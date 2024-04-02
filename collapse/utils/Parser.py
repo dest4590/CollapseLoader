@@ -7,6 +7,9 @@ class Parser:
         self.input_file = input_file
         self.minecraft = False
 
+        logger.debug('Initialized parser')
+
+
     def scan(self):
         if not self.input_file.endswith('.jar'):
             logger.error('File is not minecraft executable.')

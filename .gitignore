@@ -39,3 +39,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Loader temporary files
+*.zip
+data/
