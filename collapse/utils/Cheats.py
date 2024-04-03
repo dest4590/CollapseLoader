@@ -1,4 +1,8 @@
 from .Cheat import Cheat
 from .Data import data
 
-celestial = Cheat('Celestial Recode 1.12.2', data.get_url('CelestialRecode.zip'))
+celestial = Cheat('Celestial', data.get_url('Celestial.zip'))
+lifeclient = Cheat('LifeClient', data.get_url('LifeClient.jar'))
+
+# Add cheats here
+cheats = [celestial, lifeclient]

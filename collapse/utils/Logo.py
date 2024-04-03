@@ -17,6 +17,6 @@ class Logo:
 \____/  \___/ |_||_| \__,_|| .__/ |___/ \___|
                            |_|               '''
 
-   tagline = 'CLI-based utility to run minecraft cheats, also contains tools that can help you.'
+   tagline = 'CLI-based utility to run minecraft cheats, [s]also contains tools that can help you.[/]'
 
 logo = Logo()

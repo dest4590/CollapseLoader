@@ -1,44 +1,42 @@
-from ..logger import logger
+from .Settings import settings
+from .Logger import logger
 from .Data import data
-from tqdm import tqdm
-import requests
-import zipfile
 import os
 
-cheat_list = []
-
 class Cheat:
-    def __init__(self, name: str, link: str) -> None:
+    def __init__(self, name: str, link: str, main_class: str = 'net.minecraft.client.main.Main', version: str = '1.12.2') -> None:
         self.name = name
         self.link = link
         self.filename = os.path.basename(self.link)
-        self.path = data.root_dir + self.filename
+        self.path = data.root_dir + self.filename 
         self.path_dir = data.root_dir + os.path.splitext(self.filename)[0] + '/'
+        self.jar = os.path.splitext(self.filename)[0] + '.jar'
+        self.main_class = main_class
+        self.version = version
 
-        cheat_list.append(self)
+    def download(self) -> True:
+        """Downloading cheat files"""
 
-    def download(self):
-        if not os.path.isdir(self.path):
-            logger.warn(f'Client {self.name} already downloaded')
+        if os.path.isdir(self.path_dir):
+            logger.debug(f'Client {self.name} already downloaded')
             return
 
         logger.debug('Downloading client')
 
-        response = requests.get(self.link, stream=True)
+        data.download(self.link)
+    
+    def run(self):
+        """Run client"""
 
-        total_size = int(response.headers.get('content-length', 0))
+        data.download('jre-17.0.10.zip')
+        data.download('libraries.zip')
+        data.download('natives.zip')
+        data.download('assets.zip')
+        
+        logger.info(f'Running client {self.name}')
+  
+        os.chdir('.\\' + self.path_dir)
 
-        # Get code from google gemini
-        with tqdm(total=total_size, unit="B", unit_scale=True, ascii=True, ncols=100, colour='blue') as progressbar:
-            with open(data.root_dir + self.filename, "wb") as f:
-                for d in response.iter_content(1024):
-                    f.write(d)
-                    progressbar.update(len(d))
+        os.system(f"..\\jre-17.0.10\\bin\\java.exe -Xmx{settings.get('ram')}M -Djava.library.path=..\\natives; -cp ..\\libraries\*;.\\{self.jar} {self.main_class} --username {settings.get('nickname')} --gameDir {self.path_dir} --assetDir ..\\assets --assetIndex 1.12.2 --uuid N/A --accessToken 0 --userType legacy --version {self.version}")
 
-        logger.info(f'Downloaded client into: {data.root_dir}{self.filename}')
-
-        with zipfile.ZipFile(self.path, 'r') as zip_file:
-            zip_file.extractall(self.path_dir)
-
-        logger.debug('Removing zip')
-        os.remove(data.root_dir + self.filename)
+        logger.info('Exited from minecraft')

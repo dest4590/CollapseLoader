@@ -1,5 +1,5 @@
 from zipfile import ZipFile
-from ..logger import logger
+from .Logger import logger
 import os
 
 class Parser:
@@ -10,7 +10,7 @@ class Parser:
         logger.debug('Initialized parser')
 
 
-    def scan(self):
+    def scan(self) -> True:
         if not self.input_file.endswith('.jar'):
             logger.error('File is not minecraft executable.')
             return
@@ -21,7 +21,6 @@ class Parser:
         
         logger.info(f'Starting analyse of {self.input_file}')
 
-        # https://stackoverflow.com/questions/8005300/opening-a-java-jar-file-from-python
         zf = ZipFile(self.input_file, 'r')
 
         folders = []
@@ -41,3 +40,5 @@ class Parser:
             zf.close()
 
         logger.info(f'Is minecraft: {self.minecraft}')
+
+        return True
