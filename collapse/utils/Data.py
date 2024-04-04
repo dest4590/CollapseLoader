@@ -60,7 +60,6 @@ class DataManager:
         if filename.endswith('.zip'):
             with zipfile.ZipFile(self.root_dir + filename, 'r') as zip_file:
                 zip_file.extractall(path_dir)
-                print(path_dir)
 
             os.remove(self.root_dir + filename)
 
