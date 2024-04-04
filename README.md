@@ -7,5 +7,6 @@
 * [X] CLI Interface
 * [X] Download manager
 * [X] Logging
+* [X] Fallback servers
 * [ ] Packaging (CI/CD)
-* [ ] Fallback servers
+
