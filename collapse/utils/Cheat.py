@@ -46,7 +46,7 @@ class Cheat:
             # Using backslash var, because f-strings not supporting it in expressions
             bc = '\\'
 
-            command = f"..\\jre-21.0.2\\bin\\java.exe -noverify -Xmx{settings.get('ram')}M -Djava.library.path={f'..{bc}natives;' if not self.internal and not os.path.isdir(f'natives') else f'.{bc}natives;'} {(f'-cp ..{bc}libraries{bc}*' if not self.internal and not os.path.isdir(f'natives') else f'-cp .{bc}libraries{bc}*' ) + ';' if self.use_libraries else ''}{f'.{bc}' + self.jar + f' {self.main_class}' if not self.use_as_jar else '-jar ' + self.jar} --username {settings.get('nickname')} --gameDir .\\ --assetDir {f'.{bc}assets' if self.internal else f'..{bc}assets'} --assetIndex {self.version} --uuid N/A --accessToken 0 --userType legacy --version {self.version}"
+            command = f"..\\jre-21.0.2\\bin\\java.exe -noverify -Xmx{settings.get('ram')}M -Djava.library.path={f'.{bc}natives;' if self.internal and os.path.isdir(f'natives') else f'..{bc}natives;'} {(f'-cp ..{bc}libraries{bc}*' if not self.internal and not os.path.isdir(f'natives') else f'-cp .{bc}libraries{bc}*' ) + ';' if self.use_libraries else ''}{f'.{bc}' + self.jar + f' {self.main_class}' if not self.use_as_jar else '-jar ' + self.jar} --username {settings.get('nickname')} --gameDir .\\ --assetDir {f'.{bc}assets' if self.internal else f'..{bc}assets'} --assetIndex {self.version} --uuid N/A --accessToken 0 --userType legacy --version {self.version}"
 
             logger.debug(command)
 
