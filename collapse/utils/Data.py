@@ -9,7 +9,7 @@ class DataManager:
 
     def __init__(self) -> None:
         self.root_dir = 'data/'
-        self.server = 'https://loader.dest4590.lol/'
+        self.server = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/loader/o/'
 
         if not os.path.isdir(self.root_dir):
             os.mkdir(self.root_dir)
@@ -20,8 +20,8 @@ class DataManager:
             logger.debug('Using the main server')
             
         except requests.exceptions.RequestException:
-            logger.debug("The main server is down, we're using fallback")
-            self.server = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/loader/o/' # Uses a fallback server if the main server is down
+            logger.debug("The main server is down/inaccessible, we're using fallback")
+            self.server = 'https://loader.collapseloader.org' # Uses a fallback server if the main server is down
 
         logger.debug('Initialized DataManager')
 
