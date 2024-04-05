@@ -18,8 +18,8 @@ class Selector:
             # EXM: 1. Celestial
             self.text += f'{cheat[0]}. {cheat[1].name}\n'
 
-        self.text += '\n[dark_cyan]8. Select username[/]'
-        self.text += '\n[dark_cyan]9. Enter RAM[/]'
+        self.text += '\n[dark_cyan]9. Select username[/]'
+        self.text += '\n[dark_cyan]10. Enter RAM[/]'
     
     def show(self) -> None:
         console.print(self.text, highlight=False)

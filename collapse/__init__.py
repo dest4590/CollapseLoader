@@ -35,11 +35,11 @@ while True:
         cheat.download()
         cheat.run()
 
-    elif choosed == 8:
+    elif choosed == 9:
         settings.set('nickname', selector.select_username())
         logger.debug('Changed nickname')
 
-    elif choosed == 9:
+    elif choosed == 10:
         settings.set('ram', selector.select_ram() * 1024)
         logger.debug('Changed ram')
             
