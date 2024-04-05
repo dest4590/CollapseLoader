@@ -26,6 +26,7 @@ while True:
 
     try:
         choosed = int(selector.select())
+        
     except ValueError:
         logger.error('Choose number')
 

@@ -43,3 +43,5 @@ venv.bak/
 # Loader temporary files
 *.zip
 data/
+output/
+upload.py
