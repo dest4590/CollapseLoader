@@ -1,9 +1,11 @@
-import os
 from contextlib import chdir
+import time
+import os
 
 from .Data import data
 from .Logger import logger
 from .Settings import settings
+from .RPC import rpc
 
 
 class Cheat:
@@ -35,6 +37,10 @@ class Cheat:
     
     def run(self):
         """Run client"""
+
+        rpc.details = f'Running {self.name}'
+        rpc.start_time = time.time()
+
         # Downloading requirements
         data.download('jre-21.0.2.zip')
         data.download('libraries.zip')
@@ -54,3 +60,5 @@ class Cheat:
 
             logger.info('Exited from minecraft')
  
+            rpc.start_time = time.time()
+            rpc.details = 'Picks a cheat'

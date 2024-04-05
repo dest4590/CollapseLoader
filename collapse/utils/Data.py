@@ -10,6 +10,8 @@ class DataManager:
     def __init__(self) -> None:
         self.root_dir = 'data/'
         self.server = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/loader/o/'
+        self.server_assets = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/assets/o/'
+        self.version = '1.2'
 
         if not os.path.isdir(self.root_dir):
             os.mkdir(self.root_dir)

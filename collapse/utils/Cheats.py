@@ -8,6 +8,7 @@ moonproject = Cheat('MoonProject', data.get_url('MoonProject.zip'))
 wild = Cheat('Wild', data.get_url('WildDLC.zip'))
 speedclient = Cheat('SpeedClient', data.get_url('SpeedClient.zip'))
 hachclient = Cheat('HachClient', data.get_url('Hachclient.zip'), internal=True)
+expensive = Cheat('Expensive', data.get_url('Expensive-2.0.jar'), version='1.16')
 
 # Don't forget to add cheats to this array
 cheats = [
@@ -17,5 +18,6 @@ cheats = [
     moonproject,
     wild,
     speedclient,
-    hachclient
+    hachclient,
+    expensive,
 ]

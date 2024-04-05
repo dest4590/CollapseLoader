@@ -1,5 +1,6 @@
-from .Logger import logger
 from rich.console import Console
+
+from .Logger import logger
 from .Cheats import cheats
 from .Cheat import Cheat
 
@@ -18,8 +19,8 @@ class Selector:
             # EXM: 1. Celestial
             self.text += f'{cheat[0]}. {cheat[1].name}\n'
 
-        self.text += '\n[dark_cyan]9. Select username[/]'
-        self.text += '\n[dark_cyan]10. Enter RAM[/]'
+        self.text += '\n[dark_cyan]20. Select username[/]'
+        self.text += '\n[dark_cyan]21. Enter RAM[/]'
     
     def show(self) -> None:
         console.print(self.text, highlight=False)

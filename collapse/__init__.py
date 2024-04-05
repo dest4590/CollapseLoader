@@ -6,11 +6,13 @@ from .utils.Selector import selector
 from .utils.Cheats import cheats
 from .utils.Logger import logger
 from .utils.Settings import settings
-
+from .utils.RPC import rpc
 
 # Using rich library for displaying bold and color texts
 print('[bold white]' + logo.full)
 print('[bold green]' + logo.tagline)
+
+rpc.start()
 
 if not settings.get('nickname'):
     settings.set('nickname', f'CollapseUser{random.randint(10000, 99999)}')
@@ -35,11 +37,11 @@ while True:
         cheat.download()
         cheat.run()
 
-    elif choosed == 9:
+    elif choosed == 20:
         settings.set('nickname', selector.select_username())
         logger.debug('Changed nickname')
 
-    elif choosed == 10:
+    elif choosed == 21:
         settings.set('ram', selector.select_ram() * 1024)
         logger.debug('Changed ram')
             
