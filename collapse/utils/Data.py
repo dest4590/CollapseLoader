@@ -39,21 +39,31 @@ class DataManager:
         logger.debug(f'Downloading {path}')
 
         filename = os.path.basename(path)
+        jar = os.path.splitext(filename)[0] + '.jar'
         path = self.root_dir + filename 
         path_dir = self.root_dir + os.path.splitext(filename)[0] + '/'
-
-        if os.path.isdir(path_dir):
-            logger.debug(f'{path} Already downloaded, skip')
-            return
         
-        else:
-            os.mkdir(path_dir)
+        if not filename.endswith('.jar'):
+            if os.path.isdir(path_dir):
+                logger.debug(f'{path} Already downloaded, skip')
+                return
+            
+            else:
+                os.mkdir(path_dir)
+
+        elif filename.endswith('.jar'):
+            if os.path.exists(path_dir + jar):
+                logger.debug(f'{path} file downloaded, skip')
+                return
+
+            else:
+                os.mkdir(path_dir)
 
         response = requests.get(self.server + filename, stream=True)
  
         total_size = int(response.headers.get('content-length', 0))
 
-        with tqdm(total=total_size, unit="B", unit_scale=True, ascii=True, ncols=100, colour='blue') as progressbar:
+        with tqdm(total=total_size, unit="B", unit_scale=True, ascii=True, ncols=80, colour='blue') as progressbar:
             with open(self.root_dir + filename, "wb") as f:
                 for d in response.iter_content(1024):
                     f.write(d)
@@ -67,6 +77,5 @@ class DataManager:
 
         if filename.endswith('.jar'):
             os.rename(self.root_dir + filename, path_dir + filename)
-
     
 data = DataManager()

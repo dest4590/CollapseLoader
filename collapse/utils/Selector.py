@@ -3,6 +3,7 @@ from rich.console import Console
 from .Logger import logger
 from .Cheats import cheats
 from .Cheat import Cheat
+from .RPC import rpc
 
 console = Console()
 
@@ -21,12 +22,16 @@ class Selector:
 
         self.text += '\n[dark_cyan]20. Select username[/]'
         self.text += '\n[dark_cyan]21. Enter RAM[/]'
+        self.text += '\n[dark_cyan]22. Enable/Disable RPC[/]'
     
     def show(self) -> None:
         console.print(self.text, highlight=False)
 
     def select(self) -> str:
         return input('Select >> ')
+    
+    def info(self) -> None:
+        input('Press enter ')
     
     def get_cheat_by_index(self, index: int) -> Cheat:
         for i, c in enumerate(cheats, 1):

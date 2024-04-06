@@ -1,4 +1,5 @@
 from rich import print
+from time import time
 import random
 
 from .utils.Logo import logo
@@ -23,6 +24,10 @@ if not settings.get('ram'):
     settings.set('ram', 2048)
     logger.debug('Ram setup')
 
+if not settings.get('rpc'):
+    settings.set('rpc', True)
+    logger.debug('RPC setup')
+
 while True:
     selector.show()
 
@@ -31,6 +36,7 @@ while True:
         
     except ValueError:
         logger.error('Choose number')
+        pass
 
     if choosed <= len(cheats):
         cheat = selector.get_cheat_by_index(choosed)
@@ -44,6 +50,23 @@ while True:
     elif choosed == 21:
         settings.set('ram', selector.select_ram() * 1024)
         logger.debug('Changed ram')
+
+    elif choosed == 22:
+        if settings.get('rpc') == 'True':
+            # Disable
+            logger.info('Disabled RPC')
+            settings.set('rpc', False)
+            rpc.disabled = True
+            selector.info()
+        
+        elif settings.get('rpc') == 'False':
+            # Enable
+            logger.info('Enabled RPC')
+            settings.set('rpc', True)
+            rpc.disabled = False
+            rpc.start_time = time()
+            selector.info()
+            
             
     else:
-        logger.error('Choose')
+        logger.error('Choose number')

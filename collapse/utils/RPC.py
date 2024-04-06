@@ -3,23 +3,25 @@ from threading import Thread
 from time import sleep, time
 
 from .Data import data
+from .Settings import settings
 
 class RPC(Thread):
     client_id = '1225803664204234772'
     RPC = Presence(client_id)
 
-    details = 'Picks a cheat'
-    state = f'Version {data.version}' 
+    details = 'Choosing a client'
 
     start_time = time()
+    disabled = True if settings.get('rpc') == 'False' else False
 
     def update(self):
-        self.RPC.update(state=self.state, details=self.details, large_image=data.server_assets + 'rpc.gif', 
+        self.RPC.update(details=self.details, large_image=data.server_assets + 'rpc.gif', 
                         buttons=[
-                            {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'}, 
-                            {'label': 'Discord', 'url': 'https://collapseloader.org/discord'}
+                            {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
+                            {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'} 
                         ],
-                        start=self.start_time)
+                        start=self.start_time,
+                        large_text=f'Version {data.version}' )
 
     def run(self):
         try:
@@ -28,7 +30,12 @@ class RPC(Thread):
             return
         
         while True:
-            self.update()
-            sleep(10)
+            if not self.disabled:
+                self.update()
+
+            else:
+                self.RPC.clear()
+
+            sleep(1)
 
 rpc = RPC()
