@@ -8,10 +8,12 @@ from .utils.Cheats import cheats
 from .utils.Logger import logger
 from .utils.Settings import settings
 from .utils.RPC import rpc
+from .utils.Data import data
 
 # Using rich library for displaying bold and color texts
 print('[bold white]' + logo.full)
 print('[bold green]' + logo.tagline)
+print('[italic]VER: ' + data.version)
 
 rpc.start()
 
