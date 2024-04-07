@@ -1,9 +1,9 @@
 from rich.console import Console
+import os
 
 from .Logger import logger
 from .Cheats import cheats
 from .Cheat import Cheat
-from .RPC import rpc
 
 console = Console()
 
@@ -23,15 +23,30 @@ class Selector:
         self.text += '\n[dark_cyan]20. Select username[/]'
         self.text += '\n[dark_cyan]21. Enter RAM[/]'
         self.text += '\n[dark_cyan]22. Enable/Disable RPC[/]'
-    
+        self.text += '\n[dark_red]23. Exit[/]'
+
     def show(self) -> None:
+        self.clear()
         console.print(self.text, highlight=False)
 
     def select(self) -> str:
         return input('Select >> ')
     
-    def info(self) -> None:
-        input('Press enter ')
+    def pause(self) -> None:
+        input('Press enter >> ')
+
+    def ask(self, question: str) -> str:
+        while True:
+            i = input(f'{question} >> ')
+
+            if i in ['y', '', 'yes', 'да', 'н']:
+                return True
+            
+            elif i in ['n', 'т', 'нет']:
+                return False
+            
+            else:
+                pass
     
     def get_cheat_by_index(self, index: int) -> Cheat:
         for i, c in enumerate(cheats, 1):
@@ -48,5 +63,8 @@ class Selector:
             
             except ValueError:
                 logger.error('Enter gigabytes (2, 4)')
+
+    def clear(self) -> None:
+        os.system('cls')
 
 selector = Selector()

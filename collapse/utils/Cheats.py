@@ -10,6 +10,8 @@ speedclient = Cheat('SpeedClient', data.get_url('SpeedClient.zip'))
 hachclient = Cheat('HachClient', data.get_url('Hachclient.zip'), internal=True)
 expensive = Cheat('Expensive', data.get_url('Expensive-2.0.jar'), version='1.16')
 expensive_upgrade = Cheat('Expensive Upgrade', data.get_url('ExpensiveUpgrade.jar'), version='1.16')
+vegaline = Cheat('VegaLine', data.get_url('VegaLine.zip'), internal=True)
+fluger = Cheat('Fluger', data.get_url('Fluger.zip'), internal=True)
 
 # Don't forget to add cheats to this array
 cheats = [
@@ -21,5 +23,7 @@ cheats = [
     speedclient,
     hachclient,
     expensive,
-    expensive_upgrade
+    expensive_upgrade,
+    vegaline,
+    fluger
 ]

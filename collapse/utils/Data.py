@@ -9,21 +9,27 @@ class DataManager:
 
     def __init__(self) -> None:
         self.root_dir = 'data/'
-        self.server = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/loader/o/'
+        self.server = 'https://storage.googleapis.com/collapseloader/'
+        self.server_fallback =  'https://loader.collapseloader.org'
         self.server_assets = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/assets/o/'
-        self.version = '1.2.1'
+        self.repo = 'https://github.com/dest4590/CollapseLoader/'
+        self.version = '1.2.2'
 
         if not os.path.isdir(self.root_dir):
             os.mkdir(self.root_dir)
             logger.debug('Created root dir')
 
         try:
-            requests.get(self.server, timeout=3)
+            r = requests.get(self.server, timeout=3)
+
+            if 'is not available in your location' in r.text: # If server is blocked
+                self.server = self.server_fallback
+
             logger.debug('Using the main server')
             
         except requests.exceptions.RequestException:
             logger.debug("The main server is down/inaccessible, we're using fallback")
-            self.server = 'https://loader.collapseloader.org' # Uses a fallback server if the main server is down
+            self.server = self.server_fallback # Uses a fallback server if the main server is down
 
         logger.debug('Initialized DataManager')
 
@@ -63,7 +69,7 @@ class DataManager:
  
         total_size = int(response.headers.get('content-length', 0))
 
-        with tqdm(total=total_size, unit="B", unit_scale=True, ascii=True, ncols=80, colour='blue') as progressbar:
+        with tqdm(total=total_size, desc=path, unit="B", unit_scale=True, ascii=True, ncols=80, colour='blue') as progressbar:
             with open(self.root_dir + filename, "wb") as f:
                 for d in response.iter_content(1024):
                     f.write(d)

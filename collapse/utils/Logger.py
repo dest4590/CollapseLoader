@@ -22,4 +22,4 @@ def setup_logger(name, level):
 
     return logger
 
-logger = setup_logger('CollapseLogger', logging.INFO)
+logger = setup_logger('CollapseLogger', logging.DEBUG)
