@@ -25,8 +25,7 @@ class Selector:
         self.text += '\n[dark_cyan]22. Enable/Disable RPC[/]'
         self.text += '\n[dark_red]23. Exit[/]'
 
-    def show(self) -> None:
-        self.clear()
+    def show(self) -> None:    
         console.print(self.text, highlight=False)
 
     def select(self) -> str:

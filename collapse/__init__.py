@@ -13,9 +13,6 @@ from .utils.Data import data
 from .utils.Updater import updater
 
 # Using rich library for displaying bold and color texts
-print('[bold white]' + logo.full)
-print('[bold green]' + logo.tagline)
-print('[italic]VER: ' + data.version)
 
 if not '_child.py' in sys.argv[0]:
     rpc.daemon = True
@@ -38,6 +35,13 @@ if not settings.get('rpc'):
 
 if not '_child.py' in sys.argv[0]:
     while True:
+        selector.clear()
+
+        print('[bold white]' + logo.full)
+        print('[bold green]' + logo.tagline)
+        print('[italic]VER: ' + data.version)
+        print('[blue]Discord: https://collapseloader.org/discord')
+        
         selector.show()
 
         try:
@@ -55,10 +59,12 @@ if not '_child.py' in sys.argv[0]:
         elif choosed == 20:
             settings.set('nickname', selector.select_username())
             logger.debug('Changed nickname')
+            selector.pause()
 
         elif choosed == 21:
             settings.set('ram', selector.select_ram() * 1024)
             logger.debug('Changed ram')
+            selector.pause()
 
         elif choosed == 22:
             if settings.get('rpc') == 'True':
@@ -78,4 +84,4 @@ if not '_child.py' in sys.argv[0]:
             quit()
 
         else:
-            logger.error('Choose number')
+            logger.error('Choose number')        
