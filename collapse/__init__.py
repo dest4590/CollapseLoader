@@ -9,13 +9,17 @@ from .utils.Logger import logger
 from .utils.Settings import settings
 from .utils.RPC import rpc
 from .utils.Data import data
+from .utils.Updater import updater
 
 # Using rich library for displaying bold and color texts
 print('[bold white]' + logo.full)
 print('[bold green]' + logo.tagline)
 print('[italic]VER: ' + data.version)
 
+rpc.daemon = True
 rpc.start()
+
+updater.check_version()
 
 if not settings.get('nickname'):
     settings.set('nickname', f'CollapseUser{random.randint(10000, 99999)}')
@@ -38,7 +42,7 @@ while True:
         
     except ValueError:
         logger.error('Choose number')
-        pass
+        continue
 
     if choosed <= len(cheats):
         cheat = selector.get_cheat_by_index(choosed)
@@ -55,20 +59,20 @@ while True:
 
     elif choosed == 22:
         if settings.get('rpc') == 'True':
-            # Disable
             logger.info('Disabled RPC')
             settings.set('rpc', False)
             rpc.disabled = True
-            selector.info()
+            selector.pause()
         
         elif settings.get('rpc') == 'False':
-            # Enable
             logger.info('Enabled RPC')
             settings.set('rpc', True)
             rpc.disabled = False
             rpc.start_time = time()
-            selector.info()
-            
-            
+            selector.pause()
+
+    elif choosed == 23:
+        quit()
+
     else:
         logger.error('Choose number')
