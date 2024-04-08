@@ -1,6 +1,7 @@
 from rich import print
 from time import time
 import random
+import sys
 
 from .utils.Logo import logo
 from .utils.Selector import selector
@@ -16,8 +17,9 @@ print('[bold white]' + logo.full)
 print('[bold green]' + logo.tagline)
 print('[italic]VER: ' + data.version)
 
-rpc.daemon = True
-rpc.start()
+if not '_child.py' in sys.argv[0]:
+    rpc.daemon = True
+    rpc.start()
 
 updater.check_version()
 
@@ -34,45 +36,46 @@ if not settings.get('rpc'):
     settings.set('rpc', True)
     logger.debug('RPC setup')
 
-while True:
-    selector.show()
+if not '_child.py' in sys.argv[0]:
+    while True:
+        selector.show()
 
-    try:
-        choosed = int(selector.select())
-        
-    except ValueError:
-        logger.error('Choose number')
-        continue
+        try:
+            choosed = int(selector.select())
+            
+        except ValueError:
+            logger.error('Choose number')
+            continue
 
-    if choosed <= len(cheats):
-        cheat = selector.get_cheat_by_index(choosed)
-        cheat.download()
-        cheat.run()
+        if choosed <= len(cheats):
+            cheat = selector.get_cheat_by_index(choosed)
+            cheat.download()
+            cheat.run()
 
-    elif choosed == 20:
-        settings.set('nickname', selector.select_username())
-        logger.debug('Changed nickname')
+        elif choosed == 20:
+            settings.set('nickname', selector.select_username())
+            logger.debug('Changed nickname')
 
-    elif choosed == 21:
-        settings.set('ram', selector.select_ram() * 1024)
-        logger.debug('Changed ram')
+        elif choosed == 21:
+            settings.set('ram', selector.select_ram() * 1024)
+            logger.debug('Changed ram')
 
-    elif choosed == 22:
-        if settings.get('rpc') == 'True':
-            logger.info('Disabled RPC')
-            settings.set('rpc', False)
-            rpc.disabled = True
-            selector.pause()
-        
-        elif settings.get('rpc') == 'False':
-            logger.info('Enabled RPC')
-            settings.set('rpc', True)
-            rpc.disabled = False
-            rpc.start_time = time()
-            selector.pause()
+        elif choosed == 22:
+            if settings.get('rpc') == 'True':
+                logger.info('Disabled RPC')
+                settings.set('rpc', False)
+                rpc.disabled = True
+                selector.pause()
+            
+            elif settings.get('rpc') == 'False':
+                logger.info('Enabled RPC')
+                settings.set('rpc', True)
+                rpc.disabled = False
+                rpc.start_time = time()
+                selector.pause()
 
-    elif choosed == 23:
-        quit()
+        elif choosed == 23:
+            quit()
 
-    else:
-        logger.error('Choose number')
+        else:
+            logger.error('Choose number')

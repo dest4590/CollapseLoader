@@ -3,3 +3,4 @@ rich==13.7.1
 tqdm==4.66.2
 requests==2.31.0
 pypresence==4.3.0
+pyinstaller==6.5.0
