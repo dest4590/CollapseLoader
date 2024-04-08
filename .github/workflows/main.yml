@@ -27,14 +27,18 @@ jobs:
             python builder.py
 
 
-      - name: Set artifact path
+      - name: Set artifact path/name
         run: |
           $ARTIFACT_PATH=Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe"  -Recurse | Select-Object -ExpandProperty Name | Split-Path -Leaf
           echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          
+          
+          $ARTIFACT_HASH=git rev-parse --short HEAD
+          echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.VERSION }}
+          name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
