@@ -15,7 +15,7 @@ class RPC(Thread):
     disabled = True if settings.get('rpc') == 'False' else False
 
     def update(self):
-        self.RPC.update(details=self.details, large_image=data.server_assets + 'rpc.gif', 
+        self.RPC.update(state=settings.get('nickname'), details=self.details, large_image=data.server_assets + 'rpc.gif', 
                         buttons=[
                             {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
                             {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'} 

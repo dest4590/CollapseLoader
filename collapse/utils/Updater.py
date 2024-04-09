@@ -19,12 +19,6 @@ class Updater:
             if selector.ask('Open a download page [y,n]'):
                 webbrowser.open(data.repo + 'releases/latest')
             
-            quit()
-            
-        elif self.remote_version < self.local_version:
             return
-        else:
-            return
-
 
 updater = Updater()

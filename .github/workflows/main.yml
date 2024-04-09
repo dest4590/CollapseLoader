@@ -1,0 +1,44 @@
+name: Build
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12.2
+          
+
+      - name: Install requirements
+        run: |
+          pip install -r requirements.txt
+
+      - name: Make Build
+        run: |
+            echo "Using version ${{ env.VERSION }} in the build script."
+            python builder.py
+
+
+      - name: Set artifact path/name
+        run: |
+          $ARTIFACT_PATH=Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe"  -Recurse | Select-Object -ExpandProperty Name | Split-Path -Leaf
+          echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          
+          
+          $ARTIFACT_HASH=git rev-parse --short HEAD
+          echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: CollapseLoader (${{ env.ARTIFACT_HASH }})
+          path: ${{ env.ARTIFACT_PATH }}

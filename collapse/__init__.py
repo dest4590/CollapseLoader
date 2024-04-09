@@ -1,6 +1,7 @@
 from rich import print
 from time import time
 import random
+import sys
 
 from .utils.Logo import logo
 from .utils.Selector import selector
@@ -11,16 +12,9 @@ from .utils.RPC import rpc
 from .utils.Data import data
 from .utils.Updater import updater
 
-# Using rich library for displaying bold and color texts
-print('[bold white]' + logo.full)
-print('[bold green]' + logo.tagline)
-print('[italic]VER: ' + data.version)
-
-rpc.daemon = True
-rpc.start()
-
 updater.check_version()
 
+# Settings setup
 if not settings.get('nickname'):
     settings.set('nickname', f'CollapseUser{random.randint(10000, 99999)}')
     logger.debug('Nickname setup')
@@ -34,45 +28,61 @@ if not settings.get('rpc'):
     settings.set('rpc', True)
     logger.debug('RPC setup')
 
-while True:
-    selector.show()
+if not '_child.py' in sys.argv[0]:
+    rpc.daemon = True
+    rpc.start()
 
-    try:
-        choosed = int(selector.select())
+# Main thread
+if not '_child.py' in sys.argv[0]:
+    while True:
+        selector.clear()
+
+        print('[bold white]' + logo.full)
+        print('[bold green]' + logo.tagline)
+        print('[italic]VER: ' + data.version)
+        print('[blue]Discord: https://collapseloader.org/discord')
         
-    except ValueError:
-        logger.error('Choose number')
-        continue
+        selector.show()
 
-    if choosed <= len(cheats):
-        cheat = selector.get_cheat_by_index(choosed)
-        cheat.download()
-        cheat.run()
+        try:
+            choosed = int(selector.select())
+            
+        except ValueError:
+            logger.error('Choose number')
+            continue
 
-    elif choosed == 20:
-        settings.set('nickname', selector.select_username())
-        logger.debug('Changed nickname')
+        if choosed <= len(cheats):
+            cheat = selector.get_cheat_by_index(choosed)
+            cheat.download()
+            cheat.run()
 
-    elif choosed == 21:
-        settings.set('ram', selector.select_ram() * 1024)
-        logger.debug('Changed ram')
-
-    elif choosed == 22:
-        if settings.get('rpc') == 'True':
-            logger.info('Disabled RPC')
-            settings.set('rpc', False)
-            rpc.disabled = True
-            selector.pause()
-        
-        elif settings.get('rpc') == 'False':
-            logger.info('Enabled RPC')
-            settings.set('rpc', True)
-            rpc.disabled = False
-            rpc.start_time = time()
+        elif choosed == 20:
+            settings.set('nickname', selector.select_username())
+            logger.debug('Changed nickname')
             selector.pause()
 
-    elif choosed == 23:
-        quit()
+        elif choosed == 21:
+            settings.set('ram', selector.select_ram() * 1024)
+            logger.debug('Changed ram')
+            selector.pause()
 
-    else:
-        logger.error('Choose number')
+        elif choosed == 22:
+            if settings.get('rpc') == 'True':
+                logger.info('Disabled RPC')
+                settings.set('rpc', False)
+                rpc.disabled = True
+                selector.pause()
+            
+            elif settings.get('rpc') == 'False':
+                logger.info('Enabled RPC')
+                settings.set('rpc', True)
+                rpc.disabled = False
+                rpc.start_time = time()
+                selector.pause()
+
+        elif choosed == 23:
+            quit()
+
+        else:
+            logger.error('Choose number')
+            selector.pause()

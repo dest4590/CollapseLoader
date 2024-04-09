@@ -30,4 +30,4 @@ class Builder:
             os.remove(spec)
 
 
-Builder(version='1.2.1').build()
+Builder(version='1.2.2').build()
