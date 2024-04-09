@@ -12,14 +12,9 @@ from .utils.RPC import rpc
 from .utils.Data import data
 from .utils.Updater import updater
 
-# Using rich library for displaying bold and color texts
-
-if not '_child.py' in sys.argv[0]:
-    rpc.daemon = True
-    rpc.start()
-
 updater.check_version()
 
+# Settings setup
 if not settings.get('nickname'):
     settings.set('nickname', f'CollapseUser{random.randint(10000, 99999)}')
     logger.debug('Nickname setup')
@@ -33,6 +28,11 @@ if not settings.get('rpc'):
     settings.set('rpc', True)
     logger.debug('RPC setup')
 
+if not '_child.py' in sys.argv[0]:
+    rpc.daemon = True
+    rpc.start()
+
+# Main thread
 if not '_child.py' in sys.argv[0]:
     while True:
         selector.clear()
@@ -84,4 +84,5 @@ if not '_child.py' in sys.argv[0]:
             quit()
 
         else:
-            logger.error('Choose number')        
+            logger.error('Choose number')
+            selector.pause()
