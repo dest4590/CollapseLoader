@@ -16,7 +16,7 @@ updater.check_version()
 
 # Settings setup
 if not settings.get('nickname'):
-    settings.set('nickname', f'CollapseUser{random.randint(10000, 99999)}')
+    settings.set('nickname', f'Collapse{random.randint(1000, 9999)}')
     logger.debug('Nickname setup')
     print('[bold gray23]Remember to change your nickname!')
 
@@ -35,7 +35,7 @@ if not '_child.py' in sys.argv[0]:
 # Main thread
 if not '_child.py' in sys.argv[0]:
     while True:
-        selector.clear()
+        # selector.clear()
 
         print('[bold white]' + logo.full)
         print('[bold green]' + logo.tagline)
