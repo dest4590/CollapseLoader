@@ -1,4 +1,4 @@
-<p align=center><img src="https://github.com/dest4590/CollapseLoader/assets/80628386/e2ac4347-357b-4a2c-a50f-186ce0d95534" width=100></p>
+<p align=center><img src="https://github.com/dest4590/CollapseLoader/assets/80628386/190926bf-cde4-4de4-a35f-476eb9d9ac7b" width=100></p>
 
 <h1 align=center>CollapseLoader</h1>
 
