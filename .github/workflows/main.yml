@@ -52,7 +52,6 @@ jobs:
           }
 
           echo $ARTIFACT_PATH
-          echo ${{ env.ARTIFACT_PATH }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
