@@ -47,7 +47,7 @@ jobs:
 
           Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe" | ForEach-Object {
               $ARTIFACT_PATH = "CollapseLoader_($commitHash).exe"
-              Rename-Item -Path $_.FullName -NewName $newName
+              Rename-Item -Path $_.FullName -NewName $ARTIFACT_PATH
           }
 
       - name: Upload artifact
