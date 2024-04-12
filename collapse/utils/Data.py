@@ -41,13 +41,15 @@ class DataManager:
         """Gets a link from the web, uses a fallback server if the main one is down"""
         return self.server + path
     
-    def download(self, path: str) -> True:
+    def download(self, path: str, destination: str = None, mod: bool = False) -> True:
         logger.debug(f'Downloading {path}')
 
         filename = os.path.basename(path)
         jar = os.path.splitext(filename)[0] + '.jar'
         path = self.root_dir + filename 
         path_dir = self.root_dir + os.path.splitext(filename)[0] + '/'
+        dest = destination if destination != None else self.root_dir + filename
+        is_fabric = 'fabric' in filename
         
         if not filename.endswith('.jar'):
             if os.path.isdir(path_dir):
@@ -61,27 +63,33 @@ class DataManager:
             if os.path.exists(path_dir + jar):
                 logger.debug(f'{path} file downloaded, skip')
                 return
+            
 
-            else:
+
+            if not os.path.isdir(path_dir):
                 os.mkdir(path_dir)
 
         response = requests.get(self.server + filename, stream=True)
  
         total_size = int(response.headers.get('content-length', 0))
 
-        with tqdm(total=total_size, desc=path, unit="B", unit_scale=True, ascii=True, ncols=80, colour='blue') as progressbar:
-            with open(self.root_dir + filename, "wb") as f:
+        with tqdm(total=total_size, desc=path, unit="B", unit_scale=True, ascii=True, ncols=100, colour='blue') as progressbar:
+            with open(dest, "wb") as f:
                 for d in response.iter_content(1024):
                     f.write(d)
                     progressbar.update(len(d))
 
-        if filename.endswith('.zip'):
-            with zipfile.ZipFile(self.root_dir + filename, 'r') as zip_file:
-                zip_file.extractall(path_dir)
+        if not mod:
+            if filename.endswith('.zip'):
+                with zipfile.ZipFile(dest, 'r') as zip_file:
+                    zip_file.extractall(path_dir)
 
-            os.remove(self.root_dir + filename)
+                os.remove(dest)
 
-        if filename.endswith('.jar'):
-            os.rename(self.root_dir + filename, path_dir + filename)
+            if filename.endswith('.jar'):
+                os.rename(dest, path_dir + filename)
+        else:
+            logger.debug('Installing mod')
+            os.rename(dest, data.get_local('fabric-loader-0.15.9-1.20.4') + '/mods/' + filename)
     
 data = DataManager()
