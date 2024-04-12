@@ -7,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+      
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -15,7 +18,13 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.12.2
-          
+
+      - name: Setup - gcloud / gsutil
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCS_SA_KEY }}
+          project_id: ${{ secrets.GCS_PROJECT }}
+          export_default_credentials: true
 
       - name: Install requirements
         run: |
@@ -36,9 +45,12 @@ jobs:
           $ARTIFACT_HASH=git rev-parse --short HEAD
           echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
+
+      - name: Deploy
+        run: |-
+          gsutil -m rsync -R ${{ env.ARTIFACT_PATH }} gs://$GCS_BUCKET/builds
