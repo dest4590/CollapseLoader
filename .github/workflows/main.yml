@@ -47,6 +47,7 @@ jobs:
 
           Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe" | ForEach-Object {
               $ARTIFACT_PATH = "CollapseLoader_($commitHash).exe"
+              echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
               Rename-Item -Path $_.FullName -NewName $ARTIFACT_PATH
           }
 
