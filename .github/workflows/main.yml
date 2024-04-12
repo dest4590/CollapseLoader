@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+      GCS_BUCKET: ${{ secrets.GCS_BUCKET }
       
     steps:
       - name: Checkout repo
@@ -20,12 +20,10 @@ jobs:
         with:
           python-version: 3.12.2
 
-      - name: Setup - gcloud / gsutil
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - name: Auth cloud storage
+        uses: 'google-github-actions/auth@v2'
         with:
-          service_account_key: ${{ secrets.GCS_SA_KEY }}
-          project_id: ${{ secrets.GCS_PROJECT }}
-          export_default_credentials: true
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
 
       - name: Install requirements
         run: |
@@ -42,7 +40,6 @@ jobs:
           $ARTIFACT_PATH=Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe"  -Recurse | Select-Object -ExpandProperty Name | Split-Path -Leaf
           echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           
-          
           $ARTIFACT_HASH=git rev-parse --short HEAD
           echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
@@ -52,6 +49,9 @@ jobs:
           name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
 
-      - name: Deploy
-        run: |-
-          gsutil -m rsync -R ${{ env.ARTIFACT_PATH }} gs://$GCS_BUCKET/builds
+      - name: Upload artifact
+        uses: 'google-github-actions/upload-cloud-storage@v2'
+        with:
+          path: builds/${{ env.ARTIFACT_PATH }}
+          destination: 'collapseloader'
+  
