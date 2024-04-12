@@ -43,6 +43,13 @@ jobs:
           $ARTIFACT_HASH=git rev-parse --short HEAD
           echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+          $commitHash = git rev-parse --short HEAD
+
+          Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe" | ForEach-Object {
+              $ARTIFACT_PATH = "CollapseLoader_($commitHash).exe"
+              Rename-Item -Path $_.FullName -NewName $newName
+          }
+
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
