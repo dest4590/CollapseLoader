@@ -51,6 +51,9 @@ jobs:
               Rename-Item -Path $_.FullName -NewName $ARTIFACT_PATH
           }
 
+          echo $ARTIFACT_PATH
+          echo ${{ env.ARTIFACT_PATH }}
+
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
