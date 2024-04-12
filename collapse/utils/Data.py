@@ -49,7 +49,7 @@ class DataManager:
         path = self.root_dir + filename 
         path_dir = self.root_dir + os.path.splitext(filename)[0] + '/'
         dest = destination if destination != None else self.root_dir + filename
-        is_fabric = 'fabric' in filename
+        fabric_folder = data.get_local('fabric-loader-0.15.9-1.20.4') + '/mods/'
         
         if not filename.endswith('.jar'):
             if os.path.isdir(path_dir):
@@ -60,15 +60,14 @@ class DataManager:
                 os.mkdir(path_dir)
 
         elif filename.endswith('.jar'):
-            if os.path.exists(path_dir + jar):
+            if os.path.exists(path_dir + jar) or os.path.exists(fabric_folder + filename):
                 logger.debug(f'{path} file downloaded, skip')
                 return
             
-
-
-            if not os.path.isdir(path_dir):
+            if not os.path.isdir(path_dir) and not mod:
                 os.mkdir(path_dir)
 
+            
         response = requests.get(self.server + filename, stream=True)
  
         total_size = int(response.headers.get('content-length', 0))
@@ -90,6 +89,12 @@ class DataManager:
                 os.rename(dest, path_dir + filename)
         else:
             logger.debug('Installing mod')
-            os.rename(dest, data.get_local('fabric-loader-0.15.9-1.20.4') + '/mods/' + filename)
+
+            
+            if not os.path.exists(fabric_folder):
+                os.mkdir(fabric_folder)
+
+            if not os.path.exists(fabric_folder + filename):
+                os.rename(dest, data.get_local('fabric-loader-0.15.9-1.20.4') + '/mods/' + filename)
     
 data = DataManager()
