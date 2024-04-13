@@ -42,9 +42,14 @@ class FabricCheat:
         data.download('fabric-loader-0.15.9-1.20.4.jar')
 
     def download_mod(self) -> True:
+        # for mod in self.mod_manager.get_mod_list():
+        #     # If two and more cheats are enabled
+        #     if self.filename != mod and mod in mods:
+        #         self.mod_manager.deactivate(mod)
+
         if self.filename in self.mod_manager.get_mod_list():
             logger.debug('Mod already installed')
-            return        
+            return
 
         response = requests.get(data.server + self.filename, stream=True)
  
