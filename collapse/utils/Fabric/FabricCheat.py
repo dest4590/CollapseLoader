@@ -10,6 +10,8 @@ from ..RPC import rpc
 from ..Settings import settings
 from .ModManager import ModManager
 
+mods = []
+
 class FabricCheat:
     def __init__(self, name: str, link: str, version: str = '1.20.4', internal: bool = False) -> None:
         self.name = name
@@ -26,6 +28,8 @@ class FabricCheat:
         
         self.mod_manager = ModManager(self.path_dir + 'mods/')
 
+        mods.append(self.filename)
+
     def download(self) -> True:
         """Downloading cheat files"""
 
@@ -37,11 +41,16 @@ class FabricCheat:
 
         data.download('fabric-loader-0.15.9-1.20.4.jar')
 
-    def download_mod(self, link) -> True:
+    def download_mod(self) -> True:
+        # for mod in self.mod_manager.get_mod_list():
+        #     # If two and more cheats are enabled
+        #     if self.filename != mod and mod in mods:
+        #         self.mod_manager.deactivate(mod)
+
         if self.filename in self.mod_manager.get_mod_list():
             logger.debug('Mod already installed')
-            return  
-        
+            return
+
         response = requests.get(data.server + self.filename, stream=True)
  
         total_size = int(response.headers.get('content-length', 0))
@@ -66,6 +75,7 @@ class FabricCheat:
         data.download('natives-fabric-1.20.4.zip')
         data.download('assets-1.20.4.zip') # 600mb :(
         data.download('fabric-api-0.96.11+1.20.4.jar', mod=True)
+        self.download_mod()
 
         
         logger.info(f'Running client {self.name}')
