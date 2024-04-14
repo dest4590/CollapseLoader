@@ -10,7 +10,7 @@ class DataManager:
     def __init__(self) -> None:
         self.root_dir = 'data/'
         self.server = 'https://storage.googleapis.com/collapseloader/'
-        self.server_fallback =  'https://loader.collapseloader.org'
+        self.server_fallback =  'https://loader.collapseloader.org/'
         self.server_assets = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/assets/o/'
         self.repo = 'https://github.com/dest4590/CollapseLoader/'
         self.version = '1.2.3'
