@@ -20,9 +20,10 @@ class Selector:
             # EXM: 1. Celestial
             self.text += f'{cheat[0]}. {cheat[1].name}\n'
 
-        self.text += '\n[dark_cyan]20. Select username[/]'
-        self.text += '\n[dark_cyan]21. Enter RAM[/]'
-        self.text += '\n[dark_cyan]22. Enable/Disable RPC[/]'
+        self.text += '\n[dark_cyan]19. Select username[/]'
+        self.text += '\n[dark_cyan]20. Enter RAM[/]'
+        self.text += '\n[dark_cyan]21. Enable/Disable RPC[/]'
+        self.text += '\n[dark_cyan]22. Ghost mode (PANIC)[/]'
         self.text += '\n[dark_red]23. Exit[/]'
 
     def show(self) -> None:    
@@ -35,6 +36,8 @@ class Selector:
         input('Press enter >> ')
 
     def ask(self, question: str) -> str:
+        """asks the user for an action"""
+
         while True:
             i = input(f'{question} >> ')
 

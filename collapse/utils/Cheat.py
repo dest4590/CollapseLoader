@@ -9,7 +9,7 @@ from .RPC import rpc
 
 
 class Cheat:
-    def __init__(self, name: str, link: str, main_class: str = 'net.minecraft.client.main.Main', version: str = '1.12.2', internal: bool = False, use_as_jar: bool = False, use_libraries: bool = True) -> None:
+    def __init__(self, name: str, link: str, main_class: str = 'net.minecraft.client.main.Main', version: str = '1.12.2', internal: bool = False) -> None:
         self.name = name
         self.link = link
 
@@ -21,8 +21,7 @@ class Cheat:
         self.main_class = main_class
         self.version = version
         self.internal = internal
-        self.use_as_jar = use_as_jar
-        self.use_libraries = use_libraries
+        self.silent = True
 
     def download(self) -> True:
         """Downloading cheat files"""
@@ -52,7 +51,7 @@ class Cheat:
             # Using backslash var, because f-strings not supporting it in expressions
             bc = '\\'
 
-            command = f"..\\jre-21.0.2\\bin\\java.exe -Xverify:none -Xmx{settings.get('ram')}M -Djava.library.path={f'.{bc}natives;' if self.internal and os.path.isdir(f'natives') else f'..{bc}natives;'} {(f'-cp .{bc}libraries{bc}*' if self.internal and os.path.isdir(f'libraries') else f'-cp ..{bc}libraries{bc}*') + ';' if self.use_libraries else ''}{f'.{bc}' + self.jar + f' {self.main_class}' if not self.use_as_jar else '-jar ' + self.jar} --username {settings.get('nickname')} --gameDir .\\ --assetsDir {f'.{bc}assets' if self.internal and os.path.isdir(f'assets') else f'..{bc}assets'} --assetIndex {self.version} --uuid N/A --accessToken 0 --userType legacy --version {self.version}"
+            command = f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe -Xverify:none -Xmx{settings.get('ram')}M -Djava.library.path={f'.{bc}natives;' if self.internal and os.path.isdir(f'natives') else f'..{bc}natives;'} {(f'-cp .{bc}libraries{bc}*' if self.internal and os.path.isdir(f'libraries') else f'-cp ..{bc}libraries{bc}*') + ';' if self.use_libraries else ''}{f'.{bc}' + self.jar + f' {self.main_class}' if not self.use_as_jar else '-jar ' + self.jar} --username {settings.get('nickname')} --gameDir .\\ --assetsDir {f'.{bc}assets' if self.internal and os.path.isdir(f'assets') else f'..{bc}assets'} --assetIndex {self.version} --uuid N/A --accessToken 0 --userType legacy --version {self.version}"
 
             logger.debug(command)
 
