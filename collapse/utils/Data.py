@@ -20,7 +20,7 @@ class DataManager:
             logger.debug('Created root dir')
 
         try:
-            r = requests.get(self.server, timeout=3)
+            r = requests.get(self.server + 'index.html', timeout=3)
 
             if 'is not available in your location' in r.text: # If server is blocked
                 self.server = self.server_fallback
@@ -66,7 +66,6 @@ class DataManager:
             
             if not os.path.isdir(path_dir) and not mod:
                 os.mkdir(path_dir)
-
             
         response = requests.get(self.server + filename, stream=True)
  

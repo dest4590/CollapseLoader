@@ -18,9 +18,8 @@ class CheatCleaner:
             'C:\\Nursultan',
         ]
 
-
     def scan_folders(self):
-        if selector.ask('Remove all cheats folder'):
+        if selector.ask('Remove all cheats folder [y,n]?'):
             for folder in self.folders:
                 if os.path.isdir(folder):
                     logger.info('Removing folder: ' + folder)
