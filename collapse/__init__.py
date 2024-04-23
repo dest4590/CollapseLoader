@@ -11,6 +11,7 @@ from .utils.Settings import settings
 from .utils.RPC import rpc
 from .utils.Data import data
 from .utils.Updater import updater
+from .utils.CheatCleaner import cheatcleaner
 
 updater.check_version()
 
@@ -56,17 +57,17 @@ if not '_child.py' in sys.argv[0]:
             cheat.download()
             cheat.run()
 
-        elif choosed == 20:
+        elif choosed == 19:
             settings.set('nickname', selector.select_username())
             logger.debug('Changed nickname')
             selector.pause()
 
-        elif choosed == 21:
+        elif choosed == 20:
             settings.set('ram', selector.select_ram() * 1024)
             logger.debug('Changed ram')
             selector.pause()
 
-        elif choosed == 22:
+        elif choosed == 21:
             if settings.get('rpc') == 'True':
                 logger.info('Disabled RPC')
                 settings.set('rpc', False)
@@ -79,6 +80,10 @@ if not '_child.py' in sys.argv[0]:
                 rpc.disabled = False
                 rpc.start_time = time()
                 selector.pause()
+
+        elif choosed == 22:
+            logger.info('Clean folders [y,n]')
+            cheatcleaner.scan_folders()
 
         elif choosed == 23:
             quit()

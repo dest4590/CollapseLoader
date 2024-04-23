@@ -58,9 +58,9 @@ jobs:
           name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
 
-      - name: Upload artifact
-        uses: 'google-github-actions/upload-cloud-storage@v2'
-        with:
-          path: ${{ env.ARTIFACT_PATH }}
-          destination: 'collapseloader/builds'
+      # - name: Upload artifact
+      #   uses: 'google-github-actions/upload-cloud-storage@v2'
+      #   with:
+      #     path: ${{ env.ARTIFACT_PATH }}
+      #     destination: 'collapseloader/builds'
   
