@@ -3,11 +3,19 @@ import colorlog
 
 def setup_logger(name, level):
     formatter = colorlog.ColoredFormatter(
-        "[%(log_color)s%(levelname)s%(reset)s] %(blue)s%(message)s",
+        "[%(log_color)s%(levelname)s%(reset)s] %(message_log_color)s%(message)s",
         datefmt=None,
         reset=True,
         log_colors={'DEBUG': 'cyan', 'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red', 'CRITICAL': 'red,bg_white'},
-        secondary_log_colors={},
+        secondary_log_colors={
+            'message': {
+                'ERROR':    'red',
+                'CRITICAL': 'red',
+                'INFO':     'blue',
+                'DEBUG':    'green',
+            }
+        },
+
         style='%',
     )
 
