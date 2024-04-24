@@ -1,17 +1,19 @@
-from rich import print
 from time import time
 import random
+import shutil
 import sys
 
-from .utils.Logo import logo
-from .utils.Selector import selector
-from .utils.Cheats import cheats
-from .utils.Logger import logger
-from .utils.Settings import settings
-from .utils.RPC import rpc
-from .utils.Data import data
-from .utils.Updater import updater
+from rich import print
+
 from .utils.CheatCleaner import cheatcleaner
+from .utils.Cheats import cheats
+from .utils.Data import data
+from .utils.Logger import logger
+from .utils.Logo import logo
+from .utils.RPC import rpc
+from .utils.Selector import selector
+from .utils.Settings import settings
+from .utils.Updater import updater
 
 updater.check_version()
 
@@ -86,6 +88,11 @@ if not '_child.py' in sys.argv[0]:
             cheatcleaner.scan_folders()
 
         elif choosed == 23:
+            logger.info('Removing data folder')
+            if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
+                shutil.rmtree('data', True)
+
+        elif choosed == 24:
             quit()
 
         else:

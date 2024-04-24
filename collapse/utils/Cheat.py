@@ -21,7 +21,7 @@ class Cheat:
         self.main_class = main_class
         self.version = version
         self.internal = internal
-        self.silent = True
+        self.silent = False
 
     def download(self) -> True:
         """Downloading cheat files"""

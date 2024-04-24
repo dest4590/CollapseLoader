@@ -4,8 +4,9 @@ import requests
 class API:
     def __init__(self, server: str = 'https://api.collapseloader.org/', test: bool = False):
         self.server = server
+
         if test:
-            self.server = 'https://test.collapseloader.org'
+            self.server = 'https://test.collapseloader.org' # this subdomain not exist, you don't have to try it.
 
         self.check_api()
 

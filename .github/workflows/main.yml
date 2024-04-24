@@ -58,9 +58,32 @@ jobs:
           name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
 
-      # - name: Upload artifact
-      #   uses: 'google-github-actions/upload-cloud-storage@v2'
-      #   with:
-      #     path: ${{ env.ARTIFACT_PATH }}
-      #     destination: 'collapseloader/builds'
-  
+      - name: Upload build via FTP
+        run: |
+          echo Uploading build via FTP
+          $ftpUri = "ftp://${{ secrets.SERVER_IP }}/builds/${{ env.ARTIFACT_PATH }}"
+          
+          $ftpRequest = [System.Net.FtpWebRequest]::Create($ftpUri)
+          $ftpRequest.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
+          
+          
+          $ftpRequest.Credentials = New-Object System.Net.NetworkCredential("${{ secrets.FTP_USERNAME }}","${{ secrets.FTP_PASSWORD }}")
+          $ftpRequest.UseBinary = $true
+          $ftpRequest.UsePassive = $true
+          
+          
+          $fileContent = [System.IO.File]::ReadAllBytes(${{ env.ARTIFACT_HASH }})
+          
+          
+          $ftpRequest.ContentLength = $fileContent.Length
+          
+          
+          $requestStream = $ftpRequest.GetRequestStream()
+          $requestStream.Write($fileContent, 0, $fileContent.Length)
+          $requestStream.Close()
+          
+          
+          $response = $ftpRequest.GetResponse()
+          $response.Dispose()
+          
+          echo Uploading done!
