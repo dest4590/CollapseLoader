@@ -7,15 +7,13 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    env:
-      GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
-      
+    
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.12.2
 
@@ -48,7 +46,7 @@ jobs:
           echo $ARTIFACT_PATH
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
