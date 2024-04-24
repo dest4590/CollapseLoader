@@ -19,11 +19,6 @@ jobs:
         with:
           python-version: 3.12.2
 
-      - name: Auth cloud storage
-        uses: 'google-github-actions/auth@v2'
-        with:
-          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
-
       - name: Install requirements
         run: |
           pip install -r requirements.txt
