@@ -67,7 +67,7 @@ jobs:
           $ftpRequest.UsePassive = $true
           
           
-          $fileContent = [System.IO.File]::ReadAllBytes(${{ env.ARTIFACT_HASH }})
+          $fileContent = [System.IO.File]::ReadAllBytes("${{ env.ARTIFACT_PATH }}")
           
           
           $ftpRequest.ContentLength = $fileContent.Length
