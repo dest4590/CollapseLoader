@@ -15,7 +15,6 @@ def setup_logger(name, level):
                 'DEBUG':    'green',
             }
         },
-
         style='%',
     )
 

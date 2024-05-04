@@ -2,11 +2,11 @@ from .Logger import logger
 import requests
 
 class API:
-    def __init__(self, server: str = 'https://api.collapseloader.org/', test: bool = False):
+    def __init__(self, server: str = 'https://web.collapseloader.org/', local: bool = False):
         self.server = server
 
-        if test:
-            self.server = 'https://test.collapseloader.org' # this subdomain not exist, you don't have to try it.
+        if local:
+            self.server = 'http://127.0.0.1:8000/'
 
         self.check_api()
 
@@ -23,5 +23,5 @@ class API:
         except requests.exceptions.RequestException as e:
             logger.error('API is down, or you are having connectivity problems, check your internet connection and restart loader.')
             input('Press enter >> ')
-    
-api = API('https://api.collapseloader.org/')
+
+api = API('https://web.collapseloader.org/', False)
