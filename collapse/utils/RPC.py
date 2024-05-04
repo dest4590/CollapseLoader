@@ -6,6 +6,8 @@ from .Data import data
 from .Settings import settings
 
 class RPC(Thread):
+    """RPC, used to display activity in Discord"""
+
     client_id = '1225803664204234772'
     RPC = Presence(client_id)
 
@@ -15,7 +17,8 @@ class RPC(Thread):
     disabled = True if settings.get('rpc') == 'False' else False
 
     def update(self):
-        self.RPC.update(state=settings.get('nickname'), details=self.details, large_image=data.server_assets + 'rpc.gif', 
+        """updates the activity"""
+        self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif', 
                         buttons=[
                             {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
                             {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'} 
@@ -24,6 +27,8 @@ class RPC(Thread):
                         large_text=f'Version {data.version}' )
 
     def run(self):
+        """starts a thread for the rpc"""
+
         try:
             self.RPC.connect()
         except:

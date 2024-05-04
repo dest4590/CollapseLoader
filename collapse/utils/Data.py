@@ -10,10 +10,9 @@ class DataManager:
     def __init__(self) -> None:
         self.root_dir = 'data/'
         self.server = 'https://cdn.collapseloader.org/'
-        self.server_fallback =  'https://loader.collapseloader.org'
-        self.server_assets = 'https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/assets/o/'
+        self.server_fallback =  'https://example.com'
         self.repo = 'https://github.com/dest4590/CollapseLoader/'
-        self.version = '1.2.3'
+        self.version = '1.2.4'
 
         if not os.path.isdir(self.root_dir):
             os.mkdir(self.root_dir)
