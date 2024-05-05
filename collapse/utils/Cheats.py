@@ -6,4 +6,4 @@ cheats = []
 
 for cheat in api.clients():
     if cheat['show_in_loader']:
-        cheats.append(Cheat(cheat['name'], data.get_url(cheat['filename']), cheat['main_class'], cheat['version'], cheat['internal']))
+        cheats.append(Cheat(cheat['name'], data.get_url(cheat['filename']), cheat['main_class'], cheat['version'][:-2], cheat['internal']))
