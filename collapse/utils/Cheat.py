@@ -60,4 +60,4 @@ class Cheat:
             logger.info('Exited from minecraft')
  
             rpc.start_time = time.time()
-            rpc.details = 'Picks a cheat'
+            rpc.details = 'Choosing a client'
