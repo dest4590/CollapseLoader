@@ -30,7 +30,7 @@ class Cheat:
             logger.debug(f'Client {self.name} already downloaded')
             return
 
-        logger.debug('Downloading client')
+        logger.info('Downloading client')
 
         data.download(self.link)
     
