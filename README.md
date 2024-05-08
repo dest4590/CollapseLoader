@@ -13,4 +13,4 @@
 * [X] Download manager
 * [X] Logging
 * [ ] Mirrors (GoogleCloud, Oracle)
-* [X] Packaging (User, PyInstaller)
+* [X] Packaging (CI/CD, PyInstaller)
