@@ -30,7 +30,7 @@ class Cheat:
             logger.debug(f'Client {self.name} already downloaded')
             return
 
-        logger.debug('Downloading client')
+        logger.info('Downloading client')
 
         data.download(self.link)
     
@@ -60,4 +60,4 @@ class Cheat:
             logger.info('Exited from minecraft')
  
             rpc.start_time = time.time()
-            rpc.details = 'Picks a cheat'
+            rpc.details = 'Choosing a client'
