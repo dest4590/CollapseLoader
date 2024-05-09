@@ -3,13 +3,19 @@ import os
 
 from .Logger import logger
 from .Cheats import cheats
+from .RPC import rpc
 from .Cheat import Cheat
 
 console = Console()
 
+selector_offset = 20
+
 class Function:
-    def __init__(self, line: str, number: int, color: str = 'dark_cyan'):
-        self.line = f'\n[{color}]{number}. {line}[/]'
+    def __init__(self, line: str, color: str = 'dark_cyan'):
+        global selector_offset
+        selector_offset += 1
+
+        self.line = f'\n[{color}]{selector_offset}. {line}[/]'
 
 class Selector:
     """Selector, used to select clients, and tools, the main part of the CLI loader"""
@@ -19,17 +25,29 @@ class Selector:
 
         logger.debug('Initialized selector')
         
-        self.text = '\n[bold]CHEATS & TOOLS[/]\n'
-        self.text += '\n'.join([f'{i + 1}. {cheat.name}' for i, cheat in enumerate(cheats)])
-        self.text += '\n'
-        self.text += ''.join([Function('Select username', 19).line,
-                                Function('Enter RAM', 20).line,
-                                Function('Enable/Disable RPC', 21).line,
-                                Function('Ghost mode (PANIC)', 22).line,
-                                Function('Remove data folder', 23).line,
-                                Function('Exit', 24, 'dark_red').line])
+        self.text = self.make_text()
 
         logger.debug('Created self.text')
+
+    def make_text(self) -> str:
+        text = '\n[bold]CLIENTS & TOOLS[/]\n'
+        text += '\n'.join([f'{i + 1}. {cheat.name}' for i, cheat in enumerate(cheats)])
+
+        self.offset = len(cheats)
+
+        text += '\n'
+        text += ''.join([Function('Select username').line,
+                                Function('Enter RAM').line,
+                                Function('Discord RPC ' + ('[green][+][/]' if not rpc.disabled else '[red][-][/]')).line,
+                                Function('Ghost mode (PANIC)').line,
+                                Function('Remove data folder').line,
+                                Function('Exit', 'dark_red').line])
+        
+        return text
+    
+    def update_text(self) -> None:
+        """refreshes self.text property"""
+        self.text = self.make_text()
 
     def show(self) -> None:
         """print self.text to screen"""
@@ -37,7 +55,7 @@ class Selector:
 
     def select(self) -> str:
         """requires user selection"""
-        return input('Select >> ')
+        return console.input('Select >> ')
     
     def pause(self) -> None:
         """pauses to allow the user to read the text"""

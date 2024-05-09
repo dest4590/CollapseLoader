@@ -1,13 +1,4 @@
 class Logo:
-   letter = '''
-   ___ 
-  / __\\
- / /   
-/ /___ 
-\____/ 
-'''
-
-
    # https://www.patorjk.com/software/taag/#p=display&h=0&f=Ogre&t=Collapse
    full = '''
    ___         _  _                          

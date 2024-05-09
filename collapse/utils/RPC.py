@@ -4,6 +4,7 @@ from time import sleep, time
 
 from .Data import data
 from .Settings import settings
+from .Logger import logger
 
 class RPC(Thread):
     """RPC, used to display activity in Discord"""
@@ -18,13 +19,25 @@ class RPC(Thread):
 
     def update(self):
         """updates the activity"""
-        self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif', 
-                        buttons=[
-                            {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
-                            {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'} 
-                        ],
-                        start=self.start_time,
-                        large_text=f'Version {data.version}' )
+        try:
+            self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif', 
+                            buttons=[
+                                {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
+                                {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'} 
+                            ],
+                            start=self.start_time,
+                            large_text=f'Version {data.version}' )
+        except:
+            logger.error('RPC crashed')
+            logger.debug('Trying to connect')
+
+            try:
+                    self.RPC.connect()
+                    logger.info('Connected to discord')
+
+            except:
+                logger.error('Cannot reconnect to Discord')
+
 
     def run(self):
         """starts a thread for the rpc"""

@@ -59,21 +59,22 @@ if not '_child.py' in sys.argv[0]:
             cheat.download()
             cheat.run()
 
-        elif choosed == 19:
+        elif choosed == 21:
             settings.set('nickname', selector.select_username())
             logger.debug('Changed nickname')
             selector.pause()
 
-        elif choosed == 20:
+        elif choosed == 22:
             settings.set('ram', selector.select_ram() * 1024)
             logger.debug('Changed ram')
             selector.pause()
 
-        elif choosed == 21:
+        elif choosed == 23:
             if settings.get('rpc') == 'True':
                 logger.info('Disabled RPC')
                 settings.set('rpc', False)
                 rpc.disabled = True
+                selector.update_text()
                 selector.pause()
             
             elif settings.get('rpc') == 'False':
@@ -81,18 +82,19 @@ if not '_child.py' in sys.argv[0]:
                 settings.set('rpc', True)
                 rpc.disabled = False
                 rpc.start_time = time()
+                selector.update_text()
                 selector.pause()
 
-        elif choosed == 22:
+        elif choosed == 24:
             logger.info('Clean folders [y,n]')
             cheatcleaner.scan_folders()
 
-        elif choosed == 23:
+        elif choosed == 25:
             logger.info('Removing data folder')
             if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
                 shutil.rmtree('data', True)
 
-        elif choosed == 24:
+        elif choosed == 26:
             quit()
 
         else:

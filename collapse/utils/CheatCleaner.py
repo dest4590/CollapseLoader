@@ -16,6 +16,7 @@ class CheatCleaner:
             'C:\\MoonProject',
             'C:\\hachrecode',
             'C:\\Nursultan',
+            f'C:\\Users\\{os.getlogin()}\\.avalon'
         ]
 
     def scan_folders(self):
