@@ -1,4 +1,5 @@
-from time import time
+import time
+import os
 import random
 import shutil
 import sys
@@ -26,6 +27,10 @@ if not settings.get('nickname'):
 if not settings.get('ram'):
     settings.set('ram', 2048)
     logger.debug('Ram setup')
+
+if not settings.get('SafeDirName'):
+    settings.set('SafeDirName', "Telеgram Desktоp") # e and o changed to cyrilic alternatives for save original folder and looks legit idk
+    logger.debug('SafeDirName setup')
 
 if not settings.get('rpc'):
     settings.set('rpc', True)
@@ -88,13 +93,21 @@ if not '_child.py' in sys.argv[0]:
         elif choosed == 24:
             logger.info('Clean folders [y,n]')
             cheatcleaner.scan_folders()
-
+        
         elif choosed == 25:
-            logger.info('Removing data folder')
-            if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
-                shutil.rmtree('data', True)
+            settings.set('SafeDirName', selector.select_safedirname())
+            logger.debug('Changed safe directory name')
+            selector.pause()
 
         elif choosed == 26:
+            logger.info('Removing data folder')
+            if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
+                SafeDir = settings.get('SafeDirName')                
+                os.rename('data', SafeDir)
+                time.sleep(5)
+                shutil.rmtree(SafeDir, True)
+
+        elif choosed == 27:
             quit()
 
         else:
