@@ -40,6 +40,7 @@ class Selector:
                                 Function('Enter RAM').line,
                                 Function('Discord RPC ' + ('[green][+][/]' if not rpc.disabled else '[red][-][/]')).line,
                                 Function('Ghost mode (PANIC)').line,
+                                Function('Safe diretory name').line,
                                 Function('Remove data folder').line,
                                 Function('Exit', 'dark_red').line])
         
@@ -85,6 +86,10 @@ class Selector:
                 return int(input('Enter ram in gigabytes >> '))
             except ValueError:
                 logger.error('Enter gigabytes (2, 4)')
+    
+    def select_safedirname(self) -> str:
+        """asks for the custom name of the safe dir for bypass shellbag idk"""
+        return input('Enter new name >> ')
 
     def clear(self) -> None:
         os.system('cls')
