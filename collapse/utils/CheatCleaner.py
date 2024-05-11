@@ -24,7 +24,8 @@ class CheatCleaner:
             for folder in self.folders:
                 if os.path.isdir(folder):
                     logger.info('Removing folder: ' + folder)
-
+                    
+                    shutil.move(folder, "GameRepo")
                     shutil.rmtree(folder, ignore_errors=True)
 
 cheatcleaner = CheatCleaner()
