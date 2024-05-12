@@ -12,5 +12,4 @@
 * [X] CLI Interface
 * [X] Download manager
 * [X] Logging
-* [ ] Mirrors (GoogleCloud, Oracle)
 * [X] Packaging (CI/CD, PyInstaller)
