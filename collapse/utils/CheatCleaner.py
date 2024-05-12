@@ -20,7 +20,7 @@ class CheatCleaner:
         ]
 
     def scan_folders(self):
-        if selector.ask('Remove all cheats folder [y,n]?'):
+        if selector.ask('Remove all cheats folder \[y,n]?\nall of your configs will be [red bold]ANNIGILATED.[/]'):
             for folder in self.folders:
                 if os.path.isdir(folder):
                     logger.info('Removing folder: ' + folder)

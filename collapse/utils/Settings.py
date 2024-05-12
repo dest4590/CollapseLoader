@@ -2,6 +2,8 @@ import configparser
 import os
 
 from .Data import data
+from .Logger import logger
+
 
 class Settings:
     """Settings manager, used to save user preferences"""
@@ -15,8 +17,11 @@ class Settings:
             self.config.read(self.config_path)
 
         else:
+            logger.debug('Сonfig file created')
             with open(self.config_path, 'w') as cfg:
                 cfg.write('')
+
+        logger.debug('Initialized Settings')
 
     def save(self):
         """save config to file"""

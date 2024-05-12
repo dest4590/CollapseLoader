@@ -87,7 +87,6 @@ class DataManager:
                 os.rename(dest, path_dir + filename)
         else:
             logger.debug('Installing mod')
-
             
             if not os.path.exists(fabric_folder):
                 os.mkdir(fabric_folder)

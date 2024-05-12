@@ -1,10 +1,12 @@
-from rich.console import Console
 import os
 
-from .Logger import logger
-from .Cheats import cheats
-from .RPC import rpc
+from rich.console import Console
+
 from .Cheat import Cheat
+from .Cheats import cheats
+from .Logger import logger
+from .Settings import settings
+from .RPC import rpc
 
 console = Console()
 
@@ -23,11 +25,11 @@ class Selector:
     def __init__(self) -> None:
         """class init that creates a text variable"""
 
-        logger.debug('Initialized selector')
+        logger.debug('Initialized Selector')
         
         self.text = self.make_text()
 
-        logger.debug('Created self.text')
+        logger.debug('Created selector text')
 
     def make_text(self) -> str:
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
@@ -64,7 +66,7 @@ class Selector:
     def ask(self, question: str) -> bool:
         """asks the user for an action"""
         while True:
-            i = input(f'{question} >> ')
+            i = console.input(f'{question} >> ')
             if i in ['y', 'yes', 'да', 'н']:
                 return True
             elif i in ['n', 'no', 'нет']:

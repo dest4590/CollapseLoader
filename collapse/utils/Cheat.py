@@ -1,11 +1,12 @@
-from contextlib import chdir
-import time
 import os
+import subprocess
+import time
+from contextlib import chdir
 
 from .Data import data
 from .Logger import logger
-from .Settings import settings
 from .RPC import rpc
+from .Settings import settings
 
 
 class Cheat:
@@ -58,6 +59,6 @@ class Cheat:
             os.system(command)
 
             logger.info('Exited from minecraft')
- 
+
             rpc.start_time = time.time()
             rpc.details = 'Choosing a client'

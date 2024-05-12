@@ -1,13 +1,19 @@
-from pypresence import Presence
 from threading import Thread
 from time import sleep, time
 
+from pypresence import Presence
+
 from .Data import data
-from .Settings import settings
 from .Logger import logger
+from .Settings import settings
+
 
 class RPC(Thread):
     """RPC, used to display activity in Discord"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        logger.debug('Initialized Discord RPC')
+        super().__init__(*args, **kwargs)
 
     client_id = '1225803664204234772'
     RPC = Presence(client_id)

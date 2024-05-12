@@ -1,17 +1,17 @@
-from time import time
 import random
 import shutil
 import sys
+from time import time
 
 from rich import print
 
-from .utils.CheatCleaner import cheatcleaner
 from .utils.Cheats import cheats
 from .utils.Data import data
 from .utils.Logger import logger
 from .utils.Logo import logo
 from .utils.RPC import rpc
 from .utils.Selector import selector
+from .utils.CheatCleaner import cheatcleaner
 from .utils.Settings import settings
 from .utils.Updater import updater
 
@@ -86,12 +86,13 @@ if not '_child.py' in sys.argv[0]:
                 selector.pause()
 
         elif choosed == 24:
-            logger.info('Clean folders [y,n]')
+            logger.debug('Clean folders [y,n]')
             cheatcleaner.scan_folders()
 
         elif choosed == 25:
-            logger.info('Removing data folder')
-            if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
+            logger.debug('Removing data folder')
+
+            if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well \\[y,n]'):
                 shutil.rmtree('data', True)
 
         elif choosed == 26:
