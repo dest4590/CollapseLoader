@@ -1,14 +1,15 @@
-from contextlib import chdir
-from tqdm import tqdm
-import requests
-import time
 import os
+import time
+from contextlib import chdir
 
-from ..Logger import logger
+import requests
+from tqdm import tqdm
+
 from ..Data import data
+from ..Logger import logger
+from ..ModManager import ModManager
 from ..RPC import rpc
 from ..Settings import settings
-from .ModManager import ModManager
 
 mods = []
 

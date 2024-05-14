@@ -1,6 +1,6 @@
+from .API import api
 from .Cheat import Cheat
 from .Data import data
-from .API import api
 
 cheats = []
 

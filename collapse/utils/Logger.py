@@ -1,4 +1,5 @@
 import logging
+
 import colorlog
 
 API = 11
@@ -6,7 +7,6 @@ API = 11
 logging.addLevelName(API, 'API')
 
 def setup_logger(name, level):
-
     formatter = colorlog.ColoredFormatter(
         "[%(log_color)s%(levelname)s%(reset)s] %(message_log_color)s%(message)s",
         datefmt=None,
@@ -35,4 +35,4 @@ def setup_logger(name, level):
 
     return logger
 
-logger = setup_logger('CollapseLogger', logging.INFO)
+logger = setup_logger('CollapseLogger', logging.DEBUG)

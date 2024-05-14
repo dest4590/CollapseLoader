@@ -1,6 +1,8 @@
-import os, sys
+import os
 import shutil
+import sys
 from glob import glob
+
 
 class Builder:
     def __init__(self, onefile: bool = True, clean: bool = True, name: str = 'CollapseLoader', icon: str = 'logo.ico', version: str = '1.0'):

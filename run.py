@@ -1,7 +1,7 @@
-import traceback
 import os
+import traceback
 
-dev = False
+dev = True
 
 if not dev:
     try:
@@ -15,5 +15,5 @@ if not dev:
 
         os.system('pause')
 
-if dev:
+elif dev:
     import collapse.main

@@ -1,5 +1,6 @@
 import os
-from ..Logger import logger
+
+from .Logger import logger
 
 
 class ModManager:

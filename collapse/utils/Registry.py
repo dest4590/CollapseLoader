@@ -1,4 +1,4 @@
-import winreg as wrg 
+import winreg as wrg
 
 from .Logger import logger
 

@@ -1,7 +1,9 @@
+import os
+import shutil
+
 from .Logger import logger
 from .Selector import selector
-import shutil
-import os
+
 
 class CheatCleaner:
     def __init__(self):
@@ -20,7 +22,7 @@ class CheatCleaner:
         ]
 
     def scan_folders(self):
-        if selector.ask('Remove all cheats folder \[y,n]?\nall of your configs will be [red bold]ANNIGILATED.[/]'):
+        if selector.ask(r'Remove all cheats folder \[y,n]?\nall of your configs will be [red bold]ANNIGILATED.[/]'):
             for folder in self.folders:
                 if os.path.isdir(folder):
                     logger.info('Removing folder: ' + folder)
