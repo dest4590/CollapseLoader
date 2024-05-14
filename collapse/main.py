@@ -41,7 +41,8 @@ if not '_child.py' in sys.argv[0]:
         print('[bold white]' + logo.full)
         print('[bold green]' + logo.tagline)
         print('[italic]VER: ' + data.version)
-        print('[blue]Discord: https://collapseloader.org/discord')
+        print('[slate_blue3]Discord: https://collapseloader.org/discord')
+        print('[dodger_blue1]Telegram: https://t.me/collapseloader')
         
         selector.show()
 
