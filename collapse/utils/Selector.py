@@ -5,12 +5,11 @@ from rich.console import Console
 from .Cheat import Cheat
 from .Cheats import cheats
 from .Logger import logger
-from .Settings import settings
 from .RPC import rpc
 
 console = Console()
 
-selector_offset = 20
+selector_offset = len(cheats) + 10
 
 class Function:
     def __init__(self, line: str, color: str = 'dark_cyan'):
