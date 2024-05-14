@@ -62,6 +62,8 @@ jobs:
         with:
           generateReleaseNotes: true
           name: "Github actions build: ${{ env.ARTIFACT_HASH }}"
+          tag: "autorelease-${{ env.ARTIFACT_HASH }}"
+          prerelease: true
           artifacts: "*.exe"
 
       - name: Get MD5 Hash of build
