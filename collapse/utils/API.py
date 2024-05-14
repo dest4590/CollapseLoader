@@ -13,7 +13,8 @@ class API:
         if local:
             self.server = 'http://127.0.0.1:8000/'
 
-        self.check_api()
+        # self.check_api()
+        # ^-- speed up code from 2335ms to 1733ms!
 
     def get(self, path: str) -> requests.Response:
         logger.log(API_LVL, f'API request to {path}')
