@@ -32,7 +32,7 @@ class Selector:
 
     def make_text(self) -> str:
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
-        text += '\n'.join([f'{i + 1}. {cheat.name}' for i, cheat in enumerate(cheats)])
+        text += '\n'.join([f'{i + 1}. {cheat}' for i, cheat in enumerate(cheats)])
 
         self.offset = len(cheats)
 
@@ -85,7 +85,7 @@ class Selector:
             try:
                 return int(input('Enter ram in gigabytes >> '))
             except ValueError:
-                logger.error('Enter gigabytes (2, 4)')
+                logger.error('Enter gigabytes (2, 4, 8)')
 
     def clear(self) -> None:
         os.system('cls')

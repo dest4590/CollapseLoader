@@ -1,17 +1,19 @@
 import os
 import time
 from contextlib import chdir
+from subprocess import PIPE, STDOUT, Popen
 
 from .Data import data
 from .Logger import logger
 from .RPC import rpc
 from .Settings import settings
-
+from .LogChecker import logchecker
 
 class Cheat:
-    def __init__(self, name: str, link: str, main_class: str = 'net.minecraft.client.main.Main', version: str = '1.12.2', internal: bool = False) -> None:
+    def __init__(self, name: str, link: str, main_class: str = 'net.minecraft.client.main.Main', version: str = '1.12.2', category: str = 'HVH', internal: bool = False) -> None:
         self.name = name
         self.link = link
+        self.category = category
 
         self.filename = os.path.basename(self.link)
         self.path = data.root_dir + self.filename 
@@ -22,6 +24,10 @@ class Cheat:
         self.version = version
         self.internal = internal
         self.silent = False
+
+    def __str__(self) -> str:
+        return f'{self.name.ljust(20)} <{self.category}/{self.version}>'
+
 
     def download(self) -> True:
         """Downloading cheat files"""
@@ -55,7 +61,16 @@ class Cheat:
 
             logger.debug(command)
 
-            os.system(command)
+            # os.system(command)
+    
+            process = Popen(command, stdout=PIPE, stderr=STDOUT)
+            buffer = []
+
+            for l in process.stdout: 
+                print(l.decode(), end='')
+                buffer.append(l.decode())
+
+            logchecker.checklogs(buffer)
 
             logger.info('Exited from minecraft')
 
