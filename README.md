@@ -4,7 +4,7 @@
 
 <h2 align=center>CLI-based utility to run minecraft clients</h2> 
 
-> You can also check out our website! https://collapseloader.org
+<h2>You can also download the latest version on our <a href="https://collapseloader.org">website</a></h2>
 
 <h2 align=center>Features</h2>
 
