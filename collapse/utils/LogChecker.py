@@ -18,5 +18,7 @@ class LogChecker:
             
             if 'java.lang.OutOfMemoryError: Java heap space' in logs:
                 logger.info(self.reason('has too little memory'))
+        else:
+            logger.debug('No crashed detected, alright!')
 
 logchecker = LogChecker()
