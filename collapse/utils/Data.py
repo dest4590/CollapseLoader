@@ -15,7 +15,7 @@ class DataManager:
         self.server = 'https://cdn.collapseloader.org/'
         self.server_fallback = 'https://example.com'
         self.repo = 'https://github.com/dest4590/CollapseLoader/'
-        self.version = '1.2.4'
+        self.version = '1.2.5'
         self.session = requests.Session()
 
         if not os.path.isdir(self.root_dir):
