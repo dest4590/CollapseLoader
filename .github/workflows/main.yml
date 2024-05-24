@@ -3,7 +3,9 @@ on:
   push:
     branches:
     - main
-
+    paths:
+      - '**.py'
+      
 jobs:
   build:
     runs-on: windows-latest
