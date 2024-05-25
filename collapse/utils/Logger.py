@@ -1,36 +1,44 @@
 import logging
-
 import colorlog
 
+# Custom log level
 API = 11
-
 logging.addLevelName(API, 'API')
 
-def setup_logger(name, level):
+def setup_logger(name, level=logging.DEBUG):
+    log_colors = {
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'red,bg_white',
+        'API': 'light_cyan'
+    }
+    
+    secondary_log_colors = {
+        'message': {
+            'ERROR': 'red',
+            'CRITICAL': 'red',
+            'INFO': 'blue',
+            'API': 'light_cyan',
+            'DEBUG': 'green',
+        }
+    }
+
     formatter = colorlog.ColoredFormatter(
         "[%(log_color)s%(levelname)s%(reset)s] %(message_log_color)s%(message)s",
         datefmt=None,
         reset=True,
-        log_colors={'DEBUG': 'cyan', 'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red', 'CRITICAL': 'red,bg_white', 'API': 'light_yellow'},
-        secondary_log_colors={
-            'message': {
-                'ERROR':    'red',
-                'CRITICAL': 'red',
-                'INFO':     'blue',
-                'API':      'light_yellow',
-                'DEBUG':    'green',
-            }
-        },
-        style='%',
+        log_colors=log_colors,
+        secondary_log_colors=secondary_log_colors,
+        style='%'
     )
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
 
     logger = logging.getLogger(name)
-
     logger.setLevel(level)
- 
     logger.addHandler(handler)
 
     return logger

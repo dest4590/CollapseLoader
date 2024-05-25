@@ -26,7 +26,8 @@ class Cheat:
         self.silent = False
 
     def __str__(self) -> str:
-        return f'{self.name.ljust(20)} <{self.category}/{self.version}>'
+        return self.name
+        # return f'{self.name.ljust(20)} <{self.category}/{self.version}>'
 
 
     def download(self) -> True:

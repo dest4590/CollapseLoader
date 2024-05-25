@@ -27,14 +27,19 @@ class Selector:
         logger.debug('Initialized Selector')
         
         self.text = self.make_text()
+        self.offset = len(cheats)
+
+        if self.offset == 0:
+            logger.warn('No clients available')
+            self.text += '\n\nNo clients available, make sure you have internet\n'
 
         logger.debug('Created selector text')
 
     def make_text(self) -> str:
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
-        text += '\n'.join([f'{i + 1}. {cheat}' for i, cheat in enumerate(cheats)])
 
-        self.offset = len(cheats)
+
+        text += '\n'.join([f'{i + 1}. {cheat}' for i, cheat in enumerate(cheats)])
 
         text += '\n'
         text += ''.join([Function('Select username').line,
