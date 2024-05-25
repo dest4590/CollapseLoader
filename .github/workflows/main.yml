@@ -27,7 +27,7 @@ jobs:
 
       - name: Run build scripts
         run: |
-            .\scripts\ci_cd.ps1
+            .\scripts\release.ps1
 
       - name: Make Build
         run: |
