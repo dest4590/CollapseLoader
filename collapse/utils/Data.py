@@ -11,7 +11,7 @@ class DataManager:
     def __init__(self) -> None:
         self.root_dir = 'data/'
         self.server = 'https://cdn.collapseloader.org/'
-        self.server_fallback = 'https://example.com/'
+        self.server_fallback = 'https://сdn-ru.collapseloader.org/'
         self.repo = 'https://github.com/dest4590/CollapseLoader/'
         self.version = '1.2.5'
         self.session = requests.Session()
