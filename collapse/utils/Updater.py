@@ -1,4 +1,5 @@
 import webbrowser
+
 import requests
 
 from .Data import data

@@ -1,8 +1,11 @@
 import os
 import zipfile
+
 import requests
 from tqdm import tqdm
+
 from .Logger import logger
+from .Servers import servers
 
 
 class DataManager:
@@ -10,8 +13,12 @@ class DataManager:
 
     def __init__(self) -> None:
         self.root_dir = 'data/'
-        self.server = 'https://cdn.collapseloader.org/'
-        self.server_fallback = 'https://cdn-ru.collapseloader.org/'
+        self.server = servers.check_servers()
+
+        if self.server == None:
+            logger.critical('No server was found for downloading files (this is a critical function in the loader)')
+            quit()
+
         self.repo = 'https://github.com/dest4590/CollapseLoader/'
         self.version = '1.2.5'
         self.session = requests.Session()
@@ -20,16 +27,8 @@ class DataManager:
             os.makedirs(self.root_dir)
             logger.debug('Created root dir')
 
-        try:
-            r = self.session.get(self.server + 'index.html', timeout=3)
-            if 'is not available in your location' in r.text:  # If server is blocked
-                self.server = self.server_fallback
-            logger.debug('Using the main server')
-        except requests.exceptions.RequestException:
-            logger.debug("The main server is down/inaccessible, using fallback")
-            self.server = self.server_fallback  # Uses a fallback server if the main server is down
-
         logger.debug('Initialized DataManager')
+
 
     def get_local(self, path: str) -> str:
         """Get file locally"""

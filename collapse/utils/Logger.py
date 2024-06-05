@@ -1,4 +1,5 @@
 import logging
+
 import colorlog
 
 # Custom log level

@@ -1,7 +1,8 @@
+from rich.markup import escape
+
 from .API import api
 from .Cheat import Cheat
 from .Data import data
-from rich.markup import escape
 
 cheats = []
 
