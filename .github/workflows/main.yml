@@ -63,7 +63,7 @@ jobs:
         run: |
           $MD5_HASH=Get-FileHash ${{ env.ARTIFACT_PATH }} -Algorithm MD5
           echo "MD5 hash of build $($MD5_HASH.Hash) check it to make sure you downloaded a clean build without viruses."
-          echo "MD5_HASH=$MD5_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          echo "MD5_HASH=$MD5_HASH.Hash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Make release
         uses: ncipollo/release-action@v1
@@ -73,4 +73,3 @@ jobs:
           tag: "autorelease-${{ env.ARTIFACT_HASH }}"
           prerelease: true
           artifacts: "*.exe"
-
