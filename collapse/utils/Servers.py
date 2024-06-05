@@ -20,6 +20,6 @@ class Servers:
 
 servers = Servers([
     'cdn.collapseloader.org',
+    'collapseloader.s3.aeza.cloud',
     'cdn-ru.collapseloader.org',
-    's3.aeza.cloud/collapseloader'
 ])
