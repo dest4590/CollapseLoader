@@ -27,8 +27,6 @@ class Cheat:
 
     def __str__(self) -> str:
         return self.name
-        # return f'{self.name.ljust(20)} <{self.category}/{self.version}>'
-
 
     def download(self) -> True:
         """Downloading cheat files"""
@@ -39,7 +37,7 @@ class Cheat:
 
         logger.info('Downloading client')
 
-        data.download(self.link)
+        data.download(self.filename)
     
     def run(self):
         """Run client"""

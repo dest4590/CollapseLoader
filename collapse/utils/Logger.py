@@ -20,6 +20,7 @@ def setup_logger(name, level=logging.DEBUG):
         'message': {
             'ERROR': 'red',
             'CRITICAL': 'red',
+            'WARNING': 'yellow',
             'INFO': 'blue',
             'API': 'light_cyan',
             'DEBUG': 'green',
@@ -45,3 +46,4 @@ def setup_logger(name, level=logging.DEBUG):
     return logger
 
 logger = setup_logger('CollapseLogger', logging.DEBUG)
+ 

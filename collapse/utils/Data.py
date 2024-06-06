@@ -1,8 +1,10 @@
 import os
+import random
 import zipfile
 
 import requests
-from tqdm import tqdm
+from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
+                           TextColumn, TransferSpeedColumn)
 
 from .Logger import logger
 from .Servers import servers
@@ -15,7 +17,7 @@ class DataManager:
         self.root_dir = 'data/'
         self.server = servers.check_servers()
 
-        if self.server == None:
+        if self.server is None:
             logger.critical('No server was found for downloading files (this is a critical function in the loader)')
             quit()
 
@@ -70,12 +72,14 @@ class DataManager:
             logger.error(f"Failed to download {path}: {e}")
             return
 
-        with tqdm(total=total_size, desc=path, unit="B", unit_scale=True, ascii=True, ncols=100, colour='blue') as progressbar:
+        with Progress(TextColumn(f'[blue]{path}'), SpinnerColumn(f'dots{random.randint(2, 9)}'), BarColumn(), DownloadColumn(), TransferSpeedColumn()) as progress:
+            task = progress.add_task('', total=total_size)
+            
             with open(dest, "ab") as f:
                 for chunk in response.iter_content(1024):
                     if chunk:
                         f.write(chunk)
-                        progressbar.update(len(chunk))
+                        progress.update(task, advance=len(chunk))
 
         try:
             if filename.endswith('.zip'):

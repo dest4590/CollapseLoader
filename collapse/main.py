@@ -19,7 +19,7 @@ def initialize_settings():
     if not settings.get('nickname'):
         settings.set('nickname', f'Collapse{random.randint(1000, 9999)}')
         logger.debug('Nickname setup')
-        print('[bold gray23]Remember to change your nickname!')
+        logger.warn('Remember to change your nickname!')
 
     if not settings.get('ram'):
         settings.set('ram', 2048)
