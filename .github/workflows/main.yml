@@ -60,18 +60,18 @@ jobs:
         with:
           name: CollapseLoader (${{ env.ARTIFACT_HASH }})
           path: ${{ env.ARTIFACT_PATH }}
-          
+      
       - name: Get MD5 Hash of build
         run: |
-          $MD5_HASH=Get-FileHash ${{ env.ARTIFACT_PATH }} -Algorithm MD5
-          echo "MD5 hash of build $($MD5_HASH.Hash) check it to make sure you downloaded a clean build without viruses."
-          echo "MD5_HASH=$MD5_HASH.Hash" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
+            $MD5_HASH=Get-FileHash ${{ env.ARTIFACT_PATH }} -Algorithm MD5
+            echo "MD5 hash of build $($MD5_HASH.Hash) check it to make sure you downloaded a clean build without viruses."
+            echo "MD5_HASH=$($MD5_HASH.Hash)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+  
       - name: Make release
         uses: ncipollo/release-action@v1
         with:
-          body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}"
-          name: "Github actions build: ${{ env.ARTIFACT_HASH }}"
-          tag: "autorelease-${{ env.ARTIFACT_HASH }}"
-          prerelease: true
-          artifacts: "*.exe"
+            body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}"
+            name: "Github actions build: ${{ env.ARTIFACT_HASH }}"
+            tag: "autorelease-${{ env.ARTIFACT_HASH }}"
+            prerelease: true
+            artifacts: "*.exe"
