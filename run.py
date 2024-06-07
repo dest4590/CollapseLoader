@@ -5,7 +5,8 @@ dev = True
 
 if not dev:
     try:
-        import collapse.main
+        from collapse.main import main
+        main()
     except Exception as e:
         print('An error occurred:')
 
@@ -16,4 +17,5 @@ if not dev:
         os.system('pause')
 
 elif dev:
-    import collapse.main
+    from collapse.main import main
+    main()

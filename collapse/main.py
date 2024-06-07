@@ -2,6 +2,7 @@ import random
 import shutil
 import sys
 import time
+
 from rich import print
 
 from .utils.CheatCleaner import cheatcleaner
@@ -9,10 +10,12 @@ from .utils.Cheats import cheats
 from .utils.Data import data
 from .utils.Logger import logger
 from .utils.Logo import logo
+from .utils.Message import messageclient
 from .utils.RPC import rpc
 from .utils.Selector import selector
 from .utils.Settings import settings
 from .utils.Updater import updater
+
 
 def initialize_settings():
     """Initialize user settings with default values if not already set."""
@@ -28,6 +31,10 @@ def initialize_settings():
     if not settings.get('rpc'):
         settings.set('rpc', True)
         logger.debug('RPC setup')
+
+    if not settings.get('read_messages'):
+        settings.set('read_messages', '0,')
+        logger.debug('Readed Messages Setup')
 
 def handle_rpc():
     """Handle the RPC settings and start the RPC service if necessary."""
@@ -91,6 +98,11 @@ def handle_data_folder_removal():
     if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
         shutil.rmtree('data', True)
 
+def handle_message_showing():
+    """Handle the showing of messages."""
+
+    messageclient.show_messages()
+
 def main():
     """Main function to run the loader."""
     updater.check_version()
@@ -100,10 +112,11 @@ def main():
     if '_child.py' not in sys.argv[0]:
         while True:
             display_main_menu()
+
+            handle_message_showing()
             try:
                 choosed = int(selector.select())
                 handle_selection(choosed)
             except ValueError:
                 logger.error('Choose number')
                 continue
-main()
