@@ -25,6 +25,7 @@ class RPC(Thread):
 
     def update(self):
         """updates the activity"""
+
         try:
             self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif', 
                             buttons=[
@@ -34,15 +35,15 @@ class RPC(Thread):
                             start=self.start_time,
                             large_text=f'Version {data.version}' )
         except:
-            logger.error('RPC crashed')
+            logger.debug('RPC crashed')
             logger.debug('Trying to connect')
 
             try:
-                    self.RPC.connect()
-                    logger.info('Connected to discord')
+                self.RPC.connect()
+                logger.debug('Connected to discord')
 
             except:
-                logger.error('Cannot reconnect to Discord')
+                logger.debug('Cannot reconnect to Discord')
 
 
     def run(self):
@@ -50,8 +51,8 @@ class RPC(Thread):
 
         try:
             self.RPC.connect()
-        except:
-            return
+        except Exception as e:
+            logger.debug(f'RPC error: {e}')
         
         while True:
             if not self.disabled:
@@ -60,6 +61,6 @@ class RPC(Thread):
             else:
                 self.RPC.clear()
 
-            sleep(1)
+            sleep(5)
 
 rpc = RPC()

@@ -9,14 +9,21 @@ from .RPC import rpc
 
 console = Console()
 
-selector_offset = len(cheats) + 10
+selector_offset = len(cheats) + 11
+functions = []
 
 class Function:
     def __init__(self, line: str, color: str = 'dark_cyan'):
         global selector_offset
-        selector_offset += 1
 
-        self.line = f'\n[{color}]{selector_offset}. {line}[/]'
+        self.line_text = line
+
+        if not any(func.line_text == self.line_text for func in functions):
+            self.line = f'\n[{color}]{selector_offset}. {line}[/]'
+            functions.append(self)
+            selector_offset += 1
+        else:
+            self.line = next(func.line for func in functions if func.line_text == self.line_text)
 
 class Selector:
     """Selector, used to select clients, and tools, the main part of the CLI loader"""
@@ -53,11 +60,11 @@ class Selector:
         return text
     
     def update_text(self) -> None:
-        """refreshes self.text property"""
+        """refreshes text property"""
         self.text = self.make_text()
 
     def show(self) -> None:
-        """print self.text to screen"""
+        """print text to screen"""
         console.print(self.text, highlight=False)
 
     def select(self) -> str:
@@ -66,7 +73,7 @@ class Selector:
     
     def pause(self) -> None:
         """pauses to allow the user to read the text"""
-        input('Press enter >> ')
+        os.system('pause')
 
     def ask(self, question: str) -> bool:
         """asks the user for an action"""

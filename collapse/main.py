@@ -48,24 +48,24 @@ def handle_selection(choosed):
         cheat = selector.get_cheat_by_index(choosed)
         cheat.download()
         cheat.run()
-    elif choosed == selector.offset + 11:
-        settings.set('nickname', selector.select_username())
+    elif choosed == selector.offset + 11: # Select username
+        settings.set('nickname', selector.select_username(), 'Options')
         logger.debug('Changed nickname')
         selector.pause()
-    elif choosed == selector.offset + 12:
+    elif choosed == selector.offset + 12: # Enter RAM
         settings.set('ram', selector.select_ram() * 1024)
         logger.debug('Changed ram')
         selector.pause()
-    elif choosed == selector.offset + 13:
+    elif choosed == selector.offset + 13: # Discord RPC
         handle_rpc_toggle()
-    elif choosed == selector.offset + 14:
+    elif choosed == selector.offset + 14: # Ghost mode (PANIC)
         logger.debug('Clean folders [y,n]')
         cheatcleaner.scan_folders()
-    elif choosed == selector.offset + 15:
+    elif choosed == selector.offset + 15: # Remove data folder
         handle_data_folder_removal()
-    elif choosed == selector.offset + 16:
+    elif choosed == selector.offset + 16: # Settings Menu
         options_menu.show()
-    elif choosed == selector.offset + 17:
+    elif choosed == selector.offset + 17: # Exit
         quit()
     else:
         logger.error('Choose number')
@@ -82,6 +82,7 @@ def handle_rpc_toggle():
         settings.set('rpc', True)
         rpc.disabled = False
         rpc.start_time = time.time()
+
     selector.update_text()
     selector.pause()
 

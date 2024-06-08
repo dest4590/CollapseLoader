@@ -8,15 +8,19 @@ option_list = []
 
 class Option:
     """Option"""
-    def __init__(self, name: str, description: str = ''):
+    def __init__(self, name: str, description: str = '', option_type = str):
         self.name = name
         self.description = description
+        self.option_type = option_type
         self.value = settings.get(name, 'Options')
-
-        self.line = f"{name.title()}[/] / [violet]{description}[/] * [medium_purple3]{self.value}[/]"
 
         if description != '':
             option_list.append(self)
+
+    @property
+    def line(self):
+        self.value = settings.get(self.name, 'Options')
+        return f"{self.name.title()}[/] / [violet]{self.description}[/] * [medium_purple3]{self.value}[/]"
 
     def create(self, value, header: str = 'Options'):
         if not settings.get(self.name, header):
@@ -24,11 +28,19 @@ class Option:
             logger.debug(f'Created {self.name} option with value: {value} ({header})')
 
     def input(self):
-        new = console.input(f'Enter value for {self.name}: ')
+        if self.option_type == str:
+            new = console.input(f'Enter value for {self.name}: ')
 
-        settings.set(self.name, new, 'Options')
-        logger.info(f'Set setting {self.name} to {new}')
-        selector.pause()
+            settings.set(self.name, new, 'Options')
+            logger.info(f'Set setting {self.name} to {new}')
+            selector.pause()
+
+        elif self.option_type == bool:
+            current_value = settings.get(self.name, 'Options')
+            new_value = not (current_value.lower() == 'true')
+            settings.set(self.name, new_value, 'Options')
+
+            logger.info(f'Switched setting {self.name}')
 
     @staticmethod
     def get_option_by_index(index: int):
@@ -36,6 +48,7 @@ class Option:
         return option_list[index - 1]
 
 Option('nickname', 'User nickname for minecraft')
+Option('show_nickname', 'is responsible for whether nickname will be shown in RPC', bool).create(False)
 
 class Menu:
     """Options menu"""
@@ -45,10 +58,10 @@ class Menu:
     def show(self):
         while True:
             print('\n')
-            console.print('\n'.join(
-                [f'[green]{i + 1}. {option.line}' for i, option in enumerate(option_list)] +
-                [f'[dark_red]{self.offset + 1}. Return[/]']
-            ), highlight=False)
+            option_lines = [f'[green]{i + 1}. {option.line}' for i, option in enumerate(option_list)]
+            option_lines.append(f'[dark_red]{self.offset + 1}. Return[/]')
+
+            console.print('\n'.join(option_lines), highlight=False)
 
             try:
                 i = int(console.input('Choose option: '))
