@@ -17,7 +17,7 @@ class API:
         logger.log(API_LVL, f'API request to {path}')
         try:
             return self.session.get(url)
-        except (ConnectionError, MaxRetryError, NameResolutionError) as e:
+        except (ConnectionError, MaxRetryError, NameResolutionError, ConnectionRefusedError) as e:
             logger.error(f'Failed to reach {url}: {e}')
             raise
         except requests.exceptions.RequestException as e:

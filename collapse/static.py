@@ -1,7 +1,7 @@
 # Developer variables
 
 # Use local variant of CollapseWeb
-LOCAL_API = True
+LOCAL_API = False
 
 # Show DEBUG level of logs
 DEBUG_LOGS = True

@@ -13,7 +13,7 @@ class Option:
         self.description = description
         self.value = settings.get(name, 'Options')
 
-        self.line = f"{name.capitalize()}[/] / [violet]{description}[/] * [medium_purple3]{self.value}[/]"
+        self.line = f"{name.title()}[/] / [violet]{description}[/] * [medium_purple3]{self.value}[/]"
 
         if description != '':
             option_list.append(self)
@@ -50,7 +50,6 @@ class Menu:
                 [f'[dark_red]{self.offset + 1}. Return[/]']
             ), highlight=False)
 
-            
             try:
                 i = int(console.input('Choose option: '))
 
