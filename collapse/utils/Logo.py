@@ -8,6 +8,14 @@ class Logo:
 \____/  \___/ |_||_| \__,_|| .__/ |___/ \___|
                            |_|               '''
 
+   short = r'''
+   ___    __  
+  / __\  / /  
+ / /    / /   
+/ /___ / /___ 
+\____/ \____/ 
+              '''
+
    tagline = 'CLI-based utility to run minecraft cheats'
 
 logo = Logo()

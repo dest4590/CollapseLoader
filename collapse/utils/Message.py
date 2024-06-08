@@ -1,13 +1,25 @@
-from .Logger import logger
-from .API import api
-from .Settings import settings
+import datetime
+
 from rich import print
-from datetime import datetime, timedelta, timezone
+
+from ..static import SAVE_MESSAGES
+from .API import api
+from .Logger import logger
+from .Settings import settings
+
 
 class MessageClient:
     """Client for get messages"""
+
+    shown = False
+
     def __init__(self):
         self.messages = api.get('messages').json()
+        self.types = {
+            'info': '[green]Info[/]',
+            'warn': '[yellow]Warning[/]',
+            'maintenance': '[blue]Maintenance[/]'
+        }
 
         logger.debug('Get messages')
 
@@ -18,24 +30,29 @@ class MessageClient:
             # If remote message not in local message
 
             if not message['id'] in [int(id) for id in settings.get('read_messages').split(',')[:-1]]:
-                settings.set('read_messages', settings.get('read_messages') + f'{message["id"]},')
+                if SAVE_MESSAGES:
+                    settings.set('read_messages', settings.get('read_messages') + f'{message["id"]},')
 
-                post_time = datetime.fromisoformat(message['post_at']).astimezone(timezone.utc)
-                now = datetime.now(timezone.utc)
+                local_tz = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo  # Get local timezone from system
+                post_time = datetime.datetime.fromisoformat(message['post_at']).astimezone(local_tz)
+                now = datetime.datetime.now(local_tz)
                 time_difference = now - post_time
 
-                if time_difference < timedelta(minutes=1):
+                if time_difference < datetime.timedelta(minutes=1):
                     time_ago = "just now"
-                elif time_difference < timedelta(hours=1):
-                    minutes_ago = time_difference.seconds // 60
-                    time_ago = f"{minutes_ago} minutes ago"
-                elif time_difference < timedelta(days=1):
-                    hours_ago = time_difference.seconds // 3600
-                    time_ago = f"{hours_ago} hours ago"
                 else:
-                    days_ago = time_difference.days
-                    time_ago = f"{days_ago} days ago"
+                    total_seconds = time_difference.total_seconds()
+                    if total_seconds < 3600:
+                        time_ago = f"{int(total_seconds // 60)} minutes ago"
+                    elif total_seconds < 86400:
+                        time_ago = f"{int(total_seconds // 3600)} hours ago"
+                    else:
+                        time_ago = f"{time_difference.days} days ago"
 
-                print(f"\nNew message from developer {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
-
+                try:
+                    print(f"\n{self.types[message['type']]} message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
+                except KeyError:
+                    print(f"\n[gray]Unknown[/] type of message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
+                    
+        self.shown = True
 messageclient = MessageClient()

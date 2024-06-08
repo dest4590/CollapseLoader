@@ -6,7 +6,7 @@ from .Data import data
 
 cheats = []
 
-for cheat in api.clients():
+for cheat in api.get('clients').json():
     if cheat["show_in_loader"]:
         cheats.append(
             Cheat(

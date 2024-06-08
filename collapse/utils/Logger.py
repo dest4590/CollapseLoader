@@ -2,6 +2,8 @@ import logging
 
 import colorlog
 
+from ..static import DEBUG_LOGS
+
 # Custom log level
 API = 11
 logging.addLevelName(API, 'API')
@@ -45,5 +47,5 @@ def setup_logger(name, level=logging.DEBUG):
 
     return logger
 
-logger = setup_logger('CollapseLogger', logging.DEBUG)
+logger = setup_logger('CollapseLogger', logging.DEBUG if DEBUG_LOGS else logging.INFO)
  

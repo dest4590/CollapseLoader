@@ -47,6 +47,7 @@ class Selector:
                                 Function('Discord RPC ' + ('[green][+][/]' if not rpc.disabled else '[red][-][/]')).line,
                                 Function('Ghost mode (PANIC)').line,
                                 Function('Remove data folder').line,
+                                Function('Settings Menu').line,
                                 Function('Exit', 'dark_red').line])
         
         return text
@@ -70,7 +71,7 @@ class Selector:
     def ask(self, question: str) -> bool:
         """asks the user for an action"""
         while True:
-            i = console.input(f'{question} >> ')
+            i = console.input(f'{question} >> ').lower()
             if i in ['y', 'yes', 'да', 'н']:
                 return True
             elif i in ['n', 'no', 'нет']:

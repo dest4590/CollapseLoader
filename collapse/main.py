@@ -5,36 +5,27 @@ import time
 
 from rich import print
 
-from .utils.CheatCleaner import cheatcleaner
-from .utils.Cheats import cheats
-from .utils.Data import data
 from .utils.Logger import logger
 from .utils.Logo import logo
+from .utils.Data import data
+from .utils.Cheats import cheats
 from .utils.Message import messageclient
-from .utils.RPC import rpc
-from .utils.Selector import selector
 from .utils.Settings import settings
+from .utils.Selector import selector
+from .utils.Options import options_menu, Option
 from .utils.Updater import updater
+from .utils.RPC import rpc
+from .utils.CheatCleaner import cheatcleaner
 
 
 def initialize_settings():
     """Initialize user settings with default values if not already set."""
-    if not settings.get('nickname'):
-        settings.set('nickname', f'Collapse{random.randint(1000, 9999)}')
-        logger.debug('Nickname setup')
-        logger.warn('Remember to change your nickname!')
+    Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
+    logger.warn('Remember to change your nickname!')
 
-    if not settings.get('ram'):
-        settings.set('ram', 2048)
-        logger.debug('Ram setup')
-
-    if not settings.get('rpc'):
-        settings.set('rpc', True)
-        logger.debug('RPC setup')
-
-    if not settings.get('read_messages'):
-        settings.set('read_messages', '0,')
-        logger.debug('Readed Messages Setup')
+    Option('ram').create(2048, 'Loader')
+    Option('rpc').create(True, 'Loader')
+    Option('read_messages').create('0,', 'Loader')
 
 def handle_rpc():
     """Handle the RPC settings and start the RPC service if necessary."""
@@ -73,6 +64,8 @@ def handle_selection(choosed):
     elif choosed == selector.offset + 15:
         handle_data_folder_removal()
     elif choosed == selector.offset + 16:
+        options_menu.show()
+    elif choosed == selector.offset + 17:
         quit()
     else:
         logger.error('Choose number')
@@ -95,8 +88,10 @@ def handle_rpc_toggle():
 def handle_data_folder_removal():
     """Handle the removal of the data folder after user confirmation."""
     logger.debug('Removing data folder')
-    if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well [y,n]'):
+    if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well \[y,n]'):
         shutil.rmtree('data', True)
+
+        logger.info('Removed data folder')
 
 def handle_message_showing():
     """Handle the showing of messages."""
@@ -113,7 +108,9 @@ def main():
         while True:
             display_main_menu()
 
-            handle_message_showing()
+            if not messageclient.shown:
+                handle_message_showing()
+
             try:
                 choosed = int(selector.select())
                 handle_selection(choosed)

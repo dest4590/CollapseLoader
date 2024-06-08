@@ -30,7 +30,7 @@ class Settings:
 
     def set(self, key: str, value: str, header: str = 'Loader'):
         """sets setting, and saves it to the config."""
-        
+
         if header not in self.config:
             self.config[header] = {}
 

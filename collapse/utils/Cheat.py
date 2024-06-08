@@ -85,7 +85,7 @@ class Cheat:
                 f"-Xmx{settings.get('ram')}M",
                 f"-Djava.library.path={native_path}",
                 f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
-                f"--username {settings.get('nickname')}",
+                f"--username {settings.get('nickname', 'Options')}",
                 "--gameDir .\\",
                 f"--assetsDir {asset_path}",
                 f"--assetIndex {self.version}",

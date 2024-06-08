@@ -8,6 +8,7 @@ from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
 
 from .Logger import logger
 from .Servers import servers
+from ..static import REPO_URL, VERSION
 
 
 class DataManager:
@@ -21,8 +22,8 @@ class DataManager:
             logger.critical('No server was found for downloading files (this is a critical function in the loader)')
             quit()
 
-        self.repo = 'https://github.com/dest4590/CollapseLoader/'
-        self.version = '1.2.5'
+        self.repo = REPO_URL
+        self.version = VERSION
         self.session = requests.Session()
 
         if not os.path.isdir(self.root_dir):

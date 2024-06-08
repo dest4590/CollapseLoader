@@ -1,10 +1,14 @@
+# adding features for developers, used for developers
 
-# unremoves features for developers, used for CI/CD
+$file = '.\collapse\static.py'
+(Get-Content $file) -replace "DEBUG_LOGS = False", "DEBUG_LOGS = True" | Set-Content $file
 
-$file = '.\collapse\utils\Logger.py'
-$regex = "logger = setup_logger\('CollapseLogger', logging\.INFO\)"
-(Get-Content $file) -replace $regex, "logger = setup_logger('CollapseLogger', logging.DEBUG)" | Set-Content $file
+
+$file = '.\collapse\static.py'
+(Get-Content $file) -replace "LOCAL_API = False", "LOCAL_API = True" | Set-Content $file
+
+$file = '.\collapse\static.py'
+(Get-Content $file) -replace "DO_NOT_SAVE_MESSAGES = False", "DO_NOT_SAVE_MESSAGES = True" | Set-Content $file
 
 $file = '.\run.py'
-$regex = "dev = False"
-(Get-Content $file) -replace $regex, "dev = True" | Set-Content $file
+(Get-Content $file) -replace "dev = False", "dev = True" | Set-Content $file

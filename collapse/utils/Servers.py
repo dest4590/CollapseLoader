@@ -1,7 +1,7 @@
 import requests
 
 from .Logger import logger
-
+from ..static import SERVERS
 
 class Servers:
     def __init__(self, urls: list):
@@ -18,8 +18,4 @@ class Servers:
                 logger.info(f"The server {server} is down/inaccessible")
                 self.servers.remove(server)
 
-servers = Servers([
-    'cdn.collapseloader.org',
-    'collapseloader.s3.aeza.cloud',
-    'cdn-ru.collapseloader.org',
-])
+servers = Servers(SERVERS)
