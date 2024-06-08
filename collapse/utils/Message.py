@@ -18,7 +18,7 @@ class MessageClient:
             # If remote message not in local message
 
             if not message['id'] in [int(id) for id in settings.get('read_messages').split(',')[:-1]]:
-                settings.set('read_messages', settings.get('read_messages') + f'{message['id']},')
+                settings.set('read_messages', settings.get('read_messages') + f'{message["id"]},')
 
                 post_time = datetime.fromisoformat(message['post_at']).astimezone(timezone.utc)
                 now = datetime.now(timezone.utc)
