@@ -4,7 +4,7 @@ import requests
 
 from .Data import data
 from .Logger import logger
-from .Selector import selector
+from .CLI import selector
 
 
 class Updater:

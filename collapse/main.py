@@ -11,7 +11,7 @@ from .utils.Data import data
 from .utils.Cheats import cheats
 from .utils.Message import messageclient
 from .utils.Settings import settings
-from .utils.Selector import selector
+from .utils.CLI import selector
 from .utils.Options import options_menu, Option
 from .utils.Updater import updater
 from .utils.RPC import rpc

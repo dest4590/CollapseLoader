@@ -2,7 +2,7 @@ import os
 import shutil
 
 from .Logger import logger
-from .Selector import selector
+from .CLI import selector
 
 
 class CheatCleaner:
