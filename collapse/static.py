@@ -11,7 +11,7 @@ SAVE_MESSAGES = True
 
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'
-VERSION = '1.2.5'
+VERSION = '1.2.6'
 
 SERVERS = [
     'cdn.collapseloader.org',
