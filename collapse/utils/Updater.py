@@ -44,7 +44,7 @@ class Updater:
         if self.remote_version and self.remote_version > self.local_version:
             logger.info('Update your loader!')
 
-            if selector.ask('Open a download page [y,n]'):
+            if selector.ask('Open a download page (y,n)'):
                 webbrowser.open(data.repo + 'releases/latest')
 
 updater = Updater()
