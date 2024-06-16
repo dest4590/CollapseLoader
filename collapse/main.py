@@ -68,7 +68,7 @@ def handle_selection(choosed):
     elif choosed == selector.offset + 16: # Settings Menu
         options_menu.show()
     elif choosed == selector.offset + 17: # Exit
-        quit()
+        sys.exit(1)
     else:
         logger.error('Choose number')
         selector.pause()
