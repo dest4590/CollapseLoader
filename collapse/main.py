@@ -4,7 +4,6 @@ import sys
 import time
 
 from rich import print
-import webview
 
 from .utils.Logger import logger
 from .utils.Logo import logo
