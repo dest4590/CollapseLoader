@@ -4,6 +4,7 @@ import sys
 import time
 
 from rich import print
+import webview
 
 from .utils.Logger import logger
 from .utils.Logo import logo
@@ -21,7 +22,9 @@ from .utils.CheatCleaner import cheatcleaner
 def initialize_settings():
     """Initialize user settings with default values if not already set."""
     Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
-    logger.warn('Remember to change your nickname!')
+    
+    if not settings.get('nickname', 'Options'):
+        logger.warn('Remember to change your nickname!')
 
     Option('ram').create(2048, 'Loader')
     Option('rpc').create(True, 'Loader')
