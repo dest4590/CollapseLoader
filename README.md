@@ -23,4 +23,7 @@
 
 
 ## Showcase
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5094396fde6140c991b7bc233d601a07)](https://app.codacy.com/gh/dest4590/CollapseLoader?utm_source=github.com&utm_medium=referral&utm_content=dest4590/CollapseLoader&utm_campaign=Badge_Grade)
+
 <img src="https://github.com/dest4590/CollapseLoader/assets/80628386/797ebbc4-2f0d-40ec-b32c-e34ae3e98d47" width=300 style="border-radius: 5px;">
