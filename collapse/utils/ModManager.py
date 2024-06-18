@@ -9,7 +9,7 @@ class ModManager:
 
     def get_mod_list(self):
         return os.listdir(self.root_folder)
-    
+
     def get_mod(self, name: str):
         return self.root_folder + name
     

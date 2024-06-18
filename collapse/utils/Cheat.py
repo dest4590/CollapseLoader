@@ -10,7 +10,11 @@ from .Settings import settings
 from .LogChecker import logchecker
 
 class Cheat:
-    def __init__(self, name: str, link: str, main_class: str = 'net.minecraft.client.main.Main', version: str = '1.12.2', category: str = 'HVH', internal: bool = False) -> None:
+    def __init__(self, name: str, link: str, 
+                 main_class: str = 'net.minecraft.client.main.Main', 
+                 version: str = '1.12.2', 
+                 category: str = 'HVH', internal: bool = False) -> None:
+        
         self.name = name
         self.link = link
         self.category = category

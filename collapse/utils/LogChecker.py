@@ -21,4 +21,5 @@ class LogChecker:
         else:
             logger.debug('No crashed detected, alright!')
 
+
 logchecker = LogChecker()

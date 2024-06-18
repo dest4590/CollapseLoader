@@ -1,5 +1,4 @@
 import requests
-from requests.exceptions import ConnectionError
 from urllib3.exceptions import MaxRetryError, NameResolutionError
 
 from ..static import LOCAL_API

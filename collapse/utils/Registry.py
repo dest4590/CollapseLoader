@@ -9,7 +9,7 @@ class Registry:
 
     def __init__(self):
         self.location = wrg.HKEY_CURRENT_USER
-        self.soft = wrg.OpenKeyEx(self.location, r"SOFTWARE\\", 0, wrg.KEY_SET_VALUE) 
+        self.soft = wrg.OpenKeyEx(self.location, r"SOFTWARE\\", 0, wrg.KEY_SET_VALUE)
         logger.debug('Initialized Registry')
 
     def set_value(self, name: str, value: str, path: str):
@@ -30,5 +30,6 @@ class Registry:
 
     def get_value(self, name: str, path: str):
         return wrg.QueryValueEx(wrg.OpenKeyEx(self.location, path, 0, wrg.KEY_SET_VALUE), name)[0]
+
 
 regedit = Registry()

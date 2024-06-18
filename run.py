@@ -7,7 +7,7 @@ if not dev:
     try:
         from collapse.main import main
         main()
-    except Exception as e:
+    except Exception:
         print('An error occurred:')
 
         print('==========')

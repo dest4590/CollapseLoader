@@ -18,4 +18,5 @@ class Servers:
                 logger.info(f"The server {server} is down/inaccessible")
                 self.servers.remove(server)
 
+
 servers = Servers(SERVERS)

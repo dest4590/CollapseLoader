@@ -27,14 +27,14 @@ class RPC(Thread):
         """updates the activity"""
 
         try:
-            self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif', 
+            self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif',
                             buttons=[
                                 {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
-                                {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'} 
+                                {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'}
                             ],
                             start=self.start_time,
-                            large_text=f'Version {data.version}' )
-        except:
+                            large_text=f'Version {data.version}')
+        except Exception:
             logger.debug('RPC crashed')
             logger.debug('Trying to connect')
 

@@ -30,4 +30,5 @@ class CheatCleaner:
 
                     shutil.rmtree(folder, ignore_errors=True)
 
+
 cheatcleaner = CheatCleaner()

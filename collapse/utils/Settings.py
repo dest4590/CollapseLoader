@@ -47,4 +47,5 @@ class Settings:
         except KeyError:
             return False
 
+
 settings = Settings()

@@ -24,7 +24,7 @@ class Updater:
 
     def get_remote_version(self) -> str:
         try:
-            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/releases/latest')
+            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/releases/latest', timeout=5)
             response.raise_for_status()
             return response.json().get('tag_name')
         except requests.exceptions.RequestException as e:
@@ -33,7 +33,7 @@ class Updater:
 
     def get_latest_commit(self) -> str:
         try:
-            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/commits', params={'per_page': 1})
+            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/commits', params={'per_page': 1}, timeout=5)
             response.raise_for_status()
             return response.json()[0].get('sha', '')[:7]
         except requests.exceptions.RequestException as e:
@@ -46,5 +46,6 @@ class Updater:
 
             if selector.ask('Open a download page (y,n)'):
                 webbrowser.open(data.repo + 'releases/latest')
+
 
 updater = Updater()

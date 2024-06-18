@@ -103,4 +103,5 @@ class Selector:
     def clear(self) -> None:
         os.system('cls')
 
+
 selector = Selector()

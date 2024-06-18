@@ -41,7 +41,7 @@ class DataManager:
         """Gets a link from the web, uses a fallback server if the main one is down"""
         return self.server + path
 
-    def download(self, path: str, destination: str = None, mod: bool = False) -> None:
+    def download(self, path: str, destination: str = None) -> None:
         logger.debug(f'Downloading {path}')
         filename = os.path.basename(path)
         jar = os.path.splitext(filename)[0] + '.jar'
@@ -57,8 +57,8 @@ class DataManager:
             if os.path.exists(os.path.join(path_dir, jar)):
                 logger.debug(f'{path} file already downloaded, skip')
                 return
-            if not os.path.isdir(path_dir) and not mod:
-                os.makedirs(path_dir, exist_ok=True)
+            
+            os.makedirs(path_dir, exist_ok=True)
 
         headers = {}
         
@@ -73,7 +73,11 @@ class DataManager:
             logger.error(f"Failed to download {path}: {e}")
             return
 
-        with Progress(TextColumn(f'[blue]{path}'), SpinnerColumn(f'dots{random.randint(2, 9)}'), BarColumn(), DownloadColumn(), TransferSpeedColumn()) as progress:
+        with Progress(TextColumn(f'[blue]{path}'), 
+                      SpinnerColumn(f'dots{random.randint(2, 9)}'), 
+                      BarColumn(), 
+                      DownloadColumn(), 
+                      TransferSpeedColumn()) as progress:
             task = progress.add_task('', total=total_size)
             
             with open(dest, "ab") as f:
