@@ -8,7 +8,7 @@ from rich import print
 from .utils.Logger import logger
 from .utils.Logo import logo
 from .utils.Data import data
-from .utils.Cheats import cheats
+from .utils.Cheats import cheat_manager
 from .utils.Message import messageclient
 from .utils.Settings import settings
 from .utils.CLI import selector
@@ -46,7 +46,7 @@ def display_main_menu():
 
 def handle_selection(choosed):
     """Handle the user's menu selection."""
-    if choosed <= len(cheats):
+    if choosed <= len(cheat_manager.cheats):
         cheat = selector.get_cheat_by_index(choosed)
         cheat.download()
         cheat.run()
@@ -105,7 +105,7 @@ def main():
     """Main function to run the loader."""
     updater.check_version()
     initialize_settings()
-    handle_rpc()
+    # handle_rpc()
 
     if '_child.py' not in sys.argv[0]:
         while True:

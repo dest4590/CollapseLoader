@@ -1,15 +1,15 @@
+
 import os
 import random
 import zipfile
-
 import requests
-from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
-                           TextColumn, TransferSpeedColumn)
-
+from rich.progress import (
+    BarColumn, DownloadColumn, Progress, SpinnerColumn,
+    TextColumn, TransferSpeedColumn
+)
 from .Logger import logger
 from .Servers import servers
 from ..static import REPO_URL, VERSION
-
 
 class DataManager:
     """Used to manage loader data"""
@@ -18,7 +18,7 @@ class DataManager:
         self.root_dir = 'data/'
         self.server = servers.check_servers()
 
-        if self.server is None:
+        if not self.server:
             logger.critical('No server was found for downloading files (this is a critical function in the loader)')
             quit()
 
@@ -26,12 +26,8 @@ class DataManager:
         self.version = VERSION
         self.session = requests.Session()
 
-        if not os.path.isdir(self.root_dir):
-            os.makedirs(self.root_dir)
-            logger.debug('Created root dir')
-
+        os.makedirs(self.root_dir, exist_ok=True)
         logger.debug('Initialized DataManager')
-
 
     def get_local(self, path: str) -> str:
         """Get file locally"""
@@ -48,22 +44,17 @@ class DataManager:
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
         dest = destination if destination else os.path.join(self.root_dir, filename)
 
-        if not filename.endswith('.jar') and not os.path.exists(self.get_local(filename)):
-            if os.path.isdir(path_dir):
-                logger.debug(f'{path} already downloaded, skip')
-                return
-            os.makedirs(path_dir, exist_ok=True)
-        elif filename.endswith('.jar'):
-            if os.path.exists(os.path.join(path_dir, jar)):
-                logger.debug(f'{path} file already downloaded, skip')
-                return
-            
-            os.makedirs(path_dir, exist_ok=True)
+        if not filename.endswith('.jar') and os.path.isdir(path_dir):
+            logger.debug(f'{path} already downloaded, skip')
+            return
 
-        headers = {}
-        
-        if os.path.exists(dest):
-            headers['Range'] = f'bytes={os.path.getsize(dest)}-'
+        if filename.endswith('.jar') and os.path.exists(os.path.join(path_dir, jar)):
+            logger.debug(f'{path} file already downloaded, skip')
+            return
+
+        os.makedirs(path_dir, exist_ok=True)
+
+        headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
             response = self.session.get(self.server + filename, headers=headers, stream=True)
@@ -73,11 +64,12 @@ class DataManager:
             logger.error(f"Failed to download {path}: {e}")
             return
 
-        with Progress(TextColumn(f'[blue]{path}'), 
-                      SpinnerColumn(f'dots{random.randint(2, 9)}'), 
-                      BarColumn(), 
-                      DownloadColumn(), 
-                      TransferSpeedColumn()) as progress:
+        with Progress(
+                TextColumn(f'[blue]{path}'), 
+                SpinnerColumn(f'dots{random.randint(2, 9)}'), 
+                BarColumn(), 
+                DownloadColumn(), 
+                TransferSpeedColumn()) as progress:
             task = progress.add_task('', total=total_size)
             
             with open(dest, "ab") as f:
