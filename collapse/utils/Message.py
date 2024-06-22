@@ -29,7 +29,7 @@ class MessageClient:
         for message in self.messages:
             # If remote message not in local message
 
-            if not message['id'] in [int(id) for id in settings.get('read_messages').split(',')[:-1]]:
+            if not message['id'] in [int(id) for id in settings.get('read_messages').split(',')[:-1]] and not message['hidden']:
                 if SAVE_MESSAGES:
                     settings.set('read_messages', settings.get('read_messages') + f'{message["id"]},')
 
@@ -55,4 +55,6 @@ class MessageClient:
                     print(f"\n[gray]Unknown[/] type of message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
                     
         self.shown = True
+
+
 messageclient = MessageClient()

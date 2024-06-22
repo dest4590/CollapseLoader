@@ -75,4 +75,5 @@ class Menu:
                 logger.error('Choose number')
                 continue
 
+
 options_menu = Menu()

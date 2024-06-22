@@ -13,7 +13,8 @@ class Builder:
     def build(self, removeBuild: bool = True):
         os.system(f'''pyinstaller --onefile --clean --console --upx-dir ".\\upx" --name "{self.name}" --icon "{self.icon}" run.py''')
 
-        _ = [shutil.move(file, './') for file in glob('dist/*.exe')]
+        for file in glob('dist/*.exe'):
+            shutil.move(file, './')
 
         if removeBuild:
             self.ClearAll()

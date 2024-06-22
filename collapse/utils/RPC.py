@@ -42,7 +42,7 @@ class RPC(Thread):
                 self.RPC.connect()
                 logger.debug('Connected to discord')
 
-            except Exception:
+            except:
                 logger.debug('Cannot reconnect to Discord')
 
 
@@ -62,5 +62,6 @@ class RPC(Thread):
                 self.RPC.clear()
 
             sleep(5)
+
 
 rpc = RPC()
