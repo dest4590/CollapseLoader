@@ -2,7 +2,6 @@ import requests
 from urllib3.exceptions import MaxRetryError, NameResolutionError
 
 from ..static import LOCAL_API
-from .Logger import API as API_LVL
 from .Logger import logger
 
 
@@ -13,7 +12,7 @@ class API:
 
     def get(self, path: str) -> requests.Response:
         url = f'{self.server}api/{path}'
-        logger.log(API_LVL, f'API request to {path}')
+        logger.api(f'API request to {path}')
         try:
             return self.session.get(url)
         except (ConnectionError, MaxRetryError, NameResolutionError, ConnectionRefusedError) as e:
