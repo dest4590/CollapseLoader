@@ -6,14 +6,14 @@ from .Data import data
 
 
 class CheatManager:
-    """A class to manage and load cheats from the API."""
+    """A class to manage and load cheats from the API"""
 
     def __init__(self):
         self.cheats = self.load_cheats()
 
     @staticmethod
     def load_cheats():
-        """Load cheats from the API and return a list of Cheat instances."""
+        """Load cheats from the API and return a list of Cheat instances"""
         cheats = []
         for cheat in api.get('clients').json():
             if cheat["show_in_loader"]:
