@@ -10,5 +10,8 @@ $file = '.\collapse\static.py'
 $file = '.\collapse\static.py'
 (Get-Content $file) -replace "DO_NOT_SAVE_MESSAGES = False", "DO_NOT_SAVE_MESSAGES = True" | Set-Content $file
 
+$file = '.\collapse\static.py'
+(Get-Content $file) -replace "SHOW_HIDDEN_MESSAGES = False", "SHOW_HIDDEN_MESSAGES = True" | Set-Content $file
+
 $file = '.\run.py'
 (Get-Content $file) -replace "dev = False", "dev = True" | Set-Content $file

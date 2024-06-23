@@ -1,13 +1,16 @@
 # Developer variables
 
-# Use local variant of CollapseWeb
+# Use local variant of CollapseWeb (https://github.com/dest4590/CollapseWeb)
 LOCAL_API = False
 
 # Show DEBUG level of logs
 DEBUG_LOGS = True
 
-# save messages to the config
+# Save messages to the config
 SAVE_MESSAGES = True
+
+# Show hidden messages
+SHOW_HIDDEN_MESSAGES = True
 
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'

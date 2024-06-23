@@ -1,14 +1,13 @@
 import webbrowser
-
 import requests
-
 from .Data import data
 from .Logger import logger
 from .CLI import selector
 
-
 class Updater:
-    def __init__(self):
+    """Handles checking for updates and opening download pages"""
+
+    def __init__(self) -> None:
         try:
             self.remote_version = self.get_remote_version()
             self.latest_commit = self.get_latest_commit()
@@ -23,6 +22,7 @@ class Updater:
             self.local_version = data.version
 
     def get_remote_version(self) -> str:
+        """Fetch the latest remote version from the GitHub API"""
         try:
             response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/releases/latest', timeout=5)
             response.raise_for_status()
@@ -32,6 +32,7 @@ class Updater:
             raise
 
     def get_latest_commit(self) -> str:
+        """Fetch the latest commit SHA from the GitHub API"""
         try:
             response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/commits', params={'per_page': 1}, timeout=5)
             response.raise_for_status()
@@ -40,7 +41,8 @@ class Updater:
             logger.error(f'Failed to fetch latest commit: {e}')
             raise
 
-    def check_version(self):
+    def check_version(self) -> None:
+        """Check if the local version is up to date with the remote version"""
         if self.remote_version and self.remote_version > self.local_version:
             logger.info('Update your loader!')
 

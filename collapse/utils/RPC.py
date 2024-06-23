@@ -24,7 +24,7 @@ class RPC(Thread):
     disabled = True if settings.get('rpc') == 'False' else False
 
     def update(self):
-        """updates the activity"""
+        """Updates the activity"""
 
         try:
             self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif',
@@ -42,12 +42,12 @@ class RPC(Thread):
                 self.RPC.connect()
                 logger.debug('Connected to discord')
 
-            except:
+            except Exception:
                 logger.debug('Cannot reconnect to Discord')
 
 
     def run(self):
-        """starts a thread for the rpc"""
+        """Starts a thread for the rpc"""
 
         try:
             self.RPC.connect()

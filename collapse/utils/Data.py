@@ -34,7 +34,7 @@ class DataManager:
         return os.path.join(self.root_dir, path)
 
     def get_url(self, path: str) -> str:
-        """Gets a link from the web, uses a fallback server if the main one is down"""
+        """Gets a link from the web"""
         return self.server + path
 
     def download(self, path: str, destination: str = None) -> None:
@@ -85,6 +85,7 @@ class DataManager:
                 os.remove(dest)
             elif filename.endswith('.jar'):
                 os.rename(dest, os.path.join(path_dir, filename))
+
         except (zipfile.BadZipFile, OSError) as e:
             logger.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):
