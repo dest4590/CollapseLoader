@@ -17,9 +17,10 @@ class API:
             return self.session.get(url)
         except (ConnectionError, MaxRetryError, NameResolutionError, ConnectionRefusedError) as e:
             logger.error(f'Failed to reach {url}: {e}')
-            raise
+            raise   
         except requests.exceptions.RequestException as e:
             logger.error(f'API request error: {e}')
             raise
+
 
 api = API('https://web.collapseloader.org/', local=LOCAL_API)

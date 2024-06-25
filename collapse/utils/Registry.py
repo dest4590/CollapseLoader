@@ -1,7 +1,5 @@
 import winreg as wrg
 
-from .Logger import logger
-
 # made for the future
 
 class Registry:
@@ -9,27 +7,37 @@ class Registry:
 
     def __init__(self):
         self.location = wrg.HKEY_CURRENT_USER
-        self.soft = wrg.OpenKeyEx(self.location, r"SOFTWARE\\", 0, wrg.KEY_SET_VALUE)
-        logger.debug('Initialized Registry')
 
-    def set_value(self, name: str, value: str, path: str):
-        """Sets a registry value"""
-        wrg.SetValueEx(wrg.OpenKeyEx(self.location, path, 0, wrg.KEY_SET_VALUE), name, 0, wrg.REG_SZ, value)
+    def delete_value(self, path: str):
+        """Deletes all values under the specified path"""
+        try:
+            key = wrg.OpenKey(self.location, path, 0, wrg.KEY_ALL_ACCESS)
+            for i in range(0, wrg.QueryInfoKey(key)[1]):
+                value_name = wrg.EnumValue(key, 0)[0]
+                wrg.DeleteValue(key, value_name)
+            wrg.CloseKey(key)
+        except Exception as e:
+            pass
 
-    def edit_value(self, name: str, value: str, path: str):
-        """Edits an existing registry value"""
-        wrg.SetValueEx(wrg.OpenKeyEx(self.location, path, 0, wrg.KEY_SET_VALUE), name, 0, wrg.REG_SZ, value)
+    def delete_key(self, path: str):
+        """Deletes the specified key and all its subkeys"""
+        try:
+            key = wrg.OpenKey(self.location, path, 0, wrg.KEY_ALL_ACCESS)
+            self._delete_subkeys(key)
+            wrg.DeleteKey(self.location, path)
+        except Exception as e:
+            pass
 
-    def remove_value(self, name: str, path: str):
-        """Removes a registry value"""
-        wrg.DeleteValue(wrg.OpenKeyEx(self.location, path, 0, wrg.KEY_SET_VALUE), name)
-
-    def create_key(self, subkey: str, path: str):
-        """Creates a new registry key under the current key"""
-        wrg.CreateKeyEx(wrg.OpenKeyEx(self.location, path, 0, wrg.KEY_SET_VALUE), subkey)
-
-    def get_value(self, name: str, path: str):
-        return wrg.QueryValueEx(wrg.OpenKeyEx(self.location, path, 0, wrg.KEY_SET_VALUE), name)[0]
+    def _delete_subkeys(self, key):
+        """Helper function to delete all subkeys under a given key"""
+        while True:
+            try:
+                subkey_name = wrg.EnumKey(key, 0)
+                subkey = wrg.OpenKey(key, subkey_name, 0, wrg.KEY_ALL_ACCESS)
+                self._delete_subkeys(subkey)
+                wrg.DeleteKey(key, subkey_name)
+            except OSError:
+                break
 
 
 regedit = Registry()

@@ -43,10 +43,12 @@ class Selector:
         text += '\n'.join(f'{i + 1}. {cheat}' for i, cheat in enumerate(cheat_manager.cheats))
         text += '\n'
         function_lines = [
-            'Select username', 'Enter RAM', 
-            f'Discord RPC {"[green][+][/]" if not rpc.disabled else "[red][-][/]" }',
-            'Ghost mode (PANIC)', 'Remove data folder', 
-            'Settings Menu', 'Exit'
+            'Select username', 
+            'Enter RAM',
+            'Ghost mode (PANIC)', 
+            'Remove data folder', 
+            'Settings Menu', 
+            'Exit'
         ]
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
         return text

@@ -44,9 +44,6 @@ class Cheat:
     def run(self):
         """Run client"""
 
-        # rpc.details = f'Running {self.name}'
-        # rpc.start_time = time.time()
-
         # Downloading requirements
         data.download('jre-21.0.2.zip')
         
@@ -111,6 +108,3 @@ class Cheat:
             logchecker.checklogs(buffer)
 
             logger.info('Exited from minecraft')
-
-            # rpc.start_time = time.time()
-            # rpc.details = 'Choosing a client'

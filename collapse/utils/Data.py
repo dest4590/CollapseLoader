@@ -1,11 +1,10 @@
-
 import os
 import random
 import zipfile
 import requests
 from rich.progress import (
     BarColumn, DownloadColumn, Progress, SpinnerColumn,
-    TextColumn, TransferSpeedColumn
+    TextColumn, TransferSpeedColumn, 
 )
 from .Logger import logger
 from .Servers import servers
@@ -57,7 +56,7 @@ class DataManager:
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
-            response = self.session.get(self.server + filename, headers=headers, stream=True)
+            response = self.session.get(self.get_url(filename), headers=headers, stream=True)
             response.raise_for_status()
             total_size = int(response.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
@@ -90,5 +89,6 @@ class DataManager:
             logger.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):
                 os.remove(dest)
+
 
 data = DataManager()

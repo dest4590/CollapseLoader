@@ -4,19 +4,21 @@ import sys
 import time
 
 from rich import print
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
-from .utils.Logger import logger
-from .utils.Logo import logo
-from .utils.Data import data
-from .utils.Cheats import cheat_manager
-from .utils.Message import messageclient
-from .utils.Settings import settings
-from .utils.CLI import selector
-from .utils.Options import options_menu, Option
-from .utils.Updater import updater
-from .utils.RPC import rpc
-from .utils.CheatCleaner import cheatcleaner
-
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True) as progress:
+    loading_task = progress.add_task("[blue]Loading modules", total=None)
+ 
+    from .utils.Logger import logger
+    from .utils.Logo import logo
+    from .utils.Data import data
+    from .utils.Cheats import cheat_manager
+    from .utils.Message import messageclient
+    from .utils.Settings import settings
+    from .utils.CLI import selector
+    from .utils.Options import options_menu, Option
+    from .utils.Updater import updater
+    from .utils.CheatCleaner import cheatcleaner
 
 def initialize_settings():
     """Initialize user settings with default values if not already set."""
@@ -28,12 +30,6 @@ def initialize_settings():
     Option('ram').create(2048, 'Loader')
     Option('rpc').create(True, 'Loader')
     Option('read_messages').create('0,', 'Loader')
-
-def handle_rpc():
-    """Handle the RPC settings and start the RPC service if necessary."""
-    if '_child.py' not in sys.argv[0]:
-        rpc.daemon = True
-        rpc.start()
 
 def display_main_menu():
     """Display the main menu with logo and options."""
@@ -58,35 +54,18 @@ def handle_selection(choosed):
         settings.set('ram', selector.select_ram() * 1024)
         logger.debug('Changed ram')
         selector.pause()
-    elif choosed == selector.offset + 13: # Discord RPC
-        handle_rpc_toggle()
-    elif choosed == selector.offset + 14: # Ghost mode (PANIC)
+    elif choosed == selector.offset + 13: # Ghost mode (PANIC)
         logger.debug('Clean folders (y,n)')
         cheatcleaner.scan_folders()
-    elif choosed == selector.offset + 15: # Remove data folder
+    elif choosed == selector.offset + 14: # Remove data folder
         handle_data_folder_removal()
-    elif choosed == selector.offset + 16: # Settings Menu
+    elif choosed == selector.offset + 15: # Settings Menu
         options_menu.show()
-    elif choosed == selector.offset + 17: # Exit
+    elif choosed == selector.offset + 16: # Exit
         sys.exit(1)
     else:
         logger.error('Choose number')
         selector.pause()
-
-def handle_rpc_toggle():
-    """Toggle the RPC setting on or off."""
-    if settings.get('rpc') == 'True':
-        logger.info('Disabled RPC')
-        settings.set('rpc', False)
-        rpc.disabled = True
-    else:
-        logger.info('Enabled RPC')
-        settings.set('rpc', True)
-        rpc.disabled = False
-        rpc.start_time = time.time()
-
-    selector.update_text()
-    selector.pause()
 
 def handle_data_folder_removal():
     """Handle the removal of the data folder after user confirmation."""
@@ -105,7 +84,6 @@ def main():
     """Main function to run the loader."""
     updater.check_version()
     initialize_settings()
-    # handle_rpc()
 
     if '_child.py' not in sys.argv[0]:
         while True:
