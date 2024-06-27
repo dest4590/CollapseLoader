@@ -1,6 +1,7 @@
 from rich import print
+
+from .CLI import console, selector
 from .Logger import logger
-from .CLI import selector, console
 from .Settings import settings
 
 option_list = []
@@ -39,7 +40,7 @@ class Option:
 
         elif self.option_type == bool:
             current_value = settings.get(self.name, 'Options')
-            new_value = not (current_value.lower() == 'true')
+            new_value = not current_value.lower() == 'true'
             settings.set(self.name, new_value, 'Options')
             logger.info(f'Switched setting {self.name}')
 

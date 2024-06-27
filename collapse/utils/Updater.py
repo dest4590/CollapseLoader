@@ -1,8 +1,11 @@
 import webbrowser
+
 import requests
+
+from .CLI import selector
 from .Data import data
 from .Logger import logger
-from .CLI import selector
+
 
 class Updater:
     """Handles checking for updates and opening download pages"""
@@ -21,25 +24,25 @@ class Updater:
             self.latest_commit = None
             self.local_version = data.version
 
+    def api_request(self, path: str, params: dict = None) -> dict:
+        """Makes a request to the GitHub API"""
+        try:
+            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/' + path,
+                                     timeout=5, params=params)
+
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(f'Failed to fetch {path}: {e}')
+            raise
+
     def get_remote_version(self) -> str:
         """Fetch the latest remote version from the GitHub API"""
-        try:
-            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/releases/latest', timeout=5)
-            response.raise_for_status()
-            return response.json().get('tag_name')
-        except requests.exceptions.RequestException as e:
-            logger.error(f'Failed to fetch remote version: {e}')
-            raise
+        return self.api_request('releases/latest').get('tag_name')
 
     def get_latest_commit(self) -> str:
         """Fetch the latest commit SHA from the GitHub API"""
-        try:
-            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/commits', params={'per_page': 1}, timeout=5)
-            response.raise_for_status()
-            return response.json()[0].get('sha', '')[:7]
-        except requests.exceptions.RequestException as e:
-            logger.error(f'Failed to fetch latest commit: {e}')
-            raise
+        return self.api_request('commits', {'per_page': 1})[0].get('sha', '')[:7]
 
     def check_version(self) -> None:
         """Check if the local version is up to date with the remote version"""

@@ -1,3 +1,4 @@
+import ctypes
 import os
 
 from rich.console import Console
@@ -5,13 +6,13 @@ from rich.console import Console
 from .Cheat import Cheat
 from .Cheats import cheat_manager
 from .Logger import logger
-from .RPC import rpc
 
 console = Console()
 selector_offset = len(cheat_manager.cheats) + 11
 functions = []
 
 class Function:
+    """Function for selector class"""
     def __init__(self, line: str, color: str = 'dark_cyan'):
         global selector_offset
         self.line_text = line
@@ -39,6 +40,7 @@ class Selector:
         logger.debug('Created selector text')
 
     def make_text(self) -> str:
+        """Returns text"""
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
         text += '\n'.join(f'{i + 1}. {cheat}' for i, cheat in enumerate(cheat_manager.cheats))
         text += '\n'
@@ -52,7 +54,7 @@ class Selector:
         ]
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
         return text
-    
+
     def update_text(self) -> None:
         """Refreshes text property"""
         self.text = self.make_text()
@@ -64,7 +66,7 @@ class Selector:
     def select(self) -> str:
         """Requires user selection"""
         return console.input('Select >> ')
-    
+
     def pause(self) -> None:
         """Pauses to allow the user to read the text"""
         os.system('pause')
@@ -77,11 +79,11 @@ class Selector:
                 return True
             elif i in ['n', 'no', 'нет']:
                 return False
-    
+
     def get_cheat_by_index(self, index: int) -> Cheat:
         """Gets the cheat through its index"""
         return cheat_manager.cheats[index - 1]
-            
+
     def select_username(self) -> str:
         """Asks for the user's nickname"""
         return input('Enter nickname >> ')
@@ -95,6 +97,11 @@ class Selector:
                 logger.error('Enter gigabytes (2, 4, 8)')
 
     def clear(self) -> None:
+        """Just clears text"""
         os.system('cls')
+
+    def set_title(self, text: str):
+        """Set window title"""
+        ctypes.windll.kernel32.SetConsoleTitleW(text)
 
 selector = Selector()

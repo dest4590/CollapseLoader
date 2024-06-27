@@ -1,9 +1,12 @@
 import datetime
+
 from rich import print
+
 from ..static import SAVE_MESSAGES
 from .API import api
 from .Logger import logger
 from .Settings import settings
+
 
 class MessageClient:
     """Client for retrieving and displaying messages"""

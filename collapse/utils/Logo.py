@@ -1,5 +1,6 @@
 class Logo:
-   full = r'''
+    """Just logos"""
+    full = r'''
    ___         _  _                          
   / __\  ___  | || |  __ _  _ __   ___   ___ 
  / /    / _ \ | || | / _` || '_ \ / __| / _ \
@@ -7,7 +8,7 @@ class Logo:
 \____/  \___/ |_||_| \__,_|| .__/ |___/ \___|
                            |_|               '''
 
-   short = r'''
+    short = r'''
    ___    __  
   / __\  / /  
  / /    / /   
@@ -15,7 +16,7 @@ class Logo:
 \____/ \____/ 
               '''
 
-   tagline = 'CLI-based utility to run minecraft cheats'
+    tagline = 'CLI-based utility to run minecraft cheats'
 
 
 logo = Logo()

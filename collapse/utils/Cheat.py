@@ -1,27 +1,46 @@
 import os
 from contextlib import chdir
+from datetime import datetime
 from subprocess import PIPE, STDOUT, Popen
+from threading import Thread
+from time import sleep
+
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from .Data import data
+from .LogChecker import logchecker
 from .Logger import logger
 from .Settings import settings
-from .LogChecker import logchecker
+
+
+def update_time(task_id, progress, start_time):
+    """Updates the time for the progress bar by ticking one second"""
+    while True:
+        elapsed_time = datetime.now() - start_time
+        progress.update(
+            task_id,
+            time=str(elapsed_time).split('.', maxsplit=1)[0])
+
+        sleep(1)
+
 
 class Cheat:
-    def __init__(self, name: str, link: str, 
-                 main_class: str = 'net.minecraft.client.main.Main', 
-                 version: str = '1.12.2', 
+    """Cheat class for running clients"""
+
+    def __init__(self, name: str, link: str,
+                 main_class: str = 'net.minecraft.client.main.Main',
+                 version: str = '1.12.2',
                  category: str = 'HVH', internal: bool = False) -> None:
-        
+
         self.name = name
         self.link = link
         self.category = category
 
         self.filename = os.path.basename(self.link)
-        self.path = data.root_dir + self.filename 
+        self.path = data.root_dir + self.filename
         self.path_dir = data.root_dir + os.path.splitext(self.filename)[0] + '/'
         self.jar = os.path.splitext(self.filename)[0] + '.jar'
-        
+
         self.main_class = main_class
         self.version = version
         self.internal = internal
@@ -40,71 +59,90 @@ class Cheat:
         logger.info('Downloading client')
 
         data.download(self.filename)
-    
+
     def run(self):
         """Run client"""
 
-        # Downloading requirements
-        data.download('jre-21.0.2.zip')
-        
-        if self.version.startswith('1.12'):
-            logger.debug('Downloading 1.12.2 libraries & natives')
-            data.download('libraries-1.12.zip')
-            data.download('natives-1.12.zip')
-            
-        else:
-            logger.debug('Downloading 1.12.2+ libraries & natives')
-            data.download('libraries.zip')
-            data.download('natives.zip')
-            
-        data.download('assets.zip')
-        
-        logger.info(f'Running client {self.name}')
-        with chdir('.\\' + self.path_dir):
-            # Using backslash var, because f-strings not supporting it in expressions
-            bc = '\\'
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.description]{task.fields[session]} {task.fields[time]}"),
+            transient=True
+        ) as progress:
+            start_time = datetime.now()
 
-            path_sep = ';' if os.name == 'nt' else ':'
+            task_id = progress.add_task(
+                f"[green]Running client[/] [light_slate_blue]{self.name}[/] [light_salmon1]<{settings.get('nickname', 'Options')}>[/]",
+                session="active session",
+                time="00:00:00",
+                total=None,
+            )
+            Thread(target=update_time, args=(task_id, progress, start_time), daemon=True).start()
 
-            if self.internal and os.path.isdir('libraries'):
-                classpath = f'.{bc}libraries-1.12{bc}*' if self.version.startswith('1.12') else f'.{bc}libraries{bc}*'       
+            # Downloading requirements
+            data.download('jre-21.0.2.zip')
+
+            if self.version.startswith('1.12'):
+                logger.debug('Downloading 1.12.2 libraries & natives')
+                data.download('libraries-1.12.zip')
+                data.download('natives-1.12.zip')
+
             else:
-                classpath = f'..{bc}libraries-1.12{bc}*' if self.version.startswith('1.12') else f'..{bc}libraries{bc}*'
+                logger.debug('Downloading 1.12.2+ libraries & natives')
+                data.download('libraries.zip')
+                data.download('natives.zip')
 
-            if self.internal and os.path.isdir('natives'):
-                native_path = f'.{bc}natives-1.12;' if self.version.startswith('1.12') else f'.{bc}natives;'
-            else:
-                native_path = f'..{bc}natives-1.12;' if self.version.startswith('1.12') else f'..{bc}natives;'
+            data.download('assets.zip')
 
-            asset_path = f'.{bc}assets' if self.internal and os.path.isdir('assets') else f'..{bc}assets'
-            
-            java_command = [
-                f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe",
-                "-Xverify:none",
-                f"-Xmx{settings.get('ram')}M",
-                f"-Djava.library.path={native_path}",
-                f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
-                f"--username {settings.get('nickname', 'Options')}",
-                "--gameDir .\\",
-                f"--assetsDir {asset_path}",
-                f"--assetIndex {self.version}",
-                "--uuid N/A",
-                "--accessToken 0",
-                "--userType legacy",
-                f"--version {self.version}"
-            ]
+            logger.info(f'Running client {self.name}')
 
-            command = ' '.join(java_command)
-            logger.debug(command)
+            with chdir('.\\' + self.path_dir):
+                # Using backslash var, because f-strings not supporting it in expressions
+                # pylint: disable=line-too-long
+                bc = '\\'
 
-            process = Popen(command, stdout=PIPE, stderr=STDOUT)
-            buffer = []
+                path_sep = ';' if os.name == 'nt' else ':'
 
-            for line in process.stdout:
-                _ = line.decode('utf-8', errors='ignore')
-                print(_, end='')
-                buffer.append(_)
+                if self.internal and os.path.isdir('libraries'):
+                    classpath = f'.{bc}libraries-1.12{bc}*' if self.version.startswith('1.12') else f'.{bc}libraries{bc}*'
+                else:
+                    classpath = f'..{bc}libraries-1.12{bc}*' if self.version.startswith('1.12') else f'..{bc}libraries{bc}*'
 
-            logchecker.checklogs(buffer)
+                if self.internal and os.path.isdir('natives'):
+                    native_path = f'.{bc}natives-1.12;' if self.version.startswith('1.12') else f'.{bc}natives;'
+                else:
+                    native_path = f'..{bc}natives-1.12;' if self.version.startswith('1.12') else f'..{bc}natives;'
 
-            logger.info('Exited from minecraft')
+                asset_path = f'.{bc}assets' if self.internal and os.path.isdir('assets') else f'..{bc}assets'
+
+                java_command = [
+                    f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe",
+                    "-Xverify:none",
+                    f"-Xmx{settings.get('ram')}M",
+                    f"-Djava.library.path={native_path}",
+                    f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
+                    f"--username {settings.get('nickname', 'Options')}",
+                    "--gameDir .\\",
+                    f"--assetsDir {asset_path}",
+                    f"--assetIndex {self.version}",
+                    "--uuid N/A",
+                    "--accessToken 0",
+                    "--userType legacy",
+                    f"--version {self.version}"
+                ]
+
+                command = ' '.join(java_command)
+                logger.debug(command)
+
+                process = Popen(command, stdout=PIPE, stderr=STDOUT)
+                buffer = []
+
+                for line in process.stdout:
+                    _ = line.decode('utf-8', errors='ignore')
+                    progress.print(_, end='', markup=False, highlight=False)
+                    buffer.append(_)
+
+                logchecker.checklogs(buffer)
+
+                logger.info('Exited from minecraft')

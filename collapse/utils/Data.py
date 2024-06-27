@@ -1,14 +1,15 @@
 import os
 import random
 import zipfile
+
 import requests
-from rich.progress import (
-    BarColumn, DownloadColumn, Progress, SpinnerColumn,
-    TextColumn, TransferSpeedColumn, 
-)
+from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
+                           TextColumn, TransferSpeedColumn)
+
+from ..static import REPO_URL, VERSION
 from .Logger import logger
 from .Servers import servers
-from ..static import REPO_URL, VERSION
+
 
 class DataManager:
     """Used to manage loader data"""
@@ -37,6 +38,7 @@ class DataManager:
         return self.server + path
 
     def download(self, path: str, destination: str = None) -> None:
+        """Downloads file using path"""
         logger.debug(f'Downloading {path}')
         filename = os.path.basename(path)
         jar = os.path.splitext(filename)[0] + '.jar'
@@ -64,13 +66,13 @@ class DataManager:
             return
 
         with Progress(
-                TextColumn(f'[blue]{path}'), 
-                SpinnerColumn(f'dots{random.randint(2, 9)}'), 
-                BarColumn(), 
-                DownloadColumn(), 
+                TextColumn(f'[blue]{path}'),
+                SpinnerColumn(f'dots{random.randint(2, 9)}'),
+                BarColumn(),
+                DownloadColumn(),
                 TransferSpeedColumn()) as progress:
             task = progress.add_task('', total=total_size)
-            
+
             with open(dest, "ab") as f:
                 for chunk in response.iter_content(1024):
                     if chunk:
