@@ -5,6 +5,7 @@ from rich.console import Console
 
 from .Cheat import Cheat
 from .Cheats import cheat_manager
+from .Data import data
 from .Logger import logger
 
 console = Console()
@@ -32,6 +33,10 @@ class Selector:
         logger.debug('Initialized Selector')
         self.text = self.make_text()
         self.offset = len(cheat_manager.cheats)
+        self.titles_states = {
+            'default': f'CollapseLoader ({data.version})',
+            'run': 'CollapseLoader >> {client}'
+        }
 
         if self.offset == 0:
             logger.warn('No clients available')
@@ -101,7 +106,7 @@ class Selector:
         os.system('cls')
 
     def set_title(self, text: str):
-        """Set window title"""
+        """Changes window title"""
         ctypes.windll.kernel32.SetConsoleTitleW(text)
 
 selector = Selector()

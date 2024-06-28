@@ -9,10 +9,10 @@ class CheatManager:
     """A class to manage and load cheats from the API"""
 
     def __init__(self):
-        self.cheats = self.load_cheats()
+        self.cheats = self._load_cheats()
 
     @staticmethod
-    def load_cheats():
+    def _load_cheats():
         """Load cheats from the API and return a list of Cheat instances"""
         cheats = []
         for cheat in api.get('clients').json():

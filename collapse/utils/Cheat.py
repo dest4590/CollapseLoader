@@ -63,6 +63,10 @@ class Cheat:
     def run(self):
         """Run client"""
 
+        from .CLI import selector 
+
+        selector.set_title(selector.titles_states['run'].format(client=self.name))
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -146,3 +150,6 @@ class Cheat:
                 logchecker.checklogs(buffer)
 
                 logger.info('Exited from minecraft')
+
+        # Return default title
+        selector.set_title(selector.titles_states['default'])

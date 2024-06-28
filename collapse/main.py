@@ -7,17 +7,17 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
-
-    from .utils.CheatCleaner import cheatcleaner
-    from .utils.Cheats import cheat_manager
-    from .utils.CLI import selector
-    from .utils.Data import data
+ 
     from .utils.Logger import logger
     from .utils.Logo import logo
+    from .utils.Data import data
+    from .utils.Cheats import cheat_manager
     from .utils.Message import messageclient
-    from .utils.Options import Option, options_menu
     from .utils.Settings import settings
+    from .utils.CLI import selector
+    from .utils.Options import options_menu, Option
     from .utils.Updater import updater
+    from .utils.CheatCleaner import cheatcleaner
 
 def initialize_settings():
     """Initialize user settings with default values if not already set."""
@@ -83,7 +83,7 @@ def main():
     """Main function to run the loader."""
     updater.check_version()
     initialize_settings()
-    selector.set_title('CollapseLoader')
+    selector.set_title(selector.titles_states['default'])
 
     if '_child.py' not in sys.argv[0]:
         while True:
