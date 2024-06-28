@@ -18,6 +18,5 @@ VERSION = '1.2.6'
 
 SERVERS = [
     'cdn.collapseloader.org',
-    'collapseloader.s3.aeza.cloud',
     'cdn-ru.collapseloader.org',
 ]
