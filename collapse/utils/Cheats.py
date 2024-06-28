@@ -42,7 +42,9 @@ class CheatManager:
 
             else:
                 c = cache.get()
-                logger.info(f'Using latest clients cache ({c['_meta']['creation_time']})')
+                creation_time = c['_meta']['creation_time']
+                logger.info(f"Using latest clients cache ({creation_time})")
+
                 for cheat in c['clients']:
                     if cheat["show_in_loader"]:
                         cheats.append(

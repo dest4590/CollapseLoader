@@ -14,6 +14,7 @@ SHOW_HIDDEN_MESSAGES = True
 
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'
+API_URL = 'https://web.collapseloader.org/'
 VERSION = '1.2.6'
 
 SERVERS = [

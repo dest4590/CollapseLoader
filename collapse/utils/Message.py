@@ -22,6 +22,7 @@ class MessageClient:
             'warn': '[yellow]Warning[/]',
             'maintenance': '[blue]Maintenance[/]'
         }
+
         logger.debug('Fetched messages from API')
 
     def show_messages(self) -> None:

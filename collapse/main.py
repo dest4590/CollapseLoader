@@ -11,8 +11,8 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .utils.Logger import logger
     from .utils.Logo import logo
     from .utils.Data import data
-    from .utils.Cheats import cheat_manager
     from .utils.Message import messageclient
+    from .utils.Cheats import cheat_manager
     from .utils.Settings import settings
     from .utils.CLI import selector
     from .utils.Options import options_menu, Option
@@ -68,6 +68,7 @@ def handle_selection(choosed):
 
 def handle_data_folder_removal():
     """Handle the removal of the data folder after user confirmation"""
+
     logger.debug('Removing data folder')
     if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well (y,n)'):
         shutil.rmtree('data', True)
@@ -76,7 +77,6 @@ def handle_data_folder_removal():
 
 def handle_message_showing():
     """Handle the showing of messages"""
-
     messageclient.show_messages()
 
 def main():

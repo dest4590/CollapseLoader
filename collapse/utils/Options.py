@@ -50,7 +50,6 @@ class Option:
         return option_list[index - 1]
 
 Option('nickname', 'User nickname for minecraft')
-# Option('show_nickname', 'Is responsible for whether nickname will be shown in RPC', bool).create(False)
 
 class Menu:
     """Options menu"""
