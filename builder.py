@@ -14,7 +14,7 @@ class Builder:
 
     def build(self, removeBuild: bool = True):
         """Starts the build"""
-        os.system(f'''pyinstaller --onefile --clean --console --name "{self.name}" run.py''')
+        os.system(f'''pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse\\assets\\{self.icon}" run.py''')
 
         for file in glob('dist/*.exe'):
             shutil.move(file, './')
