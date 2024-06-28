@@ -67,6 +67,23 @@ class Cheat:
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
 
+        # Downloading requirements
+        data.download('jre-21.0.2.zip')
+
+        if self.version.startswith('1.12'):
+            logger.debug('Downloading 1.12.2 libraries & natives')
+            data.download('libraries-1.12.zip')
+            data.download('natives-1.12.zip')
+
+        else:
+            logger.debug('Downloading 1.12.2+ libraries & natives')
+            data.download('libraries.zip')
+            data.download('natives.zip')
+
+        data.download('assets.zip')
+
+        logger.info(f'Running client {self.name}')
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -82,24 +99,8 @@ class Cheat:
                 time="00:00:00",
                 total=None,
             )
+
             Thread(target=update_time, args=(task_id, progress, start_time), daemon=True).start()
-
-            # Downloading requirements
-            data.download('jre-21.0.2.zip')
-
-            if self.version.startswith('1.12'):
-                logger.debug('Downloading 1.12.2 libraries & natives')
-                data.download('libraries-1.12.zip')
-                data.download('natives-1.12.zip')
-
-            else:
-                logger.debug('Downloading 1.12.2+ libraries & natives')
-                data.download('libraries.zip')
-                data.download('natives.zip')
-
-            data.download('assets.zip')
-
-            logger.info(f'Running client {self.name}')
 
             with chdir('.\\' + self.path_dir):
                 # Using backslash var, because f-strings not supporting it in expressions

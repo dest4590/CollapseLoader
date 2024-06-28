@@ -71,6 +71,7 @@ class DataManager:
                 BarColumn(),
                 DownloadColumn(),
                 TransferSpeedColumn()) as progress:
+            
             task = progress.add_task('', total=total_size)
 
             with open(dest, "ab") as f:
@@ -78,6 +79,8 @@ class DataManager:
                     if chunk:
                         f.write(chunk)
                         progress.update(task, advance=len(chunk))
+
+            progress.stop()
 
         try:
             if filename.endswith('.zip'):
