@@ -27,6 +27,11 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Create & Activate venv
+        run: |
+          python -m virtualenv venv
+          .\venv\Scripts\activate.ps1
+
       - name: Run build scripts
         run: |
             .\scripts\release.ps1
@@ -35,7 +40,6 @@ jobs:
         run: |
             echo "Using version ${{ env.VERSION }} in the build script."
             python builder.py
-
 
       - name: Set artifact path/name
         run: |
