@@ -10,8 +10,8 @@ class Builder:
         self.name = name
         self.icon = icon
     
-    def build(self, removeBuild: bool = True):
-        os.system(f'''pyinstaller --onefile --clean --console --upx-dir ".\\upx" --name "{self.name}" --icon "{self.icon}" run.py''')
+    def build(self, removeBuild: bool = True, skipUPX: bool = False):
+        os.system(f'''pyinstaller --onefile --clean --console {'--upx-dir ".\\upx"' if not skipUPX else ''} --name "{self.name}" --icon "collapse\\assets\\{self.icon}" run.py''')
 
         for file in glob('dist/*.exe'):
             shutil.move(file, './')
@@ -31,4 +31,4 @@ class Builder:
             os.remove(spec)
 
 
-Builder().build()
+Builder().build(skipUPX=True)
