@@ -1,0 +1,13 @@
+
+[MESSAGES CONTROL]
+
+# Disable some warnings
+
+disable=relative-beyond-top-level, 
+      missing-module-docstring, 
+      invalid-name, 
+      line-too-long, 
+      too-few-public-methods,
+      import-outside-toplevel,
+      redefined-builtin,
+      deprecated-method

@@ -7,7 +7,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
- 
+
     from .utils.Logger import logger
     from .utils.Logo import logo
     from .utils.Data import data
@@ -20,7 +20,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .utils.CheatCleaner import cheatcleaner
 
 def initialize_settings():
-    """Initialize user settings with default values if not already set."""
+    """Initialize user settings with default values if not already set"""
     Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
 
     if not settings.get('nickname', 'Options'):
@@ -31,16 +31,16 @@ def initialize_settings():
     Option('read_messages').create('0,', 'Loader')
 
 def display_main_menu():
-    """Display the main menu with logo and options."""
-    print('[bold white]' + logo.full)
-    print('[bold green]' + logo.tagline)
-    print('[italic]VER: ' + data.version)
+    """Display the main menu with logo and options"""
+    print(f'[bold white]{logo.full}')
+    print(f'[bold green]{logo.tagline}')
+    print(f'[italic]VER: {data.version}')
     print('[slate_blue3]Discord: https://collapseloader.org/discord')
     print('[dodger_blue1]Telegram: https://t.me/collapseloader')
     selector.show()
 
 def handle_selection(choosed):
-    """Handle the user's menu selection."""
+    """Handle the user's menu selection"""
     if choosed <= len(cheat_manager.cheats):
         cheat = selector.get_cheat_by_index(choosed)
         cheat.download()
@@ -67,7 +67,7 @@ def handle_selection(choosed):
         selector.pause()
 
 def handle_data_folder_removal():
-    """Handle the removal of the data folder after user confirmation."""
+    """Handle the removal of the data folder after user confirmation"""
     logger.debug('Removing data folder')
     if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well (y,n)'):
         shutil.rmtree('data', True)
@@ -75,12 +75,12 @@ def handle_data_folder_removal():
         logger.info('Removed data folder')
 
 def handle_message_showing():
-    """Handle the showing of messages."""
+    """Handle the showing of messages"""
 
     messageclient.show_messages()
 
 def main():
-    """Main function to run the loader."""
+    """Main function to run the loader"""
     updater.check_version()
     initialize_settings()
     selector.set_title(selector.titles_states['default'])

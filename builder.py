@@ -4,22 +4,27 @@ from glob import glob
 
 
 class Builder:
+    """Class to build to .exe file"""
+
     def __init__(self, onefile: bool = True, clean: bool = True, name: str = 'CollapseLoader', icon: str = 'logo.ico'):
         self.onefile = onefile
         self.clean = clean
         self.name = name
         self.icon = icon
-    
-    def build(self, removeBuild: bool = True, skipUPX: bool = False):
-        os.system(f'''pyinstaller --onefile --clean --console {'--upx-dir ".\\upx"' if not skipUPX else ''} --name "{self.name}" --icon "collapse\\assets\\{self.icon}" run.py''')
+
+    def build(self, removeBuild: bool = True):
+        """Starts the build"""
+        os.system(f'''pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse\\assets\\{self.icon}" run.py''')
 
         for file in glob('dist/*.exe'):
             shutil.move(file, './')
 
         if removeBuild:
-            self.ClearAll()
+            self.clear_all()
 
-    def ClearAll(self):
+    def clear_all(self):
+        """deletes all unnecessary files"""
+
         if os.path.exists('build/'):
             shutil.rmtree('build/')
 
@@ -31,4 +36,4 @@ class Builder:
             os.remove(spec)
 
 
-Builder().build(skipUPX=True)
+Builder().build()

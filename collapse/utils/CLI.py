@@ -14,15 +14,16 @@ functions = []
 
 class Function:
     """Function for selector class"""
+    selector_offset = len(cheat_manager.cheats) + 11
+
     def __init__(self, line: str, color: str = 'dark_cyan'):
-        global selector_offset
         self.line_text = line
 
         existing_func = next((func for func in functions if func.line_text == self.line_text), None)
         if existing_func is None:
-            self.line = f'\n[{color}]{selector_offset}. {line}[/]'
+            self.line = f'\n[{color}]{Function.selector_offset}. {line}[/]'
             functions.append(self)
-            selector_offset += 1
+            Function.selector_offset += 1
         else:
             self.line = existing_func.line
 
