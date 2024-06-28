@@ -5,6 +5,7 @@ on:
     - main
     paths:
       - '**.py'
+      - '**.yml'
 
   workflow_dispatch:
       
@@ -21,7 +22,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12.2
+          python-version: 3.12.4
 
       - name: Install requirements
         run: |
