@@ -35,5 +35,6 @@ class CheatCleaner:
                     logger.info('Removing folder: ' + folder)
                     shutil.rmtree(folder, ignore_errors=True)
 
+        selector.pause()
 
 cheatcleaner = CheatCleaner()

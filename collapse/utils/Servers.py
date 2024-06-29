@@ -5,7 +5,7 @@ from .Logger import logger
 from ..static import SERVERS
 
 class Servers:
-    """Class to manage and check the availability of servers."""
+    """Class to manage and check the availability of servers"""
 
     def __init__(self, urls: list) -> None:
         """Initialize with a list of server URLs and create a requests session"""

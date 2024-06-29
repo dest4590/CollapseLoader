@@ -1,5 +1,3 @@
-# Developer variables
-
 # Use local variant of CollapseWeb (https://github.com/dest4590/CollapseWeb)
 LOCAL_API = False
 
