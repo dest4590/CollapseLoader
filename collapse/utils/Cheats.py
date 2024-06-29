@@ -8,12 +8,12 @@ from .Cheat import Cheat
 from .Data import data
 from .Logger import logger
 
-
 class CheatManager:
     """Class to manage and load cheats from the API"""
 
     def __init__(self):
-        self.cheats = self._load_cheats()
+        self.cheats = []
+        self._load_cheats()
 
     def _load_cheats(self):
         """Load cheats from the API and return a list of Cheat instances"""
@@ -22,19 +22,7 @@ class CheatManager:
 
         if clients is not None:
             cache.save(clients.json())
-
-            for cheat in clients.json():
-                if cheat["show_in_loader"]:
-                    cheats.append(
-                        Cheat(
-                            name=escape(cheat["name"]) + (" [red bold][-][/]" if not cheat["working"] else ""),
-                            link=data.get_url(cheat["filename"]),
-                            main_class=cheat["main_class"],
-                            version=cheat["version"][:-2],
-                            category=cheat["category"],
-                            internal=cheat["internal"],
-                        )
-                    )
+            self.make_array(clients.json())
 
         else:
             if not os.path.exists(cache.path):
@@ -45,19 +33,23 @@ class CheatManager:
                 creation_time = c['_meta']['creation_time']
                 logger.info(f"Using latest clients cache ({creation_time})")
 
-                for cheat in c['clients']:
-                    if cheat["show_in_loader"]:
-                        cheats.append(
-                            Cheat(
-                                name=escape(cheat["name"]) + (" [red bold][-][/]" if not cheat["working"] else ""),
-                                link=data.get_url(cheat["filename"]),
-                                main_class=cheat["main_class"],
-                                version=cheat["version"][:-2],
-                                category=cheat["category"],
-                                internal=cheat["internal"],
-                            )
-                        )
+                self.make_array(c['clients'])
 
         return cheats
+
+    def make_array(self, cheats: dict):
+        """Adds clients to array"""
+        for cheat in cheats:
+            if cheat["show_in_loader"]:
+                self.cheats.append(
+                    Cheat(
+                        name=escape(cheat["name"]) + (" [red bold][-][/]" if not cheat["working"] else ""),
+                        link=data.get_url(cheat["filename"]),
+                        main_class=cheat["main_class"],
+                        version=cheat["version"][:-2],
+                        category=cheat["category"],
+                        internal=cheat["internal"],
+                    )
+                )
 
 cheat_manager = CheatManager()
