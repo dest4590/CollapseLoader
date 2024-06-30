@@ -21,6 +21,9 @@ class LogChecker:
 
             if 'java.lang.OutOfMemoryError: Java heap space' in logs:
                 logger.info(self.reason('it has too little memory'))
+
+            if 'java.lang.NoClassDefFoundError' in logs:
+                logger.info(self.reason('some libraries are missing'))
         else:
             logger.debug('No crashes detected, all good!')
 
