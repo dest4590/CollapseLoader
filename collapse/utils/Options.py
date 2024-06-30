@@ -9,11 +9,12 @@ option_list = []
 class Option:
     """Represents a configurable option"""
 
-    def __init__(self, name: str, description: str = '', option_type= str) -> None:
+    def __init__(self, name: str, description: str = '', option_type = str, default_value = object) -> None:
         self.name = name
         self.description = description
         self.option_type = option_type
         self.value = settings.get(name, 'Options')
+        self.default_value = default_value
 
         if description:
             option_list.append(self)
@@ -30,26 +31,41 @@ class Option:
             settings.set(self.name, value, header)
             logger.debug(f'Created {self.name} option with value: {value} ({header})')
 
-    def input(self) -> None:
-        """Handles user input for the option"""
+    def save(self, value: object):
+        """Saves option to settings file"""
         if self.option_type == str:
-            new = console.input(f'Enter value for {self.name}: ')
-            settings.set(self.name, new, 'Options')
-            logger.info(f'Set setting {self.name} to {new}')
+            settings.set(self.name, value, 'Options')
+            logger.info(f'Set option {self.name} to {value}')
             selector.pause()
 
         elif self.option_type == bool:
-            current_value = settings.get(self.name, 'Options')
-            new_value = not current_value.lower() == 'true'
-            settings.set(self.name, new_value, 'Options')
+            settings.set(self.name, value, 'Options')
             logger.info(f'Switched setting {self.name}')
+
+    def input(self) -> None:
+        """Handles user input for the option"""
+        if self.option_type == str:
+            new = console.input(f'Enter value for {self.name} (enter "RESET" to reset option): ')
+            if new.upper() != 'RESET':
+                self.save(new)
+            else:
+                self.reset()
+
+        elif self.option_type == bool:
+            current_value = settings.get(self.name, 'Options')
+            self.save(not current_value.lower() == 'true')
+
+    def reset(self):
+        """Reset option with default value"""
+        self.save(self.default_value)
 
     @staticmethod
     def get_option_by_index(index: int) -> 'Option':
         """Gets the option by its index"""
         return option_list[index - 1]
 
-Option('nickname', 'User nickname for minecraft')
+Option('nickname', 'User nickname for minecraft', default_value='CollapseUser')
+Option('custom_title', 'Changes window title for all states (None for disable)', default_value='None').create('None')
 
 class Menu:
     """Options menu"""
@@ -59,6 +75,9 @@ class Menu:
 
     def show(self) -> None:
         """Displays the options menu"""
+
+        selector.set_title(title_type='settings')
+
         while True:
             print('\n')
             option_lines = [f'[green]{i + 1}. {option.line}' for i, option in enumerate(option_list)]
@@ -75,5 +94,7 @@ class Menu:
             except ValueError:
                 logger.error('Choose a valid number')
                 continue
+
+        selector.reset_title()
 
 options_menu = Menu()

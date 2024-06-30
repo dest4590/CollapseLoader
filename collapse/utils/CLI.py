@@ -6,6 +6,7 @@ from rich.console import Console
 from .Cheat import Cheat
 from .Cheats import cheat_manager
 from .Data import data
+from .Settings import settings
 from .Logger import logger
 
 console = Console()
@@ -36,8 +37,10 @@ class Selector:
         self.offset = len(cheat_manager.cheats)
         self.titles_states = {
             'default': f'CollapseLoader ({data.version})',
-            'run': 'CollapseLoader >> {client}'
+            'run': 'CollapseLoader >> {client}',
+            'settings': 'CollapseLoader <Settings>'
         }
+        self.custom_title = None if settings.get('custom_title', 'Options') == 'None' else settings.get('custom_title', 'Options')
 
         if self.offset == 0:
             logger.warn('No clients available')
@@ -85,6 +88,8 @@ class Selector:
                 return True
             elif i in ['n', 'no', 'нет']:
                 return False
+            else:
+                console.print('Select [bold]y[/] or [bold]n[/]')
 
     def get_cheat_by_index(self, index: int) -> Cheat:
         """Gets the cheat through its index"""
@@ -106,8 +111,15 @@ class Selector:
         """Just clears text"""
         os.system('cls')
 
-    def set_title(self, text: str):
+    def set_title(self, text: str = f'CollapseLoader ({data.version})', title_type: str = None):
         """Changes window title"""
-        ctypes.windll.kernel32.SetConsoleTitleW(text)
+        if self.custom_title is None:
+            ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
+        else:
+            ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
+
+    def reset_title(self):
+        """Sets default window title"""
+        self.set_title(title_type='default')
 
 selector = Selector()
