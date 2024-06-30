@@ -23,4 +23,4 @@
 
 
 ## Showcase
-<img src="https://github.com/dest4590/CollapseLoader/assets/80628386/797ebbc4-2f0d-40ec-b32c-e34ae3e98d47" width=300 style="border-radius: 5px;">
+<img src="https://github.com/dest4590/CollapseLoader/assets/80628386/3a6e4c8a-5668-46b8-ae35-814b40fa9389" width=300 style="border-radius: 5px;">
