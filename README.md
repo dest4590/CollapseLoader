@@ -18,6 +18,9 @@
 * [X] CLI Interface
 * [X] Download manager
 * [X] Logging
+* [X] Message system
+* [X] Settings system 
+* [X] Update system
 * [X] Packaging (CI/CD, PyInstaller)
 * [X] Mirrors (2 servers)
 
