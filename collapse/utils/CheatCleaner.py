@@ -6,7 +6,7 @@ from .Logger import logger
 
 class CheatCleaner:
     """Cleans cheat folders"""
-    def __init__(self):
+    def __init__(self) -> None:
         # Absolute path
         self.folders = [
             'C:\\Celestial',
@@ -26,7 +26,7 @@ class CheatCleaner:
 
         logger.debug('Initialized CheatCleaner')
 
-    def scan_folders(self):
+    def scan_folders(self) -> None:
         """Scans all folders in array, and remove its"""
         from .CLI import selector
         if selector.ask('Remove all cheats folder (y,n)?\nall of your configs will be [red bold]ANNIGILATED.[/]'):

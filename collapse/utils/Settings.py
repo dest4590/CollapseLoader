@@ -6,7 +6,7 @@ from .Logger import logger
 class Settings:
     """Settings manager, used to save user preferences"""
 
-    def __init__(self, file: str = 'config.ini'):
+    def __init__(self, file: str = 'config.ini') -> None:
         self.file = file
         self.config = configparser.ConfigParser()
         self.config_path = data.get_local(self.file)
@@ -32,7 +32,7 @@ class Settings:
         self.config[header][key] = str(value)
         self.save()
 
-    def get(self, key: str, header: str = 'Options'):
+    def get(self, key: str, header: str = 'Options') -> None:
         """Get a setting value"""
         if header in self.config and key in self.config[header]:
             return self.config[header][key]

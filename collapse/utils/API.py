@@ -7,7 +7,7 @@ from .Logger import logger
 class API:
     """Сlass for API requests"""
 
-    def __init__(self, server: str = API_URL):
+    def __init__(self, server: str = API_URL) -> None:
         self.server = 'http://127.0.0.1:8000/' if LOCAL_API else server
         self.session = requests.Session()
 

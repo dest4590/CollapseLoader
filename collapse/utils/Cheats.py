@@ -13,11 +13,11 @@ from .Settings import settings
 class CheatManager:
     """Class to manage and load cheats from the API"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.cheats = []
         self._load_cheats()
 
-    def _load_cheats(self):
+    def _load_cheats(self) -> list:
         """Load cheats from the API and return a list of Cheat instances"""
         clients = api.get('clients')
         cheats = []
@@ -43,7 +43,7 @@ class CheatManager:
         """Сreates a line to display the cheat"""
         return f"""{escape(cheat["name"])} {(" [red bold][-][/]" if not cheat["working"] else "")} {('<' + cheat["version"] + '>' if settings.get('show_cheat_version') == 'True' else '')}"""
 
-    def make_array(self, cheats: dict):
+    def make_array(self, cheats: dict) -> None:
         """Adds clients to array"""
         for cheat in cheats:
             if cheat["show_in_loader"]:

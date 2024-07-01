@@ -3,7 +3,7 @@ from .Logger import logger
 class LogChecker:
     """Used to check game logs to detect crashes"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize LogChecker and log the initialization"""
         logger.debug('Initialized LogChecker')
 

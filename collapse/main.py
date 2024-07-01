@@ -19,7 +19,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .utils.Updater import updater
     from .utils.CheatCleaner import cheatcleaner
 
-def initialize_settings():
+def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
     Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
 
@@ -30,7 +30,7 @@ def initialize_settings():
     Option('rpc').create(True, 'Loader')
     Option('read_messages').create('0,', 'Loader')
 
-def display_main_menu():
+def display_main_menu() -> None:
     """Display the main menu with logo and options"""
     if settings.get('hide_logo', 'Options') == 'False':
         print(f'[bold white]{logo.full}')
@@ -41,7 +41,7 @@ def display_main_menu():
 
     selector.show()
 
-def handle_selection(choosed):
+def handle_selection(choosed) -> None:
     """Handle the user's menu selection"""
     if choosed <= len(cheat_manager.cheats):
         cheat = selector.get_cheat_by_index(choosed)
@@ -68,7 +68,7 @@ def handle_selection(choosed):
         logger.error('Choose number')
         selector.pause()
 
-def handle_data_folder_removal():
+def handle_data_folder_removal() -> None:
     """Handle the removal of the data folder after user confirmation"""
 
     logger.debug('Removing data folder')
@@ -77,11 +77,11 @@ def handle_data_folder_removal():
 
         logger.info('Removed data folder')
 
-def handle_message_showing():
+def handle_message_showing() -> None:
     """Handle the showing of messages"""
     messageclient.show_messages()
 
-def main():
+def main() -> None:
     """Main function to run the loader"""
     updater.check_version()
     initialize_settings()

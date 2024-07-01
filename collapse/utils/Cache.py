@@ -6,7 +6,7 @@ from .Data import data
 
 class Cache:
     """Class for clients caching"""
-    def __init__(self, file: str = 'cache.json'):
+    def __init__(self, file: str = 'cache.json') -> None:
         self.file = file
         self.path = data.get_local(file)
 

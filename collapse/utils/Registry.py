@@ -3,12 +3,12 @@ import winreg as wrg
 # made for the future
 
 class Registry:
-    """Class to interact with the Windows registry."""
+    """Class to interact with the Windows registry"""
 
     def __init__(self):
         self.location = wrg.HKEY_CURRENT_USER
 
-    def delete_value(self, path: str):
+    def delete_value(self, path: str) -> None:
         """Deletes all values under the specified path"""
         key = wrg.OpenKey(self.location, path, 0, wrg.KEY_ALL_ACCESS)
 
@@ -18,13 +18,13 @@ class Registry:
 
         wrg.CloseKey(key)
 
-    def delete_key(self, path: str):
+    def delete_key(self, path: str) -> None:
         """Deletes the specified key and all its subkeys"""
         key = wrg.OpenKey(self.location, path, 0, wrg.KEY_ALL_ACCESS)
         self._delete_subkeys(key)
         wrg.DeleteKey(self.location, path)
 
-    def _delete_subkeys(self, key):
+    def _delete_subkeys(self, key) -> None:
         """Helper function to delete all subkeys under a given key"""
         while True:
             try:

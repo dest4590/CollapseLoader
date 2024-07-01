@@ -64,7 +64,7 @@ class Selector:
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
         return text
 
-    def update_text(self) -> None:
+    def update_text(self) -> None: 
         """Refreshes text property"""
         self.text = self.make_text()
 
@@ -111,14 +111,14 @@ class Selector:
         """Just clears text"""
         os.system('cls')
 
-    def set_title(self, text: str = f'CollapseLoader ({data.version})', title_type: str = None):
+    def set_title(self, text: str = f'CollapseLoader ({data.version})', title_type: str = None) -> None:
         """Changes window title"""
         if self.custom_title is None:
             ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
         else:
             ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
 
-    def reset_title(self):
+    def reset_title(self) -> None:
         """Sets default window title"""
         self.set_title(title_type='default')
 

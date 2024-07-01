@@ -23,8 +23,7 @@ class Builder:
             self.clear_all()
 
     def clear_all(self):
-        """deletes all unnecessary files"""
-
+        """Deletes all unnecessary files"""
         if os.path.exists('build/'):
             shutil.rmtree('build/')
 

@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 import zipfile
 
 import requests
@@ -20,7 +21,7 @@ class DataManager:
 
         if not self.server:
             logger.critical('No server was found for downloading files (this is a critical function in the loader)')
-            quit()
+            sys.exit(1)
 
         self.repo = REPO_URL
         self.version = VERSION

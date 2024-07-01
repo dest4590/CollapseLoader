@@ -19,7 +19,7 @@ class Servers:
                 start_time = time.time()
                 r = self.session.get(f'https://{server}/', timeout=5)
                 end_time = time.time()
-                
+
                 logger.debug(f'Server {server} responds with {r.status_code} and {((end_time - start_time) * 1000):.2f} ms of ping')
 
                 logger.info(f'Using {server} server')

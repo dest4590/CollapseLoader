@@ -13,7 +13,7 @@ from .Logger import logger
 from .Settings import settings
 
 
-def update_time(task_id, progress, start_time):
+def update_time(task_id, progress, start_time) -> None:
     """Updates the time for the progress bar by ticking one second"""
     while True:
         elapsed_time = datetime.now() - start_time
@@ -60,7 +60,7 @@ class Cheat:
 
         data.download(self.filename)
 
-    def run(self):
+    def run(self) -> None:
         """Run client"""
 
         from .CLI import selector

@@ -31,7 +31,7 @@ class Option:
             settings.set(self.name, value, header)
             logger.debug(f'Created {self.name} option with value: {value} ({header})')
 
-    def save(self, value: object):
+    def save(self, value: object) -> None:
         """Saves option to settings file"""
         if self.option_type == str:
             settings.set(self.name, value)
@@ -55,7 +55,7 @@ class Option:
             current_value = settings.get(self.name)
             self.save(not current_value.lower() == 'true')
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset option with default value"""
         self.save(self.default_value)
 
