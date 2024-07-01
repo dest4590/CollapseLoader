@@ -19,7 +19,7 @@
 * [X] Download manager
 * [X] Logging
 * [X] Packaging (CI/CD, PyInstaller)
-* [X] Mirrors (3 servers)
+* [X] Mirrors (2 servers)
 
 
 ## Showcase
