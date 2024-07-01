@@ -13,7 +13,7 @@ class Option:
         self.name = name
         self.description = description
         self.option_type = option_type
-        self.value = settings.get(name, 'Options')
+        self.value = settings.get(name)
         self.default_value = default_value
 
         if description:
@@ -22,8 +22,8 @@ class Option:
     @property
     def line(self) -> str:
         """Returns a formatted string representing the option"""
-        self.value = settings.get(self.name, 'Options')
-        return f"{self.name.title()}[/] / [violet]{self.description}[/] * [medium_purple3]{self.value}[/]"
+        self.value = settings.get(self.name)
+        return f"{self.name.title().replace('_', ' ')}[/] / [violet]{self.description}[/] * [medium_purple3]{self.value}[/]"
 
     def create(self, value, header: str = 'Options') -> None:
         """Creates a new option in the settings"""
@@ -34,12 +34,12 @@ class Option:
     def save(self, value: object):
         """Saves option to settings file"""
         if self.option_type == str:
-            settings.set(self.name, value, 'Options')
+            settings.set(self.name, value)
             logger.info(f'Set option {self.name} to {value}')
             selector.pause()
 
         elif self.option_type == bool:
-            settings.set(self.name, value, 'Options')
+            settings.set(self.name, value)
             logger.info(f'Switched setting {self.name}')
 
     def input(self) -> None:
@@ -52,7 +52,7 @@ class Option:
                 self.reset()
 
         elif self.option_type == bool:
-            current_value = settings.get(self.name, 'Options')
+            current_value = settings.get(self.name)
             self.save(not current_value.lower() == 'true')
 
     def reset(self):
@@ -66,6 +66,9 @@ class Option:
 
 Option('nickname', 'User nickname for minecraft', default_value='CollapseUser')
 Option('custom_title', 'Changes window title for all states (None for disable)', default_value='None').create('None')
+Option('hide_logo', 'Hides logo from main screen', bool, False).create('False')
+Option('hide_messages', 'Hides messages from main screen', bool, False).create('False')
+Option('show_cheat_version', 'Shows clients version', bool, False).create('False')
 
 class Menu:
     """Options menu"""

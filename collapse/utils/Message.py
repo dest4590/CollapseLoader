@@ -29,26 +29,26 @@ class MessageClient:
         """Display unread messages"""
 
         if self.messages is not None:
-            read_message_ids = [int(id) for id in settings.get('read_messages').split(',')[:-1]]
+            if settings.get('hide_messages') == 'False':
+                read_message_ids = [int(id) for id in settings.get('read_messages', 'Loader').split(',')[:-1]]
 
-            for message in self.messages.json():
-                if message['id'] not in read_message_ids and not message['hidden']:
-                    if SAVE_MESSAGES:
-                        settings.set('read_messages', settings.get('read_messages') + f'{message["id"]},')
+                for message in self.messages.json():
+                    if message['id'] not in read_message_ids and not message['hidden']:
+                        if SAVE_MESSAGES:
+                            settings.set('read_messages', settings.get('read_messages', 'Loader') + f'{message["id"]},', 'Loader')
 
-                    local_tz = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
-                    post_time = datetime.datetime.fromisoformat(message['post_at']).astimezone(local_tz)
-                    time_difference = datetime.datetime.now(local_tz) - post_time
+                        local_tz = datetime.datetime.now(datetime.timezone.utc).astimezone().tzinfo
+                        post_time = datetime.datetime.fromisoformat(message['post_at']).astimezone(local_tz)
+                        time_difference = datetime.datetime.now(local_tz) - post_time
 
-                    time_ago = self.calculate_time_ago(time_difference)
+                        time_ago = self.calculate_time_ago(time_difference)
 
-                    try:
-                        print(f"\n{self.types[message['type']]} message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
-                    except KeyError:
-                        print(f"\n[gray]Unknown[/] type of message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
+                        try:
+                            print(f"\n{self.types[message['type']]} message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
+                        except KeyError:
+                            print(f"\n[gray]Unknown[/] type of message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
 
-            self.shown = True
-
+                self.shown = True
         else:
             logger.error('MessageClient error')
 

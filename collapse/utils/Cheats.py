@@ -7,6 +7,8 @@ from .Cache import cache
 from .Cheat import Cheat
 from .Data import data
 from .Logger import logger
+from .Settings import settings
+
 
 class CheatManager:
     """Class to manage and load cheats from the API"""
@@ -37,13 +39,17 @@ class CheatManager:
 
         return cheats
 
+    def cheat_line(self, cheat) -> str:
+        """Сreates a line to display the cheat"""
+        return f"""{escape(cheat["name"])} {(" [red bold][-][/]" if not cheat["working"] else "")} {('<' + cheat["version"] + '>' if settings.get('show_cheat_version') == 'True' else '')}"""
+
     def make_array(self, cheats: dict):
         """Adds clients to array"""
         for cheat in cheats:
             if cheat["show_in_loader"]:
                 self.cheats.append(
                     Cheat(
-                        name=escape(cheat["name"]) + (" [red bold][-][/]" if not cheat["working"] else ""),
+                        name=self.cheat_line(cheat),
                         link=data.get_url(cheat["filename"]),
                         main_class=cheat["main_class"],
                         version=cheat["version"][:-2],

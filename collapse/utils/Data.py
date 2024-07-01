@@ -71,7 +71,7 @@ class DataManager:
                 BarColumn(),
                 DownloadColumn(),
                 TransferSpeedColumn()) as progress:
-            
+
             task = progress.add_task('', total=total_size)
 
             with open(dest, "ab") as f:

@@ -21,13 +21,13 @@ class RPC(Thread):
     details = 'Choosing a client'
 
     start_time = time()
-    disabled = True if settings.get('rpc') == 'False' else False
+    disabled = True if settings.get('rpc', 'Loader') == 'False' else False
 
     def update(self):
         """Updates the activity"""
 
         try:
-            self.RPC.update(state=settings.get('nickname'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif',
+            self.RPC.update(state=settings.get('nickname', 'Loader'), details=self.details, large_image='https://i.imgur.com/ZpWg110.gif',
                             buttons=[
                                 {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
                                 {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'}

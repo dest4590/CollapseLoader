@@ -32,11 +32,13 @@ def initialize_settings():
 
 def display_main_menu():
     """Display the main menu with logo and options"""
-    print(f'[bold white]{logo.full}')
-    print(f'[bold green]{logo.tagline}')
-    print(f'[italic]VER: {data.version}')
-    print('[slate_blue3]Discord: https://collapseloader.org/discord')
-    print('[dodger_blue1]Telegram: https://t.me/collapseloader')
+    if settings.get('hide_logo', 'Options') == 'False':
+        print(f'[bold white]{logo.full}')
+        print(f'[bold green]{logo.tagline}')
+        print(f'[italic]VER: {data.version}')
+        print('[slate_blue3]Discord: https://collapseloader.org/discord')
+        print('[dodger_blue1]Telegram: https://t.me/collapseloader')
+
     selector.show()
 
 def handle_selection(choosed):
@@ -46,11 +48,11 @@ def handle_selection(choosed):
         cheat.download()
         cheat.run()
     elif choosed == selector.offset + 11: # Select username
-        settings.set('nickname', selector.select_username(), 'Options')
+        settings.set('nickname', selector.select_username())
         logger.debug('Changed nickname')
         selector.pause()
     elif choosed == selector.offset + 12: # Enter RAM
-        settings.set('ram', selector.select_ram() * 1024)
+        settings.set('ram', selector.select_ram() * 1024, 'Loader')
         logger.debug('Changed ram')
         selector.pause()
     elif choosed == selector.offset + 13: # Ghost mode (PANIC)
