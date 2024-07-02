@@ -12,4 +12,7 @@ disable=relative-beyond-top-level,
       redefined-builtin,
       deprecated-method,
       too-many-arguments,
-      too-many-instance-attributes
+      too-many-instance-attributes,
+      too-many-locals,
+      simplifiable-if-expression,
+      protected-access

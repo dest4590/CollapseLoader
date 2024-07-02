@@ -4,8 +4,9 @@ import sys
 
 from rich import print
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from .utils.Fixes import console
 
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True) as progress:
+with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
 
     from .utils.Logger import logger
@@ -45,7 +46,6 @@ def handle_selection(choosed) -> None:
     """Handle the user's menu selection"""
     if choosed <= len(cheat_manager.cheats):
         cheat = selector.get_cheat_by_index(choosed)
-        cheat.download()
         cheat.run()
     elif choosed == selector.offset + 11: # Select username
         settings.set('nickname', selector.select_username())

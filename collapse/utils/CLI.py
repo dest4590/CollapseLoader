@@ -1,15 +1,12 @@
 import ctypes
 import os
 
-from rich.console import Console
-
 from .Cheat import Cheat
 from .Cheats import cheat_manager
-from .Data import data
-from .Settings import settings
+from .Data import data, console
 from .Logger import logger
+from .Settings import settings
 
-console = Console()
 selector_offset = len(cheat_manager.cheats) + 11
 functions = []
 
@@ -64,7 +61,7 @@ class Selector:
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
         return text
 
-    def update_text(self) -> None: 
+    def update_text(self) -> None:
         """Refreshes text property"""
         self.text = self.make_text()
 

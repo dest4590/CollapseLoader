@@ -10,7 +10,7 @@ from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
 from ..static import REPO_URL, VERSION
 from .Logger import logger
 from .Servers import servers
-
+from .Fixes import console
 
 class DataManager:
     """Used to manage loader data"""
@@ -71,7 +71,7 @@ class DataManager:
                 SpinnerColumn(f'dots{random.randint(2, 9)}'),
                 BarColumn(),
                 DownloadColumn(),
-                TransferSpeedColumn()) as progress:
+                TransferSpeedColumn(), console=console) as progress:
 
             task = progress.add_task('', total=total_size)
 

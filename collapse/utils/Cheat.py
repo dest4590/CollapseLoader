@@ -7,7 +7,7 @@ from time import sleep
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from .Data import data
+from .Data import data, console
 from .LogChecker import logchecker
 from .Logger import logger
 from .Settings import settings
@@ -63,6 +63,8 @@ class Cheat:
     def run(self) -> None:
         """Run client"""
 
+        self.download()
+
         from .CLI import selector
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
@@ -89,7 +91,7 @@ class Cheat:
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TextColumn("[progress.description]{task.fields[session]} {task.fields[time]}"),
-            transient=True
+            transient=True, console=console
         ) as progress:
             start_time = datetime.now()
 
@@ -97,7 +99,7 @@ class Cheat:
                 f"[green]Running client[/] [light_slate_blue]{self.name}[/] [light_salmon1]<{settings.get('nickname', 'Options')}>[/]",
                 session="active session",
                 time="00:00:00",
-                total=None,
+                total=None
             )
 
             Thread(target=update_time, args=(task_id, progress, start_time), daemon=True).start()
