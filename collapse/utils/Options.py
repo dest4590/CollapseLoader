@@ -9,12 +9,13 @@ option_list = []
 class Option:
     """Represents a configurable option"""
 
-    def __init__(self, name: str, description: str = '', option_type = str, default_value = object) -> None:
+    def __init__(self, name: str, description: str = '', option_type = str, default_value = object, callback= None) -> None:
         self.name = name
         self.description = description
         self.option_type = option_type
         self.value = settings.get(name)
         self.default_value = default_value
+        self.callback = callback
 
         if description:
             option_list.append(self)
@@ -40,7 +41,11 @@ class Option:
 
         elif self.option_type == bool:
             settings.set(self.name, value)
-            logger.info(f'Switched setting {self.name}')
+            logger.info(f'Switched option {self.name} to {value}')
+
+        if self.callback is not None:
+            self.callback()
+            logger.debug('Executing callback')
 
     def input(self) -> None:
         """Handles user input for the option"""

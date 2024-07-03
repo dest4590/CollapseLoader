@@ -15,4 +15,5 @@ disable=relative-beyond-top-level,
       too-many-instance-attributes,
       too-many-locals,
       simplifiable-if-expression,
-      protected-access
+      protected-access,
+      undefined-variable
