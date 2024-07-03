@@ -22,7 +22,7 @@ class CheatManager:
         clients = api.get('clients')
         cheats = []
 
-        if clients is not None:
+        if clients is not None and settings.get('force_use_cache') == 'False':
             cache.save(clients.json())
             self.make_array(clients.json())
 

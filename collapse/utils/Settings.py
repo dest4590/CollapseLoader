@@ -1,7 +1,9 @@
 import configparser
 import os
+
 from .Data import data
 from .Logger import logger
+
 
 class Settings:
     """Settings manager, used to save user preferences"""

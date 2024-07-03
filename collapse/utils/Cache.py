@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from .Data import data
+from .Settings import settings
 
 
 class Cache:
@@ -13,11 +14,12 @@ class Cache:
     def save(self, clients: list) -> None:
         """Saves cache into file"""
 
-        # Add timestamp to cache
-        payload = {'clients': clients, '_meta': {'creation_time': datetime.now().strftime('%d/%m/%Y %H:%M:%S')}}
+        if settings.get('disable_caching') == 'False':
+            # Add timestamp to cache
+            payload = {'clients': clients, '_meta': {'creation_time': datetime.now().strftime('%d/%m/%Y %H:%M:%S')}}
 
-        with open(self.path, 'w', encoding='utf-8') as f:
-            json.dump(payload, f)
+            with open(self.path, 'w', encoding='utf-8') as f:
+                json.dump(payload, f)
 
     def get(self) -> dict:
         """Returns cache as dict"""
