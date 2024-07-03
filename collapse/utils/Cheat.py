@@ -94,9 +94,8 @@ class Cheat:
             transient=True, console=console
         ) as progress:
             start_time = datetime.now()
-
             task_id = progress.add_task(
-                f"[green]Running client[/] [light_slate_blue]{self.name}[/] [light_salmon1]<{settings.get('nickname', 'Options')}>[/]",
+                f"[green]Running client[/] [light_slate_blue]{self.name}[/] [light_salmon1]<{settings.get('nickname')}>[/]",
                 session="active session",
                 time="00:00:00",
                 total=None

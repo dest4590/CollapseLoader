@@ -41,7 +41,7 @@ class CheatManager:
 
     def cheat_line(self, cheat) -> str:
         """Сreates a line to display the cheat"""
-        return f"""{escape(cheat["name"])} {(" [red bold][-][/]" if not cheat["working"] else "")} {('<' + cheat["version"] + '>' if settings.get('show_cheat_version') == 'True' else '')}"""
+        return f"""{escape(cheat["name"])}{(" [red bold][-][/]" if not cheat["working"] else "")}{(' <' + cheat["version"] + '>' if settings.get('show_cheat_version') == 'True' else '')}"""
 
     def make_array(self, cheats: dict) -> None:
         """Adds clients to array"""

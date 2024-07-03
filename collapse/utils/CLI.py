@@ -61,7 +61,7 @@ class Selector:
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
         return text
 
-    def update_text(self) -> None:
+    def refresh_text(self) -> None:
         """Refreshes text property"""
         self.text = self.make_text()
 
