@@ -2,6 +2,7 @@ import os
 
 from rich.markup import escape
 
+from ..static import SHOW_HIDDEN_CHEATS
 from .API import api
 from .Cache import cache
 from .Cheat import Cheat
@@ -46,7 +47,7 @@ class CheatManager:
     def make_array(self, cheats: dict) -> None:
         """Adds clients to array"""
         for cheat in cheats:
-            if cheat["show_in_loader"]:
+            if cheat["show_in_loader"] or SHOW_HIDDEN_CHEATS:
                 self.cheats.append(
                     Cheat(
                         name=self.cheat_line(cheat),

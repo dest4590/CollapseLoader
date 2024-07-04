@@ -14,5 +14,8 @@ $file = '.\collapse\static.py'
 $file = '.\collapse\static.py'
 (Get-Content $file) -replace "SHOW_HIDDEN_MESSAGES = True", "SHOW_HIDDEN_MESSAGES = False" | Set-Content $file
 
+$file = '.\collapse\static.py'
+(Get-Content $file) -replace "SHOW_HIDDEN_CHEATS = True", "SHOW_HIDDEN_CHEATS = False" | Set-Content $file
+
 $file = '.\run.py'
 (Get-Content $file) -replace "dev = True", "dev = False" | Set-Content $file
