@@ -11,7 +11,7 @@ SAVE_MESSAGES = True
 SHOW_HIDDEN_MESSAGES = True
 
 # Show hidden clients
-SHOW_HIDDEN_CHEATS = True
+SHOW_HIDDEN_CHEATS = False
 
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'

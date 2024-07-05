@@ -78,7 +78,6 @@ Option('custom_title', 'Changes window title for all states (None for disable)',
 Option('hide_logo', 'Hides logo from main screen', bool, False).create('False')
 Option('hide_messages', 'Hides messages from main screen', bool, False).create('False')
 Option('show_cheat_version', 'Shows clients version', bool, False).create('False')
-Option('force_use_cache', 'Forces to use local cache of clients', bool, False).create('False')
 Option('disable_caching', 'Disables the caching system', bool, False).create('False')
 
 class Menu:
