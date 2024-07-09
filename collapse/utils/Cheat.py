@@ -7,7 +7,7 @@ from time import sleep
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from .Data import data, console
+from .Data import console, data
 from .LogChecker import logchecker
 from .Logger import logger
 from .Settings import settings
@@ -128,7 +128,7 @@ class Cheat:
                     f"-Xmx{settings.get('ram', 'Loader')}M",
                     f"-Djava.library.path={native_path}",
                     f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
-                    f"--username {settings.get('nickname', 'Options')}",
+                    f"--username {settings.get('nickname')}",
                     "--gameDir .\\",
                     f"--assetsDir {asset_path}",
                     f"--assetIndex {self.version}",

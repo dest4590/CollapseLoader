@@ -24,7 +24,7 @@ def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
     Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
 
-    if not settings.get('nickname', 'Options'):
+    if not settings.get('nickname'):
         logger.warn('Remember to change your nickname!')
 
     Option('ram').create(2048, 'Loader')
@@ -33,12 +33,18 @@ def initialize_settings() -> None:
 
 def display_main_menu() -> None:
     """Display the main menu with logo and options"""
-    if settings.get('hide_logo', 'Options') == 'False':
-        print(f'[bold white]{logo.full}')
+    if settings.use_option('hide_logo'):
+        if settings.use_option('use_short_logo'):
+            print(f'[bold white]{logo.full}')
+        else:
+            print(f'[bold white]{logo.short}')
+
         print(f'[bold green]{logo.tagline}')
         print(f'[italic]VER: {data.version}')
-        print('[slate_blue3]Discord: https://collapseloader.org/discord')
-        print('[dodger_blue1]Telegram: https://t.me/collapseloader')
+
+        if settings.use_option('hide_links'):
+            print('[slate_blue3]Discord: https://collapseloader.org/discord')
+            print('[dodger_blue1]Telegram: https://t.me/collapseloader')
 
     selector.show()
 

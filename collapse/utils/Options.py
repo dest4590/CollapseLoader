@@ -7,7 +7,7 @@ from .Settings import settings
 option_list = []
 
 class Option:
-    """Represents a configurable option"""
+    """The Option class represents a configurable option."""
 
     def __init__(self, name: str, description: str = '', option_type = str, default_value = object, callback= None) -> None:
         self.name = name
@@ -24,14 +24,17 @@ class Option:
     def line(self) -> str:
         """Returns a formatted string representing the option"""
         self.value = settings.get(self.name)
-        return f"{self.name.title().replace('_', ' ')}[/] / [violet]{self.description}[/] * [medium_purple3]{self.value}[/]"
+        return f"{self.name.title().replace('_', ' ')}[/] / [light_salmon3]{self.description}[/] * [medium_purple3]{self.value}[/]"
 
-    def create(self, value, header: str = 'Options') -> None:
+    def create(self, value = None, header: str = 'Options') -> None:
         """Creates a new option in the settings"""
         if not settings.get(self.name, header):
-            settings.set(self.name, value, header)
-            logger.debug(f'Created {self} option with value: {value} ({header})')
-
+            if value is not None:
+                settings.set(self.name, value, header)
+                logger.debug(f'Created {self} option with value: {value} ({header})')
+            else:
+                settings.set(self.name, self.default_value, header)
+                logger.debug(f'Created {self} option with default value: {self.default_value} ({header})')
     def save(self, value: object) -> None:
         """Saves option to settings file"""
         if self.option_type == str:
@@ -73,12 +76,15 @@ class Option:
         """Returns option name as title"""
         return self.name.title().replace('_', ' ')
 
+
 Option('nickname', 'User nickname for minecraft', default_value='CollapseUser')
 Option('custom_title', 'Changes window title for all states (None for disable)', default_value='None').create('None')
-Option('hide_logo', 'Hides logo from main screen', bool, False).create('False')
-Option('hide_messages', 'Hides messages from main screen', bool, False).create('False')
-Option('show_cheat_version', 'Shows clients version', bool, False).create('False')
-Option('disable_caching', 'Disables the caching system', bool, False).create('False')
+Option('hide_logo', 'Hides logo and links from main screen', bool, False).create()
+Option('hide_messages', 'Hides messages from main screen', bool, False).create()
+Option('show_cheat_version', 'Shows clients version', bool, False).create()
+Option('disable_caching', 'Disables the caching system', bool, False).create()
+Option('use_short_logo', 'Use short variant of logo', bool, False).create()
+Option('hide_links', 'Hide loader social links in main menu', bool, False).create()
 
 class Menu:
     """Options menu"""

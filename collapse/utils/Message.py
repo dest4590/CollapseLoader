@@ -29,7 +29,7 @@ class MessageClient:
         """Display unread messages"""
 
         if self.messages is not None:
-            if settings.get('hide_messages') == 'False':
+            if settings.use_option('hide_messages'):
                 read_message_ids = [int(id) for id in settings.get('read_messages', 'Loader').split(',')[:-1]]
 
                 for message in self.messages.json():

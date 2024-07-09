@@ -37,7 +37,7 @@ class Selector:
             'run': 'CollapseLoader >> {client}',
             'settings': 'CollapseLoader <Settings>'
         }
-        self.custom_title = None if settings.get('custom_title', 'Options') == 'None' else settings.get('custom_title', 'Options')
+        self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
 
         if self.offset == 0:
             logger.warn('No clients available')

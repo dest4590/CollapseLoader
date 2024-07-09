@@ -4,7 +4,6 @@ from datetime import datetime
 from .Data import data
 from .Settings import settings
 
-
 class Cache:
     """Class for clients caching"""
     def __init__(self, file: str = 'cache.json') -> None:
@@ -14,7 +13,7 @@ class Cache:
     def save(self, clients: list) -> None:
         """Saves cache into file"""
 
-        if settings.get('disable_caching') == 'False':
+        if settings.use_option('disable_caching'):
             # Add timestamp to cache
             payload = {'clients': clients, '_meta': {'creation_time': datetime.now().strftime('%d/%m/%Y %H:%M:%S')}}
 

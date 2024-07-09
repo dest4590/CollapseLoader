@@ -41,5 +41,9 @@ class Settings:
 
         return False
 
+    def use_option(self, name: str):
+        """Сhecked whether the setting is true or false, done for convenience"""
+        return settings.get(name) == 'False'
+
 
 settings = Settings()
