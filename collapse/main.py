@@ -12,11 +12,11 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .utils.Logger import logger
     from .utils.Logo import logo
     from .utils.Data import data
-    from .utils.Message import messageclient
+    from .utils.Options import options_menu, Option
     from .utils.Cheats import cheat_manager
     from .utils.Settings import settings
     from .utils.CLI import selector
-    from .utils.Options import options_menu, Option
+    from .utils.Message import messageclient
     from .utils.Updater import updater
     from .utils.CheatCleaner import cheatcleaner
 
