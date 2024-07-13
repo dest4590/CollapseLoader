@@ -43,7 +43,7 @@ class Selector:
             logger.warn('No clients available')
             self.text += '\n\nNo clients available, make sure you have internet\n'
 
-        logger.debug('Created selector text')
+        logger.debug('Created selector text', okay='GOOOOD')
 
     def make_text(self) -> str:
         """Returns text"""

@@ -4,7 +4,6 @@ import colorlog
 
 from ..static import DEBUG_LOGS
 
-
 class CollapseLogger(logging.Logger):
     """Logging with custom levels and colored output"""
 
@@ -36,9 +35,16 @@ class CollapseLogger(logging.Logger):
                 'DEBUG': 'green',
             }
         }
+        
+        class OptionalPrefixFormatter(colorlog.ColoredFormatter):
+            """OptionalPrefixFormatter` class extends `colorlog.ColoredFormatter to add a prefix attribute to"""
+            def format(self, record):
+                if not hasattr(record, 'prefix'):
+                    record.prefix = ''  # or any default value you want
+                return super().format(record)
 
-        formatter = colorlog.ColoredFormatter(
-            "[%(log_color)s%(levelname)s%(reset)s] %(message_log_color)s%(message)s",
+        formatter = OptionalPrefixFormatter(
+            "[%(log_color)s%(levelname)s%(prefix)s%(reset)s] %(message_log_color)s%(message)s",
             datefmt=None,
             reset=True,
             log_colors=log_colors,
