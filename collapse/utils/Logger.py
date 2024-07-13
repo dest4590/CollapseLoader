@@ -42,7 +42,7 @@ class CollapseLogger(logging.Logger):
                 return super().format(record)
 
         formatter = OptionalPrefixFormatter(
-            "[%(log_color)s%(prefix)s%(levelname)s%(reset)s] %(message_log_color)s%(message)s",
+            "[%(log_color)s%(levelname)s%(prefix)s%(reset)s] %(message_log_color)s%(message)s",
             datefmt=None,
             reset=True,
             log_colors=log_colors,
