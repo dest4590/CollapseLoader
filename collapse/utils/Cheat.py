@@ -1,5 +1,5 @@
 import os
-from contextlib import chdir
+from os import chdir
 from datetime import datetime
 from subprocess import PIPE, STDOUT, Popen
 from threading import Thread

@@ -1,16 +1,18 @@
 import ctypes
 import os
 
+from ..modules.Module import Module
+from ..static import SYSTEM
 from .Cheat import Cheat
 from .Cheats import cheat_manager
-from .Data import data, console
+from .Data import console, data
 from .Logger import logger
 from .Settings import settings
 
 selector_offset = len(cheat_manager.cheats) + 11
 functions = []
 
-class Function:
+class Function(Module):
     """Function for selector class"""
     selector_offset = len(cheat_manager.cheats) + 11
 
@@ -25,11 +27,12 @@ class Function:
         else:
             self.line = existing_func.line
 
-class Selector:
+class Selector(Module):
     """Selector, used to select clients and tools, the main part of the CLI loader"""
 
     def __init__(self) -> None:
-        logger.debug('Initialized Selector')
+        super().__init__()
+        self.debug('Initialized Selector')
         self.text = self.make_text()
         self.offset = len(cheat_manager.cheats)
         self.titles_states = {
@@ -38,12 +41,13 @@ class Selector:
             'settings': 'CollapseLoader <Settings>'
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
+        self.linux = True if SYSTEM == 'posix' else False
 
         if self.offset == 0:
-            logger.warn('No clients available')
+            self.warn('No clients available')
             self.text += '\n\nNo clients available, make sure you have internet\n'
 
-        logger.debug('Created selector text', okay='GOOOOD')
+        self.debug('Created selector text')
 
     def make_text(self) -> str:
         """Returns text"""
@@ -110,10 +114,11 @@ class Selector:
 
     def set_title(self, text: str = f'CollapseLoader ({data.version})', title_type: str = None) -> None:
         """Changes window title"""
-        if self.custom_title is None:
-            ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
-        else:
-            ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
+        if not self.linux:
+            if self.custom_title is None:
+                ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
+            else:
+                ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
 
     def reset_title(self) -> None:
         """Sets default window title"""

@@ -2,15 +2,16 @@ import webbrowser
 
 import requests
 
+from ..modules.Module import Module
 from .CLI import selector
 from .Data import data
-from .Logger import logger
 
 
-class Updater:
+class Updater(Module):
     """Handles checking for updates and opening download pages"""
 
     def __init__(self) -> None:
+        super().__init__()
         try:
             self.latest_releases = self.get_latest_releases()
             self.latest_release = self.latest_releases[0]
@@ -18,10 +19,10 @@ class Updater:
             self.latest_commit = self.get_latest_commit()
             self.local_version = data.version
 
-            logger.debug(f'Remote: {self.remote_version}, local: {self.local_version}')
-            logger.debug(f'Latest commit: {self.latest_commit}')
+            self.debug(f'Remote: {self.remote_version}, local: {self.local_version}')
+            self.debug(f'Latest commit: {self.latest_commit}')
         except requests.exceptions.RequestException as e:
-            logger.error(f'Error initializing Updater: {e}')
+            self.error(f'Error initializing Updater: {e}')
             self.remote_version = None
             self.latest_commit = None
             self.local_version = data.version
@@ -35,7 +36,7 @@ class Updater:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            logger.error(f'Failed to fetch {path}: {e}')
+            self.error(f'Failed to fetch {path}: {e}')
             raise
 
     def get_latest_releases(self) -> dict:
@@ -56,21 +57,21 @@ class Updater:
     def check_version(self) -> None:
         """Check if the local version is up to date with the remote version"""
         if self.remote_version and self.remote_version > self.local_version:
-            logger.info('Update your loader!')
+            self.info('Update your loader!')
 
             if selector.ask('Download a new version (y,n)'):
                 if self.latest_releases:
                     if selector.ask('Dev version (y,n)'): # Prelease
-                        logger.debug('Downloading dev version')
+                        self.debug('Downloading dev version')
                         latest_prerelease = next((release for release in self.latest_releases if release.get('prerelease')), None)
                         if latest_prerelease and latest_prerelease.get('assets'):
                             webbrowser.open(latest_prerelease['assets'][0].get('browser_download_url'))
                     else: # Release
-                        logger.debug('Downloading stable release')
+                        self.debug('Downloading stable release')
                         latest_release = next((release for release in self.latest_releases if not release.get('prerelease')), None)
                         if latest_release and latest_release.get('assets'):
                             webbrowser.open(latest_release['assets'][0].get('browser_download_url'))
                 else:
-                    logger.warn('No releases found')
+                    self.warn('No releases found')
 
 updater = Updater()

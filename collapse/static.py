@@ -1,3 +1,5 @@
+import os
+
 # Use local variant of CollapseWeb (https://github.com/dest4590/CollapseWeb)
 LOCAL_API = False
 
@@ -12,6 +14,8 @@ SHOW_HIDDEN_MESSAGES = True
 
 # Show hidden clients
 SHOW_HIDDEN_CHEATS = False
+
+SYSTEM = os.name
 
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'

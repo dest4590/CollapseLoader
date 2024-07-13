@@ -16,4 +16,6 @@ disable=relative-beyond-top-level,
       too-many-locals,
       simplifiable-if-expression,
       protected-access,
-      undefined-variable
+      undefined-variable,
+      arguments-differ,
+      trailing-whitespace
