@@ -7,20 +7,22 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
+from ..modules.Module import Module
 from ..static import REPO_URL, VERSION
-from .Logger import logger
-from .Servers import servers
 from .Fixes import console
+from .Servers import servers
 
-class DataManager:
+
+class DataManager(Module):
     """Used to manage loader data"""
 
     def __init__(self) -> None:
+        super().__init__()
         self.root_dir = 'data/'
         self.server = servers.check_servers()
 
         if not self.server:
-            logger.critical('No server was found for downloading files (this is a critical function in the loader)')
+            self.critical('No server was found for downloading files (this is a critical function in the loader)')
             sys.exit(1)
 
         self.repo = REPO_URL
@@ -28,7 +30,6 @@ class DataManager:
         self.session = requests.Session()
 
         os.makedirs(self.root_dir, exist_ok=True)
-        logger.debug('Initialized DataManager')
 
     def get_local(self, path: str) -> str:
         """Get file locally"""
@@ -40,18 +41,18 @@ class DataManager:
 
     def download(self, path: str, destination: str = None) -> None:
         """Downloads file using path"""
-        logger.debug(f'Downloading {path}')
+        self.debug(f'Downloading {path}')
         filename = os.path.basename(path)
         jar = os.path.splitext(filename)[0] + '.jar'
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
         dest = destination if destination else os.path.join(self.root_dir, filename)
 
         if not filename.endswith('.jar') and os.path.isdir(path_dir):
-            logger.debug(f'{path} already downloaded, skip')
+            self.debug(f'{path} already downloaded, skip')
             return
 
         if filename.endswith('.jar') and os.path.exists(os.path.join(path_dir, jar)):
-            logger.debug(f'{path} file already downloaded, skip')
+            self.debug(f'{path} file already downloaded, skip')
             return
 
         os.makedirs(path_dir, exist_ok=True)
@@ -63,7 +64,7 @@ class DataManager:
             response.raise_for_status()
             total_size = int(response.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to download {path}: {e}")
+            self.error(f"Failed to download {path}: {e}")
             return
 
         with Progress(
@@ -92,7 +93,7 @@ class DataManager:
                 os.rename(dest, os.path.join(path_dir, filename))
 
         except (zipfile.BadZipFile, OSError) as e:
-            logger.error(f"Error processing {dest}: {e}")
+            self.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):
                 os.remove(dest)
 

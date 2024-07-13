@@ -3,18 +3,20 @@ import datetime
 from rich import print
 
 from ..static import SAVE_MESSAGES
+from ..modules.Module import Module
 from .API import api
 from .Logger import logger
 from .Settings import settings
 
 
-class MessageClient:
+class MessageClient(Module):
     """Client for retrieving and displaying messages"""
 
     shown = False
 
     def __init__(self) -> None:
         """Initialize the MessageClient and fetch messages from the API"""
+        super().__init__()
         self.messages = api.get('messages')
 
         self.types = {

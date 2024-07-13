@@ -2,8 +2,6 @@ import logging
 
 import colorlog
 
-from ..static import DEBUG_LOGS
-
 
 class CollapseLogger(logging.Logger):
     """Logging with custom levels and colored output"""
@@ -37,8 +35,14 @@ class CollapseLogger(logging.Logger):
             }
         }
 
-        formatter = colorlog.ColoredFormatter(
-            "[%(log_color)s%(levelname)s%(reset)s] %(message_log_color)s%(message)s",
+        class OptionalPrefixFormatter(colorlog.ColoredFormatter):
+            """Class that adds a prefix attribute to log records if it doesn't already exist."""
+            def format(self, record):
+                record.prefix = record.__dict__.get('prefix', '')
+                return super().format(record)
+
+        formatter = OptionalPrefixFormatter(
+            "[%(log_color)s%(levelname)s%(prefix)s%(reset)s] %(message_log_color)s%(message)s",
             datefmt=None,
             reset=True,
             log_colors=log_colors,
@@ -51,9 +55,10 @@ class CollapseLogger(logging.Logger):
 
         self.addHandler(handler)
 
-    def api(self, msg: object) -> None:
-        """Log a message with the custom API level."""
-        self.log(self.API_LEVEL, msg)
+    def _log(self, level, msg, args, **kwargs):
+        prefix = kwargs.pop('prefix', '')
+        kwargs['extra'] = {'prefix': prefix}
+        super()._log(level, msg, args, **kwargs)
 
 # Create a logger instance
-logger = CollapseLogger('CollapseLogger', logging.DEBUG if DEBUG_LOGS else logging.INFO)
+logger = CollapseLogger('CollapseLogger', logging.DEBUG)

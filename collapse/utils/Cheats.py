@@ -2,18 +2,19 @@ import os
 
 from rich.markup import escape
 
+from ..modules.Module import Module
 from ..static import SHOW_HIDDEN_CHEATS
 from .API import api
 from .Cache import cache
 from .Cheat import Cheat
 from .Data import data
-from .Logger import logger
 
 
-class CheatManager:
+class CheatManager(Module):
     """Class to manage and load cheats from the API"""
 
     def __init__(self) -> None:
+        super().__init__()
         self.cheats = []
         self._load_cheats()
 
@@ -28,12 +29,12 @@ class CheatManager:
 
         else:
             if not os.path.exists(cache.path):
-                logger.error('No clients cache found')
+                self.error('No clients cache found')
 
             else:
                 c = cache.get()
                 creation_time = c['_meta']['creation_time']
-                logger.info(f"Using latest clients cache ({creation_time})")
+                self.info(f"Using latest clients cache ({creation_time})")
 
                 self.make_array(c['clients'])
 

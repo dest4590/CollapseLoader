@@ -1,14 +1,15 @@
 import configparser
 import os
 
+from ..modules.Module import Module
 from .Data import data
-from .Logger import logger
 
 
-class Settings:
+class Settings(Module):
     """Settings manager, used to save user preferences"""
 
     def __init__(self, file: str = 'config.ini') -> None:
+        super().__init__()
         self.file = file
         self.config = configparser.ConfigParser()
         self.config_path = data.get_local(self.file)
@@ -16,11 +17,11 @@ class Settings:
         if os.path.exists(self.config_path):
             self.config.read(self.config_path)
         else:
-            logger.debug('Config file created')
+            self.debug('Config file created')
             with open(self.config_path, 'w', encoding='utf-8') as cfg:
                 cfg.write('')
 
-        logger.debug('Initialized Settings')
+        self.debug('Initialized Settings')
 
     def save(self) -> None:
         """Save config to file"""

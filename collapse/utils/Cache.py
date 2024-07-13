@@ -1,12 +1,15 @@
 import json
 from datetime import datetime
 
+from ..modules.Module import Module
 from .Data import data
 from .Settings import settings
 
-class Cache:
+
+class Cache(Module):
     """Class for clients caching"""
     def __init__(self, file: str = 'cache.json') -> None:
+        super().__init__()
         self.file = file
         self.path = data.get_local(file)
 
