@@ -56,6 +56,7 @@ class CollapseLogger(logging.Logger):
         self.addHandler(handler)
 
     def _log(self, level, msg, args, **kwargs):
+        """Rewrite function of logging system"""
         prefix = kwargs.pop('prefix', '')
         kwargs['extra'] = {'prefix': prefix}
         super()._log(level, msg, args, **kwargs)
