@@ -6,9 +6,6 @@ import colorlog
 class CollapseLogger(logging.Logger):
     """Logging with custom levels and colored output"""
 
-    API_LEVEL = 11
-    logging.addLevelName(API_LEVEL, 'API')
-
     def __init__(self, name: str, level: int = logging.DEBUG) -> None:
         super().__init__(name, level)
         self._setup_logger()
@@ -62,4 +59,4 @@ class CollapseLogger(logging.Logger):
         super()._log(level, msg, args, **kwargs)
 
 # Create a logger instance
-logger = CollapseLogger('CollapseLogger', logging.DEBUG)
+logger = CollapseLogger('CollapseLogger', level=logging.INFO)

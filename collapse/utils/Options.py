@@ -9,13 +9,14 @@ option_list = []
 class Option:
     """The Option class represents a configurable option."""
 
-    def __init__(self, name: str, description: str = '', option_type = str, default_value = object, callback= None) -> None:
+    def __init__(self, name: str, description: str = '', option_type = str, default_value = object, callback = None, highlight: bool = False) -> None:
         self.name = name
         self.description = description
         self.option_type = option_type
         self.value = settings.get(name)
         self.default_value = default_value
         self.callback = callback
+        self.highlight = highlight
 
         if description:
             option_list.append(self)
@@ -77,13 +78,14 @@ class Option:
         return self.name.title().replace('_', ' ')
 
 
-Option('nickname', 'User nickname for minecraft', default_value='CollapseUser')
+Option('nickname', 'User nicknamse for minecraft', default_value='CollapseUser', highlight=True)
 Option('custom_title', 'Changes window title for all states (None for disable)', default_value='None').create('None')
 Option('hide_logo', 'Hides logo and links from main screen', bool, False).create()
 Option('hide_messages', 'Hides messages from main screen', bool, False).create()
 Option('disable_caching', 'Disables the caching system', bool, False).create()
 Option('use_short_logo', 'Use short variant of logo', bool, False).create()
 Option('hide_links', 'Hide loader social links in main menu', bool, False).create()
+Option('devmode', 'Enables the developer mode', bool, False).create()
 
 class Menu:
     """Options menu"""
@@ -98,7 +100,7 @@ class Menu:
 
         while True:
             print('\n')
-            option_lines = [f'[green]{i + 1}. {option.line}' for i, option in enumerate(option_list)]
+            option_lines = [f'[{"green" if not option.highlight else "green3"}]{i + 1}. {option.line}' for i, option in enumerate(option_list)]
             option_lines.append(f'[dark_red]{self.offset + 1}. Return[/]')
             option_lines.append(f'[bright_red]{self.offset + 2}. Reset all options[/]')
             console.print('\n'.join(option_lines), highlight=False)

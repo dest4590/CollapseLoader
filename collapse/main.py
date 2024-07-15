@@ -40,11 +40,11 @@ def display_main_menu() -> None:
             print(f'[bold white]{logo.short}')
 
         print(f'[bold green]{logo.tagline}')
-        print(f'[italic]VER: {data.version}')
+        print(f'[italic]Version: {data.version}[/] ([steel_blue3]{data.codename.upper()}[/])')
 
         if settings.use_option('hide_links'):
             print('[slate_blue3]Discord: https://collapseloader.org/discord')
-            print('[dodger_blue1]Telegram: https://t.me/collapseloader')
+            print('[dodger_blue1]Telegram: https://collapseloader.org/telegram')
 
     selector.show()
 
@@ -62,7 +62,6 @@ def handle_selection(choosed) -> None:
         logger.debug('Changed ram')
         selector.pause()
     elif choosed == selector.offset + 13: # Ghost mode (PANIC)
-        logger.debug('Clean folders (y,n)')
         cheatcleaner.scan_folders()
     elif choosed == selector.offset + 14: # Remove data folder
         handle_data_folder_removal()

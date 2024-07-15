@@ -2,6 +2,7 @@ import configparser
 import os
 
 from ..modules.Module import Module
+from .Logger import logger, logging
 from .Data import data
 
 
@@ -22,6 +23,11 @@ class Settings(Module):
                 cfg.write('')
 
         self.debug('Initialized Settings')
+        
+        self.devmode = self.get('devmode')
+        self.debug(f'Devmode: {self.devmode}')
+        
+        logger.setLevel(logging.INFO if self.devmode == 'False' else logging.DEBUG)
 
     def save(self) -> None:
         """Save config to file"""

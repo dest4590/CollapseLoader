@@ -21,6 +21,7 @@ SYSTEM = os.name
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'
 API_URL = 'https://web.collapseloader.org/'
 VERSION = '1.3'
+CODENAME = 'Hydrogen'
 
 SERVERS = [
     'cdn.collapseloader.org',
