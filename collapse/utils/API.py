@@ -14,7 +14,7 @@ class API(Module):
     def get(self, path: str) -> requests.Response:
         """Makes an API request"""
         url = f'{self.server}api/{path}'
-        self.api(f'API request to {path}')
+        self.debug(f'API request to {path}')
 
         try:
             return self.session.get(url)

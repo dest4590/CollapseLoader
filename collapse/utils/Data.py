@@ -8,7 +8,7 @@ from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
 from ..modules.Module import Module
-from ..static import REPO_URL, VERSION
+from ..static import CODENAME, REPO_URL, VERSION
 from .Fixes import console
 from .Servers import servers
 
@@ -27,6 +27,7 @@ class DataManager(Module):
 
         self.repo = REPO_URL
         self.version = VERSION
+        self.codename = CODENAME
         self.session = requests.Session()
 
         os.makedirs(self.root_dir, exist_ok=True)

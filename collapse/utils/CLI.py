@@ -45,7 +45,7 @@ class Selector(Module):
 
         if self.offset == 0:
             self.warn('No clients available')
-            self.text += '\n\nNo clients available, make sure you have internet\n'
+            self.text += '\n\nNo clients available!\n'
 
         self.debug('Created selector text')
 

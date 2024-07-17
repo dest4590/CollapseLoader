@@ -25,7 +25,3 @@ class Module:
     def critical(self, msg: object):
         """Make a critical log"""
         logger.critical(msg=msg, prefix=f' !!! {self.__module_name}')
-
-    def api(self, msg: object):
-        """Make a api log"""
-        logger.log(logger.API_LEVEL, msg=msg, prefix=f' # {self.__module_name}')
