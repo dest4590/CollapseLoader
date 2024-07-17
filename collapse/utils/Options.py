@@ -85,7 +85,6 @@ Option('hide_messages', 'Hides messages from main screen', bool, False).create()
 Option('disable_caching', 'Disables the caching system', bool, False).create()
 Option('use_short_logo', 'Use short variant of logo', bool, False).create()
 Option('hide_links', 'Hide loader social links in main menu', bool, False).create()
-Option('devmode', 'Enables the developer mode', bool, False).create()
 
 class Menu:
     """Options menu"""

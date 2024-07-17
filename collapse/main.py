@@ -40,7 +40,7 @@ def display_main_menu() -> None:
             print(f'[bold white]{logo.short}')
 
         print(f'\t [italic]Version: {data.version}[/] ([steel_blue3]{data.codename.upper()}[/])')
-        print(f'[bold green]{logo.tagline}')
+        print(f'\n[bold green]{logo.tagline}')
 
         if settings.use_option('hide_links'):
             print('[slate_blue3]Discord: https://collapseloader.org/discord')

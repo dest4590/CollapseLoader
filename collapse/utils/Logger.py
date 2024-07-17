@@ -2,6 +2,8 @@ import logging
 
 import colorlog
 
+from ..static import DEBUG_LOGS
+
 
 class CollapseLogger(logging.Logger):
     """Logging with custom levels and colored output"""
@@ -59,4 +61,4 @@ class CollapseLogger(logging.Logger):
         super()._log(level, msg, args, **kwargs)
 
 # Create a logger instance
-logger = CollapseLogger('CollapseLogger', level=logging.INFO)
+logger = CollapseLogger('CollapseLogger', logging.DEBUG if DEBUG_LOGS else logging.INFO)
