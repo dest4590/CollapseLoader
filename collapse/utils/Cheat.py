@@ -42,7 +42,10 @@ class Cheat:
         self.jar = os.path.splitext(self.filename)[0] + '.jar'
 
         self.main_class = main_class
-        self.version = version
+        
+        self.cut_version = True
+        self.version = version[:-2] if self.cut_version else version
+        
         self.internal = internal
         self.silent = False
 

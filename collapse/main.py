@@ -2,23 +2,23 @@ import random
 import shutil
 import sys
 
-from rich import print
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+
 from .utils.Fixes import console
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
 
+    from .utils.CheatCleaner import cheatcleaner
+    from .utils.Cheats import cheat_manager
+    from .utils.CLI import selector
+    from .utils.Data import data
     from .utils.Logger import logger
     from .utils.Logo import logo
-    from .utils.Data import data
-    from .utils.Options import options_menu, Option
-    from .utils.Cheats import cheat_manager
-    from .utils.Settings import settings
-    from .utils.CLI import selector
     from .utils.Message import messageclient
+    from .utils.Options import Option, options_menu
+    from .utils.Settings import settings
     from .utils.Updater import updater
-    from .utils.CheatCleaner import cheatcleaner
 
 def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
@@ -33,19 +33,19 @@ def initialize_settings() -> None:
 
 def display_main_menu() -> None:
     """Display the main menu with logo and options"""
-    if settings.use_option('hide_logo'):
-        if settings.use_option('use_short_logo'):
-            print(f'[bold white]{logo.full}')
-        else:
-            print(f'[bold white]{logo.short}')
+    text = ''
 
-        print(f'\t [italic]Version: {data.version}[/] ([steel_blue3]{data.codename.upper()}[/])')
-        print(f'\n[bold green]{logo.tagline}')
+    if settings.use_option('hide_logo'):
+        selector.animate(f'[bold white]{logo.full if settings.use_option('use_short_logo') else logo.short}\n', highlight=False)
+
+        text += f'\t [italic]Version: {data.version} ([steel_blue3]{data.codename.upper()}[/])\n'
+        text += f'[bold green]{logo.tagline}[/]\n'
 
         if settings.use_option('hide_links'):
-            print('[slate_blue3]Discord: https://collapseloader.org/discord')
-            print('[dodger_blue1]Telegram: https://collapseloader.org/telegram')
+            text += '[slate_blue3]Discord: https://collapseloader.org/discord\n'
+            text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram'
 
+    selector.animate(text)
     selector.show()
 
 def handle_selection(choosed) -> None:
