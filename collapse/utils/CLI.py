@@ -1,5 +1,6 @@
 import ctypes
 import os
+from time import sleep
 
 from ..modules.Module import Module
 from ..static import SYSTEM
@@ -13,7 +14,7 @@ selector_offset = len(cheat_manager.cheats) + 11
 functions = []
 
 class Function(Module):
-    """Function for selector class"""
+    """Function for CLI class"""
     selector_offset = len(cheat_manager.cheats) + 11
 
     def __init__(self, line: str, color: str = 'dark_cyan'):
@@ -71,7 +72,7 @@ class Selector(Module):
 
     def show(self) -> None:
         """Print text to screen"""
-        console.print(self.text, highlight=False)
+        self.animate(self.text, highlight=False)
 
     def select(self) -> str:
         """Requires user selection"""
@@ -123,5 +124,12 @@ class Selector(Module):
     def reset_title(self) -> None:
         """Sets default window title"""
         self.set_title(title_type='default')
+
+
+    def animate(self, text: str, highlight: bool = True) -> None:
+        """Create an animated effect with a delay between each line"""
+        for line in text.split('\n'):
+            console.print(line, highlight=highlight)
+            sleep(0.02)
 
 selector = Selector()

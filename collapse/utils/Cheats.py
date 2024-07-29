@@ -53,7 +53,7 @@ class CheatManager(Module):
                         name=self.cheat_line(cheat),
                         link=data.get_url(cheat["filename"]),
                         main_class=cheat["main_class"],
-                        version=cheat["version"][:-2],
+                        version=cheat["version"],
                         category=cheat["category"],
                         internal=cheat["internal"],
                     )
