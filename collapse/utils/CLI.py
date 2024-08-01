@@ -130,6 +130,6 @@ class Selector(Module):
         """Create an animated effect with a delay between each line"""
         for line in text.split('\n'):
             console.print(line, highlight=highlight)
-            sleep(0.02)
+            sleep(0.015)
 
 selector = Selector()

@@ -25,7 +25,7 @@ class MessageClient(Module):
             'maintenance': '[blue]Maintenance[/]'
         }
 
-        logger.debug('Fetched messages from API')
+        self.debug('Fetched messages from API')
 
     def show_messages(self) -> None:
         """Display unread messages"""

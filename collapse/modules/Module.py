@@ -20,7 +20,7 @@ class Module:
 
     def error(self, msg: object):
         """Make a error log"""
-        logger.error(msg=msg, prefix=f' & {self.__module_name}')
+        logger.error(msg=msg, prefix=f' @ {self.__module_name}')
 
     def critical(self, msg: object):
         """Make a critical log"""
