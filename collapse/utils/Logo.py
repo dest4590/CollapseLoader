@@ -22,3 +22,4 @@ class Logo:
 
     tagline = 'CLI-based utility to run minecraft cheats'
 
+logo = Logo()
