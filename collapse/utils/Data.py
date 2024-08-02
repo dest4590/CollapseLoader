@@ -15,7 +15,6 @@ from .Servers import servers
 
 class DataManager(Module):
     """Used to manage loader data"""
-
     def __init__(self) -> None:
         super().__init__()
         self.root_dir = 'data/'
@@ -23,7 +22,6 @@ class DataManager(Module):
 
         if not self.server:
             self.critical('No server was found for downloading files (this is a critical function in the loader)')
-            sys.exit(1)
 
         self.repo = REPO_URL
         self.version = VERSION
@@ -51,13 +49,11 @@ class DataManager(Module):
         if not filename.endswith('.jar') and os.path.isdir(path_dir):
             self.debug(f'{path} already downloaded, skip')
             return
-
         if filename.endswith('.jar') and os.path.exists(os.path.join(path_dir, jar)):
             self.debug(f'{path} file already downloaded, skip')
             return
 
         os.makedirs(path_dir, exist_ok=True)
-
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
@@ -74,15 +70,12 @@ class DataManager(Module):
                 BarColumn(),
                 DownloadColumn(),
                 TransferSpeedColumn(), console=console) as progress:
-
             task = progress.add_task('', total=total_size)
-
             with open(dest, "ab") as f:
                 for chunk in response.iter_content(1024):
                     if chunk:
                         f.write(chunk)
                         progress.update(task, advance=len(chunk))
-
             progress.stop()
 
         try:
@@ -92,11 +85,9 @@ class DataManager(Module):
                 os.remove(dest)
             elif filename.endswith('.jar'):
                 os.rename(dest, os.path.join(path_dir, filename))
-
         except (zipfile.BadZipFile, OSError) as e:
             self.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):
                 os.remove(dest)
-
 
 data = DataManager()

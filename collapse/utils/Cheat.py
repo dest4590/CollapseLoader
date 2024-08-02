@@ -152,8 +152,8 @@ class Cheat:
                     progress.print(_, end='', markup=False, highlight=False)
                     buffer.append(_)
 
-                logchecker.checklogs(buffer)
-
+                logchecker.check_logs(buffer)
+ 
                 logger.info('Exited from minecraft')
 
         # Return default title

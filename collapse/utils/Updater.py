@@ -1,6 +1,7 @@
+import asyncio
 import webbrowser
 
-import requests
+import aiohttp
 
 from ..modules.Module import Module
 from .CLI import selector
@@ -12,36 +13,45 @@ class Updater(Module):
 
     def __init__(self) -> None:
         super().__init__()
+        self.latest_releases = []
+        self.latest_release = None
+        self.remote_version = None
+        self.latest_commit = None
+        self.local_version = data.version
+
+        asyncio.run(self.initialize())
+
+    async def initialize(self):
         try:
-            self.latest_releases = self.get_latest_releases()
-            self.latest_release = self.latest_releases[0]
-            self.remote_version = self.get_remote_version()
-            self.latest_commit = self.get_latest_commit()
-            self.local_version = data.version
+            async with aiohttp.ClientSession() as session:
+                self.latest_releases = await self.get_latest_releases(session)
+                self.latest_release = self.latest_releases[0]
+                self.remote_version = self.get_remote_version()
+                self.latest_commit = await self.get_latest_commit(session)
 
             self.debug(f'Remote: {self.remote_version}, local: {self.local_version}')
             self.debug(f'Latest commit: {self.latest_commit}')
-        except requests.exceptions.RequestException as e:
+        except aiohttp.ClientError as e:
             self.error(f'Error initializing Updater: {e}')
             self.remote_version = None
             self.latest_commit = None
-            self.local_version = data.version
 
-    def api_request(self, path: str, params: dict = None) -> dict:
+    async def api_request(self, session: aiohttp.ClientSession, path: str, params: dict = None) -> dict:
         """Makes a request to the GitHub API"""
+        url = f'https://api.github.com/repos/dest4590/CollapseLoader/{path}'
         try:
-            response = requests.get('https://api.github.com/repos/dest4590/CollapseLoader/' + path,
-                                     timeout=5, params=params)
-
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
+            async with session.get(url, params=params, timeout=5) as response:
+                response.raise_for_status()
+                if response.status == 403:
+                    self.error('Rate limit exceeded, try again later')
+                return await response.json()
+        except aiohttp.ClientError as e:
             self.error(f'Failed to fetch {path}: {e}')
             raise
 
-    def get_latest_releases(self) -> dict:
+    async def get_latest_releases(self, session: aiohttp.ClientSession) -> dict:
         """Fetch releases from the GitHub API"""
-        return self.api_request('releases')
+        return await self.api_request(session, 'releases')
 
     def get_remote_version(self) -> str:
         """Fetch the latest remote version from the GitHub API without considering pre-releases"""
@@ -50,9 +60,10 @@ class Updater(Module):
             return latest_release.get('tag_name')
         return None
 
-    def get_latest_commit(self) -> str:
+    async def get_latest_commit(self, session: aiohttp.ClientSession) -> str:
         """Fetch the latest commit SHA from the GitHub API"""
-        return self.api_request('commits', {'per_page': 1})[0].get('sha', '')[:7]
+        commits = await self.api_request(session, 'commits', {'per_page': 1})
+        return commits[0].get('sha', '')[:7]
 
     def check_version(self) -> None:
         """Check if the local version is up to date with the remote version"""
@@ -61,12 +72,12 @@ class Updater(Module):
 
             if selector.ask('Download a new version (y,n)'):
                 if self.latest_releases:
-                    if selector.ask('Dev version (y,n)'): # Prelease
+                    if selector.ask('Dev version (y,n)'):  # Prelease
                         self.debug('Downloading dev version')
                         latest_prerelease = next((release for release in self.latest_releases if release.get('prerelease')), None)
                         if latest_prerelease and latest_prerelease.get('assets'):
                             webbrowser.open(latest_prerelease['assets'][0].get('browser_download_url'))
-                    else: # Release
+                    else:  # Release
                         self.debug('Downloading stable release')
                         latest_release = next((release for release in self.latest_releases if not release.get('prerelease')), None)
                         if latest_release and latest_release.get('assets'):

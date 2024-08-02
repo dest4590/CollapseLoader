@@ -18,10 +18,13 @@ class Cache(Module):
 
         if settings.use_option('disable_caching'):
             # Add timestamp to cache
-            payload = {'clients': clients, '_meta': {'creation_time': datetime.now().strftime('%d/%m/%Y %H:%M:%S')}}
+            now = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            payload = {'clients': clients, '_meta': {'creation_time': now}}
 
             with open(self.path, 'w', encoding='utf-8') as f:
                 json.dump(payload, f)
+
+            self.debug(f'Saved cache at {now}')
 
     def get(self) -> dict:
         """Returns cache as dict"""

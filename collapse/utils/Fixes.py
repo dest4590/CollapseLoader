@@ -1,4 +1,5 @@
 from rich.console import Console
+import rich
 
 console = Console()
 
@@ -6,25 +7,28 @@ console = Console()
 
 
 if console.legacy_windows:
-    import ctypes
+    try:
+        import ctypes
 
-    from rich import console as conlib
-    from rich._win32_console import (ENABLE_VIRTUAL_TERMINAL_PROCESSING,
-                                    GetConsoleMode, GetStdHandle)
-    windll = ctypes.LibraryLoader(ctypes.WinDLL)
+        from rich import console as conlib
+        from rich._win32_console import (ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+                                        GetConsoleMode, GetStdHandle)
+        windll = ctypes.LibraryLoader(ctypes.WinDLL)
 
-    handle = GetStdHandle()
-    mode = GetConsoleMode(handle)
+        handle = GetStdHandle()
+        mode = GetConsoleMode(handle)
 
-    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
 
-    SetConsoleMode = windll.kernel32.SetConsoleMode
-    SetConsoleMode.argtypes = [
-        ctypes.wintypes.HANDLE,
-        ctypes.wintypes.DWORD,
-    ]
-    SetConsoleMode.restype = ctypes.wintypes.BOOL
-    SetConsoleMode(handle, mode)
+        SetConsoleMode = windll.kernel32.SetConsoleMode
+        SetConsoleMode.argtypes = [
+            ctypes.wintypes.HANDLE,
+            ctypes.wintypes.DWORD,
+        ]
+        SetConsoleMode.restype = ctypes.wintypes.BOOL
+        SetConsoleMode(handle, mode)
 
-    conlib._windows_console_features = None
-    console = Console()
+        conlib._windows_console_features = None
+        console = Console()
+    except rich._win32_console.LegacyWindowsError:
+        pass

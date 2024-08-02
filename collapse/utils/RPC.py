@@ -4,7 +4,6 @@ from time import sleep, time
 from pypresence import Presence
 
 from .Data import data
-from .Logger import logger
 from .Settings import settings
 
 
@@ -12,7 +11,6 @@ class RPC(Thread):
     """RPC, used to display activity in Discord"""
 
     def __init__(self, *args, **kwargs) -> None:
-        logger.debug('Initialized Discord RPC')
         super().__init__(*args, **kwargs)
 
     client_id = '1225803664204234772'
@@ -35,16 +33,11 @@ class RPC(Thread):
                             start=self.start_time,
                             large_text=f'Version {data.version}')
         except Exception:
-            logger.debug('RPC crashed')
-            logger.debug('Trying to connect')
-
             try:
                 self.RPC.connect()
-                logger.debug('Connected to discord')
 
             except Exception:
-                logger.debug('Cannot reconnect to Discord')
-
+                pass
 
     def run(self):
         """Starts a thread for the rpc"""
@@ -52,7 +45,7 @@ class RPC(Thread):
         try:
             self.RPC.connect()
         except Exception as e:
-            logger.debug(f'RPC error: {e}')
+            pass
         
         while True:
             if not self.disabled:

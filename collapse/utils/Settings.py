@@ -4,7 +4,6 @@ import os
 from ..modules.Module import Module
 from .Data import data
 
-
 class Settings(Module):
     """Settings manager, used to save user preferences"""
 
@@ -35,16 +34,12 @@ class Settings(Module):
         self.config[header][key] = str(value)
         self.save()
 
-    def get(self, key: str, header: str = 'Options') -> None:
+    def get(self, key: str, header: str = 'Options') -> str:
         """Get a setting value"""
-        if header in self.config and key in self.config[header]:
-            return self.config[header][key]
+        return self.config.get(header, key, fallback=False)
 
-        return False
-
-    def use_option(self, name: str):
-        """Сhecked whether the setting is true or false, done for convenience"""
-        return settings.get(name) == 'False'
-
+    def use_option(self, name: str) -> bool:
+        """Check whether the setting is true or false, done for convenience"""
+        return self.get(name) == 'False'
 
 settings = Settings()

@@ -31,7 +31,7 @@ class Servers(Module):
                 self.info(f"The server {server} is down/inaccessible")
                 self.servers.remove(server)
 
-        return None
+        return 'https://google.com/'
 
 
 servers = Servers(SERVERS)

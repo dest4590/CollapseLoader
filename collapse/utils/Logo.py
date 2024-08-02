@@ -1,6 +1,3 @@
-import time
-import os
-
 class Logo:
     """Just logos"""
 
@@ -20,6 +17,6 @@ class Logo:
 \____/ \____/ 
               '''
 
-    tagline = 'CLI-based utility to run minecraft cheats'
+    tagline = 'Simple CLI tool for running Minecraft clients'
 
 logo = Logo()
