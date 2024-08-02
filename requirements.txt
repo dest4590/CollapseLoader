@@ -3,6 +3,6 @@ rich==13.7.1
 requests==2.32.3
 pypresence==4.3.0
 pyinstaller==6.9.0
-virtualenv==20.26.3
 mock==5.1.0
 pytest==8.3.2
+aiohttp==3.10.0
