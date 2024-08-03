@@ -39,7 +39,8 @@ class Selector(Module):
         self.titles_states = {
             'default': f'CollapseLoader ({data.version})',
             'run': 'CollapseLoader >> {client}',
-            'settings': 'CollapseLoader <Settings>'
+            'settings': 'CollapseLoader <Settings>',
+            'configs': 'CollapseLoader <Configs>',
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
         self.linux = True if SYSTEM == 'posix' else False
@@ -60,7 +61,8 @@ class Selector(Module):
             'Enter RAM',
             'Ghost mode (PANIC)', 
             'Remove data folder', 
-            'Settings Menu', 
+            'Settings Menu',
+            'Configs Menu [italic][turquoise4]\[BETA][/]',
             'Exit'
         ]
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
@@ -124,7 +126,6 @@ class Selector(Module):
     def reset_title(self) -> None:
         """Sets default window title"""
         self.set_title(title_type='default')
-
 
     def animate(self, text: str, highlight: bool = True) -> None:
         """Create an animated effect with a delay between each line"""

@@ -17,6 +17,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .utils.Logo import logo
     from .utils.Message import messageclient
     from .utils.Options import Option, options_menu
+    from .utils.Configs import config_menu
     from .utils.Settings import settings
     from .utils.Updater import updater
 
@@ -68,7 +69,9 @@ def handle_selection(choosed) -> None:
         handle_data_folder_removal()
     elif choosed == selector.offset + 15: # Settings Menu
         options_menu.show()
-    elif choosed == selector.offset + 16: # Exit
+    elif choosed == selector.offset + 16: # Configs Menu
+        config_menu.show()
+    elif choosed == selector.offset + 17: # Exit
         sys.exit(1)
     else:
         logger.error('Choose number')

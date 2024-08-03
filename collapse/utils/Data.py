@@ -40,32 +40,35 @@ class DataManager(Module):
 
     def download(self, path: str, destination: str = None) -> None:
         """Downloads file using path"""
-        self.debug(f'Downloading {path}')
+        
         filename = os.path.basename(path)
         jar = os.path.splitext(filename)[0] + '.jar'
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
         dest = destination if destination else os.path.join(self.root_dir, filename)
+        
+        self.debug(f'Downloading {filename} to {dest}')
 
-        if not filename.endswith('.jar') and os.path.isdir(path_dir):
-            self.debug(f'{path} already downloaded, skip')
+        if not filename.endswith('.jar') and os.path.isdir(path_dir) and not path.startswith('http'):
+            self.debug(f'{filename} already downloaded, skip')
             return
+        
         if filename.endswith('.jar') and os.path.exists(os.path.join(path_dir, jar)):
-            self.debug(f'{path} file already downloaded, skip')
+            self.debug(f'{filename} file already downloaded, skip')
             return
 
         os.makedirs(path_dir, exist_ok=True)
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
-            response = self.session.get(self.get_url(filename), headers=headers, stream=True)
+            response = self.session.get(self.get_url(filename) if not path.startswith('http') else path, headers=headers, stream=True)
             response.raise_for_status()
             total_size = int(response.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
-            self.error(f"Failed to download {path}: {e}")
+            self.error(f"Failed to download {filename}: {e}")
             return
 
         with Progress(
-                TextColumn(f'[blue]{path}'),
+                TextColumn(f'[blue]{filename}'),
                 SpinnerColumn(f'dots{random.randint(2, 9)}'),
                 BarColumn(),
                 DownloadColumn(),

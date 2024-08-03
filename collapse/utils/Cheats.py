@@ -56,6 +56,7 @@ class CheatManager(Module):
                         version=cheat["version"],
                         category=cheat["category"],
                         internal=cheat["internal"],
+                        id=cheat["id"],
                     )
                 )
 

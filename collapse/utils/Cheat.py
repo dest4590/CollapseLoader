@@ -5,6 +5,7 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
+import requests
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from .Data import console, data
@@ -30,11 +31,13 @@ class Cheat:
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
                  version: str = '1.12.2',
-                 category: str = 'HVH', internal: bool = False) -> None:
+                 category: str = 'HVH', internal: bool = False, id: int = 1) -> None:
 
         self.name = name
         self.link = link
         self.category = category
+        self.id = id
+        self.configs = []
 
         self.filename = os.path.basename(self.link)
         self.path = data.root_dir + self.filename
@@ -62,6 +65,11 @@ class Cheat:
         logger.info('Downloading client')
 
         data.download(self.filename)
+        
+    def load_config(self, config) -> None:
+        """Load configurations for the client"""
+
+        data.download(config.file, f'{self.path_dir}{config.config_path}{config.filename}')
 
     def run(self) -> None:
         """Run client"""
