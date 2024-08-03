@@ -5,12 +5,11 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
-import requests
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+from ..modules.Module import Module
 from .Data import console, data
 from .LogChecker import logchecker
-from .Logger import logger
 from .Settings import settings
 
 
@@ -25,14 +24,15 @@ def update_time(task_id, progress, start_time) -> None:
         sleep(1)
 
 
-class Cheat:
+class Cheat(Module):
     """Cheat class for running clients"""
 
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
                  version: str = '1.12.2',
                  category: str = 'HVH', internal: bool = False, id: int = 1) -> None:
-
+        super().__init__()
+    
         self.name = name
         self.link = link
         self.category = category
@@ -59,18 +59,21 @@ class Cheat:
         """Downloading cheat files"""
 
         if os.path.isfile(self.path_dir + self.jar):
-            logger.debug(f'Client {self.name} already downloaded')
+            self.debug(f'Client {self.name} already downloaded')
             return
 
-        logger.info('Downloading client')
+        self.info('Downloading client')
 
         data.download(self.filename)
         
     def load_config(self, config) -> None:
         """Load configurations for the client"""
+        
+        if not os.path.exists(self.path_dir + config.config_path):
+            os.makedirs(self.path_dir + config.config_path)
 
         data.download(config.file, f'{self.path_dir}{config.config_path}{config.filename}')
-
+ 
     def run(self) -> None:
         """Run client"""
 
@@ -84,18 +87,18 @@ class Cheat:
         data.download('jre-21.0.2.zip')
 
         if self.version.startswith('1.12'):
-            logger.debug('Downloading 1.12.2 libraries & natives')
+            self.debug('Downloading 1.12.2 libraries & natives')
             data.download('libraries-1.12.zip')
             data.download('natives-1.12.zip')
 
         else:
-            logger.debug('Downloading 1.12.2+ libraries & natives')
+            self.debug('Downloading 1.12.2+ libraries & natives')
             data.download('libraries.zip')
             data.download('natives.zip')
 
         data.download('assets.zip')
 
-        logger.info(f'Running client {self.name}')
+        self.info(f'Running client {self.name}')
 
         with Progress(
             SpinnerColumn(),
@@ -150,7 +153,7 @@ class Cheat:
                 ]
 
                 command = ' '.join(java_command)
-                logger.debug(command)
+                self.debug(command)
 
                 process = Popen(command, stdout=PIPE, stderr=STDOUT)
                 buffer = []
@@ -162,7 +165,7 @@ class Cheat:
 
                 logchecker.check_logs(buffer)
  
-                logger.info('Exited from minecraft')
+                self.info('Exited from minecraft')
 
         # Return default title
         selector.reset_title()

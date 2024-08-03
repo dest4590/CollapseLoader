@@ -25,7 +25,7 @@ class Config:
     @property
     def line(self) -> str:
         is_installed = os.path.exists(f'{self.cheat.path_dir}{self.config_path}{self.filename}')
-        return f'{self.cheat.name} - {self.filename} [green][Installed][/]' if is_installed else f'{self.cheat.name} - {self.filename} [red][Not installed][/]'
+        return f'{self.filename} [green][Installed][/]' if is_installed else f'{self.filename} [red][Not installed][/]'
 
 class Configs(Module):
     """A class representing configurations"""
@@ -64,24 +64,47 @@ class ConfigMenu:
 
         selector.set_title(title_type='configs')
 
+        print('\n[bold]Configs[/]\n')
+
         while True:
-            print('\n')
-            config_lines = [f'[green]{i + 1}. {config.line}' for i, config in enumerate(config_list)]
-            config_lines.append(f'[dark_red]{self.offset + 1}. Return[/]')
+            grouped_configs = self.group_configs_by_cheat()
+            config_lines = []
+            config_map = {}
+            index = 1
+
+            for cheat_name, configs in grouped_configs.items():
+                config_lines.append(f'[bold]{cheat_name}:[/]')
+                for config in configs:
+                    identifier = str(index) if index <= 99 else chr(87 + index)
+                    config_lines.append(f'  {identifier}. {config.line}')
+                    config_map[identifier] = config
+                    index += 1
+
+            config_lines.append(f'[dark_red]{index}. Return[/]')
             console.print('\n'.join(config_lines), highlight=False)
 
             try:
-                i = int(console.input('Choose config: '))
+                choice = console.input('Choose config: ')
 
-                if i <= len(config_list):
-                    config_list[i - 1].cheat.load_config(config_list[i - 1])
-                elif i == self.offset + 1:
+                if choice in config_map:
+                    config_map[choice].cheat.load_config(config_map[choice])
+                elif choice == str(index):
                     break
             except ValueError:
-                logger.error('Choose a valid number')
+                logger.error('Choose a valid number or letter')
                 continue
 
         selector.reset_title()
+
+    def group_configs_by_cheat(self):
+        """Groups configurations by cheat"""
+        grouped_configs = {}
+        for config in config_list:
+            cheat_name = config.cheat.name
+            if cheat_name not in grouped_configs:
+                grouped_configs[cheat_name] = []
+            grouped_configs[cheat_name].append(config)
+        return grouped_configs
 
 configs = Configs()
 config_menu = ConfigMenu()

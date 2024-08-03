@@ -3,7 +3,7 @@ import os
 from time import sleep
 
 from ..modules.Module import Module
-from ..static import SYSTEM
+from ..static import SYSTEM, SKIP_ANIMATIONS
 from .Cheat import Cheat
 from .Cheats import cheat_manager
 from .Data import console, data
@@ -74,6 +74,10 @@ class Selector(Module):
 
     def show(self) -> None:
         """Print text to screen"""
+        if SKIP_ANIMATIONS:
+            console.print(self.text, highlight=False)
+            return
+
         self.animate(self.text, highlight=False)
 
     def select(self) -> str:

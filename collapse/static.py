@@ -10,10 +10,13 @@ DEBUG_LOGS = True
 SAVE_MESSAGES = True
 
 # Show hidden messages
-SHOW_HIDDEN_MESSAGES = True
+SHOW_HIDDEN_MESSAGES = False
 
 # Show hidden clients
 SHOW_HIDDEN_CHEATS = False
+
+# Skip animations
+SKIP_ANIMATIONS = True
 
 SYSTEM = os.name
 
