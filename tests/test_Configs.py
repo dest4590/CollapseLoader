@@ -1,5 +1,12 @@
-from collapse.utils.Configs import Configs
+from collapse.utils.Configs import Configs, Config
 
 def test_init_configs():
-    config = Configs()
-    assert config is not None
+    configs = Configs()
+    assert configs is not None
+
+def test_init_config():
+    config = Config(1, 'file.txt', 'configs/', 1)
+    
+    assert config.id == 1
+    assert config.file == 'file.txt'
+    assert config.config_path == 'configs/'

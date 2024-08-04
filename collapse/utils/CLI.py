@@ -62,7 +62,7 @@ class Selector(Module):
             'Ghost mode (PANIC)', 
             'Remove data folder', 
             'Settings Menu',
-            'Configs Menu [italic][turquoise4]\[BETA][/]',
+            'Configs Menu [italic][turquoise4](BETA)[/]',
             'Exit'
         ]
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
@@ -133,8 +133,11 @@ class Selector(Module):
 
     def animate(self, text: str, highlight: bool = True) -> None:
         """Create an animated effect with a delay between each line"""
-        for line in text.split('\n'):
-            console.print(line, highlight=highlight)
-            sleep(0.015)
+        if not SKIP_ANIMATIONS:
+            for line in text.split('\n'):
+                console.print(line, highlight=highlight)
+                sleep(0.015)
+        else:
+            console.print(text, highlight=highlight)
 
 selector = Selector()
