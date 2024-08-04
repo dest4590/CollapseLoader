@@ -1,5 +1,4 @@
 from rich import print
-
 from .CLI import console, selector
 from .Logger import logger
 from .Settings import settings
@@ -25,40 +24,29 @@ class Option:
     def line(self) -> str:
         """Returns a formatted string representing the option"""
         self.value = settings.get(self.name)
-        return f"{self.name.title().replace('_', ' ')}[/] / [light_salmon3]{self.description}[/] * [medium_purple3]{self.value}[/]"
+        if self.option_type == bool:
+            self.value = '[green]Enabled[/]' if self.value == 'True' else '[red]Disabled[/]'
+        return f"{self.name.title().replace('_', ' ')}[/] / [light_salmon3]{self.description}[/] * {self.value}"
 
-    def create(self, value = None, header: str = 'Options') -> None:
+    def create(self, value=None, header: str = 'Options') -> None:
         """Creates a new option in the settings"""
         if not settings.get(self.name, header):
-            if value is not None:
-                settings.set(self.name, value, header)
-                logger.debug(f'Created {self} option with value: {value} ({header})')
-            else:
-                settings.set(self.name, self.default_value, header)
-                logger.debug(f'Created {self} option with default value: {self.default_value} ({header})')
+            settings.set(self.name, value if value is not None else self.default_value, header)
+            logger.debug(f'Created {self} option with value: {value if value is not None else self.default_value} ({header})')
+
     def save(self, value: object) -> None:
         """Saves option to settings file"""
-        if self.option_type == str:
-            settings.set(self.name, value)
-            logger.info(f'Set option {self} to {value}')
-
-        elif self.option_type == bool:
-            settings.set(self.name, value)
-            logger.info(f'Switched option {self} to {value}')
-
-        if self.callback is not None:
+        settings.set(self.name, value)
+        logger.info(f'Set option {self} to {value}')
+        if self.callback:
             self.callback()
             logger.debug('Executing callback')
 
     def input(self) -> None:
         """Handles user input for the option"""
         if self.option_type == str:
-            new = console.input(f'Enter value for {self} (enter "RESET" to reset option): ')
-            if new.upper() != 'RESET':
-                self.save(new)
-            else:
-                self.reset()
-
+            new_value = console.input(f'Enter value for {self} (enter "RESET" to reset option): ')
+            self.save(new_value if new_value.upper() != 'RESET' else self.default_value)
         elif self.option_type == bool:
             current_value = settings.get(self.name)
             self.save(not current_value.lower() == 'true')
@@ -77,8 +65,8 @@ class Option:
         """Returns option name as title"""
         return self.name.title().replace('_', ' ')
 
-
-Option('nickname', 'User nicknamse for minecraft', default_value='CollapseUser', highlight=True)
+# Define options
+Option('nickname', 'User nickname for minecraft', default_value='CollapseUser', highlight=True)
 Option('custom_title', 'Changes window title for all states (None for disable)', default_value='None').create('None')
 Option('hide_logo', 'Hides logo and links from main screen', bool, False).create()
 Option('hide_messages', 'Hides messages from main screen', bool, False).create()
@@ -95,7 +83,6 @@ class Menu:
 
     def show(self) -> None:
         """Displays the options menu"""
-
         selector.set_title(title_type='settings')
 
         while True:
@@ -106,16 +93,18 @@ class Menu:
             console.print('\n'.join(option_lines), highlight=False)
 
             try:
-                i = int(console.input('Choose option: '))
+                choice = int(console.input('Choose option: '))
 
-                if i <= len(option_list):
-                    Option.get_option_by_index(i).input()
-                elif i == self.offset + 1:
+                if choice <= len(option_list):
+                    Option.get_option_by_index(choice).input()
+                elif choice == self.offset + 1:
                     break
-                elif i == self.offset + 2: # reset
+                elif choice == self.offset + 2:  # reset all options
                     if selector.ask('Are you sure you want to reset all the settings (y,n)'):
                         for option in option_list:
                             option.reset()
+                else:
+                    logger.error('Choose a valid number')
             except ValueError:
                 logger.error('Choose a valid number')
                 continue

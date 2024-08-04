@@ -73,7 +73,7 @@ class ConfigMenu:
             index = 1
 
             for cheat_name, configs in grouped_configs.items():
-                config_lines.append(f'[bold]{cheat_name}:[/]')
+                config_lines.append(f'- {cheat_name}:')
                 for config in configs:
                     identifier = str(index) if index <= 99 else chr(87 + index)
                     config_lines.append(f'  {identifier}. {config.line}')

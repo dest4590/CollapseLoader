@@ -41,7 +41,7 @@ def display_main_menu() -> None:
         logo_type = logo.full if settings.use_option('use_short_logo') else logo.short
         selector.animate(f'[bold white]{logo_type}\n', highlight=False)
 
-        text += f'\t [italic]Version: {data.version} ([steel_blue3]{data.codename.upper()}[/])\n'
+        text += f'\t [italic]Version: {data.version}[/] ([steel_blue3]{data.codename.upper()}[/])\n'
         text += f'[bold green]{logo.tagline}[/]\n'
 
         if settings.use_option('hide_links'):

@@ -74,7 +74,7 @@ class Selector(Module):
 
     def show(self) -> None:
         """Print text to screen"""
-        if SKIP_ANIMATIONS:
+        if SKIP_ANIMATIONS or not settings.use_option('disable_animation'):
             console.print(self.text, highlight=False)
             return
 
@@ -133,11 +133,11 @@ class Selector(Module):
 
     def animate(self, text: str, highlight: bool = True) -> None:
         """Create an animated effect with a delay between each line"""
-        if not SKIP_ANIMATIONS:
+        if SKIP_ANIMATIONS or not settings.use_option('disable_animation'):
+            console.print(text, highlight=highlight)
+        else:
             for line in text.split('\n'):
                 console.print(line, highlight=highlight)
                 sleep(0.015)
-        else:
-            console.print(text, highlight=highlight)
 
 selector = Selector()

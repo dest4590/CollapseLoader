@@ -17,7 +17,6 @@ class Cache(Module):
         """Saves cache into file"""
 
         if settings.use_option('disable_caching'):
-            # Add timestamp to cache
             now = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
             payload = {'clients': clients, '_meta': {'creation_time': now}}
 
