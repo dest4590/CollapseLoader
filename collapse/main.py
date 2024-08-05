@@ -87,10 +87,6 @@ def handle_data_folder_removal() -> None:
 
         logger.info('Removed data folder')
 
-def handle_message_showing() -> None:
-    """Handle the showing of messages"""
-    messageclient.show_messages()
-
 def main() -> None:
     """Main function to run the loader"""
     updater.check_version()
@@ -102,7 +98,7 @@ def main() -> None:
             display_main_menu()
 
             if not messageclient.shown:
-                handle_message_showing()
+                messageclient.show_messages()
 
             try:
                 choosed = int(selector.select())

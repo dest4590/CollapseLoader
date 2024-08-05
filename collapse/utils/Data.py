@@ -1,6 +1,5 @@
 import os
 import random
-import sys
 import zipfile
 
 import requests
@@ -10,6 +9,7 @@ from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
 from ..modules.Module import Module
 from ..static import CODENAME, REPO_URL, VERSION
 from .Fixes import console
+from .Network import network
 from .Servers import servers
 
 
@@ -26,7 +26,6 @@ class DataManager(Module):
         self.repo = REPO_URL
         self.version = VERSION
         self.codename = CODENAME
-        self.session = requests.Session()
 
         os.makedirs(self.root_dir, exist_ok=True)
 
@@ -60,7 +59,7 @@ class DataManager(Module):
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
-            response = self.session.get(self.get_url(filename) if not path.startswith('http') else path, headers=headers, stream=True)
+            response = network.get(self.get_url(filename) if not path.startswith('http') else path, headers=headers, stream=True)
             response.raise_for_status()
             total_size = int(response.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:

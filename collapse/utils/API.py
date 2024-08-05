@@ -1,6 +1,9 @@
 import requests
+
 from ..modules.Module import Module
-from ..static import LOCAL_API, API_URL
+from ..static import API_URL, LOCAL_API
+from .Network import network
+
 
 class API(Module):
     """Class for API requests"""
@@ -8,15 +11,14 @@ class API(Module):
     def __init__(self, server: str = API_URL) -> None:
         super().__init__()
         self.server = 'http://127.0.0.1:8000/' if LOCAL_API else server
-        self.session = requests.Session()
 
     def get(self, path: str) -> requests.Response:
         """Makes an API request"""
         url = f'{self.server}api/{path}'
         self.debug(f'API request to {path}')
-
+        
         try:
-            response = self.session.get(url)
+            response = network.get(url)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
