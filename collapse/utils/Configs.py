@@ -14,18 +14,20 @@ config_list = []
 class Config:
     """A class representing a configuration object"""
     
-    def __init__(self, id: int, file: str, config_path: str, client_id: int) -> None:
+    def __init__(self, id: int, file: str, config_path: str, server: str, client_id: int) -> None:
         self.id = id
         self.file = file
         self.cheat = Configs.get_cheat_by_id(client_id)
         self.config_path = config_path
+        self.server = server
+        self.server_line = f", server: [light_steel_blue]{server}[/]" if server != '-' else ''
         self.filename = os.path.basename(self.file)
         config_list.append(self)
         
     @property
     def line(self) -> str:
         is_installed = os.path.exists(f'{self.cheat.path_dir}{self.config_path}{self.filename}')
-        return f'{self.filename} [green][Installed][/]' if is_installed else f'{self.filename} [red][Not installed][/]'
+        return f"""{self.filename} {f'[green][+][/]' if is_installed else '[red][-][/]'}{self.server_line}"""
 
 class Configs(Module):
     """A class representing configurations"""
@@ -45,7 +47,7 @@ class Configs(Module):
 
             for cheat in cheat_manager.cheats:
                 if cheat.id == int(client_id):
-                    cheat.configs.append(Config(config['id'], config['file'], config['config_path'], cheat.id))
+                    cheat.configs.append(Config(config['id'], config['file'], config['config_path'], config['server'], cheat.id))
     
     @staticmethod
     def get_cheat_by_id(client_id: int) -> Cheat:
@@ -73,7 +75,7 @@ class ConfigMenu:
             index = 1
 
             for cheat_name, configs in grouped_configs.items():
-                config_lines.append(f'- {cheat_name}:')
+                config_lines.append(f'- [bold]{cheat_name}:[/]')
                 for config in configs:
                     identifier = str(index) if index <= 99 else chr(87 + index)
                     config_lines.append(f'  {identifier}. {config.line}')
