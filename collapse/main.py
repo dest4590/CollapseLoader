@@ -5,7 +5,6 @@ import sys
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from .utils.Fixes import console
-from .static import SKIP_ANIMATIONS
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)

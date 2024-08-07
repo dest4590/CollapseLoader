@@ -33,7 +33,6 @@ class Selector(Module):
 
     def __init__(self) -> None:
         super().__init__()
-        self.debug('Initialized Selector')
         self.text = self.make_text()
         self.offset = len(cheat_manager.cheats)
         self.titles_states = {
@@ -53,9 +52,12 @@ class Selector(Module):
 
     def make_text(self) -> str:
         """Returns text"""
+        # add title
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
+        # add clients
         text += '\n'.join(f'{i + 1}. {cheat}' for i, cheat in enumerate(cheat_manager.cheats))
         text += '\n'
+        
         function_lines = [
             'Select username', 
             'Enter RAM',
@@ -65,7 +67,9 @@ class Selector(Module):
             'Configs Menu [italic][turquoise4](BETA)[/]',
             'Exit'
         ]
+        
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
+        
         return text
 
     def refresh_text(self) -> None:

@@ -16,11 +16,11 @@ class Module:
 
     def warn(self, msg: object):
         """Make a warn log"""
-        logger.warn(msg=msg, prefix=f' ! {self.__module_name}')
+        logger.warn(msg=msg, prefix=f' @ {self.__module_name}')
 
     def error(self, msg: object):
         """Make a error log"""
-        logger.error(msg=msg, prefix=f' @ {self.__module_name}')
+        logger.error(msg=msg, prefix=f' ! {self.__module_name}')
 
     def critical(self, msg: object):
         """Make a critical log"""

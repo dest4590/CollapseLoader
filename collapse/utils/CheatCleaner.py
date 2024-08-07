@@ -28,8 +28,6 @@ class CheatCleaner(Module):
                 'C:\\RichRecode'
             ]
 
-            self.debug('Initialized CheatCleaner')
-
     def scan_folders(self) -> None:
         """Scans all folders in array, and remove its"""
         if selector.ask('Remove all cheats folder (y,n)?\nall of your configs will be [red bold]ANNIGILATED.[/]'):

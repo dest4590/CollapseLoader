@@ -119,22 +119,25 @@ class Cheat(Module):
 
             with chdir('.\\' + self.path_dir):
                 # Using backslash var, because f-strings not supporting it in expressions
-                # pylint: disable=line-too-long
                 bc = '\\'
 
                 path_sep = ';' if os.name == 'nt' else ':'
 
-                if self.internal and os.path.isdir('libraries'):
-                    classpath = f'.{bc}libraries-1.12{bc}*' if self.version.startswith('1.12') else f'.{bc}libraries{bc}*'
-                else:
-                    classpath = f'..{bc}libraries-1.12{bc}*' if self.version.startswith('1.12') else f'..{bc}libraries{bc}*'
+                libraries_dir = 'libraries-1.12' if self.version.startswith('1.12') else 'libraries'
+                natives_dir = 'natives-1.12' if self.version.startswith('1.12') else 'natives'
+                assets_dir = 'assets'
 
-                if self.internal and os.path.isdir('natives'):
-                    native_path = f'.{bc}natives-1.12;' if self.version.startswith('1.12') else f'.{bc}natives;'
+                if self.internal and os.path.isdir(libraries_dir):
+                    classpath = f'.{bc}{libraries_dir}{bc}*'
                 else:
-                    native_path = f'..{bc}natives-1.12;' if self.version.startswith('1.12') else f'..{bc}natives;'
+                    classpath = f'..{bc}{libraries_dir}{bc}*'
 
-                asset_path = f'.{bc}assets' if self.internal and os.path.isdir('assets') else f'..{bc}assets'
+                if self.internal and os.path.isdir(natives_dir):
+                    native_path = f'.{bc}{natives_dir};'
+                else:
+                    native_path = f'..{bc}{natives_dir};'
+
+                asset_path = f'.{bc}{assets_dir}' if self.internal and os.path.isdir(assets_dir) else f'..{bc}{assets_dir}'
 
                 java_command = [
                     f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe",
