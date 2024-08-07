@@ -1,8 +1,11 @@
 from threading import Thread
 from time import sleep, time
+
 from pypresence import Presence
+
 from .Data import data
 from .Settings import settings
+
 
 class RPC(Thread):
     """RPC, used to display activity in Discord"""

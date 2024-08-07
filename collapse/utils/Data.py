@@ -36,26 +36,39 @@ class DataManager(Module):
     def get_url(self, path: str) -> str:
         """Gets a link from the web"""
         return self.server + path
-
     def download(self, path: str, destination: str = None) -> None:
         """Downloads file using path"""
         
         filename = os.path.basename(path)
-        jar = os.path.splitext(filename)[0] + '.jar'
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
         dest = destination if destination else os.path.join(self.root_dir, filename)
         
         self.debug(f'Downloading {filename} to {dest}')
 
+        if self._is_downloaded(filename, path, path_dir):
+            return
+        
+        self._download_file(path, filename, dest)
+        self._extract_file(filename, dest, path_dir)
+
+    def _is_downloaded(self, filename: str, path: str, path_dir: str) -> bool:
+        """Checks if the file is already downloaded."""
+
+        jar = os.path.splitext(filename)[0] + '.jar'
         if not filename.endswith('.jar') and os.path.isdir(path_dir) and not path.startswith('http'):
             self.debug(f'{filename} already downloaded, skip')
-            return
+            return True
         
         if filename.endswith('.jar') and os.path.exists(os.path.join(path_dir, jar)):
             self.debug(f'{filename} file already downloaded, skip')
-            return
+            return True
 
-        os.makedirs(path_dir, exist_ok=True)
+        return False
+
+    def _download_file(self, path: str, filename: str, dest: str) -> None:
+        """Downloads the file from the given path and shows download progress"""
+
+        os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
@@ -80,6 +93,9 @@ class DataManager(Module):
                         progress.update(task, advance=len(chunk))
             progress.stop()
 
+    def _extract_file(self, filename: str, dest: str, path_dir: str) -> None:
+        """Extracts the downloaded file based on its type"""
+
         try:
             if filename.endswith('.zip'):
                 with zipfile.ZipFile(dest, 'r') as zip_file:
@@ -87,6 +103,7 @@ class DataManager(Module):
                 os.remove(dest)
             elif filename.endswith('.jar'):
                 os.rename(dest, os.path.join(path_dir, filename))
+                
         except (zipfile.BadZipFile, OSError) as e:
             self.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):

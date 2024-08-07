@@ -13,13 +13,12 @@ class Network:
     def get(self, url, params=None, headers=None, stream=False):
         try:
             response = self.session.get(url, params=params, headers=headers, stream=stream, timeout=5)
-            response.raise_for_status()  # Raise an exception for HTTP errors
+            response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            # Handle exceptions (e.g., log them)
             print(f"An error occurred: {e}")
             return None
-
+ 
     def close(self):
         self.session.close()
 

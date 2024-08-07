@@ -20,8 +20,6 @@ class Settings(Module):
             with open(self.config_path, 'w', encoding='utf-8') as cfg:
                 cfg.write('')
 
-        self.debug('Initialized Settings')
-
     def save(self) -> None:
         """Save config to file"""
         with open(self.config_path, 'w', encoding='utf-8') as cfg:
