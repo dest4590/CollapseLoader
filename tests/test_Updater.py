@@ -1,6 +1,6 @@
 import pytest
 
-from collapse.utils.Updater import Updater
+from collapse.modules.network.Updater import Updater
 
 
 @pytest.fixture

@@ -1,8 +1,7 @@
 import mock
 import pytest
 
-from collapse.utils.CLI import Selector
-
+from collapse.modules.CLI import Selector
 
 @pytest.fixture
 def selector():
@@ -19,3 +18,7 @@ def test_selector_ask_yes(selector: Selector):
 def test_selector_ask_no(selector: Selector):
     with mock.patch('builtins.input', return_value='n'):
         assert selector.ask('test') == False
+        
+def test_select_username(selector: Selector):
+    with mock.patch('builtins.input', return_value='test'):
+        assert selector.select_username() == 'test'

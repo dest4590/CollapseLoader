@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from collapse.utils.Settings import Settings
+from collapse.modules.storage.Settings import Settings
 
 
 @pytest.fixture

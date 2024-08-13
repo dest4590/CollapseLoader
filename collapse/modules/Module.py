@@ -1,4 +1,4 @@
-from ..utils.Logger import logger
+from ..modules.Logger import logger
 
 class Module:
     """The module is made to simplify the use of logging, etc."""

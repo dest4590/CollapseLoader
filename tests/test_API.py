@@ -1,6 +1,6 @@
 import pytest
 
-from collapse.utils.API import API
+from collapse.modules.network.API import API
 
 
 @pytest.fixture

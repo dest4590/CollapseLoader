@@ -1,6 +1,6 @@
 import pytest
 
-from collapse.utils.Servers import Servers
+from collapse.modules.network.Servers import Servers
 
 
 @pytest.fixture

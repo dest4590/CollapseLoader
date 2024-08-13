@@ -1,4 +1,5 @@
-from collapse.utils.Configs import Configs, Config
+from collapse.modules.storage.Configs import Config, Configs
+
 
 def test_init_configs():
     configs = Configs()

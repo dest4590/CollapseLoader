@@ -4,22 +4,22 @@ import sys
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from .utils.Fixes import console
+from .modules.Fixes import console
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
 
-    from .utils.CheatCleaner import cheatcleaner
-    from .utils.Cheats import cheat_manager
-    from .utils.CLI import selector
-    from .utils.Data import data
-    from .utils.Logger import logger
-    from .utils.Logo import logo
-    from .utils.Message import messageclient
-    from .utils.Options import Option, options_menu
-    from .utils.Configs import config_menu
-    from .utils.Settings import settings
-    from .utils.Updater import updater
+    from .modules.Cheats import cheat_manager
+    from .modules.CLI import selector
+    from .modules.Logger import logger
+    from .modules.Logo import logo
+    from .modules.network.Message import messageclient
+    from .modules.network.Updater import updater
+    from .modules.Options import Option, options_menu
+    from .modules.storage.CheatCleaner import cheatcleaner
+    from .modules.storage.Configs import config_menu
+    from .modules.storage.Data import data
+    from .modules.storage.Settings import settings
 
 def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""

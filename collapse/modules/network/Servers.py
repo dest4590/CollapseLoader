@@ -1,8 +1,8 @@
 import time
 import requests
 
-from ..modules.Module import Module
-from ..static import SERVERS
+from ..Module import Module
+from ...static import SERVERS
 from .Network import network
 
 class Servers(Module):

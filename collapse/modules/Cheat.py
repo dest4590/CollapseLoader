@@ -8,9 +8,9 @@ from time import sleep
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from ..modules.Module import Module
-from .Data import console, data
+from .storage.Data import console, data
 from .LogChecker import logchecker
-from .Settings import settings
+from .storage.Settings import settings
 
 
 def update_time(task_id, progress, start_time) -> None:

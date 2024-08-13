@@ -6,11 +6,11 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
-from ..modules.Module import Module
-from ..static import CODENAME, REPO_URL, VERSION
-from .Fixes import console
-from .Network import network
-from .Servers import servers
+from ...modules.Module import Module
+from ...static import CODENAME, REPO_URL, VERSION
+from ..Fixes import console
+from ..network.Network import network
+from ..network.Servers import servers
 
 
 class DataManager(Module):
@@ -36,6 +36,7 @@ class DataManager(Module):
     def get_url(self, path: str) -> str:
         """Gets a link from the web"""
         return self.server + path
+    
     def download(self, path: str, destination: str = None) -> None:
         """Downloads file using path"""
         

@@ -3,22 +3,23 @@ import os
 from time import sleep
 
 from ..modules.Module import Module
-from ..static import SYSTEM, SKIP_ANIMATIONS
+from ..static import SKIP_ANIMATIONS, SYSTEM
 from .Cheat import Cheat
 from .Cheats import cheat_manager
-from .Data import console, data
 from .Logger import logger
-from .Settings import settings
+from .storage.Data import console, data
+from .storage.Settings import settings
 
 selector_offset = len(cheat_manager.cheats) + 11
 functions = []
 
-class Function(Module):
+class Function:
     """Function for CLI class"""
     selector_offset = len(cheat_manager.cheats) + 11
 
     def __init__(self, line: str, color: str = 'dark_cyan'):
         self.line_text = line
+        self.color = color
 
         existing_func = next((func for func in functions if func.line_text == self.line_text), None)
         if existing_func is None:

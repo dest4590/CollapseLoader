@@ -1,6 +1,6 @@
 import datetime
 
-from collapse.utils.Message import MessageClient
+from collapse.modules.network.Message import MessageClient
 
 
 def test_calculate_time_ago():

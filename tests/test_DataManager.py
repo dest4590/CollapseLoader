@@ -1,6 +1,6 @@
 import pytest
 
-from collapse.utils.Data import DataManager
+from collapse.modules.storage.Data import DataManager
 
 
 @pytest.fixture
