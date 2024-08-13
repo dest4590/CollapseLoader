@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from ...modules.Module import Module
+from ..utils.Module import Module
 from .Data import data
 from .Settings import settings
 

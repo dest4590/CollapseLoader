@@ -4,18 +4,18 @@ import sys
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from .modules.Fixes import console
+from .modules.utils.Fixes import console
 
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
 
-    from .modules.Cheats import cheat_manager
-    from .modules.CLI import selector
-    from .modules.Logger import logger
-    from .modules.Logo import logo
+    from .modules.utils.Cheats import cheat_manager
+    from .modules.render.CLI import selector
+    from .modules.utils.Logger import logger
+    from .modules.utils.Logo import logo
     from .modules.network.Message import messageclient
     from .modules.network.Updater import updater
-    from .modules.Options import Option, options_menu
+    from .modules.storage.Options import Option, options_menu
     from .modules.storage.CheatCleaner import cheatcleaner
     from .modules.storage.Configs import config_menu
     from .modules.storage.Data import data

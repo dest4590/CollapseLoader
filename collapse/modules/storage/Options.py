@@ -1,7 +1,7 @@
 from rich import print
-from .CLI import console, selector
-from .Logger import logger
-from .storage.Settings import settings
+from ..render.CLI import console, selector
+from ..utils.Logger import logger
+from .Settings import settings
 
 option_list = []
 

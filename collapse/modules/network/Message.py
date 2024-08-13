@@ -1,9 +1,9 @@
 import datetime
 from rich import print
 from ...static import SAVE_MESSAGES
-from ...modules.Module import Module
+from ..utils.Module import Module
 from .API import api
-from ..Logger import logger
+from ..utils.Logger import logger
 from ..storage.Settings import settings
 
 class MessageClient(Module):

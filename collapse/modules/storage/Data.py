@@ -6,9 +6,9 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
-from ...modules.Module import Module
+from ..utils.Module import Module
 from ...static import CODENAME, REPO_URL, VERSION
-from ..Fixes import console
+from ..utils.Fixes import console
 from ..network.Network import network
 from ..network.Servers import servers
 

@@ -3,8 +3,8 @@ from time import sleep, time
 
 from pypresence import Presence
 
-from .storage.Data import data
-from .storage.Settings import settings
+from ..storage.Data import data
+from ..storage.Settings import settings
 
 
 class RPC(Thread):

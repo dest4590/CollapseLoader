@@ -1,7 +1,7 @@
 import mock
 import pytest
 
-from collapse.modules.CLI import Selector
+from collapse.modules.render.CLI import Selector
 
 @pytest.fixture
 def selector():

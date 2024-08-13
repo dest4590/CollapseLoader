@@ -2,13 +2,13 @@ import ctypes
 import os
 from time import sleep
 
-from ..modules.Module import Module
-from ..static import SKIP_ANIMATIONS, SYSTEM
-from .Cheat import Cheat
-from .Cheats import cheat_manager
-from .Logger import logger
-from .storage.Data import console, data
-from .storage.Settings import settings
+from ..utils.Module import Module
+from ...static import SKIP_ANIMATIONS, SYSTEM
+from ..utils.Cheat import Cheat
+from ..utils.Cheats import cheat_manager
+from ..utils.Logger import logger
+from ..storage.Data import console, data
+from ..storage.Settings import settings
 
 selector_offset = len(cheat_manager.cheats) + 11
 functions = []

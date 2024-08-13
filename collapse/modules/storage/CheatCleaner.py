@@ -1,8 +1,8 @@
 import os
 import shutil
 
-from ..Module import Module
-from ..CLI import selector
+from ..utils.Module import Module
+from ..render.CLI import selector
 
 
 class CheatCleaner(Module):

@@ -2,12 +2,12 @@ import os
 
 from rich.markup import escape
 
-from ..modules.Module import Module
-from ..static import SHOW_HIDDEN_CHEATS
-from .network.API import api
-from .storage.Cache import cache
+from .Module import Module
+from ...static import SHOW_HIDDEN_CHEATS
+from ..network.API import api
+from ..storage.Cache import cache
 from .Cheat import Cheat
-from .storage.Data import data
+from ..storage.Data import data
 
 
 class CheatManager(Module):

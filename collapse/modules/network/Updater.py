@@ -3,8 +3,8 @@ import webbrowser
 
 import aiohttp
 
-from ...modules.Module import Module
-from ..CLI import selector
+from ..utils.Module import Module
+from ..render.CLI import selector
 from ..storage.Data import data
 
 

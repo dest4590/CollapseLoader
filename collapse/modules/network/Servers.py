@@ -1,7 +1,7 @@
 import time
 import requests
 
-from ..Module import Module
+from ..utils.Module import Module
 from ...static import SERVERS
 from .Network import network
 

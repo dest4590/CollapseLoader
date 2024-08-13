@@ -1,6 +1,6 @@
 import pytest
 
-from collapse.modules.LogChecker import LogChecker
+from collapse.modules.utils.LogChecker import LogChecker
 
 
 @pytest.fixture

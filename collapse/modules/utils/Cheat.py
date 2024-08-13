@@ -1,16 +1,18 @@
 import os
+import random
 from contextlib import chdir
 from datetime import datetime
 from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
+from rich.color import ANSI_COLOR_NAMES
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from ..modules.Module import Module
-from .storage.Data import console, data
+from .Module import Module
 from .LogChecker import logchecker
-from .storage.Settings import settings
+from ..storage.Data import console, data
+from ..storage.Settings import settings
 
 
 def update_time(task_id, progress, start_time) -> None:
@@ -79,7 +81,7 @@ class Cheat(Module):
 
         self.download()
 
-        from .CLI import selector
+        from ..render.CLI import selector
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
 
@@ -103,7 +105,7 @@ class Cheat(Module):
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
+            BarColumn(pulse_style=random.choice(list(ANSI_COLOR_NAMES.keys()))),
             TextColumn("[progress.description]{task.fields[session]} {task.fields[time]}"),
             transient=True, console=console
         ) as progress:

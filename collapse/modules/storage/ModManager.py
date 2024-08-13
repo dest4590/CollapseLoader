@@ -1,6 +1,6 @@
 import os
 
-from ...modules.Module import Module
+from ..utils.Module import Module
 
 
 class ModManager(Module):

@@ -1,7 +1,7 @@
 import configparser
 import os
 
-from ...modules.Module import Module
+from ..utils.Module import Module
 from .Data import data
 
 class Settings(Module):
