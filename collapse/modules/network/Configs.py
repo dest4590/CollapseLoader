@@ -3,7 +3,7 @@ import os
 from rich import print
 
 from ..utils.Module import Module
-from ..network.API import api
+from .API import api
 from ..utils.Cheat import Cheat
 from ..utils.Cheats import cheat_manager
 from ..render.CLI import console, selector

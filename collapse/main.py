@@ -17,7 +17,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .modules.network.Updater import updater
     from .modules.storage.Options import Option, options_menu
     from .modules.storage.CheatCleaner import cheatcleaner
-    from .modules.storage.Configs import config_menu
+    from .modules.network.Configs import config_menu
     from .modules.storage.Data import data
     from .modules.storage.Settings import settings
 
