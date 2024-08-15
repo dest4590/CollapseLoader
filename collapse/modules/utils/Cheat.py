@@ -5,17 +5,29 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
-from contextlib_chdir import chdir
+from os import chdir
 from rich.color import ANSI_COLOR_NAMES
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from ..storage.Data import console, data
 from ..storage.Settings import settings
+from ...static import LINUX
 from .LogChecker import logchecker
 from .Module import Module
 
+class cd:
+    """Context manager for changing the current working directory"""
+    def __init__(self, newPath):
+        self.newPath = os.path.expanduser(newPath)
 
-def update_time(task_id, progress, start_time) -> None:
+    def __enter__(self):
+        self.savedPath = os.getcwd()
+        os.chdir(self.newPath)
+
+    def __exit__(self, etype, value, traceback):
+        os.chdir(self.savedPath)
+
+def update_time(task_id, progress: Progress, start_time) -> None:
     """Updates the time for the progress bar by ticking one second"""
     while True:
         elapsed_time = datetime.now() - start_time
@@ -86,22 +98,34 @@ class Cheat(Module):
         selector.set_title(selector.titles_states['run'].format(client=self.name))
 
         # Downloading requirements
-        data.download('jre-21.0.2.zip')
+        if not LINUX:
+            self.debug('Downloading Windows JRE')
+            data.download('jre-21.0.2.zip')
+        else:
+            self.debug('Downloading Linux JRE')
+            data.download('jre-21.0.2-linux.zip')
+            
+            os.system(f'chmod +x {data.root_dir}jre-21.0.2-linux/bin/java')
 
         if self.version.startswith('1.12'):
             self.debug('Downloading 1.12.2 libraries & natives')
             data.download('libraries-1.12.zip')
-            data.download('natives-1.12.zip')
+            if not LINUX:
+                data.download('natives-1.12.zip')
+            else:
+                data.download('natives-linux.zip')
 
         else:
             self.debug('Downloading 1.12.2+ libraries & natives')
             data.download('libraries.zip')
-            data.download('natives.zip')
+            if not LINUX:
+                data.download('natives.zip')
+            else:
+                data.download('natives-linux.zip')
 
         data.download('assets.zip')
 
         self.info(f'Running client {self.name}')
-
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -119,14 +143,14 @@ class Cheat(Module):
 
             Thread(target=update_time, args=(task_id, progress, start_time), daemon=True).start()
 
-            with chdir('.\\' + self.path_dir):
-                # Using backslash var, because f-strings not supporting it in expressions
-                bc = '\\'
-
+            # Using backslash var, because f-strings not supporting it in expressions
+            bc = '\\'
+            
+            with cd(os.path.join(self.path_dir)):
                 path_sep = ';' if os.name == 'nt' else ':'
-
+                
                 libraries_dir = 'libraries-1.12' if self.version.startswith('1.12') else 'libraries'
-                natives_dir = 'natives-1.12' if self.version.startswith('1.12') else 'natives'
+                natives_dir = ('natives-1.12' if not LINUX else 'natives-linux') if self.version.startswith('1.12') else ('natives' if not LINUX else 'natives-linux')
                 assets_dir = 'assets'
 
                 if self.internal and os.path.isdir(libraries_dir):
@@ -135,32 +159,41 @@ class Cheat(Module):
                     classpath = f'..{bc}{libraries_dir}{bc}*'
 
                 if self.internal and os.path.isdir(natives_dir):
-                    native_path = f'.{bc}{natives_dir};'
+                    native_path = f'.{bc}{natives_dir}{";" if not LINUX else ""}'
                 else:
-                    native_path = f'..{bc}{natives_dir};'
+                    native_path = f'..{bc}{natives_dir}{";" if not LINUX else ""}'
 
                 asset_path = f'.{bc}{assets_dir}' if self.internal and os.path.isdir(assets_dir) else f'..{bc}{assets_dir}'
 
                 java_command = [
-                    f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe",
+                    f"""{f"..{bc}jre-21.0.2" if not LINUX else f'..{bc}jre-21.0.2-linux'}\\bin\\java{'w' if self.silent else ''}{".exe" if not LINUX else ''}""",
                     "-Xverify:none",
                     f"-Xmx{settings.get('ram', 'Loader')}M",
                     f"-Djava.library.path={native_path}",
-                    f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
+                    f"-cp", # Separate -cp flag
+                    f"{classpath}{path_sep}.{bc}{self.jar}", # Classpath 
+                    self.main_class, # Main class as a separate argument
                     f"--username {settings.get('nickname')}",
-                    "--gameDir .\\",
-                    f"--assetsDir {asset_path}",
-                    f"--assetIndex {self.version}",
+                    "--gameDir ./",
+                    f"--assetsDir",
+                    asset_path,
+                    f"--assetIndex",
+                    self.version,
                     "--uuid N/A",
-                    "--accessToken 0",
+                    "--accessToken",
+                    "0",
                     "--userType legacy",
-                    f"--version {self.version}"
+                    f"--version",
+                    self.version
                 ]
+                
+                if LINUX:
+                    java_command = [arg.replace('\\', '/') for arg in java_command]
 
                 command = ' '.join(java_command)
                 self.debug(command)
 
-                process = Popen(command, stdout=PIPE, stderr=STDOUT)
+                process = Popen(java_command, stdout=PIPE, stderr=STDOUT)
                 buffer = []
 
                 for line in process.stdout:

@@ -19,6 +19,7 @@ SHOW_HIDDEN_CHEATS = False
 SKIP_ANIMATIONS = True
 
 SYSTEM = os.name
+LINUX = True if SYSTEM == 'posix' else False
 
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'

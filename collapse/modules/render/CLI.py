@@ -3,7 +3,7 @@ import os
 from time import sleep
 
 from ..utils.Module import Module
-from ...static import SKIP_ANIMATIONS, SYSTEM
+from ...static import SKIP_ANIMATIONS, LINUX    
 from ..utils.Cheat import Cheat
 from ..utils.Cheats import cheat_manager
 from ..utils.Logger import logger
@@ -43,7 +43,6 @@ class Selector(Module):
             'configs': 'CollapseLoader <Configs>',
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
-        self.linux = True if SYSTEM == 'posix' else False
 
         if self.offset == 0:
             self.warn('No clients available')
@@ -126,7 +125,7 @@ class Selector(Module):
 
     def set_title(self, text: str = f'CollapseLoader ({data.version})', title_type: str = None) -> None:
         """Changes window title"""
-        if not self.linux:
+        if not LINUX:
             if self.custom_title is None:
                 ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
             else:

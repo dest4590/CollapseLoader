@@ -1,15 +1,16 @@
 import os
 import shutil
 
-from ..utils.Module import Module
+from ...static import LINUX
 from ..render.CLI import selector
+from ..utils.Module import Module
 
 
 class CheatCleaner(Module):
     """Cleans cheat folders"""
     def __init__(self) -> None:
         super().__init__()
-        if not selector.linux:
+        if not LINUX:
             # Absolute path
             self.folders = [
                 'C:\\Celestial',
