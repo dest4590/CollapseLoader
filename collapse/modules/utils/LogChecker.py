@@ -32,6 +32,8 @@ class LogChecker(Module):
                 self.info(self.reason('some required classes or libraries are missing'))
             elif 'java.lang.UnsupportedClassVersionError' in logs:
                 self.info(self.reason('it was compiled with a different Java version'))
+            elif 'java.lang.UnsatisfiedLinkError: Failed to locate library' in logs:
+                self.info(self.reason('it failed to locate a native library'))
 
             # Modding Errors
             elif 'LoaderExceptionModCrash' in logs:
