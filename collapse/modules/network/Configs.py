@@ -34,9 +34,12 @@ class Configs(Module):
 
     def __init__(self):
         super().__init__()
-        self.configs = api.get('configs').json()
-        self.init_configs()
-        
+        self.configs = api.get('configs')
+
+        if self.configs is not None:
+            self.configs = self.configs.json()
+            self.init_configs()
+
     def init_configs(self):
         """Initialize configurations"""
         
