@@ -105,7 +105,7 @@ class Cheat(Module):
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            BarColumn(pulse_style=random.choice(list(ANSI_COLOR_NAMES.keys()))),
+            BarColumn(pulse_style='gray'),
             TextColumn("[progress.description]{task.fields[session]} {task.fields[time]}"),
             transient=True, console=console
         ) as progress:

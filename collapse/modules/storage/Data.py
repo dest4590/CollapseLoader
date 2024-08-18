@@ -44,7 +44,7 @@ class DataManager(Module):
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
         dest = destination if destination else os.path.join(self.root_dir, filename)
         
-        self.debug(f'Downloading {filename} to {dest}')
+        self.info(f'Downloading {filename} to {dest}')
 
         if self._is_downloaded(filename, path, path_dir):
             return
