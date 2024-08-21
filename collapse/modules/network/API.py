@@ -1,8 +1,8 @@
 import requests
 
-from ..utils.Module import Module
 from ...static import API_URL, LOCAL_API
 from ..network.Network import network
+from ..utils.Module import Module
 
 
 class API(Module):

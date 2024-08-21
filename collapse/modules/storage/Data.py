@@ -6,11 +6,11 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
-from ..utils.Module import Module
 from ...static import CODENAME, REPO_URL, VERSION
-from ..utils.Fixes import console
 from ..network.Network import network
 from ..network.Servers import servers
+from ..utils.Fixes import console
+from ..utils.Module import Module
 
 
 class DataManager(Module):

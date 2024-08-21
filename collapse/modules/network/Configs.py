@@ -2,12 +2,12 @@ import os
 
 from rich import print
 
-from ..utils.Module import Module
-from .API import api
+from ..render.CLI import console, selector
 from ..utils.Cheat import Cheat
 from ..utils.Cheats import cheat_manager
-from ..render.CLI import console, selector
 from ..utils.Logger import logger
+from ..utils.Module import Module
+from .API import api
 
 config_list = []
 

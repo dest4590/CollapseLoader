@@ -1,5 +1,4 @@
 import os
-import random
 from contextlib import chdir
 from datetime import datetime
 from subprocess import PIPE, STDOUT, Popen
@@ -9,10 +8,10 @@ from time import sleep
 from rich.color import ANSI_COLOR_NAMES
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from .Module import Module
-from .LogChecker import logchecker
 from ..storage.Data import console, data
 from ..storage.Settings import settings
+from .LogChecker import logchecker
+from .Module import Module
 
 
 def update_time(task_id, progress, start_time) -> None:

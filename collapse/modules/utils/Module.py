@@ -1,5 +1,6 @@
 from .Logger import logger
 
+
 class Module:
     """The module is made to simplify the use of logging, etc."""
 

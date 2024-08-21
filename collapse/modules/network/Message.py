@@ -1,10 +1,13 @@
 import datetime
+
 from rich import print
+
 from ...static import SAVE_MESSAGES
+from ..storage.Settings import settings
+from ..utils.Logger import logger
 from ..utils.Module import Module
 from .API import api
-from ..utils.Logger import logger
-from ..storage.Settings import settings
+
 
 class MessageClient(Module):
     """Client for retrieving and displaying messages"""

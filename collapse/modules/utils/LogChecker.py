@@ -1,5 +1,6 @@
 from .Module import Module
 
+
 class LogChecker(Module):
     """Used to check game logs to detect crashes"""
 

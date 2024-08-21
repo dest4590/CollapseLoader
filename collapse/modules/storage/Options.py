@@ -1,4 +1,5 @@
 from rich import print
+
 from ..render.CLI import console, selector
 from ..utils.Logger import logger
 from .Settings import settings

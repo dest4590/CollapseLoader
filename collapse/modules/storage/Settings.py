@@ -4,6 +4,7 @@ import os
 from ..utils.Module import Module
 from .Data import data
 
+
 class Settings(Module):
     """Settings manager, used to save user preferences"""
 

@@ -3,9 +3,9 @@ import webbrowser
 
 import aiohttp
 
-from ..utils.Module import Module
 from ..render.CLI import selector
 from ..storage.Data import data
+from ..utils.Module import Module
 
 
 class Updater(Module):

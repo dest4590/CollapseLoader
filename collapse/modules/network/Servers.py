@@ -1,9 +1,11 @@
 import time
+
 import requests
 
-from ..utils.Module import Module
 from ...static import SERVERS
+from ..utils.Module import Module
 from .Network import network
+
 
 class Servers(Module):
     """Class to manage and check the availability of servers"""
