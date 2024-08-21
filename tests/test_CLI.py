@@ -3,6 +3,7 @@ import pytest
 
 from collapse.modules.render.CLI import Selector
 
+
 @pytest.fixture
 def selector():
     return Selector()

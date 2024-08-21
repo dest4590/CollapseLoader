@@ -9,17 +9,18 @@ from .modules.utils.Fixes import console
 with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
     loading_task = progress.add_task("[blue]Loading modules", total=None)
 
-    from .modules.utils.Cheats import cheat_manager
-    from .modules.render.CLI import selector
-    from .modules.utils.Logger import logger
-    from .modules.utils.Logo import logo
+    from .modules.network.Analytics import analytics
+    from .modules.network.Configs import config_menu
     from .modules.network.Message import messageclient
     from .modules.network.Updater import updater
-    from .modules.storage.Options import Option, options_menu
+    from .modules.render.CLI import selector
     from .modules.storage.CheatCleaner import cheatcleaner
-    from .modules.network.Configs import config_menu
     from .modules.storage.Data import data
+    from .modules.storage.Options import Option, options_menu
     from .modules.storage.Settings import settings
+    from .modules.utils.Cheats import cheat_manager
+    from .modules.utils.Logger import logger
+    from .modules.utils.Logo import logo
 
 def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
@@ -91,6 +92,7 @@ def main() -> None:
     updater.check_version()
     initialize_settings()
     selector.set_title(selector.titles_states['default'])
+    analytics.loader_start()
 
     if '_child.py' not in sys.argv[0]:
         while True:

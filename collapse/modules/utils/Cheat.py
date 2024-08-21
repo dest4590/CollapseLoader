@@ -5,9 +5,9 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
-from rich.color import ANSI_COLOR_NAMES
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
+from ..network.Analytics import analytics
 from ..storage.Data import console, data
 from ..storage.Settings import settings
 from .LogChecker import logchecker
@@ -158,6 +158,8 @@ class Cheat(Module):
 
                 command = ' '.join(java_command)
                 self.debug(command)
+                
+                # analytics.client_run(self.id)
 
                 process = Popen(command, stdout=PIPE, stderr=STDOUT)
                 buffer = []
