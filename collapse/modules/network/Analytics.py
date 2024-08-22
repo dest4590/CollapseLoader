@@ -15,6 +15,6 @@ class Analytics(Module):
         
     def client_run(self, client_id: int):
         """Send a request to the analytics server when the client runs"""
-        network.get(f'{api.server}api/analytics/client', params={'username': data.version, 'client-id': client_id})
+        network.get(f'{api.server}api/analytics/client', params={'username': data.version, 'client_id': client_id})
         
 analytics = Analytics()

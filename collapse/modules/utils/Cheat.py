@@ -159,7 +159,7 @@ class Cheat(Module):
                 command = ' '.join(java_command)
                 self.debug(command)
                 
-                # analytics.client_run(self.id)
+                analytics.client_run(self.id)
 
                 process = Popen(command, stdout=PIPE, stderr=STDOUT)
                 buffer = []
