@@ -2,6 +2,8 @@ import ctypes
 import os
 from time import sleep
 
+from rich.prompt import Confirm
+
 from ...static import SKIP_ANIMATIONS, SYSTEM
 from ..storage.Data import console, data
 from ..storage.Settings import settings
@@ -15,6 +17,7 @@ functions = []
 
 class Function:
     """Function for CLI class"""
+    
     selector_offset = len(cheat_manager.cheats) + 11
 
     def __init__(self, line: str, color: str = 'dark_cyan'):
@@ -52,10 +55,9 @@ class Selector(Module):
         self.debug('Created selector text')
 
     def make_text(self) -> str:
-        """Returns text"""
-        # add title
+        """Creates the text for the selector"""
+        
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
-        # add clients
         text += '\n'.join(f'{i + 1}. {cheat}' for i, cheat in enumerate(cheat_manager.cheats))
         text += '\n'
         
@@ -94,26 +96,19 @@ class Selector(Module):
         os.system('pause')
 
     def ask(self, question: str) -> bool:
-        """Asks the user for an action"""
-        while True:
-            i = console.input(f'{question} >> ').lower()
-            if i in ['y', 'yes', 'да', 'н']:
-                return True
-            elif i in ['n', 'no', 'нет']:
-                return False
-            else:
-                console.print('Select [bold]y[/] or [bold]n[/]')
-
+        """Asks the user confirm for an action"""
+        return Confirm.ask(f'{question} >>')
+    
     def get_cheat_by_index(self, index: int) -> Cheat:
-        """Gets the cheat through its index"""
+        """Returns the cheat by index"""
         return cheat_manager.cheats[index - 1]
 
     def select_username(self) -> str:
-        """Asks for the user's nickname"""
+        """Asks for a nickname"""
         return input('Enter nickname >> ')
 
     def select_ram(self) -> int:
-        """Asks how much RAM to use"""
+        """Asks for RAM in gigabytes"""
         while True:
             try:
                 return int(input('Enter ram in gigabytes >> '))
@@ -121,11 +116,11 @@ class Selector(Module):
                 logger.error('Enter gigabytes (2, 4, 8)')
 
     def clear(self) -> None:
-        """Just clears text"""
+        """Clears the console"""
         os.system('cls')
 
     def set_title(self, text: str = f'CollapseLoader ({data.version})', title_type: str = None) -> None:
-        """Changes window title"""
+        """Sets the window title"""
         if not self.linux:
             if self.custom_title is None:
                 ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
@@ -133,7 +128,7 @@ class Selector(Module):
                 ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
 
     def reset_title(self) -> None:
-        """Sets default window title"""
+        """Resets the window title"""
         self.set_title(title_type='default')
 
     def animate(self, text: str, highlight: bool = True) -> None:

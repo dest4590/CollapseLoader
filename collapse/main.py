@@ -82,7 +82,7 @@ def handle_data_folder_removal() -> None:
     """Handle the removal of the data folder after user confirmation"""
 
     logger.debug('Removing data folder')
-    if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well (y,n)'):
+    if selector.ask('You definitely want to delete the loader data folder, this can also delete all your configs as well'):
         shutil.rmtree('data', True)
 
         logger.info('Removed data folder')

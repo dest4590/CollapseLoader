@@ -9,23 +9,26 @@ class CheatCleaner(Module):
     """Cleans cheat folders"""
     def __init__(self) -> None:
         super().__init__()
+        self.login = os.getlogin()
+        
         if not selector.linux:
             # Absolute path
             self.folders = [
-                'C:\\Celestial',
-                'C:\\baritone',
+                f'C:\\Users\\{self.login}\\AppData\\Roaming\\.antiautistleak',
+                f'C:\\Users\\{self.login}\\.th-client',
+                f'C:\\Users\\{self.login}\\.avalon',
                 'C:\\shaderpacks',
-                'C:\\resourcepacks',
-                'C:\\RockAntiLeak',
                 'C:\\Rockstar',
+                'C:\\RockAntiLeak',
+                'C:\\RichRecode'
+                'C:\\resourcepacks',
+                'C:\\Nursultan',
                 'C:\\MoonProject',
                 'C:\\hachrecode',
-                'C:\\Nursultan',
-                f'C:\\Users\\{os.getlogin()}\\.avalon',
                 'C:\\Excellent',
-                f'C:\\Users\\{os.getlogin()}\\AppData\\Roaming\\.antiautistleak',
-                f'C:\\Users\\{os.getlogin()}\\.th-client',
-                'C:\\RichRecode'
+                'C:\\Celestial',
+                'C:\\baritone',
+                'C:\\hachrecode'
             ]
 
     def scan_folders(self) -> None:
