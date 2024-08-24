@@ -4,7 +4,6 @@ from rich import print
 
 from ...static import SAVE_MESSAGES
 from ..storage.Settings import settings
-from ..utils.Logger import logger
 from ..utils.Module import Module
 from .API import api
 
@@ -47,7 +46,7 @@ class MessageClient(Module):
 
                 self.shown = True
         else:
-            logger.error('MessageClient error')
+            self.error('MessageClient error')
 
     @staticmethod
     def calculate_time_ago(time_difference: datetime.timedelta) -> str:

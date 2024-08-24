@@ -64,14 +64,14 @@ def handle_selection(choosed) -> None:
         settings.set('ram', selector.select_ram() * 1024, 'Loader')
         logger.debug('Changed ram')
         selector.pause()
-    elif choosed == selector.offset + 13: # Ghost mode (PANIC)
-        cheatcleaner.scan_folders()
-    elif choosed == selector.offset + 14: # Remove data folder
-        handle_data_folder_removal()
-    elif choosed == selector.offset + 15: # Settings Menu
+    elif choosed == selector.offset + 13: # Settings Menu
         options_menu.show()
-    elif choosed == selector.offset + 16: # Configs Menu
+    elif choosed == selector.offset + 14: # Configs Menu
         config_menu.show()
+    elif choosed == selector.offset + 15: # Ghost mode (PANIC)
+        cheatcleaner.scan_folders()
+    elif choosed == selector.offset + 16: # Remove data folder
+        handle_data_folder_removal()
     elif choosed == selector.offset + 17: # Exit
         sys.exit(1)
     else:

@@ -2,7 +2,7 @@ import ctypes
 import os
 from time import sleep
 
-from rich.prompt import Confirm
+from rich.prompt import Confirm, IntPrompt
 
 from ...static import SKIP_ANIMATIONS, SYSTEM
 from ..storage.Data import console, data
@@ -64,10 +64,10 @@ class Selector(Module):
         function_lines = [
             'Select username', 
             'Enter RAM',
+            'Settings Menu',
+            'Configs Menu',
             'Ghost mode (PANIC)', 
             'Remove data folder', 
-            'Settings Menu',
-            'Configs Menu [italic][turquoise4](BETA)[/]',
             'Exit'
         ]
         
@@ -109,12 +109,8 @@ class Selector(Module):
 
     def select_ram(self) -> int:
         """Asks for RAM in gigabytes"""
-        while True:
-            try:
-                return int(input('Enter ram in gigabytes >> '))
-            except ValueError:
-                logger.error('Enter gigabytes (2, 4, 8)')
-
+        return IntPrompt.ask('Enter ram in gigabytes')
+    
     def clear(self) -> None:
         """Clears the console"""
         os.system('cls')
