@@ -40,24 +40,26 @@ class CheatManager(Module):
 
         return cheats
 
-    def cheat_line(self, cheat) -> str:
-        """Сreates a line to display the cheat"""
-        return f"""{escape(cheat["name"])}{(" [red bold][-][/]" if not cheat["working"] else "")}"""
-
     def make_array(self, cheats: dict) -> None:
         """Adds clients to array"""
         for cheat in cheats:
             if cheat["show_in_loader"] or SHOW_HIDDEN_CHEATS:
                 self.cheats.append(
                     Cheat(
-                        name=self.cheat_line(cheat),
+                        name=cheat["name"],
                         link=data.get_url(cheat["filename"]),
                         main_class=cheat["main_class"],
                         version=cheat["version"],
                         category=cheat["category"],
                         internal=cheat["internal"],
+                        working=cheat["working"],
                         id=cheat["id"],
                     )
                 )
+                
+    def refresh(self) -> None:
+        """Refresh cheats"""
+        self.cheats = []
+        self._load_cheats()
 
 cheat_manager = CheatManager()

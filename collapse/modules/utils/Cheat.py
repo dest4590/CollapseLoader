@@ -5,6 +5,7 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
+from rich.markup import escape
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from ..network.Analytics import analytics
@@ -31,12 +32,13 @@ class Cheat(Module):
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
                  version: str = '1.12.2',
-                 category: str = 'HVH', internal: bool = False, id: int = 1) -> None:
+                 category: str = 'HVH', internal: bool = False, working: bool = True, id: int = 1) -> None:
         super().__init__()
     
         self.name = name
         self.link = link
         self.category = category
+        self.working = working
         self.id = id
         self.configs = []
 
@@ -54,7 +56,7 @@ class Cheat(Module):
         self.silent = False
 
     def __str__(self) -> str:
-        return self.name
+        return f"""{escape(self.name)}{(" [red bold][-][/]" if not self.working else "")}{f" <{self.version}>" if not settings.use_option('show_client_version') else ""}"""
 
     def download(self) -> True:
         """Downloading cheat files"""

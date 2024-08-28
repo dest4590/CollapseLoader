@@ -75,6 +75,7 @@ Option('disable_caching', 'Disables the caching system', bool, False).create()
 Option('use_short_logo', 'Use short variant of logo', bool, False).create()
 Option('hide_links', 'Hide loader social links in main menu', bool, False).create()
 Option('disable_animation', 'Disables the animation in the loader', bool, False).create()
+Option('show_client_version', 'Shows the client version in the loader', bool, False).create()
 
 class Menu:
     """Options menu"""
