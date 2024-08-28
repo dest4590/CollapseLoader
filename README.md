@@ -26,7 +26,7 @@
 
 
 ## Showcase
-<img src="https://github.com/dest4590/CollapseLoader/assets/80628386/3a6e4c8a-5668-46b8-ae35-814b40fa9389" width=300 style="border-radius: 5px;">
+<img src="https://github.com/user-attachments/assets/85799598-f7b5-4ee2-9cac-07afc88bc699" width=500>
 
 ## Stats
 ![Alt](https://repobeats.axiom.co/api/embed/7b1d7b331cc7aadd46f994465326905afec453a0.svg "Repobeats analytics image")
