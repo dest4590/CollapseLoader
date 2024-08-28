@@ -1,11 +1,10 @@
 import os
 
-from rich.markup import escape
-
 from ...static import SHOW_HIDDEN_CHEATS
 from ..network.API import api
 from ..storage.Cache import cache
 from ..storage.Data import data
+from ..storage.Settings import settings
 from .Cheat import Cheat
 from .Module import Module
 
@@ -39,6 +38,10 @@ class CheatManager(Module):
                 self.make_array(c['clients'])
 
         return cheats
+    
+    def cheat_line(self, cheat: dict) -> str:
+        """Returns a formatted string representing the cheat"""
+        return f"{cheat['name']} {f"<{cheat['version']}>" if not settings.use_option('show_client_version') else ''}"
 
     def make_array(self, cheats: dict) -> None:
         """Adds clients to array"""
@@ -46,7 +49,7 @@ class CheatManager(Module):
             if cheat["show_in_loader"] or SHOW_HIDDEN_CHEATS:
                 self.cheats.append(
                     Cheat(
-                        name=cheat["name"],
+                        name=self.cheat_line(cheat),
                         link=data.get_url(cheat["filename"]),
                         main_class=cheat["main_class"],
                         version=cheat["version"],

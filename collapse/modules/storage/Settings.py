@@ -35,10 +35,13 @@ class Settings(Module):
 
     def get(self, key: str, header: str = 'Options') -> str:
         """Get a setting value"""
-        return self.config.get(header, key, fallback=False)
+        return self.config.get(header, key, fallback=None)
 
     def use_option(self, name: str) -> bool:
         """Check whether the setting is true or false, done for convenience"""
+        if self.get(name) is None:
+            return True
+        
         return self.get(name) == 'False'
 
 settings = Settings()

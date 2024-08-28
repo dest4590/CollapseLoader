@@ -56,7 +56,7 @@ class Cheat(Module):
         self.silent = False
 
     def __str__(self) -> str:
-        return f"""{escape(self.name)}{(" [red bold][-][/]" if not self.working else "")}{f" <{self.version}>" if not settings.use_option('show_client_version') else ""}"""
+        return self.name
 
     def download(self) -> True:
         """Downloading cheat files"""
