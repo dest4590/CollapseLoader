@@ -41,8 +41,9 @@ class CheatManager(Module):
     
     def cheat_line(self, cheat: dict) -> str:
         """Returns a formatted string representing the cheat"""
-        return f"{cheat['name']} {f"<{cheat['version']}>" if not settings.use_option('show_client_version') else ''}"
-
+        version = f"<{cheat['version']}>" if not settings.use_option('show_client_version') else ''
+        return f"{cheat['name']} {version}"
+    
     def make_array(self, cheats: dict) -> None:
         """Adds clients to array"""
         for cheat in cheats:
