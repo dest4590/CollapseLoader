@@ -152,7 +152,7 @@ class Cheat(Module):
                     "--gameDir .\\",
                     f"--assetsDir {asset_path}",
                     f"--assetIndex {self.version}",
-                    "--uuid N/A",
+                    "--uuid 00000000-0000-0000-0000-000000000000",
                     "--accessToken 0",
                     "--userType legacy",
                     f"--version {self.version}"
