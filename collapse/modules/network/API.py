@@ -10,7 +10,7 @@ class API(Module):
 
     def __init__(self, server: str = API_URL) -> None:
         super().__init__()
-        self.server = 'http://127.0.0.1:8000/' if LOCAL_API else server
+        self.server = server if not LOCAL_API else 'http://127.0.0.1:8000/'
 
     def get(self, path: str) -> requests.Response:
         """Makes an API request"""

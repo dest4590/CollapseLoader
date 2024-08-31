@@ -44,6 +44,7 @@ class Selector(Module):
             'run': 'CollapseLoader >> {client}',
             'settings': 'CollapseLoader <Settings>',
             'configs': 'CollapseLoader <Configs>',
+            'credits': 'Collapse Loader <Credits>',
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
         self.linux = True if SYSTEM == 'posix' else False
@@ -62,12 +63,13 @@ class Selector(Module):
         text += '\n'
         
         function_lines = [
-            'Select username', 
-            'Enter RAM',
             'Settings Menu',
             'Configs Menu',
-            'Ghost mode (PANIC)', 
-            'Remove data folder', 
+            'Select username',
+            'Enter RAM',
+            'Ghost mode (PANIC)',
+            'Remove data folder',
+            'Credits & Donators', 
             'Exit'
         ]
         

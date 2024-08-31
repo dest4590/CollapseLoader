@@ -19,6 +19,7 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .modules.storage.Options import Option, options_menu
     from .modules.storage.Settings import settings
     from .modules.utils.Cheats import cheat_manager
+    from .modules.utils.CreditsMenu import credits_menu
     from .modules.utils.Logger import logger
     from .modules.utils.Logo import logo
 
@@ -56,23 +57,23 @@ def handle_selection(choosed) -> None:
     if choosed <= len(cheat_manager.cheats):
         cheat = selector.get_cheat_by_index(choosed)
         cheat.run()
-    elif choosed == selector.offset + 11: # Select username
+    elif choosed == selector.offset + 11:
+        options_menu.show()
+    elif choosed == selector.offset + 12:
+        config_menu.show()
+    elif choosed == selector.offset + 13:
         settings.set('nickname', selector.select_username())
         logger.debug('Changed nickname')
-        selector.pause()
-    elif choosed == selector.offset + 12: # Enter RAM
+    elif choosed == selector.offset + 14:
         settings.set('ram', selector.select_ram() * 1024, 'Loader')
         logger.debug('Changed ram')
-        selector.pause()
-    elif choosed == selector.offset + 13: # Settings Menu
-        options_menu.show()
-    elif choosed == selector.offset + 14: # Configs Menu
-        config_menu.show()
-    elif choosed == selector.offset + 15: # Ghost mode (PANIC)
+    elif choosed == selector.offset + 15:
         cheatcleaner.scan_folders()
-    elif choosed == selector.offset + 16: # Remove data folder
+    elif choosed == selector.offset + 16:
         handle_data_folder_removal()
-    elif choosed == selector.offset + 17: # Exit
+    elif choosed == selector.offset + 17:
+        credits_menu.show()
+    elif choosed == selector.offset + 18: # Exit
         sys.exit(1)
     else:
         logger.error('Choose number')
@@ -89,10 +90,12 @@ def handle_data_folder_removal() -> None:
 
 def main() -> None:
     """Main function to run the loader"""
-    updater.check_version()
     initialize_settings()
-    selector.set_title(selector.titles_states['default'])
+    
+    updater.check_version()
     analytics.loader_start()
+    
+    selector.set_title(selector.titles_states['default'])
 
     if '_child.py' not in sys.argv[0]:
         while True:
@@ -104,6 +107,7 @@ def main() -> None:
             try:
                 choosed = int(selector.select())
                 handle_selection(choosed)
+                
             except ValueError:
                 logger.error('Choose number')
                 continue

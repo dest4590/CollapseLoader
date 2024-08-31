@@ -26,7 +26,7 @@ class Servers(Module):
 
                 self.debug(f'Server {server} responds with {r.status_code} and {((end_time - start_time) * 1000):.2f} ms of ping')
 
-                self.info(f'Using {server} server')
+                self.debug(f'Using {server} server')
                 return f'https://{server}/'
             except requests.exceptions.RequestException:
                 self.info(f"The server {server} is down/inaccessible")

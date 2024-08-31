@@ -13,12 +13,30 @@ class Analytics(Module):
     
     def loader_start(self):
         """Send a request to the analytics server when the loader starts"""
-        self.debug('Send analytics request for loader start')
-        network.get(f'{api.server}api/analytics/start', params={'version': data.version})
+        try:
+            r = network.get(f'{api.server}api/analytics/start', params={'version': data.version}).json()
         
+            if r['status'] == 'success':
+                self.debug('Successfully sent analytics request for loader start')
+        
+            elif r['status'] == 'error':
+                self.error(f'Failed to send analytics request for loader start {r["message"]}')
+        
+        except Exception as e:
+            self.error('Failed to send analytics request for loader start', e)
+
     def client_run(self, client_id: int):
         """Send a request to the analytics server when the client runs"""
-        self.debug('Send analytics request for client run')
-        network.get(f'{api.server}api/analytics/client', params={'username': settings.get('nickname'), 'client_id': client_id})
+        try:
+            r = network.get(f'{api.server}api/analytics/client', params={'username': settings.get('nickname'), 'client_id': client_id})
+        
+            if r['status'] == 'success':
+                self.debug('Successfully sent analytics request for client run')
+            
+            elif r['status'] == 'error':
+                self.error(f'Failed to send analytics request for client run {r["message"]}')
+        
+        except Exception as e:
+            self.error('Failed to send analytics request for client run', e)
 
 analytics = Analytics()
