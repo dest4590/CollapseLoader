@@ -14,11 +14,11 @@ with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.descripti
     from .modules.network.Message import messageclient
     from .modules.network.Updater import updater
     from .modules.render.CLI import selector
-    from .modules.storage.CheatCleaner import cheatcleaner
+    from .modules.storage.ClientCleaner import clientcleaner
     from .modules.storage.Data import data
     from .modules.storage.Options import Option, options_menu
     from .modules.storage.Settings import settings
-    from .modules.utils.Cheats import cheat_manager
+    from .modules.utils.ClientManager import client_manager
     from .modules.utils.CreditsMenu import credits_menu
     from .modules.utils.Logger import logger
     from .modules.utils.Logo import logo
@@ -54,9 +54,9 @@ def display_main_menu() -> None:
 
 def handle_selection(choosed) -> None:
     """Handle the user's menu selection"""
-    if choosed <= len(cheat_manager.cheats):
-        cheat = selector.get_cheat_by_index(choosed)
-        cheat.run()
+    if choosed <= len(client_manager.clients):
+        client = selector.get_client_by_index(choosed)
+        client.run()
     elif choosed == selector.offset + 11:
         options_menu.show()
     elif choosed == selector.offset + 12:
@@ -65,10 +65,10 @@ def handle_selection(choosed) -> None:
         settings.set('nickname', selector.select_username())
         logger.debug('Changed nickname')
     elif choosed == selector.offset + 14:
-        settings.set('ram', selector.select_ram() * 1024, 'Loader')
+        settings.set('ram', selector.ask_int() * 1024, 'Loader')
         logger.debug('Changed ram')
     elif choosed == selector.offset + 15:
-        cheatcleaner.scan_folders()
+        clientcleaner.scan_folders()
     elif choosed == selector.offset + 16:
         handle_data_folder_removal()
     elif choosed == selector.offset + 17:

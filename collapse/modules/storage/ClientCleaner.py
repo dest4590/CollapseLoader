@@ -5,8 +5,8 @@ from ..render.CLI import selector
 from ..utils.Module import Module
 
 
-class CheatCleaner(Module):
-    """Cleans cheat folders"""
+class ClientCleaner(Module):
+    """Cleans client folders"""
     def __init__(self) -> None:
         super().__init__()
         self.login = os.getlogin()
@@ -33,7 +33,7 @@ class CheatCleaner(Module):
 
     def scan_folders(self) -> None:
         """Scans all folders in array, and remove its"""
-        if selector.ask('Remove all cheats folder (y,n)?\nall of your configs will be [red bold]ANNIGILATED.[/]'):
+        if selector.ask('Remove all clients folder (y,n)?\nall of your configs will be [red bold]ANNIGILATED.[/]'):
             for folder in self.folders:
                 if os.path.isdir(folder):
                     self.info('Removing folder: ' + folder)
@@ -41,4 +41,4 @@ class CheatCleaner(Module):
 
         selector.pause()
 
-cheatcleaner = CheatCleaner()
+clientcleaner = ClientCleaner()

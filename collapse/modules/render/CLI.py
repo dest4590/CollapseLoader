@@ -7,18 +7,17 @@ from rich.prompt import Confirm, IntPrompt
 from ...static import SKIP_ANIMATIONS, SYSTEM
 from ..storage.Data import console, data
 from ..storage.Settings import settings
-from ..utils.Cheat import Cheat
-from ..utils.Cheats import cheat_manager
-from ..utils.Logger import logger
+from ..utils.Client import Client
+from ..utils.ClientManager import client_manager
 from ..utils.Module import Module
 
-selector_offset = len(cheat_manager.cheats) + 11
+selector_offset = len(client_manager.clients) + 11
 functions = []
 
 class Function:
     """Function for CLI class"""
     
-    selector_offset = len(cheat_manager.cheats) + 11
+    selector_offset = len(client_manager.clients) + 11
 
     def __init__(self, line: str, color: str = 'dark_cyan'):
         self.line_text = line
@@ -38,7 +37,7 @@ class Selector(Module):
     def __init__(self) -> None:
         super().__init__()
         self.text = self.make_text()
-        self.offset = len(cheat_manager.cheats)
+        self.offset = len(client_manager.clients)
         self.titles_states = {
             'default': f'CollapseLoader ({data.version})',
             'run': 'CollapseLoader >> {client}',
@@ -59,7 +58,7 @@ class Selector(Module):
         """Creates the text for the selector"""
         
         text = '\n[bold]CLIENTS & TOOLS[/]\n'
-        text += '\n'.join(f'{i + 1}. {cheat}' for i, cheat in enumerate(cheat_manager.cheats))
+        text += '\n'.join(f'{i + 1}. {client}' for i, client in enumerate(client_manager.clients))
         text += '\n'
         
         function_lines = [
@@ -99,20 +98,20 @@ class Selector(Module):
 
     def ask(self, question: str) -> bool:
         """Asks the user confirm for an action"""
-        return Confirm.ask(f'{question} >>')
+        return Confirm.ask(question)
     
-    def get_cheat_by_index(self, index: int) -> Cheat:
-        """Returns the cheat by index"""
-        return cheat_manager.cheats[index - 1]
+    def ask_int(self, question: str) -> int:
+        """Asks the user for an integer"""
+        return IntPrompt.ask(question)
+    
+    def get_client_by_index(self, index: int) -> Client:
+        """Returns the client by index"""
+        return client_manager.clients[index - 1]
 
     def select_username(self) -> str:
         """Asks for a nickname"""
         return input('Enter nickname >> ')
 
-    def select_ram(self) -> int:
-        """Asks for RAM in gigabytes"""
-        return IntPrompt.ask('Enter ram in gigabytes')
-    
     def clear(self) -> None:
         """Clears the console"""
         os.system('cls')
@@ -121,7 +120,10 @@ class Selector(Module):
         """Sets the window title"""
         if not self.linux:
             if self.custom_title is None:
-                ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
+                try:
+                    ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
+                except KeyError:
+                    self.error(f'Cannot find title for {title_type}')
             else:
                 ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
 

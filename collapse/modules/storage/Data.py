@@ -87,11 +87,13 @@ class DataManager(Module):
                 DownloadColumn(),
                 TransferSpeedColumn(), console=console) as progress:
             task = progress.add_task('', total=total_size)
+            
             with open(dest, "ab") as f:
                 for chunk in response.iter_content(1024):
                     if chunk:
                         f.write(chunk)
                         progress.update(task, advance=len(chunk))
+                        
             progress.stop()
 
     def _extract_file(self, filename: str, dest: str, path_dir: str) -> None:

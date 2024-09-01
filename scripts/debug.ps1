@@ -10,7 +10,7 @@ $file = '.\collapse\static.py'
 (Get-Content $file) -replace "SHOW_HIDDEN_MESSAGES = False", "SHOW_HIDDEN_MESSAGES = True" | Set-Content $file
 
 $file = '.\collapse\static.py'
-(Get-Content $file) -replace "SHOW_HIDDEN_CHEATS = False", "SHOW_HIDDEN_CHEATS = True" | Set-Content $file
+(Get-Content $file) -replace "SHOW_HIDDEN_CLIENTS = False", "SHOW_HIDDEN_CLIENTS = True" | Set-Content $file
 
 $file = '.\collapse\static.py'
 (Get-Content $file) -replace "SKIP_ANIMATIONS = False", "SKIP_ANIMATIONS = True" | Set-Content $file

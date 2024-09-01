@@ -13,7 +13,7 @@ SAVE_MESSAGES = True
 SHOW_HIDDEN_MESSAGES = False
 
 # Show hidden clients
-SHOW_HIDDEN_CHEATS = False
+SHOW_HIDDEN_CLIENTS = False
 
 # Skip animations
 SKIP_ANIMATIONS = True

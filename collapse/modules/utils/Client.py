@@ -26,18 +26,16 @@ def update_time(task_id, progress, start_time) -> None:
         sleep(1)
 
 
-class Cheat(Module):
-    """Cheat class for running clients"""
+class Client(Module):
+    """Client class for running clients"""
 
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
-                 version: str = '1.12.2',
-                 category: str = 'HVH', internal: bool = False, working: bool = True, id: int = 1) -> None:
+                 version: str = '1.12.2', internal: bool = False, working: bool = True, id: int = 1) -> None:
         super().__init__()
     
         self.name = name
         self.link = link
-        self.category = category
         self.working = working
         self.id = id
         self.configs = []
@@ -59,7 +57,7 @@ class Cheat(Module):
         return self.name
 
     def download(self) -> True:
-        """Downloading cheat files"""
+        """Downloading client files"""
 
         if os.path.isfile(self.path_dir + self.jar):
             self.debug(f'Client {self.name} already downloaded')
