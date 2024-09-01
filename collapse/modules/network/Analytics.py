@@ -28,7 +28,7 @@ class Analytics(Module):
     def client_run(self, client_id: int):
         """Send a request to the analytics server when the client runs"""
         try:
-            r = network.get(f'{api.server}api/analytics/client', params={'username': settings.get('nickname'), 'client_id': client_id})
+            r = network.get(f'{api.server}api/analytics/client', params={'username': settings.get('nickname'), 'client_id': client_id}).json()
         
             if r['status'] == 'success':
                 self.debug('Successfully sent analytics request for client run')
