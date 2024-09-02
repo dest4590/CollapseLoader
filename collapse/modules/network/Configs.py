@@ -46,7 +46,7 @@ class Configs(Module):
         self.debug(f'Found {len(self.configs)} configs')
         
         for config in self.configs:
-            client_id = config['client'].split('/')[-2]
+            client_id = config['client']
 
             for client in client_manager.clients:
                 if client.id == int(client_id):
