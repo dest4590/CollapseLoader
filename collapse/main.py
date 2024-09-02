@@ -65,7 +65,7 @@ def handle_selection(choosed) -> None:
         settings.set('nickname', selector.select_username())
         logger.debug('Changed nickname')
     elif choosed == selector.offset + 14:
-        settings.set('ram', selector.ask_int() * 1024, 'Loader')
+        settings.set('ram', selector.ask_int('Select ram') * 1024, 'Loader')
         logger.debug('Changed ram')
     elif choosed == selector.offset + 15:
         clientcleaner.scan_folders()
