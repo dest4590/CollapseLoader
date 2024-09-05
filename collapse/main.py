@@ -1,27 +1,32 @@
+import argparse
+import logging
 import random
 import shutil
 import sys
 
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from .modules.utils.Logger import logger
 
-from .modules.utils.Fixes import console
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', action='store_true', help='Enable debug logging')
+args = parser.parse_args()
 
-with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), BarColumn(), transient=True, console=console) as progress:
-    loading_task = progress.add_task("[blue]Loading modules", total=None)
+if args.v:
+    logger.setLevel(logging.DEBUG)
 
-    from .modules.network.Analytics import analytics
-    from .modules.network.Configs import config_menu
-    from .modules.network.Message import messageclient
-    from .modules.network.Updater import updater
-    from .modules.render.CLI import selector
-    from .modules.storage.ClientCleaner import clientcleaner
-    from .modules.storage.Data import data
-    from .modules.storage.Options import Option, options_menu
-    from .modules.storage.Settings import settings
-    from .modules.utils.ClientManager import client_manager
-    from .modules.utils.CreditsMenu import credits_menu
-    from .modules.utils.Logger import logger
-    from .modules.utils.Logo import logo
+from .modules.network.Analytics import analytics
+from .modules.network.Configs import config_menu
+from .modules.network.Message import messageclient
+from .modules.network.Updater import updater
+from .modules.render.CLI import selector
+from .modules.storage.ClientCleaner import clientcleaner
+from .modules.storage.Data import data
+from .modules.storage.Options import Option, options_menu
+from .modules.storage.Settings import settings
+from .modules.utils.ClientManager import client_manager
+from .modules.utils.CreditsMenu import credits_menu
+from .modules.utils.Logo import logo
+from .modules.utils.RPC import rpc
+
 
 def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
@@ -96,6 +101,8 @@ def main() -> None:
     analytics.loader_start()
     
     selector.set_title(selector.titles_states['default'])
+    
+    rpc.start()
 
     if '_child.py' not in sys.argv[0]:
         while True:

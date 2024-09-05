@@ -1,3 +1,5 @@
+import random
+
 from rich import print
 
 from ..render.CLI import console, selector
@@ -40,14 +42,17 @@ class Option:
         settings.set(self.name, value)
         logger.info(f'Set option {self} to {value}')
         if self.callback:
-            self.callback()
-            logger.debug('Executing callback')
+            if callable(self.callback):
+                self.callback()
 
     def input(self) -> None:
         """Handles user input for the option"""
         if self.option_type == str:
-            new_value = console.input(f'Enter value for {self} (enter "RESET" to reset option): ')
-            self.save(new_value if new_value.upper() != 'RESET' else self.default_value)
+            console.print('\n[i]Note: you can press enter to skip input[/]')
+            new_value = console.input(f'Enter value for {self} (enter "RESET" to reset option) ({self.value}): ')
+            
+            if new_value != '':
+                self.save(new_value if new_value.upper() != 'RESET' else self.default_value)
         elif self.option_type == bool:
             current_value = settings.get(self.name)
             self.save(not current_value.lower() == 'true')
@@ -67,7 +72,7 @@ class Option:
         return self.name.title().replace('_', ' ')
 
 # Define options
-Option('nickname', 'User nickname for minecraft', default_value='CollapseUser', highlight=True)
+Option('nickname', 'User nickname for minecraft', default_value=f'Collapse{random.randint(1000, 9999)}', highlight=True)
 Option('custom_title', 'Changes window title for all states (None for disable)', default_value='None').create('None')
 Option('hide_logo', 'Hides logo and links from main screen', bool, False).create()
 Option('hide_messages', 'Hides messages from main screen', bool, False).create()
@@ -76,6 +81,7 @@ Option('use_short_logo', 'Use short variant of logo', bool, False).create()
 Option('hide_links', 'Hide loader social links in main menu', bool, False).create()
 Option('disable_animation', 'Disables the animation in the loader', bool, False).create()
 Option('show_client_version', 'Shows the client version in the loader', bool, False).create()
+Option('discord_rich_presence', 'Shows RPC in disocrd', bool, True).create()
 
 class Menu:
     """Options menu"""

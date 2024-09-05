@@ -5,12 +5,12 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
-from rich.markup import escape
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from ..network.Analytics import analytics
 from ..storage.Data import console, data
 from ..storage.Settings import settings
+from ..utils.RPC import rpc
 from .LogChecker import logchecker
 from .Module import Module
 
@@ -83,6 +83,8 @@ class Client(Module):
         from ..render.CLI import selector
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
+        
+        rpc.details = f'Playing with {self.name}'
 
         # Downloading requirements
         data.download('jre-21.0.2.zip')
@@ -175,3 +177,6 @@ class Client(Module):
 
         # Return default title
         selector.reset_title()
+
+        rpc.details = rpc.default_details
+        rpc.update()

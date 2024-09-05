@@ -14,19 +14,21 @@ class RPC(Thread):
         super().__init__(*args, **kwargs)
         self.client_id = '1225803664204234772'
         self.RPC = Presence(self.client_id)
-        self.details = 'Choosing a client'
+        self.default_details = 'Choosing a client'
+        self.details = self.default_details
         self.start_time = time()
-        self.disabled = settings.get('rpc', 'Loader') == 'False'
+        self.disabled = not settings.use_option('rpc')
 
     def update(self):
         """Updates the activity"""
+        
         try:
             self.RPC.update(
-                state=settings.get('nickname', 'Loader'),
+                state=settings.get('nickname'),
                 details=self.details,
                 large_image='https://i.imgur.com/ZpWg110.gif',
                 buttons=[
-                    {'label': 'Discord', 'url': 'https://collapseloader.org/discord'},
+                    {'label': 'Discord', 'url': 'https://collapseloader.org/discord/'},
                     {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'}
                 ],
                 start=self.start_time,
@@ -37,12 +39,26 @@ class RPC(Thread):
                 self.RPC.connect()
             except Exception:
                 pass
+            
+    def stop(self):
+        """Stops the RPC and disconnects"""
+
+        self.disabled = True
+
+        try:
+            self.RPC.clear()
+            self.RPC.close()
+            
+        except Exception:
+            pass
 
     def run(self):
         """Starts a thread for the rpc"""
+        
         try:
             self.RPC.connect()
-        except Exception as e:
+            
+        except Exception:
             pass
         
         while True:
@@ -50,6 +66,8 @@ class RPC(Thread):
                 self.update()
             else:
                 self.RPC.clear()
+
             sleep(5)
 
 rpc = RPC()
+rpc.daemon = True

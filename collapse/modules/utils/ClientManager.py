@@ -46,8 +46,8 @@ class ClientManager(Module):
     
     def client_line(self, client: dict) -> str:
         """Returns a formatted string representing the client"""
-        version = f"<{client['version']}>" if not settings.use_option('show_client_version') else ''
-        return f"{client['name']} {version}"
+        version = f" <{client['version']}>" if not settings.use_option('show_client_version') else ''
+        return f"{client['name']}{version}"
     
     def make_array(self, clients: dict) -> None:
         """Adds clients to array"""

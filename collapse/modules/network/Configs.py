@@ -46,10 +46,10 @@ class Configs(Module):
         self.debug(f'Found {len(self.configs)} configs')
         
         for config in self.configs:
-            client_id = config['client']
+            client_name = config['client_name']
 
             for client in client_manager.clients:
-                if client.id == int(client_id):
+                if client.name == client_name:
                     client.configs.append(Config(config['id'], config['file'], config['config_path'], config['server'], client.id))
     
     @staticmethod
