@@ -1,6 +1,7 @@
 import os
 
 from ..utils.Module import Module
+from ..storage.Data import data
 
 
 class ModManager(Module):
@@ -10,6 +11,7 @@ class ModManager(Module):
         """Initialize ModManager with the given root folder"""
         super().__init__()
         self.root_folder = root_folder
+        self.mods_folder = os.path.join(self.root_folder, 'mods')
 
     def get_mod_list(self) -> list:
         """Get a list of mods in the root folder"""
@@ -30,3 +32,13 @@ class ModManager(Module):
         if name.endswith('.jar'):
             self.debug(f'Disabling mod: {name}')
             os.rename(self.get_mod(name), self.get_mod(f'{name}.disabled'))
+
+    def install(self, mod: str) -> None:
+        """Install mod by name in the mods folder"""
+        self.info(f'Installing mod: {mod}')
+        
+        if not os.path.exists(self.mods_folder):
+            os.makedirs(self.mods_folder)
+        
+        if not os.path.exists(os.path.join(self.mods_folder, mod)):
+            data.download(mod, os.path.join(self.mods_folder, mod))

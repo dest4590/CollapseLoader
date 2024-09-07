@@ -63,6 +63,7 @@ class ClientManager(Module):
                             internal=client["internal"],
                             working=client["working"],
                             id=client["id"],
+                            fabric=client["fabric"]
                         )
                     )
             else:
@@ -74,7 +75,7 @@ class ClientManager(Module):
                             version=client["version"],
                             working=client["working"],
                             id=client["id"],
-                            fabric=True,
+                            fabric=client["fabric"]
                         )
                     )
                 

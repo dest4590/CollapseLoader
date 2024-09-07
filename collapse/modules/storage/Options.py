@@ -5,13 +5,15 @@ from rich import print
 from ..render.CLI import console, selector
 from ..utils.Logger import logger
 from .Settings import settings
+from ..utils.Module import Module
 
 option_list = []
 
-class Option:
+class Option(Module):
     """The Option class represents a configurable option."""
 
     def __init__(self, name: str, description: str = '', option_type = str, default_value = object, callback = None, highlight: bool = False) -> None:
+        super().__init__()
         self.name = name
         self.description = description
         self.option_type = option_type
@@ -35,12 +37,12 @@ class Option:
         """Creates a new option in the settings"""
         if not settings.get(self.name, header):
             settings.set(self.name, value if value is not None else self.default_value, header)
-            logger.debug(f'Created {self} option with value: {value if value is not None else self.default_value} ({header})')
+            self.debug(f'Created {self} option with value: {value if value is not None else self.default_value} ({header})')
 
     def save(self, value: object) -> None:
         """Saves option to settings file"""
         settings.set(self.name, value)
-        logger.info(f'Set option {self} to {value}')
+        self.info(f'Set option {self} to {value}')
         if self.callback:
             if callable(self.callback):
                 self.callback()
@@ -53,6 +55,7 @@ class Option:
             
             if new_value != '':
                 self.save(new_value if new_value.upper() != 'RESET' else self.default_value)
+                
         elif self.option_type == bool:
             current_value = settings.get(self.name)
             self.save(not current_value.lower() == 'true')
@@ -60,7 +63,7 @@ class Option:
     def reset(self) -> None:
         """Reset option with default value"""
         self.save(self.default_value)
-        logger.debug(f'Resetting option {self}')
+        self.debug(f'Resetting option {self}')
 
     @staticmethod
     def get_option_by_index(index: int) -> 'Option':

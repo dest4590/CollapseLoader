@@ -31,13 +31,14 @@ class Client(Module):
 
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
-                 version: str = '1.12.2', internal: bool = False, working: bool = True, id: int = 1) -> None:
+                 version: str = '1.12.2', internal: bool = False, working: bool = True, id: int = 1, fabric: bool = False) -> None:
         super().__init__()
     
         self.name = name
         self.link = link
         self.working = working
         self.id = id
+        self.fabric = fabric
         self.configs = []
 
         self.filename = os.path.basename(self.link)
@@ -48,7 +49,7 @@ class Client(Module):
         self.main_class = main_class
         
         self.cut_version = True
-        self.version = version[:-2] if self.cut_version else version
+        self.version = version[:-2] if self.cut_version and not fabric else version
         
         self.internal = internal
         self.silent = False
@@ -56,17 +57,6 @@ class Client(Module):
     def __str__(self) -> str:
         return self.name
 
-    def download(self) -> True:
-        """Downloading client files"""
-
-        if os.path.isfile(self.path_dir + self.jar):
-            self.debug(f'Client {self.name} already downloaded')
-            return
-
-        self.info('Downloading client')
-
-        data.download(self.filename)
-        
     def load_config(self, config) -> None:
         """Load configurations for the client"""
         
@@ -74,11 +64,23 @@ class Client(Module):
             os.makedirs(self.path_dir + config.config_path)
 
         data.download(config.file, f'{self.path_dir}{config.config_path}{config.filename}')
- 
+
+    def download(self) -> True:
+        """Downloading client files"""
+
+        if not os.path.exists(self.path_dir):
+            os.makedirs(self.path_dir)
+
+        if os.path.isfile(self.path_dir + self.jar):
+            self.debug(f'Client {self.name} already downloaded')
+            return
+
+        self.info('Downloading client')
+
+        data.download(self.filename, self.path_dir + self.filename)
+
     def run(self) -> None:
         """Run client"""
-
-        self.download()
 
         from ..render.CLI import selector
 
@@ -90,16 +92,18 @@ class Client(Module):
         data.download('jre-21.0.2.zip')
 
         if self.version.startswith('1.12'):
-            self.debug('Downloading 1.12.2 libraries & natives')
+            self.info('Downloading 1.12.2 libraries & natives')
             data.download('libraries-1.12.zip')
             data.download('natives-1.12.zip')
 
         else:
-            self.debug('Downloading 1.12.2+ libraries & natives')
+            self.info('Downloading 1.12.2+ libraries & natives')
             data.download('libraries.zip')
             data.download('natives.zip')
 
         data.download('assets.zip')
+        
+        self.download()
 
         self.info(f'Running client {self.name}')
 
