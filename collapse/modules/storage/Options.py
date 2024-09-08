@@ -4,8 +4,8 @@ from rich import print
 
 from ..render.CLI import console, selector
 from ..utils.Logger import logger
-from .Settings import settings
 from ..utils.Module import Module
+from .Settings import settings
 
 option_list = []
 

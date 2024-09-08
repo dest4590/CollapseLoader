@@ -1,7 +1,7 @@
 import os
 
-from ..utils.Module import Module
 from ..storage.Data import data
+from ..utils.Module import Module
 
 
 class ModManager(Module):

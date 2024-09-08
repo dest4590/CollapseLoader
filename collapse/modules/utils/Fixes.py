@@ -3,9 +3,7 @@ from rich.console import Console
 
 console = Console()
 
-# Fix rich render, https://github.com/Textualize/rich/pull/3038
-
-
+# Fix rich render, https://github.com/Textualize/rich/pull/3038#issuecomment-1786654627
 if console.legacy_windows:
     try:
         import ctypes

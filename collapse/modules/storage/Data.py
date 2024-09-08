@@ -69,8 +69,6 @@ class DataManager(Module):
 
     def _download_file(self, path: str, filename: str, dest) -> None:
         """Downloads the file from the given path and shows download progress"""
-
-        
         if not dest:
             os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
         

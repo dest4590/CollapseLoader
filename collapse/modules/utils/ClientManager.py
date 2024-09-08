@@ -42,7 +42,7 @@ class ClientManager(Module):
 
                 self.make_array(c['clients'])
 
-        return clients
+        return all_clients
     
     def client_line(self, client: dict) -> str:
         """Returns a formatted string representing the client"""

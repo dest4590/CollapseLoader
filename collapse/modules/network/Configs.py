@@ -49,7 +49,7 @@ class Configs(Module):
             client_name = config['client_name']
 
             for client in client_manager.clients:
-                if client.name == client_name:
+                if client.name in client_name:
                     client.configs.append(Config(config['id'], config['file'], config['config_path'], config['server'], client.id))
     
     @staticmethod

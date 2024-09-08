@@ -18,7 +18,7 @@ Thanks to the following people for their donations:
 - [underline yellow]leizark1338 ★[/] - For donating 10$
 - [underline]dana56[/] - For donating 1$
 
-< [bold]Special Thanks[/] > 
+< [bold]Special Thanks[/] >
 Thanks to the following people for their contributions:
 - [underline]ttfdk[/] - For server configuration and maintenance
 - [underline]Leizark[/] - For moderating the Discord server

@@ -9,9 +9,9 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 from ..network.Analytics import analytics
 from ..storage.Data import console, data
+from ..storage.ModManager import ModManager
 from ..storage.Settings import settings
 from ..utils.RPC import rpc
-from ..storage.ModManager import ModManager
 from .Client import Client
 from .LogChecker import logchecker
 
