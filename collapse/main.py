@@ -13,13 +13,13 @@ args = parser.parse_args()
 if args.v:
     logger.setLevel(logging.DEBUG)
 
+from .modules.storage.Data import data # isort: skip
 from .modules.network.Analytics import analytics
 from .modules.network.Configs import config_menu
 from .modules.network.Message import messageclient
 from .modules.network.Updater import updater
 from .modules.render.CLI import selector
 from .modules.storage.ClientCleaner import clientcleaner
-from .modules.storage.Data import data
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
 from .modules.utils.ClientManager import client_manager
