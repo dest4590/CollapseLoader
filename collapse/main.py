@@ -1,14 +1,10 @@
-import argparse
 import logging
 import random
 import shutil
 import sys
 
+from .arguments import args
 from .modules.utils.Logger import logger
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-v', action='store_true', help='Enable debug logging')
-args = parser.parse_args()
 
 if args.v:
     logger.setLevel(logging.DEBUG)
