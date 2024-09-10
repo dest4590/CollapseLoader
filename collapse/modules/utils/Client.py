@@ -1,6 +1,6 @@
 import os
 from contextlib import chdir
-from datetime import datetime
+from datetime import datetime, timedelta
 from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
@@ -15,19 +15,17 @@ from .LogChecker import logchecker
 from .Module import Module
 
 
-def update_time(task_id, progress, start_time) -> None:
-    """Updates the time for the progress bar by ticking one second"""
-    while True:
+def update_time(task_id, progress, start_time):
+    """Update the time field in the progress bar."""
+    while not progress.tasks[task_id].finished:
         elapsed_time = datetime.now() - start_time
-        progress.update(
-            task_id,
-            time=str(elapsed_time).split('.', maxsplit=1)[0])
-
+        formatted_time = str(timedelta(seconds=int(elapsed_time.total_seconds())))
+        progress.update(task_id, time=formatted_time)
         sleep(1)
 
 
 class Client(Module):
-    """Client class for running clients"""
+    """Client class for run ning clients"""
 
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
@@ -111,7 +109,7 @@ class Client(Module):
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(pulse_style='gray'),
-            TextColumn("[progress.description]{task.fields[session]} {task.fields[time]}"),
+            TextColumn("{task.fields[session]} {task.fields[time]}"),
             transient=True, console=console
         ) as progress:
             start_time = datetime.now()
