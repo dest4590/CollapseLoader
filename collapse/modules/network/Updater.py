@@ -32,7 +32,6 @@ class Updater(Module):
             self.debug(f'Remote: {self.remote_version}, local: {self.local_version}')
             self.debug(f'Latest commit: {self.latest_commit}')
         except aiohttp.ClientError as e:
-            self.error(f'Error initializing Updater: {e}')
             self.remote_version = None
             self.latest_commit = None
 
@@ -42,11 +41,12 @@ class Updater(Module):
         try:
             async with session.get(url, params=params, timeout=5) as response:
                 response.raise_for_status()
-                if response.status == 403:
-                    self.error('Rate limit exceeded, try again later')
                 return await response.json()
         except aiohttp.ClientError as e:
-            self.error(f'Failed to fetch {path}: {e}')
+            if e.message == 'rate limit exceeded':
+                self.warn('Rate limit exceeded, try again later')
+            else:
+                self.error(f'Failed to fetch {path}: {e}')
             raise
 
     async def get_latest_releases(self, session: aiohttp.ClientSession) -> dict:
@@ -70,15 +70,15 @@ class Updater(Module):
         if self.remote_version and self.remote_version > self.local_version:
             self.info('Update your loader!')
 
-            if selector.ask('Download a new version (y,n)'):
+            if selector.ask('Download a new version'):
                 if self.latest_releases:
-                    if selector.ask('Dev version (y,n)'):  # Prelease
-                        self.debug('Downloading dev version')
+                    if selector.ask('Dev version'):
+                        self.debug('Opening dev release')
                         latest_prerelease = next((release for release in self.latest_releases if release.get('prerelease')), None)
                         if latest_prerelease and latest_prerelease.get('assets'):
                             webbrowser.open(latest_prerelease['assets'][0].get('browser_download_url'))
-                    else:  # Release
-                        self.debug('Downloading stable release')
+                    else:
+                        self.debug('Opening latest release')
                         latest_release = next((release for release in self.latest_releases if not release.get('prerelease')), None)
                         if latest_release and latest_release.get('assets'):
                             webbrowser.open(latest_release['assets'][0].get('browser_download_url'))
