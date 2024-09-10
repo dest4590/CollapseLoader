@@ -31,6 +31,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+CollapseLoader*.exe
 
 # Environments
 .env
@@ -44,5 +45,3 @@ venv.bak/
 # Loader temporary files
 *.zip
 data/
-output/
-upload.py

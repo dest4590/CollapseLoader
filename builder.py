@@ -14,6 +14,10 @@ class Builder:
 
     def build(self, removeBuild: bool = True):
         """Starts the build"""
+        # Remove old .exe builds
+        for file in glob('*.exe'):
+            os.remove(file)
+        
         os.system(f'''pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse\\assets\\{self.icon}" run.py''')
 
         for file in glob('dist/*.exe'):
