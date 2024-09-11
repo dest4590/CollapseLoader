@@ -23,8 +23,8 @@ SYSTEM = os.name
 # LOADER VARS
 REPO_URL = 'https://github.com/dest4590/CollapseLoader/'
 API_URL = 'https://web.collapseloader.org/'
-VERSION = '1.3.6'
-CODENAME = 'Radium'
+VERSION = '1.3.7'
+CODENAME = 'Calcium'
 
 SERVERS = [
     'cdn.collapseloader.org',
