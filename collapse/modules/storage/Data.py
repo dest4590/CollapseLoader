@@ -56,7 +56,6 @@ class DataManager(Module):
         """Checks if the file is already downloaded."""
 
         jar = os.path.splitext(filename)[0] + '.jar'
-        
         if not filename.endswith('.jar') and os.path.isdir(path_dir) and not path.startswith('http'):
             self.debug(f'{filename} already downloaded, skip')
             return True
@@ -67,11 +66,10 @@ class DataManager(Module):
 
         return False
 
-    def _download_file(self, path: str, filename: str, dest) -> None:
+    def _download_file(self, path: str, filename: str, dest: str) -> None:
         """Downloads the file from the given path and shows download progress"""
-        if not dest:
-            os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
-        
+
+        os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
@@ -107,12 +105,10 @@ class DataManager(Module):
                     zip_file.extractall(path_dir)
                 os.remove(dest)
             elif filename.endswith('.jar'):
-                if not dest:
-                    os.rename(dest, os.path.join(path_dir, filename))
+                os.rename(dest, os.path.join(path_dir, filename))
                 
         except (zipfile.BadZipFile, OSError) as e:
             self.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):
                 os.remove(dest)
-
 data = DataManager()

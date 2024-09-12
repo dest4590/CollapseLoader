@@ -1,88 +1,88 @@
 name: Build
 on:
-  push:
-    branches:
-    - main
-    paths:
-      - '**.py'
-      - '**.yml'
-      - '**.ps1'
+    push:
+        branches:
+            - main
+        paths:
+            - '**.py'
+            - '**.yml'
+            - '**.ps1'
 
-  workflow_dispatch:
-      
+    workflow_dispatch:
+
 jobs:
-  build:
-    runs-on: windows-latest
-    permissions:
-      contents: write
-    
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    build:
+        runs-on: windows-latest
+        permissions:
+            contents: write
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.12.5
-          cache: 'pip'
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
 
-      - name: Install requirements
-        run: |
-          pip install -r requirements.txt
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: 3.12.5
+                  cache: 'pip'
 
-      - name: Create & Activate venv
-        run: |
-          python -m virtualenv venv
-          .\venv\Scripts\activate.ps1
+            - name: Install requirements
+              run: |
+                  pip install -r requirements.txt
 
-      - name: Run build scripts
-        run: |
-            .\scripts\release.ps1
+            - name: Create & Activate venv
+              run: |
+                  python -m virtualenv venv
+                  .\venv\Scripts\activate.ps1
 
-      - name: Run tests
-        run: |
-            pytest -v -W ignore::DeprecationWarning
+            - name: Run build scripts
+              run: |
+                  .\scripts\release.ps1
 
-      - name: Make Build
-        run: |
-            echo "Using version ${{ env.VERSION }} in the build script."
-            python builder.py
+            - name: Run tests
+              run: |
+                  pytest -v -W ignore::DeprecationWarning
 
-      - name: Set artifact path/name
-        run: |
-          $ARTIFACT_PATH=Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe"  -Recurse | Select-Object -ExpandProperty Name | Split-Path -Leaf
-          echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          
-          $ARTIFACT_HASH=git rev-parse --short HEAD
-          echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+            - name: Make Build
+              run: |
+                  echo "Using version ${{ env.VERSION }} in the build script."
+                  python builder.py
 
-          $commitHash = git rev-parse --short HEAD
+            - name: Set artifact path/name
+              run: |
+                  $ARTIFACT_PATH=Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe"  -Recurse | Select-Object -ExpandProperty Name | Split-Path -Leaf
+                  echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-          Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe" | ForEach-Object {
-              $ARTIFACT_PATH = "CollapseLoader_$commitHash.exe"
-              echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-              Rename-Item -Path $_.FullName -NewName $ARTIFACT_PATH
-          }
+                  $ARTIFACT_HASH=git rev-parse --short HEAD
+                  echo "ARTIFACT_HASH=$ARTIFACT_HASH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-          echo $ARTIFACT_PATH
+                  $commitHash = git rev-parse --short HEAD
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CollapseLoader (${{ env.ARTIFACT_HASH }})
-          path: ${{ env.ARTIFACT_PATH }}
-      
-      - name: Get MD5 Hash of build
-        run: |
-            $MD5_HASH=Get-FileHash ${{ env.ARTIFACT_PATH }} -Algorithm MD5
-            echo "MD5 hash of build $($MD5_HASH.Hash) check it to make sure you downloaded a clean build without viruses."
-            echo "MD5_HASH=$($MD5_HASH.Hash)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-  
-      - name: Make release
-        uses: ncipollo/release-action@v1
-        with:
-            body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}"
-            name: "Github actions build: ${{ env.ARTIFACT_HASH }}"
-            tag: "autorelease-${{ env.ARTIFACT_HASH }}"
-            prerelease: true
-            artifacts: "*.exe"
+                  Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe" | ForEach-Object {
+                      $ARTIFACT_PATH = "CollapseLoader_$commitHash.exe"
+                      echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+                      Rename-Item -Path $_.FullName -NewName $ARTIFACT_PATH
+                  }
+
+                  echo $ARTIFACT_PATH
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: CollapseLoader (${{ env.ARTIFACT_HASH }})
+                  path: ${{ env.ARTIFACT_PATH }}
+
+            - name: Get MD5 Hash of build
+              run: |
+                  $MD5_HASH=Get-FileHash ${{ env.ARTIFACT_PATH }} -Algorithm MD5
+                  echo "MD5 hash of build $($MD5_HASH.Hash) check it to make sure you downloaded a clean build without viruses."
+                  echo "MD5_HASH=$($MD5_HASH.Hash)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+            - name: Make release
+              uses: ncipollo/release-action@v1
+              with:
+                  body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}"
+                  name: 'Github actions build: ${{ env.ARTIFACT_HASH }}'
+                  tag: 'autorelease-${{ env.ARTIFACT_HASH }}'
+                  prerelease: true
+                  artifacts: '*.exe'

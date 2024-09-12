@@ -66,16 +66,13 @@ class Client(Module):
     def download(self) -> True:
         """Downloading client files"""
 
-        if not os.path.exists(self.path_dir):
-            os.makedirs(self.path_dir)
-
         if os.path.isfile(self.path_dir + self.jar):
             self.debug(f'Client {self.name} already downloaded')
             return
 
         self.info('Downloading client')
 
-        data.download(self.filename, self.path_dir + self.filename)
+        data.download(self.filename)
 
     def run(self) -> None:
         """Run client"""
