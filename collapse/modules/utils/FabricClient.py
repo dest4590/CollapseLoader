@@ -46,7 +46,7 @@ class FabricClient(Client):
 
         self.info('Downloading fabric')
 
-        data.download(jar_file, destination)
+        data.download(jar_file, destination, True)
         
     def run(self) -> None:
         """Run client"""

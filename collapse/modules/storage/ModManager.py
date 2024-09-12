@@ -41,4 +41,4 @@ class ModManager(Module):
             os.makedirs(self.mods_folder)
         
         if not os.path.exists(os.path.join(self.mods_folder, mod)):
-            data.download(mod, os.path.join(self.mods_folder, mod))
+            data.download(mod, os.path.join(self.mods_folder, mod), True)

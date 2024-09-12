@@ -37,25 +37,24 @@ class DataManager(Module):
         """Gets a link from the web"""
         return self.server + path
     
-    def download(self, path: str, destination: str = None) -> None:
-        """Downloads file using path"""
-        
+    def download(self, path: str, destination: str = None, fabric: bool = False) -> None:
+        """Downloads file using path"""        
         filename = os.path.basename(path)
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
         dest = destination if destination else os.path.join(self.root_dir, filename)
-        
-        self.info(f'Downloading {filename} to {dest}')
 
         if self._is_downloaded(filename, path, path_dir):
             return
+
+        self.debug(f'Downloading {filename} to {dest}')
         
-        self._download_file(path, filename, dest)
-        self._extract_file(filename, dest, path_dir)
+        self._download_file(path, filename, dest, fabric)
+        self._extract_file(filename, dest, path_dir, fabric)
 
     def _is_downloaded(self, filename: str, path: str, path_dir: str) -> bool:
         """Checks if the file is already downloaded."""
-
         jar = os.path.splitext(filename)[0] + '.jar'
+
         if not filename.endswith('.jar') and os.path.isdir(path_dir) and not path.startswith('http'):
             self.debug(f'{filename} already downloaded, skip')
             return True
@@ -66,10 +65,11 @@ class DataManager(Module):
 
         return False
 
-    def _download_file(self, path: str, filename: str, dest: str) -> None:
+    def _download_file(self, path: str, filename: str, dest: str, fabric: bool = False) -> None:
         """Downloads the file from the given path and shows download progress"""
-
-        os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
+        if not fabric:
+            os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
+        
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
 
         try:
@@ -85,7 +85,7 @@ class DataManager(Module):
                 SpinnerColumn(f'dots{random.randint(2, 9)}'),
                 BarColumn(),
                 DownloadColumn(),
-                TransferSpeedColumn(), console=console) as progress:
+                TransferSpeedColumn(), console=console, transient=True) as progress:
             task = progress.add_task('', total=total_size)
             
             with open(dest, "ab") as f:
@@ -96,19 +96,19 @@ class DataManager(Module):
                         
             progress.stop()
 
-    def _extract_file(self, filename: str, dest: str, path_dir: str) -> None:
+    def _extract_file(self, filename: str, dest: str, path_dir: str, fabric: bool) -> None:
         """Extracts the downloaded file based on its type"""
-
         try:
             if filename.endswith('.zip'):
                 with zipfile.ZipFile(dest, 'r') as zip_file:
                     zip_file.extractall(path_dir)
                 os.remove(dest)
             elif filename.endswith('.jar'):
-                os.rename(dest, os.path.join(path_dir, filename))
-                
+                if not fabric:
+                    os.rename(dest, os.path.join(path_dir, filename))
         except (zipfile.BadZipFile, OSError) as e:
             self.error(f"Error processing {dest}: {e}")
             if os.path.exists(dest):
                 os.remove(dest)
+
 data = DataManager()
