@@ -10,10 +10,10 @@ from .Network import network
 class Servers(Module):
     """Class to manage and check the availability of servers"""
 
-    def __init__(self, urls: list) -> None:
+    def __init__(self) -> None:
         """Initialize with a list of server URLs"""
         super().__init__()
-        self.servers = urls
+        self.servers = SERVERS
 
     def check_servers(self) -> str:
         """Check the servers for availability and return the first accessible server"""
@@ -35,4 +35,4 @@ class Servers(Module):
         return 'https://google.com/'
 
 
-servers = Servers(SERVERS)
+servers = Servers()
