@@ -2,6 +2,7 @@ import os
 
 import pytest
 
+from collapse.modules.storage.Data import data
 from collapse.modules.storage.Settings import Settings
 
 
@@ -32,3 +33,8 @@ def test_settings_use_option(settings: Settings):
     assert settings.use_option('test_option') == False
     settings.set('test_option', 'False')
     assert settings.use_option('test_option') == True
+
+def test_settings_after_tests():
+    test_config_file = data.get_local('test_config.ini')
+    if os.path.exists(test_config_file):
+        os.remove(test_config_file)
