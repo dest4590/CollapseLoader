@@ -32,7 +32,7 @@ class Analytics(Module):
                 self.error(f'Failed to send analytics request for loader start {r["message"]}')
         
         except Exception as e:
-            self.error('Failed to send analytics request for loader start', e)
+            self.error(f'Failed to send analytics request for loader start: {e}')
 
     def client_run(self, client_id: int):
         """Send a request to the analytics server when the client runs"""
@@ -49,6 +49,6 @@ class Analytics(Module):
                 self.error(f'Failed to send analytics request for client run {r["message"]}')
         
         except Exception as e:
-            self.error('Failed to send analytics request for client run', e)
+            self.error(f'Failed to send analytics request for client run: {e}')
 
 analytics = Analytics()

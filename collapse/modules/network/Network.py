@@ -20,11 +20,11 @@ class Network(Module):
     def get(self, url, params=None, headers=None, stream=False):
         """Make a GET request to the given URL"""
         try:
-            response = self.session.get(url, params=params, headers=headers, stream=stream, timeout=5)
+            response = self.session.get(url, params=params, headers=headers, stream=stream, timeout=1)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
+            self.error(f"An error occurred: {e}")
             raise e
  
     def close(self):

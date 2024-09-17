@@ -23,6 +23,10 @@ class ClientManager(Module):
         clients = api.get('clients')
         fabric_clients = api.get('fabric_clients')
         
+        if clients is None and fabric_clients is None:
+            self.error('Failed to fetch clients from API')
+            return []
+
         all_clients: dict = clients.json() + fabric_clients.json()
 
         clients = []
