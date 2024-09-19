@@ -30,6 +30,7 @@ class Settings(Module):
         """Set a setting and save it to the config"""
         if header not in self.config:
             self.config[header] = {}
+
         self.config[header][key] = str(value)
         self.save()
 

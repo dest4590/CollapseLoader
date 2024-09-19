@@ -19,7 +19,7 @@ from .modules.render.CLI import selector
 from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
-from .modules.utils.Background import server
+from .modules.sdk.SdkServer import server
 from .modules.utils.ClientManager import client_manager
 from .modules.utils.CreditsMenu import credits_menu
 from .modules.utils.Logo import logo
@@ -100,7 +100,7 @@ def main() -> None:
         analytics.loader_start()
         
         if args.server:
-            server.start_server()
+            server.run()
     
         else:
             selector.set_title(selector.titles_states['default'])
