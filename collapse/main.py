@@ -2,6 +2,7 @@ import logging
 import random
 import shutil
 import sys
+from threading import Thread
 
 from .arguments import args
 from .modules.utils.Logger import logger
@@ -18,6 +19,7 @@ from .modules.render.CLI import selector
 from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
+from .modules.utils.Background import server
 from .modules.utils.ClientManager import client_manager
 from .modules.utils.CreditsMenu import credits_menu
 from .modules.utils.Logo import logo
@@ -91,26 +93,30 @@ def handle_data_folder_removal() -> None:
 
 def main() -> None:
     """Main function to run the loader"""
-    initialize_settings()
-    
-    updater.check_version()
-    analytics.loader_start()
-    
-    selector.set_title(selector.titles_states['default'])
-    
-    rpc.start()
-
     if '_child.py' not in sys.argv[0]:
-        while True:
-            display_main_menu()
+        initialize_settings()
+        
+        updater.check_version()
+        analytics.loader_start()
+        
+        if args.server:
+            server.start_server()
+    
+        else:
+            selector.set_title(selector.titles_states['default'])
+            
+            rpc.start()
+        
+            while True:
+                display_main_menu()
 
-            if not messageclient.shown:
-                messageclient.show_messages()
+                if not messageclient.shown:
+                    messageclient.show_messages()
 
-            try:
-                choosed = int(selector.select())
-                handle_selection(choosed)
-                
-            except ValueError:
-                logger.error('Choose number')
-                continue
+                try:
+                    choosed = int(selector.select())
+                    handle_selection(choosed)
+                    
+                except ValueError:
+                    logger.error('Choose number')
+                    continue

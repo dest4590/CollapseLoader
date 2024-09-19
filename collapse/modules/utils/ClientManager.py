@@ -15,7 +15,7 @@ class ClientManager(Module):
 
     def __init__(self) -> None:
         super().__init__()
-        self.clients = []
+        self.clients: list[Client] = []
         self._load_clients()
 
     def _load_clients(self) -> list:
@@ -85,7 +85,13 @@ class ClientManager(Module):
                 
     def refresh(self) -> None:
         """Refresh clients"""
-        self.clients = []
+        self.clients: list[Client] = []
         self._load_clients()
+        
+    def get_client_by_name(self, name: str) -> Client:
+        """Get client by name"""
+        for client in self.clients:
+            if client.name in name:
+                return client
 
 client_manager = ClientManager()

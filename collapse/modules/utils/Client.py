@@ -55,6 +55,12 @@ class Client(Module):
     def __str__(self) -> str:
         return self.name
 
+    def to_dict(self) -> dict:
+        attributes = vars(self)
+        attributes['configs'] = None
+        attributes['mod_manager'] = None
+        return attributes
+
     def load_config(self, config) -> None:
         """Load configurations for the client"""
         
