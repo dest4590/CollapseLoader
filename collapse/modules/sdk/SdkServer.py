@@ -5,9 +5,9 @@ import signal
 import click
 from flask import Flask, request
 
+from collapse.modules.storage.Settings import settings
 from collapse.modules.utils.ClientManager import client_manager
 from collapse.modules.utils.Module import Module
-from collapse.modules.storage.Settings import settings
 
 app = Flask('CollapseLoader Server')
 

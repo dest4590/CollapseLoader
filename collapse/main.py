@@ -2,7 +2,6 @@ import logging
 import random
 import shutil
 import sys
-from threading import Thread
 
 from .arguments import args
 from .modules.utils.Logger import logger
@@ -16,10 +15,10 @@ from .modules.network.Configs import config_menu
 from .modules.network.Message import messageclient
 from .modules.network.Updater import updater
 from .modules.render.CLI import selector
+from .modules.sdk.SdkServer import server
 from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
-from .modules.sdk.SdkServer import server
 from .modules.utils.ClientManager import client_manager
 from .modules.utils.CreditsMenu import credits_menu
 from .modules.utils.Logo import logo

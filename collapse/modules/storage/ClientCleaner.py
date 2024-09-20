@@ -9,10 +9,10 @@ class ClientCleaner(Module):
     """Cleans client folders"""
     def __init__(self) -> None:
         super().__init__()
-        self.login = os.getlogin()
         
         if not selector.linux:
             # Absolute path
+            self.login = os.getlogin()
             self.folders = [
                 f'C:\\Users\\{self.login}\\AppData\\Roaming\\.antiautistleak',
                 f'C:\\Users\\{self.login}\\.th-client',
