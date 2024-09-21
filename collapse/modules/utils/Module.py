@@ -1,11 +1,21 @@
+import time
+
 from .Logger import logger
 
+modules = []
 
 class Module:
     """The module is made to simplify the use of logging, etc."""
 
-    def __init__(self):
+    def __init__(self, add_to_modules: bool = True) -> None:
         self.__module_name = self.__class__.__name__
+
+        if add_to_modules:
+            self.start_time = time.time()
+            modules.append(self)
+        
+        # Alias for logging functions
+        self.warning = self.warn
 
     def info(self, msg: object):
         """Make a info log"""

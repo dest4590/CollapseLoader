@@ -1,6 +1,7 @@
 import logging
 import random
 import shutil
+import time
 import sys
 
 from .arguments import args
@@ -23,6 +24,7 @@ from .modules.utils.ClientManager import client_manager
 from .modules.utils.CreditsMenu import credits_menu
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc
+from .modules.utils.Module import Module, modules # isort: skip
 
 
 def initialize_settings() -> None:
@@ -93,6 +95,9 @@ def handle_data_folder_removal() -> None:
 def main() -> None:
     """Main function to run the loader"""
     if '_child.py' not in sys.argv[0]:
+        total_startup_time = sum([int((time.time() - module.start_time) * 1000) for module in modules])
+        logger.debug(f'Total startup time of all modules: {total_startup_time}ms (include python startup time)')
+        
         initialize_settings()
         
         updater.check_version()

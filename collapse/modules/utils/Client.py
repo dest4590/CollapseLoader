@@ -30,7 +30,7 @@ class Client(Module):
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
                  version: str = '1.12.2', internal: bool = False, working: bool = True, id: int = 1, fabric: bool = False) -> None:
-        super().__init__()
+        super().__init__(False)
     
         self.name = name
         self.link = link

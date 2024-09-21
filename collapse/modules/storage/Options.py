@@ -11,9 +11,8 @@ option_list = []
 
 class Option(Module):
     """The Option class represents a configurable option."""
-
     def __init__(self, name: str, description: str = '', option_type = str, default_value = object, callback = None, highlight: bool = False) -> None:
-        super().__init__()
+        super().__init__(False)
         self.name = name
         self.description = description
         self.option_type = option_type

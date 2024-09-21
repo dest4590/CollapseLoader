@@ -1,5 +1,3 @@
-import time
-
 import requests
 
 from ...static import SERVERS
@@ -19,12 +17,8 @@ class Servers(Module):
         """Check the servers for availability and return the first accessible server"""
         for server in self.servers[:]:
             try:
-                start_time = time.time()
                 r = network.get(f'https://{server}/')
-                 
-                end_time = time.time()
-
-                self.debug(f'Server {server} responds with {r.status_code} and {((end_time - start_time) * 1000):.2f} ms of ping')
+                self.debug(f'Server {server} responds with {r.status_code}')
 
                 self.debug(f'Using {server} server')
                 return f'https://{server}/'

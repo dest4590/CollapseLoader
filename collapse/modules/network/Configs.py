@@ -13,7 +13,6 @@ config_list = []
 
 class Config:
     """A class representing a configuration object"""
-    
     def __init__(self, id: int, file: str, config_path: str, server: str, client_id: int) -> None:
         self.id = id
         self.file = file
