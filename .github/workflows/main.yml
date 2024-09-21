@@ -52,11 +52,11 @@ jobs:
             - name: Make Build
               run: |
                   echo "Using version ${{ env.VERSION }} in the build script."
-                  if [ "${{ inputs.dev }}" == "true" ]; then
+                  if (${{ inputs.dev }} -eq "true") {
                       python -m builder --dev
-                  else
+                  } else {
                       python -m builder
-                  fi
+                  }
 
             - name: Set artifact path/name
               run: |
