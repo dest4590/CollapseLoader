@@ -24,6 +24,10 @@ class SdkServerClient:
         """Get all settings"""
         return self.get('settings')
     
+    def get_setting(self, key: str, header: str = 'Options'):
+        """Get a single setting by key and header"""
+        return self.post('setting', {'key': key, 'header': header})
+    
     def set_setting(self, key: str, value: str, header: str = 'Options'):
         """Set a setting by key, value, header"""
         return self.post('settings', {'key': key, 'value': value, 'header': header})
@@ -34,4 +38,21 @@ class SdkServerClient:
 
 client = SdkServerClient(9090)
 
-print(client.set_setting('nickname', 'test'))
+"""
+Example usage:
+
+# Start a client by name
+client.start_client('client1')
+
+# Get all settings
+client.get_settings()
+
+# Get a single setting by key and header
+client.get_setting('key1', 'Options')
+
+# Set a setting by key, value, header
+client.set_setting('key1', 'value1', 'Options')
+
+# Stop the server
+client.stop_server()
+"""

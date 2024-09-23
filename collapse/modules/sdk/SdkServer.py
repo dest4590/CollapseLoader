@@ -58,6 +58,21 @@ class SdkServer(Module):
         settings.set(request.json.get('key'), request.json.get('value'), request.json.get('header'))
         return 'Settings updated', 200
 
+    @app.route('/setting', methods=['GET'])
+    def get_setting():
+        """Get a single setting by key and header"""
+        key = request.json.get('key')
+
+        if not key:
+            return 'Missing "key" parameter', 400
+
+        header = request.json.get('header')
+
+        if not header:
+            return 'Missing "header" parameter', 400
+        
+        return settings.get(key, header), 200
+    
     @app.route('/shutdown', methods=['POST'])
     def stop_server():
         os.kill(os.getpid(), signal.SIGINT)
@@ -67,6 +82,7 @@ class SdkServer(Module):
 Server endpoints:
 * /run - Start a client by name
 * /settings (GET) - Get all settings
+* /setting (GET) - Get a single setting by key and header
 * /settings (POST) - Update settings by key, value, header
 * /shutdown - Shutdown the server
 """
