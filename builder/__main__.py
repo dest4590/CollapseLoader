@@ -1,7 +1,3 @@
-"""
-Import this module to build the project.
-"""
-
 from argparse import ArgumentParser
 
 from .builder import Builder
