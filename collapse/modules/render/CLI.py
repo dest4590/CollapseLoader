@@ -67,7 +67,6 @@ class Selector(Module):
             'Select username',
             'Enter RAM',
             'Ghost mode (PANIC)',
-            'Remove data folder',
             'Credits & Donators', 
             'Exit'
         ]
