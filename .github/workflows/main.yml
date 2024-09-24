@@ -9,12 +9,6 @@ on:
             - '**.ps1'
 
     workflow_dispatch:
-        inputs:
-            dev:
-                description: 'Run the build script in dev mode.'
-                required: false
-                default: 'false'
-                type: 'boolean'
 
 jobs:
     build:
@@ -52,11 +46,7 @@ jobs:
             - name: Make Build
               run: |
                   echo "Using version ${{ env.VERSION }} in the build script."
-                  if (${{ inputs.dev }} -eq "true") {
-                      python -m builder --dev
-                  } else {
-                      python -m builder
-                  }
+                  python -m builder
 
             - name: Set artifact path/name
               run: |
