@@ -90,9 +90,8 @@ class ConfigMenu:
 
             try:
                 choice = selector.ask_int('Choose config')
-
-                if choice in config_map:
-                    config_map[choice].client.load_config(config_map[choice])
+                if str(choice) in config_map:
+                    config_map[str(choice)].client.load_config(config_map[str(choice)])
                 elif choice == index + 1:
                     for config in config_list:
                         config.client.load_config(config)

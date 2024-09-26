@@ -37,7 +37,7 @@ class DataManager(Module):
         """Gets a link from the web"""
         return self.server + path
     
-    def download(self, path: str, destination: str = None, fabric: bool = False) -> None:
+    def download(self, path: str, destination: str = None, raw: bool = False) -> None:
         """Downloads file using path"""        
         filename = os.path.basename(path)
         path_dir = os.path.join(self.root_dir, os.path.splitext(filename)[0])
@@ -48,8 +48,8 @@ class DataManager(Module):
 
         self.debug(f'Downloading {filename} to {dest}')
         
-        self._download_file(path, filename, dest, fabric)
-        self._extract_file(filename, dest, path_dir, fabric)
+        self._download_file(path, filename, dest, raw)
+        self._extract_file(filename, dest, path_dir, raw)
 
     def _is_downloaded(self, filename: str, path: str, path_dir: str) -> bool:
         """Checks if the file is already downloaded."""
@@ -65,9 +65,9 @@ class DataManager(Module):
 
         return False
 
-    def _download_file(self, path: str, filename: str, dest: str, fabric: bool = False) -> None:
+    def _download_file(self, path: str, filename: str, dest: str, raw: bool = False) -> None:
         """Downloads the file from the given path and shows download progress"""
-        if not fabric:
+        if not raw:
             os.makedirs(self.root_dir + os.path.splitext(filename)[0], exist_ok=True)
         
         headers = {'Range': f'bytes={os.path.getsize(dest)}-'} if os.path.exists(dest) else {}
@@ -96,7 +96,7 @@ class DataManager(Module):
                         
             progress.stop()
 
-    def _extract_file(self, filename: str, dest: str, path_dir: str, fabric: bool) -> None:
+    def _extract_file(self, filename: str, dest: str, path_dir: str, raw: bool) -> None:
         """Extracts the downloaded file based on its type"""
         try:
             if filename.endswith('.zip'):
@@ -104,7 +104,7 @@ class DataManager(Module):
                     zip_file.extractall(path_dir)
                 os.remove(dest)
             elif filename.endswith('.jar'):
-                if not fabric:
+                if not raw:
                     os.rename(dest, os.path.join(path_dir, filename))
         except (zipfile.BadZipFile, OSError) as e:
             self.error(f"Error processing {dest}: {e}")

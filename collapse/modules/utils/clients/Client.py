@@ -67,7 +67,7 @@ class Client(Module):
         if not os.path.exists(self.path_dir + config.config_path):
             os.makedirs(self.path_dir + config.config_path)
 
-        data.download(config.file, f'{self.path_dir}{config.config_path}{config.filename}')
+        data.download(config.file, os.path.join(self.path_dir, config.config_path, config.filename), True)
 
     def download(self) -> True:
         """Downloading client files"""
