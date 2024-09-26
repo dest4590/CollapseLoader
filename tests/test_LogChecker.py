@@ -1,7 +1,7 @@
 import pytest
 
+from collapse.modules.utils.clients.Client import Client
 from collapse.modules.utils.LogChecker import LogChecker
-from collapse.modules.utils.Client import Client
 
 
 @pytest.fixture

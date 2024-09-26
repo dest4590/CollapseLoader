@@ -12,9 +12,9 @@ class API(Module):
         super().__init__()
         self.server = server if not LOCAL_API else 'http://127.0.0.1:8000/'
 
-    def get(self, path: str) -> requests.Response:
+    def get(self, path: str, prefix: bool = True) -> requests.Response:
         """Makes an API request"""
-        url = f'{self.server}api/{path}'
+        url = f'{self.server}{"api/" if prefix else ""}{path}'
         self.debug(f'API request to {path}')
         
         try:

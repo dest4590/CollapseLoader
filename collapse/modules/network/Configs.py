@@ -3,8 +3,8 @@ import os
 from rich import print
 
 from ..render.CLI import console, selector
-from ..utils.Client import Client
-from ..utils.ClientManager import client_manager
+from ..utils.clients.Client import Client
+from ..utils.clients.ClientManager import client_manager
 from ..utils.Logger import logger
 from ..utils.Module import Module
 from .API import api

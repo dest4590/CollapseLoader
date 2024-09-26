@@ -7,12 +7,12 @@ from time import sleep
 
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
-from ..network.Analytics import analytics
-from ..storage.Data import console, data
-from ..storage.Settings import settings
-from ..utils.RPC import rpc
-from .LogChecker import logchecker
-from .Module import Module
+from ...network.Analytics import analytics
+from ...storage.Data import console, data
+from ...storage.Settings import settings
+from ..LogChecker import logchecker
+from ..Module import Module
+from ..RPC import rpc
 
 
 def update_time(task_id, progress, start_time):
@@ -83,7 +83,7 @@ class Client(Module):
     def run(self) -> None:
         """Run client"""
 
-        from ..render.CLI import selector
+        from ...render.CLI import selector
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
         

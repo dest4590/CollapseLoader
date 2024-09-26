@@ -7,8 +7,8 @@ from rich.prompt import Confirm, IntPrompt
 from ...static import SKIP_ANIMATIONS, SYSTEM
 from ..storage.Data import console, data
 from ..storage.Settings import settings
-from ..utils.Client import Client
-from ..utils.ClientManager import client_manager
+from ..utils.clients.Client import Client
+from ..utils.clients.ClientManager import client_manager
 from ..utils.Module import Module
 
 selector_offset = len(client_manager.clients) + 11

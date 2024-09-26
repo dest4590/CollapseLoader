@@ -18,7 +18,7 @@ from .modules.sdk.SdkServer import server
 from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
-from .modules.utils.ClientManager import client_manager
+from .modules.utils.clients.ClientManager import client_manager
 from .modules.utils.CreditsMenu import credits_menu
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc

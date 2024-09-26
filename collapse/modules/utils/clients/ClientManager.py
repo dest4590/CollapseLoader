@@ -1,13 +1,13 @@
 import os
 
-from ...static import SHOW_HIDDEN_CLIENTS
-from ..network.API import api
-from ..storage.Cache import cache
-from ..storage.Data import data
-from ..storage.Settings import settings
+from ....static import SHOW_HIDDEN_CLIENTS
+from ...network.API import api
+from ...storage.Cache import cache
+from ...storage.Data import data
+from ...storage.Settings import settings
+from ..Module import Module
 from .Client import Client
 from .FabricClient import FabricClient
-from .Module import Module
 
 
 class ClientManager(Module):
