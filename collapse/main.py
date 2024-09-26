@@ -1,6 +1,5 @@
 import logging
 import random
-import shutil
 import sys
 
 from .arguments import args

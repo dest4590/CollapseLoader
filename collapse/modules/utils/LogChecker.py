@@ -1,3 +1,7 @@
+import os
+from datetime import datetime
+
+from ..storage.Data import data
 from .Module import Module
 
 
@@ -12,13 +16,14 @@ class LogChecker(Module):
         """Construct a reason message for the crash"""
         return f'Game crashed because {msg}'
 
-    def check_logs(self, payload: str) -> None:
+    def check_logs(self, payload: str, client) -> None:
         """Check logs for crash messages and log appropriate errors and info"""
         self.debug('Checking log')
         logs = ''.join(payload)
 
         if 'Game crashed!' in logs:
             self.error('Game crashed!')
+            self.save_crash_log(logs, client)
 
             # Memory Errors
             if 'java.lang.OutOfMemoryError: Java heap space' in logs:
@@ -59,5 +64,21 @@ class LogChecker(Module):
         else:
             self.debug('No crashes detected, all good!')
             return False
+        
+    def save_crash_log(self, payload: str, client) -> None:
+        """Saves the crash log to a file"""
+        crash_log_dir = os.path.join('..', 'crash_logs')
+        
+        self.info(f'Trying to create crash log directory: {crash_log_dir}')
+        os.makedirs(crash_log_dir, exist_ok=True)
+        
+        crash_log_file = os.path.join('..', f'crash_logs', f'{client.name}_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.txt')
+        
+        self.info(f'Trying to save crash log to: {crash_log_file}')
+        
+        with open(crash_log_file, 'w', encoding='utf-8') as f:
+            f.write(payload)
+            
+        self.info(f'Crash log saved to {crash_log_file}')
 
 logchecker = LogChecker()

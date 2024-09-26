@@ -176,7 +176,7 @@ class Client(Module):
                     progress.print(_, end='', markup=False, highlight=False)
                     buffer.append(_)
 
-                logchecker.check_logs(buffer)
+                logchecker.check_logs(buffer, self)
  
                 self.info('Exited from minecraft')
 
