@@ -2,7 +2,7 @@ import logging
 
 import colorlog
 
-from ...static import DEBUG_LOGS
+from ...constants import DEBUG_LOGS
 
 
 class CollapseLogger(logging.Logger):

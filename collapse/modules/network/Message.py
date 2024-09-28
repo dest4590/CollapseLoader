@@ -2,7 +2,7 @@ import datetime
 
 from rich import print
 
-from ...static import SAVE_MESSAGES
+from ...constants import SAVE_MESSAGES
 from ..storage.Settings import settings
 from ..utils.Module import Module
 from .API import api

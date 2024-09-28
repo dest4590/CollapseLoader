@@ -1,6 +1,6 @@
 import requests
 
-from ...static import SERVERS
+from ...constants import SERVERS
 from ..utils.Module import Module
 from .Network import network
 

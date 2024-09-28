@@ -6,7 +6,7 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
-from ...static import CODENAME, REPO_URL, VERSION
+from ...constants import CODENAME, REPO_URL, VERSION
 from ..network.Network import network
 from ..network.Servers import servers
 from ..utils.Fixes import console

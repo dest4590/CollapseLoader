@@ -1,6 +1,6 @@
 import requests
 
-from ...static import API_URL, LOCAL_API
+from ...constants import API_URL, LOCAL_API
 from ..network.Network import network
 from ..utils.Module import Module
 
