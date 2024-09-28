@@ -21,6 +21,7 @@
 * [X] Message system
 * [X] Settings system 
 * [X] Update system
+* [X] Config system
 * [X] Packaging (CI/CD, PyInstaller)
 * [X] Mirrors (2 servers)
 
