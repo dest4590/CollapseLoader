@@ -4,7 +4,8 @@ from time import sleep
 
 from rich.prompt import Confirm, IntPrompt
 
-from ...constants import SKIP_ANIMATIONS, SYSTEM
+from ...constants import SYSTEM
+from ...developer import SKIP_ANIMATIONS
 from ..storage.Data import console, data
 from ..storage.Settings import settings
 from ..utils.clients.Client import Client

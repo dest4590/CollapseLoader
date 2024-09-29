@@ -11,7 +11,7 @@ class Module:
         self.__module_name = self.__class__.__name__
 
         if add_to_modules:
-            self.start_time = time.time()
+            self._start_time = time.time()
             modules.append(self)
         
         # Alias for logging functions

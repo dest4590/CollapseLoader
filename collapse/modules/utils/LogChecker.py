@@ -42,8 +42,6 @@ class LogChecker(Module):
             # Modding Errors
             elif 'LoaderExceptionModCrash' in logs:
                 self.info(self.reason('a mod caused a crash'))
-            elif ' ticking entity' in logs:
-                self.info(self.reason("an entity is causing issues (often a mod-related problem)"))
             
             # World Corruption
             elif 'Failed to load level' in logs:

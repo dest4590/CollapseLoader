@@ -1,19 +1,22 @@
-# removes features for developers, used for CI/CD
+$files = @(
+    '.\collapse\developer.py',
+    '.\run.py'
+)
 
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "DEBUG_LOGS = True", "DEBUG_LOGS = False" | Set-Content $file
+$replacements = @(
+    "DEBUG_LOGS = True", "DEBUG_LOGS = False",
+    "DO_NOT_SAVE_MESSAGES = True", "DO_NOT_SAVE_MESSAGES = False",
+    "SHOW_HIDDEN_CLIENTS = True", "SHOW_HIDDEN_CLIENTS = False",
+    "SKIP_ANIMATIONS = True", "SKIP_ANIMATIONS = False",
+    "LOCAL_API = True", "LOCAL_API = False",
+    "SAVE_MESSAGES = False", "SAVE_MESSAGES = True",
+    "dev = True", "dev = False"
+)
 
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "DO_NOT_SAVE_MESSAGES = True", "DO_NOT_SAVE_MESSAGES = False" | Set-Content $file
+$replacementCount = $replacements.Length / 2
 
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "SHOW_HIDDEN_MESSAGES = True", "SHOW_HIDDEN_MESSAGES = False" | Set-Content $file
-
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "SHOW_HIDDEN_CLIENTS = True", "SHOW_HIDDEN_CLIENTS = False" | Set-Content $file
-
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "SKIP_ANIMATIONS = True", "SKIP_ANIMATIONS = False" | Set-Content $file
-
-$file = '.\run.py'
-(Get-Content $file) -replace "dev = True", "dev = False" | Set-Content $file
+foreach ($file in $files) {
+    for ($i = 0; $i -lt $replacementCount; $i++) {
+        (Get-Content $file) -replace $replacements[$i * 2], $replacements[$i * 2 + 1] | Set-Content $file
+    }
+}

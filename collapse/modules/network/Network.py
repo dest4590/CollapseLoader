@@ -2,6 +2,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from ...arguments import args
 from ..utils.Module import Module
 
 
@@ -16,11 +17,12 @@ class Network(Module):
         adapter = HTTPAdapter(max_retries=retries)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
+        self.timeout = args.timeout if args.timeout else 1
 
     def get(self, url, params=None, headers=None, stream=False):
         """Make a GET request to the given URL"""
         try:
-            response = self.session.get(url, params=params, headers=headers, stream=stream, timeout=1)
+            response = self.session.get(url, params=params, headers=headers, stream=stream, timeout=self.timeout)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:

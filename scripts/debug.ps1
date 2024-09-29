@@ -1,19 +1,18 @@
-# adding features for developers, used for CI/CD
+$files = @(
+    '.\collapse\developer.py',
+    '.\run.py'
+)
 
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "DEBUG_LOGS = False", "DEBUG_LOGS = True" | Set-Content $file
+$replacements = @(
+    "DEBUG_LOGS = False", "DEBUG_LOGS = True",
+    "SKIP_ANIMATIONS = False", "SKIP_ANIMATIONS = True",
+    "dev = False", "dev = True"
+)
 
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "DO_NOT_SAVE_MESSAGES = False", "DO_NOT_SAVE_MESSAGES = True" | Set-Content $file
+$replacementCount = $replacements.Length / 2
 
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "SHOW_HIDDEN_MESSAGES = False", "SHOW_HIDDEN_MESSAGES = True" | Set-Content $file
-
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "SHOW_HIDDEN_CLIENTS = False", "SHOW_HIDDEN_CLIENTS = True" | Set-Content $file
-
-$file = '.\collapse\static.py'
-(Get-Content $file) -replace "SKIP_ANIMATIONS = False", "SKIP_ANIMATIONS = True" | Set-Content $file
-
-$file = '.\run.py'
-(Get-Content $file) -replace "dev = False", "dev = True" | Set-Content $file
+foreach ($file in $files) {
+    for ($i = 0; $i -lt $replacementCount; $i++) {
+        (Get-Content $file) -replace $replacements[$i * 2], $replacements[$i * 2 + 1] | Set-Content $file
+    }
+}

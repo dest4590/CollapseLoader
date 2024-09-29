@@ -1,8 +1,8 @@
 {
     "recommendations": [
         "ms-python.python",
-        "esbenp.prettier-vscode",
         "ms-python.isort",
-        "ms-python.debugpy"
+        "ms-python.debugpy",
+        "exodiusstudios.comment-anchors"
     ]
 }

@@ -1,6 +1,7 @@
 import requests
 
-from ...constants import API_URL, LOCAL_API
+from ...constants import API_URL
+from ...developer import LOCAL_API
 from ..network.Network import network
 from ..utils.Module import Module
 
@@ -14,6 +15,9 @@ class API(Module):
 
     def get(self, path: str, prefix: bool = True) -> requests.Response:
         """Makes an API request"""
+        if not path.endswith('/'):
+            path += '/'
+        
         url = f'{self.server}{"api/" if prefix else ""}{path}'
         self.debug(f'API request to {path}')
         

@@ -2,7 +2,7 @@ import datetime
 
 from rich import print
 
-from ...constants import SAVE_MESSAGES
+from ...developer import SAVE_MESSAGES
 from ..storage.Settings import settings
 from ..utils.Module import Module
 from .API import api
@@ -10,11 +10,11 @@ from .API import api
 
 class MessageClient(Module):
     """Client for retrieving and displaying messages"""
-    shown = False
 
     def __init__(self) -> None:
         """Initialize the MessageClient and fetch messages from the API"""
         super().__init__()
+        self.shown = False
         self.messages = api.get('messages')
         self.types = {
             'info': '[green]Info[/]',
@@ -46,7 +46,7 @@ class MessageClient(Module):
 
                 self.shown = True
         else:
-            self.error('MessageClient error')
+            self.error('Failed to fetch messages from API')
 
     @staticmethod
     def calculate_time_ago(time_difference: datetime.timedelta) -> str:

@@ -1,5 +1,5 @@
-from ..network.API import api
-from ..render.CLI import console, selector
+from ...network.API import api
+from ..CLI import console, selector
 
 
 class CreditsMenu:

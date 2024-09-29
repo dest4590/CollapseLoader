@@ -2,7 +2,7 @@ import logging
 
 import colorlog
 
-from ...constants import DEBUG_LOGS
+from ...developer import DEBUG_LOGS
 
 
 class CollapseLogger(logging.Logger):
@@ -60,5 +60,4 @@ class CollapseLogger(logging.Logger):
         kwargs['extra'] = {'prefix': prefix}
         super()._log(level, msg, args, **kwargs)
 
-# Create a logger instance
 logger = CollapseLogger('CollapseLogger', logging.DEBUG if DEBUG_LOGS else logging.INFO)

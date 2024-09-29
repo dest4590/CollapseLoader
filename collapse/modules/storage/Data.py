@@ -6,7 +6,7 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
-from ...constants import CODENAME, REPO_URL, VERSION
+from ...constants import CODENAME, REPO_URL, ROOT_DIR, VERSION
 from ..network.Network import network
 from ..network.Servers import servers
 from ..utils.Fixes import console
@@ -17,7 +17,7 @@ class DataManager(Module):
     """Used to manage loader data"""
     def __init__(self) -> None:
         super().__init__()
-        self.root_dir = 'data/'
+        self.root_dir = ROOT_DIR
         self.server = servers.check_servers()
 
         if not self.server:

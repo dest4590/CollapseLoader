@@ -1,6 +1,6 @@
 import os
 
-from ....constants import SHOW_HIDDEN_CLIENTS
+from ....developer import SHOW_HIDDEN_CLIENTS
 from ...network.API import api
 from ...storage.Cache import cache
 from ...storage.Data import data

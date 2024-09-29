@@ -14,12 +14,12 @@ from .modules.network.Configs import config_menu
 from .modules.network.Message import messageclient
 from .modules.network.Updater import updater
 from .modules.render.CLI import selector
+from .modules.render.menus.CreditsMenu import credits_menu
 from .modules.sdk.SdkServer import server
 from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
 from .modules.utils.clients.ClientManager import client_manager
-from .modules.utils.CreditsMenu import credits_menu
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc
 
@@ -87,7 +87,10 @@ def main() -> None:
         analytics.loader_start()
         
         if args.server:
-            server.run()
+            server.run(port=args.port if args.port else 9090)
+    
+        if args.crash:
+            raise Exception('Force crash')
     
         else:
             selector.set_title(selector.titles_states['default'])
