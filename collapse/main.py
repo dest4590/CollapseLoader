@@ -26,11 +26,10 @@ from .modules.utils.RPC import rpc
 
 def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
-    Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
-
     if not settings.get('nickname'):
         logger.warn('Remember to change your nickname!')
-
+        
+    Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
     Option('ram').create(2048, 'Loader')
     Option('rpc').create(True, 'Loader')
     Option('read_messages').create('0,', 'Loader')
