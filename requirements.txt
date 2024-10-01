@@ -5,7 +5,7 @@ pypresence==4.3.0
 pyinstaller==6.10.0
 mock==5.1.0
 pytest==8.3.3
-aiohttp==3.10.8
-virtualenv==20.26.5
+aiohttp==3.10.5
+virtualenv==20.26.6
 flask==3.0.3
 click==8.1.7
