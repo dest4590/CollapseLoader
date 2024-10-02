@@ -37,7 +37,7 @@ class ClientCleaner(Module):
         if selector.ask(lang.t('clientcleaner.ask')):
             for folder in self.folders:
                 if os.path.isdir(folder):
-                    self.info('Removing folder: ' + folder)
+                    self.info(lang.t('clientcleaner.removing').format(folder))
                     shutil.rmtree(folder, ignore_errors=True)
 
         selector.pause()

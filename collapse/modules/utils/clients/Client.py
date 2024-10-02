@@ -88,18 +88,18 @@ class Client(Module):
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
         
-        rpc.details = lang.t('rpc.playing').format(client=self.name)
+        rpc.details = lang.t('rpc.playing').format(self.name)
 
         # Downloading requirements
         data.download('jre-21.0.2.zip')
 
         if self.version.startswith('1.12'):
-            self.info(lang.t('clients.downloading-libraries-natives-1.12'))
+            self.info(lang.t('clients.downloading-libraries-natives-1-12'))
             data.download('libraries-1.12.zip')
             data.download('natives-1.12.zip')
 
         else:
-            self.info(lang.t('clients.downloading-libraries-natives-1.12.2'))
+            self.info(lang.t('clients.downloading-libraries-natives-1-12-2'))
             data.download('libraries.zip')
             data.download('natives.zip')
 

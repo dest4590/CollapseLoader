@@ -3,6 +3,7 @@ import webbrowser
 
 import aiohttp
 
+from ...constants import REPOSITORY
 from ..render.CLI import selector
 from ..storage.Data import data
 from ..utils.Language import lang
@@ -38,7 +39,7 @@ class Updater(Module):
 
     async def api_request(self, session: aiohttp.ClientSession, path: str, params: dict = None) -> dict:
         """Makes a request to the GitHub API"""
-        url = f'https://api.github.com/repos/dest4590/CollapseLoader/{path}'
+        url = f'https://api.github.com/repos/{REPOSITORY}/{path}'
         try:
             async with session.get(url, params=params, timeout=5) as response:
                 response.raise_for_status()

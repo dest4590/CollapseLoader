@@ -6,7 +6,7 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
                            TextColumn, TransferSpeedColumn)
 
-from ...constants import CODENAME, REPO_URL, ROOT_DIR, VERSION
+from ...constants import CODENAME, ROOT_DIR, VERSION
 from ..network.Network import network
 from ..network.Servers import servers
 from ..utils.Fixes import console
@@ -24,7 +24,6 @@ class DataManager(Module):
         if not self.server:
             self.critical(lang.t('data.no_servers'))
 
-        self.repo = REPO_URL
         self.version = VERSION
         self.codename = CODENAME
 

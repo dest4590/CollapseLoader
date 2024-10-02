@@ -51,4 +51,5 @@ class Analytics(Module):
         
         except Exception as e:
             self.error(lang.t('analytics.error-sent-client').format(e))
+
 analytics = Analytics()

@@ -10,6 +10,9 @@ analytics:
     error-sent-loader: Failed to send analytics request for loader start {}
     error-sent-client: Failed to send analytics request for client start {}
 
+menu:
+    return: Return
+
 configs:
     found-len: Found {} configs
     menu-header: "[bold]Configs[/]"
@@ -88,6 +91,7 @@ cache:
 
 clientcleaner:
     ask: "Delete all client folders (y,n)?\nall your configs will be [red bold]DESTROYED.[/]"
+    removing: Removing folder {}
 
 data:
     no-server: No server found for file download (this is a critical function in the loader)
@@ -166,8 +170,8 @@ clients:
     downloading: Downloading client {}
     downloading-fabric-client: Downloading Fabric client
 
-    downloading-libraries-natives-1.12: Downloading 1.12.2 libraries and natives
-    downloading-libraries-natives-1.12.2: Downloading 1.12.2+ libraries and natives
+    downloading-libraries-natives-1-12: Downloading 1.12.2 libraries and natives
+    downloading-libraries-natives-1-12-2: Downloading 1.12.2+ libraries and natives
     downloading-fabric: Downloading Fabric libraries and natives
 
     running: Running client {}
@@ -188,7 +192,7 @@ rpc:
     large-text: Version {}
 
 main:
-    dont-forget-nickname: Don't forget to change your nickname!
+    nickname-reminder: Don't forget to change your nickname!
     nickname-changed: Nickname changed
     ram-changed: RAM changed
     select-ram: Select RAM (in gigabytes)

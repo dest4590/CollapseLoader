@@ -90,6 +90,7 @@ cache:
 
 clientcleaner:
     ask: "Удалить все папки клиентов (y,n)?\nвсе ваши конфиги будут [red bold]УНИЧТОЖЕНЫ.[/]"
+    removing: Удаляем папку {}
 
 data:
     no-server: Не найден сервер для загрузки файлов (это критическая функция в лоадере)
@@ -168,8 +169,8 @@ clients:
     downloading: Скачиваем клиент {}
     downloading-fabric-client: Скачиваем Fabric клиент
 
-    downloading-libraries-natives-1.12: Скачиваем 1.12.2 библиотеки и natives
-    downloading-libraries-natives-1.12.2: Скачиваем 1.12.2+ библиотеки и natives
+    downloading-libraries-natives-1-12: Скачиваем 1.12.2 библиотеки и natives
+    downloading-libraries-natives-1-12-2: Скачиваем 1.12.2+ библиотеки и natives
     downloading-fabric: Скачиваем Fabric библиотеки и natives
 
     running: Запускаем клиент {}
@@ -190,7 +191,7 @@ rpc:
     large-text: Версия {}
 
 main:
-    dont-forget-nickname: Не забудьте изменить свой никнейм!
+    nickname-reminder: Не забудьте изменить свой никнейм!
     nickname-changed: Никнейм изменён
     ram-changed: ОЗУ изменена
     select-ram: Выберите ОЗУ (в гигабайтах)

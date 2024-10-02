@@ -64,7 +64,7 @@ class Option(Module):
     def reset(self) -> None:
         """Reset option with default value"""
         self.save(self.default_value)
-        self.debug(lang.t('options.reset', self.name, self.default_value))
+        self.debug(lang.t('options.reset').format(self.name, self.default_value))
 
     @staticmethod
     def get_option_by_index(index: int) -> 'Option':
