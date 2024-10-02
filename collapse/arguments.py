@@ -8,5 +8,6 @@ parser.add_argument('--port', type=int, help='Set port for SDK server')
 parser.add_argument('--timeout', type=int, help='Set timeout for network requests')
 parser.add_argument('--crash', action='store_true', help='Force crash')
 parser.add_argument('--api-url', help='Set API URL')
+parser.add_argument('--lang', help='Set language')
 
 args, unknown = parser.parse_known_args()

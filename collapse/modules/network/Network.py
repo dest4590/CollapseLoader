@@ -1,6 +1,7 @@
 import requests
 
 from ...arguments import args
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 
@@ -20,7 +21,7 @@ class Network(Module):
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            self.error(f"An error occurred: {e}")
+            self.error(lang.t('network.error').format(e))
             raise e
  
     def close(self):

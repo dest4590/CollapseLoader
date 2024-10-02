@@ -1,0 +1,198 @@
+api:
+    request: API request to {}
+    error: API request error {}
+
+analytics:
+    disabled: Analytics disabled
+    successfuly-sent-loader: Successfully sent analytics request for loader start
+    successfuly-sent-client: Successfully sent analytics request for client start
+
+    error-sent-loader: Failed to send analytics request for loader start {}
+    error-sent-client: Failed to send analytics request for client start {}
+
+configs:
+    found-len: Found {} configs
+    menu-header: "[bold]Configs[/]"
+    choose-config: Choose config
+    invalid-choice: Choose the correct number or letter
+
+    install-all-configs: Install all configs
+    return: Return
+    server: server
+
+messages:
+    fetched: Fetched messages from API
+    fetch-error: Error fetching messages from API
+    message: message from
+
+    types:
+        info: Informative
+        warning: Warning
+        maintenance: Maintenance
+
+    time-now: just now
+    time-minutes: "{0} minutes ago"
+    time-hours: "{0} hours ago"
+    time-days: "{0} days ago"
+
+network:
+    error: Network error {}
+
+servers:
+    server-not-accessible: Server {} is down or inaccessible
+    server-respond: Server {} responded with status code {}
+    use-server: Using server {}
+
+updater:
+    version-check: Remote version {}, local {}
+    latest-commit: Latest commit {}
+    rate-limit: Rate limit exceeded, try again later
+    fetch-error: "Error fetching {}: {}"
+
+    update-notify: Update the loader!
+    update-ask: Download new version?
+    update-ask-dev: Download new version (dev)?
+    opening-latest-prerelease: Opening latest dev release
+    opening-latest-release: Opening latest release
+
+    no-releases: No releases found
+
+cli:
+    no-clients: Clients unavailable
+    text-created: CLI text created
+
+    menu-header: CLIENTS & TOOLS
+
+    settings-menu: Settings
+    configs-menu: Configs
+    select-username: Select username
+    enter-ram: Select RAM
+    ghost-mode: Ghost mode
+    credits-donators: Creators and donations
+    exit: "[red]Exit[/]"
+
+    select: Select
+    select-username-prompt: Select username
+
+    titles:
+        settings: CollapseLoader <Settings>
+        configs: CollapseLoader <Configs>
+        credits: CollapseLoader <Creators and donations>
+
+        cannot-find: Cannot title find by key {}
+
+cache:
+    cache-saved: Cache saved at {}
+    client-cache-not-found: Client cache not found
+    using-last-cache: Using last client cache ({})
+
+clientcleaner:
+    ask: "Delete all client folders (y,n)?\nall your configs will be [red bold]DESTROYED.[/]"
+
+data:
+    no-server: No server found for file download (this is a critical function in the loader)
+
+    download:
+        to: Downloading {} to {}
+        already-downloaded: File {} already downloaded, skipping
+        error: Failed to download {}, {}
+        extract-error: Error processing file {}, {}
+
+modmanager:
+    activate: Activating mod {}
+    deactivate: Deactivating mod {}
+    install: Installing mod {}
+
+options:
+    enabled: Enabled
+    disabled: Disabled
+
+    created: Created setting {} with value {} ({})
+    saved: Set setting {} to {}
+
+    input:
+        note: "[i]Press [green]Enter[/] to skip input[/]"
+        prompt: 'Enter value for {} (type "RESET" to reset setting) ({}): '
+
+    reset: Reset setting {} to {}
+    reset-all: Reset all settings
+    choose: Choose a setting
+    invalid-choice: Choose a valid number
+
+    ask-reset: Are you sure you want to reset all settings (y,n)?
+
+    settings:
+        nickname: User nickname
+        custom_title: Custom window title (None to disable)
+        hide_logo: Hide logo and links on the main screen
+        hide_messages: Hide messages on the main screen
+        disable_caching: Disable caching
+        use_short_logo: Use short logo
+        hide_links: Hide links on the main screen
+        disable_animation: Disable animations
+        show_client_version: Show client versions
+        discord_rich_presence: Show RPC in Discord
+        language: Language (ru, en)
+
+logchecker:
+    base-reason: Game crashed due to {}
+    checking-log: Checking logs
+    game-crashed: Game crashed
+
+    crashes:
+        out_of_memory: Not enough memory (increase RAM)
+        no_class_def: Classes or libraries are missing
+        unsupported_class: Compiled with a different version of Java
+        mod_crash: Mod crashed
+        corrupted_world: World is corrupted
+        graphics_error: Problem with the graphics card or drivers
+        opengl_error: OpenGL error occurred, often related to graphics card drivers
+        unknown: Game crashed for an unknown reason. Please provide the full log for further analysis
+
+    no-crashes: No crashes detected, everything is fine!
+
+    crash-logs:
+        creating-dir: Creating directory for logs {}
+        saving: Creating log file {}
+        saved: Crash log saved in {}
+
+logo:
+    tagline: Simple CLI tool for running Minecraft clients
+
+clients:
+    already-downloaded: Client {} already downloaded
+    already-downloaded-fabric: Fabric client already downloaded
+
+    downloading: Downloading client {}
+    downloading-fabric-client: Downloading Fabric client
+
+    downloading-libraries-natives-1.12: Downloading 1.12.2 libraries and natives
+    downloading-libraries-natives-1.12.2: Downloading 1.12.2+ libraries and natives
+    downloading-fabric: Downloading Fabric libraries and natives
+
+    running: Running client {}
+    running-fabric: Running Fabric client {}
+
+    progress:
+        task: "[green]Running client[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
+        session: "[purple3]active session[/]"
+
+    finished: Exiting Minecraft
+
+clientmanager:
+    error: Failed to fetch clients from API
+
+rpc:
+    playing: Playing with {}
+    choosing: Choosing client
+    large-text: Version {}
+
+main:
+    dont-forget-nickname: Don't forget to change your nickname!
+    nickname-changed: Nickname changed
+    ram-changed: RAM changed
+    select-ram: Select RAM (in gigabytes)
+
+    invalid-option: Select a number
+
+    force-crash: Force crash

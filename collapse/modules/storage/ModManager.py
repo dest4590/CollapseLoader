@@ -1,6 +1,7 @@
 import os
 
 from ..storage.Data import data
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 
@@ -24,18 +25,18 @@ class ModManager(Module):
     def activate(self, name: str) -> None:
         """Activate a disabled mod"""
         if name.endswith('.disabled'):
-            self.debug(f'Enabling mod: {name}')
+            self.debug(lang.t('modmanager.activate').format(name))
             os.rename(self.get_mod(name), self.get_mod(name.replace('.disabled', '')))
 
     def deactivate(self, name: str) -> None:
         """Deactivate an enabled mod"""
         if name.endswith('.jar'):
-            self.debug(f'Disabling mod: {name}')
+            self.debug(lang.t('modmanager.deactivate').format(name))
             os.rename(self.get_mod(name), self.get_mod(f'{name}.disabled'))
 
     def install(self, mod: str) -> None:
         """Install mod by name in the mods folder"""
-        self.info(f'Installing mod: {mod}')
+        self.info(lang.t('modmanager.install').format(mod))
         
         if not os.path.exists(self.mods_folder):
             os.makedirs(self.mods_folder)

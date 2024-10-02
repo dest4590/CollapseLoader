@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from ..utils.Language import lang
 from ..utils.Module import Module
 from .Data import data
 from .Settings import settings
@@ -23,7 +24,7 @@ class Cache(Module):
             with open(self.path, 'w', encoding='utf-8') as f:
                 json.dump(payload, f)
 
-            self.debug(f'Saved cache at {now}')
+            self.debug(lang.t('cache.cache-saved').format(now))
 
     def get(self) -> dict:
         """Returns cache as dict"""

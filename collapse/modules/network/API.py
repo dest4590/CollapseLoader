@@ -3,6 +3,7 @@ import requests
 from ...constants import API_URL
 from ...developer import LOCAL_API
 from ..network.Network import network
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 
@@ -19,14 +20,14 @@ class API(Module):
             path += '/'
         
         url = f'{self.server}{"api/" if prefix else ""}{path}'
-        self.debug(f'API request to {path}')
+        self.debug(lang.t('api.request').format(path))
         
         try:
             response = network.get(url)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            self.error(f'API request error: {e}')
+            self.error(lang.t('api.error').format(e))
             return None
 
 api = API()

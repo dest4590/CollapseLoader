@@ -27,7 +27,7 @@ class Module:
 
     def warn(self, msg: object):
         """Make a warn log"""
-        logger.warn(msg=msg, prefix=f' @ {self.__module_name}')
+        logger.warning(msg=msg, prefix=f' @ {self.__module_name}')
 
     def error(self, msg: object):
         """Make a error log"""

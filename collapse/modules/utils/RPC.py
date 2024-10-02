@@ -5,6 +5,7 @@ from pypresence import Presence
 
 from ..storage.Data import data
 from ..storage.Settings import settings
+from ..utils.Language import lang
 
 
 class RPC(Thread):
@@ -14,7 +15,7 @@ class RPC(Thread):
         super().__init__(*args, **kwargs)
         self.client_id = '1225803664204234772'
         self.RPC = Presence(self.client_id)
-        self.default_details = 'Choosing a client'
+        self.default_details = lang.t('rpc.choosing')
         self.details = self.default_details
         self.start_time = time()
         self.disabled = not settings.use_option('rpc')
@@ -32,7 +33,7 @@ class RPC(Thread):
                     {'label': 'collapseloader.org', 'url': 'https://collapseloader.org'}
                 ],
                 start=self.start_time,
-                large_text=f'Version {data.version}'
+                large_text=lang.t('rpc.large-text').format(data.version)
             )
         except Exception:
             try:

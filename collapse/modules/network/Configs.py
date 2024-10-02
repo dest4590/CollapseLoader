@@ -5,6 +5,7 @@ from rich import print
 from ..render.CLI import console, selector
 from ..utils.clients.Client import Client
 from ..utils.clients.ClientManager import client_manager
+from ..utils.Language import lang
 from ..utils.Logger import logger
 from ..utils.Module import Module
 from .API import api
@@ -19,7 +20,7 @@ class Config:
         self.client = Configs.get_client_by_id(client_id)
         self.config_path = config_path
         self.server = server
-        self.server_line = f", server: [light_steel_blue]{server}[/]" if server != '-' else ''
+        self.server_line = f", {lang.t('configs.server')}: [light_steel_blue]{server}[/]" if server != '-' else ''
         self.filename = os.path.basename(self.file)
         config_list.append(self)
         
@@ -42,7 +43,7 @@ class Configs(Module):
     def init_configs(self):
         """Initialize configurations"""
         
-        self.debug(f'Found {len(self.configs)} configs')
+        self.debug(lang.t('configs.found-len').format(len(self.configs)))
         
         for config in self.configs:
             client_name = config['client_name']
@@ -68,7 +69,7 @@ class ConfigMenu:
 
         selector.set_title(title_type='configs')
 
-        print('\n[bold]Configs[/]\n')
+        print(f"\n{lang.t('configs.menu-header')}")
 
         while True:
             grouped_configs = self.group_configs_by_client()
@@ -84,12 +85,12 @@ class ConfigMenu:
                     config_map[identifier] = config
                     index += 1
 
-            config_lines.append(f'\n[dark_cyan]{index + 1}. Install all configs[/]')
-            config_lines.append(f'[dark_red]{index + 2}. Return[/]')
+            config_lines.append(f'\n[dark_cyan]{index + 1}. {lang.t("configs.install-all-configs")}[/]')
+            config_lines.append(f'[dark_red]{index + 2}. {lang.t("menu.return")}[/]')
             console.print('\n'.join(config_lines), highlight=False)
 
             try:
-                choice = selector.ask_int('Choose config')
+                choice = selector.ask_int(lang.t('configs.choose-config'))
                 if str(choice) in config_map:
                     config_map[str(choice)].client.load_config(config_map[str(choice)])
                 elif choice == index + 1:
@@ -98,7 +99,7 @@ class ConfigMenu:
                 elif choice == index + 2:
                     break
             except ValueError:
-                logger.error('Choose a valid number or letter')
+                logger.error(lang.t('configs.invalid-choice'))
                 continue
 
         selector.reset_title()

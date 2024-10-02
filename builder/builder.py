@@ -25,8 +25,21 @@ class Builder:
         # Remove old .exe builds
         for file in glob('*.exe'):
             os.remove(file)
-        
-        os.system(f'''pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse\\assets\\{self.icon}" run.py''')
+    
+        data_files = []
+        lang_dir = os.path.join("collapse", "assets", "lang")  # Source directory
+
+        for filename in os.listdir(lang_dir):
+            if filename.endswith(".yml"):
+                data_files.append((os.path.join(lang_dir, filename), os.path.join("collapse", "assets", "lang"))) # Fixed here!
+
+        data_files_string = " ".join([f"--add-data \"{src};{dst}\"" for src, dst in data_files])
+
+        command = f'pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse/assets/{self.icon}" {data_files_string} run.py'  # use f-string properly
+
+        logger.info(f'Running command: {command}')
+
+        os.system(command)
 
         # Move .exe file to root
         for file in glob('dist/*.exe'):

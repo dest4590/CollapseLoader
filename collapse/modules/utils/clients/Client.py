@@ -10,6 +10,7 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from ...network.Analytics import analytics
 from ...storage.Data import console, data
 from ...storage.Settings import settings
+from ..Language import lang
 from ..LogChecker import logchecker
 from ..Module import Module
 from ..RPC import rpc
@@ -73,10 +74,10 @@ class Client(Module):
         """Downloading client files"""
 
         if os.path.isfile(self.path_dir + self.jar):
-            self.debug(f'Client {self.name} already downloaded')
+            self.debug(lang.t('clients.already_downloaded').format(self.name))
             return
 
-        self.info('Downloading client')
+        self.info(lang.t('clients.downloading').format(self.name))
 
         data.download(self.filename)
 
@@ -87,18 +88,18 @@ class Client(Module):
 
         selector.set_title(selector.titles_states['run'].format(client=self.name))
         
-        rpc.details = f'Playing with {self.name}'
+        rpc.details = lang.t('rpc.playing').format(client=self.name)
 
         # Downloading requirements
         data.download('jre-21.0.2.zip')
 
         if self.version.startswith('1.12'):
-            self.info('Downloading 1.12.2 libraries & natives')
+            self.info(lang.t('clients.downloading-libraries-natives-1.12'))
             data.download('libraries-1.12.zip')
             data.download('natives-1.12.zip')
 
         else:
-            self.info('Downloading 1.12.2+ libraries & natives')
+            self.info(lang.t('clients.downloading-libraries-natives-1.12.2'))
             data.download('libraries.zip')
             data.download('natives.zip')
 
@@ -106,7 +107,7 @@ class Client(Module):
         
         self.download()
 
-        self.info(f'Running client {self.name}')
+        self.info(lang.t('clients.running').format(self.name))
 
         with Progress(
             SpinnerColumn(),
@@ -117,8 +118,8 @@ class Client(Module):
         ) as progress:
             start_time = datetime.now()
             task_id = progress.add_task(
-                f"[green]Running client[/] [light_slate_blue]{self.name}[/] [light_salmon1]<{settings.get('nickname')}>[/]",
-                session="[purple3]active session[/]",
+                lang.t('clients.progress.task').format(self.name, settings.get('nickname')),
+                session=lang.t('clients.progress.session'),
                 time="00:00:00",
                 total=None
             )
@@ -178,7 +179,7 @@ class Client(Module):
 
                 logchecker.check_logs(buffer, self)
  
-                self.info('Exited from minecraft')
+                self.info(lang.t('clients.finished'))
 
         # Return default title
         selector.reset_title()

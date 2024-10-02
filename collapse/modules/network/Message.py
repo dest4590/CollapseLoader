@@ -4,6 +4,7 @@ from rich import print
 
 from ...developer import SAVE_MESSAGES
 from ..storage.Settings import settings
+from ..utils.Language import lang
 from ..utils.Module import Module
 from .API import api
 
@@ -17,11 +18,12 @@ class MessageClient(Module):
         self.shown = False
         self.messages = api.get('messages')
         self.types = {
-            'info': '[green]Info[/]',
-            'warn': '[yellow]Warning[/]',
-            'maintenance': '[blue]Maintenance[/]'
+            'info': f'[green]{lang.t("messages.types.info")}[/]',
+            'warn': f'[yellow]{lang.t("messages.types.warning")}[/]',
+            'maintenance': f'[blue]{lang.t("messages.types.maintenance")}[/]'
         }
-        self.debug('Fetched messages from API')
+        
+        self.debug(lang.t('messages.fetched'))
 
     def show_messages(self) -> None:
         """Display unread messages"""
@@ -32,7 +34,7 @@ class MessageClient(Module):
                 current_time = datetime.datetime.now(local_tz)
 
                 for message in self.messages.json():
-                    if message['id'] not in read_message_ids and not message['hidden']:
+                    if message['id'] not in read_message_ids:
                         if SAVE_MESSAGES:
                             read_message_ids.add(message['id'])
                             settings.set('read_messages', ','.join(map(str, read_message_ids)) + ',', 'Loader')
@@ -42,22 +44,22 @@ class MessageClient(Module):
                         time_ago = self.calculate_time_ago(time_difference)
 
                         message_type = self.types.get(message['type'], '[gray]Unknown[/]')
-                        print(f"\n{message_type} message from {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
+                        print(f"\n{message_type} {lang.t('messages.message')} {post_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_ago})\n{message['body']}\n")
 
                 self.shown = True
         else:
-            self.error('Failed to fetch messages from API')
+            self.error(lang.t('messages.fetch-error'))
 
     @staticmethod
     def calculate_time_ago(time_difference: datetime.timedelta) -> str:
         """Calculate a human-readable time difference"""
         if time_difference < datetime.timedelta(minutes=1):
-            return "just now"
+            return lang.t('messages.time-now')
         total_seconds = time_difference.total_seconds()
         if total_seconds < 3600:
-            return f"{int(total_seconds // 60)} minutes ago"
+            return lang.t('messages.time-minutes').format(int(total_seconds // 60))
         if total_seconds < 86400:
-            return f"{int(total_seconds // 3600)} hours ago"
-        return f"{time_difference.days} days ago"
+            return lang.t('messages.time-hours').format(int(total_seconds // 3600))
+        return lang.t('messages.time-days').format(time_difference.days)
 
 messageclient = MessageClient()

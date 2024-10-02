@@ -1,3 +1,6 @@
+from ..utils.Language import lang
+
+
 class Logo:
     """Just logos"""
 
@@ -17,6 +20,6 @@ class Logo:
 \____/ \____/ 
               '''
 
-    tagline = 'Simple CLI tool for running Minecraft clients'
+    tagline = lang.t('logo.tagline')
 
 logo = Logo()

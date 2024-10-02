@@ -10,6 +10,7 @@ from ...constants import CODENAME, REPO_URL, ROOT_DIR, VERSION
 from ..network.Network import network
 from ..network.Servers import servers
 from ..utils.Fixes import console
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 
@@ -21,7 +22,7 @@ class DataManager(Module):
         self.server = servers.check_servers()
 
         if not self.server:
-            self.critical('No server was found for downloading files (this is a critical function in the loader)')
+            self.critical(lang.t('data.no_servers'))
 
         self.repo = REPO_URL
         self.version = VERSION
@@ -46,7 +47,7 @@ class DataManager(Module):
         if self._is_downloaded(filename, path, path_dir):
             return
 
-        self.debug(f'Downloading {filename} to {dest}')
+        self.debug(lang.t('data.download.to').format(filename, dest))
         
         self._download_file(path, filename, dest, raw)
         self._extract_file(filename, dest, path_dir, raw)
@@ -56,11 +57,11 @@ class DataManager(Module):
         jar = os.path.splitext(filename)[0] + '.jar'
 
         if not filename.endswith('.jar') and os.path.isdir(path_dir) and not path.startswith('http'):
-            self.debug(f'{filename} already downloaded, skip')
+            self.debug(lang.t('data.download.already-downloaded').format(filename))
             return True
         
         if filename.endswith('.jar') and os.path.exists(os.path.join(path_dir, jar)):
-            self.debug(f'{filename} file already downloaded, skip')
+            self.debug(lang.t('data.download.already-downloaded').format(filename))
             return True
 
         return False
@@ -77,7 +78,7 @@ class DataManager(Module):
             response.raise_for_status()
             total_size = int(response.headers.get('content-length', 0))
         except requests.exceptions.RequestException as e:
-            self.error(f"Failed to download {filename}: {e}")
+            self.error(lang.t('data.download.error').format(filename, e))
             return
 
         with Progress(
@@ -107,7 +108,7 @@ class DataManager(Module):
                 if not raw:
                     os.rename(dest, os.path.join(path_dir, filename))
         except (zipfile.BadZipFile, OSError) as e:
-            self.error(f"Error processing {dest}: {e}")
+            self.error(lang.t('data.download.extract-error').format(filename, e))
             if os.path.exists(dest):
                 os.remove(dest)
 

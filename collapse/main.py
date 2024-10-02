@@ -9,6 +9,8 @@ if args.v:
     logger.setLevel(logging.DEBUG)
 
 from .modules.storage.Data import data # isort: skip
+from .modules.storage.Settings import settings # isort: skip
+from .modules.utils.Language import lang # isort: skip
 from .modules.network.Analytics import analytics
 from .modules.network.Configs import config_menu
 from .modules.network.Message import messageclient
@@ -18,7 +20,6 @@ from .modules.render.menus.CreditsMenu import credits_menu
 from .modules.sdk.SdkServer import server
 from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Options import Option, options_menu
-from .modules.storage.Settings import settings
 from .modules.utils.clients.ClientManager import client_manager
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc
@@ -27,7 +28,7 @@ from .modules.utils.RPC import rpc
 def initialize_settings() -> None:
     """Initialize user settings with default values if not already set"""
     if not settings.get('nickname'):
-        logger.warn('Remember to change your nickname!')
+        logger.warning(lang.t('main.dont-forget-nickname'))
         
     Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
     Option('ram').create(2048, 'Loader')
@@ -63,10 +64,10 @@ def handle_selection(choosed) -> None:
         config_menu.show()
     elif choosed == selector.offset + 13:
         settings.set('nickname', selector.select_username())
-        logger.debug('Changed nickname')
+        logger.debug(lang.t('main.nickname-changed'))
     elif choosed == selector.offset + 14:
-        settings.set('ram', selector.ask_int('Select ram (in gigabytes)') * 1024, 'Loader')
-        logger.debug('Changed ram')
+        settings.set('ram', selector.ask_int(lang.t('main.select-ram')) * 1024, 'Loader')
+        logger.debug(lang.t('main.ram-changed'))
     elif choosed == selector.offset + 15:
         clientcleaner.scan_folders()
     elif choosed == selector.offset + 16:
@@ -74,7 +75,7 @@ def handle_selection(choosed) -> None:
     elif choosed == selector.offset + 17: # Exit
         sys.exit(1)
     else:
-        logger.error('Choose number')
+        logger.error(lang.t('main.invalid-option'))
         selector.pause()
 
 def main() -> None:
@@ -89,7 +90,7 @@ def main() -> None:
             server.run(port=args.port if args.port else 9090)
     
         if args.crash:
-            raise Exception('Force crash')
+            raise Exception(lang.t('main.force-crash'))
     
         else:
             selector.set_title(selector.titles_states['default'])
@@ -107,5 +108,5 @@ def main() -> None:
                     handle_selection(choosed)
                     
                 except ValueError:
-                    logger.error('Choose number')
+                    logger.error(lang.t('main.invalid-option'))
                     continue

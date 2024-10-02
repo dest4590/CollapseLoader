@@ -5,6 +5,7 @@ from ...network.API import api
 from ...storage.Cache import cache
 from ...storage.Data import data
 from ...storage.Settings import settings
+from ...utils.Language import lang
 from ..Module import Module
 from .Client import Client
 from .FabricClient import FabricClient
@@ -24,7 +25,7 @@ class ClientManager(Module):
         fabric_clients = api.get('fabric_clients')
         
         if clients is None and fabric_clients is None:
-            self.error('Failed to fetch clients from API')
+            self.error(lang.t('clientmanager.error'))
             return []
 
         all_clients: dict = clients.json() + fabric_clients.json()
@@ -37,12 +38,12 @@ class ClientManager(Module):
 
         else:
             if not os.path.exists(cache.path):
-                self.error('No clients cache found')
+                self.error(lang.t('cache.client-cache-not-found'))
 
             else:
                 c = cache.get()
                 creation_time = c['_meta']['creation_time']
-                self.info(f"Using latest clients cache ({creation_time})")
+                self.info(lang.t('cache.using-last-cache').format(creation_time))
 
                 self.make_array(c['clients'])
 

@@ -5,6 +5,7 @@ import aiohttp
 
 from ..render.CLI import selector
 from ..storage.Data import data
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 
@@ -29,8 +30,8 @@ class Updater(Module):
                 self.remote_version = self.get_remote_version()
                 self.latest_commit = await self.get_latest_commit(session)
 
-            self.debug(f'Remote: {self.remote_version}, local: {self.local_version}')
-            self.debug(f'Latest commit: {self.latest_commit}')
+            self.debug(lang.t('updater.version-check').format(self.remote_version, self.local_version))
+            self.debug(lang.t('updater.latest-commit').format(self.latest_commit))
         except aiohttp.ClientError as e:
             self.remote_version = None
             self.latest_commit = None
@@ -44,9 +45,9 @@ class Updater(Module):
                 return await response.json()
         except aiohttp.ClientError as e:
             if e.message == 'rate limit exceeded':
-                self.warn('Rate limit exceeded, try again later')
+                self.warn(lang.t('updater.rate-limit'))
             else:
-                self.error(f'Failed to fetch {path}: {e}')
+                self.error(lang.t('updater.fetch-error').format(path, e))
             raise
 
     async def get_latest_releases(self, session: aiohttp.ClientSession) -> dict:
@@ -68,21 +69,21 @@ class Updater(Module):
     def check_version(self) -> None:
         """Check if the local version is up to date with the remote version"""
         if self.remote_version and self.remote_version > self.local_version:
-            self.info('Update your loader!')
+            self.info(lang.t('updater.update-notify'))
 
-            if selector.ask('Download a new version'):
+            if selector.ask(lang.t('updater.update-ask')):
                 if self.latest_releases:
-                    if selector.ask('Dev version'):
-                        self.debug('Opening dev release')
+                    if selector.ask(lang.t('updater.update-dev-ask')):
+                        self.debug(lang.t('updater.opening-latest-prerelease'))
                         latest_prerelease = next((release for release in self.latest_releases if release.get('prerelease')), None)
                         if latest_prerelease and latest_prerelease.get('assets'):
                             webbrowser.open(latest_prerelease['assets'][0].get('browser_download_url'))
                     else:
-                        self.debug('Opening latest release')
+                        self.debug(lang.t('updater.opening-latest-release'))
                         latest_release = next((release for release in self.latest_releases if not release.get('prerelease')), None)
                         if latest_release and latest_release.get('assets'):
                             webbrowser.open(latest_release['assets'][0].get('browser_download_url'))
                 else:
-                    self.warn('No releases found')
+                    self.warn(lang.t('updater.no-releases'))
 
 updater = Updater()

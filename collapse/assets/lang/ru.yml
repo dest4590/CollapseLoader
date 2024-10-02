@@ -1,0 +1,200 @@
+api:
+    request: API запрос к {}
+    error: Ошибка API запроса {}
+
+analytics:
+    disabled: Аналитика отключена
+    successfuly-sent-loader: Успешно отправлен запрос аналитики на запуск лоадера
+    successfuly-sent-client: Успешно отправлен запрос аналитики на запуск клиента
+
+    error-sent-loader: Ошибка отправки запроса аналитики на запуск лоадера {}
+    error-sent-client: Ошибка отправки запроса аналитики на запуск клиента {}
+
+menu:
+    return: Вернуться
+
+configs:
+    found-len: Найдено {} конфигов
+    menu-header: "[bold]Конфиги[/]"
+    choose-config: Выберите конфиг
+    invalid-choice: Выберите правильный номер или букву
+
+    install-all-configs: Установить все конфиги
+    server: сервер
+
+messages:
+    fetched: Получены сообщения из API
+    fetch-error: Ошибка получения сообщений из API
+    message: сообщение с
+
+    types:
+        info: Информативное
+        warning: Предупредительное
+        maintenance: Техническое
+
+    time-now: только что
+    time-minutes: "{0} минут назад"
+    time-hours: "{0} часов назад"
+    time-days: "{0} дней назад"
+
+network:
+    error: Ошибка сети {}
+
+servers:
+    server-not-accessible: Сервер {} лежит или недоступен
+    server-respond: Сервер {} ответил с кодом {}
+    use-server: Используем сервер {}
+
+updater:
+    version-check: Удалённая версия {}, локальная {}
+    latest-commit: Последний коммит {}
+    rate-limit: Превышен лимит запросов, попробуйте позже
+    fetch-error: "Ошибка получения {}: {}"
+
+    update-notify: Обновите лоадер!
+    update-ask: Скачать новую версию?
+    update-ask-dev: Скачать новую версию (dev)?
+    opening-latest-prerelease: Открытие дев релиза
+    opening-latest-release: Открытие последнего релиза
+
+    no-releases: Релизы не найдены
+
+cli:
+    no-clients: Клиенты недоступны
+    text-created: Создан CLI текст
+
+    menu-header: КЛИЕНТЫ & ИНСТРУМЕНТЫ
+
+    settings-menu: Настройки
+    configs-menu: Конфиги
+    select-username: Выбор ника
+    enter-ram: Выбор ОЗУ
+    ghost-mode: Режим призрака
+    credits-donators: Создатели и донаты
+    exit: "[red]Выход[/]"
+
+    select: Выберите
+    select-username-prompt: Выберите ник
+
+    titles:
+        settings: CollapseLoader <Настройки>
+        configs: CollapseLoader <Конфиги>
+        credits: CollapseLoader <Создатели и донаты>
+
+        cannot-find: Не могу найти заголовок по ключу {}
+
+cache:
+    cache-saved: Кэш сохранён в {}
+    client-cache-not-found: Кэш клиентов не найден
+    using-last-cache: Используем последний кэш клиентов ({})
+
+clientcleaner:
+    ask: "Удалить все папки клиентов (y,n)?\nвсе ваши конфиги будут [red bold]УНИЧТОЖЕНЫ.[/]"
+
+data:
+    no-server: Не найден сервер для загрузки файлов (это критическая функция в лоадере)
+
+    download:
+        to: Скачиваем {} в {}
+        already-downloaded: Файл {} уже скачан, пропускаем
+        error: Не удалось скачать {}, {}
+        extract-error: Ошибка обработки файла {}, {}
+
+modmanager:
+    activate: Включаем мод {}
+    deactivate: Отключаем мод {}
+    install: Устанавливаем мод {}
+
+options:
+    enabled: Включено
+    disabled: Отключено
+
+    created: Создана настройка {} с значением {} ({})
+    saved: Установлена настройка {} в {}
+
+    input:
+        note: "[i]Нажмите [green]Enter[/] чтобы пропустить ввод[/]"
+        prompt: 'Введите значение для {} (напишите "RESET" чтобы сбросить настройку) ({}): '
+
+    reset: Сброс настройки {} на {}
+    reset-all: Сброс всех настроек
+    choose: Выберите настройку
+    invalid-choice: Выберите правильный номер
+
+    ask-reset: Вы уверены, что хотите сбросить все настройки (y,n)?
+
+    settings:
+        nickname: Никнейм пользователя
+        custom_title: Пользовательский заголовок окна (None для отключения)
+        hide_logo: Скрыть лого и ссылки на главном экране
+        hide_messages: Скрыть сообщения на главном экране
+        disable_caching: Отключить кэширование
+        use_short_logo: Использовать короткое лого
+        hide_links: Скрыть ссылки на главном экране
+        disable_animation: Отключить анимации
+        show_client_version: Показывать версии клиентов
+        discord_rich_presence: Показывает RPC в Discord
+        language: Язык (ru, en)
+
+logchecker:
+    base-reason: Игра крашнулась из-за {}
+    checking-log: Проверяем логи
+    game-crashed: Игра крашнулась
+
+    crashes:
+        out_of_memory: Не хватает памяти (повысьте ОЗУ)
+        no_class_def: Отсутствуют классы или библиотеки
+        unsupported_class: Скомпилировано с другой версией Java
+        mod_crash: Крашнулся мод
+        corrupted_world: Мир повреждён
+        graphics_error: Проблема с видеокартой или драйверами
+        opengl_error: Произошла ошибка OpenGL, часто связана с драйверами видеокарты
+        unknown: Игра крашнулась по неизвестной причине. Пожалуйста, предоставьте полный лог для дальнейшего анализа
+
+    no-crashes: Крашей не обнаружено, всё хорошо!
+
+    crash-logs:
+        creating-dir: Создаём папку для логов {}
+        saving: Создаём файл логов {}
+        saved: Лог краша сохранён в {}
+
+logo:
+    tagline: Простой CLI инструмент для запуска клиентов Minecraft
+
+clients:
+    already-downloaded: Клиент {} уже скачан
+    already-downloaded-fabric: Fabric клиент уже скачан
+
+    downloading: Скачиваем клиент {}
+    downloading-fabric-client: Скачиваем Fabric клиент
+
+    downloading-libraries-natives-1.12: Скачиваем 1.12.2 библиотеки и natives
+    downloading-libraries-natives-1.12.2: Скачиваем 1.12.2+ библиотеки и natives
+    downloading-fabric: Скачиваем Fabric библиотеки и natives
+
+    running: Запускаем клиент {}
+    running-fabric: Запускаем Fabric клиент {}
+
+    progress:
+        task: "[green]Запущенный клиент[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
+        session: "[purple3]активная сессия[/]"
+
+    finished: Выходим из Minecraft
+
+clientmanager:
+    error: Не удалось получить клиенты из API
+
+rpc:
+    playing: Играет с {}
+    choosing: Выбирает клиент
+    large-text: Версия {}
+
+main:
+    dont-forget-nickname: Не забудьте изменить свой никнейм!
+    nickname-changed: Никнейм изменён
+    ram-changed: ОЗУ изменена
+    select-ram: Выберите ОЗУ (в гигабайтах)
+
+    invalid-option: Выберите цифру
+
+    force-crash: Принудительный краш

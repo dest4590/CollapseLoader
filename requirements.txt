@@ -9,3 +9,4 @@ aiohttp==3.10.5
 virtualenv==20.26.6
 flask==3.0.3
 click==8.1.7
+pyyaml==6.0.2

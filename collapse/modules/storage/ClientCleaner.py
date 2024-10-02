@@ -2,6 +2,7 @@ import os
 import shutil
 
 from ..render.CLI import selector
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 
@@ -33,7 +34,7 @@ class ClientCleaner(Module):
 
     def scan_folders(self) -> None:
         """Scans all folders in array, and remove its"""
-        if selector.ask('Remove all clients folder (y,n)?\nall of your configs will be [red bold]ANNIGILATED.[/]'):
+        if selector.ask(lang.t('clientcleaner.ask')):
             for folder in self.folders:
                 if os.path.isdir(folder):
                     self.info('Removing folder: ' + folder)

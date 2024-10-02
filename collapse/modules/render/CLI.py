@@ -10,6 +10,7 @@ from ..storage.Data import console, data
 from ..storage.Settings import settings
 from ..utils.clients.Client import Client
 from ..utils.clients.ClientManager import client_manager
+from ..utils.Language import lang
 from ..utils.Module import Module
 
 selector_offset = len(client_manager.clients) + 11
@@ -42,34 +43,34 @@ class Selector(Module):
         self.titles_states = {
             'default': f'CollapseLoader ({data.version})',
             'run': 'CollapseLoader >> {client}',
-            'settings': 'CollapseLoader <Settings>',
-            'configs': 'CollapseLoader <Configs>',
-            'credits': 'Collapse Loader <Credits>',
+            'settings': lang.t('cli.titles.settings'),
+            'configs': lang.t('cli.titles.configs'),
+            'credits': lang.t('cli.titles.credits'),
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
         self.linux = True if SYSTEM == 'posix' else False
 
         if self.offset == 0:
-            self.warn('No clients available')
-            self.text += '\n\nNo clients available!\n'
+            self.warn(lang.t('cli.no-clients'))
+            self.text += f'\n\n{lang.t('cli.no-clients')}!\n'
 
-        self.debug('Created selector text')
+        self.debug(lang.t('cli.text-created'))
 
     def make_text(self) -> str:
         """Creates the text for the selector"""
         
-        text = '\n[bold]CLIENTS & TOOLS[/]\n'
+        text = f'\n[bold]{lang.t('cli.menu-header')}[/]\n'
         text += '\n'.join(f'{i + 1}. {client}' for i, client in enumerate(client_manager.clients))
         text += '\n'
         
         function_lines = [
-            'Settings Menu',
-            'Configs Menu',
-            'Select username',
-            'Enter RAM',
-            'Ghost mode (PANIC)',
-            'Credits & Donators', 
-            'Exit'
+            lang.t('cli.settings-menu'),
+            lang.t('cli.configs-menu'),
+            lang.t('cli.select-username'),
+            lang.t('cli.enter-ram'),
+            lang.t('cli.ghost-mode'),
+            lang.t('cli.credits-donators'),
+            lang.t('cli.exit')
         ]
         
         text += ''.join(Function(line, 'dark_red' if line == 'Exit' else 'dark_cyan').line for line in function_lines)
@@ -90,7 +91,7 @@ class Selector(Module):
 
     def select(self) -> str:
         """Requires user selection"""
-        return console.input('Select >> ')
+        return console.input(f'{lang.t('cli.select')} >> ')
 
     def pause(self) -> None:
         """Pauses to allow the user to read the text"""
@@ -110,7 +111,7 @@ class Selector(Module):
 
     def select_username(self) -> str:
         """Asks for a nickname"""
-        return input('Enter nickname >> ')
+        return input(f'{lang.t("cli.select-username-prompt")} >> ')
 
     def clear(self) -> None:
         """Clears the console"""
@@ -123,7 +124,7 @@ class Selector(Module):
                 try:
                     ctypes.windll.kernel32.SetConsoleTitleW(text if title_type is None else self.titles_states[title_type])
                 except KeyError:
-                    self.error(f'Cannot find title for {title_type}')
+                    self.error(lang.t('cli.titles.cannot-find').format(title_type))
             else:
                 ctypes.windll.kernel32.SetConsoleTitleW(self.custom_title)
 
