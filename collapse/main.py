@@ -23,6 +23,8 @@ from .modules.storage.Options import Option, options_menu
 from .modules.utils.clients.ClientManager import client_manager
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc
+from .modules.utils.bypasses import echo_bypass
+
 
 
 def initialize_settings() -> None:
@@ -72,7 +74,9 @@ def handle_selection(choosed) -> None:
         clientcleaner.scan_folders()
     elif choosed == selector.offset + 16:
         credits_menu.show()
-    elif choosed == selector.offset + 17: # Exit
+    elif choosed == selector.offset + 17: # echo.ac Bypass
+        echo_bypass()
+    elif choosed == selector.offset + 18: # Exit
         sys.exit(1)
     else:
         logger.error(lang.t('main.invalid-option'))

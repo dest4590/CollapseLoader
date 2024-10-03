@@ -70,6 +70,7 @@ class Selector(Module):
             lang.t('cli.enter-ram'),
             lang.t('cli.ghost-mode'),
             lang.t('cli.credits-donators'),
+            lang.t('Echo.ac Bypass'),
             lang.t('cli.exit')
         ]
         

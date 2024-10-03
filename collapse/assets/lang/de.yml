@@ -1,0 +1,218 @@
+api:
+    request: API-Anfrage an {}
+    error: API-Anfragefehler {}
+
+analytics:
+    disabled: Analytik deaktiviert
+    successfuly-sent-loader: Analytikanfrage für Ladebeginn erfolgreich gesendet
+    successfuly-sent-client: Analytikanfrage für Clientbeginn erfolgreich gesendet
+
+    error-sent-loader: Fehler beim Senden der Analytikanfrage für Ladebeginn {}
+    error-sent-client: Fehler beim Senden der Analytikanfrage für Clientbeginn {}
+
+menu:
+    return: Zurück
+
+configs:
+    found-len: {} Konfigurationen gefunden
+    menu-header: "[bold]Konfigurationen[/]"
+    choose-config: Konfiguration auswählen
+    invalid-choice: Wählen Sie die richtige Nummer oder den richtigen Buchstaben
+
+    install-all-configs: Alle Konfigurationen installieren
+    return: Zurück
+    server: Server
+
+messages:
+    fetched: Nachrichten von der API abgerufen
+    fetch-error: Fehler beim Abrufen von Nachrichten von der API
+    message: Nachricht von
+
+    types:
+        info: Informativ
+        warning: Warnung
+        maintenance: Wartung
+
+    time-now: gerade jetzt
+    time-minutes: "vor {0} Minuten"
+    time-hours: "vor {0} Stunden"
+    time-days: "vor {0} Tagen"
+
+network:
+    error: Netzwerkfehler {}
+
+servers:
+    server-not-accessible: Server {} ist nicht erreichbar oder ausgefallen
+    server-respond: Server {} hat mit Statuscode {} geantwortet
+    use-server: Verwenden des Servers {}
+
+updater:
+    version-check: Remote-Version {}, lokale {}
+    latest-commit: Neuester Commit {}
+    rate-limit: Rate-Limit überschritten, versuchen Sie es später erneut
+    fetch-error: "Fehler beim Abrufen von {}: {}"
+
+    update-notify: Loader aktualisieren!
+    update-ask: Neue Version herunterladen?
+    update-ask-dev: Neue Version (Entwicklung) herunterladen?
+    opening-latest-prerelease: Neueste Entwicklungs-Version öffnen
+    opening-latest-release: Neueste Version öffnen
+
+    no-releases: Keine Versionen gefunden
+
+cli:
+    no-clients: Clients nicht verfügbar
+    text-created: CLI-Text erstellt
+
+    menu-header: CLIENTS & TOOLS
+
+    settings-menu: Einstellungen
+    configs-menu: Konfigurationen
+    select-username: Benutzername auswählen
+    enter-ram: RAM auswählen
+    ghost-mode: Geistermodus
+    credits-donators: Ersteller und Spenden
+    exit: "[red]Beenden[/]"
+
+    select: Auswählen
+    select-username-prompt: Benutzername auswählen
+
+    titles:
+        settings: CollapseLoader <Einstellungen>
+        configs: CollapseLoader <Konfigurationen>
+        credits: CollapseLoader <Ersteller und Spenden>
+
+        cannot-find: Titel kann mit Schlüssel {} nicht gefunden werden
+
+cache:
+    cache-saved: Cache gespeichert unter {}
+    client-cache-not-found: Client-Cache nicht gefunden
+    using-last-cache: Letzten Client-Cache verwenden ({})
+
+clientcleaner:
+    ask: "Alle Client-Ordner löschen (y,n)?\nalle Ihre Konfigurationen werden [red bold]ZERSTÖRT.[/]"
+    removing: Ordner {} wird entfernt
+
+data:
+    no-server: Kein Server zum Herunterladen von Dateien gefunden (dies ist eine kritische Funktion im Loader)
+
+    download:
+        to: Herunterladen von {} nach {}
+        already-downloaded: Datei {} bereits heruntergeladen, überspringen
+        error: Fehler beim Herunterladen von {}, {}
+        extract-error: Fehler beim Verarbeiten der Datei {}, {}
+
+modmanager:
+    activate: Mod {} aktivieren
+    deactivate: Mod {} deaktivieren
+    install: Mod {} installieren
+
+options:
+    enabled: Aktiviert
+    disabled: Deaktiviert
+
+    created: Einstellung {} mit Wert {} ({}) erstellt
+    saved: Einstellung {} auf {} gesetzt
+
+    input:
+        note: "[i]Drücken Sie [green]Enter[/], um die Eingabe zu überspringen[/]"
+        prompt: 'Geben Sie den Wert für {} ein (tippen Sie "RESET", um die Einstellung zurückzusetzen) ({}): '
+
+    reset: Einstellung {} auf {} zurücksetzen
+    reset-all: Alle Einstellungen zurücksetzen
+    choose: Eine Einstellung wählen
+    invalid-choice: Wählen Sie eine gültige Nummer
+
+    ask-reset: Sind Sie sicher, dass Sie alle Einstellungen zurücksetzen möchten (y,n)?
+
+    settings:
+        nickname: Benutzername
+        custom_title: Benutzerdefinierter Fenstertitel (Keine, um zu deaktivieren)
+        hide_logo: Logo und Links auf dem Hauptbildschirm ausblenden
+        hide_messages: Nachrichten auf dem Hauptbildschirm ausblenden
+        disable_caching: Caching deaktivieren
+        use_short_logo: Kurzes Logo verwenden
+        hide_links: Links auf dem Hauptbildschirm ausblenden
+        disable_animation: Animationen deaktivieren
+        show_client_version: Client-Versionen anzeigen
+        discord_rich_presence: RPC in Discord anzeigen
+        language: Sprache (ru, en, de)
+
+logchecker:
+    base-reason: Spiel abgestürzt aufgrund von {}
+    checking-log: Protokolle werden überprüft
+    game-crashed: Spiel abgestürzt
+
+    crashes:
+        out_of_memory: Nicht genug Speicher (RAM erhöhen)
+        no_class_def: Klassen oder Bibliotheken fehlen
+        unsupported_class: Mit einer anderen Version von Java kompiliert
+        mod_crash: Mod abgestürzt
+        corrupted_world: Welt ist beschädigt
+        graphics_error: Problem mit der Grafikkarte oder den Treibern
+        opengl_error: OpenGL-Fehler aufgetreten, oft in Verbindung mit Treibern der Grafikkarte
+        unknown: Spiel abgestürzt aus unbekanntem Grund. Bitte geben Sie das vollständige Protokoll zur weiteren Analyse an
+
+    no-crashes: Keine Abstürze erkannt, alles ist in Ordnung!
+
+    crash-logs:
+        creating-dir: Erstelle Verzeichnis für Protokolle {}
+        saving: Erstelle Protokolldatei {}
+        saved: Absturzprotokoll unter {} gespeichert
+
+logo:
+    tagline: Einfaches CLI-Tool zum Ausführen von Minecraft-Clients
+
+clients:
+    already-downloaded: Client {} bereits heruntergeladen
+    already-downloaded-fabric: Fabric-Client bereits heruntergeladen
+
+    downloading: Herunterladen des Clients {}
+    downloading-fabric-client: Herunterladen des Fabric-Clients
+
+    downloading-libraries-natives-1-12: Herunterladen der 1.12.2-Bibliotheken und -Natives
+    downloading-libraries-natives-1-12-2: Herunterladen der 1.12.2+-Bibliotheken und -Natives
+    downloading-fabric: Herunterladen der Fabric-Bibliotheken und -Natives
+
+    running: Client {} wird ausgeführt
+    running-fabric: Fabric-Client {} wird ausgeführt
+
+    progress:
+        task: "[green]Client wird ausgeführt[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
+        session: "[purple3]aktive Sitzung[/]"
+
+    finished: Minecraft wird beendet
+
+clientmanager:
+    error: Fehler beim Abrufen der Clients von der API
+
+rpc:
+    playing: Spiele mit {}
+    choosing: Client auswählen
+    large-text: Version {}
+
+main:
+    language-set: Programm neu starten!
+
+    nickname-reminder: Vergessen Sie nicht, Ihren Benutzernamen zu ändern!
+    nickname-changed: Benutzername geändert
+    ram-changed: RAM geändert
+    select-ram: RAM auswählen (in Gigabyte)
+
+    invalid-option: Wählen Sie eine Nummer
+
+    force-crash: Erzwinge Absturz
+
+sdkserver:
+    starting: Server gestartet unter http://{}:{}
+
+    missing-name: Fehlender Parameter "name"
+    missing-key: Fehlender Parameter "key"
+    missing-header: Fehlender Parameter "header"
+
+    client-started: Client {} gestartet
+    client-not-found: Client {} nicht gefunden
+
+    settings-updated: Einstellungen aktualisiert
+
+    shutdown: Server wird heruntergefahren...

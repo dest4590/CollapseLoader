@@ -18,6 +18,7 @@ class CreditsMenu:
         
         while True:
             console.print(self.text)
+            print("Modded Version by WeepingAngel")
 
             if selector.ask('Quit'):
                 break
