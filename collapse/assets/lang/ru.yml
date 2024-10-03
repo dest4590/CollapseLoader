@@ -201,3 +201,17 @@ main:
     invalid-option: Выберите цифру
 
     force-crash: Принудительный краш
+
+sdkserver:
+    starting: Сервер запущен на http://{}:{}
+
+    missing-name: Отсутствует параметр "name"
+    missing-key: Отсутствует параметр "key"
+    missing-header: Отсутствует параметр "header"
+
+    client-started: Клиент {} запущен
+    client-not-found: Клиент {} не найден
+
+    settings-updated: Настройки обновлены
+
+    shutdown: Сервер выключается...

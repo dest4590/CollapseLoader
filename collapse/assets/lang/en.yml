@@ -202,3 +202,17 @@ main:
     invalid-option: Select a number
 
     force-crash: Force crash
+
+sdkserver:
+    starting: Server started at http://{}:{}
+
+    missing-name: Missing parameter "name"
+    missing-key: Missing parameter "key"
+    missing-header: Missing parameter "header"
+
+    client-started: Client {} started
+    client-not-found: Client {} not found
+
+    settings-updated: Settings updated
+
+    shutdown: Server shutting down...

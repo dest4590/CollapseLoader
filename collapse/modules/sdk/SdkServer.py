@@ -5,9 +5,10 @@ import signal
 import click
 from flask import Flask, request
 
-from collapse.modules.storage.Settings import settings
-from collapse.modules.utils.clients.ClientManager import client_manager
-from collapse.modules.utils.Module import Module
+from ..storage.Settings import settings
+from ..utils.clients.ClientManager import client_manager
+from ..utils.Language import lang
+from ..utils.Module import Module
 
 app = Flask('CollapseLoader Server')
 
@@ -27,7 +28,7 @@ class SdkServer(Module):
 
     def run(self, host='127.0.0.1', port=9090, debug=False):
         """Start the server"""
-        self.info(f"Server started on http://{host}:{port}")
+        self.info(lang.t('sdkserver.starting').format(host, port))
         self.app.run(host=host, port=port, debug=debug)
 
     @app.route('/run', methods=['POST'])
@@ -36,15 +37,15 @@ class SdkServer(Module):
         name = request.json.get('name')
         
         if not name:
-            return 'Missing "name" parameter', 400
+            return lang.t('sdkserver.missing-name'), 400
 
         client = client_manager.get_client_by_name(name)
         
         if client:
             client.run()
-            return 'Client started', 200
+            return lang.t('sdkserver.client-started').format(name), 200
         else:
-            return 'Client not found', 404
+            return lang.t('sdkserver.client-not-found').format(name), 404
 
     @app.route('/settings', methods=['GET'])
     def get_settings():
@@ -56,7 +57,7 @@ class SdkServer(Module):
     def update_settings():
         """Update settings by key, value, header"""
         settings.set(request.json.get('key'), request.json.get('value'), request.json.get('header'))
-        return 'Settings updated', 200
+        return lang.t('sdkserver.settings-updated'), 200
 
     @app.route('/setting', methods=['GET'])
     def get_setting():
@@ -64,19 +65,19 @@ class SdkServer(Module):
         key = request.json.get('key')
 
         if not key:
-            return 'Missing "key" parameter', 400
+            return lang.t('sdkserver.missing-key'), 400
 
         header = request.json.get('header')
 
         if not header:
-            return 'Missing "header" parameter', 400
+            return lang.t('sdkserver.missing-header'), 400
         
         return settings.get(key, header), 200
     
     @app.route('/shutdown', methods=['POST'])
     def stop_server():
         os.kill(os.getpid(), signal.SIGINT)
-        return 'Server shutting down...', 200
+        return lang.t('sdkserver.shutdown'), 200
 
 """
 Server endpoints:
