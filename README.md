@@ -8,7 +8,7 @@
 <img alt="GitHub Release" src="https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease">
 </p>
 
-<h2 align=center>### This is Just a Hobby Fork, check out the originial to be Up-to-date!
+<h2 align=center> This is Just a Hobby Fork, check out the originial to be Up-to-date!
 
 <h2 align=center>CLI-based utility to run minecraft clients</h2> 
 
