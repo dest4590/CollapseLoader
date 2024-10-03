@@ -48,7 +48,7 @@ class Language(Module):
 
     def setup_language(self):
         while True:
-            lang = input('Select language (en, ru): ')
+            lang = input(f'Select language ({', '.join(self.languages)}): ')
             
             if lang in self.languages:
                 self.set_language(lang)
