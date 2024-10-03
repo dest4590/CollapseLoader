@@ -96,6 +96,14 @@ def main() -> None:
             selector.set_title(selector.titles_states['default'])
             
             rpc.start()
+            
+            if settings.get('language_setup') is None:
+                lang.setup_language()
+                settings.set('language_setup', True)
+                
+                logger.info(lang.t('main.language-set'))
+                selector.pause()
+                sys.exit(1)
         
             while True:
                 display_main_menu()

@@ -160,7 +160,7 @@ logchecker:
         saved: Лог краша сохранён в {}
 
 logo:
-    tagline: Простой CLI инструмент для запуска клиентов Minecraft
+    tagline: CLI инструмент для запуска клиентов Minecraft
 
 clients:
     already-downloaded: Клиент {} уже скачан
@@ -191,6 +191,8 @@ rpc:
     large-text: Версия {}
 
 main:
+    language-set: Перезапустите программу!
+
     nickname-reminder: Не забудьте изменить свой никнейм!
     nickname-changed: Никнейм изменён
     ram-changed: ОЗУ изменена

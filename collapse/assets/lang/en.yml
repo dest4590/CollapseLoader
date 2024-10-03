@@ -192,6 +192,8 @@ rpc:
     large-text: Version {}
 
 main:
+    language-set: Restart the program!
+
     nickname-reminder: Don't forget to change your nickname!
     nickname-changed: Nickname changed
     ram-changed: RAM changed

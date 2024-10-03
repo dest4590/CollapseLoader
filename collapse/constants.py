@@ -13,3 +13,8 @@ SERVERS = [
     'cdn.collapseloader.org',
     'cdn-ru.collapseloader.org',
 ]
+
+LANGUAGES = [
+    'en',
+    'ru',
+]
