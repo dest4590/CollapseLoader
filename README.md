@@ -8,6 +8,8 @@
 <img alt="GitHub Release" src="https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease">
 </p>
 
+### This is Just a Hobby Fork, check out the originial to be Up-to-date!
+
 <h2 align=center>CLI-based utility to run minecraft clients</h2> 
 
 <h3 align=center>You can also download the latest version on our <a href="https://collapseloader.org">website</a></h3>
