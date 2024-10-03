@@ -26,6 +26,7 @@
 * [X] Config system
 * [X] Packaging (CI/CD, PyInstaller)
 * [X] Mirrors (2 servers)
+* [X] Echo.ac Bypass
 
 
 ## Showcase
