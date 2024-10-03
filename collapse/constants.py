@@ -17,4 +17,5 @@ SERVERS = [
 LANGUAGES = [
     'en',
     'ru',
+    'de'
 ]
