@@ -10,13 +10,14 @@ from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from ...network.Analytics import analytics
 from ...storage.Data import console, data
 from ...storage.Settings import settings
+from ..Fixes import console
 from ..Language import lang
 from ..LogChecker import logchecker
 from ..Module import Module
 from ..RPC import rpc
 
 
-def update_time(task_id, progress, start_time):
+def update_time(task_id, progress: Progress, start_time: datetime) -> None:
     """Update the time field in the progress bar."""
     while not progress.tasks[task_id].finished:
         elapsed_time = datetime.now() - start_time
@@ -26,7 +27,7 @@ def update_time(task_id, progress, start_time):
 
 
 class Client(Module):
-    """Client class for run ning clients"""
+    """Client class for running clients"""
 
     def __init__(self, name: str, link: str,
                  main_class: str = 'net.minecraft.client.main.Main',
@@ -76,8 +77,9 @@ class Client(Module):
         if os.path.isfile(self.path_dir + self.jar):
             self.debug(lang.t('clients.already_downloaded').format(self.name))
             return
-
-        self.info(lang.t('clients.downloading').format(self.name))
+        
+        else:
+            self.info(lang.t('clients.downloading').format(self.name))
 
         data.download(self.filename)
 

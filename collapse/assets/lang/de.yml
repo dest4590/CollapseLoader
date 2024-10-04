@@ -136,7 +136,7 @@ options:
         disable_animation: "Animationen deaktivieren"
         show_client_version: "Client-Versionen anzeigen"
         discord_rich_presence: "RPC in Discord anzeigen"
-        language: "Sprache (ru, en, de)"
+        language: "Sprache ({})"
 
 logchecker:
     base-reason: "Spiel abgestürzt aufgrund von {}"

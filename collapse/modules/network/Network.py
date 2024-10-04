@@ -12,7 +12,7 @@ class Network(Module):
         super().__init__()
         
         self.session = requests.Session()
-        self.timeout = args.timeout if args.timeout else 1
+        self.timeout = args.timeout if args.timeout else 5
 
     def get(self, url, params=None, headers=None, stream=False):
         """Make a GET request to the given URL"""

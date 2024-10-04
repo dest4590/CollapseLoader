@@ -36,10 +36,9 @@ class ModManager(Module):
 
     def install(self, mod: str) -> None:
         """Install mod by name in the mods folder"""
-        self.info(lang.t('modmanager.install').format(mod))
-        
         if not os.path.exists(self.mods_folder):
             os.makedirs(self.mods_folder)
         
-        if not os.path.exists(os.path.join(self.mods_folder, mod)):
-            data.download(mod, os.path.join(self.mods_folder, mod), True)
+        if not os.path.exists(f'{self.mods_folder}/{mod}'):
+            self.info(lang.t('modmanager.install').format(mod))
+            data.download(mod, f'{self.mods_folder}/{mod}', True)

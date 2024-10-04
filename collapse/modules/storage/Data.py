@@ -1,10 +1,9 @@
 import os
-import random
 import zipfile
 
 import requests
-from rich.progress import (BarColumn, DownloadColumn, Progress, SpinnerColumn,
-                           TextColumn, TransferSpeedColumn)
+from rich.progress import (BarColumn, DownloadColumn, Progress, TextColumn,
+                           TransferSpeedColumn)
 
 from ...constants import CODENAME, ROOT_DIR, VERSION
 from ..network.Network import network
@@ -82,7 +81,6 @@ class DataManager(Module):
 
         with Progress(
                 TextColumn(f'[blue]{filename}'),
-                SpinnerColumn(f'dots{random.randint(2, 9)}'),
                 BarColumn(),
                 DownloadColumn(),
                 TransferSpeedColumn(), console=console, transient=True) as progress:

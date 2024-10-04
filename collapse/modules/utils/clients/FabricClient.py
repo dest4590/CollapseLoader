@@ -29,6 +29,8 @@ def update_time(task_id, progress, start_time) -> None:
 
 
 class FabricClient(Client):
+    """Client class for running clients"""
+    
     def __init__(self, name: str, link: str, version: str = '1.12.2', working: bool = True, id: int = 1, fabric: bool = False) -> None:
         super().__init__(name, link, version, working, id, fabric=True)
         
@@ -44,8 +46,7 @@ class FabricClient(Client):
             return
         else:
             os.makedirs(self.path_dir, exist_ok=True)
-
-        self.info(lang.t('clients.downloading-fabric'))
+            self.info(lang.t('clients.downloading-fabric'))
 
         data.download(jar_file, destination, True)
         

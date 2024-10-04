@@ -136,7 +136,7 @@ options:
         disable_animation: Disable animations
         show_client_version: Show client versions
         discord_rich_presence: Show RPC in Discord
-        language: Language (ru, en)
+        language: Language ({})
 
 logchecker:
     base-reason: Game crashed due to {}
