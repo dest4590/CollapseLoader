@@ -33,7 +33,8 @@ class Language(Module):
             self.error(f'Language file not found: {language}.yml, set default language: en')
             self.set_language('en')
 
-        self.translations = self.load_language_file(settings.get('language'))
+        self.current = settings.get('language')
+        self.translations = self.load_language_file(self.current)
     
     def load_language_file(self, lang_code):
 

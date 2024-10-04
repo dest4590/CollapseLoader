@@ -16,7 +16,7 @@ class API(Module):
 
     def get(self, path: str, prefix: bool = True) -> requests.Response:
         """Makes an API request"""
-        if not path.endswith('/'):
+        if not path.endswith('/') and prefix:
             path += '/'
         
         url = f'{self.server}{"api/" if prefix else ""}{path}'
