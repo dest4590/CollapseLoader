@@ -1,0 +1,218 @@
+api:
+    request: Solicitud a la API para {}
+    error: Error en la solicitud a la API {}
+
+analytics:
+    disabled: Analíticas desactivadas
+    successfuly-sent-loader: Solicitud de análisis enviada correctamente para el inicio del cargador
+    successfuly-sent-client: Solicitud de análisis enviada correctamente para el inicio del cliente
+
+    error-sent-loader: Error al enviar la solicitud de análisis para el inicio del cargador {}
+    error-sent-client: Error al enviar la solicitud de análisis para el inicio del cliente {}
+
+menu:
+    return: Volver
+
+configs:
+    found-len: "{} configuraciones encontradas"
+    menu-header: "[bold]Configuraciones[/]"
+    choose-config: Elegir configuración
+    invalid-choice: Elija el número o la letra correctos
+
+    install-all-configs: Instalar todas las configuraciones
+    return: Volver
+    server: servidor
+
+messages:
+    fetched: Mensajes obtenidos de la API
+    fetch-error: Error al obtener los mensajes de la API
+    message: mensaje de
+
+    types:
+        info: Informativo
+        warning: Advertencia
+        maintenance: Mantenimiento
+
+    time-now: ahora mismo
+    time-minutes: "hace {0} minutos"
+    time-hours: "hace {0} horas"
+    time-days: "hace {0} días"
+
+network:
+    error: Error de red {}
+
+servers:
+    server-not-accessible: El servidor {} está caído o inaccesible
+    server-respond: El servidor {} respondió con el código de estado {}
+    use-server: Usando el servidor {}
+
+updater:
+    version-check: Versión remota {}, local {}
+    latest-commit: Última confirmación {}
+    rate-limit: Límite de frecuencia excedido, inténtelo de nuevo más tarde
+    fetch-error: "Error al obtener {}: {}"
+
+    update-notify: ¡Actualiza el cargador!
+    update-ask: ¿Descargar nueva versión?
+    update-ask-dev: ¿Descargar nueva versión (dev)?
+    opening-latest-prerelease: Abriendo la última versión de desarrollo
+    opening-latest-release: Abriendo la última versión
+
+    no-releases: No se encontraron versiones
+
+cli:
+    no-clients: Clientes no disponibles
+    text-created: Texto CLI creado
+
+    menu-header: CLIENTES Y HERRAMIENTAS
+
+    settings-menu: Ajustes
+    configs-menu: Configuraciones
+    select-username: Seleccionar nombre de usuario
+    enter-ram: Seleccionar RAM
+    ghost-mode: Modo fantasma
+    credits-donators: Creadores y donaciones
+    exit: "[red]Salir[/]"
+
+    select: Seleccionar
+    select-username-prompt: Seleccionar nombre de usuario
+
+    titles:
+        settings: CollapseLoader <Ajustes>
+        configs: CollapseLoader <Configuraciones>
+        credits: CollapseLoader <Creadores y donaciones>
+
+        cannot-find: No se puede encontrar el título por la clave {}
+
+cache:
+    cache-saved: Caché guardado en {}
+    client-cache-not-found: No se encontró la caché del cliente
+    using-last-cache: Usando la última caché del cliente ({})
+
+clientcleaner:
+    ask: "¿Eliminar todas las carpetas de clientes (s/n)?\nTodas tus configuraciones serán [red bold]DESTRUIDAS.[/]"
+    removing: Eliminando la carpeta {}
+
+data:
+    no-server: No se encontró ningún servidor para la descarga de archivos (esta es una función crítica en el cargador)
+
+    download:
+        to: Descargando {} a {}
+        already-downloaded: Archivo {} ya descargado, omitiendo
+        error: Error al descargar {}, {}
+        extract-error: Error al procesar el archivo {}, {}
+
+modmanager:
+    activate: Activando el mod {}
+    deactivate: Desactivando el mod {}
+    install: Instalando el mod {}
+
+options:
+    enabled: Activado
+    disabled: Desactivado
+
+    created: Ajuste creado {} con valor {} ({})
+    saved: Ajuste {} establecido en {}
+
+    input:
+        note: "[i]Presiona [green]Enter[/] para omitir la entrada[/]"
+        prompt: 'Introduce el valor para {} (escribe "RESET" para restablecer el ajuste) ({}): '
+
+    reset: Restablecer el ajuste {} a {}
+    reset-all: Restablecer todos los ajustes
+    choose: Elegir un ajuste
+    invalid-choice: Elija un número válido
+
+    ask-reset: ¿Está seguro de que desea restablecer todos los ajustes (s/n)?
+
+    settings:
+        nickname: Apodo de usuario
+        custom_title: Título personalizado de la ventana (Ninguno para desactivar)
+        hide_logo: Ocultar el logotipo y los enlaces en la pantalla principal
+        hide_messages: Ocultar mensajes en la pantalla principal
+        disable_caching: Desactivar el almacenamiento en caché
+        use_short_logo: Usar logotipo corto
+        hide_links: Ocultar enlaces en la pantalla principal
+        disable_animation: Desactivar animaciones
+        show_client_version: Mostrar versiones de cliente
+        discord_rich_presence: Mostrar RPC en Discord
+        language: Idioma ({})
+
+logchecker:
+    base-reason: El juego se bloqueó debido a {}
+    checking-log: Comprobando registros
+    game-crashed: El juego se bloqueó
+
+    crashes:
+        out_of_memory: Memoria insuficiente (aumente la RAM)
+        no_class_def: Faltan clases o bibliotecas
+        unsupported_class: Compilado con una versión diferente de Java
+        mod_crash: El mod se bloqueó
+        corrupted_world: El mundo está corrupto
+        graphics_error: Problema con la tarjeta gráfica o los controladores
+        opengl_error: Se produjo un error de OpenGL, a menudo relacionado con los controladores de la tarjeta gráfica
+        unknown: El juego se bloqueó por una razón desconocida. Proporcione el registro completo para un análisis más detallado
+
+    no-crashes: No se detectaron bloqueos, ¡todo está bien!
+
+    crash-logs:
+        creating-dir: Creando directorio para registros {}
+        saving: Creando archivo de registro {}
+        saved: Registro de bloqueo guardado en {}
+
+logo:
+    tagline: Herramienta CLI simple para ejecutar clientes de Minecraft
+
+clients:
+    already-downloaded: Cliente {} ya descargado
+    already-downloaded-fabric: Cliente Fabric ya descargado
+
+    downloading: Descargando cliente {}
+    downloading-fabric-client: Descargando cliente Fabric
+
+    downloading-libraries-natives-1-12: Descargando bibliotecas y nativos 1.12.2
+    downloading-libraries-natives-1-12-2: Descargando bibliotecas y nativos 1.12.2+
+    downloading-fabric: Descargando bibliotecas y nativos de Fabric
+
+    running: Ejecutando el cliente {}
+    running-fabric: Ejecutando el cliente Fabric {}
+
+    progress:
+        task: "[green]Ejecutando cliente[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
+        session: "[purple3]sesión activa[/]"
+
+    finished: Saliendo de Minecraft
+
+clientmanager:
+    error: Error al obtener clientes de la API
+
+rpc:
+    playing: Jugando con {}
+    choosing: Eligiendo cliente
+    large-text: Versión {}
+
+main:
+    language-set: ¡Reinicia el programa!
+
+    nickname-reminder: ¡No olvides cambiar tu apodo!
+    nickname-changed: Apodo cambiado
+    ram-changed: RAM cambiada
+    select-ram: Seleccionar RAM (en gigabytes)
+
+    invalid-option: Selecciona un número
+
+    force-crash: Forzar bloqueo
+
+sdkserver:
+    starting: Servidor iniciado en http://{}:{}
+
+    missing-name: Falta el parámetro "name"
+    missing-key: Falta el parámetro "key"
+    missing-header: Falta el parámetro "header"
+
+    client-started: Cliente {} iniciado
+    client-not-found: Cliente {} no encontrado
+
+    settings-updated: Configuración actualizada
+
+    shutdown: El servidor se está cerrando...

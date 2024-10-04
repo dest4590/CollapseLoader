@@ -1,0 +1,217 @@
+api:
+    request: API запит до {}
+    error: Помилка API запиту {}
+
+analytics:
+    disabled: Аналітика вимкнена
+    successfuly-sent-loader: Успішно відправлено запит аналітики на запуск лаунчера
+    successfuly-sent-client: Успішно відправлено запит аналітики на запуск клієнта
+
+    error-sent-loader: Помилка відправки запиту аналітики на запуск лаунчера {}
+    error-sent-client: Помилка відправки запиту аналітики на запуск клієнта {}
+
+menu:
+    return: Повернутися
+
+configs:
+    found-len: Знайдено {} конфігів
+    menu-header: "[bold]Конфіги[/]"
+    choose-config: Виберіть конфіг
+    invalid-choice: Виберіть правильний номер або букву
+
+    install-all-configs: Встановити всі конфіги
+    server: сервер
+
+messages:
+    fetched: Отримано повідомлення з API
+    fetch-error: Помилка отримання повідомлень з API
+    message: повідомлення з
+
+    types:
+        info: Інформаційне
+        warning: Попереджувальне
+        maintenance: Технічне
+
+    time-now: щойно
+    time-minutes: "{0} хвилин тому"
+    time-hours: "{0} годин тому"
+    time-days: "{0} днів тому"
+
+network:
+    error: Помилка мережі {}
+
+servers:
+    server-not-accessible: Сервер {} не працює або недоступний
+    server-respond: Сервер {} відповів з кодом {}
+    use-server: Використовуємо сервер {}
+
+updater:
+    version-check: Віддалена версія {}, локальна {}
+    latest-commit: Останній коміт {}
+    rate-limit: Перевищено ліміт запитів, спробуйте пізніше
+    fetch-error: "Помилка отримання {}: {}"
+
+    update-notify: Оновіть лаунчер!
+    update-ask: Завантажити нову версію?
+    update-ask-dev: Завантажити нову версію (dev)?
+    opening-latest-prerelease: Відкриття dev релізу
+    opening-latest-release: Відкриття останнього релізу
+
+    no-releases: Релізи не знайдено
+
+cli:
+    no-clients: Клієнти недоступні
+    text-created: Створено CLI текст
+
+    menu-header: КЛІЄНТИ & ІНСТРУМЕНТИ
+
+    settings-menu: Налаштування
+    configs-menu: Конфіги
+    select-username: Вибір нікнейму
+    enter-ram: Вибір ОЗУ
+    ghost-mode: Режим призрака
+    credits-donators: Автори та донати
+    exit: "[red]Вихід[/]"
+
+    select: Виберіть
+    select-username-prompt: Виберіть нікнейм
+
+    titles:
+        settings: CollapseLoader <Налаштування>
+        configs: CollapseLoader <Конфіги>
+        credits: CollapseLoader <Автори та донати>
+
+        cannot-find: Не можу знайти заголовок за ключем {}
+
+cache:
+    cache-saved: Кеш збережено в {}
+    client-cache-not-found: Кеш клієнтів не знайдено
+    using-last-cache: Використовуємо останній кеш клієнтів ({})
+
+clientcleaner:
+    ask: "Видалити всі папки клієнтів (y,n)?\nвсі ваші конфіги будуть [red bold]ЗНИЩЕНІ.[/]"
+    removing: Видаляємо папку {}
+
+data:
+    no-server: Не знайдено сервер для завантаження файлів (це критична функція в лаунчері)
+
+    download:
+        to: Завантажуємо {} в {}
+        already-downloaded: Файл {} вже завантажено, пропускаємо
+        error: Не вдалося завантажити {}, {}
+        extract-error: Помилка обробки файлу {}, {}
+
+modmanager:
+    activate: Вмикаємо мод {}
+    deactivate: Вимкаємо мод {}
+    install: Встановлюємо мод {}
+
+options:
+    enabled: Увімкнено
+    disabled: Вимкнено
+
+    created: Створено налаштування {} зі значенням {} ({})
+    saved: Встановлено налаштування {} в {}
+
+    input:
+        note: "[i]Натисніть [green]Enter[/] щоб пропустити введення[/]"
+        prompt: 'Введіть значення для {} (напишіть "RESET" щоб скинути налаштування) ({}): '
+
+    reset: Скидання налаштування {} на {}
+    reset-all: Скидання всіх налаштувань
+    choose: Виберіть налаштування
+    invalid-choice: Виберіть правильний номер
+
+    ask-reset: Ви впевнені, що хочете скинути всі налаштування (y,n)?
+
+    settings:
+        nickname: Нікнейм користувача
+        custom_title: Користувацький заголовок вікна (None для відключення)
+        hide_logo: Приховати логотип та посилання на головному екрані
+        hide_messages: Приховати повідомлення на головному екрані
+        disable_caching: Вимкнути кешування
+        use_short_logo: Використовувати короткий логотип
+        hide_links: Приховати посилання на головному екрані
+        disable_animation: Вимкнути анімації
+        show_client_version: Показувати версії клієнтів
+        discord_rich_presence: Показує RPC в Discord
+        language: Мова ({})
+
+logchecker:
+    base-reason: Гра вилетіла через {}
+    checking-log: Перевіряємо логи
+    game-crashed: Гра вилетіла
+
+    crashes:
+        out_of_memory: Не вистачає пам'яті (збільште ОЗУ)
+        no_class_def: Відсутні класи або бібліотеки
+        unsupported_class: Скомпільовано з іншою версією Java
+        mod_crash: Вилетів мод
+        corrupted_world: Світ пошкоджений
+        graphics_error: Проблема з відеокартою або драйверами
+        opengl_error: Сталася помилка OpenGL, часто пов'язана з драйверами відеокарти
+        unknown: Гра вилетіла з невідомою причиною. Будь ласка, надайте повний лог для подальшого аналізу
+
+    no-crashes: Крашів не виявлено, все добре!
+
+    crash-logs:
+        creating-dir: Створюємо папку для логів {}
+        saving: Створюємо файл логів {}
+        saved: Лог крашу збережено в {}
+
+logo:
+    tagline: CLI інструмент для запуску клієнтів Minecraft
+
+clients:
+    already-downloaded: Клієнт {} вже завантажено
+    already-downloaded-fabric: Fabric клієнт вже завантажено
+
+    downloading: Завантажуємо клієнт {}
+    downloading-fabric-client: Завантажуємо Fabric клієнт
+
+    downloading-libraries-natives-1-12: Завантажуємо 1.12.2 бібліотеки та natives
+    downloading-libraries-natives-1-12-2: Завантажуємо 1.12.2+ бібліотеки та natives
+    downloading-fabric: Завантажуємо Fabric бібліотеки та natives
+
+    running: Запускаємо клієнт {}
+    running-fabric: Запускаємо Fabric клієнт {}
+
+    progress:
+        task: "[green]Запущений клієнт[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
+        session: "[purple3]активна сесія[/]"
+
+    finished: Виходимо з Minecraft
+
+clientmanager:
+    error: Не вдалося отримати клієнти з API
+
+rpc:
+    playing: Грає з {}
+    choosing: Вибирає клієнт
+    large-text: Версія {}
+
+main:
+    language-set: Перезапустіть програму!
+
+    nickname-reminder: Не забудьте змінити свій нікнейм!
+    nickname-changed: Нікнейм змінено
+    ram-changed: ОЗУ змінено
+    select-ram: Виберіть ОЗУ (в гігабайтах)
+
+    invalid-option: Виберіть цифру
+
+    force-crash: Примусовий краш
+
+sdkserver:
+    starting: Сервер запущений на http://{}:{}
+
+    missing-name: Відсутній параметр "name"
+    missing-key: Відсутній параметр "key"
+    missing-header: Відсутній параметр "header"
+
+    client-started: Клієнт {} запущений
+    client-not-found: Клієнт {} не знайдено
+
+    settings-updated: Налаштування оновлено
+
+    shutdown: Сервер вимикається...
