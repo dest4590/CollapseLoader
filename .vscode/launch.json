@@ -2,10 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger",
+            "name": "Start CollapseLoader",
             "type": "debugpy",
             "request": "launch",
             "program": "run.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Start CollapseLoader without analytics",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "run.py",
+            "args": ["--disable-analytics"],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Start CollapseLoader in server mode",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "run.py",
+            "args": ["--server"],
             "console": "integratedTerminal"
         }
     ]
