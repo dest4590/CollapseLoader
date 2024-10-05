@@ -22,16 +22,15 @@ class Builder:
         
         logger.info('Building CollapseLoader, this may take a while...')
         
-        # Remove old .exe builds
         for file in glob('*.exe'):
             os.remove(file)
     
         data_files = []
-        lang_dir = os.path.join("collapse", "assets", "lang")  # Source directory
+        lang_dir = os.path.join("collapse", "assets", "lang")
 
         for filename in os.listdir(lang_dir):
             if filename.endswith(".yml"):
-                data_files.append((os.path.join(lang_dir, filename), os.path.join("collapse", "assets", "lang"))) # Fixed here!
+                data_files.append((os.path.join(lang_dir, filename), os.path.join("collapse", "assets", "lang")))
 
         data_files_string = " ".join([f"--add-data \"{src};{dst}\"" for src, dst in data_files])
 
@@ -41,11 +40,9 @@ class Builder:
 
         os.system(command)
 
-        # Move .exe file to root
         for file in glob('dist/*.exe'):
             shutil.move(file, './')
 
-        # Remove build folder
         if remove_build:
             self.clear_all()
 
@@ -59,6 +56,5 @@ class Builder:
         if os.path.exists('dist/'):
             shutil.rmtree('dist/')
 
-        # Remove spec file
         for spec in glob('*.spec'):
             os.remove(spec)
