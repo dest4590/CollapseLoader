@@ -4,10 +4,10 @@ api:
 
 analytics:
     disabled: Аналітика вимкнена
-    successfuly-sent-loader: Успішно відправлено запит аналітики на запуск лаунчера
+    successfuly-sent-loader: Успішно відправлено запит аналітики на запуск лоадера
     successfuly-sent-client: Успішно відправлено запит аналітики на запуск клієнта
 
-    error-sent-loader: Помилка відправки запиту аналітики на запуск лаунчера {}
+    error-sent-loader: Помилка відправки запиту аналітики на запуск лоадера {}
     error-sent-client: Помилка відправки запиту аналітики на запуск клієнта {}
 
 menu:
@@ -51,7 +51,7 @@ updater:
     rate-limit: Перевищено ліміт запитів, спробуйте пізніше
     fetch-error: "Помилка отримання {}: {}"
 
-    update-notify: Оновіть лаунчер!
+    update-notify: Оновіть лоадер!
     update-ask: Завантажити нову версію?
     update-ask-dev: Завантажити нову версію (dev)?
     opening-latest-prerelease: Відкриття dev релізу
@@ -61,7 +61,7 @@ updater:
 
 cli:
     no-clients: Клієнти недоступні
-    text-created: Створено CLI текст
+    text-created: Створено текст CLI
 
     menu-header: КЛІЄНТИ & ІНСТРУМЕНТИ
 
@@ -69,7 +69,7 @@ cli:
     configs-menu: Конфіги
     select-username: Вибір нікнейму
     enter-ram: Вибір ОЗУ
-    ghost-mode: Режим призрака
+    ghost-mode: Режим привида
     credits-donators: Автори та донати
     exit: "[red]Вихід[/]"
 
@@ -93,7 +93,7 @@ clientcleaner:
     removing: Видаляємо папку {}
 
 data:
-    no-server: Не знайдено сервер для завантаження файлів (це критична функція в лаунчері)
+    no-server: Не знайдено сервер для завантаження файлів (це критична функція в лоадері)
 
     download:
         to: Завантажуємо {} в {}
