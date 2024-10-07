@@ -5,19 +5,19 @@ import signal
 import click
 from flask import Flask, request
 
+from ...arguments import args
 from ..storage.Settings import settings
 from ..utils.clients.ClientManager import client_manager
 from ..utils.Language import lang
 from ..utils.Module import Module
 
-app = Flask('CollapseLoader Server')
 
 class SdkServer(Module):
     """SDK server for manipulating loader using HTTP requests"""
+    app = Flask('CollapseLoader Server')
     
     def __init__(self, disable_logging: bool = True):
         super().__init__()
-        self.app = app
 
         if disable_logging:
             log = logging.getLogger('werkzeug')
@@ -26,10 +26,10 @@ class SdkServer(Module):
             click.echo = lambda *args, **kwargs: None
             click.secho = lambda *args, **kwargs: None
 
-    def run(self, host='127.0.0.1', port=9090, debug=False):
+    def run(self, host='127.0.0.1', port=9090):
         """Start the server"""
         self.info(lang.t('sdkserver.starting').format(host, port))
-        self.app.run(host=host, port=port, debug=debug)
+        self.app.run(host=host, port=port, debug=args.server_debug if args.server_debug else False)
 
     @app.route('/run', methods=['POST'])
     def client_run():
@@ -88,4 +88,4 @@ Server endpoints:
 * /shutdown - Shutdown the server
 """
 
-server = SdkServer()
+server = SdkServer(False)

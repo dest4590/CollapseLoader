@@ -1,7 +1,7 @@
 import requests
 
+from ...arguments import args
 from ...constants import API_URL
-from ...developer import LOCAL_API
 from ..network.Network import network
 from ..utils.Language import lang
 from ..utils.Module import Module
@@ -10,9 +10,9 @@ from ..utils.Module import Module
 class API(Module):
     """Class for API requests"""
 
-    def __init__(self, server: str = API_URL) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.server = server if not LOCAL_API else 'http://127.0.0.1:8000/'
+        self.server = args.api_url if args.api_url else API_URL
 
     def get(self, path: str, prefix: bool = True) -> requests.Response:
         """Makes an API request"""

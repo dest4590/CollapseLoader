@@ -1,4 +1,4 @@
-from ...arguments import args
+from ...arguments import args, enabled_args
 from ..network.API import api
 from ..storage.Data import data
 from ..storage.Settings import settings
@@ -24,7 +24,7 @@ class Analytics(Module):
             return
         
         try:
-            r = network.get(f'{api.server}api/analytics/start', params={'version': data.version}).json()
+            r = network.get(f'{api.server}api/analytics/start', params={'version': data.version, 'enabled_args': str(enabled_args)}).json()
         
             if r['status'] == 'success':
                 self.debug(lang.t('analytics.successfuly-sent-loader'))
