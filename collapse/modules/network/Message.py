@@ -9,11 +9,11 @@ from ..utils.Module import Module
 from .API import api
 
 
-class MessageClient(Module):
+class Messages(Module):
     """Client for retrieving and displaying messages"""
 
     def __init__(self) -> None:
-        """Initialize the MessageClient and fetch messages from the API"""
+        """Initialize the Messages and fetch messages from the API"""
         super().__init__()
         self.shown = False
         self.messages = api.get('messages')
@@ -62,4 +62,4 @@ class MessageClient(Module):
             return lang.t('messages.time-hours').format(int(total_seconds // 3600))
         return lang.t('messages.time-days').format(time_difference.days)
 
-messageclient = MessageClient()
+messages = Messages()
