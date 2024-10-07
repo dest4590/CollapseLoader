@@ -110,9 +110,10 @@ class Client(Module):
         self.download()
 
         self.info(lang.t('clients.running').format(self.name))
+        
+        analytics.client_run(self.id)
 
         with Progress(
-            SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
             BarColumn(pulse_style='gray'),
             TextColumn("{task.fields[session]} {task.fields[time]}"),
@@ -167,11 +168,8 @@ class Client(Module):
                 ]
 
                 command = ' '.join(java_command)
-                self.debug(command)
-                
-                analytics.client_run(self.id)
 
-                process = Popen(command, stdout=PIPE, stderr=STDOUT)
+                process = Popen(command, stdout=PIPE, stderr=STDOUT) 
                 buffer = []
 
                 for line in process.stdout:

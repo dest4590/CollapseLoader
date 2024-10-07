@@ -18,7 +18,7 @@ class LogChecker(Module):
 
     def check_logs(self, payload: str, client) -> None:
         """Check logs for crash messages and log appropriate errors and info"""
-        self.debug(lang.t('logchecker.checking_logs'))
+        self.debug(lang.t('logchecker.checking-log'))
         logs = ''.join(payload)
 
         if 'Game crashed!' in logs:
@@ -55,7 +55,7 @@ class LogChecker(Module):
             
             return True
         else:
-            self.debug(lang.t('logchecker.no_crash'))
+            self.debug(lang.t('logchecker.no_crashes'))
             return False
         
     def save_crash_log(self, payload: str, client) -> None:
