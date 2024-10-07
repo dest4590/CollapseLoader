@@ -205,6 +205,8 @@ main:
 sdkserver:
     starting: Сервер запущений на http://{}:{}
 
+    logs-disabled: Логи вимкнені
+
     missing-name: Відсутній параметр "name"
     missing-key: Відсутній параметр "key"
     missing-header: Відсутній параметр "header"

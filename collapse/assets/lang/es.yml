@@ -206,6 +206,8 @@ main:
 sdkserver:
     starting: Servidor iniciado en http://{}:{}
 
+    logs-disabled: Registros desactivados
+
     missing-name: Falta el parámetro "name"
     missing-key: Falta el parámetro "key"
     missing-header: Falta el parámetro "header"

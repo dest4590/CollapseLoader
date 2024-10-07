@@ -26,7 +26,7 @@ class SdkServerClient:
     
     def get_setting(self, key: str, header: str = 'Options'):
         """Get a single setting by key and header"""
-        return self.post('setting', {'key': key, 'header': header})
+        return self.get('setting', {'key': key, 'header': header})
     
     def set_setting(self, key: str, value: str, header: str = 'Options'):
         """Set a setting by key, value, header"""

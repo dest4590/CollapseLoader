@@ -206,6 +206,8 @@ main:
 sdkserver:
     starting: Serveur démarré sur http://{}:{}
 
+    logs-disabled: Journaux désactivés
+
     missing-name: Paramètre "name" manquant
     missing-key: Paramètre "key" manquant
     missing-header: Paramètre "header" manquant

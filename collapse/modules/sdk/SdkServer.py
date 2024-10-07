@@ -16,15 +16,18 @@ class SdkServer(Module):
     """SDK server for manipulating loader using HTTP requests"""
     app = Flask('CollapseLoader Server')
     
-    def __init__(self, disable_logging: bool = True):
+    def __init__(self):
         super().__init__()
 
-        if disable_logging:
+        if args.no_logs:
+            self.debug(lang.t('sdkserver.logs-disabled'))
             log = logging.getLogger('werkzeug')
             log.disabled = True
             
             click.echo = lambda *args, **kwargs: None
             click.secho = lambda *args, **kwargs: None
+            
+        self.start = self.run
 
     def run(self, host='127.0.0.1', port=9090):
         """Start the server"""
@@ -88,4 +91,4 @@ Server endpoints:
 * /shutdown - Shutdown the server
 """
 
-server = SdkServer(False)
+server = SdkServer()

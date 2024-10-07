@@ -206,6 +206,8 @@ main:
 sdkserver:
     starting: Server started at http://{}:{}
 
+    logs-disabled: Logs disabled
+
     missing-name: Missing parameter "name"
     missing-key: Missing parameter "key"
     missing-header: Missing parameter "header"

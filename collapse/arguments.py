@@ -13,6 +13,7 @@ parser.add_argument('--lang', help='Set language')
 parser.add_argument('--server', action='store_true', help='Run the SDK server')
 parser.add_argument('--port', type=int, help='Set port for SDK server')
 parser.add_argument('--server-debug', action='store_true', help='Enable debug mode for SDK server')
+parser.add_argument('--no-logs', action='store_true', help='Disable logs for SDK server')
 
 args, unknown = parser.parse_known_args()
 enabled_args = {k: v for k, v in args._get_kwargs() if v is not None and v is not False}
