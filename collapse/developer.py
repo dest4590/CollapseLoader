@@ -9,7 +9,7 @@ LOCAL_API = False
 DEBUG_LOGS = True
 
 # Save messages to the config
-#LINK - collapse/modules/network/Message.py:36
+#LINK - collapse/modules/network/Message.py:59
 SAVE_MESSAGES = True
 
 # Show hidden clients

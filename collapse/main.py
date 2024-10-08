@@ -13,6 +13,7 @@ from .modules.storage.Settings import settings # isort: skip
 from .modules.utils.Language import lang # isort: skip
 from .modules.network.Analytics import analytics
 from .modules.network.Configs import config_menu
+from .modules.network.Header import header
 from .modules.network.Message import messages
 from .modules.network.Updater import updater
 from .modules.render.CLI import selector
@@ -48,8 +49,10 @@ def display_main_menu() -> None:
 
         if settings.use_option('hide_links'):
             text += '[slate_blue3]Discord: https://collapseloader.org/discord\n'
-            text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram'
+            text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram\n'
 
+    text += f'\n{header.get()}'
+            
     selector.animate(text)
     selector.show()
 
