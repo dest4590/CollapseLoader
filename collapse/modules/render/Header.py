@@ -14,7 +14,7 @@ class HeaderText(Module):
             fetched_text = api.get(f'header/?lang={lang.current}', prefix=False)
         
         if fetched_text is not None:
-            self.text = fetched_text
+            self.text = fetched_text.text
         
         return self.text
     

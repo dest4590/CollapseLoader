@@ -13,7 +13,7 @@ from .modules.storage.Settings import settings # isort: skip
 from .modules.utils.Language import lang # isort: skip
 from .modules.network.Analytics import analytics
 from .modules.network.Configs import config_menu
-from .modules.network.Header import header
+from .modules.render.Header import header
 from .modules.network.Message import messages
 from .modules.network.Updater import updater
 from .modules.render.CLI import selector

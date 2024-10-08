@@ -11,9 +11,11 @@ class CreditsMenu:
 
     def show(self) -> None:
         """Displays the configurations menu"""
-        
         if self.text is None:
-            self.text = api.get(f'credits/?lang={lang.current}', prefix=False).text
+            fetched_text = api.get(f'credits/?lang={lang.current}', prefix=False)
+        
+        if fetched_text is not None:
+            self.text = fetched_text.text
         
         selector.set_title(title_type='credits')
         
