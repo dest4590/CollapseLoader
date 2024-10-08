@@ -49,9 +49,12 @@ def display_main_menu() -> None:
 
         if settings.use_option('hide_links'):
             text += '[slate_blue3]Discord: https://collapseloader.org/discord\n'
-            text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram\n'
+            text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram'
 
-    text += f'\n{header.get()}'
+    header.get()
+
+    if header.text is not None:
+        text += f'\n\n{header.text}'
             
     selector.animate(text)
     selector.show()

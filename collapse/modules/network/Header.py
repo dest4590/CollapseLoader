@@ -8,10 +8,13 @@ class HeaderText(Module):
         super().__init__()
         
         self.text = None
-        
+
     def get(self):
         if self.text is None:
-            self.text = api.get(f'header/?lang={lang.current}', prefix=False).text
+            fetched_text = api.get(f'header/?lang={lang.current}', prefix=False)
+        
+        if fetched_text is not None:
+            self.text = fetched_text
         
         return self.text
     
