@@ -84,6 +84,8 @@ cli:
 
         cannot-find: No se puede encontrar el título por la clave {}
 
+    hide-console-error: No se puede encontrar hwnd para la ventana de la consola
+
 cache:
     cache-saved: Caché guardado en {}
     client-cache-not-found: No se encontró la caché del cliente

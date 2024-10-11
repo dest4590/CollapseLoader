@@ -169,6 +169,8 @@ class Client(Module):
 
                 command = ' '.join(java_command)
 
+                selector.hide_console()
+
                 process = Popen(command, stdout=PIPE, stderr=STDOUT) 
                 buffer = []
 
@@ -183,6 +185,8 @@ class Client(Module):
 
         # Return default title
         selector.reset_title()
+        
+        selector.show_console()
 
         rpc.details = rpc.default_details
         rpc.update()

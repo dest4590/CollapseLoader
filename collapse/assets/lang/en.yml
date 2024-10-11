@@ -84,6 +84,8 @@ cli:
 
         cannot-find: Cannot title find by key {}
 
+    hide-console-error: Cannot find hwnd for console window
+
 cache:
     cache-saved: Cache saved at {}
     client-cache-not-found: Client cache not found

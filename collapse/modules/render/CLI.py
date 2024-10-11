@@ -141,4 +141,24 @@ class Selector(Module):
                 console.print(line, highlight=highlight)
                 sleep(0.015)
 
+    def hide_console(self):
+        """Hides the console window"""
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        
+        if hwnd != 0:
+            ctypes.windll.user32.ShowWindow(hwnd, 6)
+            ctypes.windll.user32.ShowWindow(hwnd, 0)
+            
+        else:
+            self.error(lang.t('cli.hide-console-error'))
+
+    def show_console(self):
+        """Shows the console window"""
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        
+        if hwnd != 0:
+            ctypes.windll.user32.ShowWindow(hwnd, 5)
+        else:
+            self.error(lang.t('cli.show-console-error'))
+
 selector = Selector()
