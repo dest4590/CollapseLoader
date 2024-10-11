@@ -7,16 +7,27 @@ from .modules.utils.Logger import logger
 
 if args.v:
     logger.setLevel(logging.DEBUG)
+    
+if args.level:
+    levels = {
+        'debug': logging.DEBUG,
+        'info': logging.INFO,
+        'warning': logging.WARNING,
+        'error': logging.ERROR,
+        'critical': logging.CRITICAL
+    }
+    
+    logger.setLevel(levels[args.level])
 
 from .modules.storage.Data import data # isort: skip
 from .modules.storage.Settings import settings # isort: skip
 from .modules.utils.Language import lang # isort: skip
 from .modules.network.Analytics import analytics
 from .modules.network.Configs import config_menu
-from .modules.render.Header import header
 from .modules.network.Message import messages
 from .modules.network.Updater import updater
 from .modules.render.CLI import selector
+from .modules.render.Header import header
 from .modules.render.menus.CreditsMenu import credits_menu
 from .modules.sdk.SdkServer import server
 from .modules.storage.ClientCleaner import clientcleaner
