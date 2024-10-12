@@ -23,7 +23,7 @@ jobs:
             - name: Setup Python
               uses: actions/setup-python@v5
               with:
-                  python-version: 3.12.6
+                  python-version: 3.12.7
                   cache: 'pip'
 
             - name: Install requirements
@@ -78,11 +78,21 @@ jobs:
                   echo "MD5 hash of build $($MD5_HASH.Hash) check it to make sure you downloaded a clean build without viruses."
                   echo "MD5_HASH=$($MD5_HASH.Hash)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
+            - name: VirusTotal Scan
+              uses: crazy-max/ghaction-virustotal@v4
+              id: virustotal
+              with:
+                vt_api_key: ${{ secrets.VT_API_KEY }}
+                files: |
+                  ./${{ env.ARTIFACT_PATH }}
+
             - name: Make release
               uses: ncipollo/release-action@v1
               with:
-                  body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}"
+                  body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}\nVirusTotal Scan: ${{ steps.virustotal.outputs.analysis }}\n\n"
                   name: 'Github actions build: ${{ env.ARTIFACT_HASH }}'
                   tag: 'autorelease-${{ env.ARTIFACT_HASH }}'
                   prerelease: true
                   artifacts: '*.exe'
+
+            
