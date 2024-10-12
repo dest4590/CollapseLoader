@@ -138,6 +138,7 @@ options:
         disable_animation: Disable animations
         show_client_version: Show client versions
         discord_rich_presence: Show RPC in Discord
+        hide_console: Hide console window on client start
         language: Language ({})
 
 logchecker:

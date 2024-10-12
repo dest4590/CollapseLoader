@@ -14,7 +14,7 @@ class LogChecker(Module):
 
     def reason(self, msg: str) -> str:
         """Construct a reason message for the crash"""
-        return lang.t('logchecker.crash_reason').format(msg)
+        return lang.t('logchecker.base-reason').format(msg)
 
     def check_logs(self, payload: str, client) -> None:
         """Check logs for crash messages and log appropriate errors and info"""
@@ -22,7 +22,7 @@ class LogChecker(Module):
         logs = ''.join(payload)
 
         if 'Game crashed!' in logs:
-            self.error(lang.t('logchecker.game_crashed'))
+            self.error(lang.t('logchecker.game-crashed'))
             self.save_crash_log(logs, client)
 
             # Memory Errors
@@ -55,14 +55,14 @@ class LogChecker(Module):
             
             return True
         else:
-            self.debug(lang.t('logchecker.no_crashes'))
+            self.debug(lang.t('logchecker.no-crashes'))
             return False
         
     def save_crash_log(self, payload: str, client) -> None:
         """Saves the crash log to a file"""
         crash_log_dir = os.path.join('..', 'crash_logs')
         
-        self.debug(lang.t('logchecker.crash-logs.creating_dir').format(crash_log_dir))
+        self.debug(lang.t('logchecker.crash-logs.creating-dir').format(crash_log_dir))
         os.makedirs(crash_log_dir, exist_ok=True)
         
         crash_log_file = os.path.join('..', f'crash_logs', f'{client.name}_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.txt')

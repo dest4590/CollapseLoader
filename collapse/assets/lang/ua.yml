@@ -137,6 +137,7 @@ options:
         disable_animation: Вимкнути анімації
         show_client_version: Показувати версії клієнтів
         discord_rich_presence: Показує RPC в Discord
+        hide_console: Приховати консоль під час запуску клієнта
         language: Мова ({})
 
 logchecker:

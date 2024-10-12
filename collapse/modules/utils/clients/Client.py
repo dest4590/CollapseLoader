@@ -75,7 +75,7 @@ class Client(Module):
         """Downloading client files"""
 
         if os.path.isfile(self.path_dir + self.jar):
-            self.debug(lang.t('clients.already_downloaded').format(self.name))
+            self.debug(lang.t('clients.already-downloaded').format(self.name))
             return
         
         else:

@@ -146,6 +146,11 @@ class Selector(Module):
 
     def hide_console(self):
         """Hides the console window"""
+        if settings.use_option('hide_console'):
+            return
+        
+        self.debug('Hiding console window')
+        
         hwnd = ctypes.windll.kernel32.GetConsoleWindow()
         
         if hwnd != 0:
@@ -157,6 +162,11 @@ class Selector(Module):
 
     def show_console(self):
         """Shows the console window"""
+        if settings.use_option('hide_console'):
+            return
+        
+        self.debug('Showing console window')
+        
         hwnd = ctypes.windll.kernel32.GetConsoleWindow()
         
         if hwnd != 0:
