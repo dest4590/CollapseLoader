@@ -62,15 +62,13 @@ def display_main_menu() -> None:
             text += '[slate_blue3]Discord: https://collapseloader.org/discord\n'
             text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram'
 
-    header.get()
-
-    if header.text is not None:
-        text += f'\n\n{header.text}'
+    if selector.header is not None:
+        text += f'\n\n{selector.header}'
             
     selector.animate(text)
     selector.show()
 
-def handle_selection(choosed) -> None:
+def handle_selection(choosed: int) -> None:
     """Handle the user's menu selection"""
     if choosed <= len(client_manager.clients):
         client = selector.get_client_by_index(choosed)

@@ -6,6 +6,7 @@ from rich.prompt import Confirm, IntPrompt
 
 from ...constants import SYSTEM
 from ...developer import SKIP_ANIMATIONS
+from ..render.Header import header
 from ..storage.Data import console, data
 from ..storage.Settings import settings
 from ..utils.clients.Client import Client
@@ -49,6 +50,8 @@ class Selector(Module):
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
         self.linux = True if SYSTEM == 'posix' else False
+        
+        self.header = header.text
 
         if self.offset == 0:
             self.warn(lang.t('cli.no-clients'))

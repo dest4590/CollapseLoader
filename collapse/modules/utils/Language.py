@@ -29,26 +29,26 @@ class Language(Module):
         if args.lang:
             language = args.lang
             settings.set('language', language)
-
-        if not os.path.join(self.lang_folder, f'{language}.yml'):
+        
+        if not os.path.exists(os.path.join(self.lang_folder, f'{language}.yml')):
             self.error(f'Language file not found: {language}.yml, set default language: en')
             self.set_language('en')
 
         self.current = settings.get('language')
         self.translations = self.load_language_file(self.current)
     
-    def load_language_file(self, lang_code):
+    def load_language_file(self, lang_code) -> dict:
 
         file_path = os.path.join(self.lang_folder, f'{lang_code}.yml')
 
         with open(file_path, 'r', encoding='utf-8') as file:
             return yaml.safe_load(file)
 
-    def set_language(self, lang_code):
-        self.translations = self.load_language_file(lang_code)
+    def set_language(self, lang_code) -> None:
+        # self.translations = self.load_language_file(lang_code)
         settings.set('language', lang_code)
 
-    def setup_language(self):
+    def setup_language(self) -> None:
         while True:
             lang = input(f'Select language ({', '.join(self.languages)}): ')
             
@@ -60,7 +60,7 @@ class Language(Module):
                 os.system('pause')
                 pass
 
-    def t(self, key) -> str:
+    def t(self, key: str) -> str:
         keys = key.split('.')
         value = self.translations
         for k in keys:
