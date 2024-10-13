@@ -138,6 +138,7 @@ options:
         show_client_version: Показувати версії клієнтів
         discord_rich_presence: Показує RPC в Discord
         hide_console: Приховати консоль під час запуску клієнта
+        show_header: Показувати заголовок на головному екрані
         language: Мова ({})
 
 logchecker:

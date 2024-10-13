@@ -87,6 +87,7 @@ Option('disable_animation', lang.t('options.settings.disable_animation'), bool, 
 Option('show_client_version', lang.t('options.settings.show_client_version'), bool, False).create()
 Option('discord_rich_presence', lang.t('options.settings.discord_rich_presence'), bool, True).create()
 Option('hide_console', lang.t('options.settings.hide_console'), bool, False).create()
+Option('show_header', lang.t('options.settings.show_header'), bool, True).create()
 Option('language', lang.t('options.settings.language').format(', '.join(lang.languages)), default_value='en').create('en')
 
 class Menu:

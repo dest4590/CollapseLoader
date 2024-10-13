@@ -4,9 +4,9 @@ on:
         branches:
             - main
         paths:
-            - '**.py'
-            - '**.yml'
-            - '**.ps1'
+            - "**.py"
+            - "**.yml"
+            - "**.ps1"
 
     workflow_dispatch:
 
@@ -24,7 +24,7 @@ jobs:
               uses: actions/setup-python@v5
               with:
                   python-version: 3.12.7
-                  cache: 'pip'
+                  cache: "pip"
 
             - name: Install requirements
               run: |
@@ -82,17 +82,21 @@ jobs:
               uses: crazy-max/ghaction-virustotal@v4
               id: virustotal
               with:
-                vt_api_key: ${{ secrets.VT_API_KEY }}
-                files: |
-                  ./${{ env.ARTIFACT_PATH }}
+                  vt_api_key: ${{ secrets.VT_API_KEY }}
+                  files: |
+                      ./${{ env.ARTIFACT_PATH }}
+
+            - name: Extract and Print URL
+              run: |
+                  $analysis = "${{ steps.virustotal.outputs.analysis }}"
+                  $url = $analysis -split '=', 2 | Select-Object -Last 1
+                  echo "VIRUSTOTAL_URL=$url" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
             - name: Make release
               uses: ncipollo/release-action@v1
               with:
-                  body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}\nVirusTotal Scan: ${{ steps.virustotal.outputs.analysis }}\n\n"
-                  name: 'Github actions build: ${{ env.ARTIFACT_HASH }}'
-                  tag: 'autorelease-${{ env.ARTIFACT_HASH }}'
+                  body: "${{ env.ARTIFACT_PATH }}\nMD5 hash: ${{ env.MD5_HASH }}\nVirusTotal Scan: ${{ env.VIRUSTOTAL_URL }}\n\n"
+                  name: "Github actions build: ${{ env.ARTIFACT_HASH }}"
+                  tag: "autorelease-${{ env.ARTIFACT_HASH }}"
                   prerelease: true
-                  artifacts: '*.exe'
-
-            
+                  artifacts: "*.exe"

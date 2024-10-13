@@ -16,4 +16,4 @@ parser.add_argument('--server-debug', action='store_true', help='Enable debug mo
 parser.add_argument('--no-logs', action='store_true', help='Disable logs for SDK server')
 
 args, unknown = parser.parse_known_args()
-enabled_args = {k: v for k, v in args._get_kwargs() if v is not None and v is not False}
+enabled_args = {k: v for k, v in vars(args).items() if v}

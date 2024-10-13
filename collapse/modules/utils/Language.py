@@ -45,7 +45,7 @@ class Language(Module):
             return yaml.safe_load(file)
 
     def set_language(self, lang_code) -> None:
-        # self.translations = self.load_language_file(lang_code)
+        self.translations = self.load_language_file(lang_code)
         settings.set('language', lang_code)
 
     def setup_language(self) -> None:

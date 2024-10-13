@@ -10,9 +10,7 @@ class ClientCleaner(Module):
     """Cleans client folders"""
     def __init__(self) -> None:
         super().__init__()
-        
         if not selector.linux:
-            # Absolute path
             self.login = os.getlogin()
             self.folders = [
                 f'C:\\Users\\{self.login}\\AppData\\Roaming\\.antiautistleak',
@@ -21,7 +19,7 @@ class ClientCleaner(Module):
                 'C:\\shaderpacks',
                 'C:\\Rockstar',
                 'C:\\RockAntiLeak',
-                'C:\\RichRecode'
+                'C:\\RichRecode',
                 'C:\\resourcepacks',
                 'C:\\Nursultan',
                 'C:\\MoonProject',
@@ -39,7 +37,6 @@ class ClientCleaner(Module):
                 if os.path.isdir(folder):
                     self.info(lang.t('clientcleaner.removing').format(folder))
                     shutil.rmtree(folder, ignore_errors=True)
-
         selector.pause()
 
 clientcleaner = ClientCleaner()

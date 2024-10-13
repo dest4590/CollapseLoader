@@ -11,13 +11,9 @@ class HeaderText(Module):
         self.get()
 
     def get(self):
-        fetched_text = None
-        if self.text is None:
-            fetched_text = api.get(f'header/?lang={lang.current}', prefix=False)
-        
-        if fetched_text is not None:
-            self.text = fetched_text.text
-        
-        return self.text
-    
+        response = api.get(f'header/?lang={lang.current}', prefix=False)
+
+        if response is not None:
+            self.text = response.text
+
 header = HeaderText()

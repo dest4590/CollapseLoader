@@ -62,7 +62,7 @@ def display_main_menu() -> None:
             text += '[slate_blue3]Discord: https://collapseloader.org/discord\n'
             text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram'
 
-    if selector.header is not None:
+    if selector.header is not None and settings.use_option('show_header'):
         text += f'\n\n{selector.header}'
             
     selector.animate(text)
@@ -100,7 +100,7 @@ def main() -> None:
         
         updater.check_version()
         analytics.loader_start()
-        
+
         if args.server:
             server.run(port=args.port if args.port else 9090)
     

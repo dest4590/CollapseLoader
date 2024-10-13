@@ -50,7 +50,7 @@ class Selector(Module):
         }
         self.custom_title = None if settings.get('custom_title') == 'None' else settings.get('custom_title')
         self.linux = True if SYSTEM == 'posix' else False
-        
+
         self.header = header.text
 
         if self.offset == 0:
