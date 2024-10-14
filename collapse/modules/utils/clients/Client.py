@@ -154,7 +154,7 @@ class Client(Module):
                 java_command = [
                     f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe",
                     "-Xverify:none",
-                    f"-Xmx{settings.get('ram', 'Loader')}M",
+                    f"-Xmx{settings.get('ram')}M",
                     f"-Djava.library.path={native_path}",
                     f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
                     f"--username {settings.get('nickname')}",

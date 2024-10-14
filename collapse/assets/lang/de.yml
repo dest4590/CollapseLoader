@@ -129,6 +129,7 @@ options:
 
     settings:
         nickname: Benutzername
+        ram: RAM (in megabytes)
         custom_title: Benutzerdefinierter Fenstertitel (Keine, um zu deaktivieren)
         hide_logo: Logo und Links auf dem Hauptbildschirm ausblenden
         hide_messages: Nachrichten auf dem Hauptbildschirm ausblenden

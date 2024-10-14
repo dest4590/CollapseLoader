@@ -43,7 +43,6 @@ def initialize_settings() -> None:
         logger.warning(lang.t('main.nickname-reminder'))
         
     Option('nickname').create(f'Collapse{random.randint(1000, 9999)}')
-    Option('ram').create(2048, 'Loader')
     Option('rpc').create(True, 'Loader')
     Option('read_messages').create('0,', 'Loader')
 
@@ -62,7 +61,7 @@ def display_main_menu() -> None:
             text += '[slate_blue3]Discord: https://collapseloader.org/discord\n'
             text += '[dodger_blue1]Telegram: https://collapseloader.org/telegram'
 
-    if selector.header is not None and settings.use_option('show_header'):
+    if selector.header is not None and not settings.use_option('show_header'):
         text += f'\n\n{selector.header}'
             
     selector.animate(text)
@@ -81,7 +80,7 @@ def handle_selection(choosed: int) -> None:
         settings.set('nickname', selector.select_username())
         logger.debug(lang.t('main.nickname-changed'))
     elif choosed == selector.offset + 14:
-        settings.set('ram', selector.ask_int(lang.t('main.select-ram')) * 1024, 'Loader')
+        settings.set('ram', selector.ask_int(lang.t('main.select-ram')) * 1024)
         logger.debug(lang.t('main.ram-changed'))
     elif choosed == selector.offset + 15:
         clientcleaner.scan_folders()

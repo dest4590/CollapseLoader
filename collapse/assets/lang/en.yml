@@ -129,6 +129,7 @@ options:
 
     settings:
         nickname: User nickname
+        ram: RAM (in megabytes)
         custom_title: Custom window title (None to disable)
         hide_logo: Hide logo and links on the main screen
         hide_messages: Hide messages on the main screen

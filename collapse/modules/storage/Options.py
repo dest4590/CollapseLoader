@@ -37,7 +37,6 @@ class Option(Module):
         """Creates a new option in the settings"""
         if not settings.get(self.name, header):
             settings.set(self.name, value if value is not None else self.default_value, header)
-            
             self.debug(lang.t('options.created').format(self.name, value if value is not None else self.default_value, header))
 
     def save(self, value: object) -> None:
@@ -77,6 +76,7 @@ class Option(Module):
 
 # Define options
 Option('nickname', lang.t('options.settings.nickname'), default_value=f'Collapse{random.randint(1000, 9999)}', highlight=True)
+Option('ram', lang.t('options.settings.ram'), int, 2048).create()
 Option('custom_title', lang.t('options.settings.custom_title'), default_value='None').create('None')
 Option('hide_logo', lang.t('options.settings.hide_logo'), bool, False).create()
 Option('hide_messages', lang.t('options.settings.hide_messages'), bool, False).create()
