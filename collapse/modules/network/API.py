@@ -24,7 +24,6 @@ class API(Module):
         
         try:
             response = network.get(url)
-            response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
             self.error(lang.t('api.error').format(e))

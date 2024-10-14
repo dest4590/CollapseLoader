@@ -45,7 +45,7 @@ class Updater(Module):
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientError as e:
-            if e.message == 'rate limit exceeded':
+            if 'rate limit exceeded' in str(e):
                 self.warn(lang.t('updater.rate-limit'))
             else:
                 self.error(lang.t('updater.fetch-error').format(path, e))

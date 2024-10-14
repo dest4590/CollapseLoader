@@ -12,7 +12,6 @@ class HeaderText(Module):
 
     def get(self):
         response = api.get(f'header/?lang={lang.current}', prefix=False)
-
         if response is not None:
             self.text = response.text
 
