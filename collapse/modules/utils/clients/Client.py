@@ -5,7 +5,7 @@ from subprocess import PIPE, STDOUT, Popen
 from threading import Thread
 from time import sleep
 
-from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.progress import BarColumn, Progress, TextColumn
 
 from ...network.Analytics import analytics
 from ...storage.Data import console, data

@@ -4,6 +4,7 @@ import webbrowser
 import aiohttp
 
 from ...constants import REPOSITORY
+from ..network.Network import network
 from ..render.CLI import selector
 from ..storage.Data import data
 from ..utils.Language import lang
@@ -33,7 +34,7 @@ class Updater(Module):
 
             self.debug(lang.t('updater.version-check').format(self.remote_version, self.local_version))
             self.debug(lang.t('updater.latest-commit').format(self.latest_commit))
-        except aiohttp.ClientError as e:
+        except aiohttp.ClientError:
             self.remote_version = None
             self.latest_commit = None
 
@@ -41,7 +42,7 @@ class Updater(Module):
         """Makes a request to the GitHub API"""
         url = f'https://api.github.com/repos/{REPOSITORY}/{path}'
         try:
-            async with session.get(url, params=params, timeout=5) as response:
+            async with session.get(url, params=params, timeout=network.timeout) as response:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientError as e:
