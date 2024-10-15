@@ -45,11 +45,8 @@ jobs:
 
             - name: Make Build
               run: |
-                  echo "Using version ${{ env.VERSION }} in the build script."
                   python -m builder
 
-            - name: Set artifact path/name
-              run: |
                   $ARTIFACT_PATH=Get-ChildItem -Path .\ -Filter "CollapseLoader*.exe"  -Recurse | Select-Object -ExpandProperty Name | Split-Path -Leaf
                   echo "ARTIFACT_PATH=$ARTIFACT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
@@ -86,7 +83,7 @@ jobs:
                   files: |
                       ./${{ env.ARTIFACT_PATH }}
 
-            - name: Extract and Print URL
+            - name: Extract and Print URL of VirusTotal Scan
               run: |
                   $analysis = "${{ steps.virustotal.outputs.analysis }}"
                   $url = $analysis -split '=', 2 | Select-Object -Last 1
