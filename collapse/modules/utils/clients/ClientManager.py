@@ -48,11 +48,6 @@ class ClientManager(Module):
 
         return all_clients
     
-    def client_line(self, client: dict) -> str:
-        """Returns a formatted string representing the client"""
-        version = f" <{client['version']}>" if not settings.use_option('show_client_version') else ''
-        return f"{client['name']}{version}"
-    
     def make_array(self, clients: dict) -> None:
         """Adds clients to array"""
         for client in clients:
@@ -60,7 +55,7 @@ class ClientManager(Module):
                 if client["show_in_loader"] or SHOW_HIDDEN_CLIENTS:
                     self.clients.append(
                         Client(
-                            name=self.client_line(client),
+                            name=client["name"],
                             link=data.get_url(client["filename"]),
                             main_class=client["main_class"],
                             version=client["version"],
@@ -74,7 +69,7 @@ class ClientManager(Module):
                 if client["show_in_loader"] or SHOW_HIDDEN_CLIENTS:
                     self.clients.append(
                         FabricClient(
-                            name=self.client_line(client),
+                            name=client["name"],
                             link=data.get_url(client["filename"]),
                             version=client["version"],
                             working=client["working"],
@@ -91,7 +86,7 @@ class ClientManager(Module):
     def get_client_by_name(self, name: str) -> Client:
         """Get client by name"""
         for client in self.clients:
-            if client.name.lower() in name.lower():
+            if client.lower() in name.lower():
                 return client
 
 client_manager = ClientManager()

@@ -25,6 +25,7 @@ class DataManager(Module):
 
         self.version = VERSION
         self.codename = CODENAME
+        self.boolean_states = {True: f' [green]\[+][/]', False: ''}
 
         os.makedirs(self.root_dir, exist_ok=True)
 
@@ -49,6 +50,12 @@ class DataManager(Module):
         
         self._download_file(path, filename, dest, raw)
         self._extract_file(filename, dest, path_dir, raw)
+
+    def is_downloaded(self, filename: str) -> bool:
+        if os.path.exists(data.get_local(os.path.splitext(filename)[0])):
+            return True
+        
+        return False
 
     def _is_downloaded(self, filename: str, path: str, path_dir: str) -> bool:
         """Checks if the file is already downloaded."""

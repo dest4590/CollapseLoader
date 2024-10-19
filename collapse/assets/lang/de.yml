@@ -207,6 +207,7 @@ main:
     invalid-option: Wählen Sie eine Nummer
     client-resetted: Client {} zurückgesetzt
     select-client: Wählen Sie einen Client zum Zurücksetzen!
+    client-deleted: Client {} gelöscht
 
     force-crash: Erzwinge Absturz
 

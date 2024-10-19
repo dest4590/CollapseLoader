@@ -206,6 +206,7 @@ main:
     invalid-option: Выберите цифру
     client-resetted: Клиент {} сброшен
     select-client: Выберите клиента для сброса!
+    client-deleted: Клиент {} удалён
 
     force-crash: Принудительный краш
 

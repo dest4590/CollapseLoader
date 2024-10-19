@@ -34,7 +34,7 @@ class Client(Module):
                  main_class: str = 'net.minecraft.client.main.Main',
                  version: str = '1.12.2', internal: bool = False, working: bool = True, id: int = 1, fabric: bool = False) -> None:
         super().__init__(False)
-    
+
         self.name = name
         self.link = link
         self.working = working
@@ -56,7 +56,9 @@ class Client(Module):
         self.silent = False
 
     def __str__(self) -> str:
-        return self.name
+        is_downloaded = data.boolean_states[data.is_downloaded(self.filename)]
+        version = f" <{self.version}>" if not settings.use_option('show_client_version') else ''
+        return f"{self.name}{version}{is_downloaded}"
 
     def to_dict(self) -> dict:
         attributes = vars(self)
@@ -83,6 +85,9 @@ class Client(Module):
             self.info(lang.t('clients.downloading').format(self.name))
 
         data.download(self.filename)
+        
+        from ...render.CLI import selector
+        selector.refresh_text()
 
     def reset(self) -> None:
         """Reset the client"""
@@ -90,6 +95,17 @@ class Client(Module):
             shutil.rmtree(self.path_dir)
 
         self.download()
+
+    def delete(self) -> None:
+        """Delete the client"""
+        if os.path.isdir(self.path_dir):
+            shutil.rmtree(self.path_dir, ignore_errors=True)
+
+    def open_folder(self) -> None:
+        """Open the client folder"""
+        if os.path.isdir(self.path_dir):
+            absolute_path = os.path.abspath(self.path_dir)
+            Popen(f'explorer /open,{absolute_path}')
 
     def run(self) -> None:
         """Run client"""

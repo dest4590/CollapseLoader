@@ -75,24 +75,32 @@ def handle_selection(choosed: str) -> None:
             client = selector.get_client_by_index(int(choosed))
             client.run()
             
+            return
+            
     else:
         try:
             args = selector.parse_args(choosed)
+
+            try:
+                client = selector.get_client_by_index(int(args[1]))
             
-            #TODO - add more functions for clients
+            except IndexError:
+                logger.error(lang.t('main.select-client'))
+                selector.pause()
             
             if args[0] == 'R': 
-                try:
-                    client = selector.get_client_by_index(int(args[1]))
-                    client.reset()
-                    
-                    logger.info(lang.t('main.client-resetted').format(client.name))
-                    
-                    selector.pause()
-                    
-                except IndexError:
-                    logger.error(lang.t('main.select-client'))
-                    selector.pause()
+                client.reset()    
+                logger.info(lang.t('main.client-resetted').format(client.name))
+                selector.pause()
+                
+            elif args[0] == 'D':
+                client.delete()
+                logger.info(lang.t('main.client-deleted').format(client.name))
+                selector.refresh_text()
+                selector.pause()
+                
+            elif args[0] == 'O':
+                client.open_folder()
                 
         except ValueError:
             logger.error(lang.t('main.invalid-option'))
