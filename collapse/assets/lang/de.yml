@@ -205,6 +205,8 @@ main:
     select-ram: RAM auswählen (in Gigabyte)
 
     invalid-option: Wählen Sie eine Nummer
+    client-resetted: Client {} zurückgesetzt
+    select-client: Wählen Sie einen Client zum Zurücksetzen!
 
     force-crash: Erzwinge Absturz
 

@@ -1,4 +1,5 @@
 import os
+import shutil
 from contextlib import chdir
 from datetime import datetime, timedelta
 from subprocess import PIPE, STDOUT, Popen
@@ -82,6 +83,13 @@ class Client(Module):
             self.info(lang.t('clients.downloading').format(self.name))
 
         data.download(self.filename)
+
+    def reset(self) -> None:
+        """Reset the client"""
+        if os.path.isdir(self.path_dir):
+            shutil.rmtree(self.path_dir)
+
+        self.download()
 
     def run(self) -> None:
         """Run client"""

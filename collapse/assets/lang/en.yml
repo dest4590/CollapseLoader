@@ -205,6 +205,8 @@ main:
     select-ram: Select RAM (in gigabytes)
 
     invalid-option: Select a number
+    client-resetted: Client {} resetted
+    select-client: Select client to reset!
 
     force-crash: Force crash
 

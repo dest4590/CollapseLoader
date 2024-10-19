@@ -26,17 +26,6 @@ class ClientManager(Module):
         
         if clients is None and fabric_clients is None:
             self.error(lang.t('clientmanager.error'))
-            return []
-
-        all_clients: dict = clients.json() + fabric_clients.json()
-
-        clients = []
-
-        if clients is not None:
-            cache.save(all_clients)
-            self.make_array(all_clients)
-
-        else:
             if not os.path.exists(cache.path):
                 self.error(lang.t('cache.client-cache-not-found'))
 
@@ -46,6 +35,16 @@ class ClientManager(Module):
                 self.info(lang.t('cache.using-last-cache').format(creation_time))
 
                 self.make_array(c['clients'])
+                
+            return
+
+        all_clients: dict = clients.json() + fabric_clients.json()
+
+        clients = []
+
+        if clients is not None:
+            cache.save(all_clients)
+            self.make_array(all_clients)
 
         return all_clients
     

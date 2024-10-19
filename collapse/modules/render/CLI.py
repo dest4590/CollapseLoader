@@ -116,6 +116,10 @@ class Selector(Module):
         """Asks for a nickname"""
         return input(f'{lang.t("cli.select-username-prompt")} >> ')
 
+    def parse_args(self, string: str) -> None:
+        """Parses the arguments (seprated by spaces)"""
+        return string.split(' ')
+        
     def clear(self) -> None:
         """Clears the console"""
         os.system('cls')

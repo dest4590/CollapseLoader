@@ -67,12 +67,42 @@ def display_main_menu() -> None:
     selector.animate(text)
     selector.show()
 
-def handle_selection(choosed: int) -> None:
+def handle_selection(choosed: str) -> None:
     """Handle the user's menu selection"""
-    if choosed <= len(client_manager.clients):
-        client = selector.get_client_by_index(choosed)
-        client.run()
-    elif choosed == selector.offset + 11:
+
+    if choosed.isnumeric():
+        if int(choosed) <= len(client_manager.clients):
+            client = selector.get_client_by_index(int(choosed))
+            client.run()
+            
+    else:
+        try:
+            args = selector.parse_args(choosed)
+            
+            #TODO - add more functions for clients
+            
+            if args[0] == 'R': 
+                try:
+                    client = selector.get_client_by_index(int(args[1]))
+                    client.reset()
+                    
+                    logger.info(lang.t('main.client-resetted').format(client.name))
+                    
+                    selector.pause()
+                    
+                except IndexError:
+                    logger.error(lang.t('main.select-client'))
+                    selector.pause()
+                
+        except ValueError:
+            logger.error(lang.t('main.invalid-option'))
+            selector.pause()
+            
+        return
+    
+    choosed = int(choosed)
+
+    if choosed == selector.offset + 11:
         options_menu.show()
     elif choosed == selector.offset + 12:
         config_menu.show()
@@ -125,10 +155,6 @@ def main() -> None:
                 if not messages.shown:
                     messages.show_messages()
 
-                try:
-                    choosed = int(selector.select())
-                    handle_selection(choosed)
+                choosed = selector.select()
+                handle_selection(choosed)
                     
-                except ValueError:
-                    logger.error(lang.t('main.invalid-option'))
-                    continue

@@ -204,6 +204,8 @@ main:
     select-ram: Виберіть ОЗУ (в гігабайтах)
 
     invalid-option: Виберіть цифру
+    client-resetted: Клієнт {} скинуто
+    select-client: Виберіть клієнта для скидання!
 
     force-crash: Примусовий краш
 
