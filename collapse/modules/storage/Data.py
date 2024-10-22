@@ -25,7 +25,7 @@ class DataManager(Module):
 
         self.version = VERSION
         self.codename = CODENAME
-        self.boolean_states = {True: f' [green]\[+][/]', False: ''}
+        self.boolean_states = {True: f' [green]\\[+][/]', False: ''}
 
         os.makedirs(self.root_dir, exist_ok=True)
 
