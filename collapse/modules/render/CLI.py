@@ -111,12 +111,16 @@ class Selector(Module):
     def get_client_by_index(self, index: int) -> Client:
         """Returns the client by index"""
         return client_manager.clients[index - 1]
+    
+    def get_client_by_name(self, name: str) -> Client:
+        """Returns the client by name"""
+        return client_manager.get_client_by_name(name)
 
     def select_username(self) -> str:
         """Asks for a nickname"""
         return input(f'{lang.t("cli.select-username-prompt")} >> ')
 
-    def parse_args(self, string: str) -> None:
+    def parse_args(self, string: str) -> str:
         """Parses the arguments (seprated by spaces)"""
         return string.split(' ')
         

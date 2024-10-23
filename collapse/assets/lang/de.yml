@@ -40,6 +40,7 @@ messages:
 
 network:
     error: Netzwerkfehler {}
+    timeout: Timeout erzwingen für {}
 
 servers:
     server-not-accessible: Server {} ist nicht erreichbar oder ausgefallen
@@ -208,6 +209,7 @@ main:
     client-resetted: Client {} zurückgesetzt
     select-client: Wählen Sie einen Client zum Zurücksetzen!
     client-deleted: Client {} gelöscht
+    client-not-found: Client {} nicht gefunden
 
     force-crash: Erzwinge Absturz
 

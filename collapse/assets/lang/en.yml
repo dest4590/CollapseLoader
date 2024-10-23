@@ -40,6 +40,7 @@ messages:
 
 network:
     error: Network error {}
+    timeout: Force timeout for {}
 
 servers:
     server-not-accessible: Server {} is down or inaccessible
@@ -208,6 +209,7 @@ main:
     client-resetted: Client {} resetted
     select-client: Select client to reset!
     client-deleted: Client {} deleted
+    client-not-found: Client {} not found
 
     force-crash: Force crash
 

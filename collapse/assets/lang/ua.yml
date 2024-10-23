@@ -39,6 +39,7 @@ messages:
 
 network:
     error: Помилка мережі {}
+    timeout: Примусовий таймаут для {}
 
 servers:
     server-not-accessible: Сервер {} не працює або недоступний
@@ -207,6 +208,7 @@ main:
     client-resetted: Клієнт {} скинуто
     select-client: Виберіть клієнта для скидання!
     client-deleted: Клієнт {} видалено
+    client-not-found: Клієнт {} не знайдено
 
     force-crash: Примусовий краш
 

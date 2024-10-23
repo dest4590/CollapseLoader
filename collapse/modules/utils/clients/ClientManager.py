@@ -86,7 +86,7 @@ class ClientManager(Module):
     def get_client_by_name(self, name: str) -> Client:
         """Get client by name"""
         for client in self.clients:
-            if client.lower() in name.lower():
+            if client.name.lower() in name.lower():
                 return client
 
 client_manager = ClientManager()
