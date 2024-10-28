@@ -14,7 +14,8 @@ class Network(Module):
         self.session = requests.Session()
         self.timeout = args.timeout if args.timeout else 5
         
-        self.debug(lang.t('network.timeout').format(self.timeout))
+        if args.timeout:
+            self.debug(lang.t('network.timeout').format(self.timeout))
 
     def get(self, url, params=None, headers=None, stream=False) -> requests.Response:
         """Make a GET request to the given URL"""
