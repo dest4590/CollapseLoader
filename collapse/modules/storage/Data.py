@@ -19,6 +19,7 @@ class DataManager(Module):
         super().__init__()
         self.root_dir = ROOT_DIR
         self.server = servers.check_servers()
+        self.web_server = servers.check_web_servers()
 
         if not self.server:
             self.critical(lang.t('data.no_servers'))

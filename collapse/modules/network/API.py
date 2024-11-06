@@ -1,8 +1,8 @@
 import requests
 
 from ...arguments import args
-from ...constants import API_URL
 from ..network.Network import network
+from ..storage.Data import data
 from ..utils.Language import lang
 from ..utils.Module import Module
 
@@ -12,7 +12,7 @@ class API(Module):
 
     def __init__(self) -> None:
         super().__init__()
-        self.server = args.api_url if args.api_url else API_URL
+        self.server = args.api_url if args.api_url else data.web_server
 
     def get(self, path: str, prefix: bool = True) -> requests.Response:
         """Makes an API request"""
