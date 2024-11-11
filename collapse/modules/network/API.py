@@ -16,17 +16,18 @@ class API(Module):
 
     def get(self, path: str, prefix: bool = True) -> requests.Response:
         """Makes an API request"""
-        if not path.endswith('/') and prefix:
-            path += '/'
-        
+        if not path.endswith("/") and prefix:
+            path += "/"
+
         url = f'{self.server}{"api/" if prefix else ""}{path}'
-        self.debug(lang.t('api.request').format(path))
-        
+        self.debug(lang.t("api.request").format(path))
+
         try:
             response = network.get(url)
             return response
         except requests.exceptions.RequestException as e:
-            self.error(lang.t('api.error').format(e))
+            self.error(lang.t("api.error").format(e))
             return None
+
 
 api = API()

@@ -141,6 +141,7 @@ options:
         discord_rich_presence: Показує RPC в Discord
         hide_console: Приховати консоль під час запуску клієнта
         show_header: Показувати заголовок на головному екрані
+        show_installed: Показувати індикатор встановленості
         language: Мова ({})
 
 logchecker:
@@ -197,8 +198,6 @@ rpc:
     large-text: Версія {}
 
 main:
-    language-set: Перезапустіть програму!
-
     nickname-reminder: Не забудьте змінити свій нікнейм!
     nickname-changed: Нікнейм змінено
     ram-changed: ОЗУ змінено

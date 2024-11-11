@@ -142,6 +142,7 @@ options:
         discord_rich_presence: Show RPC in Discord
         hide_console: Hide console window on client start
         show_header: Show header on the main screen
+        show_installed: Show installed indicator
         language: Language ({})
 
 logchecker:
@@ -198,8 +199,6 @@ rpc:
     large-text: Version {}
 
 main:
-    language-set: Restart the program!
-
     nickname-reminder: Don't forget to change your nickname!
     nickname-changed: Nickname changed
     ram-changed: RAM changed

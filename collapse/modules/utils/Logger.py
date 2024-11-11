@@ -15,29 +15,30 @@ class CollapseLogger(logging.Logger):
     def _setup_logger(self) -> None:
         """Set up the logger with colored output."""
         log_colors = {
-            'DEBUG': 'cyan',
-            'INFO': 'green',
-            'WARNING': 'yellow',
-            'ERROR': 'red',
-            'CRITICAL': 'red,bg_white',
-            'API': 'light_cyan'
+            "DEBUG": "cyan",
+            "INFO": "green",
+            "WARNING": "yellow",
+            "ERROR": "red",
+            "CRITICAL": "red,bg_white",
+            "API": "light_cyan",
         }
 
         secondary_log_colors = {
-            'message': {
-                'ERROR': 'red',
-                'CRITICAL': 'red',
-                'WARNING': 'yellow',
-                'INFO': 'blue',
-                'API': 'light_cyan',
-                'DEBUG': 'green',
+            "message": {
+                "ERROR": "red",
+                "CRITICAL": "red",
+                "WARNING": "yellow",
+                "INFO": "blue",
+                "API": "light_cyan",
+                "DEBUG": "green",
             }
         }
 
         class OptionalPrefixFormatter(colorlog.ColoredFormatter):
             """Class that adds a prefix attribute to log records if it doesn't already exist."""
+
             def format(self, record):
-                record.prefix = record.__dict__.get('prefix', '')
+                record.prefix = record.__dict__.get("prefix", "")
                 return super().format(record)
 
         formatter = OptionalPrefixFormatter(
@@ -46,7 +47,7 @@ class CollapseLogger(logging.Logger):
             reset=True,
             log_colors=log_colors,
             secondary_log_colors=secondary_log_colors,
-            style='%'
+            style="%",
         )
 
         handler = logging.StreamHandler()
@@ -56,8 +57,9 @@ class CollapseLogger(logging.Logger):
 
     def _log(self, level, msg, args, **kwargs):
         """Rewrite function of logging system"""
-        prefix = kwargs.pop('prefix', '')
-        kwargs['extra'] = {'prefix': prefix}
+        prefix = kwargs.pop("prefix", "")
+        kwargs["extra"] = {"prefix": prefix}
         super()._log(level, msg, args, **kwargs)
 
-logger = CollapseLogger('CollapseLogger', logging.DEBUG if DEBUG_LOGS else logging.INFO)
+
+logger = CollapseLogger("CollapseLogger", logging.DEBUG if DEBUG_LOGS else logging.INFO)

@@ -2,6 +2,7 @@ import winreg as wrg
 
 # made for the future
 
+
 class Registry:
     """Class to interact with the Windows registry"""
 

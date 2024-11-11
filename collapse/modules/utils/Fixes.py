@@ -11,6 +11,7 @@ if console.legacy_windows:
         from rich import console as conlib
         from rich._win32_console import (ENABLE_VIRTUAL_TERMINAL_PROCESSING,
                                          GetConsoleMode, GetStdHandle)
+
         windll = ctypes.LibraryLoader(ctypes.WinDLL)
 
         handle = GetStdHandle()
