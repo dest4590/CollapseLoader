@@ -16,10 +16,9 @@ class LogChecker(Module):
         """Construct a reason message for the crash"""
         return lang.t("logchecker.base-reason").format(msg)
 
-    def check_logs(self, payload: str, client) -> None:
+    def check_logs(self, logs: str, client) -> None:
         """Check logs for crash messages and log appropriate errors and info"""
         self.debug(lang.t("logchecker.checking-log"))
-        logs = "".join(payload)
 
         if "Game crashed!" in logs:
             self.error(lang.t("logchecker.game-crashed"))

@@ -205,6 +205,7 @@ main:
     select-ram: RAM auswählen (in Gigabyte)
 
     invalid-option: Wählen Sie eine Nummer
+    no-crash-logs: Crash-Log-Ordner ist leer
     client-resetted: Client {} zurückgesetzt
     select-client: Wählen Sie einen Client zum Zurücksetzen!
     client-deleted: Client {} gelöscht

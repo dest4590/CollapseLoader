@@ -8,6 +8,8 @@ from time import sleep
 
 from rich.progress import BarColumn, Progress, TextColumn
 
+from collapse.modules.storage.ModManager import ModManager
+
 from ...network.Analytics import analytics
 from ...storage.Data import console, data
 from ...storage.Settings import settings
@@ -55,6 +57,8 @@ class Client(Module):
         self.path_dir = data.root_dir + os.path.splitext(self.filename)[0] + "/"
         self.jar = os.path.splitext(self.filename)[0] + ".jar"
 
+        self.mod_manager = ModManager(self.path_dir)
+
         self.main_class = main_class
 
         self.cut_version = True
@@ -93,14 +97,26 @@ class Client(Module):
     def download(self) -> True:
         """Downloading client files"""
 
-        if os.path.isfile(self.path_dir + self.jar):
-            self.debug(lang.t("clients.already-downloaded").format(self.name))
-            return
+        if self.fabric:
+            jar_file = "fabric-1.21.jar"
+            destination = os.path.join(self.path_dir, jar_file)
 
+            if os.path.isfile(destination):
+                self.debug(lang.t("clients.already-downloaded-fabric"))
+                return
+            else:
+                os.makedirs(self.path_dir, exist_ok=True)
+                self.info(lang.t("clients.downloading-fabric"))
+
+            data.download(jar_file, destination, True)
         else:
-            self.info(lang.t("clients.downloading").format(self.name))
+            if os.path.isfile(self.path_dir + self.jar):
+                self.debug(lang.t("clients.already-downloaded").format(self.name))
+                return
+            else:
+                self.info(lang.t("clients.downloading").format(self.name))
 
-        data.download(self.filename)
+            data.download(self.filename)
 
         from ...render.CLI import selector
 
@@ -133,18 +149,27 @@ class Client(Module):
 
         rpc.details = lang.t("rpc.playing").format(self.name)
 
-        # Downloading requirements
         data.download("jre-21.0.2.zip")
 
-        if self.version.startswith("1.12"):
-            self.info(lang.t("clients.downloading-libraries-natives-1-12"))
-            data.download("libraries-1.12.zip")
-            data.download("natives-1.12.zip")
-
-        else:
-            self.info(lang.t("clients.downloading-libraries-natives-1-12-2"))
-            data.download("libraries.zip")
+        if self.fabric:
+            self.info(lang.t("clients.downloading-fabric"))
+            data.download("libraries-1.21.zip")
             data.download("natives.zip")
+            data.download("assets.zip")
+            self.download()
+            self.mod_manager.install(self.filename)
+            self.mod_manager.install("fabric-api-0.102.0+1.21.jar")
+            self.info(lang.t("clients.running-fabric").format(self.name))
+        else:
+            if self.version.startswith("1.12"):
+                self.info(lang.t("clients.downloading-libraries-natives-1-12"))
+                data.download("libraries-1.12.zip")
+                data.download("natives-1.12.zip")
+
+            else:
+                self.info(lang.t("clients.downloading-libraries-natives-1-12-2"))
+                data.download("libraries.zip")
+                data.download("natives.zip")
 
         data.download("assets.zip")
 
@@ -172,21 +197,30 @@ class Client(Module):
             )
 
             Thread(
-                target=update_time, args=(task_id, progress, start_time), daemon=True
+                target=update_time,
+                args=(task_id, progress, start_time),
+                daemon=True,
             ).start()
 
             with chdir(".\\" + self.path_dir):
-                # Using backslash var, because f-strings not supporting it in expressions
                 bc = "\\"
 
                 path_sep = ";" if os.name == "nt" else ":"
 
                 libraries_dir = (
-                    "libraries-1.12" if self.version.startswith("1.12") else "libraries"
+                    "libraries-1.21"
+                    if self.fabric
+                    else (
+                        "libraries-1.12"
+                        if self.version.startswith("1.12")
+                        else "libraries"
+                    )
                 )
+
                 natives_dir = (
                     "natives-1.12" if self.version.startswith("1.12") else "natives"
                 )
+
                 assets_dir = "assets"
 
                 if self.internal and os.path.isdir(libraries_dir):
@@ -205,12 +239,17 @@ class Client(Module):
                     else f"..{bc}{assets_dir}"
                 )
 
+                if self.fabric:
+                    cp = f"-cp {classpath}{path_sep}.{bc}fabric-1.21.jar net.fabricmc.loader.impl.launch.knot.KnotClient"
+                else:
+                    cp = f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}"
+
                 java_command = [
                     f"..\\jre-21.0.2\\bin\\java{'w' if self.silent else ''}.exe",
                     "-Xverify:none",
                     f"-Xmx{settings.get('ram')}M",
                     f"-Djava.library.path={native_path}",
-                    f"-cp {classpath}{path_sep}.{bc}{self.jar} {self.main_class}",
+                    cp,
                     f"--username {settings.get('nickname')}",
                     "--gameDir .\\",
                     f"--assetsDir {asset_path}",
@@ -223,17 +262,19 @@ class Client(Module):
 
                 command = " ".join(java_command)
 
+                progress.print(command, end="", markup=False, highlight=False)
+
                 selector.hide_console()
 
                 process = Popen(command, stdout=PIPE, stderr=STDOUT)
                 buffer = []
 
                 for line in process.stdout:
-                    _ = line.decode("utf-8", errors="ignore")
-                    progress.print(_, end="", markup=False, highlight=False)
-                    buffer.append(_)
+                    log = line.decode("utf-8", errors="ignore")
+                    progress.print(log, end="", markup=False, highlight=False)
+                    buffer.append(log)
 
-                logchecker.check_logs(buffer, self)
+                logchecker.check_logs("".join(buffer).replace("\r", ""), self)
 
                 self.info(lang.t("clients.finished"))
 

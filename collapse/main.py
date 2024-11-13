@@ -1,7 +1,8 @@
-import importlib
 import logging
+import os
 import random
 import sys
+from subprocess import Popen
 
 from .arguments import args
 from .modules.utils.Logger import logger
@@ -87,35 +88,37 @@ def handle_selection(choosed: str) -> None:
                 else:
                     client = selector.get_client_by_name(args[1])
             except (IndexError, ValueError):
-                logger.error(lang.t("main.select-client"))
-                selector.pause()
+                if args[0] == "l":
+                    if os.path.isdir(data.get_local("crash_logs")):
+                        absolute_path = os.path.abspath(data.get_local("crash_logs"))
+                        Popen(f"explorer /open,{absolute_path}")
+                    else:
+                        selector.warn(lang.t("main.no-crash-logs"))
+                    return
+
+                selector.warn(lang.t("main.select-client"))
                 return
 
             if client is None:
-                logger.error(lang.t("main.client-not-found").format(args[1]))
-                selector.pause()
+                selector.warn(lang.t("main.client-not-found").format(args[1]))
                 return
 
             if args[0] == "r":
                 client.reset()
-                logger.info(lang.t("main.client-resetted").format(client.name))
-                selector.pause()
+                selector.warn(lang.t("main.client-resetted").format(client.name))
 
             elif args[0] == "d":
                 client = selector.get_client_by_index(int(args[1]))
                 client.delete()
-                logger.info(lang.t("main.client-deleted").format(client.name))
+                selector.warn(lang.t("main.client-deleted").format(client.name))
                 selector.refresh_text()
-                selector.pause()
 
             elif args[0] == "o":
                 client = selector.get_client_by_index(int(args[1]))
                 client.open_folder()
 
         except ValueError:
-            logger.error(lang.t("main.invalid-option"))
-            selector.pause()
-
+            selector.warn(lang.t("main.invalid-option"))
         return
 
     choosed = int(choosed)
@@ -136,15 +139,13 @@ def handle_selection(choosed: str) -> None:
         logger.debug(lang.t("main.ram-changed"))
     elif choosed == selector.offset + 15:
         from .modules.storage.ClientCleaner import clientcleaner
-
         clientcleaner.scan_folders()
     elif choosed == selector.offset + 16:
         credits_menu.show()
-    elif choosed == selector.offset + 17:  # Exit
+    elif choosed == selector.offset + 17:
         sys.exit(1)
     else:
-        logger.error(lang.t("main.invalid-option"))
-        selector.pause()
+        selector.warn(lang.t("main.invalid-option"))
 
 
 def main() -> None:

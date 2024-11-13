@@ -204,6 +204,7 @@ main:
     select-ram: Виберіть ОЗУ (в гігабайтах)
 
     invalid-option: Виберіть цифру
+    no-crash-logs: Папка з логами крашів порожня
     client-resetted: Клієнт {} скинуто
     select-client: Виберіть клієнта для скидання!
     client-deleted: Клієнт {} видалено

@@ -113,6 +113,11 @@ class Selector(Module):
         """Pauses to allow the user to read the text"""
         os.system("pause")
 
+    def warn(self, text: str) -> None:
+        """Prints a warning message"""
+        console.print(f"[bold yellow]{text}[/]")
+        self.pause()
+
     def ask(self, question: str) -> bool:
         """Asks the user confirm for an action"""
         return Confirm.ask(question)

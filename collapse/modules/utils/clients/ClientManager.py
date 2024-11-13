@@ -7,7 +7,6 @@ from ...storage.Data import data
 from ...utils.Language import lang
 from ..Module import Module
 from .Client import Client
-from .FabricClient import FabricClient
 
 
 class ClientManager(Module):
@@ -67,9 +66,10 @@ class ClientManager(Module):
             else:
                 if client["show_in_loader"] or SHOW_HIDDEN_CLIENTS:
                     self.clients.append(
-                        FabricClient(
+                        Client(
                             name=client["name"],
                             link=data.get_url(client["filename"]),
+                            main_class="",
                             version=client["version"],
                             working=client["working"],
                             id=client["id"],

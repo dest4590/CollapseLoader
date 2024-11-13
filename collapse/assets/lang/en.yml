@@ -205,6 +205,7 @@ main:
     select-ram: Select RAM (in gigabytes)
 
     invalid-option: Select a number
+    no-crash-logs: Crash logs folder is empty
     client-resetted: Client {} resetted
     select-client: Select client to reset!
     client-deleted: Client {} deleted

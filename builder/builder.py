@@ -43,7 +43,7 @@ class Builder:
             [f'--add-data "{src};{dst}"' for src, dst in data_files]
         )
 
-        command = f'pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse/assets/{self.icon}" {data_files_string} run.py'  # use f-string properly
+        command = f'pyinstaller --onefile --clean --console --name "{self.name}" --icon "collapse/assets/{self.icon}" {data_files_string} run.py'
 
         logger.info(f"Running command: {command}")
 
