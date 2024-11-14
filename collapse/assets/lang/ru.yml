@@ -143,6 +143,7 @@ options:
         hide_console: Скрыть консоль при запуске клиента
         show_header: Показывать текст на главном экране
         show_installed: Показывать индикатор установленности
+        sort_clients: Сортировать клиентов по алфавиту
         language: Язык ({})
 
 logchecker:

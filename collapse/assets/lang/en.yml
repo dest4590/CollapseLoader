@@ -144,6 +144,7 @@ options:
         hide_console: Hide console window on client start
         show_header: Show header on the main screen
         show_installed: Show installed indicator
+        sort_clients: Sort clients by alphabet
         language: Language ({})
 
 logchecker:

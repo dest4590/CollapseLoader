@@ -144,6 +144,7 @@ options:
         hide_console: Konsolenfenster ausblenden bei Ausführung des Clients
         show_header: Header auf dem Hauptbildschirm anzeigen
         show_installed: Installationsanzeige anzeigen
+        sort_clients: Clients alphabetisch sortieren
         language: Sprache ({})
 
 logchecker:

@@ -143,6 +143,7 @@ Option(
     lang.t("options.settings.language").format(", ".join(lang.languages)),
     default_value="en",
 ).create("en")
+Option("sort_clients", lang.t("options.settings.sort_clients"), bool, True).create()
 
 
 class Menu:

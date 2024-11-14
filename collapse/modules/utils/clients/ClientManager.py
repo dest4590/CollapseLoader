@@ -4,6 +4,7 @@ from ....developer import SHOW_HIDDEN_CLIENTS
 from ...network.API import api
 from ...storage.Cache import cache
 from ...storage.Data import data
+from ...storage.Settings import settings
 from ...utils.Language import lang
 from ..Module import Module
 from .Client import Client
@@ -76,6 +77,9 @@ class ClientManager(Module):
                             fabric=client["fabric"],
                         )
                     )
+
+        if not settings.use_option('sort_clients'):
+            self.clients.sort(key=lambda client: client.name.lower())
 
     def refresh(self) -> None:
         """Refresh clients"""
