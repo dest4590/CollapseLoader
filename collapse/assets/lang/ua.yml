@@ -206,8 +206,9 @@ main:
 
     invalid-option: Виберіть цифру
     no-crash-logs: Папка з логами крашів порожня
+    client-not-installed: Клієнт {} не встановлено
     client-resetted: Клієнт {} скинуто
-    select-client: Виберіть клієнта для скидання!
+    select-client: Виберіть клієнт!
     client-deleted: Клієнт {} видалено
     client-not-found: Клієнт {} не знайдено
 

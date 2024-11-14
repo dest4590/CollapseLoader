@@ -207,8 +207,9 @@ main:
 
     invalid-option: Select a number
     no-crash-logs: Crash logs folder is empty
+    client-not-installed: Client {} not installed
     client-resetted: Client {} resetted
-    select-client: Select client to reset!
+    select-client: Select client!
     client-deleted: Client {} deleted
     client-not-found: Client {} not found
 

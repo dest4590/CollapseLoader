@@ -88,12 +88,17 @@ def handle_selection(choosed: str) -> None:
                 else:
                     client = selector.get_client_by_name(args[1])
             except (IndexError, ValueError):
-                if args[0] == "l":
+                if args[0] == "c":
                     if os.path.isdir(data.get_local("crash_logs")):
                         absolute_path = os.path.abspath(data.get_local("crash_logs"))
                         Popen(f"explorer /open,{absolute_path}")
                     else:
                         selector.warn(lang.t("main.no-crash-logs"))
+                    return
+
+                elif args[0] == "data":
+                    absolute_path = os.path.abspath(data.root_dir)
+                    Popen(f"explorer /open,{absolute_path}")
                     return
 
                 selector.warn(lang.t("main.select-client"))
@@ -108,17 +113,17 @@ def handle_selection(choosed: str) -> None:
                 selector.warn(lang.t("main.client-resetted").format(client.name))
 
             elif args[0] == "d":
-                client = selector.get_client_by_index(int(args[1]))
                 client.delete()
                 selector.warn(lang.t("main.client-deleted").format(client.name))
                 selector.refresh_text()
 
             elif args[0] == "o":
-                client = selector.get_client_by_index(int(args[1]))
-                client.open_folder()
+                if not client.open_folder():
+                    selector.warn(lang.t("main.client-not-installed").format(client.name))
 
         except ValueError:
             selector.warn(lang.t("main.invalid-option"))
+            
         return
 
     choosed = int(choosed)

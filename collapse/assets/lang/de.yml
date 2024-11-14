@@ -207,8 +207,9 @@ main:
 
     invalid-option: Wählen Sie eine Nummer
     no-crash-logs: Crash-Log-Ordner ist leer
+    client-not-installed: Client {} nicht installiert
     client-resetted: Client {} zurückgesetzt
-    select-client: Wählen Sie einen Client zum Zurücksetzen!
+    select-client: Wählen Sie einen Client!
     client-deleted: Client {} gelöscht
     client-not-found: Client {} nicht gefunden
 

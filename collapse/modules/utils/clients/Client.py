@@ -134,11 +134,13 @@ class Client(Module):
         if os.path.isdir(self.path_dir):
             shutil.rmtree(self.path_dir, ignore_errors=True)
 
-    def open_folder(self) -> None:
+    def open_folder(self) -> bool:
         """Open the client folder"""
         if os.path.isdir(self.path_dir):
             absolute_path = os.path.abspath(self.path_dir)
             Popen(f"explorer /open,{absolute_path}")
+        else:
+            return False
 
     def run(self) -> None:
         """Run client"""
