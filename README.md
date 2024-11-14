@@ -17,17 +17,20 @@
 * [X] Run clients
 * [X] CLI Interface
 * [X] Download manager
-* [X] Logging
 * [X] Message system
-* [X] Settings system 
-* [X] Update system
+* [X] Settings system
 * [X] Config system
+* [X] Cache system 
 * [X] Packaging (CI/CD, PyInstaller)
-* [X] Mirrors (2 servers)
+* [X] Mirrors (4 servers)
 
 
 ## Showcase
-<img src="https://github.com/user-attachments/assets/85799598-f7b5-4ee2-9cac-07afc88bc699" width=500>
+<img src="https://github.com/user-attachments/assets/4d7b4a0b-fdc2-422e-a8a1-7e8e6aecdd44" width=500>
+
+<img src="https://github.com/user-attachments/assets/f270b8a6-6321-41b9-b6e2-393e807ce4b5" width=500>
+
+<img src="https://github.com/user-attachments/assets/2da89acb-72cb-4763-a649-625b1179b002" width=500>
 
 ## Stats
 ![Alt](https://repobeats.axiom.co/api/embed/7b1d7b331cc7aadd46f994465326905afec453a0.svg "Repobeats analytics image")
