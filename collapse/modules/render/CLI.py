@@ -99,11 +99,7 @@ class Selector(Module):
 
     def show(self) -> None:
         """Print text to screen"""
-        if SKIP_ANIMATIONS or not settings.use_option("disable_animation"):
-            console.print(self.text, highlight=False)
-            return
-
-        self.animate(self.text, highlight=False)
+        console.print(self.text, highlight=False)
 
     def select(self) -> str:
         """Requires user selection"""
@@ -115,7 +111,7 @@ class Selector(Module):
 
     def warn(self, text: str) -> None:
         """Prints a warning message"""
-        console.print(f"[bold yellow]{text}[/]")
+        console.print(f"[bold]{text}[/]")
         self.pause()
 
     def ask(self, question: str) -> bool:
@@ -164,15 +160,6 @@ class Selector(Module):
     def reset_title(self) -> None:
         """Resets the window title"""
         self.set_title(title_type="default")
-
-    def animate(self, text: str, highlight: bool = True) -> None:
-        """Create an animated effect with a delay between each line"""
-        if SKIP_ANIMATIONS or not settings.use_option("disable_animation"):
-            console.print(text, highlight=highlight)
-        else:
-            for line in text.split("\n"):
-                console.print(line, highlight=highlight)
-                sleep(0.015)
 
     def hide_console(self):
         """Hides the console window"""

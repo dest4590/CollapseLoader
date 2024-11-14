@@ -75,7 +75,7 @@ cli:
     credits-donators: Автори та донати
     exit: "[red]Вихід[/]"
 
-    select: Виберіть
+    select: Виберіть (help для команд)
     select-username-prompt: Виберіть нікнейм
 
     titles:
@@ -100,7 +100,7 @@ data:
     no-server: Не знайдено сервер для завантаження файлів (це критична функція в лоадері)
 
     download:
-        to: Завантажуємо {} в {}
+        to: Завантажуємо файл {} в {}
         already-downloaded: Файл {} вже завантажено, пропускаємо
         error: Не вдалося завантажити {}, {}
         extract-error: Помилка обробки файлу {}, {}
@@ -205,7 +205,7 @@ main:
     ram-changed: ОЗУ змінено
     select-ram: Виберіть ОЗУ (в гігабайтах)
 
-    invalid-option: Виберіть цифру
+    invalid-option: Виберіть цифру або команду
     no-crash-logs: Папка з логами крашів порожня
     client-not-installed: Клієнт {} не встановлено
     client-resetted: Клієнт {} скинуто
@@ -214,6 +214,18 @@ main:
     client-not-found: Клієнт {} не знайдено
 
     force-crash: Примусовий краш
+
+commands:
+    command: Команда
+    description: Опис
+    title: Команди (аргумент client може бути ім'ям або ID)
+    crashes: Відкриває папку журналів збоїв
+    data: Відкриває папку даних або очищує дані, якщо вказано 'clear'
+    download: Завантажує клієнт <client>
+    reset: Скидає клієнт <client>
+    delete: Видаляє клієнт <client>
+    open: Відкриває папку клієнта <client>
+    help: Показує це довідкове повідомлення
 
 sdkserver:
     starting: Сервер запущений на http://{}:{}

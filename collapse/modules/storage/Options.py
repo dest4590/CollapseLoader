@@ -101,7 +101,6 @@ class Option(Module):
         return self.name.title().replace("_", " ")
 
 
-# Define options
 Option(
     "nickname",
     lang.t("options.settings.nickname"),
@@ -121,9 +120,6 @@ Option(
     "use_short_logo", lang.t("options.settings.use_short_logo"), bool, False
 ).create()
 Option("hide_links", lang.t("options.settings.hide_links"), bool, False).create()
-Option(
-    "disable_animation", lang.t("options.settings.disable_animation"), bool, False
-).create()
 Option(
     "show_client_version", lang.t("options.settings.show_client_version"), bool, False
 ).create()

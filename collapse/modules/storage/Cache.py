@@ -1,9 +1,10 @@
 import json
+import os
 from datetime import datetime
 
+from ...config import ROOT_DIR
 from ..utils.Language import lang
 from ..utils.Module import Module
-from .Data import data
 from .Settings import settings
 
 
@@ -13,7 +14,7 @@ class Cache(Module):
     def __init__(self, file: str = "cache.json") -> None:
         super().__init__()
         self.file = file
-        self.path = data.get_local(file)
+        self.path = os.path.join(ROOT_DIR, file)
 
     def save(self, clients: list) -> None:
         """Saves cache into file"""

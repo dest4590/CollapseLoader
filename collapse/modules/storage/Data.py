@@ -1,4 +1,5 @@
 import os
+import shutil
 import zipfile
 
 import requests
@@ -8,6 +9,8 @@ from rich.progress import (BarColumn, DownloadColumn, Progress, TextColumn,
 from ...config import CODENAME, ROOT_DIR, VERSION
 from ..network.Network import network
 from ..network.Servers import servers
+from ..storage.Cache import cache
+from ..storage.Settings import settings
 from ..utils.Fixes import console
 from ..utils.Language import lang
 from ..utils.Module import Module
@@ -31,6 +34,7 @@ class DataManager(Module):
         self.version = VERSION
         self.codename = CODENAME
         self.boolean_states = {True: f" [green]\\[+][/]", False: ""}
+        self.ignored_files = [settings.config_path, cache.path]
 
         os.makedirs(self.root_dir, exist_ok=True)
 
@@ -41,6 +45,19 @@ class DataManager(Module):
     def get_url(self, path: str) -> str:
         """Gets a link from the web"""
         return self.server + path
+
+    def clear(self) -> str:
+        """Clears the data folder"""
+        for file in os.listdir(self.root_dir):
+            file_path = os.path.join(self.root_dir, file)
+            if file_path not in self.ignored_files:
+                try:
+                    if os.path.isdir(file_path):
+                        shutil.rmtree(file_path)
+                    else:
+                        os.remove(file_path)
+                except PermissionError:
+                    print(f"Permission denied: {file_path}")
 
     def download(self, path: str, destination: str = None, raw: bool = False) -> None:
         """Downloads file using path"""

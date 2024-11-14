@@ -76,7 +76,7 @@ cli:
     credits-donators: Creators and donations
     exit: "[red]Exit[/]"
 
-    select: Select
+    select: Select (help for commands)
     select-username-prompt: Select username
 
     titles:
@@ -101,7 +101,7 @@ data:
     no-server: No server found for file download (this is a critical function in the loader)
 
     download:
-        to: Downloading {} to {}
+        to: Downloading file {} to {}
         already-downloaded: File {} already downloaded, skipping
         error: Failed to download {}, {}
         extract-error: Error processing file {}, {}
@@ -206,7 +206,7 @@ main:
     ram-changed: RAM changed
     select-ram: Select RAM (in gigabytes)
 
-    invalid-option: Select a number
+    invalid-option: Select a number or command
     no-crash-logs: Crash logs folder is empty
     client-not-installed: Client {} not installed
     client-resetted: Client {} resetted
@@ -215,6 +215,18 @@ main:
     client-not-found: Client {} not found
 
     force-crash: Force crash
+
+commands:
+    command: Command
+    description: Description
+    title: Commands (client argument can be name or ID)
+    crashes: Opens crash logs folder
+    data: Opens data folder or clears data if 'clear' is specified
+    download: Downloads a client <client>
+    reset: Resets a client <client>
+    delete: Deletes a client <client>
+    open: Opens a client's folder <client>
+    help: Shows this help message
 
 sdkserver:
     starting: Server started at http://{}:{}

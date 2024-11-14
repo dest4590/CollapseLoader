@@ -78,7 +78,7 @@ class ClientManager(Module):
                         )
                     )
 
-        if not settings.use_option('sort_clients'):
+        if not settings.use_option("sort_clients"):
             self.clients.sort(key=lambda client: client.name.lower())
 
     def refresh(self) -> None:

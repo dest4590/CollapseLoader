@@ -76,7 +76,7 @@ cli:
     credits-donators: Ersteller und Spenden
     exit: "[red]Beenden[/]"
 
-    select: Auswählen
+    select: Auswählen (Hilfe für Befehle)
     select-username-prompt: Benutzername auswählen
 
     titles:
@@ -101,7 +101,7 @@ data:
     no-server: Kein Server zum Herunterladen von Dateien gefunden (dies ist eine kritische Funktion im Loader)
 
     download:
-        to: Herunterladen von {} nach {}
+        to: Laden Sie die {} Datei auf {}
         already-downloaded: Datei {} bereits heruntergeladen, überspringen
         error: Fehler beim Herunterladen von {}, {}
         extract-error: Fehler beim Verarbeiten der Datei {}, {}
@@ -206,7 +206,7 @@ main:
     ram-changed: RAM geändert
     select-ram: RAM auswählen (in Gigabyte)
 
-    invalid-option: Wählen Sie eine Nummer
+    invalid-option: Wählen Sie eine Nummer oder eine Option
     no-crash-logs: Crash-Log-Ordner ist leer
     client-not-installed: Client {} nicht installiert
     client-resetted: Client {} zurückgesetzt
@@ -215,6 +215,18 @@ main:
     client-not-found: Client {} nicht gefunden
 
     force-crash: Erzwinge Absturz
+
+commands:
+    command: Befehle
+    description: Beschreibung
+    title: Befehle (Client-Argument kann Name oder ID sein)
+    crashes: Öffnet den Ordner mit den Absturzprotokollen
+    data: Öffnet den Datenordner oder löscht Daten, wenn 'clear' angegeben ist
+    download: Lädt einen Client herunter <client>
+    reset: Setzt einen Client zurück <client>
+    delete: Löscht einen Client <client>
+    open: Öffnet den Ordner eines Clients <client>
+    help: Zeigt diese Hilfemeldung an
 
 sdkserver:
     starting: Server gestartet unter http://{}:{}
