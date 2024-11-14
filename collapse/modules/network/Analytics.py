@@ -18,6 +18,10 @@ class Analytics(Module):
             self.disabled = True
             self.info(lang.t("analytics.disabled"))
 
+    def convert_args(self, args: dict) -> dict:
+        """Convert the arguments to a string"""
+        return ", ".join([f"{k} = {v}" for k, v in args.items()])
+
     def loader_start(self):
         """Send a request to the analytics server when the loader starts"""
         if self.disabled:
@@ -26,7 +30,10 @@ class Analytics(Module):
         try:
             r = network.get(
                 f"{api.server}api/analytics/start",
-                params={"version": data.version, "enabled_args": str(enabled_args)},
+                params={
+                    "version": data.version,
+                    "enabled_args": self.convert_args(enabled_args),
+                },
             ).json()
 
             if r["status"] == "success":

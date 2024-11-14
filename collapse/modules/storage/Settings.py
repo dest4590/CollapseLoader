@@ -1,7 +1,7 @@
 import configparser
 import os
 
-from ...constants import ROOT_DIR
+from ...config import ROOT_DIR
 from ..utils.Module import Module
 
 

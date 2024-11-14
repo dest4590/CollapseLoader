@@ -6,13 +6,15 @@ from pypresence import Presence
 from ..storage.Data import data
 from ..storage.Settings import settings
 from ..utils.Language import lang
+from ..utils.Module import Module
 
 
-class RPC(Thread):
+class RPC(Thread, Module):
     """RPC, used to display activity in Discord"""
 
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        Thread.__init__(self, **kwargs)
+        Module.__init__(self)
         self.client_id = "1225803664204234772"
         self.RPC = Presence(self.client_id)
         self.default_details = lang.t("rpc.choosing")

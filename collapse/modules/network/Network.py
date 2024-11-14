@@ -5,6 +5,10 @@ from ..utils.Language import lang
 from ..utils.Module import Module
 
 
+class NameResolutionError(Exception):
+    pass
+
+
 class Network(Module):
     """Module for network operations"""
 
@@ -25,6 +29,9 @@ class Network(Module):
             )
             return response
         except requests.exceptions.RequestException as e:
+            if "NameResolutionError" in str(e):
+                raise NameResolutionError
+
             self.error(lang.t("network.error").format(e))
             raise e
 

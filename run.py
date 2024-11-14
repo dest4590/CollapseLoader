@@ -3,7 +3,7 @@ import sys
 import traceback
 from datetime import datetime
 
-from collapse.constants import ROOT_DIR
+from collapse.config import ROOT_DIR
 
 dev = True
 

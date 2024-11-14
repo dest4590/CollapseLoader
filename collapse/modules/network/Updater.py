@@ -3,7 +3,8 @@ import webbrowser
 
 import aiohttp
 
-from ...constants import REPOSITORY
+from ...arguments import args
+from ...config import REPOSITORY
 from ..network.Network import network
 from ..render.CLI import selector
 from ..storage.Data import data
@@ -21,6 +22,9 @@ class Updater(Module):
         self.remote_version = None
         self.latest_commit = None
         self.local_version = data.version
+
+        if args.skip_updater:
+            return
 
         asyncio.run(self.initialize())
 

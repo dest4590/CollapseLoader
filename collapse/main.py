@@ -139,6 +139,7 @@ def handle_selection(choosed: str) -> None:
         logger.debug(lang.t("main.ram-changed"))
     elif choosed == selector.offset + 15:
         from .modules.storage.ClientCleaner import clientcleaner
+
         clientcleaner.scan_folders()
     elif choosed == selector.offset + 16:
         credits_menu.show()

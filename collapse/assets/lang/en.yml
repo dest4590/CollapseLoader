@@ -43,6 +43,7 @@ network:
     timeout: Force timeout for {}
 
 servers:
+    server-not-resolved: Server {} could not be resolved, try enabling VPN
     server-not-accessible: Server {} is down or inaccessible
     server-respond: Server {} responded with status code {}
     use-server: Using server {}
@@ -93,7 +94,7 @@ cache:
     using-last-cache: Using last client cache ({})
 
 clientcleaner:
-    ask: "Delete all client folders (y,n)?\nall your configs will be [red bold]DESTROYED.[/]"
+    ask: "Delete all client folders?\nall your configs will be [red bold]DESTROYED.[/]"
     removing: Removing folder {}
 
 data:

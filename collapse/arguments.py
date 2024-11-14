@@ -14,6 +14,7 @@ parser.add_argument("--timeout", type=int, help="Set timeout for network request
 parser.add_argument("--crash", action="store_true", help="Force crash")
 parser.add_argument("--api-url", help="Set API URL")
 parser.add_argument("--lang", help="Set language")
+parser.add_argument("--skip-updater", action="store_true", help="Skip update check")
 
 # LINK - collapse/modules/sdk/SdkServer.py
 parser.add_argument("--server", action="store_true", help="Run the SDK server")

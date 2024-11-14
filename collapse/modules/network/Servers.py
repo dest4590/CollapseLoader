@@ -1,9 +1,40 @@
 import requests
 
-from ...constants import SERVERS, WEB_SERVERS
 from ..utils.Language import lang
 from ..utils.Module import Module
-from .Network import network
+from .Network import NameResolutionError, network
+
+
+class CDNServer:
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+    def check(self) -> bool:
+        try:
+            r = network.get(f"https://{self.url}/")
+            return r.status_code == 200
+        except requests.exceptions.RequestException:
+            return False
+        except NameResolutionError:
+            return False
+
+
+class WebServer(CDNServer):
+    def __init__(self, url: str) -> None:
+        super().__init__(url)
+
+
+SERVERS = [
+    CDNServer("cdn.collapseloader.org"),
+    CDNServer("cdn-ru.collapseloader.org"),
+    CDNServer("cdncollapse.ttfdk.lol"),
+]
+
+WEB_SERVERS = [
+    WebServer("web.collapseloader.org"),
+    WebServer("web2.collapseloader.org"),
+    WebServer("webcollapse.ttfdk.lol"),
+]
 
 
 class Servers(Module):
@@ -15,39 +46,35 @@ class Servers(Module):
         self.servers = SERVERS
         self.web_servers = WEB_SERVERS
 
-    def check_servers(self) -> str:
-        """Check the servers for availability and return the first accessible server"""
-        for server in self.servers[:]:
-            try:
-                r = network.get(f"https://{server}/")
-                self.debug(
-                    lang.t("servers.server-respond").format(server, r.status_code)
-                )
+        self.cdn_server = ""
+        self.web_server = ""
 
-                self.debug(lang.t("servers.use-server").format(server))
-                return f"https://{server}/"
-            except requests.exceptions.RequestException:
-                self.info(lang.t("servers.server-not-accessible").format(server))
+    def check_servers(self) -> None:
+        """Check all servers for availability and return the first accessible server"""
+
+        for server in self.servers[:]:
+            if server.check():
+                self.debug(lang.t("servers.server-respond").format(server.url, 200))
+
+                self.cdn_server = f"https://{server.url}/"
+                self.info(lang.t("servers.use-server").format(server.url))
+
+                break
+            else:
+                self.info(lang.t("servers.server-not-accessible").format(server.url))
                 self.servers.remove(server)
 
-        return "https://google.com/"
+        for server in self.web_servers[:]:
+            if server.check():
+                self.debug(lang.t("servers.server-respond").format(server.url, 200))
 
-    def check_web_servers(self) -> str:
-        """Check the web servers for availability and return the first accessible web server"""
-        for web_server in self.web_servers[:]:
-            try:
-                r = network.get(f"https://{web_server}/")
-                self.debug(
-                    lang.t("servers.server-respond").format(web_server, r.status_code)
-                )
+                self.web_server = f"https://{server.url}/"
+                self.info(lang.t("servers.use-server").format(server.url))
 
-                self.debug(lang.t("servers.use-server").format(web_server))
-                return f"https://{web_server}/"
-            except requests.exceptions.RequestException:
-                self.info(lang.t("servers.server-not-accessible").format(web_server))
-                self.web_servers.remove(web_server)
-
-        return "https://google.com/"
+                break
+            else:
+                self.info(lang.t("servers.server-not-accessible").format(server.url))
+                self.web_servers.remove(server)
 
 
 servers = Servers()

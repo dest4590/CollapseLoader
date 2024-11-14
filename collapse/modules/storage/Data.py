@@ -5,7 +5,7 @@ import requests
 from rich.progress import (BarColumn, DownloadColumn, Progress, TextColumn,
                            TransferSpeedColumn)
 
-from ...constants import CODENAME, ROOT_DIR, VERSION
+from ...config import CODENAME, ROOT_DIR, VERSION
 from ..network.Network import network
 from ..network.Servers import servers
 from ..utils.Fixes import console
@@ -19,8 +19,11 @@ class DataManager(Module):
     def __init__(self) -> None:
         super().__init__()
         self.root_dir = ROOT_DIR
-        self.server = servers.check_servers()
-        self.web_server = servers.check_web_servers()
+
+        servers.check_servers()
+
+        self.server = servers.cdn_server
+        self.web_server = servers.web_server
 
         if not self.server:
             self.critical(lang.t("data.no_servers"))
@@ -48,7 +51,7 @@ class DataManager(Module):
         if self._is_downloaded(filename, path, path_dir):
             return
 
-        self.debug(lang.t("data.download.to").format(filename, dest))
+        self.info(lang.t("data.download.to").format(filename, dest))
 
         self._download_file(path, filename, dest, raw)
         self._extract_file(filename, dest, path_dir, raw)
