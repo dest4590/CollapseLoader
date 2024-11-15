@@ -68,7 +68,7 @@ class DataManager(Module):
         if self._is_downloaded(filename, path, path_dir):
             return
 
-        self.info(lang.t("data.download.to").format(filename, dest))
+        self.debug(lang.t("data.download.to").format(filename, dest))
 
         self._download_file(path, filename, dest, raw)
         self._extract_file(filename, dest, path_dir, raw)

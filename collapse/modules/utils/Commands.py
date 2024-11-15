@@ -34,7 +34,7 @@ def open_data_folder(*args):
 def handle_client_command(client: Client, args, action):
     if client is None:
         selector.warn(
-            lang.t("main.client-not-found").format(args[0] if args else "Client")
+            lang.t("main.client-not-found").format(args[0] if args else "?")
         )
         return
 

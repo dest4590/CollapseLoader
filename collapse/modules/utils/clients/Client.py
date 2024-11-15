@@ -139,6 +139,7 @@ class Client(Module):
         if os.path.isdir(self.path_dir):
             absolute_path = os.path.abspath(self.path_dir)
             Popen(f"explorer /open,{absolute_path}")
+            return True
         else:
             return False
 
