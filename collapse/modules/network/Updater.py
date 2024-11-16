@@ -1,11 +1,10 @@
-import asyncio
 import webbrowser
 
-import aiohttp
+import requests
 
 from ...arguments import args
 from ...config import REPOSITORY
-from ..network.Network import network
+from ..network.Network import NameResolutionError, network
 from ..render.CLI import selector
 from ..storage.Data import data
 from ..utils.Language import lang
@@ -26,47 +25,48 @@ class Updater(Module):
         if args.skip_updater:
             return
 
-        asyncio.run(self.initialize())
+        self.initialize()
 
-    async def initialize(self):
+    def initialize(self):
         try:
-            async with aiohttp.ClientSession() as session:
-                self.latest_releases = await self.get_latest_releases(session)
+            self.latest_releases = self.get_latest_releases()
+            if self.latest_releases:
                 self.latest_release = self.latest_releases[0]
                 self.remote_version = self.get_remote_version()
-                self.latest_commit = await self.get_latest_commit(session)
+            self.latest_commit = self.get_latest_commit()
 
-            self.debug(
-                lang.t("updater.version-check").format(
-                    self.remote_version, self.local_version
+            if self.remote_version:
+                self.debug(
+                    lang.t("updater.version-check").format(
+                        self.remote_version, self.local_version
+                    )
                 )
-            )
-            self.debug(lang.t("updater.latest-commit").format(self.latest_commit))
-        except aiohttp.ClientError:
+            if self.latest_commit:
+                self.debug(lang.t("updater.latest-commit").format(self.latest_commit))
+
+        except requests.exceptions.RequestException as e:
+            if "NameResolutionError" in str(e):
+                raise NameResolutionError
             self.remote_version = None
             self.latest_commit = None
 
-    async def api_request(
-        self, session: aiohttp.ClientSession, path: str, params: dict = None
-    ) -> dict:
+    def api_request(self, path: str, params: dict = None) -> dict:
         """Makes a request to the GitHub API"""
         url = f"https://api.github.com/repos/{REPOSITORY}/{path}"
         try:
-            async with session.get(
-                url, params=params, timeout=network.timeout
-            ) as response:
-                response.raise_for_status()
-                return await response.json()
-        except aiohttp.ClientError as e:
-            if "rate limit exceeded" in str(e):
+            response = network.get(url, params=params)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            if "rate limit exceeded" in str(e).lower():
                 self.warn(lang.t("updater.rate-limit"))
             else:
                 self.error(lang.t("updater.fetch-error").format(path, e))
             raise
 
-    async def get_latest_releases(self, session: aiohttp.ClientSession) -> dict:
+    def get_latest_releases(self) -> list:
         """Fetch releases from the GitHub API"""
-        return await self.api_request(session, "releases")
+        return self.api_request("releases")
 
     def get_remote_version(self) -> str:
         """Fetch the latest remote version from the GitHub API without considering pre-releases"""
@@ -78,14 +78,14 @@ class Updater(Module):
             ),
             None,
         )
-        if latest_release:
-            return latest_release.get("tag_name")
-        return None
+        return latest_release.get("tag_name") if latest_release else None
 
-    async def get_latest_commit(self, session: aiohttp.ClientSession) -> str:
+    def get_latest_commit(self) -> str:
         """Fetch the latest commit SHA from the GitHub API"""
-        commits = await self.api_request(session, "commits", {"per_page": 1})
-        return commits[0].get("sha", "")[:7]
+        commits = self.api_request("commits", {"per_page": 1})
+        if commits:
+            return commits[0].get("sha", "")[:7]
+        return None
 
     def check_version(self) -> None:
         """Check if the local version is up to date with the remote version"""
@@ -94,7 +94,9 @@ class Updater(Module):
 
             if selector.ask(lang.t("updater.update-ask")):
                 if self.latest_releases:
-                    if selector.ask(lang.t("updater.update-dev-ask")):
+                    download_url = None
+
+                    if selector.ask(lang.t("updater.update-ask-dev")):
                         self.debug(lang.t("updater.opening-latest-prerelease"))
                         latest_prerelease = next(
                             (
@@ -105,25 +107,19 @@ class Updater(Module):
                             None,
                         )
                         if latest_prerelease and latest_prerelease.get("assets"):
-                            webbrowser.open(
-                                latest_prerelease["assets"][0].get(
-                                    "browser_download_url"
-                                )
+                            download_url = latest_prerelease["assets"][0].get(
+                                "browser_download_url"
                             )
                     else:
                         self.debug(lang.t("updater.opening-latest-release"))
-                        latest_release = next(
-                            (
-                                release
-                                for release in self.latest_releases
-                                if not release.get("prerelease")
-                            ),
-                            None,
-                        )
-                        if latest_release and latest_release.get("assets"):
-                            webbrowser.open(
-                                latest_release["assets"][0].get("browser_download_url")
+
+                        if self.latest_release and self.latest_release.get("assets"):
+                            download_url = self.latest_release["assets"][0].get(
+                                "browser_download_url"
                             )
+
+                    if download_url:
+                        webbrowser.open(download_url)
                 else:
                     self.warn(lang.t("updater.no-releases"))
 
