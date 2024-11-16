@@ -46,7 +46,7 @@ servers:
     server-not-resolved: Server {} konnte nicht aufgelöst werden, versuchen Sie, VPN zu aktivieren
     server-not-accessible: Server {} ist nicht erreichbar oder ausgefallen
     server-respond: Server {} hat mit Statuscode {} geantwortet
-    use-server: Verwenden des Servers {}
+    use-server: Verwenden Sie {} Server {}
 
 updater:
     version-check: Remote-Version {}, lokale {}
@@ -56,7 +56,7 @@ updater:
 
     update-notify: Loader aktualisieren!
     update-ask: Neue Version herunterladen?
-    update-ask-dev: Neue Version (Entwicklung) herunterladen?
+    update-ask-dev: Dev -Version herunterladen?
     opening-latest-prerelease: Neueste Entwicklungs-Version öffnen
     opening-latest-release: Neueste Version öffnen
 

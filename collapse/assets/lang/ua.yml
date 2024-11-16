@@ -45,7 +45,7 @@ servers:
     server-not-resolved: Сервер {} не вдалося розпізнати, спробуйте включити VPN
     server-not-accessible: Сервер {} не працює або недоступний
     server-respond: Сервер {} відповів з кодом {}
-    use-server: Використовуємо сервер {}
+    use-server: Використовуємо {} сервер {}
 
 updater:
     version-check: Віддалена версія {}, локальна {}
@@ -55,7 +55,7 @@ updater:
 
     update-notify: Оновіть лоадер!
     update-ask: Завантажити нову версію?
-    update-ask-dev: Завантажити нову версію (dev)?
+    update-ask-dev: Завантажити dev версію?
     opening-latest-prerelease: Відкриття dev релізу
     opening-latest-release: Відкриття останнього релізу
 

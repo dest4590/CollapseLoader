@@ -46,7 +46,7 @@ servers:
     server-not-resolved: Server {} could not be resolved, try enabling VPN
     server-not-accessible: Server {} is down or inaccessible
     server-respond: Server {} responded with status code {}
-    use-server: Using server {}
+    use-server: Using {} server {}
 
 updater:
     version-check: Remote version {}, local {}
@@ -56,7 +56,7 @@ updater:
 
     update-notify: Update the loader!
     update-ask: Download new version?
-    update-ask-dev: Download new version (dev)?
+    update-ask-dev: Download dev version?
     opening-latest-prerelease: Opening latest dev release
     opening-latest-release: Opening latest release
 

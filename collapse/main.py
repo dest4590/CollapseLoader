@@ -91,9 +91,9 @@ def handle_commands(command_str: str):
             if command.cmd == command_name:
                 try:
                     client_arg = args[1]
-                    if client_arg.isnumeric():
+                    try:
                         client = selector.get_client_by_index(int(client_arg))
-                    else:
+                    except ValueError:
                         client = selector.get_client_by_name(client_arg)
 
                     command.execute(client, args[2:])

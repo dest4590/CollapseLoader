@@ -45,7 +45,7 @@ servers:
     server-not-resolved: Сервер {} не удалось разпознать, попробуйте включить ВПН
     server-not-accessible: Сервер {} лежит или недоступен
     server-respond: Сервер {} ответил с кодом {}
-    use-server: Используем сервер {}
+    use-server: Используем {} сервер {}
 
 updater:
     version-check: Удалённая версия {}, локальная {}
@@ -55,7 +55,7 @@ updater:
 
     update-notify: Обновите лоадер!
     update-ask: Скачать новую версию?
-    update-ask-dev: Скачать новую версию (dev)?
+    update-ask-dev: Скачать dev версию?
     opening-latest-prerelease: Открытие дев релиза
     opening-latest-release: Открытие последнего релиза
 
