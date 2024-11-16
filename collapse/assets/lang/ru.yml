@@ -165,7 +165,6 @@ logchecker:
 
     crash-logs:
         creating-dir: Создаём папку для логов {}
-        saving: Создаём файл логов {}
         saved: Лог краша сохранён в {}
 
 logo:

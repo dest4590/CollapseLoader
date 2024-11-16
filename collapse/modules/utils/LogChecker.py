@@ -16,7 +16,7 @@ class LogChecker(Module):
         """Construct a reason message for the crash"""
         return lang.t("logchecker.base-reason").format(msg)
 
-    def check_logs(self, logs: str, client) -> None:
+    def check_logs(self, logs: str, client) -> bool:
         """Check logs for crash messages and log appropriate errors and info"""
         self.debug(lang.t("logchecker.checking-log"))
 
@@ -69,8 +69,6 @@ class LogChecker(Module):
             f"crash_logs",
             f'{client.name}_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.txt',
         )
-
-        self.debug(lang.t("logchecker.crash-logs.saving").format(crash_log_file))
 
         with open(crash_log_file, "w", encoding="utf-8") as f:
             f.write(payload)

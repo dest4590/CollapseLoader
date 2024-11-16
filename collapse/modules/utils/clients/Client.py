@@ -254,7 +254,7 @@ class Client(Module):
                     f"-Djava.library.path={native_path}",
                     cp,
                     f"--username {settings.get('nickname')}",
-                    "--gameDir .\\",
+                    f"--gameDir .{bc}",
                     f"--assetsDir {asset_path}",
                     f"--assetIndex {self.version}",
                     "--uuid 00000000-0000-0000-0000-000000000000",
@@ -264,8 +264,6 @@ class Client(Module):
                 ]
 
                 command = " ".join(java_command)
-
-                progress.print(command, end="", markup=False, highlight=False)
 
                 selector.hide_console()
 
@@ -277,14 +275,14 @@ class Client(Module):
                     progress.print(log, end="", markup=False, highlight=False)
                     buffer.append(log)
 
-                logchecker.check_logs("".join(buffer).replace("\r", ""), self)
+                crashed = logchecker.check_logs("".join(buffer).replace("\r", ""), self)
 
                 self.info(lang.t("clients.finished"))
 
-        # Return default title
         selector.reset_title()
-
         selector.show_console()
 
         rpc.details = rpc.default_details
-        rpc.update()
+
+        if crashed:
+            selector.pause()

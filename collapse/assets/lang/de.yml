@@ -166,7 +166,6 @@ logchecker:
 
     crash-logs:
         creating-dir: Erstelle Verzeichnis für Protokolle {}
-        saving: Erstelle Protokolldatei {}
         saved: Absturzprotokoll unter {} gespeichert
 
 logo:
