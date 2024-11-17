@@ -90,7 +90,13 @@ cli:
 
 cache:
     cache-saved: Cache saved at {}
-    client-cache-not-found: Client cache not found
+    cache-cleared: Cache cleared
+    cache-info: |
+        [bold]Cache info[/]
+        [green]Cache size:[/] {} kb
+        [green]Cache clients:[/] {}
+        [green]Cache creation time:[/] {}
+    cache-not-found: Client cache not found
     using-last-cache: Using last client cache ({})
 
 clientcleaner:
@@ -218,14 +224,17 @@ main:
 commands:
     command: Command
     description: Description
-    title: Commands (client argument can be name or ID)
-    crashes: Opens crash logs folder
-    data: Opens data folder or clears data if 'clear' is specified
-    download: Downloads a client <client>
-    reset: Resets a client <client>
-    delete: Deletes a client <client>
-    open: Opens a client's folder <client>
-    help: Shows this help message
+    usage: Usage
+    title: Commands
+
+    cmds:
+        crashes: Opens the crash logs folder
+        data: Opens the data folder or clears data if 'clear' is specified
+        download: Downloads the client <client>
+        reset: Resets the client <client>
+        delete: Deletes the client <client>
+        open: Opens the client's folder <client>
+        help: Shows this help message
 
 sdkserver:
     starting: Server started at http://{}:{}

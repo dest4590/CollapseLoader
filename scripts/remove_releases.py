@@ -4,7 +4,6 @@ import os
 import requests
 from dotenv import load_dotenv
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -72,6 +71,21 @@ def delete_release(release):
         logging.error(f"Error deleting release {tag_name}: {e}")
 
 
+def delete_tag(tag_name):
+    delete_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/git/refs/tags/{tag_name}"
+    try:
+        logging.info(f"Deleting tag: {tag_name}")
+        del_response = requests.delete(delete_url, headers=HEADERS)
+        if del_response.status_code == 204:
+            logging.info(f"Successfully deleted tag: {tag_name}")
+        else:
+            logging.error(
+                f"Failed to delete tag {tag_name}: Status Code {del_response.status_code}"
+            )
+    except requests.RequestException as e:
+        logging.error(f"Error deleting tag {tag_name}: {e}")
+
+
 def main():
     latest_tag = fetch_latest_release()
     if not latest_tag:
@@ -81,8 +95,10 @@ def main():
     releases = fetch_all_releases()
     for release in releases:
         tag_name = release.get("tag_name")
-        if tag_name.startswith(PREFIX) and tag_name != latest_tag:
-            delete_release(release)
+        if tag_name.startswith(PREFIX) or tag_name == PREFIX:
+            if tag_name != latest_tag:
+                delete_release(release)
+                delete_tag(tag_name)
 
 
 if __name__ == "__main__":

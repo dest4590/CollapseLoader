@@ -89,18 +89,19 @@ def handle_commands(command_str: str):
 
         for command in commands:
             if command.cmd == command_name:
-                try:
-                    client_arg = args[1]
+                if command.requires_client:
                     try:
-                        client = selector.get_client_by_index(int(client_arg))
-                    except ValueError:
-                        client = selector.get_client_by_name(client_arg)
-
-                    command.execute(client, args[2:])
-                    return
-                except (IndexError, ValueError):
+                        client_arg = args[1]
+                        try:
+                            client = selector.get_client_by_index(int(client_arg))
+                        except ValueError:
+                            client = selector.get_client_by_name(client_arg)
+                        command.execute(client, args[2:])
+                    except (IndexError, ValueError):
+                        selector.warn(lang.t("main.client-not-found"))
+                else:
                     command.execute(None, args[1:])
-                    return
+                return
 
         selector.warn(lang.t("main.invalid-option"))
 

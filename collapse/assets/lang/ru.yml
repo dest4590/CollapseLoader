@@ -88,9 +88,15 @@ cli:
     hide-console-error: Не могу найти hwnd для окна консоли
 
 cache:
-    cache-saved: Кэш сохранён в {}
-    client-cache-not-found: Кэш клиентов не найден
-    using-last-cache: Используем последний кэш клиентов ({})
+    cache-saved: Кэш сохранен в {}
+    cache-cleared: Кэш очищен
+    cache-info: |
+        [bold]Информация о кэше[/]
+        [green]Размер кэша:[/] {} КБ
+        [green]Клиенты кэша:[/] {}
+        [green]Время создания кэша:[/] {}
+    cache-not-found: Кэш клиента не найден
+    using-last-cache: Используется последний кэш клиента ({})
 
 clientcleaner:
     ask: "Удалить все папки клиентов?\nвсе ваши конфиги будут [red bold]УНИЧТОЖЕНЫ.[/]"
@@ -217,14 +223,17 @@ main:
 commands:
     command: Команда
     description: Описание
-    title: Команды (аргумент client может быть именем или ID)
-    crashes: Открывает папку с логами сбоев
-    data: Открывает папку данных или очищает данные, если указано 'clear'
-    download: Скачивает клиент <client>
-    reset: Сбрасывает клиент <client>
-    delete: Удаляет клиент <client>
-    open: Открывает папку клиента <client>
-    help: Показывает это справочное сообщение
+    usage: Использование
+    title: Команды
+
+    cmds:
+        crashes: Открывает папку с логами сбоев
+        data: Открывает папку данных или очищает данные, если указано 'clear'
+        download: Скачивает клиент <client>
+        reset: Сбрасывает клиент <client>
+        delete: Удаляет клиент <client>
+        open: Открывает папку клиента <client>
+        help: Показывает это справочное сообщение
 
 sdkserver:
     starting: Сервер запущен на http://{}:{}

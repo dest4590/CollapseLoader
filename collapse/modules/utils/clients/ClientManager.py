@@ -16,6 +16,7 @@ class ClientManager(Module):
     def __init__(self) -> None:
         super().__init__()
         self.clients: list[Client] = []
+        self.json_clients: dict = {}
         self._load_clients()
 
     def _load_clients(self) -> list:
@@ -44,6 +45,8 @@ class ClientManager(Module):
         if clients is not None:
             cache.save(all_clients)
             self.make_array(all_clients)
+
+        self.json_clients = all_clients
 
         return all_clients
 

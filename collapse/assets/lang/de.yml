@@ -90,8 +90,14 @@ cli:
 
 cache:
     cache-saved: Cache gespeichert unter {}
-    client-cache-not-found: Client-Cache nicht gefunden
-    using-last-cache: Letzten Client-Cache verwenden ({})
+    cache-cleared: Cache geleert
+    cache-info: |
+        [bold]Cache-Informationen[/]
+        [green]Cache-Größe:[/] {} KB
+        [green]Cache-Clients:[/] {}
+        [green]Cache-Erstellungszeitpunkt:[/] {}
+    cache-not-found: Client-Cache nicht gefunden
+    using-last-cache: Letzter Client-Cache wird verwendet ({})
 
 clientcleaner:
     ask: Alle Client-Ordner löschen?\nalle Ihre Konfigurationen werden [red bold]ZERSTÖRT.[/]
@@ -216,16 +222,19 @@ main:
     force-crash: Erzwinge Absturz
 
 commands:
-    command: Befehle
+    command: Befehl
     description: Beschreibung
-    title: Befehle (Client-Argument kann Name oder ID sein)
-    crashes: Öffnet den Ordner mit den Absturzprotokollen
-    data: Öffnet den Datenordner oder löscht Daten, wenn 'clear' angegeben ist
-    download: Lädt einen Client herunter <client>
-    reset: Setzt einen Client zurück <client>
-    delete: Löscht einen Client <client>
-    open: Öffnet den Ordner eines Clients <client>
-    help: Zeigt diese Hilfemeldung an
+    usage: Verwendung
+    title: Befehle
+
+    cmds:
+        crashes: Öffnet den Ordner mit den Absturzprotokollen
+        data: Öffnet den Datenordner oder löscht die Daten, wenn 'clear' angegeben ist
+        download: Lädt den Client <client> herunter
+        reset: Setzt den Client <client> zurück
+        delete: Löscht den Client <client>
+        open: Öffnet den Ordner des Clients <client>
+        help: Zeigt diese Hilfemeldung an
 
 sdkserver:
     starting: Server gestartet unter http://{}:{}
