@@ -210,6 +210,7 @@ main:
     nickname-changed: Nickname changed
     ram-changed: RAM changed
     select-ram: Select RAM (in gigabytes)
+    data-cleared: Data folder cleared
 
     invalid-option: Select a number or command
     no-crash-logs: Crash logs folder is empty

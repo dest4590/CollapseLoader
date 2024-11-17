@@ -5,7 +5,6 @@ from time import sleep
 from rich.prompt import Confirm, IntPrompt
 
 from ...config import SYSTEM
-from ...developer import SKIP_ANIMATIONS
 from ..render.Header import header
 from ..storage.Data import console, data
 from ..storage.Settings import settings

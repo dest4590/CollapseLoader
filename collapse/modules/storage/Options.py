@@ -1,4 +1,5 @@
 import random
+from typing import List
 
 from rich import print
 
@@ -8,7 +9,7 @@ from ..utils.Logger import logger
 from ..utils.Module import Module
 from .Settings import settings
 
-option_list = []
+option_list: List["Option"] = []
 
 
 class Option(Module):
@@ -101,45 +102,23 @@ class Option(Module):
         return self.name.title().replace("_", " ")
 
 
-Option(
-    "nickname",
-    lang.t("options.settings.nickname"),
-    default_value=f"Collapse{random.randint(1000, 9999)}",
-    highlight=True,
-)
+# fmt: off
+Option("nickname", lang.t("options.settings.nickname"), default_value=f"Collapse{random.randint(1000, 9999)}", highlight=True)
 Option("ram", lang.t("options.settings.ram"), int, 2048).create()
-Option(
-    "custom_title", lang.t("options.settings.custom_title"), default_value="None"
-).create("None")
+Option("custom_title", lang.t("options.settings.custom_title"), default_value="None").create("None")
 Option("hide_logo", lang.t("options.settings.hide_logo"), bool, False).create()
 Option("hide_messages", lang.t("options.settings.hide_messages"), bool, False).create()
-Option(
-    "disable_caching", lang.t("options.settings.disable_caching"), bool, False
-).create()
-Option(
-    "use_short_logo", lang.t("options.settings.use_short_logo"), bool, False
-).create()
+Option("disable_caching", lang.t("options.settings.disable_caching"), bool, False).create()
+Option("use_short_logo", lang.t("options.settings.use_short_logo"), bool, False).create()
 Option("hide_links", lang.t("options.settings.hide_links"), bool, False).create()
-Option(
-    "show_client_version", lang.t("options.settings.show_client_version"), bool, False
-).create()
-Option(
-    "discord_rich_presence",
-    lang.t("options.settings.discord_rich_presence"),
-    bool,
-    True,
-).create()
+Option("show_client_version", lang.t("options.settings.show_client_version"), bool, False).create()
+Option("discord_rpc", lang.t("options.settings.rpc"), bool, True).create()
 Option("hide_console", lang.t("options.settings.hide_console"), bool, False).create()
 Option("show_header", lang.t("options.settings.show_header"), bool, True).create()
-Option(
-    "show_installed", lang.t("options.settings.show_installed"), bool, False
-).create()
-Option(
-    "language",
-    lang.t("options.settings.language").format(", ".join(lang.languages)),
-    default_value="en",
-).create("en")
+Option("show_installed", lang.t("options.settings.show_installed"), bool, False).create()
+Option("language", lang.t("options.settings.language").format(", ".join(lang.languages)), default_value="en").create("en")
 Option("sort_clients", lang.t("options.settings.sort_clients"), bool, True).create()
+# fmt: on
 
 
 class Menu:
@@ -173,7 +152,7 @@ class Menu:
                     Option.get_option_by_index(choice).input()
                 elif choice == self.offset + 1:
                     break
-                elif choice == self.offset + 2:  # reset all options
+                elif choice == self.offset + 2:
                     if selector.ask(lang.t("options.ask-reset")):
                         for option in option_list:
                             option.reset()

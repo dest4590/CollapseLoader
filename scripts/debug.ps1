@@ -5,7 +5,6 @@ $files = @(
 
 $replacements = @(
     "DEBUG_LOGS = False", "DEBUG_LOGS = True",
-    "SKIP_ANIMATIONS = False", "SKIP_ANIMATIONS = True",
     "dev = False", "dev = True"
 )
 

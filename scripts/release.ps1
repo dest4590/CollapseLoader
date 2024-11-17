@@ -7,7 +7,6 @@ $replacements = @(
     "DEBUG_LOGS = True", "DEBUG_LOGS = False",
     "DO_NOT_SAVE_MESSAGES = True", "DO_NOT_SAVE_MESSAGES = False",
     "SHOW_HIDDEN_CLIENTS = True", "SHOW_HIDDEN_CLIENTS = False",
-    "SKIP_ANIMATIONS = True", "SKIP_ANIMATIONS = False",
     "LOCAL_API = True", "LOCAL_API = False",
     "SAVE_MESSAGES = False", "SAVE_MESSAGES = True",
     "dev = True", "dev = False"

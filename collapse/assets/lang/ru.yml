@@ -209,6 +209,7 @@ main:
     nickname-changed: Никнейм изменён
     ram-changed: ОЗУ изменена
     select-ram: Выберите ОЗУ (в гигабайтах)
+    data-cleared: Папка данных очищена
 
     invalid-option: Выберите цифру или команду
     no-crash-logs: Папка с логами крашей пуста
