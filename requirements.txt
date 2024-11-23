@@ -5,7 +5,7 @@ pypresence==4.3.0
 pyinstaller==6.11.1
 mock==5.1.0
 pytest==8.3.3
-aiohttp==3.10.10
+aiohttp==3.11.2
 virtualenv==20.27.1
-flask==3.0.3
+flask==3.1.0
 pyyaml==6.0.2
