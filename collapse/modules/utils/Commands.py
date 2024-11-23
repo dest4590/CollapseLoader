@@ -106,7 +106,7 @@ commands = [
         "crashes",
         "commands.cmds.crashes",
         "crashes",
-        lambda: handle_crashes(),
+        lambda clients, args: handle_crashes(),
         requires_client=False,
     ),
     Command(
