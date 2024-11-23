@@ -50,7 +50,7 @@ class LogChecker(Module):
 
             # Catch-all for unknown reasons
             else:
-                self.warn(self.reason(lang.t("logchecker.crashes.unknown")))
+                self.warn(lang.t("logchecker.crashes.unknown"))
 
             return True
         else:
