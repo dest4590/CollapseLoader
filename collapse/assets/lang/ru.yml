@@ -15,7 +15,7 @@ menu:
 
 configs:
     found-len: Найдено {} конфигов
-    menu-header: "[bold]Конфиги[/]"
+    menu-header: '[bold]Конфиги[/]'
     choose-config: Выберите конфиг
     invalid-choice: Выберите правильный номер или букву
 
@@ -33,9 +33,9 @@ messages:
         maintenance: Техническое
 
     time-now: только что
-    time-minutes: "{0} минут назад"
-    time-hours: "{0} часов назад"
-    time-days: "{0} дней назад"
+    time-minutes: '{0} минут назад'
+    time-hours: '{0} часов назад'
+    time-days: '{0} дней назад'
 
 network:
     error: Ошибка сети {}
@@ -51,7 +51,7 @@ updater:
     version-check: Удалённая версия {}, локальная {}
     latest-commit: Последний коммит {}
     rate-limit: Превышен лимит запросов, попробуйте позже
-    fetch-error: "Ошибка получения {}: {}"
+    fetch-error: 'Ошибка получения {}: {}'
 
     update-notify: Обновите лоадер!
     update-ask: Скачать новую версию?
@@ -73,7 +73,7 @@ cli:
     enter-ram: Выбор ОЗУ
     ghost-mode: Режим призрака
     credits-donators: Создатели и донаты
-    exit: "[red]Выход[/]"
+    exit: '[red]Выход[/]'
 
     select: Выберите (help для команд)
     select-username-prompt: Выберите ник
@@ -124,7 +124,7 @@ options:
     saved: Установлена настройка {} в {}
 
     input:
-        note: "[i]Нажмите [green]Enter[/] чтобы пропустить ввод[/]"
+        note: '[i]Нажмите [green]Enter[/] чтобы пропустить ввод[/]'
         prompt: 'Введите значение для {} (напишите "RESET" чтобы сбросить настройку) ({}): '
 
     reset: Сброс настройки {} на {}
@@ -191,8 +191,8 @@ clients:
     running-fabric: Запускаем Fabric клиент {}
 
     progress:
-        task: "[green]Запущенный клиент[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
-        session: "[purple3]активная сессия[/]"
+        task: '[green]Запущенный клиент[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]'
+        session: '[purple3]активная сессия[/]'
 
     finished: Выходим из Minecraft
 

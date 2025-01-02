@@ -33,7 +33,7 @@ class Cache(Module):
         """Clears cache"""
         if os.path.exists(self.path):
             os.remove(self.path)
-    
+
     def display_info(self) -> None:
         """Prints cache info"""
         if os.path.exists(self.path):
@@ -42,8 +42,10 @@ class Cache(Module):
                 creation_time = data["_meta"]["creation_time"]
                 clients = len(data["clients"])
                 size = round(os.path.getsize(self.path) / 1024, 2)
-                
-                console.print(lang.t("cache.cache-info").format(size, clients, creation_time))
+
+                console.print(
+                    lang.t("cache.cache-info").format(size, clients, creation_time)
+                )
         else:
             self.warn(lang.t("cache.cache-not-found"))
 

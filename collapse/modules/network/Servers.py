@@ -26,14 +26,10 @@ class WebServer(CDNServer):
 
 SERVERS = [
     CDNServer("cdn.collapseloader.org"),
-    CDNServer("cdn-ru.collapseloader.org"),
-    CDNServer("cdncollapse.ttfdk.lol"),
 ]
 
 WEB_SERVERS = [
     WebServer("web.collapseloader.org"),
-    WebServer("web2.collapseloader.org"),
-    WebServer("webcollapse.ttfdk.lol"),
 ]
 
 

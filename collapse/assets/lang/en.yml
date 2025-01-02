@@ -15,7 +15,7 @@ menu:
 
 configs:
     found-len: Found {} configs
-    menu-header: "[bold]Configs[/]"
+    menu-header: '[bold]Configs[/]'
     choose-config: Choose config
     invalid-choice: Choose the correct number or letter
 
@@ -34,9 +34,9 @@ messages:
         maintenance: Maintenance
 
     time-now: just now
-    time-minutes: "{0} minutes ago"
-    time-hours: "{0} hours ago"
-    time-days: "{0} days ago"
+    time-minutes: '{0} minutes ago'
+    time-hours: '{0} hours ago'
+    time-days: '{0} days ago'
 
 network:
     error: Network error {}
@@ -52,7 +52,7 @@ updater:
     version-check: Remote version {}, local {}
     latest-commit: Latest commit {}
     rate-limit: Rate limit exceeded, try again later
-    fetch-error: "Error fetching {}: {}"
+    fetch-error: 'Error fetching {}: {}'
 
     update-notify: Update the loader!
     update-ask: Download new version?
@@ -74,7 +74,7 @@ cli:
     enter-ram: Select RAM
     ghost-mode: Ghost mode
     credits-donators: Creators and donations
-    exit: "[red]Exit[/]"
+    exit: '[red]Exit[/]'
 
     select: Select (help for commands)
     select-username-prompt: Select username
@@ -125,7 +125,7 @@ options:
     saved: Set setting {} to {}
 
     input:
-        note: "[i]Press [green]Enter[/] to skip input[/]"
+        note: '[i]Press [green]Enter[/] to skip input[/]'
         prompt: 'Enter value for {} (type "RESET" to reset setting) ({}): '
 
     reset: Reset setting {} to {}
@@ -192,8 +192,8 @@ clients:
     running-fabric: Running Fabric client {}
 
     progress:
-        task: "[green]Running client[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
-        session: "[purple3]active session[/]"
+        task: '[green]Running client[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]'
+        session: '[purple3]active session[/]'
 
     finished: Exiting Minecraft
 

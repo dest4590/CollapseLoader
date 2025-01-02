@@ -14,8 +14,8 @@ menu:
     return: Zurück
 
 configs:
-    found-len: "{} Konfigurationen gefunden"
-    menu-header: "[bold]Konfigurationen[/]"
+    found-len: '{} Konfigurationen gefunden'
+    menu-header: '[bold]Konfigurationen[/]'
     choose-config: Konfiguration auswählen
     invalid-choice: Wählen Sie die richtige Nummer oder den richtigen Buchstaben
 
@@ -52,7 +52,7 @@ updater:
     version-check: Remote-Version {}, lokale {}
     latest-commit: Neuester Commit {}
     rate-limit: Rate-Limit überschritten, versuchen Sie es später erneut
-    fetch-error: "Fehler beim Abrufen von {}: {}"
+    fetch-error: 'Fehler beim Abrufen von {}: {}'
 
     update-notify: Loader aktualisieren!
     update-ask: Neue Version herunterladen?
@@ -74,7 +74,7 @@ cli:
     enter-ram: RAM auswählen
     ghost-mode: Geistermodus
     credits-donators: Ersteller und Spenden
-    exit: "[red]Beenden[/]"
+    exit: '[red]Beenden[/]'
 
     select: Auswählen (Hilfe für Befehle)
     select-username-prompt: Benutzername auswählen
@@ -125,7 +125,7 @@ options:
     saved: Einstellung {} auf {} gesetzt
 
     input:
-        note: "[i]Drücken Sie [green]Enter[/], um die Eingabe zu überspringen[/]"
+        note: '[i]Drücken Sie [green]Enter[/], um die Eingabe zu überspringen[/]'
         prompt: 'Geben Sie den Wert für {} ein (tippen Sie "RESET", um die Einstellung zurückzusetzen) ({}): '
 
     reset: Einstellung {} auf {} zurücksetzen
@@ -192,8 +192,8 @@ clients:
     running-fabric: Fabric-Client {} wird ausgeführt
 
     progress:
-        task: "[green]Client wird ausgeführt[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]"
-        session: "[purple3]aktive Sitzung[/]"
+        task: '[green]Client wird ausgeführt[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]'
+        session: '[purple3]aktive Sitzung[/]'
 
     finished: Minecraft wird beendet
 

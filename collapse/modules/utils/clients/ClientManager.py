@@ -88,7 +88,7 @@ class ClientManager(Module):
         """Refresh clients"""
         self.clients: list[Client] = []
         self._load_clients()
-        
+
     def get_client_by_name(self, name: str) -> Client:
         """Get client by name"""
         for client in self.clients:

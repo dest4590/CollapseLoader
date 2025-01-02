@@ -74,6 +74,7 @@ def handle_data_clear(client: Client, args):
     else:
         open_data_folder()
 
+
 def handle_cache(args):
     if args == ["clear"]:
         cache.clear()
@@ -84,6 +85,7 @@ def handle_cache(args):
     elif args == ["info"]:
         cache.display_info()
         selector.pause()
+
 
 def display_help(*args):
     print()
@@ -121,7 +123,7 @@ commands = [
         "commands.cmds.cache",
         escape("cache [clear, create, info]"),
         lambda client, args: handle_cache(args),
-        requires_client=False
+        requires_client=False,
     ),
     Command(
         "download",
