@@ -1,8 +1,6 @@
 <p align=center><img src="https://github.com/dest4590/CollapseLoader/assets/80628386/190926bf-cde4-4de4-a35f-476eb9d9ac7b" width=100></p>
 
-<h1 align=center>CollapseLoader (CLOSED)</h1>
-
-> the project is closed, there will be no more support use [LTS](https://github.com/dest4590/CollapseLoader/releases/LTS) release
+<h1 align=center>CollapseLoader</h1>
 
 <p align=center>
 <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/dest4590/CollapseLoader/main.yml?style=for-the-badge&logo=githubactions&logoColor=ffffff&color=%2382B155">

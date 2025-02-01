@@ -26,6 +26,9 @@ class WebServer(CDNServer):
 
 SERVERS = [
     CDNServer("cdn.collapseloader.org"),
+    CDNServer(
+        "axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/collapse/o"
+    ),
 ]
 
 WEB_SERVERS = [
