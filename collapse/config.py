@@ -3,8 +3,8 @@ import os
 SYSTEM = os.name
 
 REPOSITORY = "dest4590/CollapseLoader"
-VERSION = "2.0.0"
-CODENAME = "Carbon"
+VERSION = "2.0.1"
+CODENAME = "Dioxide"
 ROOT_DIR = "data/"
 
 # Servers moved to:
