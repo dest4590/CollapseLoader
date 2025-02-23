@@ -1,5 +1,6 @@
 from ...arguments import args, enabled_args
 from ..network.API import api
+from ..network.Servers import servers
 from ..storage.Data import data
 from ..storage.Settings import settings
 from ..utils.Language import lang
@@ -24,7 +25,7 @@ class Analytics(Module):
 
     def loader_start(self):
         """Send a request to the analytics server when the loader starts"""
-        if self.disabled:
+        if self.disabled or servers.web_server == "":
             return
 
         try:
@@ -47,7 +48,7 @@ class Analytics(Module):
 
     def client_run(self, client_id: int):
         """Send a request to the analytics server when the client runs"""
-        if self.disabled:
+        if self.disabled or servers.web_server == "":
             return
 
         try:

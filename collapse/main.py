@@ -20,10 +20,13 @@ if args.level:
     }
     logger.setLevel(levels[args.level])
 
-from .modules.render.CLI import selector
+from .modules.network.Configs import config_menu
+from .modules.render.CLI import Function, selector, selector_offset
 from .modules.render.Header import header
 from .modules.render.menus.CreditsMenu import credits_menu
+from .modules.storage.ClientCleaner import clientcleaner
 from .modules.storage.Data import data
+from .modules.storage.Options import options_menu
 from .modules.storage.Settings import settings
 from .modules.utils.clients.ClientManager import client_manager
 from .modules.utils.Language import lang
@@ -65,13 +68,19 @@ def handle_selection(choosed: str):
     try:
         choosed_int = int(choosed)
         client_index_max = len(client_manager.clients)
+        menu_start = client_index_max + 10
+        menu_end = client_index_max + Function.selector_offset
 
         if 1 <= choosed_int <= client_index_max:
             client = selector.get_client_by_index(choosed_int)
             client.run()
             return
-        elif choosed_int > client_index_max:
+        elif menu_start <= choosed_int <= menu_end:
+            menu_option_index = choosed_int - client_index_max
             handle_menu_options(choosed_int)
+            return
+        else:
+            selector.warn(lang.t("main.invalid-option"))
             return
 
     except ValueError:
@@ -79,68 +88,64 @@ def handle_selection(choosed: str):
 
 
 def handle_commands(command_str: str):
-    """Handles commands"""
+    """Handles commands using the command registry."""
     try:
         args = selector.parse_args(command_str.lower())
         command_name = args[0]
-
         if not command_name:
             raise ValueError("Empty command")
 
         for command in commands:
-            if command.cmd == command_name:
-                if command.requires_client:
-                    try:
+            if command.cmd == command_name or command_name in command.aliases:
+                try:
+                    client = None
+                    if command.requires_client:
                         client_arg = args[1]
                         try:
                             client = selector.get_client_by_index(int(client_arg))
                         except ValueError:
                             client = selector.get_client_by_name(client_arg)
                         command.execute(client, args[2:])
-                    except (IndexError, ValueError):
-                        selector.warn(lang.t("main.client-not-found"))
-                else:
-                    command.execute(None, args[1:])
+                    else:
+                        command.execute(None, args[1:])
+                except IndexError:
+
+                    selector.warn(
+                        lang.t("main.missing-arguments").format(usage=command.usage)
+                    )
+                except ValueError as e:
+                    selector.warn(str(e))
                 return
 
         selector.warn(lang.t("main.invalid-option"))
 
-    except (ValueError, IndexError):
-        selector.warn(lang.t("main.invalid-option"))
+    except (ValueError, IndexError) as e:
+        selector.warn(str(e))
 
 
 def handle_menu_options(choosed_int: int):
-    offset = selector.offset
-    choosed_int -= offset
-
-    if choosed_int == 11:
-        from .modules.storage.Options import options_menu
-
+    if choosed_int == selector_offset:
         options_menu.show()
-    elif choosed_int == 12:
-        from .modules.network.Configs import config_menu
-
+    elif choosed_int == selector_offset + 1:
         config_menu.show()
-    elif choosed_int == 13:
+    elif choosed_int == selector_offset + 2:
         settings.set("nickname", selector.select_username())
         logger.debug(lang.t("main.nickname-changed"))
-    elif choosed_int == 14:
+    elif choosed_int == selector_offset + 3:
         settings.set("ram", selector.ask_int(lang.t("main.select-ram")) * 1024)
         logger.debug(lang.t("main.ram-changed"))
-    elif choosed_int == 15:
-        from .modules.storage.ClientCleaner import clientcleaner
-
+    elif choosed_int == selector_offset + 4:
         clientcleaner.scan_folders()
-    elif choosed_int == 16:
+    elif choosed_int == selector_offset + 5:
         credits_menu.show()
-    elif choosed_int == 17:
+    elif choosed_int == selector_offset + 6:
         sys.exit(1)
     else:
         selector.warn(lang.t("main.invalid-option"))
 
 
 def main():
-
+    selector.offset = 0
     if "_child.py" not in sys.argv[0]:
         from .modules.network.Analytics import analytics
         from .modules.network.Message import messages

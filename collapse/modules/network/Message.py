@@ -3,6 +3,7 @@ import datetime
 from rich import print
 
 from ...developer import SAVE_MESSAGES
+from ..network.Servers import servers
 from ..storage.Settings import settings
 from ..utils.Language import lang
 from ..utils.Module import Module
@@ -16,7 +17,10 @@ class Messages(Module):
         """Initialize the Messages and fetch messages from the API"""
         super().__init__()
         self.shown = False
-        self.messages = self.fetch_messages()
+        if servers.web_server != "":
+            self.messages = self.fetch_messages()
+        else:
+            self.messages = None
         self.types = {
             "info": f'[green]{lang.t("messages.types.info")}[/]',
             "warn": f'[yellow]{lang.t("messages.types.warning")}[/]',
@@ -36,7 +40,8 @@ class Messages(Module):
     def show_messages(self) -> None:
         """Display unread messages"""
         if not self.messages:
-            self.error(lang.t("messages.fetch-error"))
+            if servers.web_server != "":
+                self.error(lang.t("messages.fetch-error"))
             return
 
         if settings.use_option("hide_messages"):

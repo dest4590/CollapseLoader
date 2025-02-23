@@ -95,7 +95,8 @@ class Option(Module):
     @staticmethod
     def get_option_by_index(index: int) -> "Option":
         """Gets the option by its index"""
-        return option_list[index - 1]
+
+        return option_list[index]
 
     def __str__(self):
         """Returns option name as title"""
@@ -103,22 +104,37 @@ class Option(Module):
 
 
 # fmt: off
-Option("nickname", lang.t("options.settings.nickname"), default_value=f"Collapse{random.randint(1000, 9999)}", highlight=True)
-Option("ram", lang.t("options.settings.ram"), int, 2048).create()
-Option("custom_title", lang.t("options.settings.custom_title"), default_value="None").create("None")
-Option("hide_logo", lang.t("options.settings.hide_logo"), bool, False).create()
-Option("hide_messages", lang.t("options.settings.hide_messages"), bool, False).create()
-Option("disable_caching", lang.t("options.settings.disable_caching"), bool, False).create()
-Option("use_short_logo", lang.t("options.settings.use_short_logo"), bool, False).create()
-Option("hide_links", lang.t("options.settings.hide_links"), bool, False).create()
-Option("show_client_version", lang.t("options.settings.show_client_version"), bool, False).create()
-Option("discord_rpc", lang.t("options.settings.rpc"), bool, True).create()
-Option("hide_console", lang.t("options.settings.hide_console"), bool, False).create()
-Option("show_header", lang.t("options.settings.show_header"), bool, True).create()
-Option("show_installed", lang.t("options.settings.show_installed"), bool, False).create()
-Option("language", lang.t("options.settings.language").format(", ".join(lang.languages)), default_value="en").create("en")
-Option("sort_clients", lang.t("options.settings.sort_clients"), bool, True).create()
+general_options = [
+    Option("nickname", lang.t("options.settings.nickname"), default_value=f"Collapse{random.randint(1000, 9999)}", highlight=True),
+    Option("hide_messages", lang.t("options.settings.hide_messages"), bool, False),
+    Option("hide_links", lang.t("options.settings.hide_links"), bool, False),
+    Option("show_client_version", lang.t("options.settings.show_client_version"), bool, False),
+    Option("discord_rpc", lang.t("options.settings.rpc"), bool, True),
+    Option("hide_console", lang.t("options.settings.hide_console"), bool, False),
+    Option("show_installed", lang.t("options.settings.show_installed"), bool, False),
+    Option("language", lang.t("options.settings.language").format(", ".join(lang.languages)), default_value="en"),
+    Option("sort_clients", lang.t("options.settings.sort_clients"), bool, True),
+]
+
+performance_options = [
+    Option("ram", lang.t("options.settings.ram"), int, 2048),
+    Option("disable_caching", lang.t("options.settings.disable_caching"), bool, False),
+]
+
+appearance_options = [
+    Option("custom_title", lang.t("options.settings.custom_title"), default_value="None"),
+    Option("hide_logo", lang.t("options.settings.hide_logo"), bool, False),
+    Option("use_short_logo", lang.t("options.settings.use_short_logo"), bool, False),
+    Option("show_header", lang.t("options.settings.show_header"), bool, True),
+]
 # fmt: on
+
+for opt_list in [general_options, performance_options, appearance_options]:
+    for option in opt_list:
+        option.create()
+
+
+option_list = general_options + performance_options + appearance_options
 
 
 class Menu:
@@ -133,26 +149,41 @@ class Menu:
 
         while True:
             print("\n")
-            option_lines = [
-                f'[{"green" if not option.highlight else "green3"}]{i + 1}. {option.line}'
-                for i, option in enumerate(option_list)
-            ]
+            option_lines = []
+            current_index = 1
+
+            def add_options(options, category_name=None):
+                nonlocal current_index
+                if category_name:
+                    option_lines.append(f"[bold]{category_name}[/]")
+                for option in options:
+                    option_lines.append(
+                        f'[{"green" if not option.highlight else "green3"}]{current_index}. {option.line}'
+                    )
+                    current_index += 1
+
+            add_options(general_options, lang.t("options.category.general"))
+            add_options(performance_options, lang.t("options.category.performance"))
+            add_options(appearance_options, lang.t("options.category.appearance"))
+
             option_lines.append(
-                f'[dark_red]{self.offset + 1}. {lang.t("menu.return")}[/]'
+                f'[dark_red]{current_index}. {lang.t("menu.return")}[/]'
             )
+            current_index += 1
             option_lines.append(
-                f'[bright_red]{self.offset + 2}. {lang.t("options.reset-all")}[/]'
+                f'[bright_red]{current_index}. {lang.t("options.reset-all")}[/]'
             )
+
             console.print("\n".join(option_lines), highlight=False)
 
             try:
                 choice = int(console.input(f"{lang.t('options.choose')}: "))
 
-                if choice <= len(option_list):
-                    Option.get_option_by_index(choice).input()
-                elif choice == self.offset + 1:
+                if 1 <= choice <= len(option_list):
+                    Option.get_option_by_index(choice - 1).input()
+                elif choice == current_index - 1:
                     break
-                elif choice == self.offset + 2:
+                elif choice == current_index:
                     if selector.ask(lang.t("options.ask-reset")):
                         for option in option_list:
                             option.reset()

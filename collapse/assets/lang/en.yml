@@ -64,7 +64,6 @@ updater:
 
 cli:
     no-clients: Clients unavailable
-    text-created: CLI text created
 
     menu-header: CLIENTS & TOOLS
 
@@ -96,6 +95,8 @@ cache:
         [green]Cache size:[/] {} kb
         [green]Cache clients:[/] {}
         [green]Cache creation time:[/] {}
+        [green]Cache from version:[/] {}
+
     cache-not-found: Client cache not found
     using-last-cache: Using last client cache ({})
 
@@ -134,6 +135,11 @@ options:
     invalid-choice: Choose a valid number
 
     ask-reset: Are you sure you want to reset all settings (y,n)?
+
+    category:
+        general: 'General'
+        performance: 'Performance'
+        appearance: 'Appearance'
 
     settings:
         nickname: User nickname
@@ -223,19 +229,20 @@ main:
     force-crash: Force crash
 
 commands:
-    command: Command
-    description: Description
-    usage: Usage
-    title: Commands
-
+    title: 'Available Commands'
+    command: 'Command'
+    description: 'Description'
+    usage: 'Usage'
     cmds:
-        crashes: Opens the crash logs folder
-        data: Opens the data folder or clears data if 'clear' is specified
-        download: Downloads the client <client>
-        reset: Resets the client <client>
-        delete: Deletes the client <client>
-        open: Opens the client's folder <client>
-        help: Shows this help message
+        datafolder: 'Opens the data folder.'
+        crashes: 'Opens the crash logs folder.'
+        data: 'Manages the data folder (e.g., clearing it).'
+        cache: 'Manages the cache (clear, create, info).'
+        download: 'Downloads a client.'
+        reset: 'Resets a client.'
+        delete: 'Deletes a client.'
+        open: "Opens a client's folder."
+        help: 'Displays this help message.'
 
 sdkserver:
     starting: Server started at http://{}:{}

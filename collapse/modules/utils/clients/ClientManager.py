@@ -1,5 +1,7 @@
 import os
 
+from collapse.modules.network.Servers import servers
+
 from ....developer import SHOW_HIDDEN_CLIENTS
 from ...network.API import api
 from ...storage.Cache import cache
@@ -21,11 +23,12 @@ class ClientManager(Module):
 
     def _load_clients(self) -> list:
         """Load clients from the API and return a list of client instances"""
-        clients = api.get("clients")
-        fabric_clients = api.get("fabric_clients")
 
-        if clients is None and fabric_clients is None:
-            self.error(lang.t("clientmanager.error"))
+        if servers.web_server != "":
+            clients = api.get("clients")
+            fabric_clients = api.get("fabric_clients")
+
+        if servers.web_server == "":
             if not os.path.exists(cache.path):
                 self.error(lang.t("cache.client-cache-not-found"))
 
@@ -81,8 +84,8 @@ class ClientManager(Module):
                         )
                     )
 
-        if not settings.use_option("sort_clients"):
-            self.clients.sort(key=lambda client: client.name.lower())
+            if not settings.use_option("sort_clients"):
+                self.clients.sort(key=lambda client: client.name.lower())
 
     def refresh(self) -> None:
         """Refresh clients"""

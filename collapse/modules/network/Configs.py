@@ -2,6 +2,7 @@ import os
 
 from rich import print
 
+from ..network.Servers import servers
 from ..render.CLI import console, selector
 from ..utils.clients.Client import Client
 from ..utils.clients.ClientManager import client_manager
@@ -45,11 +46,13 @@ class Configs(Module):
 
     def __init__(self):
         super().__init__()
-        self.configs = api.get("configs")
 
-        if self.configs is not None:
-            self.configs = self.configs.json()
-            self.init_configs()
+        if servers.web_server != "":
+            self.configs = api.get("configs")
+
+            if self.configs is not None:
+                self.configs = self.configs.json()
+                self.init_configs()
 
     def init_configs(self):
         """Initialize configurations"""

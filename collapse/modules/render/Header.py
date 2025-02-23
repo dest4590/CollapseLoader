@@ -1,4 +1,5 @@
 from collapse.modules.network.API import api
+from collapse.modules.network.Servers import servers
 from collapse.modules.utils.Language import lang
 from collapse.modules.utils.Module import Module
 
@@ -11,9 +12,12 @@ class HeaderText(Module):
         self.get()
 
     def get(self):
-        response = api.get(f"header/?lang={lang.current}", prefix=False)
-        if response is not None:
-            self.text = response.text
+        if servers.web_server != "":
+            response = api.get(f"header/?lang={lang.current}", prefix=False)
+            if response is not None:
+                self.text = response.text
+        else:
+            self.text = "HEADER NOT AVAILABLE"
 
 
 header = HeaderText()

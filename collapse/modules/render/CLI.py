@@ -1,6 +1,7 @@
 import ctypes
 import os
 from time import sleep
+from typing import List
 
 from rich.prompt import Confirm, IntPrompt
 
@@ -63,8 +64,6 @@ class Selector(Module):
         if self.offset == 0:
             self.warn(lang.t("cli.no-clients"))
             self.text += f"\n\n{lang.t('cli.no-clients')}!\n"
-
-        self.debug(lang.t("cli.text-created"))
 
     def make_text(self) -> str:
         """Creates the text for the selector"""
@@ -133,9 +132,27 @@ class Selector(Module):
         """Asks for a nickname"""
         return input(f'{lang.t("cli.select-username-prompt")} >> ')
 
-    def parse_args(self, string: str) -> str:
-        """Parses the arguments (seprated by spaces)"""
-        return string.split(" ")
+    @staticmethod
+    def parse_args(command_str: str) -> List[str]:
+        """Parses a command string into a list of arguments, handling quoted strings."""
+        args = []
+        in_quote = False
+        current_arg = ""
+
+        for char in command_str:
+            if char == '"':
+                in_quote = not in_quote
+            elif char == " " and not in_quote:
+                if current_arg:
+                    args.append(current_arg)
+                current_arg = ""
+            else:
+                current_arg += char
+
+        if current_arg:
+            args.append(current_arg)
+
+        return args
 
     def clear(self) -> None:
         """Clears the console"""

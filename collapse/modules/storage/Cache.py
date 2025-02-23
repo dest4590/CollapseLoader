@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-from ...config import ROOT_DIR
+from ...config import CODENAME, ROOT_DIR, VERSION
 from ..utils.Fixes import console
 from ..utils.Language import lang
 from ..utils.Module import Module
@@ -22,7 +22,10 @@ class Cache(Module):
 
         if settings.use_option("disable_caching"):
             now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            payload = {"clients": clients, "_meta": {"creation_time": now}}
+            payload = {
+                "clients": clients,
+                "_meta": {"creation_time": now, "version": f"{VERSION} ({CODENAME})"},
+            }
 
             with open(self.path, "w", encoding="utf-8") as f:
                 json.dump(payload, f)
@@ -40,11 +43,14 @@ class Cache(Module):
             with open(self.path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 creation_time = data["_meta"]["creation_time"]
+                version = data["_meta"]["version"]
                 clients = len(data["clients"])
                 size = round(os.path.getsize(self.path) / 1024, 2)
 
                 console.print(
-                    lang.t("cache.cache-info").format(size, clients, creation_time)
+                    lang.t("cache.cache-info").format(
+                        size, clients, creation_time, version
+                    )
                 )
         else:
             self.warn(lang.t("cache.cache-not-found"))

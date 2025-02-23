@@ -60,7 +60,7 @@ class Servers(Module):
 
                 break
             else:
-                self.info(lang.t("servers.server-not-accessible").format(server.url))
+                self.warn(lang.t("servers.server-not-accessible").format(server.url))
                 self.servers.remove(server)
 
         for server in self.web_servers[:]:
@@ -72,7 +72,7 @@ class Servers(Module):
 
                 break
             else:
-                self.info(lang.t("servers.server-not-accessible").format(server.url))
+                self.warn(lang.t("servers.server-not-accessible").format(server.url))
                 self.web_servers.remove(server)
 
 
