@@ -1,4 +1,5 @@
 import os
+import sys
 from abc import ABC, abstractmethod
 from subprocess import Popen
 from typing import List, Optional
@@ -110,6 +111,20 @@ class CacheCommand(Command):
             selector.pause()
 
 
+class FixCommand(Command):
+    def __init__(self):
+        super().__init__("fix", "commands.cmds.fix", "fix", requires_client=False)
+
+    def execute(self, client: Optional[Client], args: List[str]):
+        data.clear()
+        console.print(lang.t("main.data-cleared"))
+        cache.clear()
+        console.print(lang.t("cache.cache-cleared"))
+
+        selector.warn(lang.t("main.restart"))
+        sys.exit(0)
+
+
 class ClientCommand(Command):
     def __init__(
         self,
@@ -215,5 +230,6 @@ register_command(OpenCommand())
 register_command(CrashesCommand())
 register_command(DataCommand())
 register_command(CacheCommand())
+register_command(FixCommand())
 register_command(HelpCommand())
 register_command(OpenDataFolderCommand())

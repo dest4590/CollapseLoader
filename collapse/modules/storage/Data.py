@@ -57,7 +57,7 @@ class DataManager(Module):
                     else:
                         os.remove(file_path)
                 except PermissionError:
-                    print(f"Permission denied: {file_path}")
+                    self.error(f"Permission denied: {file_path}")
 
     def download(self, path: str, destination: str = None, raw: bool = False) -> None:
         """Downloads file using path"""

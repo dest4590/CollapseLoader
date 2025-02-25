@@ -3,7 +3,7 @@ from typing import List
 
 from rich import print
 
-from ..render.CLI import console, selector
+from ..render.CLI import console, selector  # Corrected import
 from ..utils.Language import lang
 from ..utils.Logger import logger
 from ..utils.Module import Module
@@ -87,6 +87,31 @@ class Option(Module):
             current_value = settings.get(self.name)
             self.save(not current_value.lower() == "true")
 
+        elif self.option_type == int:
+            ram_map = {
+                "2G": 2048,
+                "4G": 4096,
+                "8G": 8192,
+                "16G": 16384,
+            }
+
+            console.print(f'\n{lang.t("options.input.note-ram")}')
+            new_value = console.input(
+                lang.t("options.input.prompt").format(self.name, self.value)
+            )
+
+            if new_value != "":
+                new_value_upper = new_value.upper()
+                if new_value_upper in list(ram_map.keys()):
+                    self.save(ram_map[new_value_upper])
+                    return
+
+                try:
+                    self.save(int(new_value))
+                except ValueError:
+                    logger.error(lang.t("options.invalid-value"))
+                    selector.pause()
+
     def reset(self) -> None:
         """Reset option with default value"""
         self.save(self.default_value)
@@ -95,7 +120,6 @@ class Option(Module):
     @staticmethod
     def get_option_by_index(index: int) -> "Option":
         """Gets the option by its index"""
-
         return option_list[index]
 
     def __str__(self):
@@ -133,65 +157,84 @@ for opt_list in [general_options, performance_options, appearance_options]:
     for option in opt_list:
         option.create()
 
+# Keep the categorized structure.
+categorized_options = [
+    (lang.t("options.category.general"), general_options),
+    (lang.t("options.category.performance"), performance_options),
+    (lang.t("options.category.appearance"), appearance_options),
+]
 
-option_list = general_options + performance_options + appearance_options
+option_list = (
+    general_options + performance_options + appearance_options
+)  # still need this for reset
 
 
 class Menu:
     """Options menu"""
 
     def __init__(self) -> None:
-        self.offset = len(option_list)
+        pass
+
+    def _get_option(self, choice: int) -> Option | None:
+        """Helper function to get the option."""
+        current_index = 1
+        for _, options in categorized_options:
+            for option in options:
+                if current_index == choice:
+                    return option
+                current_index += 1
+        return None
 
     def show(self) -> None:
         """Displays the options menu"""
         selector.set_title(title_type="settings")
 
         while True:
-            print("\n")
+            print()
             option_lines = []
             current_index = 1
 
-            def add_options(options, category_name=None):
-                nonlocal current_index
-                if category_name:
-                    option_lines.append(f"[bold]{category_name}[/]")
+            for category_name, options in categorized_options:
+                option_lines.append(f"[bold]{category_name}[/]")
                 for option in options:
                     option_lines.append(
                         f'[{"green" if not option.highlight else "green3"}]{current_index}. {option.line}'
                     )
                     current_index += 1
 
-            add_options(general_options, lang.t("options.category.general"))
-            add_options(performance_options, lang.t("options.category.performance"))
-            add_options(appearance_options, lang.t("options.category.appearance"))
-
             option_lines.append(
                 f'[dark_red]{current_index}. {lang.t("menu.return")}[/]'
             )
+            return_index = current_index
             current_index += 1
             option_lines.append(
                 f'[bright_red]{current_index}. {lang.t("options.reset-all")}[/]'
             )
+            reset_all_index = current_index
 
             console.print("\n".join(option_lines), highlight=False)
 
             try:
                 choice = int(console.input(f"{lang.t('options.choose')}: "))
 
-                if 1 <= choice <= len(option_list):
-                    Option.get_option_by_index(choice - 1).input()
-                elif choice == current_index - 1:
+                if choice == return_index:
                     break
-                elif choice == current_index:
+                elif choice == reset_all_index:
                     if selector.ask(lang.t("options.ask-reset")):
                         for option in option_list:
                             option.reset()
+                    continue  # Go to the next loop iteration
+
+                selected_option = self._get_option(choice)
+                if selected_option:
+                    selected_option.input()  # Now correctly calls the input handler.
                 else:
                     logger.error(lang.t("options.invalid-choice"))
+
             except ValueError:
                 logger.error(lang.t("options.invalid-choice"))
-                continue
+            except Exception as e:
+                logger.error(f"An unexpected error occurred: {e}")
 
         selector.reset_title()
 

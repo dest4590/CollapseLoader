@@ -2,10 +2,10 @@ colorlog==6.9.0
 rich==13.9.4
 requests==2.32.3
 pypresence==4.3.0
-pyinstaller==6.11.1
+pyinstaller==6.12.0
 mock==5.1.0
 pytest==8.3.4
-aiohttp==3.11.11
-virtualenv==20.28.0
+aiohttp==3.11.12
+virtualenv==20.29.2
 flask==3.1.0
 pyyaml==6.0.2

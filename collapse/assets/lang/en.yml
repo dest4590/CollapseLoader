@@ -127,12 +127,14 @@ options:
 
     input:
         note: '[i]Press [green]Enter[/] to skip input[/]'
+        note-ram: '[bold]You can also type 2G, 4G, etc.[/]'
         prompt: 'Enter value for {} (type "RESET" to reset setting) ({}): '
 
     reset: Reset setting {} to {}
     reset-all: Reset all settings
     choose: Choose a setting
     invalid-choice: Choose a valid number
+    invalid-value: Enter a valid value
 
     ask-reset: Are you sure you want to reset all settings (y,n)?
 
@@ -219,6 +221,7 @@ main:
     data-cleared: Data folder cleared
 
     invalid-option: Select a number or command
+    restart: Restart the loader to apply changes
     no-crash-logs: Crash logs folder is empty
     client-not-installed: Client {} not installed
     client-resetted: Client {} resetted
@@ -237,6 +240,7 @@ commands:
         datafolder: 'Opens the data folder.'
         crashes: 'Opens the crash logs folder.'
         data: 'Manages the data folder (e.g., clearing it).'
+        fix: 'May fix some issues with the loader.'
         cache: 'Manages the cache (clear, create, info).'
         download: 'Downloads a client.'
         reset: 'Resets a client.'
