@@ -56,7 +56,7 @@ class Servers(Module):
                 self.debug(lang.t("servers.server-respond").format(server.url, 200))
 
                 self.cdn_server = f"https://{server.url}/"
-                self.info(lang.t("servers.use-server").format("CDN", server.url))
+                self.debug(lang.t("servers.use-server").format("CDN", server.url))
 
                 break
             else:
@@ -68,7 +68,7 @@ class Servers(Module):
                 self.debug(lang.t("servers.server-respond").format(server.url, 200))
 
                 self.web_server = f"https://{server.url}/"
-                self.info(lang.t("servers.use-server").format("WEB", server.url))
+                self.debug(lang.t("servers.use-server").format("WEB", server.url))
 
                 break
             else:

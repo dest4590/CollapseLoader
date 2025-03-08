@@ -30,7 +30,7 @@ class Cache(Module):
             with open(self.path, "w", encoding="utf-8") as f:
                 json.dump(payload, f)
 
-            self.info(lang.t("cache.cache-saved").format(now))
+            self.debug(lang.t("cache.cache-saved").format(now))
 
     def clear(self) -> None:
         """Clears cache"""

@@ -3,7 +3,7 @@ from typing import List
 
 from rich import print
 
-from ..render.CLI import console, selector  # Corrected import
+from ..render.CLI import console, selector
 from ..utils.Language import lang
 from ..utils.Logger import logger
 from ..utils.Module import Module
@@ -157,7 +157,6 @@ for opt_list in [general_options, performance_options, appearance_options]:
     for option in opt_list:
         option.create()
 
-# Keep the categorized structure.
 categorized_options = [
     (lang.t("options.category.general"), general_options),
     (lang.t("options.category.performance"), performance_options),
@@ -223,11 +222,11 @@ class Menu:
                     if selector.ask(lang.t("options.ask-reset")):
                         for option in option_list:
                             option.reset()
-                    continue  # Go to the next loop iteration
+                    continue
 
                 selected_option = self._get_option(choice)
                 if selected_option:
-                    selected_option.input()  # Now correctly calls the input handler.
+                    selected_option.input()
                 else:
                     logger.error(lang.t("options.invalid-choice"))
 

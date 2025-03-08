@@ -90,7 +90,7 @@ class Selector(Module):
             )
         )
 
-        return f"\n[bold]{lang.t('cli.menu-header')}[/]\n{clients_list}\n\n{function_text}\n"
+        return f"\n[bold]{lang.t('cli.menu-header')}[/]\n{clients_list}\n\n{function_text}"
 
     def refresh_text(self) -> None:
         """Refreshes text property"""

@@ -17,7 +17,7 @@ class HeaderText(Module):
             if response is not None:
                 self.text = response.text
         else:
-            self.text = "HEADER NOT AVAILABLE"
+            self.text = "[i]header not available[/]"
 
 
 header = HeaderText()
