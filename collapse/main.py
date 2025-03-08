@@ -53,7 +53,7 @@ def display_main_menu() -> None:
     text = ""
 
     if settings.use_option("hide_logo"):
-        logo_type = logo.short if settings.use_option("use_short_logo") else logo.full
+        logo_type = logo.short if not settings.use_option("use_short_logo") else logo.full
         console.print(f"[bold white]{logo_type}\n", highlight=False)
         text += f"\t [italic]Version: {data.version}[/] ([steel_blue3]{data.codename.upper()}[/])\n"
         text += f"[bold green]{logo.tagline}[/]\n"

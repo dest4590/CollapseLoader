@@ -58,7 +58,6 @@ class Selector(Module):
             else settings.get("custom_title")
         )
         self.linux = True if SYSTEM == "posix" else False
-
         self.header = header.text
 
         if self.offset == 0:
@@ -68,9 +67,9 @@ class Selector(Module):
     def make_text(self) -> str:
         """Creates the text for the selector."""
 
-
-        clients_list = "\n".join(f"{i + 2}. {client}" for i, client in enumerate(client_manager.clients))
-
+        clients_list = "\n".join(
+            f"{i + 1}. {client}" for i, client in enumerate(client_manager.clients)
+        )
 
         function_items = [
             lang.t("cli.settings-menu"),
@@ -81,17 +80,18 @@ class Selector(Module):
             lang.t("cli.credits-donators"),
             lang.t("cli.exit"),
         ]
-    
 
         colors = ["dark_cyan"] * (len(function_items) - 1) + ["red"]
 
-
         function_text = "\n".join(
-            f"[{color}]{i}.{item}[/]" for i, (item, color) in enumerate(zip(function_items, colors), start=41)
+            f"[{color}]{i}. {item}[/]"
+            for i, (item, color) in enumerate(
+                zip(function_items, colors), start=selector_offset
+            )
         )
 
-        return f"\n[bold]{lang.t('cli.menu-header')}[/]\n{clients_list}\n{function_text}"
-    
+        return f"\n[bold]{lang.t('cli.menu-header')}[/]\n{clients_list}\n\n{function_text}\n"
+
     def refresh_text(self) -> None:
         """Refreshes text property"""
         self.text = self.make_text()
