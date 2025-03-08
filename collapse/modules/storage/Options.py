@@ -133,7 +133,7 @@ general_options = [
     Option("hide_messages", lang.t("options.settings.hide_messages"), bool, False),
     Option("hide_links", lang.t("options.settings.hide_links"), bool, False),
     Option("show_client_version", lang.t("options.settings.show_client_version"), bool, False),
-    Option("discord_rpc", lang.t("options.settings.rpc"), bool, True),
+    Option("discord_rpc", lang.t("options.settings.discord_rich_presence"), bool, True),
     Option("hide_console", lang.t("options.settings.hide_console"), bool, False),
     Option("show_installed", lang.t("options.settings.show_installed"), bool, False),
     Option("language", lang.t("options.settings.language").format(", ".join(lang.languages)), default_value="en"),
