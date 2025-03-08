@@ -66,30 +66,24 @@ class Selector(Module):
             self.text += f"\n\n{lang.t('cli.no-clients')}!\n"
 
     def make_text(self) -> str:
-        """Creates the text for the selector"""
+        """Creates the text for the selector."""
 
-        text = f"\n[bold]{lang.t('cli.menu-header')}[/]\n"
-        text += "\n".join(
-            f"{i + 1}. {client}" for i, client in enumerate(client_manager.clients)
-        )
-        text += "\n"
+        clients_list = "\n".join(f"{i + 1}. {client}" for i, client in enumerate(client_manager.clients))
 
-        function_lines = [
-            lang.t("cli.settings-menu"),
-            lang.t("cli.configs-menu"),
-            lang.t("cli.select-username"),
-            lang.t("cli.enter-ram"),
-            lang.t("cli.ghost-mode"),
-            lang.t("cli.credits-donators"),
-            lang.t("cli.exit"),
-        ]
+        function_lines = {
+            "Exit": "dark_red",
+            lang.t("cli.settings-menu"): "dark_cyan",
+            lang.t("cli.configs-menu"): "dark_cyan",
+            lang.t("cli.select-username"): "dark_cyan",
+            lang.t("cli.enter-ram"): "dark_cyan",
+            lang.t("cli.ghost-mode"): "dark_cyan",
+            lang.t("cli.credits-donators"): "dark_cyan",
+        }
 
-        text += "".join(
-            Function(line, "dark_red" if line == "Exit" else "dark_cyan").line
-            for line in function_lines
-        )
+        function_text = "".join(Function(line, color).line for line, color in function_lines.items())
 
-        return text
+        return f"\n[bold]{lang.t('cli.menu-header')}[/]\n{clients_list}\n{function_text}"
+    
 
     def refresh_text(self) -> None:
         """Refreshes text property"""
