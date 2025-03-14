@@ -22,7 +22,7 @@ class Updater(Module):
         self.latest_commit = None
         self.local_version = data.version
 
-        if args.skip_updater:
+        if args.disable_updater:
             return
 
         self.initialize()

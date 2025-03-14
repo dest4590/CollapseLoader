@@ -137,7 +137,7 @@ general_options = [
     Option("hide_console", lang.t("options.settings.hide_console"), bool, False),
     Option("show_installed", lang.t("options.settings.show_installed"), bool, False),
     Option("language", lang.t("options.settings.language").format(", ".join(lang.languages)), default_value="en"),
-    Option("sort_clients", lang.t("options.settings.sort_clients"), bool, True),
+    Option("sort_clients", lang.t("options.settings.sort_clients"), bool, False),
 ]
 
 performance_options = [
