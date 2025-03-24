@@ -5,33 +5,38 @@ from datetime import datetime
 
 from collapse.config import ROOT_DIR
 
-dev = True
+debug = True
 
-if not dev:
+if not debug:
     try:
         from collapse.main import main
-        main()
+
+        main(debug)
 
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         exc_lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         max_length = max(len(line) for line in exc_lines)
-        
-        print('=' * max_length)
+
+        print("=" * max_length)
         traceback.print_exception(exc_type, exc_value, exc_traceback)
-        print('=' * max_length)
+        print("=" * max_length)
 
-        if not os.path.exists(f'{ROOT_DIR}/crash_logs'):
-            os.mkdir(f'{ROOT_DIR}/crash_logs')
+        if not os.path.exists(f"{ROOT_DIR}/crash_logs"):
+            os.mkdir(f"{ROOT_DIR}/crash_logs")
 
-        with open(f'{ROOT_DIR}/crash_logs/crash_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.log', 'w') as f:
-            f.write(''.join(exc_lines))
+        with open(
+            f'{ROOT_DIR}/crash_logs/crash_{datetime.now().strftime("%d-%m-%Y_%H-%M-%S")}.log',
+            "w",
+        ) as f:
+            f.write("".join(exc_lines))
 
-        os.system('pause')
+        os.system("pause")
 
-elif dev:
+elif debug:
     from collapse.main import main
-    main()
+
+    main(debug)
 
 #                                                            ,1,
 #                               ......                     .ifL1

@@ -213,6 +213,8 @@ rpc:
     large-text: Версія {}
 
 main:
+    debug-enabled: Режим відладки увімкнено
+
     nickname-reminder: Не забудьте змінити свій нікнейм!
     nickname-changed: Нікнейм змінено
     ram-changed: ОЗУ змінено

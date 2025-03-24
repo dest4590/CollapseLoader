@@ -214,6 +214,8 @@ rpc:
     large-text: Version {}
 
 main:
+    debug-enabled: Debug mode enabled
+
     nickname-reminder: Don't forget to change your nickname!
     nickname-changed: Nickname changed
     ram-changed: RAM changed

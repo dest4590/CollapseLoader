@@ -2,6 +2,8 @@ import logging
 import random
 import sys
 
+from collapse.developer import DEBUG
+
 from .arguments import args
 from .modules.utils.Commands import commands
 from .modules.utils.Fixes import console
@@ -53,7 +55,9 @@ def display_main_menu() -> None:
     text = ""
 
     if settings.use_option("hide_logo"):
-        logo_type = logo.short if not settings.use_option("use_short_logo") else logo.full
+        logo_type = (
+            logo.short if not settings.use_option("use_short_logo") else logo.full
+        )
         console.print(f"[bold white]{logo_type}\n", highlight=False)
         text += f"\t [italic]Version: {data.version}[/] ([steel_blue3]{data.codename.upper()}[/])\n"
         text += f"[bold green]{logo.tagline}[/]\n"
@@ -148,7 +152,7 @@ def handle_commands(command_str: str) -> None:
             selector.warn(str(e))
     except Exception as e:
         selector.warn(f"An unexpected error occurred: {e}")
-        logger.exception("An unexpected error in handle_commands:")
+        logger.exception("An unexpected error in handle_commands:", exc_info=True)
 
 
 def handle_menu_options(choosed_int: int) -> None:
@@ -181,9 +185,17 @@ def handle_menu_options(choosed_int: int) -> None:
         logger.warning(f"Invalid menu option selected: {choosed_int}")
 
 
-def main() -> None:
+def main(debug: bool) -> None:
     """Main entry point of the application."""
+    global DEBUG
+
     selector.offset = 0
+
+    DEBUG = debug
+
+    if debug:
+        logger.debug(lang.t("main.debug-enabled"))
+
     if "_child.py" not in sys.argv[0]:
         initialize_settings()
 

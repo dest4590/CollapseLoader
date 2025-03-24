@@ -152,6 +152,10 @@ class Client(Module):
 
         rpc.details = lang.t("rpc.playing").format(self.name)
 
+        if not os.path.exists(data.get_local("jre-21.0.2\\bin\\java.exe")):
+            if os.path.exists(data.get_local("jre-21.0.2")):
+                os.rmdir(data.get_local("jre-21.0.2"))
+
         data.download("jre-21.0.2.zip")
 
         if self.fabric:

@@ -30,6 +30,7 @@ class ClientCleaner(Module):
                 "C:\\baritone",
                 "C:\\hachrecode",
                 "C:\\Nevernight",
+                "C:\\NewCode",
             ]
 
     def scan_folders(self) -> None:
