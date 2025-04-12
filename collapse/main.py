@@ -96,8 +96,7 @@ def handle_selection(choosed: str) -> None:
     except ValueError:
         handle_commands(choosed)
     except Exception as e:
-        selector.warn(f"An unexpected error occurred: {e}")
-        logger.exception("An unexpected error during selection handling:")
+        selector.warn(lang.t("main.invalid-option"))
 
 
 def handle_commands(command_str: str) -> None:
@@ -151,8 +150,7 @@ def handle_commands(command_str: str) -> None:
         else:
             selector.warn(str(e))
     except Exception as e:
-        selector.warn(f"An unexpected error occurred: {e}")
-        logger.exception("An unexpected error in handle_commands:", exc_info=True)
+        selector.warn(lang.t("main.invalid-option"))
 
 
 def handle_menu_options(choosed_int: int) -> None:

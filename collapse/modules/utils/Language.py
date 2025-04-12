@@ -40,7 +40,6 @@ class Language(Module):
         self.translations = self.load_language_file(self.current)
 
     def load_language_file(self, lang_code) -> dict:
-
         file_path = os.path.join(self.lang_folder, f"{lang_code}.yml")
 
         with open(file_path, "r", encoding="utf-8") as file:
