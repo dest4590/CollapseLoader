@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from ..utils.Fixes import console
 from ..utils.Language import lang
 from .Module import Module
 
@@ -14,7 +15,7 @@ class LogChecker(Module):
 
     def reason(self, msg: str) -> str:
         """Construct a reason message for the crash"""
-        return lang.t("logchecker.base-reason").format(msg)
+        return f"[bold]{lang.t('logchecker.base-reason').format(msg)}[/]"
 
     def check_logs(self, logs: str, client) -> bool:
         """Check logs for crash messages and log appropriate errors and info"""
@@ -26,31 +27,33 @@ class LogChecker(Module):
 
             # Memory Errors
             if "java.lang.OutOfMemoryError: Java heap space" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.out_of_memory")))
+                console.print(self.reason(lang.t("logchecker.crashes.out_of_memory")))
 
             # Class and Library Errors
             elif "java.lang.NoClassDefFoundError" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.no_class_def")))
+                console.print(self.reason(lang.t("logchecker.crashes.no_class_def")))
             elif "java.lang.UnsupportedClassVersionError" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.unsupported_class")))
+                console.print(
+                    self.reason(lang.t("logchecker.crashes.unsupported_class"))
+                )
 
             # Modding Errors
             elif "LoaderExceptionModCrash" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.mod_crash")))
+                console.print(self.reason(lang.t("logchecker.crashes.mod_crash")))
 
             # World Corruption
             elif "Failed to load level" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.corrupted_world")))
+                console.print(self.reason(lang.t("logchecker.crashes.corrupted_world")))
 
             # Graphics and Rendering
             elif "Pixel format not accelerated" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.graphics_error")))
+                console.print(self.reason(lang.t("logchecker.crashes.graphics_error")))
             elif "OpenGL error" in logs:
-                self.info(self.reason(lang.t("logchecker.crashes.opengl_error")))
+                console.print(self.reason(lang.t("logchecker.crashes.opengl_error")))
 
             # Catch-all for unknown reasons
             else:
-                self.warn(lang.t("logchecker.crashes.unknown"))
+                console.print(f"[bold red]{lang.t('logchecker.crashes.unknown')}[/]")
 
             return True
         else:
@@ -73,7 +76,7 @@ class LogChecker(Module):
         with open(crash_log_file, "w", encoding="utf-8") as f:
             f.write(payload)
 
-        self.info(lang.t("logchecker.crash-logs.saved").format(crash_log_file))
+        console.print(lang.t("logchecker.crash-logs.saved").format(crash_log_file))
 
 
 logchecker = LogChecker()

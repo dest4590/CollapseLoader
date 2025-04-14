@@ -11,7 +11,7 @@ if not debug:
     try:
         from collapse.main import main
 
-        main(debug)
+        main()
 
     except Exception:
         exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -36,7 +36,7 @@ if not debug:
 elif debug:
     from collapse.main import main
 
-    main(debug)
+    main()
 
 #                                                            ,1,
 #                               ......                     .ifL1

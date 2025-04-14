@@ -51,6 +51,7 @@ class Client(Module):
         self.id = id
         self.fabric = fabric
         self.configs = []
+        self.is_custom = False
 
         self.filename = os.path.basename(self.link)
         self.path = data.root_dir + self.filename
@@ -74,7 +75,16 @@ class Client(Module):
             if not settings.use_option("show_client_version")
             else ""
         )
-        return f"{self.name}{version}{is_downloaded if not settings.use_option('show_installed') else ''}"
+
+        if hasattr(self, "is_custom") and self.is_custom:
+            prefix = "[cyan1]★[/] "
+
+            name_color = "[turquoise2]" + self.name + "[/]"
+            fabric_tag = " [violet](Fabric)[/]" if self.fabric else ""
+            return f"{prefix}{name_color}{version}{fabric_tag}{is_downloaded if not settings.use_option('show_installed') else ''}"
+        else:
+            fabric_tag = " [violet](Fabric)[/]" if self.fabric else ""
+            return f"{self.name}{version}{fabric_tag}{is_downloaded if not settings.use_option('show_installed') else ''}"
 
     def to_dict(self) -> dict:
         attributes = vars(self)
@@ -169,12 +179,12 @@ class Client(Module):
             self.info(lang.t("clients.running-fabric").format(self.name))
         else:
             if self.version.startswith("1.12"):
-                self.info(lang.t("clients.downloading-libraries-natives-1-12"))
+                self.debug(lang.t("clients.downloading-libraries-natives-1-12"))
                 data.download("libraries-1.12.zip")
                 data.download("natives-1.12.zip")
 
             else:
-                self.info(lang.t("clients.downloading-libraries-natives-1-12-2"))
+                self.debug(lang.t("clients.downloading-libraries-natives-1-12-2"))
                 data.download("libraries.zip")
                 data.download("natives.zip")
 

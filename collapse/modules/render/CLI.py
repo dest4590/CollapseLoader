@@ -50,6 +50,7 @@ class Selector(Module):
             "run": "CollapseLoader >> {client}",
             "settings": lang.t("cli.titles.settings"),
             "configs": lang.t("cli.titles.configs"),
+            "customclients": lang.t("cli.titles.customclients"),
             "credits": lang.t("cli.titles.credits"),
         }
         self.custom_title = (
@@ -77,6 +78,7 @@ class Selector(Module):
             lang.t("cli.select-username"),
             lang.t("cli.enter-ram"),
             lang.t("cli.ghost-mode"),
+            lang.t("cli.customclients"),
             lang.t("cli.credits-donators"),
             lang.t("cli.exit"),
         ]

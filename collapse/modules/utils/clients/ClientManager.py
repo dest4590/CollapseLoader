@@ -10,6 +10,7 @@ from ...storage.Settings import settings
 from ...utils.Language import lang
 from ..Module import Module
 from .Client import Client
+from .CustomClientManager import custom_client_manager
 
 
 class ClientManager(Module):
@@ -39,6 +40,7 @@ class ClientManager(Module):
 
                 self.make_array(c["clients"])
 
+            self.load_custom_clients()
             return
 
         all_clients: dict = clients.json() + fabric_clients.json()
@@ -50,6 +52,8 @@ class ClientManager(Module):
             self.make_array(all_clients)
 
         self.json_clients = all_clients
+
+        self.load_custom_clients()
 
         return all_clients
 
@@ -83,6 +87,16 @@ class ClientManager(Module):
                             fabric=client["fabric"],
                         )
                     )
+
+            if not settings.use_option("sort_clients"):
+                self.clients.sort(key=lambda client: client.name.lower())
+
+    def load_custom_clients(self) -> None:
+        """Load custom clients into the main client list"""
+        if hasattr(custom_client_manager, "clients") and custom_client_manager.clients:
+            for custom_client in custom_client_manager.clients:
+                custom_client.is_custom = True
+                self.clients.append(custom_client)
 
             if not settings.use_option("sort_clients"):
                 self.clients.sort(key=lambda client: client.name.lower())

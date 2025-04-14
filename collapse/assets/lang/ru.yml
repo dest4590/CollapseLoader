@@ -1,71 +1,55 @@
 api:
     request: API запрос к {}
     error: Ошибка API запроса {}
-
 analytics:
     disabled: Аналитика отключена
     successfuly-sent-loader: Успешно отправлен запрос аналитики на запуск лоадера
     successfuly-sent-client: Успешно отправлен запрос аналитики на запуск клиента
-
     error-sent-loader: Ошибка отправки запроса аналитики на запуск лоадера {}
     error-sent-client: Ошибка отправки запроса аналитики на запуск клиента {}
-
 menu:
     return: Вернуться
-
 configs:
     found-len: Найдено {} конфигов
     menu-header: '[bold]Конфиги[/]'
     choose-config: Выберите конфиг
     invalid-choice: Выберите правильный номер или букву
-
     install-all-configs: Установить все конфиги
     server: сервер
-
 messages:
     fetched: Получены сообщения из API
     fetch-error: Ошибка получения сообщений из API
     message: сообщение с
-
     types:
         info: Информативное
         warning: Предупредительное
         maintenance: Техническое
-
     time-now: только что
     time-minutes: '{0} минут назад'
     time-hours: '{0} часов назад'
     time-days: '{0} дней назад'
-
 network:
     error: Ошибка сети {}
     timeout: Принудительный таймаут на {}
-
 servers:
     server-not-resolved: Сервер {} не удалось разпознать, попробуйте включить ВПН
     server-not-accessible: Сервер {} лежит или недоступен
     server-respond: Сервер {} ответил с кодом {}
     use-server: Используем {} сервер {}
-
 updater:
     version-check: Удалённая версия {}, локальная {}
     latest-commit: Последний коммит {}
     rate-limit: Превышен лимит запросов, попробуйте позже
     fetch-error: 'Ошибка получения {}: {}'
-
     update-notify: Обновите лоадер!
     update-ask: Скачать новую версию?
     update-ask-dev: Скачать dev версию?
     opening-latest-prerelease: Открытие дев релиза
     opening-latest-release: Открытие последнего релиза
-
     no-releases: Релизы не найдены
-
 cli:
     no-clients: Клиенты недоступны
-
     menu-header: КЛИЕНТЫ & ИНСТРУМЕНТЫ
-
     settings-menu: Настройки
     configs-menu: Конфиги
     select-username: Выбор ника
@@ -73,75 +57,64 @@ cli:
     ghost-mode: Режим призрака
     credits-donators: Создатели и донаты
     exit: '[red]Выход[/]'
-
     select: Выберите (help для команд)
     select-username-prompt: Выберите ник
-
     titles:
         settings: CollapseLoader <Настройки>
         configs: CollapseLoader <Конфиги>
         credits: CollapseLoader <Создатели и донаты>
-
+        customclients: CollapseLoader <Пользовательские клиенты>
         cannot-find: Не могу найти заголовок по ключу {}
-
     hide-console-error: Не могу найти hwnd для окна консоли
-
+    customclients: Свои клиенты ([deep_sky_blue3]Новое[/])
 cache:
     cache-saved: Кэш сохранен в {}
     cache-cleared: Кэш очищен
-    cache-info: |
-        [bold]Информация о кэше[/]
+    cache-info: '[bold]Информация о кэше[/]
         [green]Размер кэша:[/] {} КБ
         [green]Клиенты кэша:[/] {}
         [green]Время создания кэша:[/] {}
-        [green]Кэш с версии:[/] {}
-
+        [green]Кэш с версии:[/] {}'
     cache-not-found: Кэш клиента не найден
     using-last-cache: Используется последний кэш клиента ({})
 
 clientcleaner:
-    ask: "Удалить все папки клиентов?\nвсе ваши конфиги будут [red bold]УНИЧТОЖЕНЫ.[/]"
-    removing: Удаляем папку {}
+    ask: 'Удалить все папки клиентов?
 
+        все ваши конфиги будут [red bold]УНИЧТОЖЕНЫ.[/]'
+    removing: Удаляем папку {}
 data:
     no-server: Не найден сервер для загрузки файлов (это критическая функция в лоадере)
-
     download:
         to: Скачиваем файл {} в {}
         already-downloaded: Файл {} уже скачан, пропускаем
         error: Не удалось скачать {}, {}
         extract-error: Ошибка обработки файла {}, {}
-
 modmanager:
     activate: Включаем мод {}
     deactivate: Отключаем мод {}
     install: Устанавливаем мод {}
-
 options:
     enabled: Включено
     disabled: Отключено
-
     created: Создана настройка {} с значением {} ({})
     saved: Установлена настройка {} в {}
-
     input:
         note: '[i]Нажмите [green]Enter[/] чтобы пропустить ввод[/]'
         note-ram: '[bold]Вы также можете ввести 2G, 4G и т. д.[/]'
-        prompt: 'Введите значение для {} (напишите "RESET" чтобы сбросить настройку) ({}): '
-
+        prompt:
+            'Введите значение для {} (напишите "RESET" чтобы сбросить настройку)
+            ({}): '
     reset: Сброс настройки {} на {}
     reset-all: Сброс всех настроек
     choose: Выберите настройку
     invalid-choice: Выберите правильный номер
     invalid-value: Введите правильное значение
-
     ask-reset: Вы уверены, что хотите сбросить все настройки (y,n)?
-
     category:
-        general: 'Общие'
-        performance: 'Производительность'
-        appearance: 'Внешний вид'
-
+        general: Общие
+        performance: Производительность
+        appearance: Внешний вид
     settings:
         nickname: Никнейм пользователя
         ram: Оперативная память (в мегабайтах)
@@ -164,63 +137,49 @@ logchecker:
     base-reason: Игра крашнулась из-за {}
     checking-log: Проверяем логи
     game-crashed: Игра крашнулась
-
     crashes:
-        out_of_memory: Не хватает памяти (повысьте ОЗУ)
-        no_class_def: Отсутствуют классы или библиотеки
-        unsupported_class: Скомпилировано с другой версией Java
-        mod_crash: Крашнулся мод
-        corrupted_world: Мир повреждён
-        graphics_error: Проблема с видеокартой или драйверами
-        opengl_error: Произошла ошибка OpenGL, часто связана с драйверами видеокарты
-        unknown: Игра крашнулась по неизвестной причине. Пожалуйста, предоставьте полный лог для дальнейшего анализа
-
+        out_of_memory: того что хватает памяти (повысьте ОЗУ)
+        no_class_def: того что отсутствуют классы или библиотеки
+        unsupported_class: того что клиент скомпилирован с другой версией Java
+        mod_crash: того что крашнулся мод
+        corrupted_world: того что мир повреждён
+        graphics_error: того что проблема с видеокартой или драйверами
+        opengl_error: того что произошла ошибка OpenGL, часто связана с драйверами видеокарты
+        unknown:
+            Игра крашнулась по неизвестной причине. Пожалуйста, предоставьте
+            полный лог для дальнейшего анализа
     no-crashes: Крашей не обнаружено, всё хорошо!
-
     crash-logs:
         creating-dir: Создаём папку для логов {}
         saved: Лог краша сохранён в {}
-
 logo:
     tagline: CLI инструмент для запуска клиентов Minecraft
-
 clients:
     already-downloaded: Клиент {} уже скачан
     already-downloaded-fabric: Fabric клиент уже скачан
-
     downloading: Скачиваем клиент {}
     downloading-fabric-client: Скачиваем Fabric клиент
-
     downloading-libraries-natives-1-12: Скачиваем 1.12.2 библиотеки и natives
     downloading-libraries-natives-1-12-2: Скачиваем 1.12.2+ библиотеки и natives
     downloading-fabric: Скачиваем Fabric библиотеки и natives
-
     running: Запускаем клиент {}
     running-fabric: Запускаем Fabric клиент {}
-
     progress:
         task: '[green]Запущенный клиент[/] [light_slate_blue]{}[/] [light_salmon1]<{}>[/]'
         session: '[purple3]активная сессия[/]'
-
     finished: Выходим из Minecraft
-
 clientmanager:
     error: Не удалось получить клиенты из API
-
 rpc:
     playing: Играет с {}
     choosing: Выбирает клиент
-    large-text: Версия {}
-
+    large-text: Версия {} ({})
 main:
-    debug-enabled: Режим отладки включен
-
     nickname-reminder: Не забудьте изменить свой никнейм!
     nickname-changed: Никнейм изменён
     ram-changed: ОЗУ изменена
     select-ram: Выберите ОЗУ (в гигабайтах)
     data-cleared: Папка данных очищена
-
     invalid-option: Выберите цифру или команду
     restart: Перезапустите лоадер для применения изменений
     no-crash-logs: Папка с логами крашей пуста
@@ -229,38 +188,64 @@ main:
     select-client: Выберите клиент!
     client-deleted: Клиент {} удалён
     client-not-found: Клиент {} не найден
-
     force-crash: Принудительный краш
-
 commands:
-    title: 'Доступные команды'
-    command: 'Команда'
-    description: 'Описание'
-    usage: 'Использование'
+    title: Доступные команды
+    command: Команда
+    description: Описание
+    usage: Использование
     cmds:
-        datafolder: 'Открывает папку данных.'
-        crashes: 'Открывает папку с журналами сбоев.'
-        data: 'Управляет папкой данных (например, очистка).'
-        fix: 'Может исправить некоторые проблемы с лоадером.'
-        cache: 'Управляет кэшем (очистка, создание, информация).'
-        download: 'Загружает клиент.'
-        reset: 'Сбрасывает клиент.'
-        delete: 'Удаляет клиент.'
-        open: 'Открывает папку клиента.'
-        help: 'Отображает это справочное сообщение.'
-
+        datafolder: Открывает папку данных.
+        crashes: Открывает папку с журналами сбоев.
+        data: Управляет папкой данных (например, очистка).
+        fix: Может исправить некоторые проблемы с лоадером.
+        cache: Управляет кэшем (очистка, создание, информация).
+        download: Загружает клиент.
+        reset: Сбрасывает клиент.
+        delete: Удаляет клиент.
+        open: Открывает папку клиента.
+        help: Отображает это справочное сообщение.
 sdkserver:
     starting: Сервер запущен на http://{}:{}
-
     logs-disabled: Логи отключены
-
     missing-name: Отсутствует параметр "name"
     missing-key: Отсутствует параметр "key"
     missing-header: Отсутствует параметр "header"
-
     client-started: Клиент {} запущен
     client-not-found: Клиент {} не найден
-
     settings-updated: Настройки обновлены
-
     shutdown: Сервер выключается...
+customclients:
+    menu-header: МЕНЕДЖЕР ПОЛЬЗОВАТЕЛЬСКИХ КЛИЕНТОВ
+    menu-options: Опции
+    no-clients: Пользовательские клиенты еще не добавлены
+    add: Добавить клиент
+    remove: Удалить клиент
+    rename: Переименовать клиент
+    change-version: Изменить версию клиента
+    back: Вернуться в главное меню
+    client-options: 'Опции для клиента: {}'
+    run: Запустить клиент
+    open-folder: Открыть папку клиента
+    enter-jar-path: Введите путь к JAR файлу клиента (можете перетащить файл в окно)
+    enter-name: Введите название клиента
+    enter-version: Введите версию клиента
+    enter-main-class: Введите путь к главному классу
+    enter-new-name: Введите новое название клиента
+    enter-new-version: Введите новую версию клиента
+    is-fabric: Это Fabric клиент? (д/н)
+    select-client: Выберите номер клиента
+    confirm-remove: Вы уверены, что хотите удалить клиент {}?
+    invalid-choice: Пожалуйста, выберите правильную опцию
+    jar-not-found: JAR файл не найден по пути {}
+    copying: Копирование JAR файла из {} в {}
+    already-exists: JAR файл клиента {} уже существует
+    added: Пользовательский клиент {} успешно добавлен
+    removed: Пользовательский клиент {} успешно удален
+    renamed: Клиент переименован с {} на {}
+    version-changed: Версия клиента {} изменена с {} на {}
+    not-found: Клиент с ID {} не найден
+    loaded: Загружено {} пользовательских клиентов
+    load-failed: 'Не удалось загрузить пользовательские клиенты: {}'
+    saved: Пользовательские клиенты успешно сохранены
+    save-failed: 'Не удалось сохранить пользовательские клиенты: {}'

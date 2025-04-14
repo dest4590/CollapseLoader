@@ -38,7 +38,7 @@ class RPC(Thread, Module):
                     },
                 ],
                 start=self.start_time,
-                large_text=lang.t("rpc.large-text").format(data.version),
+                large_text=lang.t("rpc.large-text").format(data.version, data.codename),
             )
         except Exception:
             try:

@@ -15,7 +15,3 @@ SAVE_MESSAGES = True
 # Show hidden clients
 # LINK - collapse/modules/utils/clients/ClientManager.py:60
 SHOW_HIDDEN_CLIENTS = False
-
-# !! DO NOT TOUCH !!
-# this variable will automatically enable if you enable debug in run.py
-DEBUG = False

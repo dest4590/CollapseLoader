@@ -8,24 +8,24 @@
 <img alt="GitHub Release" src="https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease">
 </p>
 
-<h2 align=center>CLI-based utility to run minecraft clients</h2> 
+<h2 align=center>CLI-based utility to run minecraft clients</h2>
 
 <h3 align=center>You can also download the latest version on our <a href="https://collapseloader.org">website</a></h3>
 
 <h2 align=center>Features</h2>
 
-* [X] Run clients
-* [X] CLI Interface
-* [X] Download manager
-* [X] Message system
-* [X] Settings system
-* [X] Config system
-* [X] Cache system 
-* [X] Packaging (CI/CD, PyInstaller)
-* [X] Mirrors (4 servers)
-
+-   [x] Run clients
+-   [x] CLI Interface
+-   [x] Download manager
+-   [x] Message system
+-   [x] Settings system
+-   [x] Config system
+-   [x] Cache system
+-   [x] Packaging (CI/CD, PyInstaller)
+-   [x] Mirrors (4 servers)
 
 ## Showcase
+
 <img src="https://github.com/user-attachments/assets/4d7b4a0b-fdc2-422e-a8a1-7e8e6aecdd44" width=500>
 
 <img src="https://github.com/user-attachments/assets/f270b8a6-6321-41b9-b6e2-393e807ce4b5" width=500>
@@ -33,4 +33,5 @@
 <img src="https://github.com/user-attachments/assets/2da89acb-72cb-4763-a649-625b1179b002" width=500>
 
 ## Stats
-![Alt](https://repobeats.axiom.co/api/embed/7b1d7b331cc7aadd46f994465326905afec453a0.svg "Repobeats analytics image")
+
+![Alt](https://repobeats.axiom.co/api/embed/7b1d7b331cc7aadd46f994465326905afec453a0.svg 'Repobeats analytics image')

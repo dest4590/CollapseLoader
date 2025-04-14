@@ -1,8 +1,7 @@
 import logging
+import os
 import random
 import sys
-
-from collapse.developer import DEBUG
 
 from .arguments import args
 from .modules.utils.Commands import commands
@@ -35,6 +34,7 @@ from .modules.storage.Data import data
 from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
 from .modules.utils.clients.ClientManager import client_manager
+from .modules.utils.clients.CustomClientManager import custom_client_manager
 from .modules.utils.Language import lang
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc
@@ -167,8 +167,9 @@ def handle_menu_options(choosed_int: int) -> None:
         )
         or logger.debug(lang.t("main.ram-changed")),
         selector_offset + 4: clientcleaner.scan_folders,
-        selector_offset + 5: credits_menu.show,
-        selector_offset + 6: lambda: sys.exit(1),
+        selector_offset + 5: custom_client_manager.show_client_manager,
+        selector_offset + 6: credits_menu.show,
+        selector_offset + 7: lambda: sys.exit(1),
     }
 
     action = menu_actions.get(choosed_int)
@@ -183,16 +184,9 @@ def handle_menu_options(choosed_int: int) -> None:
         logger.warning(f"Invalid menu option selected: {choosed_int}")
 
 
-def main(debug: bool) -> None:
+def main() -> None:
     """Main entry point of the application."""
-    global DEBUG
-
     selector.offset = 0
-
-    DEBUG = debug
-
-    if debug:
-        logger.debug(lang.t("main.debug-enabled"))
 
     if "_child.py" not in sys.argv[0]:
         initialize_settings()
