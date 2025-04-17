@@ -4,6 +4,7 @@ import shutil
 from datetime import datetime
 
 from ...storage.Data import data
+from ...storage.Settings import settings
 from ...utils.Fixes import console
 from ..Language import lang
 from ..Module import Module
@@ -25,27 +26,53 @@ class CustomClient(Client):
         filename = os.path.basename(jar_path)
         link = os.path.join(data.root_dir, filename)
 
+        self.full_version = version
+
+        asset_version = version
+        if not is_fabric and "." in version:
+            parts = version.split(".")
+            if len(parts) >= 2:
+                asset_version = f"{parts[0]}.{parts[1]}"
+
         super().__init__(
             name=name,
             link=link,
             main_class=main_class,
-            version=version,
+            version=asset_version,
             internal=False,
             working=True,
             id=custom_id + 10000,
             fabric=is_fabric,
         )
 
+        self.cut_version = False
+
         self.original_jar_path = jar_path
         self.custom_id = custom_id
         self.added_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.is_custom = True
 
+    def __str__(self) -> str:
+        """Override to display full version for custom clients"""
+        is_downloaded = data.boolean_states[data.is_downloaded(self.filename)]
+
+        version = (
+            f" <{self.full_version}>"
+            if not settings.use_option("show_client_version")
+            else ""
+        )
+
+        prefix = "[cyan1]★[/] "
+        name_color = "[turquoise2]" + self.name + "[/]"
+        fabric_tag = " [violet](Fabric)[/]" if self.fabric else ""
+
+        return f"{prefix}{name_color}{version}{fabric_tag}{is_downloaded if not settings.use_option('show_installed') else ''}"
+
     def to_dict(self) -> dict:
         """Convert to dictionary for storage"""
         return {
             "name": self.name,
-            "version": self.version,
+            "version": self.full_version,
             "main_class": self.main_class,
             "fabric": self.fabric,
             "original_jar_path": self.original_jar_path,
@@ -181,8 +208,17 @@ class CustomClientManager(Module):
         """Update the version of a custom client"""
         for client in self.clients:
             if client.custom_id == client_id:
-                old_version = client.version
-                client.version = new_version
+                old_version = client.full_version
+
+                client.full_version = new_version
+
+                if new_version.count(".") >= 2 and not client.fabric:
+                    parts = new_version.split(".")
+                    if len(parts) >= 2:
+                        client.version = f"{parts[0]}.{parts[1]}"
+                else:
+                    client.version = new_version
+
                 self.save_clients()
                 self.info(
                     lang.t("customclients.version-changed").format(
@@ -223,7 +259,7 @@ class CustomClientManager(Module):
             else:
                 for i, client in enumerate(self.clients):
                     print(
-                        f"{i + 1}. {client.name} <{client.version}> {'(Fabric)' if client.fabric else ''}"
+                        f"{i + 1}. {client.name} <{client.full_version}> {'(Fabric)' if client.fabric else ''}"
                     )
 
             client_count = len(self.clients)
@@ -264,10 +300,10 @@ class CustomClientManager(Module):
                         name = os.path.splitext(os.path.basename(jar_path))[0]
 
                     version = input(
-                        f"{lang.t('customclients.enter-version')} (1.12.2): "
+                        f"{lang.t('customclients.enter-version')} (1.16.5): "
                     )
                     if not version:
-                        version = "1.12.2"
+                        version = "1.16.5"
 
                     main_class = input(
                         f"{lang.t('customclients.enter-main-class')} (net.minecraft.client.main.Main): "
@@ -328,8 +364,11 @@ class CustomClientManager(Module):
 
                     if 1 <= client_index <= len(self.clients):
                         client = self.clients[client_index - 1]
+                        display_version = getattr(
+                            client, "display_version", client.version
+                        )
                         new_version = input(
-                            f"{lang.t('customclients.enter-new-version')} ({client.version}): "
+                            f"{lang.t('customclients.enter-new-version')} ({display_version}): "
                         )
 
                         if new_version:
@@ -383,7 +422,7 @@ class CustomClientManager(Module):
                                 self.rename_client(client.custom_id, new_name)
                         elif sub_choice == "4":
                             new_version = input(
-                                f"{lang.t('customclients.enter-new-version')} ({client.version}): "
+                                f"{lang.t('customclients.enter-new-version')} ({client.full_version}): "
                             )
                             if new_version:
                                 self.update_version(client.custom_id, new_version)

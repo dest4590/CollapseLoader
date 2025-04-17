@@ -63,15 +63,26 @@ class Client(Module):
         self.main_class = main_class
 
         self.cut_version = True
-        self.version = version[:-2] if self.cut_version and not fabric else version
+        self.version = (
+            version[:-2]
+            if self.cut_version and not fabric and not hasattr(self, "is_custom")
+            else version
+        )
 
         self.internal = internal
         self.silent = False
 
     def __str__(self) -> str:
         is_downloaded = data.boolean_states[data.is_downloaded(self.filename)]
+
+        display_version = (
+            getattr(self, "display_version", self.version)
+            if hasattr(self, "is_custom") and self.is_custom
+            else self.version
+        )
+
         version = (
-            f" <{self.version}>"
+            f" <{display_version}>"
             if not settings.use_option("show_client_version")
             else ""
         )
