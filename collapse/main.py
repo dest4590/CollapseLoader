@@ -4,7 +4,6 @@ import random
 import sys
 
 from .arguments import args
-from .modules.utils.Commands import commands
 from .modules.utils.Fixes import console
 from .modules.utils.Logger import logger
 
@@ -21,6 +20,12 @@ if args.level:
     }
     logger.setLevel(levels[args.level])
 
+import ssl
+
+# this lines fixes the SSL error when u using your own certificate (like mitmproxy, charlesproxy, etc)
+ssl._create_default_https_context = ssl._create_unverified_context
+ssl.SSLContext.verify_mode = ssl.VerifyMode.CERT_OPTIONAL
+
 from .modules.network.Analytics import analytics
 from .modules.network.Configs import config_menu
 from .modules.network.Message import messages
@@ -35,6 +40,7 @@ from .modules.storage.Options import Option, options_menu
 from .modules.storage.Settings import settings
 from .modules.utils.clients.ClientManager import client_manager
 from .modules.utils.clients.CustomClientManager import custom_client_manager
+from .modules.utils.Commands import commands
 from .modules.utils.Language import lang
 from .modules.utils.Logo import logo
 from .modules.utils.RPC import rpc
