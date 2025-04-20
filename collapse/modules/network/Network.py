@@ -25,7 +25,12 @@ class Network(Module):
         """Make a GET request to the given URL"""
         try:
             response = self.session.get(
-                url, params=params, headers=headers, stream=stream, timeout=self.timeout
+                url,
+                params=params,
+                headers=headers,
+                stream=stream,
+                timeout=self.timeout,
+                verify=False,
             )
             return response
         except requests.exceptions.RequestException as e:

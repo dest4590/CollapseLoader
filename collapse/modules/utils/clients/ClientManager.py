@@ -31,7 +31,7 @@ class ClientManager(Module):
 
         if servers.web_server == "":
             if not os.path.exists(cache.path):
-                self.error(lang.t("cache.client-cache-not-found"))
+                self.error(lang.t("cache.cache-not-found"))
 
             else:
                 c = cache.get()
