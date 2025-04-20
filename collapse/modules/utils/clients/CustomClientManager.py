@@ -277,7 +277,7 @@ class CustomClientManager(Module):
                 f"[dark_cyan]{client_count + menu_option_offset + 4}. {lang.t('customclients.change-version')}[/]"
             )
             console.print(
-                f"[dark_cyan]{client_count + menu_option_offset + 5}. {lang.t('customclients.back')}[/]"
+                f"[red]{client_count + menu_option_offset + 5}. {lang.t('customclients.back')}[/]"
             )
 
             try:
@@ -400,7 +400,7 @@ class CustomClientManager(Module):
                             f"[dark_cyan]5. {lang.t('customclients.remove')}[/]"
                         )
                         console.print(
-                            f"[dark_cyan]6. {lang.t('customclients.back')}[/]"
+                            f"[red]6. {lang.t('customclients.back')}[/]"
                         )
 
                         sub_choice = selector.select()

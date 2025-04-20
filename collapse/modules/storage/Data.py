@@ -29,7 +29,7 @@ class DataManager(Module):
         self.web_server = servers.web_server
 
         if not self.server:
-            self.critical(lang.t("data.no_servers"))
+            self.critical(lang.t("data.no-server"))
 
         self.version = VERSION
         self.codename = CODENAME
