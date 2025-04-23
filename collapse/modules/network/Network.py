@@ -30,7 +30,7 @@ class Network(Module):
                 headers=headers,
                 stream=stream,
                 timeout=self.timeout,
-                verify=False,
+                # verify=False,
             )
             return response
         except requests.exceptions.RequestException as e:
