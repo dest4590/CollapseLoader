@@ -65,7 +65,7 @@ class Client(Module):
         self.cut_version = True
         self.version = (
             version[:-2]
-            if self.cut_version and not fabric and not hasattr(self, "is_custom")
+            if self.cut_version and not fabric or not hasattr(self, "is_custom")
             else version
         )
 
