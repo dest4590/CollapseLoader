@@ -1,0 +1,796 @@
+{
+  "modals": {
+    "initial_setup": {
+      "welcome": {
+        "title": "Welcome to CollapseLoader",
+        "description": "Let's configure everything for you"
+      },
+      "gui": {
+        "title": "User-Friendly Interface",
+        "description": "Simple and intuitive interface for managing clients"
+      },
+      "ram": {
+        "title": "Memory Settings",
+        "description": "Configure how much RAM to allocate for optimal performance"
+      },
+      "registration": {
+        "title": "Create Account",
+        "description": "Register an account to sync your settings and unlock additional features",
+        "create_account": "Create Account",
+        "registering": "Registering...",
+        "success": "Account created successfully!",
+        "failed": "Registration failed. Please try again.",
+        "auto_login_success": "Account created successfully! You are now logged in."
+      },
+      "feedback": {
+        "title": "Feedback",
+        "description": "Join our community"
+      },
+      "telemetry": {
+        "title": "Optional Analytics",
+        "description": "Help us improve CollapseLoader by sharing anonymous usage data. You can change this setting anytime in the settings menu.",
+        "data_collected_title": "What we collect:",
+        "data_collected": {
+          "performance": "Performance metrics (startup time, memory usage)",
+          "usage_patterns": "Usage patterns (most used clients, launch frequency)",
+          "crash_reports": "Crash reports and errors to improve stability"
+        },
+        "privacy_note_title": "Privacy: ",
+        "privacy_note": "All data is anonymous and contains no personal information. You can disable this feature at any time in settings.",
+        "accept": "Allow Analytics",
+        "decline": "No Thanks"
+      },
+      "appreciation": {
+        "title": "Thank You for Choosing CollapseLoader",
+        "description": "We hope you enjoy using our loader!"
+      },
+      "disclaimer": {
+        "title": "Disclaimer",
+        "responsibility": "The developers of CollapseLoader and the creators of any listed clients are not responsible for any consequences that may arise from your use of this software or the clients it provides access to.",
+        "acknowledgment": "By using this application, you accept all risks",
+        "accept": "I understand and accept"
+      },
+      "lets_go": "Let's go!",
+      "language_changed": "Language changed successfully!",
+      "language_change_failed": "Failed to change language. Please try again."
+    },
+    "block_unblock_confirm": {
+      "block_message": "Are you sure you want to block {displayName}? This will remove them from your friends list and prevent future contact.",
+      "unblock_message": "Are you sure you want to unblock {displayName}? They will be able to send you friend requests again.",
+      "yes_unblock": "Yes, unblock",
+      "yes_block": "Yes, block"
+    },
+    "reset_confirm": {
+      "message": "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
+      "yes_reset": "Yes, Reset",
+      "cancel": "Cancel"
+    },
+    "remove_friend_confirm": {
+      "message": "Are you sure you want to remove {displayName} from your friends? This action cannot be undone.",
+      "yes_remove": "Yes, Remove",
+      "cancel": "Cancel"
+    },
+    "cancel_friend_request_confirm": {
+      "message": "Are you sure you want to cancel your friend request to {displayName}?",
+      "yes_cancel": "Yes, Cancel Request",
+      "keep_request": "Keep Request"
+    },
+    "register_prompt": {
+      "title": "Create an Account",
+      "description": "Register an account to unlock all features and sync your settings across devices.",
+      "benefits": {
+        "sync": "Save and sync your settings (include themes, favorites, etc.)",
+        "notifications": "Receive notifications about updates"
+      },
+      "register_now": "Register Now",
+      "maybe_later": "Maybe Later"
+    },
+    "edit_nickname": {
+      "label": "Nickname",
+      "placeholder": "Enter your nickname",
+      "description": "Optional - this is how others will see you",
+      "update": "Update Nickname",
+      "cancel": "Cancel",
+      "nickname_taken": "This nickname is already taken"
+    },
+    "edit_account": {
+      "username_label": "Username",
+      "tags_label": "Tags (comma separated)",
+      "update": "Update Account",
+      "cancel": "Cancel"
+    },
+    "delete_account_confirm": {
+      "message": "Are you sure you want to delete the account \"{username}\"? This action cannot be undone.",
+      "yes_delete": "Yes, Delete",
+      "cancel": "Cancel"
+    },
+    "change_password_confirm": {
+      "message": "Are you sure you want to change your password?",
+      "warning": "After changing your password, you will need to log in again on all other devices.",
+      "yes_change": "Yes, Change Password"
+    },
+    "logout_confirm": {
+      "message": "Are you sure you want to log out of your account?",
+      "info": "You will need to log in again to access your account features.",
+      "yes_logout": "Yes, Logout"
+    },
+    "client_crash": {
+      "error_occurred": "An error occurred: {error}",
+      "crashed_message": "Client {clientName} has crashed. See the logs below for more details.",
+      "crash_logs": "Crash Logs:",
+      "no_logs": "No logs available.",
+      "copy_logs": "Copy Logs",
+      "close": "Close"
+    },
+    "add_friend": {
+      "search_label": "Search for users",
+      "search_placeholder": "Enter username...",
+      "add_friend": "Add Friend",
+      "already_friends": "Already Friends",
+      "request_sent": "Request Sent",
+      "request_received": "Request Received",
+      "blocked": "Blocked",
+      "no_users_found": "No users found",
+      "search_hint": "Enter at least 2 characters to search",
+      "close": "Close"
+    },
+    "add_account": {
+      "username_label": "Username",
+      "username_placeholder": "Enter username",
+      "tags_label": "Tags (comma separated)",
+      "tags_placeholder": "e.g. funtime, spookytime",
+      "add_account": "Add Account",
+      "cancel": "Cancel"
+    },
+    "telemetry_consent": {
+      "title": "Optional Analytics Consent",
+      "description": "To improve your CollapseLoader experience, we may collect additional analytics. This data helps us understand how the application is being used and make it better.",
+      "data_collected_title": "What data we collect:",
+      "data_collected": {
+        "performance": "Performance metrics (startup time, memory usage)",
+        "usage_patterns": "Usage patterns (most used clients, launch frequency)",
+        "crash_reports": "Crash reports and errors to improve stability",
+        "feature_usage": "Application feature usage statistics"
+      },
+      "privacy_note_title": "Privacy: ",
+      "privacy_note": "All data is anonymous and contains no personal information. You can disable this feature at any time in settings.",
+      "accept": "Allow Analytics",
+      "decline": "Decline"
+    },
+    "insecure_client_warning": {
+      "modal_title": "Security Warning",
+      "title": "Unverified Client Warning",
+      "subtitle": "This client has not been checked for viruses",
+      "description": "You are about to launch \"{clientName}\", which has not been verified for malware or viruses. This client may contain potentially harmful code that could damage your system or compromise your security.",
+      "dont_show_again": "Don't show this warning again for this client",
+      "proceed_anyway": "Launch Anyway",
+      "cancel": "Cancel"
+    }
+  },
+  "preloader": {
+    "initializing": "Initialization...",
+    "connecting_servers": "Connecting to servers...",
+    "ready": "Ready!"
+  },
+  "about": {
+    "title": "About CollapseLoader",
+    "version": "Version",
+    "codename": "Codename",
+    "commit": "Commit",
+    "description": "Join our community for updates, support, and to report any issues you may encounter.",
+    "open_failed": "Failed to open {platform}"
+  },
+  "account": {
+    "no_email": "No email",
+    "invisible_mode": "Invisible mode",
+    "invisible_mode_description": "When enabled, you'll appear offline to other users",
+    "streamer_mode": "Streamer mode",
+    "streamer_mode_description": "When enabled, all usernames will be hidden for privacy",
+    "streamer_enabled": "Streamer mode enabled",
+    "streamer_disabled": "Streamer mode disabled",
+    "streamer_failed": "Failed to toggle streamer mode",
+    "invisible_failed": "You must be online to change visibility settings",
+    "using_cached_data": "Offline mode - Status changes disabled",
+    "change_password": "Change password",
+    "change_password_confirm_title": "Confirm Password Change",
+    "current_password": "Current password",
+    "new_password": "New password",
+    "confirm_password": "Confirm password",
+    "password_change_failed": "Failed to change password. Please check your connection and try again.",
+    "password_change_success": "Password changed successfully!",
+    "password_too_short": "New password must be at least 8 characters long.",
+    "password_mismatch": "New passwords do not match.",
+    "nickname_update_failed": "Failed to update nickname. Please try again when online.",
+    "nickname_update_success": "Nickname updated successfully!",
+    "nickname_label": "Edit nickname",
+    "user_info_load_failed": "Failed to load user info.",
+    "profile_load_failed": "Failed to load user profile.",
+    "invisible_enabled": "Invisible mode enabled",
+    "invisible_disabled": "Invisible mode disabled",
+    "logout_confirm_title": "Confirm Logout"
+  },
+  "time": {
+    "offline": "Offline",
+    "online": "Online"
+  },
+  "common": {
+    "logout": "Logout",
+    "back": "Back",
+    "unblock": "Unblock",
+    "next": "Next",
+    "previous": "Previous",
+    "install": "Install",
+    "delete": "Delete",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "login": "Login",
+    "register": "Register",
+    "download": "Download",
+    "launch": "Launch",
+    "stop": "Stop",
+    "please_wait": "Please wait",
+    "unavailable": "Unavailable",
+    "cancel": "Cancel",
+    "reinstall": "Reinstall",
+    "blocked": "Blocked",
+    "loading": "Loading...",
+    "ok": "Ok",
+    "close": "Close"
+  },
+  "auth": {
+    "logout": {
+      "confirm": "Are you sure you want to log out of your account?",
+      "local_only": "Logout completed locally. There was an issue with server logout.",
+      "success": "Logged out successfully!"
+    },
+    "login": {
+      "title": "Login",
+      "username_placeholder": "Enter your username",
+      "password_placeholder": "Enter your password",
+      "login_button": "Login",
+      "register_link": "Don't have an account?",
+      "success": "Logged in successfully!",
+      "login_failed": "Login failed. Please check your credentials.",
+      "no_token": "No authentication token received."
+    },
+    "register": {
+      "title": "Register",
+      "username_placeholder": "Choose a username",
+      "email_placeholder": "Enter your email",
+      "password_placeholder": "Choose a password",
+      "confirm_password_placeholder": "Confirm password",
+      "register_button": "Register",
+      "login_link": "Already have an account?",
+      "registration_failed": "Registration failed. Please try again.",
+      "auto_login_failed": "Registration successful, but automatic login failed. Please log in manually."
+    }
+  },
+  "appLogs": {
+    "copyLogs": "Copy",
+    "autoScroll": "Auto scroll",
+    "noLogs": "No application logs available."
+  },
+  "blockedUsers": {
+    "title": "Blocked Users ({count})",
+    "noBlockedUsers": "No blocked users. Blocked users will appear here."
+  },
+  "friends": {
+    "addFriend": "Add Friend",
+    "friendRequests": "Friend Requests",
+    "noFriends": "No friends yet. \nAdd some friends to get started!",
+    "receivedRequests": "Received",
+    "sentRequests": "Sent",
+    "title": "Friends ({count})",
+    "pending": "Pending",
+    "cancel": "Cancel",
+    "cancel_friend_request": "Cancel Friend Request",
+    "remove_success": "{name} removed from friends",
+    "block_success": "{name} has been blocked",
+    "unblock_success": "{name} has been unblocked",
+    "request_accepted": "Friend request accepted",
+    "request_rejected": "Friend request rejected",
+    "request_canceled": "Friend request canceled",
+    "remove_failed": "Failed to remove friend",
+    "block_failed": "Failed to block user",
+    "unblock_failed": "Failed to unblock user",
+    "request_failed": "Failed to {action} friend request",
+    "load_failed": "Failed to load friends data"
+  },
+  "home": {
+    "warning": "WARNING: This program builded for beta testers only, do not share it with anyone!",
+    "alpha": "WARNING: This program is in alpha stage, it may contain bugs and issues!",
+    "search_placeholder": "Search clients...",
+    "no_clients": "No clients found",
+    "adjust_search": "Try adjusting your search query.",
+    "client_installed": "{name} installed successfully",
+    "favorite_added": "Added to favorites",
+    "favorite_removed": "Removed from favorites",
+    "starting_download": "Starting download for {name}",
+    "no_internet": "Cannot download client: No internet connection.",
+    "not_installed": "{name} is not installed. Please download it first.",
+    "launching": "Launching {client}...",
+    "stopping": "Stopping {name}...",
+    "opened_folder": "Opened folder for {name}",
+    "reinstalling": "Reinstalling {name}...",
+    "no_internet_reinstall": "Cannot reinstall client: No internet connection.",
+    "logs_copied": "Logs for {name} copied to clipboard",
+    "deleted_success": "{name} deleted successfully",
+    "please_wait": "Please wait",
+    "unavailable": "Unavailable",
+    "downloading_other": "Downloading...",
+    "download": "Download",
+    "stop": "Stop",
+    "launch": "Launch",
+    "verifying": "Verifying...",
+    "verifying_hash": "Verifying integrity",
+    "start_with": "Start with",
+    "select_account": "Select an account",
+    "started_with_account": "Started {client} with account {account}",
+    "selected_clients": "Selected: {count} clients",
+    "multiple_clients_selected": "{count} clients selected",
+    "download_selected": "Download Selected",
+    "reinstall_selected": "Reinstall Selected",
+    "delete_selected": "Delete Selected",
+    "downloading_multiple": "Downloading {count} clients...",
+    "downloading_multiple_concurrent": "Downloading {count} clients concurrently",
+    "deleting_multiple": "Deleting {count} clients...",
+    "reinstalling_multiple": "Reinstalling {count} clients...",
+    "multiple_clients_deleted": "{count} clients deleted successfully",
+    "multiple_clients_reinstalled": "{count} clients reinstalled successfully",
+    "no_clients_to_download": "No clients available for download",
+    "no_clients_to_delete": "No installed clients to delete",
+    "no_clients_to_reinstall": "No installed clients to reinstall",
+    "requirements": "requirements",
+    "stop_selected": "Stop selected clients",
+    "stopping_multiple": "Stopping {count} clients",
+    "multiple_clients_stopped": "{count} clients stopped successfully"
+  },
+  "theme": {
+    "actions": {
+      "add_favorite": "Add to Favorites",
+      "remove_favorite": "Remove from Favorites",
+      "open_folder": "Open Folder"
+    },
+    "title": "Theme",
+    "select_theme": "Select Theme",
+    "description": "Select your preferred theme.",
+    "loading": "Loading theme settings...",
+    "change_success": "Theme changed",
+    "save_failed": "Failed to save theme: {error}",
+    "light": "Light",
+    "dark": "Dark",
+    "card_configure_title": "Card Configure",
+    "card_preview": "Client Card Preview",
+    "card_preview_desc": "This is how your client cards will look.",
+    "card_radius_none": "No Border Radius",
+    "card_radius_sm": "Small Border Radius",
+    "card_radius_md": "Medium Border Radius",
+    "card_radius_lg": "Large Border Radius",
+    "card_radius_xl": "Extra Large Border Radius",
+    "card_shadow_label": "Card Shadow",
+    "card_shadow_none": "No Shadow",
+    "card_shadow_sm": "Small Shadow",
+    "card_shadow_md": "Medium Shadow",
+    "card_shadow_lg": "Large Shadow",
+    "card_shadow_xl": "Extra Large Shadow",
+    "card_padding_label": "Card Padding",
+    "card_padding_sm": "Small Padding",
+    "card_padding_md": "Medium Padding",
+    "card_padding_lg": "Large Padding",
+    "card_padding_xl": "Extra Large Padding",
+    "reset_button": "Reset",
+    "expert_css_title": "Expert CSS Customization",
+    "show_expert": "Show Expert",
+    "hide_expert": "Hide Expert",
+    "documentation": "Documentation",
+    "expert_warning": "Advanced users only. Invalid CSS may break the interface.",
+    "custom_css_label": "Custom CSS",
+    "custom_variables_label": "CSS Variables",
+    "reset_css": "Reset CSS",
+    "reset_variables": "Reset Variables",
+    "enable_custom_css": "Enable custom CSS",
+    "css_placeholder": "/* Custom CSS styles */\n.my-custom-class {\n  /* Your styles here */\n}",
+    "variables_placeholder": "--my-custom-color: #ff6b6b;\n--my-custom-size: 1.5rem;",
+    "css_examples_title": "Examples",
+    "example_1": "Add backdrop blur to cards",
+    "example_inserted": "Example inserted",
+    "enable_custom_css_first": "Enable custom css first",
+    "selected": "Selected",
+    "insert_example": "Insert",
+    "available_classes_label": "Available classes for editing (click to insert them into code)",
+    "tooltip_client_card": "Main class of the client card",
+    "tooltip_sidebar_btn": "Class for left navigation buttons",
+    "tooltip_launch_download_btn": "Classes of download and launch buttons",
+    "card_radius": "Card radius",
+    "export_css_btn": "Export CSS",
+    "import_css_btn": "Import CSS",
+    "export_css_title": "Export Custom CSS",
+    "import_css_title": "Import Custom CSS",
+    "import_export_css": "Import/Export CSS",
+    "export_desc": "Copy the encoded CSS below and share it. Only safe CSS is allowed.",
+    "import_desc": "Paste the encoded CSS here to import. Only safe CSS is allowed.",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "copy_failed": "Failed to copy",
+    "import": "Import",
+    "import_success": "CSS imported successfully!",
+    "import_invalid": "Invalid or unsafe CSS. Import failed."
+  },
+  "logs": {
+    "copy_logs": "Copy logs",
+    "title": "{client} Logs"
+  },
+  "installation": {
+    "downloading": "Downloading",
+    "extracting": "Extracting",
+    "download_complete": "Download Complete",
+    "installation_complete": "Installation Complete"
+  },
+  "errors": {
+    "clients_load_failed": "Failed to load clients. Servers might be unavailable. Please check logs or try again later.",
+    "clients_unavailable": "Failed to load clients. Servers might be unavailable.",
+    "download_error": "Error downloading client: {error}",
+    "launch_error": "Error launching client: {error}",
+    "stop_error": "Error stopping client: {error}",
+    "folder_error": "Error opening folder: {error}",
+    "reinstall_error": "Error reinstalling client: {error}",
+    "logs_error": "Error copying logs: {error}",
+    "delete_error": "Error deleting client: {error}",
+    "status_update_error": "Failed to update {name} status: {error}",
+    "favorites_error": "Error updating favorite: {error}",
+    "load_accounts_error": "Error loading accounts: {error}",
+    "launch_with_account_error": "Error launching client with account: {error}",
+    "download_network_error": "Network connection error while downloading: {error}",
+    "download_timeout_error": "Download timed out. Please check your connection: {error}",
+    "download_disk_error": "Failed to save file to disk. Please check available storage: {error}",
+    "hash_verification_failed": "File integrity check failed for {name}. The downloaded file is corrupted and has been removed. Please try downloading again.",
+    "hash_verification_download_failed": "Hash verification failed for {name}. Expected: {expected}, Got: {actual}. The file has been removed and needs to be redownloaded.",
+    "hash_verification_launch_failed": "Cannot check hash for client {name}"
+  },
+  "validation": {
+    "passwords_no_match": "Passwords do not match.",
+    "min_length": "{field} must be at least {length} characters long."
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General Settings",
+    "sync": "Cloud Sync",
+    "accounts": "Account Management",
+    "reset_tooltip": "Reset to defaults",
+    "sync_status": "Cloud Sync Status",
+    "sync_controls": "Sync Controls",
+    "upload_title": "Upload to Cloud",
+    "upload_description": "Backup your current settings, favorites, and accounts to the cloud.",
+    "upload_button": "Upload Now",
+    "download_title": "Download from Cloud",
+    "download_description": "Restore your settings, favorites, and accounts from the cloud.",
+    "download_button": "Download Now",
+    "syncing": "Syncing...",
+    "auto_sync": "Auto-sync",
+    "auto_sync_description": "Automatically sync your data to the cloud every 5 minutes when online.",
+    "offline_warning": "You are currently offline. Sync features are disabled.",
+    "no_cloud_data": "No cloud data found. Upload your data to get started with cloud sync.",
+    "add_account": "Add Account",
+    "active": "Active",
+    "tags": "Tags",
+    "created": "Created",
+    "last_used": "Last used",
+    "no_accounts_title": "No accounts yet",
+    "no_accounts_description": "Add your first account to get started",
+    "account_set_active": "{username} is now the active account!",
+    "account_set_active_failed": "Failed to set active account: {error}",
+    "download_success": "Downloaded from cloud successfully!",
+    "download_failed": "Download from cloud failed: {error}",
+    "load_settings_failed": "Failed to load settings: {error}",
+    "save_settings_failed": "Failed to save settings: {error}",
+    "load_accounts_failed": "Failed to load accounts: {error}",
+    "load_flags_failed": "Failed to load flags: {error}",
+    "language_change_failed": "Failed to change language: {error}",
+    "descriptions": {
+      "ram": "Amount of RAM to allocate in MB.",
+      "language": "The application language (e.g., en, ru).",
+      "discord_rpc_enabled": "Enable Discord Rich Presence to show your activity in Discord.",
+      "optional_telemetry": "Allow anonymous analytics to help improve CollapseLoader. No personal information is collected.",
+      "cordshare": "Share your coordinates with friends to show your location in-game, even when you're outside loaded chunks.",
+      "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
+      "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date."
+    },
+    "telemetry": "Analytics",
+    "telemetry_toggle": "Enable anonymous analytics",
+    "open_data": "Open data folder",
+    "add_account_title": "Add New Account",
+    "edit_account_title": "Edit account",
+    "reset_title": "Reset Settings Confirmation",
+    "delete_account_title": "Delete Account Confirmation",
+    "actions": "Actions",
+    "toast_position": {
+      "title": "Toast Position",
+      "description": "Choose where notifications appear on your screen",
+      "bottom_right": "Bottom Right",
+      "bottom_left": "Bottom Left",
+      "top_right": "Top Right",
+      "top_left": "Top Left",
+      "bottom_center": "Bottom Center",
+      "top_center": "Top Center",
+      "preview_message": "Toast position changed!",
+      "test_message": "This is a test notification!",
+      "test_toast": "Test Toast"
+    },
+    "telemetry_info_title": "Info about telemetry",
+    "reset_requirements": "Reset loader files",
+    "reset_requirements_success": "Successfully removed requirements, now download any client",
+    "reset_requirements_failed": "Cannot remove requirements, try again or restart loader",
+    "login_required": "You will need to log into your account to use this feature.",
+    "reset_cache": "Reset client cache",
+    "reset_cache_success": "Successfully deleted client cache, restart the loader",
+    "reset_cache_failed": "Cannot remove cache, try again"
+  },
+  "userProfile": {
+    "back_to_friends": "Back to Friends",
+    "profile_information": "Profile Information",
+    "username": "Username",
+    "nickname": "Nickname",
+    "member_since": "Member since",
+    "actions": "Actions",
+    "online": "Online",
+    "offline": "Offline",
+    "playing": "Playing",
+    "last_seen": "Last seen",
+    "just_now": "just now",
+    "minutes_ago": "{count}m ago",
+    "hours_ago": "{count}h ago",
+    "days_ago": "{count}d ago",
+    "unknown": "Unknown",
+    "friends_with": "You are friends with {name}",
+    "remove_friend": "Remove Friend",
+    "friend_request_sent": "Friend request sent to {name}",
+    "friend_request_received": "{name} sent you a friend request",
+    "accept": "Accept",
+    "decline": "Decline",
+    "user_blocked": "This user is blocked",
+    "send_friend_request": "Send Friend Request",
+    "sending": "Sending...",
+    "canceling": "Canceling...",
+    "cancel_friend_request": "Cancel Request",
+    "block_user": "Block User",
+    "unblock_user": "Unblock User",
+    "no_user_id": "No user ID provided",
+    "user_not_found": "User not found",
+    "login_required": "You need to be logged in to view profiles",
+    "profile_load_failed": "Failed to load user profile",
+    "friend_request_sent_success": "Friend request sent to {name}",
+    "friend_request_failed": "Failed to send friend request",
+    "friend_request_canceled": "Friend request canceled successfully",
+    "friend_request_cancel_failed": "Failed to cancel friend request",
+    "friend_removed_success": "{name} removed from friends",
+    "friend_remove_failed": "Failed to remove friend",
+    "friend_request_responded": "Friend request {action}ed",
+    "friend_request_respond_failed": "Failed to {action} friend request",
+    "friend_request_not_found": "Friend request not found",
+    "user_blocked_success": "{name} has been blocked",
+    "user_block_failed": "Failed to block user"
+  },
+  "sync": {
+    "last_sync": "Last sync",
+    "minutes_ago": "{count}m ago",
+    "hours_ago": "{count}h ago",
+    "days_ago": "{count}d ago"
+  },
+  "navigation": {
+    "home": "Home",
+    "friends": "Friends",
+    "settings": "Settings",
+    "theme": "Theme",
+    "logs": "Application Logs",
+    "account": "Account",
+    "about": "About",
+    "admin": "Admin Panel",
+    "news": "News"
+  },
+  "admin": {
+    "title": "Administration Panel",
+    "role": "ADMIN",
+    "stats": {
+      "totalUsers": "Total Users",
+      "onlineUsers": "Online Users",
+      "newToday": "New Today",
+      "friendships": "Active Friendships"
+    },
+    "users": {
+      "title": "Users Management",
+      "searchPlaceholder": "Search by username, email or nickname...",
+      "username": "Username",
+      "email": "Email",
+      "status": "Status",
+      "lastSeen": "Last Seen",
+      "actions": "Actions",
+      "noUsers": "No users found.",
+      "adjustSearch": "Try adjusting your search query."
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "inactive": "Inactive",
+      "never": "Never"
+    },
+    "actions": {
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "forceLogout": "Force Logout"
+    },
+    "pagination": {
+      "pageOf": "Page {current} of {total}",
+      "page_of": "Page {current} of {total}"
+    },
+    "errors": {
+      "accessDenied": "Access denied. Admin privileges required.",
+      "accessCheckFailed": "Failed to check admin access.",
+      "statsLoadFailed": "Failed to load dashboard statistics.",
+      "usersLoadFailed": "Failed to load users data.",
+      "actionFailed": "Action failed. Please try again."
+    },
+    "success": {
+      "userStatusChanged": "User {username} status changed successfully.",
+      "userLoggedOut": "User {username} has been logged out."
+    }
+  },
+  "toast": {
+    "dev": {
+      "example": "This is an example toast!",
+      "menu_opened": "Developer menu opened",
+      "flags_reset": "Flags have been reset!"
+    },
+    "client": {
+      "crashed": "Client {name} has crashed. {error}",
+      "crashed_incomplete": "Client {name} crashed due to incomplete download. Attempting auto-reinstall.",
+      "reinstall_success": "Successfully reinstalled {name}. Please try launching again.",
+      "reinstall_failed": "Failed to reinstall {name}: {error}. Please reinstall manually.",
+      "hash_verification_failed": "File integrity check failed for {name}. Redownloading...",
+      "redownload_success": "Successfully redownloaded {name}. Hash verified."
+    },
+    "server": {
+      "offline": "Could not determine server status. Assuming offline.",
+      "offline_base": "You are currently offline. ",
+      "cdn_and_api_offline": "Cannot connect to CDN and Web API.",
+      "cdn_offline": "Cannot connect to CDN.",
+      "api_offline": "Cannot connect to Web API.",
+      "status_offline": "You are currently offline",
+      "api_init_failed": "Failed to initialize API: {error}"
+    },
+    "settings": {
+      "flags_load_failed": "Failed to load flags: {error}",
+      "first_run_save_failed": "Failed to save first run status: {error}",
+      "disclaimer_save_failed": "Failed to save disclaimer status: {error}",
+      "theme_save_failed": "Failed to save theme: {error}"
+    },
+    "telemetry": {
+      "analytics_enabled": "Analytics enabled. Thank you for helping us improve!",
+      "analytics_disabled": "Analytics disabled.",
+      "analytics_enable_failed": "Failed to enable analytics: {error}",
+      "analytics_disable_failed": "Failed to disable analytics: {error}"
+    },
+    "auth": {
+      "registration_success": "Registration successful! Please log in."
+    },
+    "logs": {
+      "fetch_failed": "Error fetching app logs: {error}",
+      "copied_success": "App logs copied to clipboard!",
+      "copy_failed": "Failed to copy app logs: {error}",
+      "client_logs_copied": "Logs copied to clipboard!",
+      "client_logs_copy_failed": "Failed to copy logs to clipboard."
+    },
+    "users": {
+      "blocked_load_failed": "Failed to load blocked users",
+      "unblocked_success": "{name} has been unblocked",
+      "unblock_failed": "Failed to unblock user"
+    },
+    "friends": {
+      "search_failed": "Failed to search users",
+      "request_sent": "Friend request sent to {name}",
+      "request_send_failed": "Failed to send friend request"
+    },
+    "account": {
+      "username_required": "Username is required",
+      "account_updated": "Account updated successfully!",
+      "account_update_failed": "Failed to update account: {error}",
+      "account_added": "Account added successfully!",
+      "account_add_failed": "Failed to add account: {error}",
+      "account_deleted": "Account deleted successfully!",
+      "account_delete_failed": "Failed to delete account: {error}",
+      "nickname_update_failed": "Failed to update nickname. Please try again.",
+      "nickname_taken": "This nickname is already taken",
+      "username_taken": "This username is already taken",
+      "email_taken": "This email address is already taken"
+    },
+    "modal": {
+      "settings_reset_success": "Settings reset successfully!",
+      "settings_reset_failed": "Failed to reset settings: {error}"
+    },
+    "sync": {
+      "offline_error": "Cannot sync while offline",
+      "already_in_progress": "Sync already in progress",
+      "syncing": "Syncing to cloud...",
+      "success": "Sync completed successfully!",
+      "failed": "Sync failed: {error}"
+    }
+  },
+  "discord": {
+    "details": {
+      "in_menu": "In Menu",
+      "in_game": "In Game"
+    },
+    "states": {
+      "browsing_clients": "Browsing clients",
+      "configuring_settings": "Configuring settings",
+      "enjoying_visuals": "Enjoying the visuals",
+      "watching_client_behavior": "Watching the client's behavior",
+      "in_profile": "In profile",
+      "watching_about": "Watching about us",
+      "debugging": "Debugging",
+      "logging_in": "Logging in",
+      "browsing_friends": "Watching what friends do",
+      "browsing_news": "Reading news"
+    }
+  },
+  "modal": {
+    "client_crash": {
+      "title": "Crash Report for {name}"
+    }
+  },
+  "news": {
+    "loading": "Loading news...",
+    "error_title": "Error Loading News",
+    "retry": "Try Again",
+    "no_news": "No News Available",
+    "no_news_description": "There are currently no news articles to display.",
+    "updated_at": "Updated",
+    "not_found": "News not found",
+    "server_error": "Server error occurred",
+    "network_error": "Network connection error",
+    "fetch_failed": "Failed to fetch news: {error}",
+    "fetch_failed_toast": "Failed to load news",
+    "new": "New",
+    "time": {
+      "just_now": "just now",
+      "minutes_ago": "{count} minutes ago",
+      "hours_ago": "{count} hours ago",
+      "days_ago": "{count} days ago"
+    },
+    "search_placeholder": "News search...",
+    "mark_all_read": "Mark everything as read",
+    "refresh": "Refresh"
+  },
+  "hold_button": {
+    "label": "Hold to begin!"
+  },
+  "client": {
+    "details": {
+      "loading": "Loading details...",
+      "info_tab": "Information",
+      "screenshots_tab": "Screenshots",
+      "source_link": "Source Link",
+      "created": "Created",
+      "changelog": "Changelog",
+      "no_changelog": "No changelog available",
+      "no_screenshots": "No screenshots available",
+      "screenshot_viewer": {
+        "close": "Close",
+        "zoom_in": "Zoom In",
+        "zoom_out": "Zoom Out",
+        "reset_zoom": "Reset Zoom",
+        "reset": "Reset",
+        "zoom_percent": "{percent}%",
+        "image_counter": "{current} / {total}",
+        "controls": {
+          "esc_close": "ESC - Close",
+          "esc_reset": "ESC - Reset zoom",
+          "navigate": "← → - Navigate",
+          "click_zoom": "Click - Zoom | Scroll - Zoom",
+          "drag_pan": "Drag - Pan | +/- - Zoom | 0 - Reset"
+        }
+      },
+      "no_changelog_desc": "Updates and changes will appear here."
+    }
+  }
+}

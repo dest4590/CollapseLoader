@@ -8,25 +8,13 @@
 <img alt="GitHub Release" src="https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease">
 </p>
 
-<h2 align=center>CLI-based utility to run minecraft clients</h2>
+<h2 align=center>GUI utility to run secure minecraft clients</h2>
 
 <h3 align=center>You can also download the latest version on our <a href="https://collapseloader.org">website</a></h3>
 
-<h2 align=center>Features</h2>
-
--   [x] Run clients
--   [x] CLI Interface
--   [x] Download manager
--   [x] Message system
--   [x] Settings system
--   [x] Config system
--   [x] Cache system
--   [x] Packaging (CI/CD, PyInstaller)
--   [x] Mirrors (4 servers)
-
 ## Showcase
 
-<img src="https://github.com/user-attachments/assets/4d7b4a0b-fdc2-422e-a8a1-7e8e6aecdd44" width=500>
+<img src="https://github.com/user-attachments/assets/a0a290ca-15ca-4cd9-a9e4-fda225c4ff9d" width=500>
 
 <img src="https://github.com/user-attachments/assets/f270b8a6-6321-41b9-b6e2-393e807ce4b5" width=500>
 

@@ -1,0 +1,38 @@
+{
+    "name": "collapseloader",
+    "private": true,
+    "version": "0.1.6",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc --noEmit && vite build",
+        "preview": "vite preview",
+        "tauri": "tauri",
+        "tauri:build": "tauri build",
+        "tauri:dev": "tauri dev"
+    },
+    "dependencies": {
+        "@guolao/vue-monaco-editor": "^1.5.5",
+        "@tauri-apps/api": "2.6.0",
+        "@tauri-apps/plugin-notification": "2.3.0",
+        "@tauri-apps/plugin-opener": "2.4.0",
+        "axios": "1.10.0",
+        "daisyui": "5.0.43",
+        "gsap": "3.13.0",
+        "lucide-vue-next": "0.525.0",
+        "monaco-editor": "^0.52.2",
+        "vue": "3.5.17",
+        "vue-i18n": "11.1.8",
+        "vue3-lottie": "3.3.1"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "4.1.11",
+        "@tauri-apps/cli": "2.6.2",
+        "@types/node": "24.0.10",
+        "@vitejs/plugin-vue": "6.0.0",
+        "tailwindcss": "4.1.11",
+        "typescript": "5.8.3",
+        "vite": "7.0.0",
+        "vue-tsc": "3.0.1"
+    }
+}

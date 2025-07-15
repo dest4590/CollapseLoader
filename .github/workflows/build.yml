@@ -1,0 +1,230 @@
+name: Build and Release
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'src/**'
+            - 'src-tauri/**'
+            - '**.json'
+            - '**.toml'
+            - '**.yml'
+            - '**.yaml'
+
+    workflow_dispatch:
+
+jobs:
+    build:
+        strategy:
+            fail-fast: false
+            matrix:
+                platform: [windows-latest, ubuntu-latest]
+
+        runs-on: ${{ matrix.platform }}
+        permissions:
+            contents: write
+            actions: write
+            id-token: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - name: Install Rust stable
+              uses: dtolnay/rust-toolchain@stable
+
+            - name: Setup sccache
+              uses: mozilla-actions/sccache-action@v0.0.9
+
+            - name: Cache sccache
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      ~/.cache/sccache
+                      ~/AppData/Local/Mozilla/sccache
+                  key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-sccache-
+
+            - name: Install dependencies (ubuntu only)
+              if: matrix.platform == 'ubuntu-latest'
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libgtk-3-dev libappindicator3-dev librsvg2-dev patchelf \
+                  build-essential curl wget file libssl-dev \
+                  libjavascriptcoregtk-4.1-dev libwebkit2gtk-4.1-dev \
+                  libsoup-3.0-dev pkg-config
+
+            - name: Configure pkg-config (Ubuntu only)
+              if: matrix.platform == 'ubuntu-latest'
+              run: |
+                  echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+                  ls -la /usr/lib/x86_64-linux-gnu/pkgconfig/ || true
+                  pkg-config --list-all | grep -i javascript || true
+
+            - name: Install frontend dependencies (Windows)
+              if: matrix.platform == 'windows-latest'
+              run: npm ci; npm install
+
+            - name: Install frontend dependencies (Ubuntu)
+              if: matrix.platform == 'ubuntu-latest'
+              run: npm ci || npm install
+
+            - name: Get version from package.json (Ubuntu)
+              if: matrix.platform == 'ubuntu-latest'
+              id: package-version-ubuntu
+              uses: martinbeentjes/npm-get-version-action@main
+
+            - name: Get version from package.json (Windows)
+              if: matrix.platform == 'windows-latest'
+              id: package-version-windows
+              shell: bash
+              run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+            - name: Get commit hash
+              id: commit-hash
+              run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+              shell: bash
+
+            - name: Build the app
+              uses: tauri-apps/tauri-action@v0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RUSTC_WRAPPER: sccache
+                  PKG_CONFIG_PATH: /usr/lib/pkgconfig:/usr/share/pkgconfig
+                  PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
+                  PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
+              with:
+                  createRelease: false
+                  includeUpdaterJson: true
+                  updaterJsonKeepUniversal: true
+
+            - name: Show sccache stats
+              run: sccache --show-stats
+
+            - name: Collect Windows artifacts
+              if: matrix.platform == 'windows-latest'
+              shell: pwsh
+              run: |
+                  mkdir -p artifacts-windows
+
+                  Get-ChildItem -Path ./src-tauri/target/release/bundle/msi/*.msi -Recurse | ForEach-Object {
+                    Copy-Item $_.FullName -Destination artifacts-windows/
+                    $md5 = Get-FileHash $_.FullName -Algorithm MD5
+                    echo "MSI_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
+                  }
+
+                  Get-ChildItem -Path ./src-tauri/target/release/bundle/nsis/*-setup.exe -Recurse | ForEach-Object {
+                    Copy-Item $_.FullName -Destination artifacts-windows/
+                    $md5 = Get-FileHash $_.FullName -Algorithm MD5
+                    echo "NSIS_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
+                  }
+
+                  Get-ChildItem -Path ./src-tauri/target/release/*.exe | ForEach-Object {
+                    Copy-Item $_.FullName -Destination artifacts-windows/
+                    $md5 = Get-FileHash $_.FullName -Algorithm MD5
+                    echo "EXE_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
+                  }
+
+                  echo "ARTIFACT_PATH=artifacts-windows" >> $env:GITHUB_ENV
+
+            - name: Collect Ubuntu artifacts
+              if: matrix.platform == 'ubuntu-latest'
+              run: |
+                  mkdir -p artifacts-ubuntu
+
+                  find ./src-tauri/target/release/bundle/deb -name "*.deb" | while read file; do
+                    cp "$file" artifacts-ubuntu/
+                    MD5=$(md5sum "$file" | awk '{ print $1 }')
+                    echo "DEB_MD5=$MD5" >> $GITHUB_ENV
+                  done
+
+                  find ./src-tauri/target/release/bundle/appimage -name "*.AppImage" 2>/dev/null | while read file; do
+                    cp "$file" artifacts-ubuntu/
+                    MD5=$(md5sum "$file" | awk '{ print $1 }')
+                    echo "APPIMAGE_MD5=$MD5" >> $GITHUB_ENV
+                  done
+
+                  echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: CollapseLoader-${{ matrix.platform }}-${{ env.HASH }}
+                  path: ${{ matrix.platform == 'windows-latest' && 'artifacts-windows/**' || 'artifacts-ubuntu/**' }}
+
+            - name: VirusTotal Scan (Windows only)
+              if: matrix.platform == 'windows-latest' && github.event.repository.fork == false
+              uses: crazy-max/ghaction-virustotal@v4
+              id: virustotal
+              with:
+                  vt_api_key: ${{ secrets.VT_API_KEY }}
+                  files: |
+                      artifacts-windows/*.msi
+                      artifacts-windows/*-setup.exe
+                      artifacts-windows/*.exe
+
+            - name: Extract and Print URL of VirusTotal Scan (Windows only)
+              if: matrix.platform == 'windows-latest' && github.event.repository.fork == false && steps.virustotal.outputs.analysis != ''
+              shell: bash
+              run: |
+                  ANALYSIS="${{ steps.virustotal.outputs.analysis }}"
+                  URL=$(echo $ANALYSIS | cut -d '=' -f 2-)
+                  echo "VIRUSTOTAL_URL=$URL" >> $GITHUB_ENV
+
+    create-release:
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            actions: read
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+
+            - name: Get version from package.json
+              id: package-version
+              run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+            - name: Get commit hash
+              id: commit-hash
+              run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+              shell: bash
+
+            - name: Download all artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  path: release-artifacts
+
+            - name: List artifacts
+              run: find release-artifacts -type f
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: prerelease-v${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}
+                  name: 'CollapseLoader ${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}'
+                  body: |
+
+                      Automatic build from GitHub Actions
+
+                      - Windows (.msi, .exe installer, standalone .exe)
+                      - Linux (.deb)
+
+                      Note: This is an automated build from the main branch.
+                      Commit hash: ${{ env.HASH }}
+                  files: release-artifacts/**/*
+                  prerelease: true
