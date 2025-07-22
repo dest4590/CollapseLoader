@@ -29,7 +29,7 @@ CollapseLoader is an open-source GUI utility designed to securely launch Minecra
 - **Cross-Platform Support**: Works seamlessly on Windows and Linux.
 - **Virus-Free Guarantee**: Every client and build is scanned for malware using advanced tools and VirusTotal.
 
-Join our [Discord community](https://discord.gg/[your-discord-link]) for support and updates!
+Join our [Discord community](https://collapseloader.org/discord) for support and updates!
 
 ---
 
