@@ -163,6 +163,7 @@ onUnmounted(() => {
     overflow-x: hidden;
     word-wrap: break-word;
     word-break: break-word;
+    min-height: 0;
 }
 
 .custom-modal-close-button {
@@ -257,8 +258,8 @@ onUnmounted(() => {
 
 .full-mobile {
     @media (max-width: 768px) {
-        max-width: calc(100vw - 4rem);
-        max-height: calc(100vh - 1rem);
+        max-width: calc(100vw - 2rem);
+        max-height: calc(100vh - 2rem);
         padding: 1rem;
     }
 }
@@ -281,6 +282,7 @@ onUnmounted(() => {
     .custom-modal-footer {
         flex-direction: column;
         gap: 0.5rem;
+        margin-top: 0.75rem;
     }
 
     .custom-modal-footer>* {
@@ -298,5 +300,23 @@ onUnmounted(() => {
         max-height: calc(100vh - 0.5rem);
         padding: 0.75rem;
     }
+}
+
+.custom-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.custom-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.custom-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
 }
 </style>

@@ -56,7 +56,15 @@ pub fn run() {
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::analytics::send_client_analytics,
-            commands::discord_rpc::update_presence
+            commands::discord_rpc::update_presence,
+            commands::plugins::get_plugins_manifest,
+            commands::plugins::get_plugin_data,
+            commands::plugins::save_plugin_data,
+            commands::plugins::delete_plugin,
+            commands::plugins::update_plugin_enabled_status,
+            commands::plugins::get_plugin_code,
+            commands::plugins::save_plugin_code,
+            commands::plugins::create_plugin_from_text,
         ])
         .setup(|app| {
             let app_handle = app.handle();

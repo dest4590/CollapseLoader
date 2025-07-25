@@ -31,7 +31,7 @@ import Home from './views/Home.vue';
 import LoginView from './views/LoginView.vue';
 import RegisterView from './views/RegisterView.vue';
 import Settings from './views/Settings.vue';
-import Theme from './views/Theme.vue';
+import Customization from './views/Customization.vue';
 import UserProfileView from './views/UserProfileView.vue';
 import News from './views/News.vue';
 import { apiGet } from './services/apiClient';
@@ -60,7 +60,7 @@ const activeTab = ref<
     | 'home'
     | 'settings'
     | 'app_logs'
-    | 'theme'
+    | 'customization'
     | 'about'
     | 'account'
     | 'login'
@@ -105,7 +105,7 @@ const setActiveTab = (tab: string) => {
             'home',
             'settings',
             'app_logs',
-            'theme',
+            'customization',
             'about',
             'account',
             'login',
@@ -121,7 +121,7 @@ const setActiveTab = (tab: string) => {
             | 'home'
             | 'settings'
             | 'app_logs'
-            | 'theme'
+            | 'customization'
             | 'about'
             | 'account'
             | 'login'
@@ -494,7 +494,7 @@ const views: Record<string, any> = {
     news: News,
     settings: Settings,
     about: About,
-    theme: Theme,
+    customization: Customization,
     app_logs: AppLogs,
     account: AccountView,
     login: LoginView,
@@ -620,7 +620,7 @@ const getTransitionName = () => {
         'home',
         'friends',
         'settings',
-        'theme',
+        'customization',
         'app_logs',
         'admin',
         'account',

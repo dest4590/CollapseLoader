@@ -3,7 +3,7 @@ import App from "./App.vue";
 import Vue3Lottie from "vue3-lottie";
 import i18n from './i18n/index';
 import { initializeApiUrl } from './config';
-import { loader } from '@guolao/vue-monaco-editor'
+import { loader } from '@guolao/vue-monaco-editor';
 
 loader.config({
   paths: {
