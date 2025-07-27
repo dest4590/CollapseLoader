@@ -83,6 +83,10 @@ const selectedClients = ref<Set<number>>(new Set());
 const isCtrlPressed = ref(false);
 const expandedClientId = ref<number | null>(null);
 
+const isAnyCardExpanded = computed(() => {
+    return expandedClientId.value !== null;
+});
+
 const handleLaunchClick = (client: Client) => {
     if (isClientRunning(client.id)) {
         stopClient(client.id);
@@ -1099,8 +1103,9 @@ onBeforeUnmount(() => {
             :installationStatus="installationStatus" :isRequirementsInProgress="isRequirementsInProgress"
             :isAnyClientDownloading="isAnyClientDownloading" :isFavorite="isClientFavorite(client.id)"
             :isSelected="isClientSelected(client.id)" :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
-            :isHashVerifying="isClientHashVerifying(client.id)" @launch="handleLaunchClick" @download="downloadClient"
-            @open-log-viewer="openLogViewer" @show-context-menu="showContextMenu" @client-click="handleClientClick"
+            :isHashVerifying="isClientHashVerifying(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
+            @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
+            @show-context-menu="showContextMenu" @client-click="handleClientClick"
             @expanded-state-changed="handleExpandedStateChanged" class="client-card-item"
             :style="{ 'animation-delay': index * 0.07 + 's' }" />
     </div>

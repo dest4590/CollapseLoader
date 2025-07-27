@@ -14,10 +14,13 @@ import {
 import { useI18n } from 'vue-i18n';
 import gsap from 'gsap';
 import type { Client, InstallProgress, ClientDetails } from '../../../types/ui';
+import InsecureClientWarningModal from '../../modals/InsecureClientWarningModal.vue';
 import ClientInfo from './ClientInfo.vue';
 import { invoke } from '@tauri-apps/api/core';
+import { useModal } from '../../../services/modalService';
 
 const { t } = useI18n();
+const { showModal, hideModal } = useModal();
 
 const props = defineProps<{
     client: Client;
@@ -30,6 +33,7 @@ const props = defineProps<{
     isSelected?: boolean;
     isMultiSelectMode?: boolean;
     isHashVerifying?: boolean;
+    isAnyCardExpanded?: boolean;
     class?: string;
     style?: string | Record<string, any>;
 }>();
@@ -102,7 +106,7 @@ const handleCardClick = (event: MouseEvent) => {
         emit('client-click', props.client, event);
     } else if (!isAnimating.value && !props.isSelected) {
         const target = event.target as HTMLElement;
-        if (target.closest('button, a, .progress-bar-container, input, select, textarea')) {
+        if (target.closest('button, a, .progress-bar-container, input, select, textarea, div[class*="tooltip"]')) {
             return;
         }
         expandCard();
@@ -111,6 +115,20 @@ const handleCardClick = (event: MouseEvent) => {
 
 const handleShowContextMenu = (event: MouseEvent) => {
     emit('show-context-menu', event, props.client);
+};
+
+const showInsecureWarning = () => {
+    showModal(
+        `insecure-warning-${props.client.id}`,
+        InsecureClientWarningModal,
+        {
+            title: t('modals.insecure_client_warning.modal_title'),
+        },
+        { client: props.client, infoVariant: true },
+        {
+            close: () => hideModal(`insecure-warning-${props.client.id}`),
+        }
+    );
 };
 
 const clientIsRunning = computed(() => props.isClientRunning(props.client.id));
@@ -131,6 +149,7 @@ const cardPadding = computed(() => {
 const expandCard = async () => {
     const card = cardRef.value;
     if (!card) return;
+    if (props.isAnyCardExpanded) return;
 
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
@@ -656,7 +675,12 @@ onBeforeUnmount(() => {
             <div class="flex justify-between items-start">
                 <h2 class="card-title text-base">
                     {{ client.name }}
-                    <AlertTriangle v-if="client.insecure" class="text-warning w-4 h-4" />
+                    <div v-if="client.insecure">
+                        <div class="tooltip tooltip-right" :data-tip="t('client.insecure_tooltip')"
+                            @click="showInsecureWarning">
+                            <AlertTriangle class="text-warning w-4 h-4 transition-all duration-500" />
+                        </div>
+                    </div>
                 </h2>
                 <transition name="fade" appear>
                     <div v-if="isFavorite && !isAnimating" class="favorite-indicator">

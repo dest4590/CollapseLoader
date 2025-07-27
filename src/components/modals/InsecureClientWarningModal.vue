@@ -22,7 +22,7 @@
             }}
         </p>
 
-        <div class="form-control">
+        <div class="form-control" v-if="!infoVariant">
             <label class="label cursor-pointer justify-start gap-3">
                 <input type="checkbox" class="checkbox checkbox-sm" v-model="dontShowAgain" />
                 <span class="label-text">
@@ -33,13 +33,17 @@
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3 justify-end">
-        <button @click="handleCancel" class="btn btn-outline order-2 sm:order-1">
+        <button @click="handleCancel" class="btn btn-outline order-2 sm:order-1" v-if="!infoVariant">
             <X class="w-4 h-4 mr-2" />
             {{ t('modals.insecure_client_warning.cancel') }}
         </button>
-        <button @click="handleProceed" class="btn btn-warning order-1 sm:order-2">
+        <button @click="handleProceed" class="btn btn-warning order-1 sm:order-2" v-if="!infoVariant">
             <Play class="w-4 h-4 mr-2" />
             {{ t('modals.insecure_client_warning.proceed_anyway') }}
+        </button>
+
+        <button @click="emit('close')" class="btn btn-ghost order-3">
+            {{ t('modals.insecure_client_warning.close') }}
         </button>
     </div>
 </template>
@@ -57,6 +61,7 @@ interface Client {
 
 const props = defineProps<{
     client: Client;
+    infoVariant: boolean;
 }>();
 
 const emit = defineEmits(['proceed', 'cancel', 'close']);

@@ -15,9 +15,6 @@
                 <div class="custom-modal-body">
                     <slot name="body"></slot>
                 </div>
-                <div class="custom-modal-footer">
-                    <slot name="footer"></slot>
-                </div>
             </div>
         </div>
     </transition>
@@ -132,7 +129,7 @@ onUnmounted(() => {
 
 .custom-modal-content {
     background-color: var(--color-base-200);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 0.5rem;
     box-shadow:
         0 10px 25px -5px rgba(0, 0, 0, 0.3),
@@ -183,14 +180,6 @@ onUnmounted(() => {
     opacity: 1;
 }
 
-.custom-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-}
 
 .modal-fade-enter-active {
     transition: opacity 0.4s ease;
@@ -277,16 +266,6 @@ onUnmounted(() => {
 
     .custom-modal-header {
         margin-bottom: 0.75rem;
-    }
-
-    .custom-modal-footer {
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-    }
-
-    .custom-modal-footer>* {
-        width: 100%;
     }
 }
 
