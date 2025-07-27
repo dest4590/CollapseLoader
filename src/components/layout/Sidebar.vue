@@ -159,7 +159,7 @@ onUnmounted(() => {
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'customization',
                 }" @click="changeTab('customization')">
-                    <Vue3Lottie :animation-data="customization_animated" class="w-5 h-5"
+                    <Vue3Lottie :animation-data="customization_animated" class="w-5 h-5 customization-light-selected"
                         v-if="activeTab === 'customization'" :class="{
                             'invert': activeTab === 'customization'
                         }" />
@@ -282,5 +282,9 @@ onUnmounted(() => {
 
 html[data-theme="light"] .customization-light {
     filter: invert(1);
+}
+
+html[data-theme="light"] .customization-light-selected {
+    filter: invert(0);
 }
 </style>
