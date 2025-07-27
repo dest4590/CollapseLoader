@@ -21,6 +21,7 @@ import { useModal } from './services/modalService';
 import { syncService } from './services/syncService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
+import { updaterService } from './services/updaterService';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AdminView from './views/AdminView.vue';
@@ -376,6 +377,8 @@ const initApp = async () => {
         console.error('Failed to load news on startup:', error);
     }
 
+    updaterService.startPeriodicCheck(t);
+
     currentProgress.value = 4;
     loadingState.value = t('preloader.ready');
 
@@ -713,6 +716,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     globalUserStatus.stopStatusSync();
+    updaterService.stopPeriodicCheck();
     window.removeEventListener('beforeunload', () => { });
 });
 </script>
@@ -720,17 +724,18 @@ onUnmounted(() => {
 <template>
     <div id="preloader" v-if="showPreloader" class="fixed inset-0 bg-base-300 flex items-center justify-center">
         <div class="flex flex-col items-center justify-center h-full w-screen relative z-10">
-            <div class="w-48 h-48 animate-pulse-subtle" :class="{ invert: currentTheme === 'light' }">
+            <div class="w-48 h-48 animate-pulse-subtle">
                 <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
             </div>
             <div class="loading-status mt-6">
                 <transition name="slide-fade" mode="out-in">
-                    <span :key="loadingState" class="text-lg font-medium">{{
-                        loadingState
+                    <span :key="loadingState" class="text-lg font-medium"
+                        :class="{ invert: currentTheme === 'light' }">{{
+                            loadingState
                         }}</span>
                 </transition>
             </div>
-            <div class="w-80 progress-container mt-4">
+            <div class="w-80 progress-container mt-4" :class="{ invert: currentTheme === 'light' }">
                 <div class="bg-base-100 rounded-full h-3 overflow-hidden shadow-inner progress-track">
                     <div class="bg-primary h-full rounded-full transition-all duration-700 ease-out progress-fill"
                         :style="{
@@ -892,12 +897,12 @@ onUnmounted(() => {
 }
 
 .slide-fade-enter-from {
-    transform: translateY(20px);
+    transform: translateY(15px);
     opacity: 0;
 }
 
 .slide-fade-leave-to {
-    transform: translateY(-20px);
+    transform: translateY(-15px);
     opacity: 0;
 }
 

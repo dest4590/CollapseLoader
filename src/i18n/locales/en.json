@@ -164,7 +164,8 @@
       "description": "You are about to launch \"{clientName}\", which has not been verified for malware or viruses. This client may contain potentially harmful code that could damage your system or compromise your security.",
       "dont_show_again": "Don't show this warning again for this client",
       "proceed_anyway": "Launch Anyway",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "close": "I understand"
     }
   },
   "preloader": {
@@ -764,7 +765,8 @@
     "refresh": "Refresh"
   },
   "hold_button": {
-    "label": "Hold to begin!"
+    "label": "Hold to begin!",
+    "info_message": "Are you serious?"
   },
   "client": {
     "details": {
@@ -793,7 +795,8 @@
         }
       },
       "no_changelog_desc": "Updates and changes will appear here."
-    }
+    },
+    "insecure_tooltip": "This client is marked as insecure, tap to view details"
   },
   "plugins": {
     "title": "Plugins",
@@ -854,5 +857,48 @@
   "customization": {
     "theme": "Theme",
     "plugins": "Plugins"
+  },
+  "updater": {
+    "update_available": "Update Available",
+    "current": "Current",
+    "latest": "Latest",
+    "critical": "Critical",
+    "version_info": "Current: {current} → Latest: {latest}",
+    "release_notes": "Release Notes",
+    "changelog": "Changelog",
+    "download_install": "Download & Install",
+    "downloading": "Downloading...",
+    "skip": "Skip",
+    "view_changelog": "View Changelog",
+    "changelog_title": "Changelog",
+    "check_failed": "Failed to check for updates: {error}",
+    "no_download_url": "No download URL available for this platform",
+    "starting_download": "Starting update download...",
+    "update_installed": "Update installed successfully! The app will restart.",
+    "update_failed": "Update failed: {error}",
+    "check_for_updates": "Check for Updates",
+    "checking_updates": "Checking for updates...",
+    "up_to_date": "You're running the latest version!",
+    "show_more": "Show {count} more versions",
+    "show_less": "Show less",
+    "release_types": {
+      "major": "Major",
+      "minor": "Minor",
+      "patch": "Patch",
+      "hotfix": "Hotfix"
+    },
+    "categories": {
+      "feature": "New Features",
+      "improvement": "Improvements",
+      "bugfix": "Bug Fixes",
+      "other": "Other Changes"
+    },
+    "changelogs": {
+      "feature": {
+        "v0_1_7": {
+          "added_custom_clients": "Added custom clients management system"
+        }
+      }
+    }
   }
 }
