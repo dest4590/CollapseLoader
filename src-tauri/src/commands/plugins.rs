@@ -1,4 +1,4 @@
-use crate::api::core::data::DATA;
+use crate::core::storage::data::DATA;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -48,14 +48,14 @@ fn get_manifest_path() -> PathBuf {
 }
 
 fn get_plugin_path(plugin_id: &str) -> PathBuf {
-    get_plugins_dir().join(format!("{}.json", plugin_id))
+    get_plugins_dir().join(format!("{plugin_id}.json"))
 }
 
 fn ensure_plugins_dir() -> Result<(), String> {
     let plugins_dir = get_plugins_dir();
     if !plugins_dir.exists() {
         fs::create_dir_all(&plugins_dir)
-            .map_err(|e| format!("Failed to create plugins directory: {}", e))?;
+            .map_err(|e| format!("Failed to create plugins directory: {e}"))?;
     }
     Ok(())
 }
@@ -70,19 +70,19 @@ fn load_manifest() -> Result<PluginManifest, String> {
         });
     }
 
-    let content = fs::read_to_string(&manifest_path)
-        .map_err(|e| format!("Failed to read manifest: {}", e))?;
+    let content =
+        fs::read_to_string(&manifest_path).map_err(|e| format!("Failed to read manifest: {e}"))?;
 
-    serde_json::from_str(&content).map_err(|e| format!("Failed to parse manifest: {}", e))
+    serde_json::from_str(&content).map_err(|e| format!("Failed to parse manifest: {e}"))
 }
 
 fn save_manifest(manifest: &PluginManifest) -> Result<(), String> {
     ensure_plugins_dir()?;
     let manifest_path = get_manifest_path();
     let content = serde_json::to_string_pretty(manifest)
-        .map_err(|e| format!("Failed to serialize manifest: {}", e))?;
+        .map_err(|e| format!("Failed to serialize manifest: {e}"))?;
 
-    fs::write(&manifest_path, content).map_err(|e| format!("Failed to write manifest: {}", e))
+    fs::write(&manifest_path, content).map_err(|e| format!("Failed to write manifest: {e}"))
 }
 
 #[tauri::command]
@@ -97,10 +97,10 @@ pub fn get_plugin_data(plugin_id: String) -> Result<PluginData, String> {
         return Err("Plugin not found".to_string());
     }
 
-    let content = fs::read_to_string(&plugin_path)
-        .map_err(|e| format!("Failed to read plugin file: {}", e))?;
+    let content =
+        fs::read_to_string(&plugin_path).map_err(|e| format!("Failed to read plugin file: {e}"))?;
 
-    serde_json::from_str(&content).map_err(|e| format!("Failed to parse plugin data: {}", e))
+    serde_json::from_str(&content).map_err(|e| format!("Failed to parse plugin data: {e}"))
 }
 
 #[tauri::command]
@@ -109,9 +109,9 @@ pub fn save_plugin_data(plugin_data: PluginData) -> Result<(), String> {
 
     let plugin_path = get_plugin_path(&plugin_data.metadata.id);
     let content = serde_json::to_string_pretty(&plugin_data)
-        .map_err(|e| format!("Failed to serialize plugin data: {}", e))?;
+        .map_err(|e| format!("Failed to serialize plugin data: {e}"))?;
 
-    fs::write(&plugin_path, &content).map_err(|e| format!("Failed to write plugin file: {}", e))?;
+    fs::write(&plugin_path, &content).map_err(|e| format!("Failed to write plugin file: {e}"))?;
 
     let mut manifest = load_manifest()?;
     let plugin_info = PluginFileInfo {
@@ -142,8 +142,7 @@ pub fn save_plugin_data(plugin_data: PluginData) -> Result<(), String> {
 pub fn delete_plugin(plugin_id: String) -> Result<(), String> {
     let plugin_path = get_plugin_path(&plugin_id);
     if plugin_path.exists() {
-        fs::remove_file(&plugin_path)
-            .map_err(|e| format!("Failed to delete plugin file: {}", e))?;
+        fs::remove_file(&plugin_path).map_err(|e| format!("Failed to delete plugin file: {e}"))?;
     }
 
     let mut manifest = load_manifest()?;

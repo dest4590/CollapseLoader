@@ -1,13 +1,14 @@
-use crate::api::clients::clients::CLIENT_MANAGER;
-use crate::api::core::settings::SETTINGS;
-use crate::api::globals::ROOT_DIR;
-use crate::api::network::servers::SERVERS;
-use crate::api::utils;
+use crate::core::network::servers::SERVERS;
+use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::globals::ROOT_DIR;
+use crate::core::utils::utils::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
 use lazy_static::lazy_static;
-use std::fs;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
+use std::time::Duration;
+use std::{fs, io};
+use crate::core::clients::clients::CLIENT_MANAGER;
 
 pub struct DataManager {
     pub root_dir: PathBuf,
@@ -20,7 +21,7 @@ lazy_static! {
 impl DataManager {
     pub fn new(root_dir: PathBuf) -> Self {
         if !root_dir.exists() {
-            std::fs::create_dir_all(&root_dir).expect("Failed to create root directory");
+            fs::create_dir_all(&root_dir).expect("Failed to create root directory");
         }
 
         Self { root_dir }
@@ -32,7 +33,7 @@ impl DataManager {
 
     pub fn unzip(&self, file: &str) -> Result<(), String> {
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            utils::emit_to_main_window(app_handle, "unzip-start", &file);
+            emit_to_main_window(app_handle, "unzip-start", &file);
         }
 
         let zip_path = self.get_local(file);
@@ -44,11 +45,11 @@ impl DataManager {
                 unzip_path.display()
             );
         } else {
-            std::fs::create_dir_all(&unzip_path).map_err(|e| e.to_string())?;
+            fs::create_dir_all(&unzip_path).map_err(|e| e.to_string())?;
         }
 
         let mut archive =
-            zip::ZipArchive::new(std::fs::File::open(&zip_path).map_err(|e| e.to_string())?)
+            zip::ZipArchive::new(fs::File::open(&zip_path).map_err(|e| e.to_string())?)
                 .map_err(|e| e.to_string())?;
 
         let total_files = archive.len() as u64;
@@ -61,13 +62,13 @@ impl DataManager {
             let outpath = unzip_path.join(file_entry.mangled_name());
 
             if file_entry.name().ends_with('/') {
-                std::fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
+                fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
             } else {
                 if let Some(parent) = outpath.parent() {
-                    std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                    fs::create_dir_all(parent).map_err(|e| e.to_string())?;
                 }
-                let mut outfile = std::fs::File::create(&outpath).map_err(|e| e.to_string())?;
-                std::io::copy(&mut file_entry, &mut outfile).map_err(|e| e.to_string())?;
+                let mut outfile = fs::File::create(&outpath).map_err(|e| e.to_string())?;
+                io::copy(&mut file_entry, &mut outfile).map_err(|e| e.to_string())?;
             }
 
             files_extracted += 1;
@@ -84,17 +85,17 @@ impl DataManager {
                         "files_extracted": files_extracted,
                         "total_files": total_files
                     });
-                    utils::emit_to_main_window(app_handle, "unzip-progress", progress_data);
+                    emit_to_main_window(app_handle, "unzip-progress", progress_data);
                 }
             }
         }
 
-        if let Err(e) = std::fs::remove_file(&zip_path) {
+        if let Err(e) = fs::remove_file(&zip_path) {
             log_debug!("Failed to delete zip file {}: {}", zip_path.display(), e);
         }
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            utils::emit_to_main_window(app_handle, "unzip-complete", &file);
+            emit_to_main_window(app_handle, "unzip-complete", &file);
         }
 
         Ok(())
@@ -107,7 +108,7 @@ impl DataManager {
 
     pub fn get_as_folder_string(&self, file: &str) -> String {
         let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
-        format!("{}{}", file_name, std::path::MAIN_SEPARATOR)
+        format!("{}{}", file_name, MAIN_SEPARATOR)
     }
 
     pub fn get_filename(&self, file: &str) -> String {
@@ -146,14 +147,14 @@ impl DataManager {
         log_debug!("Starting download for file: {}", file);
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            utils::emit_to_main_window(app_handle, "download-start", &file);
+            emit_to_main_window(app_handle, "download-start", &file);
         }
 
         if file.ends_with(".jar") {
             let local_path = self.get_as_folder(file).to_path_buf();
             if let Err(e) = fs::create_dir_all(&local_path) {
                 log_error!("Failed to create directory {}: {}", local_path.display(), e);
-                return Err(format!("Failed to create directory: {}", e));
+                return Err(format!("Failed to create directory: {e}"));
             }
         }
 
@@ -168,16 +169,16 @@ impl DataManager {
         let download_url = format!("{cdn_url}{file}");
 
         let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(600))
+            .timeout(Duration::from_secs(600))
             .build()
             .map_err(|e| {
                 log_error!("Failed to create HTTP client: {}", e);
-                format!("Failed to create HTTP client: {}", e)
+                format!("Failed to create HTTP client: {e}")
             })?;
 
         let response = client.get(&download_url).send().await.map_err(|e| {
             log_error!("Failed to make HTTP request to {}: {}", download_url, e);
-            format!("Failed to download file {}: {}", file, e)
+            format!("Failed to download file {file}: {e}")
         })?;
 
         if !response.status().is_success() {
@@ -207,7 +208,7 @@ impl DataManager {
                 dest_path.display(),
                 e
             );
-            format!("Failed to create file: {}", e)
+            format!("Failed to create file: {e}")
         })?;
 
         let mut downloaded: u64 = 0;
@@ -220,7 +221,7 @@ impl DataManager {
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| {
                 log_error!("Failed to read response data for {}: {}", file, e);
-                format!("Network read error: {}", e)
+                format!("Network read error: {e}")
             })?;
 
             dest.write_all(&chunk).await.map_err(|e| {
@@ -229,7 +230,7 @@ impl DataManager {
                     dest_path.display(),
                     e
                 );
-                format!("File write error: {}", e)
+                format!("File write error: {e}")
             })?;
 
             downloaded += chunk.len() as u64;
@@ -250,18 +251,18 @@ impl DataManager {
                         "total": total_size.unwrap_or(0),
                         "action": "downloading"
                     });
-                    utils::emit_to_main_window(app_handle, "download-progress", progress_data);
+                    emit_to_main_window(app_handle, "download-progress", progress_data);
                 }
             }
         }
 
         dest.flush().await.map_err(|e| {
             log_error!("Failed to flush file {}: {}", dest_path.display(), e);
-            format!("File flush error: {}", e)
+            format!("File flush error: {e}")
         })?;
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            utils::emit_to_main_window(app_handle, "download-complete", &file);
+            emit_to_main_window(app_handle, "download-complete", &file);
         }
 
         if file.ends_with(".zip") {
@@ -279,11 +280,7 @@ impl DataManager {
         Ok(())
     }
 
-    async fn verify_client_hash(
-        &self,
-        filename: &str,
-        file_path: &std::path::PathBuf,
-    ) -> Result<(), String> {
+    async fn verify_client_hash(&self, filename: &str, file_path: &PathBuf) -> Result<(), String> {
         let hash_verify_enabled = {
             let settings = SETTINGS
                 .lock()
@@ -302,7 +299,7 @@ impl DataManager {
                 .iter()
                 .find(|c| c.filename == filename)
                 .map(|c| (c.md5_hash.clone(), c.id, c.name.clone()))
-                .ok_or_else(|| format!("Client not found for filename: {}", filename))?
+                .ok_or_else(|| format!("Client not found for filename: {filename}"))?
         };
 
         if !hash_verify_enabled {
@@ -314,7 +311,7 @@ impl DataManager {
         }
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            utils::emit_to_main_window(
+            emit_to_main_window(
                 app_handle,
                 "client-hash-verification-start",
                 &serde_json::json!({
@@ -331,7 +328,7 @@ impl DataManager {
         let calculated_hash = self.calculate_md5_hash(file_path)?;
 
         if calculated_hash != expected_hash {
-            if let Err(e) = std::fs::remove_file(file_path) {
+            if let Err(e) = fs::remove_file(file_path) {
                 log_warn!("Failed to remove corrupted file {}: {}", filename, e);
             }
 
@@ -344,7 +341,7 @@ impl DataManager {
             }
 
             if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-                utils::emit_to_main_window(
+                emit_to_main_window(
                     app_handle,
                     "client-hash-verification-failed",
                     &serde_json::json!({
@@ -357,15 +354,14 @@ impl DataManager {
             }
 
             return Err(format!(
-                "Hash verification failed for {}. Expected: {}, Got: {}. The file has been removed and needs to be redownloaded.",
-                filename, expected_hash, calculated_hash
+                "Hash verification failed for {filename}. Expected: {expected_hash}, Got: {calculated_hash}. The file has been removed and needs to be redownloaded."
             ));
         }
 
         log_info!("MD5 hash verification successful for {}", filename);
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            utils::emit_to_main_window(
+            emit_to_main_window(
                 app_handle,
                 "client-hash-verification-done",
                 &serde_json::json!({
@@ -378,12 +374,11 @@ impl DataManager {
         Ok(())
     }
 
-    fn calculate_md5_hash(&self, path: &std::path::PathBuf) -> Result<String, String> {
-        let bytes =
-            std::fs::read(path).map_err(|e| format!("Failed to read file for hashing: {}", e))?;
+    fn calculate_md5_hash(&self, path: &PathBuf) -> Result<String, String> {
+        let bytes = fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
 
         let digest = md5::compute(&bytes);
-        Ok(format!("{:x}", digest))
+        Ok(format!("{digest:x}"))
     }
 
     pub fn reset_requirements(&self) -> Result<(), Box<dyn std::error::Error>> {
@@ -406,9 +401,9 @@ impl DataManager {
             let path = self.root_dir.join(requirement);
             if path.exists() {
                 if path.is_dir() {
-                    std::fs::remove_dir_all(&path)?;
+                    fs::remove_dir_all(&path)?;
                 } else {
-                    std::fs::remove_file(&path)?;
+                    fs::remove_file(&path)?;
                 }
             }
         }
@@ -419,7 +414,7 @@ impl DataManager {
     pub fn reset_cache(&self) -> Result<(), Box<dyn std::error::Error>> {
         let cache_dir = self.root_dir.join("cache");
         if cache_dir.exists() {
-            std::fs::remove_dir_all(&cache_dir)?;
+            fs::remove_dir_all(&cache_dir)?;
         }
         Ok(())
     }

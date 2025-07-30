@@ -1,15 +1,13 @@
 use lazy_static::lazy_static;
 use std::path::PathBuf;
 
-use crate::api::network::servers::Server;
+use crate::core::network::servers::Server;
 
 pub static CODENAME: &str = "Dioxide";
+pub static GITHUB_REPO_OWNER: &str = "dest4590";
+pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
 lazy_static! {
-    // pub static ref WEB_SERVERS: Vec<Server> = vec![Server::new("https://web.collapseloader.org/"), Server::new("https://collapse.ttfdk.lol/")];
-    pub static ref API_SERVERS: Vec<Server> = vec![
-        Server::new("https://api.collapseloader.org/"),
-    ];
     pub static ref CDN_SERVERS: Vec<Server> = vec![
         Server::new("https://cdn.collapseloader.org/"),
         Server::new("https://collapse.ttfdk.lol/cdn/"),

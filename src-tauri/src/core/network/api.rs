@@ -5,7 +5,7 @@ use std::{
     io::{BufReader, BufWriter},
 };
 
-use crate::api::core::data::DATA;
+use crate::core::storage::data::DATA;
 use crate::{log_debug, log_error, log_warn};
 
 use super::servers::{Server, SERVERS};
@@ -120,33 +120,31 @@ impl CAPI {
                                     None => true,
                                 };
 
-                                if should_update_cache {
-                                    if cache_dir.exists() {
-                                        match File::create(&cache_file_path) {
-                                            Ok(file) => {
-                                                let writer = BufWriter::new(file);
-                                                if let Err(e) =
-                                                    serde_json::to_writer_pretty(writer, &api_data)
-                                                {
-                                                    log_warn!(
+                                if should_update_cache && cache_dir.exists() {
+                                    match File::create(&cache_file_path) {
+                                        Ok(file) => {
+                                            let writer = BufWriter::new(file);
+                                            if let Err(e) =
+                                                serde_json::to_writer_pretty(writer, &api_data)
+                                            {
+                                                log_warn!(
                                                         "Failed to write API response to cache at {:?}: {}",
                                                         cache_file_path,
                                                         e
                                                     );
-                                                } else {
-                                                    log_debug!(
-                                                        "Cache updated for API path: {} (data changed)",
-                                                        path
-                                                    );
-                                                }
-                                            }
-                                            Err(e) => {
-                                                log_warn!(
-                                                    "Failed to create API cache file at {:?}: {}",
-                                                    cache_file_path,
-                                                    e
+                                            } else {
+                                                log_debug!(
+                                                    "Cache updated for API path: {} (data changed)",
+                                                    path
                                                 );
                                             }
+                                        }
+                                        Err(e) => {
+                                            log_warn!(
+                                                "Failed to create API cache file at {:?}: {}",
+                                                cache_file_path,
+                                                e
+                                            );
                                         }
                                     }
                                 }
@@ -211,10 +209,10 @@ impl CAPI {
 
 lazy_static! {
     pub static ref API: Option<CAPI> = {
-        match SERVERS.selected_api_server.clone() {
-            Some(api_s) => Some(CAPI { api_server: api_s }),
+        match SERVERS.selected_auth_server.clone() {
+            Some(auth_s) => Some(CAPI { api_server: auth_s }),
             _ => {
-                log_warn!("Required API server or CDN server is not available. API functionality will be disabled.");
+                log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
                 None
             }
         }

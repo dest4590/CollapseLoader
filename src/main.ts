@@ -2,7 +2,7 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import Vue3Lottie from "vue3-lottie";
 import i18n from './i18n/index';
-import { initializeApiUrl } from './config';
+import { initializeAuthUrl } from './config';
 import { loader } from '@guolao/vue-monaco-editor';
 
 loader.config({
@@ -11,7 +11,7 @@ loader.config({
   },
 })
 
-initializeApiUrl()
+initializeAuthUrl()
   .finally(() => {
     createApp(App)
       .use(Vue3Lottie)

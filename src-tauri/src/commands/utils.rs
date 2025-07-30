@@ -1,6 +1,7 @@
 use base64::{engine::general_purpose, Engine};
 
-use crate::api::{core::data::DATA, globals::CODENAME, network::servers::SERVERS};
+use crate::core::utils::globals::CODENAME;
+use crate::core::{network::servers::SERVERS, storage::data::DATA};
 
 #[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
@@ -18,7 +19,7 @@ pub fn open_data_folder() -> Result<String, String> {
     let path = DATA.root_dir.to_string_lossy().to_string();
 
     if let Err(e) = open::that(&path) {
-        return Err(format!("Failed to open data folder: {}", e));
+        return Err(format!("Failed to open data folder: {e}"));
     }
 
     Ok(path)
@@ -27,7 +28,7 @@ pub fn open_data_folder() -> Result<String, String> {
 #[tauri::command]
 pub fn reset_requirements() -> Result<(), String> {
     if let Err(e) = DATA.reset_requirements() {
-        return Err(format!("Failed to reset requirements: {}", e));
+        return Err(format!("Failed to reset requirements: {e}"));
     }
     Ok(())
 }
@@ -35,26 +36,17 @@ pub fn reset_requirements() -> Result<(), String> {
 #[tauri::command]
 pub fn reset_cache() -> Result<(), String> {
     if let Err(e) = DATA.reset_cache() {
-        return Err(format!("Failed to reset cache: {}", e));
+        return Err(format!("Failed to reset cache: {e}"));
     }
     Ok(())
 }
 
 #[tauri::command]
-pub fn get_auth_url() -> Result<String, String> {
+pub async fn get_auth_url() -> Result<String, String> {
     if let Some(auth_url) = SERVERS.get_auth_server_url() {
         Ok(auth_url)
     } else {
         Ok("https://auth.collapseloader.org".to_string())
-    }
-}
-
-#[tauri::command]
-pub async fn get_api_url() -> Result<String, String> {
-    if let Some(api_url) = SERVERS.get_api_server_url() {
-        Ok(api_url)
-    } else {
-        Ok("https://api.collapseloader.org".to_string())
     }
 }
 

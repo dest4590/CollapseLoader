@@ -1,10 +1,8 @@
 use tauri::AppHandle;
 
+use crate::core::utils::utils::emit_to_main_window_filtered;
 use crate::{
-    api::{
-        clients::client::{Client, CLIENT_LOGS},
-        utils,
-    },
+    core::clients::client::{Client, CLIENT_LOGS},
     log_info,
 };
 
@@ -62,7 +60,7 @@ impl LogChecker {
                     "Client {} (ID: {}) crash likely due to missing main class. Triggering reinstall.",
                     self.client.name, self.client.id
                 );
-                utils::emit_to_main_window_filtered(
+                emit_to_main_window_filtered(
                     app_handle,
                     "client-needs-reinstall",
                     serde_json::json!({
@@ -85,14 +83,14 @@ impl LogChecker {
         }
     }
 
-    fn emit_crash_details(&self, client_logs: &Vec<String>, app_handle: &AppHandle) {
-        utils::emit_to_main_window_filtered(
+    fn emit_crash_details(&self, client_logs: &[String], app_handle: &AppHandle) {
+        emit_to_main_window_filtered(
             app_handle,
             "client-crash-details",
             serde_json::json!({
                 "id": self.client.id,
                 "name": self.client.name.clone(),
-                "logs": client_logs.clone()
+                "logs": client_logs.to_owned()
             }),
         );
     }

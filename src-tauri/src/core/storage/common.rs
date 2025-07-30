@@ -119,7 +119,7 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
         }
 
         let default = Self::create_default();
-        let _ = default.save_to_disk();
+        default.save_to_disk();
         default
     }
 

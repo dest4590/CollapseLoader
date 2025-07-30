@@ -56,7 +56,7 @@ const openDiscord = async () => {
 const checkForUpdates = async () => {
     isCheckingUpdates.value = true;
     try {
-        await updaterService.checkForUpdates(true, t);
+        await updaterService.checkForUpdates(false, t);
     } finally {
         isCheckingUpdates.value = false;
     }

@@ -957,6 +957,9 @@ const handleToastPositionChange = (position: ToastPosition) => {
 </template>
 
 <style scoped>
+@reference "tailwindcss";
+@plugin "daisyui";
+
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.2s ease;
@@ -968,7 +971,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
 }
 
 .tab {
-    border-radius: 4rem;
+    @apply rounded-md;
 }
 
 @keyframes slideIn {

@@ -4,7 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use lazy_static::lazy_static;
 
-use crate::api::core::settings::SETTINGS;
+use crate::core::storage::settings::SETTINGS;
 use crate::{log_debug, log_warn};
 
 const DISCORD_APP_ID: &str = "1225803664204234772";
@@ -86,13 +86,11 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
 
         if let Err(e) = discord_client.connect() {
             log_debug!("Failed to reconnect to Discord: {}", e);
-        } else {
-            if let Err(e) = discord_client.set_activity(activity) {
-                log_debug!(
-                    "Failed to update Discord activity after reconnection: {}",
-                    e
-                );
-            }
+        } else if let Err(e) = discord_client.set_activity(activity) {
+            log_debug!(
+                "Failed to update Discord activity after reconnection: {}",
+                e
+            );
         }
     }
 

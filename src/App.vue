@@ -13,7 +13,7 @@ import Sidebar from './components/layout/Sidebar.vue';
 import ClientCrashModal from './components/modals/ClientCrashModal.vue';
 import RegisterPromptModal from './components/modals/RegisterPromptModal.vue';
 import ToastContainer from './components/notifications/ToastContainer.vue';
-import { useFriends } from './composables/useFriends';
+import { globalFriends } from './composables/useFriends';
 import { useUser } from './composables/useUser';
 import { globalUserStatus } from './composables/useUserStatus';
 import { changeLanguage } from './i18n';
@@ -22,6 +22,7 @@ import { syncService } from './services/syncService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
+import { apiPreload } from './services/apiClient';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AdminView from './views/AdminView.vue';
@@ -95,6 +96,23 @@ const isNavigatingToProfile = ref(false);
 const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
+
+// Enhanced composables integration
+const { loadUserData, displayName, isAuthenticated: userAuthenticated } = useUser();
+const { 
+    friends, 
+    onlineFriendsCount, 
+    loadFriendsData, 
+    isLoading: friendsLoading 
+} = globalFriends;
+
+// Status management
+const { 
+    isOnline: userOnline, 
+    connectionStatus, 
+    initializeStatusSystem,
+    stopStatusSync 
+} = globalUserStatus;
 
 const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
@@ -595,22 +613,35 @@ const handleRegisterPrompt = () => {
     localStorage.setItem('registrationPromptShown', new Date().toISOString());
 };
 
-const { loadUserData: loadGlobalUserData, clearUserData } = useUser();
+const { clearUserData } = useUser();
 
 const initializeUserData = async () => {
     if (!isAuthenticated.value || !isOnline.value) return;
 
     try {
-        await loadGlobalUserData();
+        // Preload critical API data
+        await apiPreload();
+        
+        // Initialize user data
+        await loadUserData();
+        console.log(`User loaded: ${displayName.value || 'Unknown'}`);
 
-        const { loadFriendsData } = useFriends();
+        // Initialize enhanced status system
+        initializeStatusSystem();
+        console.log(`Status system initialized, connection: ${connectionStatus.value}`);
+
+        // Load friends data using enhanced system
         await loadFriendsData();
+        console.log(`Friends loaded: ${friends.value.length} total, ${onlineFriendsCount.value} online`);
 
         console.log(
-            'User data and friends data initialized successfully on startup'
+            'Enhanced user data and friends system initialized successfully on startup'
         );
+        console.log(`Loading state: ${friendsLoading.value ? 'Loading...' : 'Complete'}`);
+        console.log(`User authentication: ${userAuthenticated.value ? 'Authenticated' : 'Not authenticated'}`);
+        console.log(`User online status: ${userOnline.value ? 'Online' : 'Offline'}`);
     } catch (error) {
-        console.error('Failed to initialize user data on startup:', error);
+        console.error('Failed to initialize enhanced user data on startup:', error);
     }
 };
 
@@ -656,7 +687,7 @@ onMounted(() => {
         console.log(`Client ${payload.name} launched, updating status...`);
 
         try {
-            globalUserStatus.setPlayingClient(payload.name, payload.version);
+            globalUserStatus.setPlayingClient(`${payload.name} (${payload.version || 'unknown version'})`);
 
             const settings = await invoke<AppSettings>('get_settings');
             if (settings.discord_rpc_enabled?.value) {
@@ -700,10 +731,9 @@ onMounted(() => {
         const payload = event.payload as {
             status: string;
             currentClient: string | null;
-            clientVersion: string | null;
         };
-        console.log('Received status update event from backend:', payload);
 
+        console.log('Received status update event from backend:', payload);
         console.log('Backend status event ignored to prevent conflicts');
     });
 
@@ -715,9 +745,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    globalUserStatus.stopStatusSync();
+    console.log('App unmounting, stopping enhanced systems...');
+    stopStatusSync();
     updaterService.stopPeriodicCheck();
     window.removeEventListener('beforeunload', () => { });
+    console.log('Enhanced status sync stopped');
 });
 </script>
 

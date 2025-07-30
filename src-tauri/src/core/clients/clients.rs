@@ -2,16 +2,15 @@ use lazy_static::lazy_static;
 use std::{fs::File, io::BufReader, sync::Mutex};
 use tauri::AppHandle;
 
+use super::client::Client;
+use crate::core::utils::utils::emit_to_main_window;
 use crate::{
-    api::{
-        core::data::DATA,
+    core::{
         network::api::{API, API_CACHE_DIR},
-        utils,
+        storage::data::DATA,
     },
     log_debug, log_error, log_info, log_warn,
 };
-
-use super::client::Client;
 
 pub struct ClientManager {
     pub clients: Vec<Client>,
@@ -124,13 +123,12 @@ impl ClientManager {
     }
 
     pub fn update_status_on_client_exit(&self, app_handle: &AppHandle) -> Result<(), String> {
-        utils::emit_to_main_window(
+        emit_to_main_window(
             app_handle,
             "update-user-status",
             serde_json::json!({
                 "status": "online",
                 "currentClient": null,
-                "clientVersion": null
             }),
         );
 

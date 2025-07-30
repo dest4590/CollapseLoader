@@ -1,7 +1,6 @@
 use crate::log_debug;
 use std::thread;
-
-use super::network::servers::SERVERS;
+use crate::core::network::servers::SERVERS;
 
 pub struct Analytics;
 
@@ -11,12 +10,12 @@ impl Analytics {
     }
 
     pub fn send_client_analytics(client_id: u32) {
-        let endpoint = format!("api/client/{}/launch", client_id);
+        let endpoint = format!("api/client/{client_id}/launch");
         Self::send_analytics(&endpoint, "client analytics");
     }
 
     pub fn send_client_download_analytics(client_id: u32) {
-        let endpoint = format!("api/client/{}/download", client_id);
+        let endpoint = format!("api/client/{client_id}/download");
         Self::send_analytics(&endpoint, "client download analytics");
     }
 
@@ -30,7 +29,7 @@ impl Analytics {
             };
 
             let client = Self::create_client();
-            let url = format!("{}{}", server_url, endpoint);
+            let url = format!("{server_url}{endpoint}");
 
             match client.post(&url).send() {
                 Ok(response) => {
@@ -54,10 +53,10 @@ impl Analytics {
     }
 
     fn get_server_url(analytics_type: &str) -> Option<String> {
-        match SERVERS.selected_api_server.clone() {
+        match SERVERS.selected_auth_server.clone() {
             Some(server) => Some(server.url),
             None => {
-                log_debug!("No API server selected for {}", analytics_type);
+                log_debug!("No Auth server selected for {}", analytics_type);
                 None
             }
         }

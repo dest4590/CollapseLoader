@@ -1,4 +1,4 @@
-use crate::api::analytics::Analytics;
+use crate::core::network::analytics::Analytics;
 
 #[tauri::command]
 pub fn send_client_analytics(client_id: u32) -> Result<(), String> {

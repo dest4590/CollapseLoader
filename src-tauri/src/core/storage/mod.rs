@@ -5,3 +5,4 @@ pub mod favorites;
 pub mod flags;
 pub mod settings;
 pub mod telemetry;
+pub mod custom_clients;

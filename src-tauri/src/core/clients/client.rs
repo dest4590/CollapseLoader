@@ -9,14 +9,14 @@ use std::{
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
-use crate::api::{
-    analytics::Analytics,
-    clients::{agent_overlay::AgentArguments, log_checker::LogChecker},
-    core::accounts::ACCOUNT_MANAGER,
-    utils,
-};
+use super::clients::CLIENT_MANAGER;
+use crate::core::clients::internal::agent_overlay::AgentArguments;
+use crate::core::clients::log_checker::LogChecker;
+use crate::core::network::analytics::Analytics;
+use crate::core::storage::accounts::ACCOUNT_MANAGER;
+use crate::core::utils::utils::{emit_to_main_window, emit_to_main_window_filtered};
 use crate::{
-    api::core::{data::DATA, settings::SETTINGS},
+    core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,
 };
 use semver::Version;
@@ -24,15 +24,13 @@ use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::Semaphore;
 
-use super::clients::CLIENT_MANAGER;
-
 lazy_static::lazy_static! {
     pub static ref CLIENT_LOGS: Mutex<HashMap<u32, Vec<String>>> = Mutex::new(HashMap::new());
     pub static ref REQUIREMENTS_DOWNLOADING: Mutex<bool> = Mutex::new(false);
     pub static ref REQUIREMENTS_SEMAPHORE: Arc<Semaphore> = Arc::new(Semaphore::new(1));
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Meta {
     pub is_new: bool,
     pub asset_index: String,
@@ -75,7 +73,7 @@ fn add_log_line(client_id: u32, line: String) {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Client {
     pub id: u32,
     pub name: String,
@@ -108,7 +106,7 @@ impl Client {
     pub async fn download(&self) -> Result<(), String> {
         match DATA.download(&self.filename).await {
             Ok(()) => {
-                log_info!("Successfully downloaded and verified client: {}", self.name);
+                log_info!("Successfully downloaded: {}", self.name);
                 if let Ok(mut manager) = CLIENT_MANAGER.lock() {
                     if let Some(manager) = manager.as_mut() {
                         if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
@@ -258,7 +256,7 @@ impl Client {
 
         log_info!("Need to download requirements: {:?}", files_to_download);
 
-        utils::emit_to_main_window(app_handle, "requirements-status", true);
+        emit_to_main_window(app_handle, "requirements-status", true);
 
         {
             let mut downloading = REQUIREMENTS_DOWNLOADING
@@ -271,7 +269,7 @@ impl Client {
             log_info!("Downloading requirement: {}", file_to_dl);
             DATA.download(file_to_dl).await.map_err(|e| {
                 log_error!("Failed to download {}: {}", file_to_dl, e);
-                format!("Failed to download {}: {}", file_to_dl, e)
+                format!("Failed to download {file_to_dl}: {e}")
             })?;
             log_info!("Successfully downloaded {}", file_to_dl);
         }
@@ -287,7 +285,7 @@ impl Client {
             *downloading = false;
         }
 
-        utils::emit_to_main_window(app_handle, "requirements-status", false);
+        emit_to_main_window(app_handle, "requirements-status", false);
 
         Ok(())
     }
@@ -304,11 +302,9 @@ impl Client {
         let client_name = self.name.clone();
         let app_handle_clone_for_run = app_handle.clone();
         let app_handle_clone_for_crash_handling = app_handle.clone();
-        let optional_analytics = SETTINGS
-            .lock()
-            .map_or(false, |s| s.optional_telemetry.value);
-        let cordshare = SETTINGS.lock().map_or(false, |s| s.cordshare.value);
-        let irc_chat = SETTINGS.lock().map_or(false, |s| s.irc_chat.value);
+        let optional_analytics = SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value);
+        let cordshare = SETTINGS.lock().is_ok_and(|s| s.cordshare.value);
+        let irc_chat = SETTINGS.lock().is_ok_and(|s| s.irc_chat.value);
 
         let agent_arguments = AgentArguments::new(
             user_token.clone(),
@@ -322,7 +318,7 @@ impl Client {
 
         if let Err(e) = self.download_requirements(&app_handle_clone_for_run).await {
             log_info!("Error downloading requirements: {}", e);
-            utils::emit_to_main_window_filtered(
+            emit_to_main_window_filtered(
                 &app_handle_clone_for_crash_handling,
                 "client-crashed",
                 serde_json::json!({
@@ -383,7 +379,7 @@ impl Client {
                 .and_then(|manager| manager.get_active_account().map(|a| a.username.clone()))
                 .unwrap_or_else(|| {
                     let random_digits = rand::random::<u32>() % 100000;
-                    format!("Collapse{:05}", random_digits)
+                    format!("Collapse{random_digits:05}")
                 });
 
             let assets_dir = DATA.root_dir.join("assets");
@@ -396,7 +392,7 @@ impl Client {
                     agent_overlay_folder.join("CollapseAgent.jar").display(),
                     agent_arguments.encrypt()
                 ))
-                .arg(format!("-Xmx{}M", ram_mb))
+                .arg(format!("-Xmx{ram_mb}M"))
                 .arg(format!(
                     "-Djava.library.path={};{}",
                     natives_path.display(),
@@ -428,7 +424,7 @@ impl Client {
 
             add_log_line(client_id, format!("Starting client: {}", self_clone.name));
 
-            let mut secure_command = format!("{:#?}", command);
+            let mut secure_command = format!("{command:#?}");
 
             if let Some(start) = secure_command.find("-javaagent:") {
                 if let Some(end) = secure_command[start..].find(" -") {
@@ -446,7 +442,7 @@ impl Client {
                 .spawn()
                 .map_err(|e| format!("Failed to start client: {e}"))?;
 
-            utils::emit_to_main_window_filtered(
+            emit_to_main_window_filtered(
                 &app_handle_clone_for_crash_handling,
                 "client-launched",
                 serde_json::json!({
@@ -459,7 +455,7 @@ impl Client {
             if let Some(stdout) = child.stdout.take() {
                 thread::spawn(move || {
                     let reader = BufReader::new(stdout);
-                    for line in reader.lines().filter_map(Result::ok) {
+                    for line in reader.lines().map_while(Result::ok) {
                         add_log_line(client_id, line);
                     }
                 });
@@ -468,7 +464,7 @@ impl Client {
             if let Some(stderr) = child.stderr.take() {
                 thread::spawn(move || {
                     let reader = BufReader::new(stderr);
-                    for line in reader.lines().filter_map(Result::ok) {
+                    for line in reader.lines().map_while(Result::ok) {
                         add_log_line(client_id, line);
                     }
                 });
@@ -494,7 +490,8 @@ impl Client {
                             }
                         }
                     }
-                    utils::emit_to_main_window_filtered(
+
+                    emit_to_main_window_filtered(
                         &app_handle_clone_for_crash_handling,
                         "client-exited",
                         serde_json::json!({
@@ -509,7 +506,7 @@ impl Client {
                     let log_line = format!("Error waiting for process: {e}");
                     log_error!("{}", log_line);
                     add_log_line(client_id, log_line.clone());
-                    utils::emit_to_main_window_filtered(
+                    emit_to_main_window_filtered(
                         &app_handle_clone_for_crash_handling,
                         "client-crashed",
                         serde_json::json!({

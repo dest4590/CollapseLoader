@@ -1,10 +1,11 @@
 use tauri::Manager;
 
-use crate::api::analytics::Analytics;
+use self::core::network::analytics::Analytics;
 
-mod api;
 mod commands;
+mod core;
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
@@ -49,7 +50,6 @@ pub fn run() {
             commands::settings::is_client_favorite,
             commands::utils::get_version,
             commands::utils::get_auth_url,
-            commands::utils::get_api_url,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::reset_cache,
@@ -65,13 +65,16 @@ pub fn run() {
             commands::plugins::get_plugin_code,
             commands::plugins::save_plugin_code,
             commands::plugins::create_plugin_from_text,
+            commands::updater::check_for_updates,
+            commands::updater::download_and_install_update,
+            commands::updater::get_changelog,
         ])
         .setup(|app| {
             let app_handle = app.handle();
-            *api::core::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
+            *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
             let version = env!("CARGO_PKG_VERSION");
-            let window_title = format!("CollapseLoader v{}", version);
+            let window_title = format!("CollapseLoader v{version}");
 
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.set_title(&window_title);
@@ -83,7 +86,7 @@ pub fn run() {
         })
         .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let _ = api::discord_rpc::shutdown();
+                core::utils::discord_rpc::shutdown();
             }
         })
         .run(tauri::generate_context!())

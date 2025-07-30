@@ -62,8 +62,8 @@ lazy_static! {
 #[macro_export]
 macro_rules! log_info {
     ($($arg:tt)*) => {
-        $crate::api::logging::LOGGER.log_with_module(
-            $crate::api::logging::LogLevel::Info,
+        $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::LogLevel::Info,
             module_path!(),
             &format!($($arg)*)
         )
@@ -73,8 +73,8 @@ macro_rules! log_info {
 #[macro_export]
 macro_rules! log_warn {
     ($($arg:tt)*) => {
-        $crate::api::logging::LOGGER.log_with_module(
-            $crate::api::logging::LogLevel::Warn,
+        $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::LogLevel::Warn,
             module_path!(),
             &format!($($arg)*)
         )
@@ -84,8 +84,8 @@ macro_rules! log_warn {
 #[macro_export]
 macro_rules! log_error {
     ($($arg:tt)*) => {
-        $crate::api::logging::LOGGER.log_with_module(
-            $crate::api::logging::LogLevel::Error,
+        $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::LogLevel::Error,
             module_path!(),
             &format!($($arg)*)
         )
@@ -95,8 +95,8 @@ macro_rules! log_error {
 #[macro_export]
 macro_rules! log_debug {
     ($($arg:tt)*) => {
-        $crate::api::logging::LOGGER.log_with_module(
-            $crate::api::logging::LogLevel::Debug,
+        $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::LogLevel::Debug,
             module_path!(),
             &format!($($arg)*)
         )

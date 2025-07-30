@@ -1,5 +1,5 @@
-use crate::api::core::data::DATA;
-use crate::api::network::servers::SERVERS;
+use crate::core::storage::data::DATA;
+use crate::core::network::servers::SERVERS;
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -75,8 +75,7 @@ impl AgentOverlayManager {
 
         let folder = DATA.root_dir.join("agent_overlay");
         if !folder.exists() {
-            fs::create_dir_all(&folder)
-                .map_err(|e| format!("Failed to create directory: {}", e))?;
+            fs::create_dir_all(&folder).map_err(|e| format!("Failed to create directory: {e}"))?;
         }
 
         let agent_path = folder.join("CollapseAgent.jar");
@@ -85,7 +84,7 @@ impl AgentOverlayManager {
         let base_url = Self::get_api_base_url()?;
 
         log_debug!("Downloading agent file...");
-        Self::download_file(&format!("{}api/agent/download/", base_url), &agent_path).await?;
+        Self::download_file(&format!("{base_url}api/agent/download/"), &agent_path).await?;
 
         let downloaded_hash = Self::calculate_md5_hash(&agent_path)?;
         if downloaded_hash != info.agent_hash {
@@ -96,7 +95,7 @@ impl AgentOverlayManager {
         }
 
         log_debug!("Downloading overlay file...");
-        Self::download_file(&format!("{}api/overlay/download/", base_url), &overlay_path).await?;
+        Self::download_file(&format!("{base_url}api/overlay/download/"), &overlay_path).await?;
 
         let downloaded_overlay_hash = Self::calculate_md5_hash(&overlay_path)?;
         if downloaded_overlay_hash != info.overlay_hash {
@@ -112,14 +111,14 @@ impl AgentOverlayManager {
 
     async fn get_agent_overlay_info() -> Result<AgentOverlayInfo, String> {
         let base_url = Self::get_api_base_url()?;
-        let url = format!("{}api/agent-overlay/", base_url);
+        let url = format!("{base_url}api/agent-overlay/");
 
         let client = reqwest::Client::new();
         let response = client
             .get(&url)
             .send()
             .await
-            .map_err(|e| format!("Failed to get agent/overlay info: {}", e))?;
+            .map_err(|e| format!("Failed to get agent/overlay info: {e}"))?;
 
         if !response.status().is_success() {
             return Err(format!("Backend returned error: {}", response.status()));
@@ -128,7 +127,7 @@ impl AgentOverlayManager {
         let info: AgentOverlayInfo = response
             .json()
             .await
-            .map_err(|e| format!("Failed to parse agent/overlay info: {}", e))?;
+            .map_err(|e| format!("Failed to parse agent/overlay info: {e}"))?;
 
         Ok(info)
     }
@@ -139,7 +138,7 @@ impl AgentOverlayManager {
             .get(url)
             .send()
             .await
-            .map_err(|e| format!("Failed to download file: {}", e))?;
+            .map_err(|e| format!("Failed to download file: {e}"))?;
 
         if !response.status().is_success() {
             return Err(format!(
@@ -151,19 +150,18 @@ impl AgentOverlayManager {
         let bytes = response
             .bytes()
             .await
-            .map_err(|e| format!("Failed to read file bytes: {}", e))?;
+            .map_err(|e| format!("Failed to read file bytes: {e}"))?;
 
-        fs::write(path, bytes).map_err(|e| format!("Failed to write file to disk: {}", e))?;
+        fs::write(path, bytes).map_err(|e| format!("Failed to write file to disk: {e}"))?;
 
         Ok(())
     }
 
     fn calculate_md5_hash(path: &PathBuf) -> Result<String, String> {
-        let bytes =
-            fs::read(path).map_err(|e| format!("Failed to read file for hashing: {}", e))?;
+        let bytes = fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
 
         let digest = md5::compute(&bytes);
-        Ok(format!("{:x}", digest))
+        Ok(format!("{digest:x}"))
     }
 
     pub async fn verify_agent_overlay_files() -> Result<bool, String> {
@@ -171,8 +169,7 @@ impl AgentOverlayManager {
 
         let folder = DATA.root_dir.join("agent_overlay");
         if !folder.exists() {
-            fs::create_dir_all(&folder)
-                .map_err(|e| format!("Failed to create directory: {}", e))?;
+            fs::create_dir_all(&folder).map_err(|e| format!("Failed to create directory: {e}"))?;
         }
 
         let agent_path = folder.join("CollapseAgent.jar");

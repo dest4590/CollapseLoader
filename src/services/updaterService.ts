@@ -15,22 +15,14 @@ interface UpdateInfo {
 class UpdaterService {
     private checkInterval: number | null = null;
     private isChecking = false;
-    private lastCheckTime = 0;
     private readonly CHECK_INTERVAL = 6 * 60 * 60 * 1000;
-    private readonly MIN_CHECK_INTERVAL = 5 * 60 * 1000;
 
     async checkForUpdates(showNoUpdateToast = true, t: any): Promise<UpdateInfo | null> {
         if (this.isChecking) {
             return null;
         }
 
-        const now = Date.now();
-        if (now - this.lastCheckTime < this.MIN_CHECK_INTERVAL) {
-            return null;
-        }
-
         this.isChecking = true;
-        this.lastCheckTime = now;
 
         try {
             console.log('Checking for updates...');
@@ -41,7 +33,7 @@ class UpdaterService {
                 this.showUpdateNotification(updateInfo, t);
             } else if (showNoUpdateToast) {
                 const { addToast } = useToast();
-                addToast('updater.up_to_date', 'success');
+                addToast(t('updater.up_to_date'), 'success');
             }
 
             return updateInfo;

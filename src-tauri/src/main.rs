@@ -41,12 +41,12 @@ pub fn check_webview2() -> Result<bool, String> {
                         if let Err(msgbox_err) = win_msgbox::show::<Okay>(
                             "WebView2 has been installed successfully. Please restart the application.",
                         ) {
-                            eprintln!("Failed to display restart message box: {:?}", msgbox_err);
+                            eprintln!("Failed to display restart message box: {msgbox_err:?}");
                         }
                         Ok(true)
                     }
                     Err(e) => {
-                        eprintln!("Failed to execute WebView2 installer: {:?}", e);
+                        eprintln!("Failed to execute WebView2 installer: {e:?}");
                         Ok(false)
                     }
                 }
@@ -68,10 +68,9 @@ pub fn check_webview2() -> Result<bool, String> {
 fn main() {
     #[cfg(target_os = "windows")]
     if let Err(e) = check_webview2() {
-        if let Err(msgbox_err) =
-            win_msgbox::show::<Okay>(&format!("Error checking WebView2: {}", e))
+        if let Err(msgbox_err) = win_msgbox::show::<Okay>(&format!("Error checking WebView2: {e}"))
         {
-            eprintln!("Failed to display error message box: {:?}", msgbox_err);
+            eprintln!("Failed to display error message box: {msgbox_err:?}");
         }
     }
 

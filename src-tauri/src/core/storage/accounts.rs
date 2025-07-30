@@ -3,7 +3,7 @@ use std::{path::PathBuf, sync::Mutex};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
-use crate::api::core::data::DATA;
+use crate::core::storage::data::DATA;
 
 use super::common::JsonStorage;
 
