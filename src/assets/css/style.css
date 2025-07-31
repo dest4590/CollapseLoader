@@ -116,3 +116,7 @@
 .client-card .card-body {
     padding: var(--client-card-padding) !important;
 }
+
+.label {
+    display: block;
+}

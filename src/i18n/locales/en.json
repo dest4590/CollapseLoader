@@ -166,7 +166,10 @@
       "proceed_anyway": "Launch Anyway",
       "cancel": "Cancel",
       "close": "I understand"
-    }
+    },
+    "add_custom_client": "Add custom client",
+    "edit_custom_client": "Edit custom client",
+    "delete_custom_client": "Delete custom client"
   },
   "preloader": {
     "initializing": "Initialization...",
@@ -589,7 +592,8 @@
     "about": "About",
     "admin": "Admin Panel",
     "news": "News",
-    "customization": "Customization"
+    "customization": "Customization",
+    "custom_clients": "Custom Clients"
   },
   "admin": {
     "title": "Administration Panel",
@@ -733,7 +737,8 @@
       "debugging": "Debugging",
       "logging_in": "Logging in",
       "browsing_friends": "Watching what friends do",
-      "browsing_news": "Reading news"
+      "browsing_news": "Reading news",
+      "browsing_custom_clients": "Browsing custom clients"
     }
   },
   "modal": {

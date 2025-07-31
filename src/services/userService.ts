@@ -397,6 +397,31 @@ class UserService {
         }
     }
 
+    async downloadFromCloud(): Promise<UserProfile | null> {
+        try {
+            const response = await apiClient.get('/auth/profile/');
+            return response.data;
+        } catch (error) {
+            console.error('Failed to download from cloud:', error);
+            throw error;
+        }
+    }
+
+
+    async syncToCloud(data: SyncData): Promise<UserProfile> {
+        try {
+            const response = await apiClient.post('/auth/sync/', data);
+
+            const cachedData = this.getCachedData();
+            this.setCachedData({ profile: response.data.data, info: cachedData?.info || null });
+
+            return response.data.data;
+        } catch (error) {
+            console.error('Failed to sync to cloud:', error);
+            throw error;
+        }
+    }
+
     clearCache(): void {
         localStorage.removeItem(CACHE_KEY);
         console.log('User data cache cleared');

@@ -62,9 +62,9 @@
             </h3>
             <div class="grid gap-3">
                 <FriendRequestCard v-for="request in friendRequests.received" :key="request.id"
-                    :user="request.requester" :request-id="request.id" type="received"
-                    @accept="respondToRequest($event, 'accept')" @reject="respondToRequest($event, 'reject')"
-                    @view-profile="$emit('show-user-profile', $event)" />
+                    :user="{ ...request.requester, status: { ...request.requester.status, username: request.requester.username } }"
+                    :request-id="request.id" type="received" @accept="respondToRequest($event, 'accept')"
+                    @reject="respondToRequest($event, 'reject')" @view-profile="$emit('show-user-profile', $event)" />
             </div>
         </div>
 
@@ -73,7 +73,8 @@
                 {{ t('friends.sentRequests') }}
             </h3>
             <div class="grid gap-3">
-                <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id" :user="request.addressee"
+                <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
+                    :user="{ ...request.addressee, status: { ...request.addressee.status, username: request.addressee.username } }"
                     :request-id="request.id" type="sent" @cancel="cancelRequest"
                     @view-profile="$emit('show-user-profile', $event)" />
             </div>
@@ -87,8 +88,10 @@
         </div>
 
         <div v-else class="grid gap-4">
-            <FriendCard v-for="friend in friends" :key="friend.id" :friend="friend" @remove-friend="removeFriend"
-                @block-friend="blockFriend" @view-profile="$emit('show-user-profile', $event)" />
+            <FriendCard v-for="friend in friends" :key="friend.id"
+                :friend="{ ...friend, status: { ...friend.status, username: friend.username } }"
+                @remove-friend="removeFriend" @block-friend="blockFriend"
+                @view-profile="$emit('show-user-profile', $event)" />
         </div>
     </div>
 </template>

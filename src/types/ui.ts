@@ -17,6 +17,20 @@ export interface Client {
     };
 }
 
+export interface CustomClient {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    file_path: string;
+    main_class: string;
+    description?: string;
+    created_at: string;
+    is_installed: boolean;
+    launches: number;
+    insecure: boolean;
+}
+
 export interface ClientDetails {
     source_link: string;
     screenshot_urls: string[];

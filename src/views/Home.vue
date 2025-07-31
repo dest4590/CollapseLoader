@@ -13,6 +13,7 @@ import {
     Download,
     Newspaper,
     StopCircle,
+    FileText,
 } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
@@ -1072,9 +1073,16 @@ onBeforeUnmount(() => {
         {{ t('home.alpha') }}
     </h1> -->
 
-    <div class="flex items-center gap-4 mb-6">
-        <SearchBar @search="handleSearch" class="flex-1" :initial-value="searchQuery"
+    <div class="flex items-center gap-2 mb-6">
+        <SearchBar @search="handleSearch" class="flex-1 mr-2" :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')" />
+        <div class="tooltip tooltip-bottom" :data-tip="t('navigation.custom_clients')">
+            <button @click="$emit('change-view', 'custom_clients')"
+                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0"
+                style="border: var(--border) solid #0000">
+                <FileText class="w-4 h-4" />
+            </button>
+        </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
             <button @click="$emit('change-view', 'news')"
                 class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 relative"

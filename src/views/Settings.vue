@@ -28,6 +28,7 @@ import {
     Waypoints,
     MessagesSquare,
     BadgeCheck,
+    FileText,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -390,6 +391,10 @@ const getFormattedLabel = (key: string) => {
         return t('settings.telemetry');
     }
 
+    if (key === 'custom_clients') {
+        return 'Custom Clients';
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
@@ -625,6 +630,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <Waypoints v-if="key === 'cordshare'" class="w-5 h-5 text-primary" />
                                 <MessagesSquare v-if="key === 'irc_chat'" class="w-5 h-5 text-primary" />
                                 <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
+                                <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
 
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
@@ -658,6 +664,16 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
                                         {{ lang.nativeName }} ({{ lang.name }})
                                     </option>
+                                </select>
+                                <p class="text-xs text-base-content/70">
+                                    {{ getSettingDescription(key) }}
+                                </p>
+                            </div>
+
+                            <div v-else-if="key === 'custom_clients_display'" class="space-y-3">
+                                <select v-model="field.value" class="select select-bordered w-full bg-base-100">
+                                    <option value="separate">{{ t('settings.custom_clients_display_separate') }}</option>
+                                    <option value="global">{{ t('settings.custom_clients_display_global') }}</option>
                                 </select>
                                 <p class="text-xs text-base-content/70">
                                     {{ getSettingDescription(key) }}

@@ -24,7 +24,7 @@
       },
       "feedback": {
         "title": "Обратная связь",
-        "description": "Присоединяйтесь к нашему сообществу"
+        "description": "Присоединяйтесь к нашему сообществу для получения поддержки и обновлений"
       },
       "telemetry": {
         "title": "Дополнительная аналитика",
@@ -166,7 +166,9 @@
       "proceed_anyway": "Запустить в любом случае",
       "cancel": "Отмена",
       "close": "Я понял"
-    }
+    },
+    "add_custom_client": "Добавить пользовательский клиент",
+    "delete_custom_client": "Удалить свой клиент"
   },
   "preloader": {
     "initializing": "Инициализация...",
@@ -589,7 +591,8 @@
     "about": "О программе",
     "admin": "Панель админа",
     "news": "Новости",
-    "customization": "Кастомизация"
+    "customization": "Кастомизация",
+    "custom_clients": "Свои клиенты"
   },
   "toast": {
     "dev": {
@@ -733,7 +736,8 @@
       "debugging": "Отладка",
       "logging_in": "Входит в систему",
       "browsing_friends": "Смотрит что делают друзья",
-      "browsing_news": "Читает новости"
+      "browsing_news": "Читает новости",
+      "browsing_custom_clients": "Смотрит на свои клиенты"
     }
   },
   "modal": {
@@ -890,5 +894,9 @@
         }
       }
     }
-  }
+  },
+  "custom_clients_display": "Отображение пользовательских клиентов",
+  "custom_clients_display_description": "Выберите, как отображать пользовательские клиенты - в отдельной вкладке или смешанно с обычными клиентами",
+  "custom_clients_display_separate": "Отдельная вкладка",
+  "custom_clients_display_global": "Общий список"
 }

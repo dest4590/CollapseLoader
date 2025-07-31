@@ -36,6 +36,7 @@ import Settings from './views/Settings.vue';
 import Customization from './views/Customization.vue';
 import UserProfileView from './views/UserProfileView.vue';
 import News from './views/News.vue';
+import CustomClients from './views/CustomClients.vue';
 import { apiGet } from './services/apiClient';
 import { getCurrentLanguage } from './i18n';
 
@@ -63,6 +64,7 @@ const activeTab = ref<
     | 'settings'
     | 'app_logs'
     | 'customization'
+    | 'custom_clients'
     | 'about'
     | 'account'
     | 'login'
@@ -97,21 +99,19 @@ const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
 
-// Enhanced composables integration
 const { loadUserData, displayName, isAuthenticated: userAuthenticated } = useUser();
-const { 
-    friends, 
-    onlineFriendsCount, 
-    loadFriendsData, 
-    isLoading: friendsLoading 
+const {
+    friends,
+    onlineFriendsCount,
+    loadFriendsData,
+    isLoading: friendsLoading
 } = globalFriends;
 
-// Status management
-const { 
-    isOnline: userOnline, 
-    connectionStatus, 
+const {
+    isOnline: userOnline,
+    connectionStatus,
     initializeStatusSystem,
-    stopStatusSync 
+    stopStatusSync
 } = globalUserStatus;
 
 const handleUnreadNewsCountUpdated = (count: number) => {
@@ -122,6 +122,7 @@ const setActiveTab = (tab: string) => {
     if (
         [
             'home',
+            'custom_clients',
             'settings',
             'app_logs',
             'customization',
@@ -138,6 +139,7 @@ const setActiveTab = (tab: string) => {
         isNavigatingToProfile.value = false;
         activeTab.value = tab as
             | 'home'
+            | 'custom_clients'
             | 'settings'
             | 'app_logs'
             | 'customization'
@@ -516,6 +518,7 @@ const views: Record<string, any> = {
     settings: Settings,
     about: About,
     customization: Customization,
+    custom_clients: CustomClients,
     app_logs: AppLogs,
     account: AccountView,
     login: LoginView,
@@ -546,6 +549,9 @@ const updateDiscordRPC = async (tab?: string) => {
         switch (currentTab) {
             case 'home':
                 state = t('discord.states.browsing_clients');
+                break;
+            case 'custom_clients':
+                state = t('discord.states.browsing_custom_clients');
                 break;
             case 'news':
                 state = t('discord.states.browsing_news');
@@ -619,18 +625,14 @@ const initializeUserData = async () => {
     if (!isAuthenticated.value || !isOnline.value) return;
 
     try {
-        // Preload critical API data
         await apiPreload();
-        
-        // Initialize user data
+
         await loadUserData();
         console.log(`User loaded: ${displayName.value || 'Unknown'}`);
 
-        // Initialize enhanced status system
         initializeStatusSystem();
         console.log(`Status system initialized, connection: ${connectionStatus.value}`);
 
-        // Load friends data using enhanced system
         await loadFriendsData();
         console.log(`Friends loaded: ${friends.value.length} total, ${onlineFriendsCount.value} online`);
 
@@ -652,6 +654,7 @@ const getTransitionName = () => {
 
     const tabOrder = [
         'home',
+        'custom_clients',
         'friends',
         'settings',
         'customization',

@@ -13,6 +13,8 @@ use crate::{
     log_debug, log_error, log_info, log_warn,
 };
 
+use std::path::PathBuf;
+
 fn get_client_by_id(id: u32) -> Result<Client, String> {
     CLIENT_MANAGER
         .lock()
@@ -447,13 +449,111 @@ fn calculate_md5_hash(path: &std::path::PathBuf) -> Result<String, String> {
     Ok(format!("{digest:x}"))
 }
 
-// // CUSTOM CLIENTS
-// #[tauri::command]
-// pub fn get_custom_clients() -> Vec<internal::clients::custom_clients::CustomClient>
-// {
-//     internal::clients::custom_clients::CUSTOM_CLIENTS
-//         .lock()
-//         .ok()
-//         .and_then(|clients| clients.clone())
-//         .unwrap_or_default()
-// }
+#[tauri::command]
+pub fn get_custom_clients() -> Vec<crate::core::clients::custom_clients::CustomClient> {
+    crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .ok()
+        .map(|manager| manager.clients.clone())
+        .unwrap_or_default()
+}
+
+#[tauri::command]
+pub fn add_custom_client(
+    name: String,
+    version: String,
+    filename: String,
+    file_path: String,
+    main_class: String,
+) -> Result<(), String> {
+    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    let version_enum = crate::core::clients::custom_clients::Version::from_string(&version);
+    let path_buf = PathBuf::from(file_path);
+
+    let custom_client = crate::core::clients::custom_clients::CustomClient::new(
+        0,
+        name,
+        version_enum,
+        filename,
+        path_buf,
+        main_class,
+    );
+
+    manager.add_client(custom_client)
+}
+
+#[tauri::command]
+pub fn remove_custom_client(id: u32) -> Result<(), String> {
+    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    manager.remove_client(id)
+}
+
+#[tauri::command]
+pub fn update_custom_client(
+    id: u32,
+    name: Option<String>,
+    version: Option<String>,
+    main_class: Option<String>,
+) -> Result<(), String> {
+    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    let version_enum =
+        version.map(|v| crate::core::clients::custom_clients::Version::from_string(&v));
+
+    let updates = crate::core::storage::custom_clients::CustomClientUpdate {
+        name,
+        version: version_enum,
+        main_class,
+    };
+
+    manager.update_client(id, updates)
+}
+
+#[tauri::command]
+pub fn launch_custom_client(id: u32, app_handle: AppHandle) -> Result<(), String> {
+    let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    let custom_client = manager
+        .get_client(id)
+        .ok_or_else(|| "Custom client not found".to_string())?;
+
+    custom_client.validate_file()?;
+
+    {
+        let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+            .lock()
+            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+        manager.increment_launches(id)?;
+    }
+
+    log_info!("Launching custom client: {}", custom_client.name);
+
+    emit_to_main_window(
+        &app_handle,
+        "custom-client-launched",
+        &serde_json::json!({
+            "name": custom_client.name
+        }),
+    );
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn validate_custom_clients() -> Vec<(u32, String)> {
+    crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .ok()
+        .map(|manager| manager.validate_all_clients())
+        .unwrap_or_default()
+}
