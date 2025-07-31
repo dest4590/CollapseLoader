@@ -168,7 +168,10 @@
       "close": "Я понял"
     },
     "add_custom_client": "Добавить пользовательский клиент",
-    "delete_custom_client": "Удалить свой клиент"
+    "delete_custom_client": "Удалить свой клиент",
+    "client_added": "Клиент добавлен",
+    "client_edited": "Клиент изменён",
+    "client_deleted": "Клиент удалён"
   },
   "preloader": {
     "initializing": "Инициализация...",

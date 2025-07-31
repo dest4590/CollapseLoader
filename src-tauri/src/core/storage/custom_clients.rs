@@ -105,16 +105,6 @@ impl CustomClientManager {
         }
     }
 
-    pub fn increment_launches(&mut self, id: u32) -> Result<(), String> {
-        if let Some(client) = self.get_client_mut(id) {
-            client.launches += 1;
-            self.save_to_disk();
-            Ok(())
-        } else {
-            Err("Client not found".to_string())
-        }
-    }
-
     pub fn validate_all_clients(&self) -> Vec<(u32, String)> {
         let mut errors = Vec::new();
 

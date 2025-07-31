@@ -102,6 +102,22 @@ fn default_meta() -> Meta {
     }
 }
 
+pub struct LaunchOptions {
+    pub app_handle: AppHandle,
+    pub user_token: String,
+    pub is_custom: bool,
+}
+
+impl LaunchOptions {
+    pub fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
+        Self {
+            app_handle,
+            user_token,
+            is_custom,
+        }
+    }
+}
+
 impl Client {
     pub async fn download(&self) -> Result<(), String> {
         match DATA.download(&self.filename).await {
@@ -290,8 +306,10 @@ impl Client {
         Ok(())
     }
 
-    pub async fn run(self, app_handle: AppHandle, user_token: String) -> Result<(), String> {
-        Analytics::send_client_analytics(self.id);
+    pub async fn run(self, options: LaunchOptions) -> Result<(), String> {
+        if !options.is_custom {
+            Analytics::send_client_analytics(self.id);
+        }
 
         {
             let mut logs = CLIENT_LOGS.lock().unwrap();
@@ -300,14 +318,14 @@ impl Client {
 
         let client_id = self.id;
         let client_name = self.name.clone();
-        let app_handle_clone_for_run = app_handle.clone();
-        let app_handle_clone_for_crash_handling = app_handle.clone();
+        let app_handle_clone_for_run = options.app_handle.clone();
+        let app_handle_clone_for_crash_handling = options.app_handle.clone();
         let optional_analytics = SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value);
         let cordshare = SETTINGS.lock().is_ok_and(|s| s.cordshare.value);
         let irc_chat = SETTINGS.lock().is_ok_and(|s| s.irc_chat.value);
 
         let agent_arguments = AgentArguments::new(
-            user_token.clone(),
+            options.user_token.clone(),
             client_name.clone(),
             optional_analytics,
             cordshare,

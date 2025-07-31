@@ -3,9 +3,7 @@ import { ref, reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { useToast } from '../../services/toastService';
-import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const { addToast } = useToast();
 
 const emit = defineEmits<{
@@ -16,7 +14,7 @@ const emit = defineEmits<{
 const form = reactive({
     name: '',
     version: '1.16.5',
-    mainClass: '',
+    mainClass: 'net.minecraft.client.main.Main',
     filePath: '',
     fileName: '',
 });
@@ -27,7 +25,6 @@ const errors = ref<Record<string, string>>({});
 const availableVersions = [
     '1.16.5',
     '1.12.2',
-    'Custom'
 ];
 
 const validateForm = () => {
@@ -60,11 +57,11 @@ const selectFile = async () => {
 
         if (selected && typeof selected === 'string') {
             form.filePath = selected;
-            // Extract filename from path for display
             const pathParts = selected.split(/[/\\]/);
             form.fileName = pathParts[pathParts.length - 1];
         }
     } catch (error) {
+        console.error('File selection error:', error);
         addToast('Failed to select file', 'error');
     }
 };
@@ -88,12 +85,13 @@ const handleSubmit = async () => {
         Object.assign(form, {
             name: '',
             version: '1.16.5',
-            mainClass: '',
+            mainClass: 'net.minecraft.client.main.Main',
             filePath: '',
             fileName: '',
         });
 
         emit('client-added');
+        emit('close');
     } catch (err) {
         addToast(`Failed to add custom client: ${err}`, 'error');
     } finally {
@@ -103,60 +101,60 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-    <form @submit.prevent="handleSubmit" class="space-y-4">
-        <div class="form-control">
-            <label class="label">
-                <span class="label-text">Client Name *</span>
-            </label>
-            <input v-model="form.name" type="text" placeholder="Enter client name" class="input input-bordered"
-                :class="{ 'input-error': errors.name }" />
-            <label v-if="errors.name" class="label">
-                <span class="label-text-alt text-error">{{ errors.name }}</span>
-            </label>
-        </div>
-
-        <div class="form-control">
-            <label class="label">
-                <span class="label-text">Minecraft Version *</span>
-            </label>
-            <select v-model="form.version" class="select select-bordered">
-                <option v-for="version in availableVersions" :key="version" :value="version">
-                    {{ version }}
-                </option>
-            </select>
-        </div>
-
-        <div class="form-control">
-            <label class="label">
-                <span class="label-text">Main Class *</span>
-            </label>
-            <input v-model="form.mainClass" type="text" placeholder="e.g., net.minecraft.client.main.Main"
-                class="input input-bordered" :class="{ 'input-error': errors.mainClass }" />
-            <label v-if="errors.mainClass" class="label">
-                <span class="label-text-alt text-error">{{ errors.mainClass }}</span>
-            </label>
-        </div>
-
-
-        <div class="form-control">
-            <label class="label">
-                <span class="label-text">JAR File *</span>
-            </label>
-            <div class="flex gap-2">
-                <input :value="form.fileName || 'No file selected'" type="text" placeholder="Select a .jar file"
-                    class="input input-bordered flex-1" readonly :class="{ 'input-error': errors.filePath }" />
-                <button type="button" @click="selectFile" class="btn btn-outline">
-                    Browse
-                </button>
+    <form @submit.prevent="handleSubmit" class="space-y-4 ">
+        <div class="form-scroll-area">
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Client Name *</span>
+                </label>
+                <input v-model="form.name" type="text" placeholder="Enter client name" class="input input-bordered"
+                    :class="{ 'input-error': errors.name }" />
+                <label v-if="errors.name" class="label">
+                    <span class="label-text-alt text-error">{{ errors.name }}</span>
+                </label>
             </div>
-            <label v-if="errors.filePath" class="label">
-                <span class="label-text-alt text-error">{{ errors.filePath }}</span>
-            </label>
-            <label v-if="form.fileName" class="label">
-                <span class="label-text-alt text-success">Selected: {{ form.fileName }}</span>
-            </label>
-        </div>
 
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Minecraft Version *</span>
+                </label>
+                <select v-model="form.version" class="select select-bordered">
+                    <option v-for="version in availableVersions" :key="version" :value="version">
+                        {{ version }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Main Class *</span>
+                </label>
+                <input v-model="form.mainClass" type="text" placeholder="e.g., net.minecraft.client.main.Main"
+                    class="input input-bordered" :class="{ 'input-error': errors.mainClass }" />
+                <label v-if="errors.mainClass" class="label">
+                    <span class="label-text-alt text-error">{{ errors.mainClass }}</span>
+                </label>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">JAR File *</span>
+                </label>
+                <div class="flex gap-2">
+                    <input :value="form.fileName || 'No file selected'" type="text" placeholder="Select a .jar file"
+                        class="input input-bordered flex-1" readonly :class="{ 'input-error': errors.filePath }" />
+                    <button type="button" @click="selectFile" class="btn btn-outline">
+                        Browse
+                    </button>
+                </div>
+                <label v-if="errors.filePath" class="label">
+                    <span class="label-text-alt text-error">{{ errors.filePath }}</span>
+                </label>
+                <label v-if="form.fileName" class="label">
+                    <span class="label-text-alt text-success">Selected: {{ form.fileName }}</span>
+                </label>
+            </div>
+        </div>
         <div class="modal-action">
             <button type="button" class="btn" @click="$emit('close')" :disabled="loading">
                 Cancel

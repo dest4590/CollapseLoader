@@ -169,7 +169,10 @@
     },
     "add_custom_client": "Add custom client",
     "edit_custom_client": "Edit custom client",
-    "delete_custom_client": "Delete custom client"
+    "delete_custom_client": "Delete custom client",
+    "client_added": "Client added",
+    "client_edited": "Client edited",
+    "client_deleted": "Client deleted"
   },
   "preloader": {
     "initializing": "Initialization...",

@@ -23,26 +23,20 @@ import DeleteCustomClientConfirmModal from '../components/modals/DeleteCustomCli
 
 const { t } = useI18n();
 
-defineProps<{
-    isOnline: boolean;
-}>();
-
 const customClients = ref<CustomClient[]>([]);
 const error = ref('');
 const loading = ref(true);
 const searchQuery = ref('');
 const { addToast } = useToast();
-const { showModal, hideModal } = useModal();
+const { showModal } = useModal();
 
 const filteredClients = computed(() => {
-    if (!searchQuery.value) return customClients.value;
+    if (!searchQuery.value.trim()) return customClients.value;
 
-    const query = searchQuery.value.toLowerCase();
+    const query = searchQuery.value.trim().toLowerCase();
     return customClients.value.filter(client =>
-        client.name.toLowerCase().includes(query) ||
-        client.version.toLowerCase().includes(query) ||
-        client.main_class.toLowerCase().includes(query) ||
-        (client.description && client.description.toLowerCase().includes(query))
+        (client.name && client.name.toLowerCase().includes(query)) ||
+        (client.version && client.version.toLowerCase().includes(query))
     );
 });
 
@@ -61,46 +55,44 @@ const loadCustomClients = async () => {
 };
 
 const handleAddClient = () => {
-    showModal('add-custom-client', AddCustomClientModal, { title: t('modals.add_custom_client') }, {}, {});
+    showModal('add-custom-client', AddCustomClientModal, { title: t('modals.add_custom_client') }, {}, {
+        'client-added': () => {
+            addToast(t('modals.client_added'), 'success');
+            loadCustomClients();
+        }
+    });
 };
 
 const handleEditClient = (client: CustomClient) => {
-    showModal('edit-custom-client', EditCustomClientModal, { title: t('modals.edit_custom_client') }, { client }, {});
+    showModal('edit-custom-client', EditCustomClientModal, { title: t('modals.edit_custom_client') }, { client }, {
+        'client-edited': () => {
+            addToast(t('modals.client_edited'), 'success');
+            loadCustomClients();
+        }
+    });
 };
 
 const handleDeleteClient = (client: CustomClient) => {
-    showModal('delete-custom-client-confirm', DeleteCustomClientConfirmModal, { title: t('modals.delete_custom_client') }, { client }, {});
+    showModal('delete-custom-client-confirm', DeleteCustomClientConfirmModal, { title: t('modals.delete_custom_client') }, { client }, {
+        'client-deleted': () => {
+            addToast(t('modals.client_deleted'), 'success');
+            loadCustomClients();
+        }
+    });
 };
 
 const handleLaunchClient = async (client: CustomClient) => {
     try {
+        const userToken = localStorage.getItem('authToken') || 'null';
+
         await invoke('launch_custom_client', {
-            id: client.id,
-            userToken: '',
+            id: client.id, userToken,
         });
 
         addToast(`Launched ${client.name}`, 'success');
     } catch (err) {
         addToast(`Failed to launch ${client.name}: ${err}`, 'error');
     }
-};
-
-const handleClientAdded = async () => {
-    hideModal('add-custom-client');
-    await loadCustomClients();
-    addToast('Custom client added successfully!', 'success');
-};
-
-const handleClientEdited = async () => {
-    hideModal('edit-custom-client');
-    await loadCustomClients();
-    addToast('Custom client updated successfully!', 'success');
-};
-
-const handleClientDeleted = async () => {
-    hideModal('delete-custom-client-confirm');
-    await loadCustomClients();
-    addToast('Custom client deleted successfully!', 'success');
 };
 
 const formatDate = (dateString: string) => {
@@ -132,7 +124,7 @@ onMounted(async () => {
                     Manage your custom Minecraft clients
                 </p>
             </div>
-            <button @click="handleAddClient" class="btn btn-primary gap-2" :disabled="!isOnline">
+            <button @click="handleAddClient" class="btn btn-primary gap-2">
                 <Plus class="w-4 h-4" />
                 Add Custom Client
             </button>
@@ -163,7 +155,7 @@ onMounted(async () => {
                         : 'Add your first custom client to get started.'
                     }}
                 </p>
-                <button v-if="!searchQuery" @click="handleAddClient" class="btn btn-primary" :disabled="!isOnline">
+                <button v-if="!searchQuery" @click="handleAddClient" class="btn btn-primary">
                     <Plus class="w-4 h-4 mr-2" />
                     Add Custom Client
                 </button>
@@ -238,7 +230,7 @@ onMounted(async () => {
 
                         <div class="card-actions justify-end">
                             <button @click="handleLaunchClient(client)" class="btn btn-primary btn-sm gap-2"
-                                :disabled="!client.is_installed || !isOnline">
+                                :disabled="!client.is_installed">
                                 <Play class="w-4 h-4" />
                                 Launch
                             </button>
@@ -249,21 +241,3 @@ onMounted(async () => {
         </div>
     </div>
 </template>
-
-<style scoped>
-.slide-up {
-    animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>

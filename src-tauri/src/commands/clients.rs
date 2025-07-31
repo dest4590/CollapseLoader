@@ -4,7 +4,7 @@ use core::clients::{
 };
 use tauri::AppHandle;
 
-use crate::core::clients::internal::agent_overlay::AgentOverlayManager;
+use crate::core::clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager};
 use crate::core::network::analytics::Analytics;
 use crate::core::utils::utils::emit_to_main_window;
 use crate::core::utils::{discord_rpc, logging};
@@ -194,7 +194,9 @@ pub async fn launch_client(
         }
     }
 
-    client.run(app_handle, user_token).await
+    let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
+
+    client.run(options).await
 }
 
 #[tauri::command]
@@ -518,25 +520,27 @@ pub fn update_custom_client(
 }
 
 #[tauri::command]
-pub fn launch_custom_client(id: u32, app_handle: AppHandle) -> Result<(), String> {
-    let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
-        .lock()
-        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+pub async fn launch_custom_client(
+    id: u32,
+    user_token: String,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let custom_client = {
+        let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+            .lock()
+            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
-    let custom_client = manager
-        .get_client(id)
-        .ok_or_else(|| "Custom client not found".to_string())?;
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
 
     custom_client.validate_file()?;
 
-    {
-        let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
-            .lock()
-            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
-        manager.increment_launches(id)?;
-    }
-
     log_info!("Launching custom client: {}", custom_client.name);
+
+    let client = custom_client.to_client();
 
     emit_to_main_window(
         &app_handle,
@@ -546,7 +550,9 @@ pub fn launch_custom_client(id: u32, app_handle: AppHandle) -> Result<(), String
         }),
     );
 
-    Ok(())
+    let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), true);
+
+    client.run(options).await
 }
 
 #[tauri::command]

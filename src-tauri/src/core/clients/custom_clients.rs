@@ -6,7 +6,6 @@ use std::path::PathBuf;
 pub enum Version {
     V1_16_5,
     V1_12_2,
-    Custom(String),
 }
 
 impl Version {
@@ -14,7 +13,6 @@ impl Version {
         match self {
             Version::V1_16_5 => "1.16.5".to_string(),
             Version::V1_12_2 => "1.12.2".to_string(),
-            Version::Custom(version) => version.clone(),
         }
     }
 
@@ -22,7 +20,7 @@ impl Version {
         match version {
             "1.16.5" => Version::V1_16_5,
             "1.12.2" => Version::V1_12_2,
-            _ => Version::Custom(version.to_string()),
+            _ => Version::V1_16_5,
         }
     }
 }
