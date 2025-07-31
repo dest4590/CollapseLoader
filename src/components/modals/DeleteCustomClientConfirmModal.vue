@@ -3,11 +3,9 @@ import { ref, computed, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../../services/toastService';
 import { useModal } from '../../services/modalService';
-import { useI18n } from 'vue-i18n';
 import { AlertTriangle, Trash2 } from 'lucide-vue-next';
 import type { CustomClient } from '../../types/ui';
 
-const { t } = useI18n();
 const { addToast } = useToast();
 const { getModals } = useModal();
 
