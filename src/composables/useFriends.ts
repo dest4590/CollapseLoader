@@ -1,4 +1,4 @@
-import { ref, computed, reactive, watch, onUnmounted } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 import { apiClient } from '../services/apiClient';
 import { sendNativeNotification } from '../services/notificationService';
 
@@ -435,10 +435,6 @@ export function useFriends() {
             console.log('Stopped intelligent status updates');
         }
     };
-
-    onUnmounted(() => {
-        stopStatusUpdates();
-    });
 
     watch(isAuthenticated, (newValue) => {
         if (!newValue) {

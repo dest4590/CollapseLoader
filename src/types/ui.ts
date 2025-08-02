@@ -13,6 +13,7 @@ export interface Client {
     meta: {
         [key: string]: any;
         installed?: boolean;
+        is_custom?: boolean;
         size?: string;
     };
 }
@@ -27,8 +28,6 @@ export interface CustomClient {
     description?: string;
     created_at: string;
     is_installed: boolean;
-    launches: number;
-    insecure: boolean;
 }
 
 export interface ClientDetails {

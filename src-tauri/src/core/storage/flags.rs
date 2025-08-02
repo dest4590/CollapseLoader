@@ -15,12 +15,19 @@ impl<T> Flag<T> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Flags {
     pub disclaimer_shown: Flag<bool>,
     pub first_run: Flag<bool>,
     pub telemetry_consent_shown: Flag<bool>,
+    pub custom_clients_display: Flag<String>,
     pub flags_path: PathBuf,
+}
+
+impl Flags {
+    pub fn set_custom_clients_display(&mut self, display: String) {
+        self.custom_clients_display.value = display;
+    }
 }
 
 impl JsonStorage for Flags {
@@ -37,23 +44,13 @@ impl JsonStorage for Flags {
     }
 }
 
-impl Clone for Flags {
-    fn clone(&self) -> Self {
-        Self {
-            disclaimer_shown: self.disclaimer_shown.clone(),
-            first_run: self.first_run.clone(),
-            telemetry_consent_shown: self.telemetry_consent_shown.clone(),
-            flags_path: self.flags_path.clone(),
-        }
-    }
-}
-
 impl Default for Flags {
     fn default() -> Self {
         Self {
             disclaimer_shown: Flag::new(false),
             first_run: Flag::new(true),
             telemetry_consent_shown: Flag::new(false),
+            custom_clients_display: Flag::new("separate".to_string()),
             flags_path: DATA.get_local("flags.json"),
         }
     }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { CircleDot, Download, Play } from 'lucide-vue-next';
+import { CircleDot, Download, HardDrive, Play } from 'lucide-vue-next';
 import { Client } from '../../../types/ui';
 
 const props = defineProps<{
@@ -32,7 +32,8 @@ const formattedLaunches = computed(() => {
         <div class="stats">
             <CircleDot class="w-3 h-3 opacity-60" />
             <span class="text-xs font-semibold opacity-70">{{ client.version }}</span>
-
+            <HardDrive v-if="client.meta.is_custom" class="ml-1 w-3 h-3 opacity-60" />
+            <span v-if="client.meta.is_custom" class="text-xs text-success w-14">CUSTOM</span>
         </div>
         <transition name="fade">
             <div v-if="expanded" class="expanded-stats stats">
@@ -58,7 +59,6 @@ const formattedLaunches = computed(() => {
 .client-stats {
     display: flex;
     align-items: center;
-    font-size: 0.75rem;
     color: rgba(var(--bc), 0.6);
     gap: 0.375rem;
 }

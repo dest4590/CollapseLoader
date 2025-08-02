@@ -55,20 +55,20 @@ watch(() => modals['delete-custom-client-confirm']?.props?.client, (client: Cust
             </div>
         </div>
         <div>
-            <h3 class="font-bold text-lg">Delete Custom Client</h3>
+            <h3 class="font-bold text-lg">{{ $t('modals.delete_custom_client_confirm_modal.title') }}</h3>
             <p class="text-base-content/70 text-sm">
-                This action cannot be undone
+                {{ $t('modals.delete_custom_client_confirm_modal.description') }}
             </p>
         </div>
     </div>
 
     <div class="modal-action">
         <button type="button" class="btn" @click="$emit('close')" :disabled="loading">
-            Cancel
+            {{ $t('common.cancel') }}
         </button>
         <button type="button" class="btn btn-error" @click="handleDelete" :disabled="loading">
             <div v-if="loading" class="loading loading-spinner loading-sm"></div>
-            {{ loading ? 'Deleting...' : 'Delete Client' }}
+            {{ loading ? $t('modals.delete_custom_client_confirm_modal.deleting') : $t('modals.delete_custom_client_confirm_modal.delete_client') }}
         </button>
     </div>
 </template>

@@ -376,11 +376,11 @@ const getFormattedLabel = (key: string) => {
     }
 
     if (key == "irc_chat") {
-        return 'IRC Chat';
+        return t('settings.irc_chat');
     }
 
     if (key === 'hash_verify') {
-        return 'Hash Verification';
+        return t('settings.hash_verify');
     }
 
     if (key === 'discord_rpc_enabled') {
@@ -389,10 +389,6 @@ const getFormattedLabel = (key: string) => {
 
     if (key === 'enable_telemetry') {
         return t('settings.telemetry');
-    }
-
-    if (key === 'custom_clients') {
-        return 'Custom Clients';
     }
 
     return words
@@ -670,16 +666,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </p>
                             </div>
 
-                            <div v-else-if="key === 'custom_clients_display'" class="space-y-3">
-                                <select v-model="field.value" class="select select-bordered w-full bg-base-100">
-                                    <option value="separate">{{ t('settings.custom_clients_display_separate') }}</option>
-                                    <option value="global">{{ t('settings.custom_clients_display_global') }}</option>
-                                </select>
-                                <p class="text-xs text-base-content/70">
-                                    {{ getSettingDescription(key) }}
-                                </p>
-                            </div>
-
                             <div v-else-if="typeof field.value === 'boolean'" class="space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div class="flex-1">
@@ -692,7 +678,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         v-model="field.value" class="toggle toggle-primary" />
 
                                     <div v-else class="tooltip tooltip-left" :data-tip="$t('settings.login_required')">
-                                        <input type="checkbox" :checked="false" class="toggle toggle-primary pointer-events-none" tabindex="-1" />
+                                        <input type="checkbox" :checked="false"
+                                            class="toggle toggle-primary pointer-events-none" tabindex="-1" />
                                     </div>
                                 </div>
                             </div>
@@ -758,7 +745,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <RotateCcw class="w-4 h-4" />
                                     {{ $t('settings.reset_requirements') }}
                                 </button>
-                                <button class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-secondary-focus transition-all duration-200"
+                                <button
+                                    class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-secondary-focus transition-all duration-200"
                                     @click="resetCache">
                                     <RotateCcw class="w-4 h-4" />
                                     {{ $t('settings.reset_cache') }}
@@ -861,7 +849,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -870,7 +858,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>

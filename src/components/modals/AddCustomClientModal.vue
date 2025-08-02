@@ -105,9 +105,9 @@ const handleSubmit = async () => {
         <div class="form-scroll-area">
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">Client Name *</span>
+                    <span class="label-text">{{ $t('modals.add_custom_client_modal.client_name') }} *</span>
                 </label>
-                <input v-model="form.name" type="text" placeholder="Enter client name" class="input input-bordered"
+                <input v-model="form.name" type="text" :placeholder="$t('modals.add_custom_client_modal.enter_client_name')" class="input input-bordered"
                     :class="{ 'input-error': errors.name }" />
                 <label v-if="errors.name" class="label">
                     <span class="label-text-alt text-error">{{ errors.name }}</span>
@@ -116,7 +116,7 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">Minecraft Version *</span>
+                    <span class="label-text">{{ $t('modals.add_custom_client_modal.minecraft_version') }} *</span>
                 </label>
                 <select v-model="form.version" class="select select-bordered">
                     <option v-for="version in availableVersions" :key="version" :value="version">
@@ -127,9 +127,9 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">Main Class *</span>
+                    <span class="label-text">{{ $t('modals.add_custom_client_modal.main_class') }} *</span>
                 </label>
-                <input v-model="form.mainClass" type="text" placeholder="e.g., net.minecraft.client.main.Main"
+                <input v-model="form.mainClass" type="text" :placeholder="$t('modals.add_custom_client_modal.main_class_placeholder')"
                     class="input input-bordered" :class="{ 'input-error': errors.mainClass }" />
                 <label v-if="errors.mainClass" class="label">
                     <span class="label-text-alt text-error">{{ errors.mainClass }}</span>
@@ -138,30 +138,30 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">JAR File *</span>
+                    <span class="label-text">{{ $t('modals.add_custom_client_modal.jar_file') }} *</span>
                 </label>
                 <div class="flex gap-2">
-                    <input :value="form.fileName || 'No file selected'" type="text" placeholder="Select a .jar file"
+                    <input :value="form.fileName || $t('modals.add_custom_client_modal.no_file_selected')" type="text" :placeholder="$t('modals.add_custom_client_modal.select_jar_file')"
                         class="input input-bordered flex-1" readonly :class="{ 'input-error': errors.filePath }" />
                     <button type="button" @click="selectFile" class="btn btn-outline">
-                        Browse
+                        {{ $t('common.browse') }}
                     </button>
                 </div>
                 <label v-if="errors.filePath" class="label">
                     <span class="label-text-alt text-error">{{ errors.filePath }}</span>
                 </label>
                 <label v-if="form.fileName" class="label">
-                    <span class="label-text-alt text-success">Selected: {{ form.fileName }}</span>
+                    <span class="label-text-alt text-success">{{ $t('modals.add_custom_client_modal.selected') }}: {{ form.fileName }}</span>
                 </label>
             </div>
         </div>
         <div class="modal-action">
             <button type="button" class="btn" @click="$emit('close')" :disabled="loading">
-                Cancel
+                {{ $t('common.cancel') }}
             </button>
             <button type="submit" class="btn btn-primary" :disabled="loading">
                 <div v-if="loading" class="loading loading-spinner loading-sm"></div>
-                {{ loading ? 'Adding...' : 'Add Client' }}
+                {{ loading ? $t('modals.add_custom_client_modal.adding') : $t('modals.add_custom_client_modal.add_client') }}
             </button>
         </div>
     </form>

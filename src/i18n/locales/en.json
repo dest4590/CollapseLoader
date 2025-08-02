@@ -168,11 +168,42 @@
       "close": "I understand"
     },
     "add_custom_client": "Add custom client",
-    "edit_custom_client": "Edit custom client",
+    "edit_custom_client": "Edit client",
     "delete_custom_client": "Delete custom client",
     "client_added": "Client added",
     "client_edited": "Client edited",
-    "client_deleted": "Client deleted"
+    "client_deleted": "Client deleted",
+    "delete_custom_client_confirm": {
+      "message": "Do you really want to delete this custom client?"
+    },
+    "add_custom_client_modal": {
+      "client_name": "Client Name",
+      "enter_client_name": "Enter client name",
+      "minecraft_version": "Minecraft Version",
+      "main_class": "Main Class",
+      "main_class_placeholder": "e.g., net.minecraft.client.main.Main",
+      "jar_file": "JAR File",
+      "no_file_selected": "No file selected",
+      "select_jar_file": "Select a .jar file",
+      "selected": "Selected",
+      "adding": "Adding...",
+      "add_client": "Add Client"
+    },
+    "edit_custom_client_modal": {
+      "client_name": "Client Name",
+      "enter_client_name": "Enter client name",
+      "minecraft_version": "Minecraft Version",
+      "main_class": "Main Class",
+      "main_class_placeholder": "e.g., net.minecraft.client.main.Main",
+      "updating": "Updating...",
+      "update_client": "Update Client"
+    },
+    "delete_custom_client_confirm_modal": {
+      "title": "Delete Custom Client",
+      "description": "This action cannot be undone",
+      "deleting": "Deleting...",
+      "delete_client": "Delete Client"
+    }
   },
   "preloader": {
     "initializing": "Initialization...",
@@ -244,7 +275,8 @@
     "loading": "Loading...",
     "ok": "Ok",
     "close": "Close",
-    "save": "Save"
+    "save": "Save",
+    "browse": "Browse"
   },
   "auth": {
     "logout": {
@@ -532,7 +564,10 @@
     "login_required": "You will need to log into your account to use this feature.",
     "reset_cache": "Reset client cache",
     "reset_cache_success": "Successfully deleted client cache, restart the loader",
-    "reset_cache_failed": "Cannot remove cache, try again"
+    "reset_cache_failed": "Cannot remove cache, try again",
+    "hash_verify": "Hash verify",
+    "irc_chat": "IRC Chat",
+    "save_flags_failed": "Failed to save flags: {error}"
   },
   "userProfile": {
     "back_to_friends": "Back to Friends",
@@ -889,12 +924,7 @@
     "up_to_date": "You're running the latest version!",
     "show_more": "Show {count} more versions",
     "show_less": "Show less",
-    "release_types": {
-      "major": "Major",
-      "minor": "Minor",
-      "patch": "Patch",
-      "hotfix": "Hotfix"
-    },
+    "release_types": {},
     "categories": {
       "feature": "New Features",
       "improvement": "Improvements",
@@ -908,5 +938,18 @@
         }
       }
     }
+  },
+  "custom_clients": {
+    "add": "Add custom client",
+    "running": "Running",
+    "edit": "Edit",
+    "delete": "Delete",
+    "added": "Added",
+    "stop": "Stop",
+    "launch": "Launch",
+    "display_settings": "Display settings",
+    "display_mode": "Display Mode",
+    "display_mode_separate": "Separate",
+    "display_mode_global": "Global"
   }
 }

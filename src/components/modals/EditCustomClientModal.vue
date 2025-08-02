@@ -82,9 +82,9 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
     <form @submit.prevent="handleSubmit" class="space-y-4">
         <div class="form-control">
             <label class="label">
-                <span class="label-text">Client Name *</span>
+                <span class="label-text">{{ $t('modals.edit_custom_client_modal.client_name') }} *</span>
             </label>
-            <input v-model="form.name" type="text" placeholder="Enter client name" class="input input-bordered"
+            <input v-model="form.name" type="text" :placeholder="$t('modals.edit_custom_client_modal.enter_client_name')" class="input input-bordered"
                 :class="{ 'input-error': errors.name }" />
             <label v-if="errors.name" class="label">
                 <span class="label-text-alt text-error">{{ errors.name }}</span>
@@ -93,7 +93,7 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
 
         <div class="form-control">
             <label class="label">
-                <span class="label-text">Minecraft Version *</span>
+                <span class="label-text">{{ $t('modals.edit_custom_client_modal.minecraft_version') }} *</span>
             </label>
             <select v-model="form.version" class="select select-bordered">
                 <option v-for="version in availableVersions" :key="version" :value="version">
@@ -104,9 +104,9 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
 
         <div class="form-control">
             <label class="label">
-                <span class="label-text">Main Class *</span>
+                <span class="label-text">{{ $t('modals.edit_custom_client_modal.main_class') }} *</span>
             </label>
-            <input v-model="form.mainClass" type="text" placeholder="e.g., net.minecraft.client.main.Main"
+            <input v-model="form.mainClass" type="text" :placeholder="$t('modals.edit_custom_client_modal.main_class_placeholder')"
                 class="input input-bordered" :class="{ 'input-error': errors.mainClass }" />
             <label v-if="errors.mainClass" class="label">
                 <span class="label-text-alt text-error">{{ errors.mainClass }}</span>
@@ -115,11 +115,11 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
 
         <div class="modal-action">
             <button type="button" class="btn" @click="$emit('close')" :disabled="loading">
-                Cancel
+                {{ $t('common.cancel') }}
             </button>
             <button type="submit" class="btn btn-primary" :disabled="loading">
                 <div v-if="loading" class="loading loading-spinner loading-sm"></div>
-                {{ loading ? 'Updating...' : 'Update Client' }}
+                {{ loading ? $t('modals.edit_custom_client_modal.updating') : $t('modals.edit_custom_client_modal.update_client') }}
             </button>
         </div>
     </form>

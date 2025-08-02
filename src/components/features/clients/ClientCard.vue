@@ -104,7 +104,7 @@ const handleOpenLogViewer = () => {
 const handleCardClick = (event: MouseEvent) => {
     if (props.isMultiSelectMode) {
         emit('client-click', props.client, event);
-    } else if (!isAnimating.value && !props.isSelected) {
+    } else if (!isAnimating.value && !props.isSelected && !props.client.meta.is_custom) {
         const target = event.target as HTMLElement;
         if (target.closest('button, a, .progress-bar-container, input, select, textarea, div[class*="tooltip"]')) {
             return;
@@ -150,6 +150,7 @@ const expandCard = async () => {
     const card = cardRef.value;
     if (!card) return;
     if (props.isAnyCardExpanded) return;
+    if (props.client.meta.is_custom) return;
 
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
@@ -733,10 +734,10 @@ onBeforeUnmount(() => {
                                 <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                 <span v-if="client.working">{{
                                     t('home.download')
-                                }}</span>
+                                    }}</span>
                                 <span v-else-if="!client.working">{{
                                     t('home.unavailable')
-                                }}</span>
+                                    }}</span>
                             </span>
                             <span class="flex items-center get-text absolute inset-0 opacity-0">
                                 {{ client.meta.size || '0' }} MB

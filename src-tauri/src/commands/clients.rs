@@ -4,10 +4,13 @@ use core::clients::{
 };
 use tauri::AppHandle;
 
-use crate::core::clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager};
 use crate::core::network::analytics::Analytics;
 use crate::core::utils::utils::emit_to_main_window;
 use crate::core::utils::{discord_rpc, logging};
+use crate::core::{
+    clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
+    storage::common::JsonStorage,
+};
 use crate::{
     core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
@@ -526,14 +529,19 @@ pub async fn launch_custom_client(
     app_handle: AppHandle,
 ) -> Result<(), String> {
     let custom_client = {
-        let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
             .lock()
             .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
-        manager
-            .get_client(id)
-            .cloned()
-            .ok_or_else(|| "Custom client not found".to_string())?
+        let client = manager
+            .get_client_mut(id)
+            .ok_or_else(|| "Custom client not found".to_string())?;
+
+        client.launches += 1;
+        let client_clone = client.clone();
+        manager.save_to_disk();
+
+        client_clone
     };
 
     custom_client.validate_file()?;
@@ -556,10 +564,34 @@ pub async fn launch_custom_client(
 }
 
 #[tauri::command]
-pub fn validate_custom_clients() -> Vec<(u32, String)> {
-    crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
-        .lock()
-        .ok()
-        .map(|manager| manager.validate_all_clients())
-        .unwrap_or_default()
+pub async fn get_running_custom_client_ids() -> Vec<u32> {
+    let handle = tokio::task::spawn_blocking(|| {
+        crate::core::clients::custom_clients::CustomClient::get_running_custom_clients()
+            .iter()
+            .map(|client| client.id)
+            .collect()
+    });
+
+    handle.await.unwrap_or_else(|_| Vec::new())
+}
+
+#[tauri::command]
+pub async fn stop_custom_client(id: u32) -> Result<(), String> {
+    let custom_client = {
+        let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+            .lock()
+            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let client_clone = custom_client.clone();
+    let handle = tokio::task::spawn_blocking(move || client_clone.stop());
+
+    handle
+        .await
+        .map_err(|e| format!("Stop custom client task error: {e}"))?
 }

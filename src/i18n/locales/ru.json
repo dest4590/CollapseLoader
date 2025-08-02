@@ -171,7 +171,39 @@
     "delete_custom_client": "Удалить свой клиент",
     "client_added": "Клиент добавлен",
     "client_edited": "Клиент изменён",
-    "client_deleted": "Клиент удалён"
+    "client_deleted": "Клиент удалён",
+    "edit_custom_client": "Редактировать клиент",
+    "delete_custom_client_confirm": {
+      "message": "Вы действительно хотите удалить этот клиент?"
+    },
+    "add_custom_client_modal": {
+      "client_name": "Имя клиента",
+      "enter_client_name": "Введите имя клиента",
+      "minecraft_version": "Версия Minecraft",
+      "main_class": "Главный класс",
+      "main_class_placeholder": "например: net.minecraft.client.main.Main",
+      "jar_file": "JAR файл",
+      "no_file_selected": "Файл не выбран",
+      "select_jar_file": "Выберите .jar файл",
+      "selected": "Выбрано",
+      "adding": "Добавление...",
+      "add_client": "Добавить клиент"
+    },
+    "edit_custom_client_modal": {
+      "client_name": "Имя клиента",
+      "enter_client_name": "Введите имя клиента",
+      "minecraft_version": "Версия Minecraft",
+      "main_class": "Главный класс",
+      "main_class_placeholder": "например: net.minecraft.client.main.Main",
+      "updating": "Обновление...",
+      "update_client": "Обновить клиент"
+    },
+    "delete_custom_client_confirm_modal": {
+      "title": "Удалить клиент",
+      "description": "Это действие нельзя отменить",
+      "deleting": "Удаление...",
+      "delete_client": "Удалить клиент"
+    }
   },
   "preloader": {
     "initializing": "Инициализация...",
@@ -276,7 +308,8 @@
     "loading": "Загрузка...",
     "ok": "Окей",
     "close": "Закрыть",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "browse": "Выбрать"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -531,7 +564,10 @@
     "login_required": "Вам нужно войти в свою учетную запись, чтобы использовать эту функцию.",
     "reset_cache": "Сбросить кэш клиентов",
     "reset_cache_success": "Успешно удален кэш клиентов, перезапустите лоадер",
-    "reset_cache_failed": "Не удалось удалить кэш, попробуйте еще раз"
+    "reset_cache_failed": "Не удалось удалить кэш, попробуйте еще раз",
+    "hash_verify": "Проверка хэша ",
+    "irc_chat": "IRC чат",
+    "save_flags_failed": "Не удалось сохранить флаги: {error}"
   },
   "userProfile": {
     "playing": "Играет в",
@@ -852,10 +888,14 @@
     "no_config_options": "Нет никаких настроек для плагина",
     "error": "Ошибка плагина в {name}",
     "edit": {
-      "save_and_close": "Сохранить и закрыть"
+      "save_and_close": "Сохранить и закрыть",
+      "load_error": "Ошибка загрузки плагина",
+      "save_error": "Ошибка сохранения",
+      "save_success": "Успешно сохранено"
     },
     "toggle_failed": "Не удалось переключить плагин {name}",
-    "remove_failed": "Не удается удалить плагин {name}"
+    "remove_failed": "Не удается удалить плагин {name}",
+    "description": "Расширяйте функционал CollapseLoader с помощью плагинов"
   },
   "customization": {
     "theme": "Тема",
@@ -898,8 +938,17 @@
       }
     }
   },
-  "custom_clients_display": "Отображение пользовательских клиентов",
-  "custom_clients_display_description": "Выберите, как отображать пользовательские клиенты - в отдельной вкладке или смешанно с обычными клиентами",
-  "custom_clients_display_separate": "Отдельная вкладка",
-  "custom_clients_display_global": "Общий список"
+  "custom_clients": {
+    "add": "Добавить свой клиент",
+    "running": "Запущен",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "added": "Добавлено",
+    "stop": "Остановить",
+    "launch": "Запустить",
+    "display_settings": "Настройка отображения",
+    "display_mode_global": "Глобально",
+    "display_mode": "Режим отображения",
+    "display_mode_separate": "Отдельно"
+  }
 }

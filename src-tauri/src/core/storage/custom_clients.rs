@@ -104,18 +104,6 @@ impl CustomClientManager {
             Err("Client not found".to_string())
         }
     }
-
-    pub fn validate_all_clients(&self) -> Vec<(u32, String)> {
-        let mut errors = Vec::new();
-
-        for client in &self.clients {
-            if let Err(error) = client.validate_file() {
-                errors.push((client.id, error));
-            }
-        }
-
-        errors
-    }
 }
 
 #[derive(Debug)]

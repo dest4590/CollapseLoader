@@ -35,6 +35,7 @@ pub struct Meta {
     pub is_new: bool,
     pub asset_index: String,
     pub installed: bool,
+    pub is_custom: bool,
     pub size: u64,
 }
 
@@ -60,6 +61,7 @@ impl Meta {
             is_new: is_new_version,
             asset_index,
             installed: jar_path.exists(),
+            is_custom: false,
             size: 0,
         }
     }
@@ -98,6 +100,7 @@ fn default_meta() -> Meta {
         is_new: false,
         asset_index: String::new(),
         installed: false,
+        is_custom: false,
         size: 0,
     }
 }

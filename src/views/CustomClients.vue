@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import {
     Plus,
     Edit3,
     Trash2,
     Play,
+    StopCircle,
     AlertTriangle,
     FileText,
     Calendar,
@@ -20,6 +20,7 @@ import type { CustomClient } from '../types/ui';
 import AddCustomClientModal from '../components/modals/AddCustomClientModal.vue';
 import EditCustomClientModal from '../components/modals/EditCustomClientModal.vue';
 import DeleteCustomClientConfirmModal from '../components/modals/DeleteCustomClientConfirmModal.vue';
+import CustomClientDisplaySettingsModal from '../components/modals/CustomClientDisplaySettingsModal.vue';
 
 const { t } = useI18n();
 
@@ -27,8 +28,7 @@ const customClients = ref<CustomClient[]>([]);
 const error = ref('');
 const loading = ref(true);
 const searchQuery = ref('');
-const { addToast } = useToast();
-const { showModal } = useModal();
+const displayMode = ref<'global' | 'separate'>('separate');
 
 const filteredClients = computed(() => {
     if (!searchQuery.value.trim()) return customClients.value;
@@ -40,17 +40,81 @@ const filteredClients = computed(() => {
     );
 });
 
+const runningCustomClients = ref<number[]>([]);
+const statusInterval = ref<number | null>(null);
+const { addToast } = useToast();
+const { showModal } = useModal();
+
+
 const loadCustomClients = async () => {
     try {
         loading.value = true;
         const clients = await invoke<CustomClient[]>('get_custom_clients');
-        customClients.value = clients;
+        customClients.value = clients.map(client => ({
+            ...client,
+            version: client.version.replace(/^V1_/, '1.').replace(/_/g, '.')
+        }));
         error.value = '';
     } catch (err) {
         error.value = `Failed to load custom clients: ${err}`;
         addToast(`Failed to load custom clients: ${err}`, 'error');
     } finally {
         loading.value = false;
+    }
+};
+
+const checkRunningStatus = async () => {
+    try {
+        const response = await invoke<number[]>('get_running_custom_client_ids');
+        runningCustomClients.value = response;
+    } catch (err) {
+        console.error('Error checking custom client running status:', err);
+    }
+};
+
+const isCustomClientRunning = (id: number): boolean => {
+    return runningCustomClients.value.includes(id);
+};
+
+const handleLaunchClick = async (client: CustomClient) => {
+    if (isCustomClientRunning(client.id)) {
+        await stopCustomClient(client.id);
+        return;
+    }
+
+    await handleLaunchClient(client);
+};
+
+const handleLaunchClient = async (client: CustomClient) => {
+    try {
+        const userToken = localStorage.getItem('authToken') || 'null';
+
+        addToast(t('home.launching', { client: client.name }), 'info', 2000);
+
+        await invoke('launch_custom_client', {
+            id: client.id, userToken,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await checkRunningStatus();
+    } catch (err) {
+        addToast(`Failed to launch ${client.name}: ${err}`, 'error');
+    }
+};
+
+const stopCustomClient = async (id: number) => {
+    try {
+        const client = customClients.value.find(c => c.id === id);
+        if (client) {
+            addToast(t('home.stopping', { client: client.name }), 'info', 2000);
+        }
+        await invoke('stop_custom_client', { id });
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await checkRunningStatus();
+    } catch (err) {
+        console.error('Error stopping custom client:', err);
+        addToast(`Error stopping client: ${err}`, 'error');
     }
 };
 
@@ -81,19 +145,24 @@ const handleDeleteClient = (client: CustomClient) => {
     });
 };
 
-const handleLaunchClient = async (client: CustomClient) => {
+const loadDisplayMode = async () => {
     try {
-        const userToken = localStorage.getItem('authToken') || 'null';
-
-        await invoke('launch_custom_client', {
-            id: client.id, userToken,
-        });
-
-        addToast(`Launched ${client.name}`, 'success');
+        const flags = await invoke('get_flags');
+        const typedFlags = flags as { custom_clients_display?: string };
+        displayMode.value = (typedFlags.custom_clients_display === 'global' || typedFlags.custom_clients_display === 'separate')
+            ? typedFlags.custom_clients_display
+            : 'separate';
+        return typedFlags;
     } catch (err) {
-        addToast(`Failed to launch ${client.name}: ${err}`, 'error');
+        console.error('Error loading flags:', err);
+        addToast(`Failed to load flags: ${err}`, 'error');
+        return {};
     }
 };
+
+const handleDisplaySettings = () => {
+    showModal('custom-client-display-settings', CustomClientDisplaySettingsModal, { title: t("custom_clients.display_settings") }, {}, {});
+}
 
 const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -101,37 +170,51 @@ const formatDate = (dateString: string) => {
 
 onMounted(async () => {
     await loadCustomClients();
+    await loadDisplayMode();
+    await checkRunningStatus();
 
-    const unlisten = await listen('custom-client-launched', (event) => {
-        const { name } = event.payload as { name: string };
-        addToast(`${name} has been launched successfully!`, 'success');
-    });
+    if (statusInterval.value !== null) {
+        clearInterval(statusInterval.value);
+    }
 
-    return () => {
-        unlisten();
-    };
+    statusInterval.value = setInterval(checkRunningStatus, 5000) as unknown as number;
 });
+
+onBeforeUnmount(() => {
+    if (statusInterval.value !== null) {
+        clearInterval(statusInterval.value);
+        statusInterval.value = null;
+    }
+});
+
+
+const handleSearch = (query: string) => {
+    searchQuery.value = query;
+};
 </script>
 
 <template>
     <div class="max-w-6xl mx-auto slide-up">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-center mb-4">
             <div>
                 <h1 class="text-3xl font-bold text-primary mb-2">
                     {{ t('navigation.custom_clients') }}
                 </h1>
-                <p class="text-base-content/70">
-                    Manage your custom Minecraft clients
-                </p>
             </div>
-            <button @click="handleAddClient" class="btn btn-primary gap-2">
-                <Plus class="w-4 h-4" />
-                Add Custom Client
-            </button>
+            <div class="flex gap-2">
+                <button @click="handleAddClient" class="btn btn-primary gap-2">
+                    <Plus class="w-4 h-4" />
+                    {{ $t("custom_clients.add") }}
+                </button>
+                <button @click="handleDisplaySettings()" class="btn btn-secondary gap-2">
+                    <Edit3 class="w-4 h-4" />
+                    {{ $t("custom_clients.display_settings") }}
+                </button>
+            </div>
         </div>
 
         <div class="mb-6">
-            <SearchBar v-model="searchQuery" placeholder="Search custom clients..." class="max-w-md" />
+            <SearchBar @search="handleSearch" :initial-value="searchQuery" placeholder="Search custom clients..." />
         </div>
 
         <div v-if="loading" class="flex justify-center items-center py-12">
@@ -157,7 +240,7 @@ onMounted(async () => {
                 </p>
                 <button v-if="!searchQuery" @click="handleAddClient" class="btn btn-primary">
                     <Plus class="w-4 h-4 mr-2" />
-                    Add Custom Client
+                    {{ $t('custom_clients.add') }}
                 </button>
             </div>
         </div>
@@ -170,6 +253,9 @@ onMounted(async () => {
                         <div class="flex-1">
                             <h3 class="card-title text-lg font-semibold mb-1">
                                 {{ client.name }}
+                                <div v-if="isCustomClientRunning(client.id)" class="badge badge-success badge-sm ml-2">
+                                    {{ $t('custom_clients.running') }}
+                                </div>
                             </h3>
                             <div class="badge badge-outline badge-sm">
                                 {{ client.version }}
@@ -183,13 +269,13 @@ onMounted(async () => {
                                 <li>
                                     <button @click="handleEditClient(client)" class="gap-2">
                                         <Edit3 class="w-4 h-4" />
-                                        Edit
+                                        {{ $t('custom_clients.edit') }}
                                     </button>
                                 </li>
                                 <li>
                                     <button @click="handleDeleteClient(client)" class="gap-2 text-error">
                                         <Trash2 class="w-4 h-4" />
-                                        Delete
+                                        {{ $t('custom_clients.delete') }}
                                     </button>
                                 </li>
                             </ul>
@@ -203,36 +289,20 @@ onMounted(async () => {
 
                         <div class="text-sm space-y-1">
                             <div class="flex items-center gap-2">
-                                <FileText class="w-4 h-4 text-primary" />
-                                <span class="font-medium">Main Class:</span>
-                                <code class="text-xs bg-base-300 px-2 py-1 rounded">
-                                    {{ client.main_class }}
-                                </code>
-                            </div>
-
-                            <div class="flex items-center gap-2">
                                 <Calendar class="w-4 h-4 text-primary" />
-                                <span class="font-medium">Added:</span>
+                                <span class="font-medium">{{ $t('custom_clients.added') }}:</span>
                                 <span>{{ formatDate(client.created_at) }}</span>
                             </div>
-
-                            <div class="flex items-center gap-2">
-                                <Play class="w-4 h-4 text-primary" />
-                                <span class="font-medium">Launches:</span>
-                                <span>{{ client.launches }}</span>
-                            </div>
-                        </div>
-
-                        <div v-if="client.insecure" class="alert alert-warning py-2">
-                            <AlertTriangle class="w-4 h-4" />
-                            <span class="text-sm">This client is marked as insecure</span>
                         </div>
 
                         <div class="card-actions justify-end">
-                            <button @click="handleLaunchClient(client)" class="btn btn-primary btn-sm gap-2"
+                            <button @click="handleLaunchClick(client)" class="btn btn-sm gap-2"
+                                :class="isCustomClientRunning(client.id) ? 'btn-error' : 'btn-primary'"
                                 :disabled="!client.is_installed">
-                                <Play class="w-4 h-4" />
-                                Launch
+                                <StopCircle v-if="isCustomClientRunning(client.id)" class="w-4 h-4" />
+                                <Play v-else class="w-4 h-4" />
+                                {{ isCustomClientRunning(client.id) ? $t('custom_clients.stop') :
+                                    $t('custom_clients.launch') }}
                             </button>
                         </div>
                     </div>

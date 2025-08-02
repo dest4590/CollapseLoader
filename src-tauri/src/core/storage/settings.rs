@@ -119,7 +119,6 @@ define_settings! {
         cordshare: Setting<bool> = (true, true),
         irc_chat: Setting<bool> = (true, true),
         hash_verify: Setting<bool> = (true, true),
-        custom_clients_display: Setting<String> = ("separate".to_string(), true),
     }
 }
 

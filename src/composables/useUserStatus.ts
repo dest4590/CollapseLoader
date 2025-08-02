@@ -1,4 +1,4 @@
-import { ref, computed, reactive, onUnmounted } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { apiClient } from '../services/apiClient';
 
 interface StatusData {
@@ -378,10 +378,6 @@ export function useUserStatus() {
     const lastSeen = computed(() => globalStatus.lastSeen);
     const username = computed(() => globalStatus.username);
     const nickname = computed(() => globalStatus.nickname);
-
-    onUnmounted(() => {
-        stopStatusSync();
-    });
 
     return {
         isAuthenticated,

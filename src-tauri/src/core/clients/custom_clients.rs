@@ -1,4 +1,4 @@
-use crate::core::clients::client::Client;
+use crate::core::clients::client::{Client, Meta};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -76,15 +76,16 @@ impl CustomClient {
             launches: self.launches,
             downloads: 0,
             size: 0,
-            meta: crate::core::clients::client::Meta {
-                is_new: false,
+            meta: Meta {
+                is_new: self.version == Version::V1_16_5,
                 asset_index: String::new(),
                 installed: self.is_installed,
+                is_custom: true,
                 size: 0,
             },
         }
     }
-
+    
     pub fn validate_file(&self) -> Result<(), String> {
         if !self.file_path.exists() {
             return Err(format!("File {} does not exist", self.file_path.display()));
@@ -102,6 +103,89 @@ impl CustomClient {
 
         if extension != "jar" {
             return Err("File must be a .jar file".to_string());
+        }
+
+        Ok(())
+    }
+
+    pub fn get_running_custom_clients() -> Vec<CustomClient> {
+        use crate::core::storage::data::DATA;
+        use std::process::Command;
+
+        #[cfg(target_os = "windows")]
+        use std::os::windows::process::CommandExt;
+
+        let jps_path = DATA.root_dir.join("jdk-21.0.2").join("bin").join("jps.exe");
+        let mut command = Command::new(jps_path);
+
+        #[cfg(windows)]
+        command.creation_flags(0x08000000);
+
+        let output = match command.arg("-m").output() {
+            Ok(output) => output,
+            Err(_) => {
+                return Vec::new();
+            }
+        };
+
+        let binding = String::from_utf8_lossy(&output.stdout);
+        let outputs: Vec<&str> = binding.lines().collect();
+
+        let custom_clients = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+            .lock()
+            .ok()
+            .map(|manager| manager.clients.clone())
+            .unwrap_or_default();
+
+        custom_clients
+            .into_iter()
+            .filter(|client| outputs.iter().any(|line| line.contains(&client.filename)))
+            .collect()
+    }
+
+    pub fn stop(&self) -> Result<(), String> {
+        use crate::core::storage::data::DATA;
+        use std::process::Command;
+
+        #[cfg(target_os = "windows")]
+        use std::os::windows::process::CommandExt;
+
+        let jps_path = DATA.root_dir.join("jdk-21.0.2").join("bin").join("jps.exe");
+        let mut command = Command::new(jps_path);
+
+        #[cfg(windows)]
+        command.creation_flags(0x08000000);
+
+        let output = command
+            .arg("-m")
+            .output()
+            .map_err(|e| format!("Failed to execute jps command: {e}"))?;
+
+        let binding = String::from_utf8_lossy(&output.stdout);
+        let outputs: Vec<&str> = binding.lines().collect();
+
+        let mut process_found = false;
+        for line in &outputs {
+            if line.contains(&self.filename) {
+                process_found = true;
+                let pid = line.split_whitespace().next().unwrap_or_default();
+
+                let mut kill_command = Command::new("taskkill");
+
+                #[cfg(windows)]
+                kill_command.creation_flags(0x08000000);
+
+                kill_command
+                    .arg("/PID")
+                    .arg(pid)
+                    .arg("/F")
+                    .output()
+                    .map_err(|e| format!("Failed to kill process: {e}"))?;
+            }
+        }
+
+        if !process_found {
+            crate::log_info!("No process found for custom client: {}", self.name);
         }
 
         Ok(())
