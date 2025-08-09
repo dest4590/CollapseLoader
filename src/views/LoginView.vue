@@ -64,7 +64,10 @@ const handleLogin = async () => {
             }
         );
 
-        const authToken = response.data.auth_token;
+        console.log('Login response:', response);
+
+        const authToken = response.data?.auth_token || response.data?.token || response.auth_token || response.token;
+
         if (authToken) {
             localStorage.setItem('authToken', authToken);
             userService.clearCache();
@@ -80,10 +83,13 @@ const handleLogin = async () => {
             addToast(t('auth.login.success'), 'success');
             emit('logged-in');
         } else {
+            console.error('No auth token found in response:', response);
             addToast(t('auth.login.no_token'), 'error');
         }
     } catch (error: any) {
         console.error('Login failed:', error);
+        console.error('Error response:', error.response);
+
         if (error.response && error.response.data) {
             let errorMessage = t('auth.login.login_failed');
             const errors = error.response.data;

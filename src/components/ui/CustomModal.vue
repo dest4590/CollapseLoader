@@ -15,9 +15,6 @@
                 <div class="custom-modal-body">
                     <slot name="body"></slot>
                 </div>
-                <div class="custom-modal-footer">
-                    <slot name="footer"></slot>
-                </div>
             </div>
         </div>
     </transition>
@@ -132,7 +129,7 @@ onUnmounted(() => {
 
 .custom-modal-content {
     background-color: var(--color-base-200);
-    padding: 1.5rem;
+    padding: 1rem;
     border-radius: 0.5rem;
     box-shadow:
         0 10px 25px -5px rgba(0, 0, 0, 0.3),
@@ -163,6 +160,7 @@ onUnmounted(() => {
     overflow-x: hidden;
     word-wrap: break-word;
     word-break: break-word;
+    min-height: 0;
 }
 
 .custom-modal-close-button {
@@ -182,14 +180,6 @@ onUnmounted(() => {
     opacity: 1;
 }
 
-.custom-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    flex-shrink: 0;
-    flex-wrap: wrap;
-}
 
 .modal-fade-enter-active {
     transition: opacity 0.4s ease;
@@ -257,8 +247,8 @@ onUnmounted(() => {
 
 .full-mobile {
     @media (max-width: 768px) {
-        max-width: calc(100vw - 4rem);
-        max-height: calc(100vh - 1rem);
+        max-width: calc(100vw - 2rem);
+        max-height: calc(100vh - 2rem);
         padding: 1rem;
     }
 }
@@ -277,15 +267,6 @@ onUnmounted(() => {
     .custom-modal-header {
         margin-bottom: 0.75rem;
     }
-
-    .custom-modal-footer {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .custom-modal-footer>* {
-        width: 100%;
-    }
 }
 
 @media (max-width: 480px) {
@@ -298,5 +279,23 @@ onUnmounted(() => {
         max-height: calc(100vh - 0.5rem);
         padding: 0.75rem;
     }
+}
+
+.custom-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.custom-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+.custom-modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
 }
 </style>

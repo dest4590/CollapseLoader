@@ -13,7 +13,7 @@ import Sidebar from './components/layout/Sidebar.vue';
 import ClientCrashModal from './components/modals/ClientCrashModal.vue';
 import RegisterPromptModal from './components/modals/RegisterPromptModal.vue';
 import ToastContainer from './components/notifications/ToastContainer.vue';
-import { useFriends } from './composables/useFriends';
+import { globalFriends } from './composables/useFriends';
 import { useUser } from './composables/useUser';
 import { globalUserStatus } from './composables/useUserStatus';
 import { changeLanguage } from './i18n';
@@ -21,6 +21,8 @@ import { useModal } from './services/modalService';
 import { syncService } from './services/syncService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
+import { updaterService } from './services/updaterService';
+import { apiPreload } from './services/apiClient';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AdminView from './views/AdminView.vue';
@@ -31,9 +33,10 @@ import Home from './views/Home.vue';
 import LoginView from './views/LoginView.vue';
 import RegisterView from './views/RegisterView.vue';
 import Settings from './views/Settings.vue';
-import Theme from './views/Theme.vue';
+import Customization from './views/Customization.vue';
 import UserProfileView from './views/UserProfileView.vue';
 import News from './views/News.vue';
+import CustomClients from './views/CustomClients.vue';
 import { apiGet } from './services/apiClient';
 import { getCurrentLanguage } from './i18n';
 
@@ -60,7 +63,8 @@ const activeTab = ref<
     | 'home'
     | 'settings'
     | 'app_logs'
-    | 'theme'
+    | 'customization'
+    | 'custom_clients'
     | 'about'
     | 'account'
     | 'login'
@@ -95,6 +99,21 @@ const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
 
+const { loadUserData, displayName, isAuthenticated: userAuthenticated } = useUser();
+const {
+    friends,
+    onlineFriendsCount,
+    loadFriendsData,
+    isLoading: friendsLoading
+} = globalFriends;
+
+const {
+    isOnline: userOnline,
+    connectionStatus,
+    initializeStatusSystem,
+    stopStatusSync
+} = globalUserStatus;
+
 const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
@@ -103,9 +122,10 @@ const setActiveTab = (tab: string) => {
     if (
         [
             'home',
+            'custom_clients',
             'settings',
             'app_logs',
-            'theme',
+            'customization',
             'about',
             'account',
             'login',
@@ -119,9 +139,10 @@ const setActiveTab = (tab: string) => {
         isNavigatingToProfile.value = false;
         activeTab.value = tab as
             | 'home'
+            | 'custom_clients'
             | 'settings'
             | 'app_logs'
-            | 'theme'
+            | 'customization'
             | 'about'
             | 'account'
             | 'login'
@@ -376,6 +397,8 @@ const initApp = async () => {
         console.error('Failed to load news on startup:', error);
     }
 
+    updaterService.startPeriodicCheck(t);
+
     currentProgress.value = 4;
     loadingState.value = t('preloader.ready');
 
@@ -494,7 +517,8 @@ const views: Record<string, any> = {
     news: News,
     settings: Settings,
     about: About,
-    theme: Theme,
+    customization: Customization,
+    custom_clients: CustomClients,
     app_logs: AppLogs,
     account: AccountView,
     login: LoginView,
@@ -525,6 +549,9 @@ const updateDiscordRPC = async (tab?: string) => {
         switch (currentTab) {
             case 'home':
                 state = t('discord.states.browsing_clients');
+                break;
+            case 'custom_clients':
+                state = t('discord.states.browsing_custom_clients');
                 break;
             case 'news':
                 state = t('discord.states.browsing_news');
@@ -592,22 +619,31 @@ const handleRegisterPrompt = () => {
     localStorage.setItem('registrationPromptShown', new Date().toISOString());
 };
 
-const { loadUserData: loadGlobalUserData, clearUserData } = useUser();
+const { clearUserData } = useUser();
 
 const initializeUserData = async () => {
     if (!isAuthenticated.value || !isOnline.value) return;
 
     try {
-        await loadGlobalUserData();
+        await apiPreload();
 
-        const { loadFriendsData } = useFriends();
+        await loadUserData();
+        console.log(`User loaded: ${displayName.value || 'Unknown'}`);
+
+        initializeStatusSystem();
+        console.log(`Status system initialized, connection: ${connectionStatus.value}`);
+
         await loadFriendsData();
+        console.log(`Friends loaded: ${friends.value.length} total, ${onlineFriendsCount.value} online`);
 
         console.log(
-            'User data and friends data initialized successfully on startup'
+            'Enhanced user data and friends system initialized successfully on startup'
         );
+        console.log(`Loading state: ${friendsLoading.value ? 'Loading...' : 'Complete'}`);
+        console.log(`User authentication: ${userAuthenticated.value ? 'Authenticated' : 'Not authenticated'}`);
+        console.log(`User online status: ${userOnline.value ? 'Online' : 'Offline'}`);
     } catch (error) {
-        console.error('Failed to initialize user data on startup:', error);
+        console.error('Failed to initialize enhanced user data on startup:', error);
     }
 };
 
@@ -618,9 +654,10 @@ const getTransitionName = () => {
 
     const tabOrder = [
         'home',
+        'custom_clients',
         'friends',
         'settings',
-        'theme',
+        'customization',
         'app_logs',
         'admin',
         'account',
@@ -653,7 +690,7 @@ onMounted(() => {
         console.log(`Client ${payload.name} launched, updating status...`);
 
         try {
-            globalUserStatus.setPlayingClient(payload.name, payload.version);
+            globalUserStatus.setPlayingClient(`${payload.name} (${payload.version || 'unknown version'})`);
 
             const settings = await invoke<AppSettings>('get_settings');
             if (settings.discord_rpc_enabled?.value) {
@@ -697,10 +734,9 @@ onMounted(() => {
         const payload = event.payload as {
             status: string;
             currentClient: string | null;
-            clientVersion: string | null;
         };
-        console.log('Received status update event from backend:', payload);
 
+        console.log('Received status update event from backend:', payload);
         console.log('Backend status event ignored to prevent conflicts');
     });
 
@@ -712,25 +748,29 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    globalUserStatus.stopStatusSync();
+    console.log('App unmounting, stopping enhanced systems...');
+    stopStatusSync();
+    updaterService.stopPeriodicCheck();
     window.removeEventListener('beforeunload', () => { });
+    console.log('Enhanced status sync stopped');
 });
 </script>
 
 <template>
     <div id="preloader" v-if="showPreloader" class="fixed inset-0 bg-base-300 flex items-center justify-center">
         <div class="flex flex-col items-center justify-center h-full w-screen relative z-10">
-            <div class="w-48 h-48 animate-pulse-subtle" :class="{ invert: currentTheme === 'light' }">
+            <div class="w-48 h-48 animate-pulse-subtle">
                 <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
             </div>
             <div class="loading-status mt-6">
                 <transition name="slide-fade" mode="out-in">
-                    <span :key="loadingState" class="text-lg font-medium">{{
-                        loadingState
+                    <span :key="loadingState" class="text-lg font-medium"
+                        :class="{ invert: currentTheme === 'light' }">{{
+                            loadingState
                         }}</span>
                 </transition>
             </div>
-            <div class="w-80 progress-container mt-4">
+            <div class="w-80 progress-container mt-4" :class="{ invert: currentTheme === 'light' }">
                 <div class="bg-base-100 rounded-full h-3 overflow-hidden shadow-inner progress-track">
                     <div class="bg-primary h-full rounded-full transition-all duration-700 ease-out progress-fill"
                         :style="{
@@ -892,12 +932,12 @@ onUnmounted(() => {
 }
 
 .slide-fade-enter-from {
-    transform: translateY(20px);
+    transform: translateY(15px);
     opacity: 0;
 }
 
 .slide-fade-leave-to {
-    transform: translateY(-20px);
+    transform: translateY(-15px);
     opacity: 0;
 }
 

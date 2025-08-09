@@ -179,13 +179,11 @@ const fetchNews = async () => {
 
         const allNews = response.data as NewsArticle[];
 
-        if (!Array.isArray(allNews)) {
-            throw new Error('Invalid response format: expected array');
-        }
-
-        let filteredNews = allNews.filter(
-            (article) => article.language === currentLanguage.value
-        );
+        let filteredNews: NewsArticle[] = Array.isArray(allNews)
+            ? allNews.filter(
+                (article) => article.language === currentLanguage.value
+            )
+            : [];
 
         news.value = filteredNews.sort(
             (a, b) =>

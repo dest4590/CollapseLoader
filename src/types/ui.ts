@@ -13,8 +13,21 @@ export interface Client {
     meta: {
         [key: string]: any;
         installed?: boolean;
+        is_custom?: boolean;
         size?: string;
     };
+}
+
+export interface CustomClient {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    file_path: string;
+    main_class: string;
+    description?: string;
+    created_at: string;
+    is_installed: boolean;
 }
 
 export interface ClientDetails {

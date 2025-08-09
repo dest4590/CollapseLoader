@@ -4,7 +4,7 @@
     <button ref="btnElement" class="btn btn-neutral btn-lg group" @mousedown="handleMouseDown"
         @mouseup="handleMouseUpOrLeave" @mouseleave="handleMouseUpOrLeave" @blur="handleMouseUpOrLeave"
         @touchstart.prevent="handleMouseDown" @touchend="handleMouseUpOrLeave" @keydown="handleKeyDown"
-        @keyup="handleKeyUp">
+        @keyup="handleKeyUp" @click="onClick">
         <Gamepad2 ref="svgElement" class="w-7 h-7  transition-transform duration-300 ease-in-out" />
         <span class="font-normal text-lg">{{ $t('hold_button.label') }}</span>
     </button>
@@ -13,8 +13,12 @@
 <script setup>
 import { ref, onUnmounted } from 'vue';
 import { Gamepad2 } from 'lucide-vue-next';
+import { useToast } from '../../services/toastService';
+import { useI18n } from 'vue-i18n';
 
 const emit = defineEmits(['start']);
+const { addToast } = useToast();
+const { t } = useI18n();
 
 const btnElement = ref(null);
 const svgElement = ref(null);
@@ -22,11 +26,23 @@ const svgElement = ref(null);
 let holdTimeout = null;
 let holdInterval = null;
 let startTime = null;
+let holdTriggered = false;
+
+const onClick = () => {
+    if (!holdTriggered) {
+        addToast(
+            t('hold_button.info_message'),
+            'info',
+            3000
+        );
+    }
+}
 
 const handleMouseDown = () => {
     if (holdTimeout || holdInterval) return;
 
     startTime = Date.now();
+    holdTriggered = false;
 
     if (btnElement.value && svgElement.value) {
         svgElement.value.style.transition = 'rotate 3s linear';
@@ -51,6 +67,7 @@ const handleMouseDown = () => {
     }
 
     holdTimeout = setTimeout(() => {
+        holdTriggered = true;
         emit('start');
         handleMouseUpOrLeave();
     }, 3000);

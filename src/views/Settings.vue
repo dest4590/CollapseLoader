@@ -28,6 +28,7 @@ import {
     Waypoints,
     MessagesSquare,
     BadgeCheck,
+    FileText,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -375,11 +376,11 @@ const getFormattedLabel = (key: string) => {
     }
 
     if (key == "irc_chat") {
-        return 'IRC Chat';
+        return t('settings.irc_chat');
     }
 
     if (key === 'hash_verify') {
-        return 'Hash Verification';
+        return t('settings.hash_verify');
     }
 
     if (key === 'discord_rpc_enabled') {
@@ -625,6 +626,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <Waypoints v-if="key === 'cordshare'" class="w-5 h-5 text-primary" />
                                 <MessagesSquare v-if="key === 'irc_chat'" class="w-5 h-5 text-primary" />
                                 <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
+                                <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
 
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
@@ -676,7 +678,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         v-model="field.value" class="toggle toggle-primary" />
 
                                     <div v-else class="tooltip tooltip-left" :data-tip="$t('settings.login_required')">
-                                        <input type="checkbox" :checked="false" class="toggle toggle-primary pointer-events-none" tabindex="-1" />
+                                        <input type="checkbox" :checked="false"
+                                            class="toggle toggle-primary pointer-events-none" tabindex="-1" />
                                     </div>
                                 </div>
                             </div>
@@ -742,7 +745,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <RotateCcw class="w-4 h-4" />
                                     {{ $t('settings.reset_requirements') }}
                                 </button>
-                                <button class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-secondary-focus transition-all duration-200"
+                                <button
+                                    class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-secondary-focus transition-all duration-200"
                                     @click="resetCache">
                                     <RotateCcw class="w-4 h-4" />
                                     {{ $t('settings.reset_cache') }}
@@ -845,7 +849,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -854,7 +858,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -957,6 +961,9 @@ const handleToastPositionChange = (position: ToastPosition) => {
 </template>
 
 <style scoped>
+@reference "tailwindcss";
+@plugin "daisyui";
+
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.2s ease;
@@ -968,7 +975,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
 }
 
 .tab {
-    border-radius: 4rem;
+    @apply rounded-md;
 }
 
 @keyframes slideIn {

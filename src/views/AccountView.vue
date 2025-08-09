@@ -166,11 +166,6 @@ const currentPassword = ref('');
 const newPassword = ref('');
 const confirmNewPassword = ref('');
 const nickname = ref('');
-const cacheStatus = ref({
-    hasCache: false,
-    isExpired: false,
-    lastUpdated: null as string | null,
-});
 
 const {
     username,
@@ -218,8 +213,6 @@ let unsubscribeSyncService: (() => void) | null = null;
 const emit = defineEmits(['logged-out']);
 
 onMounted(async () => {
-    cacheStatus.value = userService.getCacheStatus();
-
     unsubscribeSyncService = syncService.subscribe((state) => {
         syncState.value = state;
     });

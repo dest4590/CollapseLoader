@@ -164,7 +164,45 @@
       "description": "You are about to launch \"{clientName}\", which has not been verified for malware or viruses. This client may contain potentially harmful code that could damage your system or compromise your security.",
       "dont_show_again": "Don't show this warning again for this client",
       "proceed_anyway": "Launch Anyway",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "close": "I understand"
+    },
+    "add_custom_client": "Add custom client",
+    "edit_custom_client": "Edit client",
+    "delete_custom_client": "Delete custom client",
+    "client_added": "Client added",
+    "client_edited": "Client edited",
+    "client_deleted": "Client deleted",
+    "delete_custom_client_confirm": {
+      "message": "Do you really want to delete this custom client?"
+    },
+    "add_custom_client_modal": {
+      "client_name": "Client Name",
+      "enter_client_name": "Enter client name",
+      "minecraft_version": "Minecraft Version",
+      "main_class": "Main Class",
+      "main_class_placeholder": "e.g., net.minecraft.client.main.Main",
+      "jar_file": "JAR File",
+      "no_file_selected": "No file selected",
+      "select_jar_file": "Select a .jar file",
+      "selected": "Selected",
+      "adding": "Adding...",
+      "add_client": "Add Client"
+    },
+    "edit_custom_client_modal": {
+      "client_name": "Client Name",
+      "enter_client_name": "Enter client name",
+      "minecraft_version": "Minecraft Version",
+      "main_class": "Main Class",
+      "main_class_placeholder": "e.g., net.minecraft.client.main.Main",
+      "updating": "Updating...",
+      "update_client": "Update Client"
+    },
+    "delete_custom_client_confirm_modal": {
+      "title": "Delete Custom Client",
+      "description": "This action cannot be undone",
+      "deleting": "Deleting...",
+      "delete_client": "Delete Client"
     }
   },
   "preloader": {
@@ -236,7 +274,9 @@
     "blocked": "Blocked",
     "loading": "Loading...",
     "ok": "Ok",
-    "close": "Close"
+    "close": "Close",
+    "save": "Save",
+    "browse": "Browse"
   },
   "auth": {
     "logout": {
@@ -524,7 +564,10 @@
     "login_required": "You will need to log into your account to use this feature.",
     "reset_cache": "Reset client cache",
     "reset_cache_success": "Successfully deleted client cache, restart the loader",
-    "reset_cache_failed": "Cannot remove cache, try again"
+    "reset_cache_failed": "Cannot remove cache, try again",
+    "hash_verify": "Hash verify",
+    "irc_chat": "IRC Chat",
+    "save_flags_failed": "Failed to save flags: {error}"
   },
   "userProfile": {
     "back_to_friends": "Back to Friends",
@@ -586,7 +629,9 @@
     "account": "Account",
     "about": "About",
     "admin": "Admin Panel",
-    "news": "News"
+    "news": "News",
+    "customization": "Customization",
+    "custom_clients": "Custom Clients"
   },
   "admin": {
     "title": "Administration Panel",
@@ -730,7 +775,8 @@
       "debugging": "Debugging",
       "logging_in": "Logging in",
       "browsing_friends": "Watching what friends do",
-      "browsing_news": "Reading news"
+      "browsing_news": "Reading news",
+      "browsing_custom_clients": "Browsing custom clients"
     }
   },
   "modal": {
@@ -762,7 +808,8 @@
     "refresh": "Refresh"
   },
   "hold_button": {
-    "label": "Hold to begin!"
+    "label": "Hold to begin!",
+    "info_message": "Are you serious?"
   },
   "client": {
     "details": {
@@ -791,6 +838,118 @@
         }
       },
       "no_changelog_desc": "Updates and changes will appear here."
+    },
+    "insecure_tooltip": "This client is marked as insecure, tap to view details"
+  },
+  "plugins": {
+    "title": "Plugins",
+    "description": "Extend CollapseLoader functionality with custom plugins",
+    "add_plugin": "Add Plugin",
+    "show_enabled_only": "Show enabled only",
+    "all_categories": "All categories",
+    "categories": {
+      "appearance": "Appearance",
+      "functionality": "Functionality",
+      "integration": "Integration",
+      "utility": "Utility"
+    },
+    "total_plugins": "Total Plugins",
+    "enabled_plugins": "Enabled",
+    "no_plugins_title": "No plugins found",
+    "no_plugins_description": "Add some plugins to get started",
+    "configure": "Configure",
+    "enable": "Enable",
+    "disable": "Disable",
+    "remove": "Remove",
+    "visit_website": "Visit Website",
+    "enabled": "Enabled {name}",
+    "disabled": "Disabled {name}",
+    "removed": "Removed {name}",
+    "add_modal": {
+      "title": "Add New Plugin",
+      "description": "Paste your plugin code below and we'll extract the metadata",
+      "paste_label": "Plugin Code",
+      "paste_hint": "Plugin metadata should be included in a comment block at the top",
+      "preview": "Preview",
+      "validation_errors": "Validation Errors",
+      "metadata_help_title": "Need help with metadata?",
+      "metadata_help_desc": "Include plugin information in a comment block:",
+      "website": "Website",
+      "add_button": "Add Plugin",
+      "adding": "Adding...",
+      "invalid_plugin": "Plugin validation failed",
+      "add_success": "Added {name} successfully",
+      "add_failed": "Failed to add plugin",
+      "add_error": "An error occurred while adding the plugin"
+    },
+    "configure_plugin": "Configure plugin",
+    "config_saved": "Config saved.",
+    "config_save_failed": "Cannot save config: {error}",
+    "reset_defaults": "Reset defaults",
+    "no_config_options": "There are no any plugin options",
+    "error": "Plugin error in {name}",
+    "edit": {
+      "save_and_close": "Save and close",
+      "load_error": "Plugin code load error",
+      "save_success": "Save success",
+      "save_error": "Save error"
+    },
+    "toggle_failed": "Failed to toggle plugin {name}",
+    "remove_failed": "Cannot remove plugin {name}"
+  },
+  "customization": {
+    "theme": "Theme",
+    "plugins": "Plugins"
+  },
+  "updater": {
+    "update_available": "Update Available",
+    "current": "Current",
+    "latest": "Latest",
+    "critical": "Critical",
+    "version_info": "Current: {current} → Latest: {latest}",
+    "release_notes": "Release Notes",
+    "changelog": "Changelog",
+    "download_install": "Download & Install",
+    "downloading": "Downloading...",
+    "skip": "Skip",
+    "view_changelog": "View Changelog",
+    "changelog_title": "Changelog",
+    "check_failed": "Failed to check for updates: {error}",
+    "no_download_url": "No download URL available for this platform",
+    "starting_download": "Starting update download...",
+    "update_installed": "Update installed successfully! The app will restart.",
+    "update_failed": "Update failed: {error}",
+    "check_for_updates": "Check for Updates",
+    "checking_updates": "Checking for updates...",
+    "up_to_date": "You're running the latest version!",
+    "show_more": "Show {count} more versions",
+    "show_less": "Show less",
+    "release_types": {},
+    "categories": {
+      "feature": "New Features",
+      "improvement": "Improvements",
+      "bugfix": "Bug Fixes",
+      "other": "Other Changes"
+    },
+    "changelogs": {
+      "feature": {
+        "v0_1_7": {
+          "added_custom_clients": "Added custom clients management system"
+        }
+      }
     }
+  },
+  "custom_clients": {
+    "add": "Add custom client",
+    "running": "Running",
+    "edit": "Edit",
+    "delete": "Delete",
+    "added": "Added",
+    "stop": "Stop",
+    "launch": "Launch",
+    "display_settings": "Display settings",
+    "display_mode": "Display Mode",
+    "display_mode_separate": "Separate",
+    "display_mode_global": "Global"
   }
 }

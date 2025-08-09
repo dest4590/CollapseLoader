@@ -1,32 +1,14 @@
-import axios from 'axios';
-import { getAuthUrl } from '../config';
+import { apiClient } from './apiClient';
 
-const authClient = axios.create();
+export const apiGet = apiClient.get.bind(apiClient);
+export const apiPost = apiClient.post.bind(apiClient);
+export const apiPut = apiClient.put.bind(apiClient);
+export const apiPatch = apiClient.patch.bind(apiClient);
+export const apiDelete = apiClient.delete.bind(apiClient);
 
-authClient.interceptors.request.use((config) => {
-    const baseUrl = getAuthUrl();
+export const apiBatchGet = apiClient.batchGet.bind(apiClient);
+export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
+export const apiMetrics = apiClient.getMetrics.bind(apiClient);
+export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
 
-    if (config.url?.startsWith('/')) {
-        config.url = `${baseUrl}${config.url}`;
-    }
-
-    return config;
-});
-
-export const apiGet = (url: string, config?: any): Promise<any> => {
-    return authClient.get(url, config);
-};
-
-export const apiPost = (url: string, data?: any, config?: any): Promise<any> => {
-    return authClient.post(url, data, config);
-};
-
-export const apiPatch = (url: string, data?: any, config?: any): Promise<any> => {
-    return authClient.patch(url, data, config);
-};
-
-export const apiDelete = (url: string, config?: any): Promise<any> => {
-    return authClient.delete(url, config);
-};
-
-export default authClient;
+export default apiClient;

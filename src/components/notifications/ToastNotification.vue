@@ -91,13 +91,16 @@ const handleMouseLeave = () => {
     overflow: hidden;
     position: relative;
     backdrop-filter: blur(10px);
+    max-width: 100%;
+    word-break: break-word;
 }
 
 .toast-content {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     width: 100%;
     padding: 0.75rem 1rem;
+    gap: 0.75rem;
 }
 
 .toast-success {
@@ -117,8 +120,8 @@ const handleMouseLeave = () => {
 }
 
 .toast-icon {
-    margin-right: 0.75rem;
     flex-shrink: 0;
+    margin-top: 0.125rem;
 }
 
 .toast-success .toast-icon {
@@ -142,6 +145,9 @@ const handleMouseLeave = () => {
     font-size: 0.875rem;
     line-height: 1.4;
     word-break: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    min-width: 0;
 }
 
 .toast-close-btn {
@@ -151,9 +157,9 @@ const handleMouseLeave = () => {
     opacity: 0.7;
     cursor: pointer;
     padding: 0.25rem;
-    margin-left: 0.75rem;
     transition: all 0.2s ease;
     border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .toast-close-btn:hover {

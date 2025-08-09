@@ -18,7 +18,7 @@ import { globalUserStatus } from '../../composables/useUserStatus';
 
 interface Props {
     name: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     showStatus?: boolean;
     isOnline?: boolean;
     backgroundClass?: string;
@@ -41,6 +41,8 @@ const sizeClasses = computed(() => {
             return 'w-10 h-10';
         case 'lg':
             return 'w-16 h-16';
+        case 'xl':
+            return 'w-20 h-20';
         default:
             return 'w-10 h-10';
     }
@@ -54,6 +56,8 @@ const textSizeClass = computed(() => {
             return 'text-xl';
         case 'lg':
             return 'text-2xl';
+        case 'xl':
+            return 'text-3xl';
         default:
             return 'text-xl';
     }

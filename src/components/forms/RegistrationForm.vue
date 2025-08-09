@@ -108,13 +108,16 @@ const handleRegister = async () => {
                 }
             );
 
-            const authToken = loginResponse.data.auth_token;
+            console.log('Auto-login response:', loginResponse);
+            const authToken = loginResponse.data?.auth_token || loginResponse.data?.token || loginResponse.auth_token || loginResponse.token;
+
             if (authToken) {
                 localStorage.setItem('authToken', authToken);
                 userService.clearCache();
                 addToast(t('auth.login.success'), 'success');
                 emit('logged-in');
             } else {
+                console.error('No auth token found in auto-login response:', loginResponse);
                 addToast(t('auth.login.no_token'), 'error');
                 emit('registered');
             }
@@ -125,6 +128,8 @@ const handleRegister = async () => {
         }
     } catch (error: any) {
         console.error('Registration failed:', error);
+        console.error('Registration error response:', error.response);
+
         if (error.response && error.response.data) {
             let errorMessage = t('auth.register.registration_failed');
             const errors = error.response.data;

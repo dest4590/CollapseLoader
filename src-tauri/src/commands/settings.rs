@@ -1,9 +1,9 @@
-use crate::api::core::accounts::{Account, ACCOUNT_MANAGER};
-use crate::api::core::common::JsonStorage;
-use crate::api::core::favorites::FAVORITE_MANAGER;
-use crate::api::core::flags::{Flags, FLAGS_MANAGER};
-use crate::api::core::settings::{InputSettings, Settings, SETTINGS};
-use crate::api::discord_rpc;
+use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
+use crate::core::storage::common::JsonStorage;
+use crate::core::storage::favorites::FAVORITE_MANAGER;
+use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
+use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
+use crate::core::utils::discord_rpc;
 
 #[tauri::command]
 pub fn get_settings() -> Settings {
@@ -41,7 +41,7 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
 
     if discord_rpc_changed {
         if let Err(e) = discord_rpc::toggle_rpc(new_discord_rpc_value) {
-            eprintln!("Failed to toggle Discord RPC: {}", e);
+            eprintln!("Failed to toggle Discord RPC: {e}");
         }
     }
 
@@ -210,4 +210,12 @@ pub fn mark_telemetry_consent_shown() -> Result<(), String> {
 pub fn is_telemetry_consent_shown() -> Result<bool, String> {
     let flags = FLAGS_MANAGER.lock().unwrap();
     Ok(flags.telemetry_consent_shown.value)
+}
+
+#[tauri::command]
+pub fn set_custom_clients_display(display: String) -> Result<(), String> {
+    let mut flags = FLAGS_MANAGER.lock().unwrap();
+    flags.set_custom_clients_display(display);
+    flags.save_to_disk();
+    Ok(())
 }

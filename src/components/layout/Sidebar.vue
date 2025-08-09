@@ -2,18 +2,20 @@
 import {
     Home,
     Info,
-    PaintRoller,
     Settings,
     Terminal,
     LogIn,
     User,
     Users,
-    ShieldAlert
+    ShieldAlert,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
+import { Vue3Lottie } from 'vue3-lottie';
+import customization_idle from '../../assets/misc/customization_idle.json';
+import customization_animated from '../../assets/misc/customization_animated.json';
 
 const { t } = useI18n();
 const { adminStatus } = useUser();
@@ -152,11 +154,16 @@ onUnmounted(() => {
                     }" />
                 </button>
             </div>
-
-            <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.theme')">
-                <button class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn"
-                    @click="changeTab('theme')">
-                    <PaintRoller class="w-5 h-5" :class="{ 'animate-rainbow': activeTab === 'theme' }" />
+            <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.customization')">
+                <button class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn" :class="{
+                    'bg-primary text-primary-content shadow-lg scale-110':
+                        activeTab === 'customization',
+                }" @click="changeTab('customization')">
+                    <Vue3Lottie :animation-data="customization_animated" class="w-5 h-5 customization-light-selected"
+                        v-if="activeTab === 'customization'" :class="{
+                            'invert': activeTab === 'customization'
+                        }" />
+                    <Vue3Lottie :animation-data="customization_idle" class="w-5 h-5 customization-light" v-else />
                 </button>
             </div>
 
@@ -234,47 +241,6 @@ onUnmounted(() => {
     transition: transform 1s ease;
 }
 
-@keyframes animate-rainbow {
-
-    0%,
-    100% {
-        color: hsl(300, 80%, 65%);
-    }
-
-    12.5% {
-        color: hsl(0, 100%, 65%);
-    }
-
-    25% {
-        color: hsl(30, 100%, 60%);
-    }
-
-    37.5% {
-        color: hsl(60, 90%, 60%);
-    }
-
-    50% {
-        color: hsl(120, 80%, 55%);
-    }
-
-    62.5% {
-        color: hsl(210, 90%, 65%);
-    }
-
-    75% {
-        color: hsl(270, 80%, 60%);
-    }
-}
-
-.animate-rainbow {
-    animation: animate-rainbow 6s ease-in-out infinite;
-    filter: drop-shadow(0 0 2px var(--fallback-bc, oklch(var(--bc))));
-}
-
-:root.dark .animate-rainbow {
-    filter: brightness(1.2) drop-shadow(0 0 2px var(--fallback-bc, oklch(var(--bc))));
-}
-
 .terminal-button {
     animation: fadeIn 0.3s ease-out;
     opacity: 0;
@@ -308,5 +274,17 @@ onUnmounted(() => {
         opacity: 0;
         transform: translateY(10px);
     }
+}
+
+.invert {
+    filter: invert(1);
+}
+
+html[data-theme="light"] .customization-light {
+    filter: invert(1);
+}
+
+html[data-theme="light"] .customization-light-selected {
+    filter: invert(0);
 }
 </style>

@@ -13,6 +13,7 @@ import {
     Download,
     Newspaper,
     StopCircle,
+    FileText,
 } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
@@ -20,6 +21,7 @@ import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
 import type { Client, InstallProgress } from '../types/ui';
+import type { CustomClient } from '../types/ui';
 import LogViewerModal from '../components/modals/LogViewerModal.vue';
 import InsecureClientWarningModal from '../components/modals/InsecureClientWarningModal.vue';
 
@@ -51,6 +53,8 @@ defineEmits<{
 }>();
 
 const clients = ref<Client[]>([]);
+const customClients = ref<CustomClient[]>([]);
+const customClientsDisplayMode = ref<'global' | 'separate'>('separate');
 const favoriteClients = ref<number[]>([]);
 const error = ref('');
 const runningClients = ref<number[]>([]);
@@ -83,7 +87,16 @@ const selectedClients = ref<Set<number>>(new Set());
 const isCtrlPressed = ref(false);
 const expandedClientId = ref<number | null>(null);
 
+const isAnyCardExpanded = computed(() => {
+    return expandedClientId.value !== null;
+});
+
 const handleLaunchClick = (client: Client) => {
+    if (client.meta.is_custom) {
+        handleLaunchCustomClient(client);
+        return;
+    }
+
     if (isClientRunning(client.id)) {
         stopClient(client.id);
         return;
@@ -99,6 +112,28 @@ const handleLaunchClick = (client: Client) => {
     }
 
     launchClient(client.id);
+};
+
+const handleLaunchCustomClient = async (client: Client) => {
+    try {
+        if (isCustomClientRunning(client.id)) {
+            await stopCustomClient(client.id);
+            return;
+        }
+
+        const userToken = localStorage.getItem('authToken') || 'null';
+        addToast(t('home.launching', { client: client.name }), 'info', 2000);
+
+        await invoke('launch_custom_client', {
+            id: client.id,
+            userToken,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await checkRunningStatus();
+    } catch (err) {
+        addToast(`Failed to launch ${client.name}: ${err}`, 'error');
+    }
 };
 
 const handleSearch = (query: string) => {
@@ -122,6 +157,31 @@ const isAnyClientDownloading = computed(() => {
 
 const filteredClients = computed(() => {
     let clientsList = clients.value;
+
+    if (customClientsDisplayMode.value === 'global') {
+        const customClientsAsClients = customClients.value.map(customClient => ({
+            id: customClient.id,
+            name: customClient.name,
+            version: customClient.version.replace(/^V1_/, '1.').replace(/_/g, '.'),
+            filename: customClient.filename,
+            md5_hash: '',
+            main_class: customClient.main_class,
+            show: true,
+            working: true,
+            insecure: false,
+            launches: 0,
+            downloads: 0,
+            size: 0,
+            meta: {
+                is_new: false,
+                asset_index: '',
+                installed: customClient.is_installed,
+                is_custom: true,
+                size: '0',
+            },
+        }));
+        clientsList = [...customClientsAsClients, ...clientsList];
+    }
 
     if (searchQuery.value.trim()) {
         const query = searchQuery.value.toLowerCase().trim();
@@ -359,6 +419,22 @@ const stopClient = async (id: number) => {
     }
 };
 
+const stopCustomClient = async (id: number) => {
+    try {
+        const client = customClients.value.find(c => c.id === id);
+        if (client) {
+            addToast(t('home.stopping', { client: client.name }), 'info', 2000);
+        }
+        await invoke('stop_custom_client', { id });
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await checkRunningStatus();
+    } catch (err) {
+        console.error('Error stopping custom client:', err);
+        addToast(`Error stopping client: ${err}`, 'error');
+    }
+};
+
 const checkRunningStatus = async () => {
     if (isLeaving.value) return;
     try {
@@ -370,6 +446,10 @@ const checkRunningStatus = async () => {
 };
 
 const isClientRunning = (id: number): boolean => {
+    return runningClients.value.includes(id);
+};
+
+const isCustomClientRunning = (id: number): boolean => {
     return runningClients.value.includes(id);
 };
 
@@ -1019,9 +1099,34 @@ const saveWarnedInsecureClients = () => {
     }
 };
 
+const loadCustomClients = async () => {
+    try {
+        const clients = await invoke<CustomClient[]>('get_custom_clients');
+        customClients.value = clients;
+    } catch (err) {
+        console.error('Error loading custom clients:', err);
+    }
+};
+
+const loadCustomClientsDisplayMode = async () => {
+    try {
+        const flags = await invoke('get_flags');
+        const typedFlags = flags as any;
+
+        customClientsDisplayMode.value = typedFlags.custom_clients_display.value;
+        return typedFlags;
+    } catch (err) {
+        console.error('Error loading flags:', err);
+        addToast(`Failed to load flags: ${err}`, 'error');
+        return {};
+    }
+};
+
 onMounted(async () => {
     await getClients();
     await loadFavorites();
+    await loadCustomClients();
+    await loadCustomClientsDisplayMode();
     await checkRunningStatus();
     await loadAccounts();
     loadWarnedInsecureClients();
@@ -1064,13 +1169,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <!-- <h1 class="text-error text-center mb-5 font-semibold">
-        {{ t('home.alpha') }}
-    </h1> -->
 
-    <div class="flex items-center gap-4 mb-6">
-        <SearchBar @search="handleSearch" class="flex-1" :initial-value="searchQuery"
+    <div class="flex items-center gap-2 mb-6">
+        <SearchBar @search="handleSearch" class="flex-1 mr-2" :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')" />
+        <div class="tooltip tooltip-bottom" :data-tip="t('navigation.custom_clients')">
+            <button @click="$emit('change-view', 'custom_clients')"
+                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0"
+                style="border: var(--border) solid #0000">
+                <FileText class="w-4 h-4" />
+            </button>
+        </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
             <button @click="$emit('change-view', 'news')"
                 class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 relative"
@@ -1099,8 +1208,9 @@ onBeforeUnmount(() => {
             :installationStatus="installationStatus" :isRequirementsInProgress="isRequirementsInProgress"
             :isAnyClientDownloading="isAnyClientDownloading" :isFavorite="isClientFavorite(client.id)"
             :isSelected="isClientSelected(client.id)" :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
-            :isHashVerifying="isClientHashVerifying(client.id)" @launch="handleLaunchClick" @download="downloadClient"
-            @open-log-viewer="openLogViewer" @show-context-menu="showContextMenu" @client-click="handleClientClick"
+            :isHashVerifying="isClientHashVerifying(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
+            @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
+            @show-context-menu="showContextMenu" @client-click="handleClientClick"
             @expanded-state-changed="handleExpandedStateChanged" class="client-card-item"
             :style="{ 'animation-delay': index * 0.07 + 's' }" />
     </div>

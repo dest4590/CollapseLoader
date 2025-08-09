@@ -1,14 +1,16 @@
 use tauri::Manager;
 
-use crate::api::analytics::Analytics;
+use self::core::network::analytics::Analytics;
 
-mod api;
 mod commands;
+mod core;
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             commands::clients::initialize_api,
             commands::clients::initialize_rpc,
@@ -27,6 +29,13 @@ pub fn run() {
             commands::clients::update_client_installed_status,
             commands::clients::delete_client,
             commands::clients::increment_client_counter,
+            commands::clients::get_custom_clients,
+            commands::clients::add_custom_client,
+            commands::clients::remove_custom_client,
+            commands::clients::update_custom_client,
+            commands::clients::launch_custom_client,
+            commands::clients::get_running_custom_client_ids,
+            commands::clients::stop_custom_client,
             commands::settings::get_settings,
             commands::settings::save_settings,
             commands::settings::reset_settings,
@@ -35,6 +44,7 @@ pub fn run() {
             commands::settings::set_optional_telemetry,
             commands::settings::mark_telemetry_consent_shown,
             commands::settings::is_telemetry_consent_shown,
+            commands::settings::set_custom_clients_display,
             commands::settings::get_flags,
             commands::settings::get_accounts,
             commands::settings::add_account,
@@ -49,21 +59,31 @@ pub fn run() {
             commands::settings::is_client_favorite,
             commands::utils::get_version,
             commands::utils::get_auth_url,
-            commands::utils::get_api_url,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::reset_cache,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::analytics::send_client_analytics,
-            commands::discord_rpc::update_presence
+            commands::discord_rpc::update_presence,
+            commands::plugins::get_plugins_manifest,
+            commands::plugins::get_plugin_data,
+            commands::plugins::save_plugin_data,
+            commands::plugins::delete_plugin,
+            commands::plugins::update_plugin_enabled_status,
+            commands::plugins::get_plugin_code,
+            commands::plugins::save_plugin_code,
+            commands::plugins::create_plugin_from_text,
+            commands::updater::check_for_updates,
+            commands::updater::download_and_install_update,
+            commands::updater::get_changelog,
         ])
         .setup(|app| {
             let app_handle = app.handle();
-            *api::core::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
+            *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
             let version = env!("CARGO_PKG_VERSION");
-            let window_title = format!("CollapseLoader v{}", version);
+            let window_title = format!("CollapseLoader v{version}");
 
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.set_title(&window_title);
@@ -75,7 +95,7 @@ pub fn run() {
         })
         .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let _ = api::discord_rpc::shutdown();
+                core::utils::discord_rpc::shutdown();
             }
         })
         .run(tauri::generate_context!())

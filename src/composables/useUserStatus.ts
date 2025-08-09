@@ -1,25 +1,73 @@
 import { ref, computed, reactive } from 'vue';
-import { userService } from '../services/userService';
+import { apiClient } from '../services/apiClient';
 
-const globalStatus = reactive({
+interface StatusData {
+    isOnline: boolean;
+    currentClient: string | null;
+    invisibleMode: boolean;
+    streamerMode: boolean;
+    lastSeen: string | null;
+    username: string;
+    nickname: string | null;
+    lastStatusUpdate: string | null;
+}
+
+interface StatusChangeEvent {
+    type: 'online' | 'offline' | 'client_change' | 'invisible_toggle';
+    timestamp: number;
+    data: Partial<StatusData>;
+}
+
+interface StatusMetrics {
+    totalUpdates: number;
+    skippedUpdates: number;
+    errorCount: number;
+    avgResponseTime: number;
+    lastSuccessfulSync: number;
+    consecutiveErrors: number;
+}
+
+const globalStatus = reactive<StatusData>({
     isOnline: false,
-    currentClient: null as string | null,
-    clientVersion: null as string | null,
+    currentClient: null,
     invisibleMode: false,
     streamerMode: false,
-    lastSeen: null as string | null,
+    lastSeen: null,
     username: '',
-    nickname: null as string | null
+    nickname: null,
+    lastStatusUpdate: null
+});
+
+const statusMetrics = reactive<StatusMetrics>({
+    totalUpdates: 0,
+    skippedUpdates: 0,
+    errorCount: 0,
+    avgResponseTime: 0,
+    lastSuccessfulSync: 0,
+    consecutiveErrors: 0
 });
 
 const isAuthenticated = ref(false);
-const connectionStatus = ref<'online' | 'offline' | 'connecting'>('offline');
+const connectionStatus = ref<'online' | 'offline' | 'connecting' | 'error'>('offline');
 const lastStatusUpdate = ref<Date | null>(null);
+const statusChangeQueue: StatusChangeEvent[] = [];
+
+const pollingConfig = {
+    baseInterval: 30000,
+    maxInterval: 300000,
+    backoffMultiplier: 1.5,
+    currentInterval: 30000,
+    consecutiveUnchangedPolls: 0,
+    maxUnchangedPolls: 5,
+};
 
 let statusSyncInterval: ReturnType<typeof setInterval> | null = null;
+let changeDetectionTimeout: NodeJS.Timeout | null = null;
+let pendingStatusUpdate: Promise<any> | null = null;
 
 export function useUserStatus() {
-    const checkAuthStatus = () => {
+
+    const checkAuthStatus = (): boolean => {
         const token = localStorage.getItem('authToken');
         const isAuth = !!token;
         isAuthenticated.value = isAuth;
@@ -30,78 +78,153 @@ export function useUserStatus() {
         return isAuth;
     };
 
-    /**
-     * Sends the current user status to the server
-     */
-    const syncStatusToServer = async () => {
+    const syncStatusToServer = async (force = false): Promise<any> => {
         if (!checkAuthStatus()) {
             connectionStatus.value = 'offline';
-            return;
+            return null;
         }
 
+        if (pendingStatusUpdate && !force) {
+            console.log('Status update already in progress, skipping');
+            statusMetrics.skippedUpdates++;
+            return pendingStatusUpdate;
+        }
+
+        connectionStatus.value = 'connecting';
+        const startTime = Date.now();
+
         try {
-            connectionStatus.value = 'connecting';
+            const statusPayload = {
+                is_online: globalStatus.isOnline,
+                current_client: globalStatus.currentClient || undefined,
+                invisible_mode: globalStatus.invisibleMode
+            };
 
-            const status = await userService.updateUserStatus(
-                globalStatus.isOnline,
-                globalStatus.currentClient || undefined,
-                globalStatus.clientVersion || undefined,
-                globalStatus.invisibleMode
-            );
+            pendingStatusUpdate = apiClient.post('/auth/status/', statusPayload);
+            const response = await pendingStatusUpdate;
 
-            globalStatus.username = status.username;
-            globalStatus.nickname = status.nickname || null;
-            globalStatus.lastSeen = status.last_seen;
-            if (status.invisible_mode !== undefined) {
-                globalStatus.invisibleMode = status.invisible_mode;
-            }
+            const wasChanged = updateLocalStatus(response);
+
+            const responseTime = Date.now() - startTime;
+            updateResponseTimeMetric(responseTime);
+            statusMetrics.totalUpdates++;
+            statusMetrics.lastSuccessfulSync = Date.now();
+            statusMetrics.consecutiveErrors = 0;
+
+            adjustPollingFrequency(wasChanged);
 
             lastStatusUpdate.value = new Date();
             connectionStatus.value = globalStatus.isOnline ? 'online' : 'offline';
 
-            console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
+            console.log(`Status synced (${responseTime}ms): ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
                 globalStatus.currentClient ? `playing ${globalStatus.currentClient}` : '');
 
-            return status;
+            return response;
         } catch (error) {
             console.error('Failed to sync status to server:', error);
-            connectionStatus.value = 'offline';
+            statusMetrics.errorCount++;
+            statusMetrics.consecutiveErrors++;
+
+            if (statusMetrics.consecutiveErrors > 3) {
+                pollingConfig.currentInterval = Math.min(
+                    pollingConfig.currentInterval * pollingConfig.backoffMultiplier,
+                    pollingConfig.maxInterval
+                );
+                console.log(`Increased polling interval to ${pollingConfig.currentInterval}ms due to errors`);
+            }
+
+            connectionStatus.value = 'error';
             throw error;
+        } finally {
+            pendingStatusUpdate = null;
         }
     };
 
-    /**
-     * Set the user status to online without a specific client
-     */
+
+    const updateLocalStatus = (serverResponse: any): boolean => {
+        const oldStatus = { ...globalStatus };
+
+        if (serverResponse.username) globalStatus.username = serverResponse.username;
+        if (serverResponse.nickname !== undefined) globalStatus.nickname = serverResponse.nickname;
+        if (serverResponse.last_seen) globalStatus.lastSeen = serverResponse.last_seen;
+        if (serverResponse.invisible_mode !== undefined) globalStatus.invisibleMode = serverResponse.invisible_mode;
+        if (serverResponse.last_status_update) globalStatus.lastStatusUpdate = serverResponse.last_status_update;
+
+        const hasChanges = (
+            oldStatus.isOnline !== globalStatus.isOnline ||
+            oldStatus.currentClient !== globalStatus.currentClient ||
+            oldStatus.invisibleMode !== globalStatus.invisibleMode
+        );
+
+        if (hasChanges) {
+            const changeEvent: StatusChangeEvent = {
+                type: globalStatus.isOnline ? 'online' : 'offline',
+                timestamp: Date.now(),
+                data: { ...globalStatus }
+            };
+            statusChangeQueue.push(changeEvent);
+
+            if (statusChangeQueue.length > 50) {
+                statusChangeQueue.shift();
+            }
+        }
+
+        return hasChanges;
+    };
+
+    const adjustPollingFrequency = (hasChanges: boolean) => {
+        if (hasChanges) {
+            pollingConfig.currentInterval = pollingConfig.baseInterval;
+            pollingConfig.consecutiveUnchangedPolls = 0;
+            console.log('Status changes detected, reset polling to base interval');
+        } else {
+            pollingConfig.consecutiveUnchangedPolls++;
+
+            if (pollingConfig.consecutiveUnchangedPolls >= pollingConfig.maxUnchangedPolls) {
+                const newInterval = Math.min(
+                    pollingConfig.currentInterval * 1.2,
+                    pollingConfig.maxInterval
+                );
+
+                if (newInterval !== pollingConfig.currentInterval) {
+                    pollingConfig.currentInterval = newInterval;
+                    console.log(`Increased polling interval to ${newInterval}ms (no changes for ${pollingConfig.consecutiveUnchangedPolls} polls)`);
+                }
+            }
+        }
+
+        if (statusSyncInterval) {
+            clearInterval(statusSyncInterval);
+            startPolling();
+        }
+    };
+
+
+    const updateResponseTimeMetric = (responseTime: number) => {
+        statusMetrics.avgResponseTime = statusMetrics.avgResponseTime * 0.8 + responseTime * 0.2;
+    };
+
     const setOnline = () => {
         console.log('Setting user online (no client)');
         globalStatus.isOnline = true;
         globalStatus.currentClient = null;
-        globalStatus.clientVersion = null;
+        queueStatusUpdate('online');
     };
-    /**
-     * Sets the user offline
-     */
+
     const setOffline = () => {
         console.log('Setting user offline');
         globalStatus.isOnline = false;
         globalStatus.currentClient = null;
-        globalStatus.clientVersion = null;
+        queueStatusUpdate('offline');
     };
 
-    /**
-     * Sets the status to "playing client"
-     */
-    const setPlayingClient = (clientName: string, clientVersion?: string) => {
-        console.log(`Setting user playing client: ${clientName}${clientVersion ? ` v${clientVersion}` : ''}`);
+    const setPlayingClient = (clientName: string) => {
+        console.log(`Setting user playing client: ${clientName}`);
         globalStatus.isOnline = true;
         globalStatus.currentClient = clientName;
-        globalStatus.clientVersion = clientVersion || null;
+        queueStatusUpdate('client_change');
     };
 
-    /**
-     * Toggles invisible mode
-     */
     const setInvisibleMode = (enable: boolean) => {
         console.log(`Setting invisible mode: ${enable ? 'enabled' : 'disabled'}`);
         globalStatus.invisibleMode = enable;
@@ -109,65 +232,69 @@ export function useUserStatus() {
         if (enable) {
             globalStatus.isOnline = false;
             globalStatus.currentClient = null;
-            globalStatus.clientVersion = null;
         } else {
             globalStatus.isOnline = true;
         }
+        queueStatusUpdate('invisible_toggle');
     };
 
-    /**
-     * Toggles streamer mode
-     */
     const setStreamerMode = (enable: boolean) => {
         console.log(`Setting streamer mode: ${enable ? 'enabled' : 'disabled'}`);
         globalStatus.streamerMode = enable;
         localStorage.setItem('streamerModeEnabled', enable.toString());
     };
 
-    /**
-     * Forces status synchronization with the server (immediately)
-     */
-    const forceSyncStatus = async () => {
-        return await syncStatusToServer();
+
+    const queueStatusUpdate = (_: StatusChangeEvent['type']) => {
+        if (changeDetectionTimeout) {
+            clearTimeout(changeDetectionTimeout);
+        }
+
+        changeDetectionTimeout = setTimeout(() => {
+            syncStatusToServer(true).catch(error => {
+                console.error('Queued status update failed:', error);
+            });
+        }, 500);
     };
 
-    /**
-     * Starts automatic status synchronization every 10 seconds
-     */
+
+    const startPolling = () => {
+        if (statusSyncInterval) {
+            clearInterval(statusSyncInterval);
+        }
+
+        statusSyncInterval = setInterval(() => {
+            if (checkAuthStatus()) {
+                syncStatusToServer().catch(error => {
+                    console.error('Scheduled status sync failed:', error);
+                });
+            } else {
+                console.log('Auth check failed in sync interval, stopping sync');
+                stopStatusSync();
+            }
+        }, pollingConfig.currentInterval);
+
+        console.log(`Started intelligent polling with ${pollingConfig.currentInterval}ms interval`);
+    };
+
     const startStatusSync = () => {
         if (!checkAuthStatus()) {
             console.log('Cannot start status sync - user not authenticated');
             return;
         }
 
-        if (statusSyncInterval) {
-            console.log('Status sync already running, stopping previous interval');
-            clearInterval(statusSyncInterval);
-        }
+        console.log('Starting enhanced status sync system');
 
-        console.log('Starting status sync (interval: 10 seconds)');
-
-        syncStatusToServer().catch(error => {
+        syncStatusToServer(true).catch(error => {
             console.error('Failed to sync status on start:', error);
         });
 
-        statusSyncInterval = setInterval(() => {
-            if (checkAuthStatus()) {
-                syncStatusToServer().catch(error => {
-                    console.error('Status sync failed:', error);
-                });
-            } else {
-                console.log('Auth check failed in sync interval, stopping sync');
-                stopStatusSync();
-            }
-        }, 10000);
+        startPolling();
 
-        console.log('Status sync started successfully');
+        console.log('Enhanced status sync system started');
     };
 
-    /**
-     * Stops automatic synchronization
-     */
+
     const stopStatusSync = () => {
         console.log('Stopping status sync...');
 
@@ -176,9 +303,14 @@ export function useUserStatus() {
             statusSyncInterval = null;
         }
 
+        if (changeDetectionTimeout) {
+            clearTimeout(changeDetectionTimeout);
+            changeDetectionTimeout = null;
+        }
+
         if (checkAuthStatus() && globalStatus.isOnline) {
             setOffline();
-            syncStatusToServer().catch(error => {
+            syncStatusToServer(true).catch(error => {
                 console.error('Failed to mark user offline on stop:', error);
             });
         }
@@ -187,45 +319,20 @@ export function useUserStatus() {
         console.log('Status sync stopped');
     };
 
-    /**
-     * Initializes the status system
-     */
-    const initializeStatusSystem = () => {
-        checkAuthStatus();
-        if (isAuthenticated.value) {
-            console.log('Initializing status system...');
 
-            setOnline();
-            startStatusSync();
-
-            console.log('Status system initialized');
-        } else {
-            console.log('User not authenticated, skipping status system initialization');
-        }
+    const forceSyncStatus = async () => {
+        return await syncStatusToServer(true);
     };
 
-    /**
-     * Restarts the status system
-     */
-    const restartStatusSystem = () => {
-        stopStatusSync();
-        setTimeout(() => {
-            initializeStatusSystem();
-        }, 1000);
-    };
 
-    /**
-     * Gets the current status from the server
-     */
     const fetchCurrentStatus = async () => {
         if (!checkAuthStatus()) return null;
 
         try {
-            const status = await userService.getUserStatus();
+            const status = await apiClient.get('/auth/status/');
 
             globalStatus.isOnline = status.is_online;
             globalStatus.currentClient = status.current_client || null;
-            globalStatus.clientVersion = status.client_version || null;
             globalStatus.invisibleMode = status.invisible_mode || false;
             globalStatus.lastSeen = status.last_seen;
             globalStatus.username = status.username;
@@ -238,9 +345,34 @@ export function useUserStatus() {
         }
     };
 
+
+    const initializeStatusSystem = () => {
+        checkAuthStatus();
+        if (isAuthenticated.value) {
+            console.log('Initializing enhanced status system...');
+
+            pollingConfig.currentInterval = pollingConfig.baseInterval;
+            pollingConfig.consecutiveUnchangedPolls = 0;
+
+            setOnline();
+            startStatusSync();
+
+            console.log('Enhanced status system initialized');
+        } else {
+            console.log('User not authenticated, skipping status system initialization');
+        }
+    };
+
+
+    const restartStatusSystem = () => {
+        stopStatusSync();
+        setTimeout(() => {
+            initializeStatusSystem();
+        }, 1000);
+    };
+
     const isOnline = computed(() => globalStatus.isOnline);
     const currentClient = computed(() => globalStatus.currentClient);
-    const clientVersion = computed(() => globalStatus.clientVersion);
     const isInvisible = computed(() => globalStatus.invisibleMode);
     const isStreamer = computed(() => globalStatus.streamerMode);
     const lastSeen = computed(() => globalStatus.lastSeen);
@@ -255,7 +387,6 @@ export function useUserStatus() {
 
         isOnline,
         currentClient,
-        clientVersion,
         isInvisible,
         isStreamer,
         lastSeen,
@@ -275,7 +406,6 @@ export function useUserStatus() {
         initializeStatusSystem,
         restartStatusSystem,
         fetchCurrentStatus,
-
         checkAuthStatus
     };
 }

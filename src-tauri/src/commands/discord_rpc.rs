@@ -1,4 +1,4 @@
-use crate::api::discord_rpc;
+use crate::core::utils::discord_rpc;
 
 #[tauri::command]
 pub fn update_presence(details: String, state: String) -> Result<(), String> {

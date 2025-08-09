@@ -75,8 +75,10 @@ class SyncService {
 
         try {
             const status = await userService.getSyncStatus();
-            this.state.lastSyncTime = status.last_sync_timestamp;
-            this.state.hasCloudData = status.has_cloud_data;
+            if (status) {
+                this.state.lastSyncTime = status.last_sync_timestamp;
+                this.state.hasCloudData = status.has_cloud_data;
+            }
             this.notifyListeners();
         } catch (error) {
             console.error('Failed to get sync status:', error);

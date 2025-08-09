@@ -24,7 +24,7 @@
       },
       "feedback": {
         "title": "Обратная связь",
-        "description": "Присоединяйтесь к нашему сообществу"
+        "description": "Присоединяйтесь к нашему сообществу для получения поддержки и обновлений"
       },
       "telemetry": {
         "title": "Дополнительная аналитика",
@@ -164,7 +164,45 @@
       "description": "Вы собираетесь запустить \"{clientName}\", который не был проверен на наличие вредоносного ПО или вирусов. Этот клиент может содержать потенциально опасный код, который может повредить вашу систему или скомпрометировать безопасность.",
       "dont_show_again": "Больше не показывать это предупреждение для этого клиента",
       "proceed_anyway": "Запустить в любом случае",
-      "cancel": "Отмена"
+      "cancel": "Отмена",
+      "close": "Я понял"
+    },
+    "add_custom_client": "Добавить пользовательский клиент",
+    "delete_custom_client": "Удалить свой клиент",
+    "client_added": "Клиент добавлен",
+    "client_edited": "Клиент изменён",
+    "client_deleted": "Клиент удалён",
+    "edit_custom_client": "Редактировать клиент",
+    "delete_custom_client_confirm": {
+      "message": "Вы действительно хотите удалить этот клиент?"
+    },
+    "add_custom_client_modal": {
+      "client_name": "Имя клиента",
+      "enter_client_name": "Введите имя клиента",
+      "minecraft_version": "Версия Minecraft",
+      "main_class": "Главный класс",
+      "main_class_placeholder": "например: net.minecraft.client.main.Main",
+      "jar_file": "JAR файл",
+      "no_file_selected": "Файл не выбран",
+      "select_jar_file": "Выберите .jar файл",
+      "selected": "Выбрано",
+      "adding": "Добавление...",
+      "add_client": "Добавить клиент"
+    },
+    "edit_custom_client_modal": {
+      "client_name": "Имя клиента",
+      "enter_client_name": "Введите имя клиента",
+      "minecraft_version": "Версия Minecraft",
+      "main_class": "Главный класс",
+      "main_class_placeholder": "например: net.minecraft.client.main.Main",
+      "updating": "Обновление...",
+      "update_client": "Обновить клиент"
+    },
+    "delete_custom_client_confirm_modal": {
+      "title": "Удалить клиент",
+      "description": "Это действие нельзя отменить",
+      "deleting": "Удаление...",
+      "delete_client": "Удалить клиент"
     }
   },
   "preloader": {
@@ -269,7 +307,9 @@
     "blocked": "Заблокированный",
     "loading": "Загрузка...",
     "ok": "Окей",
-    "close": "Закрыть"
+    "close": "Закрыть",
+    "save": "Сохранить",
+    "browse": "Выбрать"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -524,7 +564,10 @@
     "login_required": "Вам нужно войти в свою учетную запись, чтобы использовать эту функцию.",
     "reset_cache": "Сбросить кэш клиентов",
     "reset_cache_success": "Успешно удален кэш клиентов, перезапустите лоадер",
-    "reset_cache_failed": "Не удалось удалить кэш, попробуйте еще раз"
+    "reset_cache_failed": "Не удалось удалить кэш, попробуйте еще раз",
+    "hash_verify": "Проверка хэша ",
+    "irc_chat": "IRC чат",
+    "save_flags_failed": "Не удалось сохранить флаги: {error}"
   },
   "userProfile": {
     "playing": "Играет в",
@@ -586,7 +629,9 @@
     "account": "Аккаунт",
     "about": "О программе",
     "admin": "Панель админа",
-    "news": "Новости"
+    "news": "Новости",
+    "customization": "Кастомизация",
+    "custom_clients": "Свои клиенты"
   },
   "toast": {
     "dev": {
@@ -730,7 +775,8 @@
       "debugging": "Отладка",
       "logging_in": "Входит в систему",
       "browsing_friends": "Смотрит что делают друзья",
-      "browsing_news": "Читает новости"
+      "browsing_news": "Читает новости",
+      "browsing_custom_clients": "Смотрит на свои клиенты"
     }
   },
   "modal": {
@@ -762,7 +808,8 @@
     }
   },
   "hold_button": {
-    "label": "Зажмите, чтобы начать!"
+    "label": "Зажмите, чтобы начать!",
+    "info_message": "Ты серьезно?"
   },
   "client": {
     "details": {
@@ -791,6 +838,117 @@
         }
       },
       "no_changelog_desc": "Обновления и изменения появятся здесь."
+    },
+    "insecure_tooltip": "Этот клиент помечен как непроверенный, нажмите, чтобы просмотреть детали"
+  },
+  "plugins": {
+    "title": "Плагины",
+    "add_plugin": "Добавить плагин",
+    "show_enabled_only": "Показать только включённые",
+    "all_categories": "Все категории",
+    "categories": {
+      "appearance": "Внешний вид",
+      "functionality": "Функциональность",
+      "integration": "Интеграция",
+      "utility": "Утилиты"
+    },
+    "total_plugins": "Всего плагинов",
+    "enabled_plugins": "Включено",
+    "no_plugins_title": "Плагины не найдены",
+    "no_plugins_description": "Добавьте плагины для начала работы",
+    "configure": "Настроить",
+    "enable": "Включить",
+    "disable": "Отключить",
+    "remove": "Удалить",
+    "visit_website": "Посетить сайт",
+    "enabled": "Включён {name}",
+    "disabled": "Отключён {name}",
+    "removed": "Удалён {name}",
+    "add_modal": {
+      "title": "Добавить новый плагин",
+      "description": "Вставьте код плагина ниже, и мы извлечём метаданные",
+      "paste_label": "Код плагина",
+      "paste_hint": "Метаданные плагина должны быть включены в блок комментариев вверху",
+      "preview": "Предпросмотр",
+      "validation_errors": "Ошибки валидации",
+      "metadata_help_title": "Нужна помощь с метаданными?",
+      "metadata_help_desc": "Включите информацию о плагине в блок комментариев:",
+      "website": "Веб-сайт",
+      "add_button": "Добавить плагин",
+      "adding": "Добавление...",
+      "invalid_plugin": "Валидация плагина не прошла",
+      "add_success": "{name} успешно добавлен",
+      "add_failed": "Не удалось добавить плагин",
+      "add_error": "Произошла ошибка при добавлении плагина"
+    },
+    "configure_plugin": "Настройка плагина",
+    "config_saved": "Конфиг сохранён.",
+    "config_save_failed": "Ошибка сохранения конфига: {error}",
+    "reset_defaults": "Сбросить по умолчанию",
+    "no_config_options": "Нет никаких настроек для плагина",
+    "error": "Ошибка плагина в {name}",
+    "edit": {
+      "save_and_close": "Сохранить и закрыть",
+      "load_error": "Ошибка загрузки плагина",
+      "save_error": "Ошибка сохранения",
+      "save_success": "Успешно сохранено"
+    },
+    "toggle_failed": "Не удалось переключить плагин {name}",
+    "remove_failed": "Не удается удалить плагин {name}",
+    "description": "Расширяйте функционал CollapseLoader с помощью плагинов"
+  },
+  "customization": {
+    "theme": "Тема",
+    "plugins": "Плагины"
+  },
+  "updater": {
+    "update_available": "Доступно обновление",
+    "current": "Текущая",
+    "latest": "Последняя",
+    "critical": "Критическое",
+    "version_info": "Текущая: {current} → Последняя: {latest}",
+    "release_notes": "Примечания к выпуску",
+    "changelog": "Список изменений",
+    "download_install": "Скачать и установить",
+    "downloading": "Скачивание...",
+    "skip": "Пропустить",
+    "view_changelog": "Посмотреть список изменений",
+    "changelog_title": "Список изменений",
+    "check_failed": "Не удалось проверить обновления: {error}",
+    "no_download_url": "URL для скачивания недоступен для этой платформы",
+    "starting_download": "Начинается скачивание обновления...",
+    "update_installed": "Обновление установлено успешно! Приложение будет перезапущено.",
+    "update_failed": "Обновление не удалось: {error}",
+    "check_for_updates": "Проверить обновления",
+    "checking_updates": "Проверка обновлений...",
+    "up_to_date": "У вас установлена последняя версия!",
+    "show_more": "Показать еще {count} версий",
+    "show_less": "Показать меньше",
+    "categories": {
+      "feature": "Новые функции",
+      "improvement": "Улучшения",
+      "bugfix": "Исправления ошибок",
+      "other": "Прочее"
+    },
+    "changelogs": {
+      "feature": {
+        "v0_1_7": {
+          "added_custom_clients": "Добавлена система своих клиентов"
+        }
+      }
     }
+  },
+  "custom_clients": {
+    "add": "Добавить свой клиент",
+    "running": "Запущен",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "added": "Добавлено",
+    "stop": "Остановить",
+    "launch": "Запустить",
+    "display_settings": "Настройка отображения",
+    "display_mode_global": "Глобально",
+    "display_mode": "Режим отображения",
+    "display_mode_separate": "Отдельно"
   }
 }

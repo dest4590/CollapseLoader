@@ -4,6 +4,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { onMounted, ref } from 'vue';
 import { useToast } from '../services/toastService';
 import { useI18n } from 'vue-i18n';
+import { updaterService } from '../services/updaterService';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -11,6 +12,7 @@ const { addToast } = useToast();
 const version = ref('');
 const codename = ref('');
 const commitHash = ref('');
+const isCheckingUpdates = ref(false);
 
 const getVersion = async () => {
     try {
@@ -51,6 +53,15 @@ const openDiscord = async () => {
     }
 };
 
+const checkForUpdates = async () => {
+    isCheckingUpdates.value = true;
+    try {
+        await updaterService.checkForUpdates(false, t);
+    } finally {
+        isCheckingUpdates.value = false;
+    }
+};
+
 onMounted(async () => {
     await getVersion();
     const versionElement = document.querySelector('#version');
@@ -72,10 +83,10 @@ onMounted(async () => {
                     <div class="tooltip-content flex flex-col">
                         <span class="text-sm font-semibold text-base-content">{{
                             codename
-                            }}</span>
+                        }}</span>
                         <span class="text-xs text-base-content/50">{{
                             commitHash
-                            }}</span>
+                        }}</span>
                     </div>
                     <p class="text-base-content/70">v{{ version }}</p>
                 </div>
@@ -102,6 +113,13 @@ onMounted(async () => {
             </button>
         </div>
 
+        <div class="flex justify-center max-w-xl mx-auto mb-5">
+            <button @click="checkForUpdates" :disabled="isCheckingUpdates" class="btn btn-primary w-full">
+                <span v-if="isCheckingUpdates" class="loading loading-spinner loading-sm"></span>
+                {{ isCheckingUpdates ? t('updater.checking_updates') : t('updater.check_for_updates') }}
+            </button>
+        </div>
+
         <div class="bg-base-200 rounded-xl border border-base-300 p-6 max-w-xl mx-auto">
             <div class="flex flex-col gap-3">
                 <h2 class="text-lg font-semibold text-primary-focus mb-2">
@@ -111,21 +129,21 @@ onMounted(async () => {
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.version')
-                        }}</span>
+                    }}</span>
                     <span class="font-medium">{{ version }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.codename')
-                        }}</span>
+                    }}</span>
                     <span class="font-medium">{{ codename }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.commit')
-                        }}</span>
+                    }}</span>
                     <code class="bg-base-300 px-2 py-1 rounded text-xs">{{
                         commitHash
                     }}</code>

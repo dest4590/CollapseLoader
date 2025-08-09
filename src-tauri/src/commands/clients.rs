@@ -1,14 +1,22 @@
-use api::clients::{
-    agent_overlay::AgentOverlayManager,
+use core::clients::{
     client::{Client, CLIENT_LOGS},
     clients::{initialize_client_manager, CLIENT_MANAGER},
 };
 use tauri::AppHandle;
 
+use crate::core::network::analytics::Analytics;
+use crate::core::utils::utils::emit_to_main_window;
+use crate::core::utils::{discord_rpc, logging};
+use crate::core::{
+    clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
+    storage::common::JsonStorage,
+};
 use crate::{
-    api::{self, analytics::Analytics, core::data::DATA, utils},
+    core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
 };
+
+use std::path::PathBuf;
 
 fn get_client_by_id(id: u32) -> Result<Client, String> {
     CLIENT_MANAGER
@@ -25,7 +33,7 @@ fn get_client_by_id(id: u32) -> Result<Client, String> {
 
 #[tauri::command]
 pub fn get_app_logs() -> Vec<String> {
-    api::logging::APP_LOGS
+    logging::APP_LOGS
         .lock()
         .map(|logs| logs.clone())
         .unwrap_or_default()
@@ -38,7 +46,7 @@ pub async fn initialize_api() -> Result<(), String> {
 
 #[tauri::command]
 pub fn initialize_rpc() -> Result<(), String> {
-    if let Err(e) = api::discord_rpc::initialize() {
+    if let Err(e) = discord_rpc::initialize() {
         log_error!("Failed to initialize Discord RPC: {}", e);
     } else {
         log_info!("Discord RPC initialized successfully");
@@ -47,8 +55,8 @@ pub fn initialize_rpc() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_server_connectivity_status() -> api::network::servers::ServerConnectivityStatus {
-    let servers = &api::network::servers::SERVERS;
+pub fn get_server_connectivity_status() -> core::network::servers::ServerConnectivityStatus {
+    let servers = &core::network::servers::SERVERS;
     servers.connectivity_status.lock().unwrap().clone()
 }
 
@@ -80,7 +88,7 @@ pub async fn launch_client(
     }
 
     let hash_verify_enabled = {
-        let settings = api::core::settings::SETTINGS
+        let settings = core::storage::settings::SETTINGS
             .lock()
             .map_err(|_| "Failed to access settings".to_string())?;
         log_debug!("Hash verification setting: {}", settings.hash_verify.value);
@@ -88,7 +96,7 @@ pub async fn launch_client(
     };
 
     if hash_verify_enabled {
-        utils::emit_to_main_window(
+        emit_to_main_window(
             &app_handle,
             "client-hash-verification-start",
             &serde_json::json!({
@@ -110,7 +118,7 @@ pub async fn launch_client(
                 current_hash
             );
 
-            utils::emit_to_main_window(
+            emit_to_main_window(
                 &app_handle,
                 "client-hash-verification-failed",
                 &serde_json::json!({
@@ -139,7 +147,7 @@ pub async fn launch_client(
                     }
                 })?;
 
-            utils::emit_to_main_window(
+            emit_to_main_window(
                 &app_handle,
                 "client-redownload-complete",
                 &serde_json::json!({
@@ -158,7 +166,7 @@ pub async fn launch_client(
                 client.name
             );
 
-            utils::emit_to_main_window(
+            emit_to_main_window(
                 &app_handle,
                 "client-hash-verification-done",
                 &serde_json::json!({
@@ -182,14 +190,16 @@ pub async fn launch_client(
             log_warn!("Agent/overlay files verification failed, attempting to download...");
             AgentOverlayManager::download_agent_overlay_files()
                 .await
-                .map_err(|e| format!("Failed to download required agent/overlay files: {}", e))?;
+                .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
         }
         Err(e) => {
             log_error!("Error verifying agent/overlay files: {}", e);
         }
     }
 
-    client.run(app_handle, user_token).await
+    let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
+
+    client.run(options).await
 }
 
 #[tauri::command]
@@ -201,10 +211,7 @@ pub async fn get_running_client_ids() -> Vec<u32> {
             .collect()
     });
 
-    match handle.await {
-        Ok(result) => result,
-        Err(_) => Vec::new(),
-    }
+    handle.await.unwrap_or_else(|_| Vec::new())
 }
 
 #[tauri::command]
@@ -284,9 +291,7 @@ pub async fn reinstall_client(id: u32, app_handle: AppHandle) -> Result<(), Stri
         }
     });
 
-    if download_result.is_err() {
-        return download_result;
-    }
+    download_result.as_ref()?;
 
     let result = client.download_requirements(&app_handle).await;
 
@@ -377,15 +382,15 @@ pub async fn delete_client(id: u32) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
-    let api_url = crate::commands::utils::get_api_url().await?;
-    let url = format!("{}/api/client/{}/detailed", api_url, client_id);
+    let api_url = crate::commands::utils::get_auth_url().await?;
+    let url = format!("{api_url}/api/client/{client_id}/detailed");
 
     let client = reqwest::Client::new();
     let response = client
         .get(&url)
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch client details: {}", e))?;
+        .map_err(|e| format!("Failed to fetch client details: {e}"))?;
 
     if !response.status().is_success() {
         return Err(format!("API returned error: {}", response.status()));
@@ -394,7 +399,7 @@ pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, Str
     let details: serde_json::Value = response
         .json()
         .await
-        .map_err(|e| format!("Failed to parse client details: {}", e))?;
+        .map_err(|e| format!("Failed to parse client details: {e}"))?;
 
     Ok(details)
 }
@@ -435,7 +440,7 @@ pub fn increment_client_counter(id: u32, counter_type: String) -> Result<(), Str
             );
         }
         _ => {
-            return Err(format!("Invalid counter type: {}", counter_type));
+            return Err(format!("Invalid counter type: {counter_type}"));
         }
     }
 
@@ -443,9 +448,150 @@ pub fn increment_client_counter(id: u32, counter_type: String) -> Result<(), Str
 }
 
 fn calculate_md5_hash(path: &std::path::PathBuf) -> Result<String, String> {
-    let bytes =
-        std::fs::read(path).map_err(|e| format!("Failed to read file for hashing: {}", e))?;
+    let bytes = std::fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
 
     let digest = md5::compute(&bytes);
-    Ok(format!("{:x}", digest))
+    Ok(format!("{digest:x}"))
+}
+
+#[tauri::command]
+pub fn get_custom_clients() -> Vec<crate::core::clients::custom_clients::CustomClient> {
+    crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .ok()
+        .map(|manager| manager.clients.clone())
+        .unwrap_or_default()
+}
+
+#[tauri::command]
+pub fn add_custom_client(
+    name: String,
+    version: String,
+    filename: String,
+    file_path: String,
+    main_class: String,
+) -> Result<(), String> {
+    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    let version_enum = crate::core::clients::custom_clients::Version::from_string(&version);
+    let path_buf = PathBuf::from(file_path);
+
+    let custom_client = crate::core::clients::custom_clients::CustomClient::new(
+        0,
+        name,
+        version_enum,
+        filename,
+        path_buf,
+        main_class,
+    );
+
+    manager.add_client(custom_client)
+}
+
+#[tauri::command]
+pub fn remove_custom_client(id: u32) -> Result<(), String> {
+    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    manager.remove_client(id)
+}
+
+#[tauri::command]
+pub fn update_custom_client(
+    id: u32,
+    name: Option<String>,
+    version: Option<String>,
+    main_class: Option<String>,
+) -> Result<(), String> {
+    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        .lock()
+        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+    let version_enum =
+        version.map(|v| crate::core::clients::custom_clients::Version::from_string(&v));
+
+    let updates = crate::core::storage::custom_clients::CustomClientUpdate {
+        name,
+        version: version_enum,
+        main_class,
+    };
+
+    manager.update_client(id, updates)
+}
+
+#[tauri::command]
+pub async fn launch_custom_client(
+    id: u32,
+    user_token: String,
+    app_handle: AppHandle,
+) -> Result<(), String> {
+    let custom_client = {
+        let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+            .lock()
+            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+        let client = manager
+            .get_client_mut(id)
+            .ok_or_else(|| "Custom client not found".to_string())?;
+
+        client.launches += 1;
+        let client_clone = client.clone();
+        manager.save_to_disk();
+
+        client_clone
+    };
+
+    custom_client.validate_file()?;
+
+    log_info!("Launching custom client: {}", custom_client.name);
+
+    let client = custom_client.to_client();
+
+    emit_to_main_window(
+        &app_handle,
+        "custom-client-launched",
+        &serde_json::json!({
+            "name": custom_client.name
+        }),
+    );
+
+    let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), true);
+
+    client.run(options).await
+}
+
+#[tauri::command]
+pub async fn get_running_custom_client_ids() -> Vec<u32> {
+    let handle = tokio::task::spawn_blocking(|| {
+        crate::core::clients::custom_clients::CustomClient::get_running_custom_clients()
+            .iter()
+            .map(|client| client.id)
+            .collect()
+    });
+
+    handle.await.unwrap_or_else(|_| Vec::new())
+}
+
+#[tauri::command]
+pub async fn stop_custom_client(id: u32) -> Result<(), String> {
+    let custom_client = {
+        let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+            .lock()
+            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let client_clone = custom_client.clone();
+    let handle = tokio::task::spawn_blocking(move || client_clone.stop());
+
+    handle
+        .await
+        .map_err(|e| format!("Stop custom client task error: {e}"))?
 }
