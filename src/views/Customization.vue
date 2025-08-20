@@ -1,24 +1,14 @@
 <template>
     <div class="container mx-auto mt-4">
         <div role="tablist" class="tabs tabs-boxed mb-5 flex justify-center gap-4">
-            <a @click="activeTab = 'theme'" class="tab transition-all duration-300 rounded-md" :class="{
-                'tab-active transform scale-105 shadow-md bg-base-300': activeTab === 'theme',
-                'hover:bg-base-300': activeTab !== 'theme',
-            }">
+            <a class="tab transition-all duration-300 rounded-md tab-active transform scale-105 shadow-md bg-base-300">
                 <Palette class="w-4 h-4 mr-2" />
                 {{ t('customization.theme') }}
-            </a>
-            <a @click="activeTab = 'plugins'" class="tab transition-all duration-300 rounded-md" :class="{
-                'tab-active transform scale-105 shadow-md bg-base-300': activeTab === 'plugins',
-                'hover:bg-base-300': activeTab !== 'plugins',
-            }">
-                <Puzzle class="w-4 h-4 mr-2" />
-                {{ t('customization.plugins') }}
             </a>
         </div>
 
         <transition name="tab-switch" mode="out-in">
-            <div v-if="activeTab === 'theme'" key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6">
                     <h2 class="text-xl font-semibold mb-4">{{ t('theme.select_theme') }}</h2>
                     <p class="text-base-content/70 mb-4">{{ t('theme.description') }}</p>
@@ -181,7 +171,7 @@
                                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                                         <div>
                                             <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                                }}</label>
+                                            }}</label>
                                             <VueMonacoEditor v-model:value="customCSS" language="css"
                                                 :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
                                                     readOnly: !enableCustomCSS,
@@ -232,48 +222,14 @@
                     </div>
                 </div>
             </div>
-
-            <div v-else key="plugins" class="space-y-6">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="form-control">
-                        <label class="label cursor-pointer">
-                            <span class="label-text mr-2">{{ t('plugins.show_enabled_only') }}</span>
-                            <input type="checkbox" v-model="showEnabledOnly" class="toggle toggle-primary" />
-                        </label>
-                    </div>
-                    <button @click="showAddPluginDialog" class="btn btn-primary">
-                        <Plus class="w-4 h-4 mr-2" />
-                        {{ t('plugins.add_plugin') }}
-                    </button>
-                </div>
-
-                <div v-if="filteredPlugins.length === 0" class="text-center py-10">
-                    <Puzzle class="w-16 h-16 mx-auto text-base-content/30 mb-4" />
-                    <h3 class="text-lg font-semibold mb-2">{{ t('plugins.no_plugins_title') }}</h3>
-                    <p class="text-base-content/70">{{ t('plugins.no_plugins_description') }}</p>
-                </div>
-
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <PluginCard v-for="plugin in filteredPlugins" :key="plugin.id" :plugin="plugin"
-                        :all-plugins="pluginStates" @configure="openPluginConfig" @edit="openPluginEditor" />
-                </div>
-            </div>
         </transition>
-
-        <PluginEditorModal v-if="showPluginEditor" :plugin-id="editingPluginId" :plugin-name="editingPluginName"
-            :current-theme="currentTheme" @close="closePluginEditor" @saved="handlePluginSaved" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, reactive } from 'vue';
+import { ref, onMounted, onUnmounted, watch, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Palette, Puzzle, Plus, ClipboardCopy, ClipboardPaste } from 'lucide-vue-next';
-import { getPluginService } from '../services/pluginService';
-import type { PluginState, PluginConfig } from '../types/plugin';
-import PluginCard from '../components/features/plugins/PluginCard.vue';
-import PluginConfigModal from '../components/modals/PluginConfigModal.vue';
-import PluginEditorModal from '../components/modals/PluginEditorModal.vue';
+import { Palette, ClipboardCopy, ClipboardPaste } from 'lucide-vue-next';
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../services/toastService';
 import { themeService } from '../services/themeService';
@@ -295,13 +251,11 @@ import {
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
 import ImportExportCssModal from '../components/modals/ImportExportCssModal.vue';
 import { useModal } from '../services/modalService';
-import AddPluginModal from '../components/modals/AddPluginModal.vue';
 
 const i18n = useI18n();
-const pluginService = getPluginService();
 const { t } = i18n;
 const { addToast } = useToast();
-const { showModal, hideModal } = useModal();
+const { showModal } = useModal();
 
 const themes = ['dark', 'light'];
 const selectedTheme = ref(document.documentElement.getAttribute('data-theme') || 'dark');
@@ -409,22 +363,6 @@ const findOptionIndex = (options: { value: string }[], value: string | undefined
 const radiusIndex = ref(findOptionIndex(radiusOptions, themeService.settings.borderRadius, 2));
 const shadowIndex = ref(findOptionIndex(shadowOptions, themeService.settings.shadow, 2));
 const paddingIndex = ref(findOptionIndex(paddingOptions, themeService.settings.padding, 1));
-
-const activeTab = ref<'theme' | 'plugins'>('theme');
-const pluginStates = ref<PluginState[]>([]);
-const showEnabledOnly = ref(false);
-
-let unsubscribePluginService: (() => void) | null = null;
-
-const filteredPlugins = computed(() => {
-    let filtered = pluginStates.value;
-
-    if (showEnabledOnly.value) {
-        filtered = filtered.filter(p => p.enabled);
-    }
-
-    return filtered;
-});
 
 const changeTheme = async (theme: string) => {
     try {
@@ -574,73 +512,12 @@ const openImportModal = () => {
     );
 };
 
-const showAddPluginDialog = () => {
-    showModal(
-        'add-plugin',
-        AddPluginModal,
-        { title: t('plugins.add_modal.title') },
-        {},
-        {
-            cancel: () => hideModal('add-plugin'),
-            'plugin-added': () => {
-                hideModal('add-plugin');
-                addToast(t('plugins.add_modal.add_success'), 'success');
-            }
-        }
-    );
-};
-
-const openPluginConfig = (plugin: PluginState) => {
-    showModal(
-        'plugin-config',
-        PluginConfigModal,
-        { title: t('plugins.configure_plugin', { name: plugin.metadata.name }) },
-        { plugin },
-        {
-            cancel: () => hideModal('plugin-config'),
-            save: (_: PluginConfig) => {
-                hideModal('plugin-config');
-            }
-        }
-    );
-};
-
-const showPluginEditor = ref(false);
-const editingPluginId = ref('');
-const editingPluginName = ref('');
-
-const currentTheme = computed(() => selectedTheme.value);
-
-const openPluginEditor = (plugin: PluginState) => {
-    editingPluginId.value = plugin.id;
-    editingPluginName.value = plugin.metadata.name;
-    showPluginEditor.value = true;
-};
-
-const closePluginEditor = () => {
-    showPluginEditor.value = false;
-    editingPluginId.value = '';
-    editingPluginName.value = '';
-};
-
-const handlePluginSaved = (pluginId: string) => {
-    addToast(t('plugins.edit.save_success'), 'success');
-    console.log('Plugin saved:', pluginId);
-};
 
 onMounted(() => {
-    unsubscribePluginService = pluginService.subscribe((states) => {
-        pluginStates.value = states;
-    });
-
-    pluginStates.value = pluginService.getPluginStates();
     document.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
-    if (unsubscribePluginService) {
-        unsubscribePluginService();
-    }
     document.removeEventListener('keydown', handleKeyDown);
 });
 </script>

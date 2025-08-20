@@ -841,65 +841,8 @@
     },
     "insecure_tooltip": "Этот клиент помечен как непроверенный, нажмите, чтобы просмотреть детали"
   },
-  "plugins": {
-    "title": "Плагины",
-    "add_plugin": "Добавить плагин",
-    "show_enabled_only": "Показать только включённые",
-    "all_categories": "Все категории",
-    "categories": {
-      "appearance": "Внешний вид",
-      "functionality": "Функциональность",
-      "integration": "Интеграция",
-      "utility": "Утилиты"
-    },
-    "total_plugins": "Всего плагинов",
-    "enabled_plugins": "Включено",
-    "no_plugins_title": "Плагины не найдены",
-    "no_plugins_description": "Добавьте плагины для начала работы",
-    "configure": "Настроить",
-    "enable": "Включить",
-    "disable": "Отключить",
-    "remove": "Удалить",
-    "visit_website": "Посетить сайт",
-    "enabled": "Включён {name}",
-    "disabled": "Отключён {name}",
-    "removed": "Удалён {name}",
-    "add_modal": {
-      "title": "Добавить новый плагин",
-      "description": "Вставьте код плагина ниже, и мы извлечём метаданные",
-      "paste_label": "Код плагина",
-      "paste_hint": "Метаданные плагина должны быть включены в блок комментариев вверху",
-      "preview": "Предпросмотр",
-      "validation_errors": "Ошибки валидации",
-      "metadata_help_title": "Нужна помощь с метаданными?",
-      "metadata_help_desc": "Включите информацию о плагине в блок комментариев:",
-      "website": "Веб-сайт",
-      "add_button": "Добавить плагин",
-      "adding": "Добавление...",
-      "invalid_plugin": "Валидация плагина не прошла",
-      "add_success": "{name} успешно добавлен",
-      "add_failed": "Не удалось добавить плагин",
-      "add_error": "Произошла ошибка при добавлении плагина"
-    },
-    "configure_plugin": "Настройка плагина",
-    "config_saved": "Конфиг сохранён.",
-    "config_save_failed": "Ошибка сохранения конфига: {error}",
-    "reset_defaults": "Сбросить по умолчанию",
-    "no_config_options": "Нет никаких настроек для плагина",
-    "error": "Ошибка плагина в {name}",
-    "edit": {
-      "save_and_close": "Сохранить и закрыть",
-      "load_error": "Ошибка загрузки плагина",
-      "save_error": "Ошибка сохранения",
-      "save_success": "Успешно сохранено"
-    },
-    "toggle_failed": "Не удалось переключить плагин {name}",
-    "remove_failed": "Не удается удалить плагин {name}",
-    "description": "Расширяйте функционал CollapseLoader с помощью плагинов"
-  },
   "customization": {
-    "theme": "Тема",
-    "plugins": "Плагины"
+    "theme": "Тема"
   },
   "updater": {
     "update_available": "Доступно обновление",

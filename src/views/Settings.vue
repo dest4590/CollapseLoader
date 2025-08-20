@@ -849,7 +849,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -858,7 +858,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>

@@ -841,65 +841,9 @@
     },
     "insecure_tooltip": "This client is marked as insecure, tap to view details"
   },
-  "plugins": {
-    "title": "Plugins",
-    "description": "Extend CollapseLoader functionality with custom plugins",
-    "add_plugin": "Add Plugin",
-    "show_enabled_only": "Show enabled only",
-    "all_categories": "All categories",
-    "categories": {
-      "appearance": "Appearance",
-      "functionality": "Functionality",
-      "integration": "Integration",
-      "utility": "Utility"
-    },
-    "total_plugins": "Total Plugins",
-    "enabled_plugins": "Enabled",
-    "no_plugins_title": "No plugins found",
-    "no_plugins_description": "Add some plugins to get started",
-    "configure": "Configure",
-    "enable": "Enable",
-    "disable": "Disable",
-    "remove": "Remove",
-    "visit_website": "Visit Website",
-    "enabled": "Enabled {name}",
-    "disabled": "Disabled {name}",
-    "removed": "Removed {name}",
-    "add_modal": {
-      "title": "Add New Plugin",
-      "description": "Paste your plugin code below and we'll extract the metadata",
-      "paste_label": "Plugin Code",
-      "paste_hint": "Plugin metadata should be included in a comment block at the top",
-      "preview": "Preview",
-      "validation_errors": "Validation Errors",
-      "metadata_help_title": "Need help with metadata?",
-      "metadata_help_desc": "Include plugin information in a comment block:",
-      "website": "Website",
-      "add_button": "Add Plugin",
-      "adding": "Adding...",
-      "invalid_plugin": "Plugin validation failed",
-      "add_success": "Added {name} successfully",
-      "add_failed": "Failed to add plugin",
-      "add_error": "An error occurred while adding the plugin"
-    },
-    "configure_plugin": "Configure plugin",
-    "config_saved": "Config saved.",
-    "config_save_failed": "Cannot save config: {error}",
-    "reset_defaults": "Reset defaults",
-    "no_config_options": "There are no any plugin options",
-    "error": "Plugin error in {name}",
-    "edit": {
-      "save_and_close": "Save and close",
-      "load_error": "Plugin code load error",
-      "save_success": "Save success",
-      "save_error": "Save error"
-    },
-    "toggle_failed": "Failed to toggle plugin {name}",
-    "remove_failed": "Cannot remove plugin {name}"
-  },
   "customization": {
-    "theme": "Theme",
-    "plugins": "Plugins"
+  "theme": "Theme"
+    
   },
   "updater": {
     "update_available": "Update Available",
