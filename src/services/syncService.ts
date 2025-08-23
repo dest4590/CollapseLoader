@@ -185,9 +185,14 @@ class SyncService {
                 accounts_data: accounts
             };
 
-            const result = await userService.syncToCloud(syncData);
+            await userService.syncToCloud(syncData);
 
-            this.state.lastSyncTime = result.last_sync_timestamp || new Date().toISOString();
+            const status = await userService.getSyncStatus();
+
+            if (status) {
+                this.state.lastSyncTime = status.last_sync_timestamp || new Date().toISOString();
+            }
+
             this.state.hasCloudData = true;
 
             return true;

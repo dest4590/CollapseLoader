@@ -637,13 +637,13 @@ const initializeUserData = async () => {
         console.log(`Friends loaded: ${friends.value.length} total, ${onlineFriendsCount.value} online`);
 
         console.log(
-            'Enhanced user data and friends system initialized successfully on startup'
+            'User data and friends system initialized successfully on startup'
         );
         console.log(`Loading state: ${friendsLoading.value ? 'Loading...' : 'Complete'}`);
         console.log(`User authentication: ${userAuthenticated.value ? 'Authenticated' : 'Not authenticated'}`);
         console.log(`User online status: ${userOnline.value ? 'Online' : 'Offline'}`);
     } catch (error) {
-        console.error('Failed to initialize enhanced user data on startup:', error);
+        console.error('Failed to initialize user data on startup:', error);
     }
 };
 
