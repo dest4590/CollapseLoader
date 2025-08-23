@@ -73,3 +73,6 @@ For more details, see our [Security Overview](SECURITY.md).
    - Visit [GitHub Releases](https://github.com/dest4590/CollapseLoader/releases) or [collapseloader.org](https://collapseloader.org).
    - Download the appropriate binary for your platform (Windows or Linux).
 
+> [!IMPORTANT]  
+> There is currently no Linux support (but the loader itself can be launched)
+
