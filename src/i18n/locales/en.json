@@ -455,7 +455,14 @@
     "copy_failed": "Failed to copy",
     "import": "Import",
     "import_success": "CSS imported successfully!",
-    "import_invalid": "Invalid or unsafe CSS. Import failed."
+    "import_invalid": "Invalid or unsafe CSS. Import failed.",
+    "global_radius": "Global UI Radius",
+    "primary_color_override": "Primary color",
+    "remove_animations": "Remove all animations",
+    "export_preset": "Export preset",
+    "import_preset": "Import preset",
+    "import_empty": "Clipboard is empty",
+    "import_too_large": "Preset too large"
   },
   "logs": {
     "copy_logs": "Copy logs",
@@ -842,8 +849,7 @@
     "insecure_tooltip": "This client is marked as insecure, tap to view details"
   },
   "customization": {
-  "theme": "Theme"
-    
+    "theme": "Theme"
   },
   "updater": {
     "update_available": "Update Available",

@@ -108,6 +108,14 @@
     --client-card-padding: 1rem;
 }
 
+html[data-reduce-motion='true'] *,
+html[data-reduce-motion='true'] *::before,
+html[data-reduce-motion='true'] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+
 .client-card {
     border-radius: var(--client-card-radius) !important;
     box-shadow: var(--client-card-shadow) !important;

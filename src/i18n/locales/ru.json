@@ -455,7 +455,14 @@
     "copy_failed": "Не удалось скопировать",
     "import": "Импортировать",
     "import_success": "CSS успешно импортирован!",
-    "import_invalid": "Некорректный или опасный CSS. Импорт не выполнен."
+    "import_invalid": "Некорректный или опасный CSS. Импорт не выполнен.",
+    "global_radius": "Глобальный радиус углов",
+    "primary_color_override": "Основной цвет",
+    "remove_animations": "Убрать все анимации",
+    "export_preset": "Экспорт пресета",
+    "import_preset": "Импортировать пресет",
+    "import_empty": "Буфер обмена пуст",
+    "import_too_large": "Пресет слишком большой"
   },
   "logs": {
     "copy_logs": "Копировать логи",

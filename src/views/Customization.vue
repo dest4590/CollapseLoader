@@ -1,235 +1,270 @@
 <template>
     <div class="container mx-auto mt-4">
-        <div role="tablist" class="tabs tabs-boxed mb-5 flex justify-center gap-4">
-            <a class="tab transition-all duration-300 rounded-md tab-active transform scale-105 shadow-md bg-base-300">
-                <Palette class="w-4 h-4 mr-2" />
-                {{ t('customization.theme') }}
-            </a>
-        </div>
+        <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6">
+                <h2 class="text-xl font-semibold mb-4">{{ t('theme.select_theme') }}</h2>
+                <p class="text-base-content/70 mb-4">{{ t('theme.description') }}</p>
 
-        <transition name="tab-switch" mode="out-in">
-            <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6">
-                    <h2 class="text-xl font-semibold mb-4">{{ t('theme.select_theme') }}</h2>
-                    <p class="text-base-content/70 mb-4">{{ t('theme.description') }}</p>
+                <div class="flex flex-col gap-4">
+                    <button v-for="theme in themes" :key="theme" @click="changeTheme(theme)"
+                        class="btn border flex items-center justify-between px-6 py-3" :class="{
+                            'border-primary/50 bg-primary/10': selectedTheme === theme,
+                            'border-base-content/10': selectedTheme !== theme
+                        }">
+                        <div class="flex items-center gap-2">
+                            <Sun v-if="theme === 'light'" class="w-5 h-5 text-amber-400" />
+                            <Moon v-else class="w-5 h-5 text-indigo-400" />
+                            <span class="font-medium capitalize">{{ t(`theme.${theme}`) }}</span>
+                        </div>
+                        <div v-if="selectedTheme === theme" class="badge badge-primary">
+                            {{ t('theme.selected') }}
+                        </div>
+                    </button>
+                </div>
+            </div>
 
-                    <div class="flex flex-col gap-4">
-                        <button v-for="theme in themes" :key="theme" @click="changeTheme(theme)"
-                            class="btn border flex items-center justify-between px-6 py-3" :class="{
-                                'border-primary/50 bg-primary/10': selectedTheme === theme,
-                                'border-base-content/10': selectedTheme !== theme
-                            }">
-                            <div class="flex items-center gap-2">
-                                <Sun v-if="theme === 'light'" class="w-5 h-5 text-amber-400" />
-                                <Moon v-else class="w-5 h-5 text-indigo-400" />
-                                <span class="font-medium capitalize">{{ t(`theme.${theme}`) }}</span>
+            <div class="lg:col-span-8">
+                <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
+                    <div class="card-body">
+                        <h2 class="card-title flex items-center gap-2">
+                            <LayoutPanelLeft class="w-5 h-5 text-primary" />
+                            {{ t('theme.card_configure_title') }}
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                            <div>
+                                <div class="space-y-6">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium flex items-center gap-1">
+                                                <Radius class="w-4 h-4" />
+                                                {{ t('theme.card_radius') }}
+                                            </label>
+                                            <span class="text-xs text-base-content/70">
+                                                {{ getRadiusLabel(radiusIndex) }}
+                                            </span>
+                                        </div>
+                                        <AnimatedSlider v-model="radiusIndex" :min="0" :max="radiusOptions.length - 1"
+                                            @update:modelValue="handleRadiusChange" />
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium flex items-center gap-1">
+                                                <Square class="w-4 h-4" />
+                                                {{ t('theme.card_shadow_label') }}
+                                            </label>
+                                            <span class="text-xs text-base-content/70">
+                                                {{ getShadowLabel(shadowIndex) }}
+                                            </span>
+                                        </div>
+                                        <AnimatedSlider v-model="shadowIndex" :min="0" :max="shadowOptions.length - 1"
+                                            @update:modelValue="handleShadowChange" />
+                                    </div>
+
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium flex items-center gap-1">
+                                                <GripVertical class="w-4 h-4" />
+                                                {{ t('theme.card_padding_label') }}
+                                            </label>
+                                            <span class="text-xs text-base-content/70">
+                                                {{ getPaddingLabel(paddingIndex) }}
+                                            </span>
+                                        </div>
+                                        <AnimatedSlider v-model="paddingIndex" :min="0" :max="paddingOptions.length - 1"
+                                            @update:modelValue="handlePaddingChange" />
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm font-medium flex items-center gap-1">
+                                                <Radius class="w-4 h-4" />
+                                                {{ t('theme.global_radius') }}
+                                            </label>
+                                            <span class="text-xs text-base-content/70">
+                                                {{ getRadiusLabel(globalRadiusIndex) }}
+                                            </span>
+                                        </div>
+                                        <AnimatedSlider v-model="globalRadiusIndex" :min="0"
+                                            :max="radiusOptions.length - 1"
+                                            @update:modelValue="handleGlobalRadiusChange" class="mb-7" />
+                                    </div>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <div>
+                                        <div class="flex items-center justify-between">
+                                            <label class="text-sm font-medium flex items-center gap-1">
+                                                <Square class="w-4 h-4" />
+                                                {{ t('theme.primary_color_override') }}
+                                            </label>
+                                            <input type="color" class="input input-bordered w-16 h-8 p-0"
+                                                :value="primaryColor"
+                                                @input="handlePrimaryColorChange(($event.target as HTMLInputElement).value)" />
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-sm font-medium flex items-center gap-2">
+                                            <GripVertical class="w-4 h-4" />
+                                            {{ t('theme.remove_animations') }}
+                                        </label>
+                                        <input type="checkbox" class="toggle toggle-primary" v-model="reduceMotion"
+                                            @change="handleReduceMotionChange" />
+                                    </div>
+                                </div>
+
+
+                                <div class="flex gap-2 pt-2">
+                                    <button class="btn btn-outline btn-sm" @click="resetCardStyles">
+                                        <RotateCcw class="w-4 h-4 mr-1" />
+                                        {{ t('theme.reset_button') }}
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" @click="exportPresetToClipboard">
+                                        <ClipboardCopy class="w-4 h-4 mr-1" />
+                                        {{ t('theme.export_preset') }}
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm" @click="importPresetFromClipboard">
+                                        <ClipboardPaste class="w-4 h-4 mr-1" />
+                                        {{ t('theme.import_preset') }}
+                                    </button>
+                                </div>
                             </div>
-                            <div v-if="selectedTheme === theme" class="badge badge-primary">
-                                {{ t('theme.selected') }}
+
+                            <div>
+                                <h3 class="font-medium text-base mb-3">
+                                    {{ t('theme.card_preview') }}
+                                </h3>
+                                <p class="text-sm text-base-content/70 mb-4">
+                                    {{ t('theme.card_preview_desc') }}
+                                </p>
+                                <div class="card-preview">
+                                    <ClientCard :client="demoClient" :is-client-running="() => false"
+                                        :is-client-installing="() => false" :installation-status="new Map()"
+                                        :is-requirements-in-progress="false" :is-favorite="true" />
+                                </div>
                             </div>
-                        </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-8">
-                    <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-                        <div class="card-body">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <div @click="toggleExpertMode" class="cursor-pointer flex items-center justify-between">
                             <h2 class="card-title flex items-center gap-2">
-                                <LayoutPanelLeft class="w-5 h-5 text-primary" />
-                                {{ t('theme.card_configure_title') }}
+                                <Code class="w-5 h-5 text-primary" />
+                                {{ t('theme.expert_css_title') }}
                             </h2>
+                            <button class="btn btn-sm btn-ghost">
+                                <ChevronDown v-if="!showExpertOptions" class="w-5 h-5" />
+                                <ChevronUp v-else class="w-5 h-5" />
+                                {{ showExpertOptions ? t('theme.hide_expert') : t('theme.show_expert') }}
+                            </button>
+                        </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-                                <div>
-                                    <div class="space-y-6">
-                                        <div>
-                                            <div class="flex items-center justify-between mb-2">
-                                                <label class="text-sm font-medium flex items-center gap-1">
-                                                    <Radius class="w-4 h-4" />
-                                                    {{ t('theme.card_radius') }}
-                                                </label>
-                                                <span class="text-xs text-base-content/70">
-                                                    {{ getRadiusLabel(radiusIndex) }}
-                                                </span>
-                                            </div>
-                                            <AnimatedSlider v-model="radiusIndex" :min="0"
-                                                :max="radiusOptions.length - 1"
-                                                @update:modelValue="handleRadiusChange" />
-                                        </div>
-
-                                        <div>
-                                            <div class="flex items-center justify-between mb-2">
-                                                <label class="text-sm font-medium flex items-center gap-1">
-                                                    <Square class="w-4 h-4" />
-                                                    {{ t('theme.card_shadow_label') }}
-                                                </label>
-                                                <span class="text-xs text-base-content/70">
-                                                    {{ getShadowLabel(shadowIndex) }}
-                                                </span>
-                                            </div>
-                                            <AnimatedSlider v-model="shadowIndex" :min="0"
-                                                :max="shadowOptions.length - 1"
-                                                @update:modelValue="handleShadowChange" />
-                                        </div>
-
-                                        <div>
-                                            <div class="flex items-center justify-between mb-2">
-                                                <label class="text-sm font-medium flex items-center gap-1">
-                                                    <GripVertical class="w-4 h-4" />
-                                                    {{ t('theme.card_padding_label') }}
-                                                </label>
-                                                <span class="text-xs text-base-content/70">
-                                                    {{ getPaddingLabel(paddingIndex) }}
-                                                </span>
-                                            </div>
-                                            <AnimatedSlider v-model="paddingIndex" :min="0"
-                                                :max="paddingOptions.length - 1"
-                                                @update:modelValue="handlePaddingChange" />
-                                        </div>
-
-                                        <button class="btn btn-outline btn-sm" @click="resetCardStyles">
-                                            <RotateCcw class="w-4 h-4 mr-1" />
-                                            {{ t('theme.reset_button') }}
-                                        </button>
+                        <transition name="expert-fade" @before-enter="expertAnimationActive = true"
+                            @after-leave="expertAnimationActive = false">
+                            <div v-if="showExpertOptions" class="mt-4">
+                                <div class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
+                                    <div class="flex items-start gap-2">
+                                        <HelpCircle class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                                        <p class="text-sm text-warning">
+                                            {{ t('theme.expert_warning') }}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <h3 class="font-medium text-base mb-3">
-                                        {{ t('theme.card_preview') }}
-                                    </h3>
-                                    <p class="text-sm text-base-content/70 mb-4">
-                                        {{ t('theme.card_preview_desc') }}
-                                    </p>
-                                    <div class="card-preview">
-                                        <ClientCard :client="demoClient" :is-client-running="() => false"
-                                            :is-client-installing="() => false" :installation-status="new Map()"
-                                            :is-requirements-in-progress="false" :is-favorite="true" />
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" class="checkbox" v-model="enableCustomCSS"
+                                            @change="handleEnableCustomCSS(($event.target as HTMLInputElement)?.checked ?? false)" />
+                                        <span>{{ t('theme.enable_custom_css') }}</span>
+                                    </label>
+                                </div>
+                                <div class="flex flex-col gap-2 mb-4">
+                                    <label class="font-medium mb-1">{{ t('theme.available_classes_label') }}</label>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span
+                                            class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
+                                            :data-tip="t('theme.tooltip_client_card')"
+                                            @click="addExample('.client-card')">
+                                            client-card
+                                        </span>
+                                        <span
+                                            class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
+                                            :data-tip="t('theme.tooltip_sidebar_btn')"
+                                            @click="addExample('.sidebar-btn')">
+                                            sidebar-btn
+                                        </span>
+                                        <span
+                                            class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
+                                            :data-tip="t('theme.tooltip_launch_download_btn')"
+                                            @click="addExample('.launch-btn, .download-btn')">
+                                            download-btn | launch-btn
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                                    <div>
+                                        <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
+                                        }}</label>
+                                        <VueMonacoEditor v-model:value="customCSS" language="css"
+                                            :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
+                                                readOnly: !enableCustomCSS,
+                                                minimap: { enabled: false },
+                                                fontSize: 14,
+                                                lineNumbers: 'on',
+                                                wordWrap: 'on',
+                                                automaticLayout: true,
+                                                scrollBeyondLastLine: false
+                                            }"
+                                            style="height: 300px; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);" />
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 mt-4">
+                                    <button class="btn btn-primary btn-sm flex items-center gap-2"
+                                        @click="openExportModal">
+                                        <ClipboardCopy class="w-4 h-4" />
+                                        {{ t('theme.export_css_btn') }}
+                                    </button>
+                                    <button class="btn btn-secondary btn-sm flex items-center gap-2"
+                                        @click="openImportModal">
+                                        <ClipboardPaste class="w-4 h-4" />
+                                        {{ t('theme.import_css_btn') }}
+                                    </button>
+                                </div>
+                                <div class="mt-6">
+                                    <h3 class="font-medium text-sm mb-3">{{ t('theme.css_examples_title') }}</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div v-for="(example, index) in cssExamples" :key="index"
+                                            class="card shadow-md border border-base-300">
+                                            <div class="card-body p-4">
+                                                <h4 class="card-title text-sm">{{ example.title }}</h4>
+                                                <pre
+                                                    class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"><code>{{ example.code }}</code></pre>
+                                                <button @click="insertExample(example.code)"
+                                                    class="btn btn-xs btn-primary mt-2" :disabled="!enableCustomCSS">
+                                                    <ClipboardPaste class="w-4 h-4" />
+                                                    {{ t('theme.insert_example') }}
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="card bg-base-200 shadow-md border border-base-300">
-                        <div class="card-body">
-                            <div @click="toggleExpertMode" class="cursor-pointer flex items-center justify-between">
-                                <h2 class="card-title flex items-center gap-2">
-                                    <Code class="w-5 h-5 text-primary" />
-                                    {{ t('theme.expert_css_title') }}
-                                </h2>
-                                <button class="btn btn-sm btn-ghost">
-                                    <ChevronDown v-if="!showExpertOptions" class="w-5 h-5" />
-                                    <ChevronUp v-else class="w-5 h-5" />
-                                    {{ showExpertOptions ? t('theme.hide_expert') : t('theme.show_expert') }}
-                                </button>
-                            </div>
-
-                            <transition name="expert-fade" @before-enter="expertAnimationActive = true"
-                                @after-leave="expertAnimationActive = false">
-                                <div v-if="showExpertOptions" class="mt-4">
-                                    <div class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
-                                        <div class="flex items-start gap-2">
-                                            <HelpCircle class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
-                                            <p class="text-sm text-warning">
-                                                {{ t('theme.expert_warning') }}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center justify-between mb-2">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox" class="checkbox" v-model="enableCustomCSS"
-                                                @change="handleEnableCustomCSS(($event.target as HTMLInputElement)?.checked ?? false)" />
-                                            <span>{{ t('theme.enable_custom_css') }}</span>
-                                        </label>
-                                    </div>
-                                    <div class="flex flex-col gap-2 mb-4">
-                                        <label class="font-medium mb-1">{{ t('theme.available_classes_label') }}</label>
-                                        <div class="flex flex-wrap gap-2">
-                                            <span
-                                                class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                                :data-tip="t('theme.tooltip_client_card')"
-                                                @click="addExample('.client-card')">
-                                                client-card
-                                            </span>
-                                            <span
-                                                class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                                :data-tip="t('theme.tooltip_sidebar_btn')"
-                                                @click="addExample('.sidebar-btn')">
-                                                sidebar-btn
-                                            </span>
-                                            <span
-                                                class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                                :data-tip="t('theme.tooltip_launch_download_btn')"
-                                                @click="addExample('.launch-btn, .download-btn')">
-                                                download-btn | launch-btn
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                                        <div>
-                                            <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                            }}</label>
-                                            <VueMonacoEditor v-model:value="customCSS" language="css"
-                                                :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
-                                                    readOnly: !enableCustomCSS,
-                                                    minimap: { enabled: false },
-                                                    fontSize: 14,
-                                                    lineNumbers: 'on',
-                                                    wordWrap: 'on',
-                                                    automaticLayout: true,
-                                                    scrollBeyondLastLine: false
-                                                }"
-                                                style="height: 300px; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);" />
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2 mt-4">
-                                        <button class="btn btn-primary btn-sm flex items-center gap-2"
-                                            @click="openExportModal">
-                                            <ClipboardCopy class="w-4 h-4" />
-                                            {{ t('theme.export_css_btn') }}
-                                        </button>
-                                        <button class="btn btn-secondary btn-sm flex items-center gap-2"
-                                            @click="openImportModal">
-                                            <ClipboardPaste class="w-4 h-4" />
-                                            {{ t('theme.import_css_btn') }}
-                                        </button>
-                                    </div>
-                                    <div class="mt-6">
-                                        <h3 class="font-medium text-sm mb-3">{{ t('theme.css_examples_title') }}</h3>
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div v-for="(example, index) in cssExamples" :key="index"
-                                                class="card shadow-md border border-base-300">
-                                                <div class="card-body p-4">
-                                                    <h4 class="card-title text-sm">{{ example.title }}</h4>
-                                                    <pre
-                                                        class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"><code>{{ example.code }}</code></pre>
-                                                    <button @click="insertExample(example.code)"
-                                                        class="btn btn-xs btn-primary mt-2"
-                                                        :disabled="!enableCustomCSS">
-                                                        <ClipboardPaste class="w-4 h-4" />
-                                                        {{ t('theme.insert_example') }}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
+                        </transition>
                     </div>
                 </div>
             </div>
-        </transition>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Palette, ClipboardCopy, ClipboardPaste } from 'lucide-vue-next';
+import { ClipboardCopy, ClipboardPaste } from 'lucide-vue-next';
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../services/toastService';
 import { themeService } from '../services/themeService';
@@ -364,6 +399,10 @@ const radiusIndex = ref(findOptionIndex(radiusOptions, themeService.settings.bor
 const shadowIndex = ref(findOptionIndex(shadowOptions, themeService.settings.shadow, 2));
 const paddingIndex = ref(findOptionIndex(paddingOptions, themeService.settings.padding, 1));
 
+const globalRadiusIndex = ref(findOptionIndex(radiusOptions, themeService.settings.globalRadius, 2));
+const primaryColor = ref(themeService.settings.primaryColorOverride || '#000000');
+const reduceMotion = ref<boolean>(themeService.settings.reduceMotion);
+
 const changeTheme = async (theme: string) => {
     try {
         selectedTheme.value = theme;
@@ -411,6 +450,57 @@ const handlePaddingChange = () => {
     themeService.updateCardSettings({
         padding: paddingOptions[index].value
     });
+};
+
+const handleGlobalRadiusChange = () => {
+    const idx = globalRadiusIndex.value >= 0 && globalRadiusIndex.value < radiusOptions.length ? globalRadiusIndex.value : 2;
+    themeService.updateCardSettings({ globalRadius: radiusOptions[idx].value });
+};
+
+const handlePrimaryColorChange = (color: string) => {
+    primaryColor.value = color;
+    themeService.updateCardSettings({ primaryColorOverride: color });
+};
+
+const handleReduceMotionChange = () => {
+    themeService.updateCardSettings({ reduceMotion: !!reduceMotion.value });
+};
+
+const exportPresetToClipboard = async () => {
+    try {
+        const json = themeService.exportPreset();
+        await navigator.clipboard.writeText(json);
+        addToast(t('theme.export_success') || 'Preset copied to clipboard', 'success');
+    } catch (e) {
+        addToast(t('theme.export_failed') || 'Failed to export preset', 'error');
+    }
+};
+
+const importPresetFromClipboard = async () => {
+    try {
+        const txt = await navigator.clipboard.readText();
+        if (!txt || txt.trim().length === 0) {
+            addToast(t('theme.import_empty'), 'warning');
+            return;
+        }
+        if (txt.length > 20000) {
+            addToast(t('theme.import_too_large'), 'error');
+            return;
+        }
+        themeService.importPreset(txt);
+
+        radiusIndex.value = findOptionIndex(radiusOptions, themeService.settings.borderRadius, 2);
+        shadowIndex.value = findOptionIndex(shadowOptions, themeService.settings.shadow, 2);
+        paddingIndex.value = findOptionIndex(paddingOptions, themeService.settings.padding, 1);
+        globalRadiusIndex.value = findOptionIndex(radiusOptions, themeService.settings.globalRadius, 2);
+        primaryColor.value = themeService.settings.primaryColorOverride || '#000000';
+        reduceMotion.value = themeService.settings.reduceMotion;
+
+        addToast(t('theme.import_success'), 'success');
+    } catch (e) {
+        console.error('Import preset error:', e);
+        addToast(t('theme.import_invalid'), 'error');
+    }
 };
 
 const toggleExpertMode = () => {
@@ -566,16 +656,5 @@ textarea.textarea-bordered {
     font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
     line-height: 1.5;
     tab-size: 2;
-}
-
-.tab-switch-enter-active,
-.tab-switch-leave-active {
-    transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.tab-switch-enter-from,
-.tab-switch-leave-to {
-    opacity: 0;
-    transform: translateY(10px);
 }
 </style>

@@ -287,4 +287,29 @@ html[data-theme="light"] .customization-light {
 html[data-theme="light"] .customization-light-selected {
     filter: invert(0);
 }
+
+.sidebar-btn,
+.btn-square.sidebar-btn,
+.btn-square.sidebar-btn>* {
+    border-radius: var(--radius-box, 0.5rem) !important;
+    overflow: visible !important;
+}
+
+.sidebar-btn img,
+.sidebar-btn .Vue3Lottie,
+.sidebar-btn svg {
+    border-radius: inherit !important;
+}
+
+.sidebar-btn {
+    will-change: transform, box-shadow;
+}
+
+html[data-reduce-motion='true'] .sidebar-btn,
+html[data-reduce-motion='true'] .btn-square.sidebar-btn {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
 </style>
