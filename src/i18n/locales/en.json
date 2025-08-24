@@ -462,7 +462,9 @@
     "export_preset": "Export preset",
     "import_preset": "Import preset",
     "import_empty": "Clipboard is empty",
-    "import_too_large": "Preset too large"
+    "import_too_large": "Preset too large",
+    "export_success": "Preset copied to clipboard",
+    "export_failed": "Failed to export preset"
   },
   "logs": {
     "copy_logs": "Copy logs",

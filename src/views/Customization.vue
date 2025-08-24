@@ -470,9 +470,9 @@ const exportPresetToClipboard = async () => {
     try {
         const json = themeService.exportPreset();
         await navigator.clipboard.writeText(json);
-        addToast(t('theme.export_success') || 'Preset copied to clipboard', 'success');
+        addToast(t('theme.export_success'), 'success');
     } catch (e) {
-        addToast(t('theme.export_failed') || 'Failed to export preset', 'error');
+        addToast(t('theme.export_failed'), 'error');
     }
 };
 
