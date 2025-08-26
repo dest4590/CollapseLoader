@@ -748,11 +748,11 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    console.log('App unmounting, stopping enhanced systems...');
+    console.log('App unmounting, stopping systems...');
     stopStatusSync();
     updaterService.stopPeriodicCheck();
     window.removeEventListener('beforeunload', () => { });
-    console.log('Enhanced status sync stopped');
+    console.log('Status sync stopped');
 });
 </script>
 
@@ -813,6 +813,12 @@ onUnmounted(() => {
     <RegisterPromptModal v-model="showRegistrationPrompt" @register="handleRegisterPrompt"
         @cancel="hideRegistrationPrompt" />
 </template>
+
+<style>
+body {
+    transition: background 0.5s ease;
+}
+</style>
 
 <style scoped>
 #preloader {

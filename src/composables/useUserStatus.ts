@@ -283,7 +283,7 @@ export function useUserStatus() {
             return;
         }
 
-        console.log('Starting enhanced status sync system');
+        console.log('Starting status sync system');
 
         syncStatusToServer(true).catch(error => {
             console.error('Failed to sync status on start:', error);
@@ -291,7 +291,7 @@ export function useUserStatus() {
 
         startPolling();
 
-        console.log('Enhanced status sync system started');
+        console.log('Status sync system started');
     };
 
 
@@ -349,7 +349,7 @@ export function useUserStatus() {
     const initializeStatusSystem = () => {
         checkAuthStatus();
         if (isAuthenticated.value) {
-            console.log('Initializing enhanced status system...');
+            console.log('Initializing status sync system...');
 
             pollingConfig.currentInterval = pollingConfig.baseInterval;
             pollingConfig.consecutiveUnchangedPolls = 0;
@@ -357,7 +357,7 @@ export function useUserStatus() {
             setOnline();
             startStatusSync();
 
-            console.log('Enhanced status system initialized');
+            console.log('Status sync system initialized');
         } else {
             console.log('User not authenticated, skipping status system initialization');
         }

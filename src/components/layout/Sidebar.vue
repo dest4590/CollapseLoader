@@ -33,7 +33,8 @@ const terminalButtonRef = ref<HTMLButtonElement | null>(null);
 
 const isAdmin = computed(() => adminStatus.value?.is_admin || false);
 
-const { onlineFriendsCount } = useFriends();
+const { onlineFriendsCount, friendRequests } = useFriends();
+const incomingRequestsCount = computed(() => (friendRequests.value?.received?.length) || 0);
 
 let homeClickCount = 0;
 const homeClickTimeout = ref<number | null>(null);
@@ -137,6 +138,12 @@ onUnmounted(() => {
                     <span v-if="onlineFriendsCount > 0"
                         class="absolute -top-1 -right-1 bg-success text-success-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
                         {{ onlineFriendsCount }}
+                    </span>
+
+                    <!-- new incoming friend requests badge -->
+                    <span v-if="incomingRequestsCount > 0"
+                        class="absolute -bottom-1 -right-1 bg-info text-info-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
+                        {{ incomingRequestsCount }}
                     </span>
                 </button>
             </div>
