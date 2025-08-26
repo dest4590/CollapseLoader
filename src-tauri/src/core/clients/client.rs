@@ -373,11 +373,11 @@ impl Client {
             let agent_overlay_folder = DATA.root_dir.join("agent_overlay");
 
             let classpath = format!(
-                "{}{}*;{};{}",
+                "{};{}{}*;{}",
+                client_jar_path.display(),
                 libraries_path.display(),
                 std::path::MAIN_SEPARATOR,
                 agent_overlay_folder.display(),
-                client_jar_path.display(),
             );
 
             let java_executable = DATA
