@@ -454,8 +454,8 @@
     "copied": "Скопировано!",
     "copy_failed": "Не удалось скопировать",
     "import": "Импортировать",
-    "import_success": "CSS успешно импортирован!",
-    "import_invalid": "Некорректный или опасный CSS. Импорт не выполнен.",
+    "import_success": "Пресет успешно импортирован!",
+    "import_invalid": "Некорректный пресет. Импорт не выполнен.",
     "global_radius": "Глобальный радиус углов",
     "primary_color_override": "Основной цвет",
     "remove_animations": "Убрать все анимации",
@@ -464,7 +464,31 @@
     "import_empty": "Буфер обмена пуст",
     "import_too_large": "Пресет слишком большой",
     "export_success": "Пресет скопирован в буфер обмена",
-    "export_failed": "Не удалось экспортировать пресет"
+    "export_failed": "Не удалось экспортировать пресет",
+    "colors": "Цвета",
+    "base_colors": "Базовые цвета",
+    "base100": "База 100",
+    "base200": "База 200",
+    "base300": "База 300",
+    "base_content": "Цвет контента (база)",
+    "primary_secondary_accent": "Основной / Вторичный / Акцент",
+    "primary_content": "Цвет основного текста",
+    "secondary": "Вторичный",
+    "secondary_content": "Цвет вторичного текста",
+    "accent": "Акцент",
+    "accent_content": "Цвет акцента",
+    "semantic_colors": "Семантические цвета",
+    "neutral": "Нейтральный",
+    "neutral_content": "Цвет нейтрального текста",
+    "info": "Информация",
+    "info_content": "Цвет информации",
+    "success": "Успех",
+    "success_content": "Цвет успеха",
+    "warning": "Предупреждение",
+    "warning_content": "Цвет предупреждения",
+    "error": "Ошибка",
+    "error_content": "Цвет ошибки",
+    "preset": "Пресет"
   },
   "logs": {
     "copy_logs": "Копировать логи",
@@ -767,6 +791,11 @@
     "success": {
       "userStatusChanged": "Статус пользователя {username} успешно изменен.",
       "userLoggedOut": "Пользователь {username} принудительно выведен из системы."
+    },
+    "health": {
+      "title": "Статус системы",
+      "responseTime": "Ответ (мс):",
+      "detailed": "Детально"
     }
   },
   "discord": {

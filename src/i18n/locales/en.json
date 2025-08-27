@@ -454,8 +454,8 @@
     "copied": "Copied!",
     "copy_failed": "Failed to copy",
     "import": "Import",
-    "import_success": "CSS imported successfully!",
-    "import_invalid": "Invalid or unsafe CSS. Import failed.",
+    "import_success": "Preset imported successfully!",
+    "import_invalid": "Invalid preset. Import failed.",
     "global_radius": "Global UI Radius",
     "primary_color_override": "Primary color",
     "remove_animations": "Remove all animations",
@@ -464,7 +464,31 @@
     "import_empty": "Clipboard is empty",
     "import_too_large": "Preset too large",
     "export_success": "Preset copied to clipboard",
-    "export_failed": "Failed to export preset"
+    "export_failed": "Failed to export preset",
+    "colors": "Colors",
+    "base_colors": "Base Colors",
+    "base100": "Base 100",
+    "base200": "Base 200",
+    "base300": "Base 300",
+    "base_content": "Base content",
+    "primary_secondary_accent": "Primary / Secondary / Accent",
+    "primary_content": "Primary content",
+    "secondary": "Secondary",
+    "secondary_content": "Secondary content",
+    "accent": "Accent",
+    "accent_content": "Accent content",
+    "semantic_colors": "Semantic Colors",
+    "neutral": "Neutral",
+    "neutral_content": "Neutral content",
+    "info": "Info",
+    "info_content": "Info content",
+    "success": "Success",
+    "success_content": "Success content",
+    "warning": "Warning",
+    "warning_content": "Warning content",
+    "error": "Error",
+    "error_content": "Error content",
+    "preset": "Preset"
   },
   "logs": {
     "copy_logs": "Copy logs",
@@ -687,6 +711,12 @@
     "success": {
       "userStatusChanged": "User {username} status changed successfully.",
       "userLoggedOut": "User {username} has been logged out."
+    },
+    "health": {
+      "title": "Status System Health",
+      "responseTime": "Response (ms):",
+      "refresh": "Health",
+      "detailed": "Detailed"
     }
   },
   "toast": {

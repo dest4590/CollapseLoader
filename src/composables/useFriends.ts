@@ -117,7 +117,7 @@ export function useFriends() {
         const startTime = Date.now();
 
         try {
-            console.log('Loading friends data via optimized batch endpoint...');
+            console.log('Loading friends data via batch endpoint...');
 
             const batchData = await apiClient.get('/auth/friends/batch/');
 
@@ -155,7 +155,7 @@ export function useFriends() {
                 startIntelligentStatusUpdates();
             }
 
-            console.log('Friends data loaded successfully via optimized batch endpoint');
+            console.log('Friends data loaded successfully via batch endpoint');
         } catch (error) {
             console.error('Failed to load friends data via batch endpoint:', error);
 

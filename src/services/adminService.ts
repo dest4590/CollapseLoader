@@ -53,6 +53,14 @@ export interface AdminStatusResponse {
     username: string;
 }
 
+export interface AdminHealthResponse {
+    system_health: any;
+    timestamp: string;
+    // only on detailed
+    analytics?: any;
+    recent_status_changes?: any;
+}
+
 class AdminService {
     private getHeaders() {
         const token = localStorage.getItem('authToken');
@@ -61,19 +69,25 @@ class AdminService {
             'Content-Type': 'application/json',
             'Accept-Language': getCurrentLanguage() || 'en'
         };
-    } async checkAdminStatus(): Promise<AdminStatusResponse> {
+    }
+
+    async checkAdminStatus(): Promise<AdminStatusResponse> {
         const response = await apiGet('/auth/admin/check-status/', {
             headers: this.getHeaders(),
         });
 
-        return response.data;
-    } async getDashboardStats(): Promise<AdminStats> {
+        return response?.data ?? response;
+    }
+
+    async getDashboardStats(): Promise<AdminStats> {
         const response = await apiGet('/auth/admin/dashboard/', {
             headers: this.getHeaders(),
         });
 
-        return response.data;
-    } async getUsersList(page: number = 1, pageSize: number = 20, search: string = ''): Promise<AdminUsersResponse> {
+        return response?.data ?? response;
+    }
+
+    async getUsersList(page: number = 1, pageSize: number = 20, search: string = ''): Promise<AdminUsersResponse> {
         const params = new URLSearchParams({
             page: page.toString(),
             page_size: pageSize.toString(),
@@ -87,8 +101,19 @@ class AdminService {
             headers: this.getHeaders(),
         });
 
-        return response.data;
-    } async toggleUserStatus(userId: number): Promise<void> {
+        return response?.data ?? response;
+    }
+
+    async getStatusSystemHealth(includeDetailed: boolean = false): Promise<AdminHealthResponse> {
+        const query = includeDetailed ? '?detailed=true' : '';
+        const response = await apiGet(`/auth/admin/status-health/${query}`, {
+            headers: this.getHeaders(),
+        });
+
+        return response?.data ?? response;
+    }
+
+    async toggleUserStatus(userId: number): Promise<void> {
         await apiPost('/auth/admin/users/toggle-status/',
             { user_id: userId },
             { headers: this.getHeaders() }

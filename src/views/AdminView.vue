@@ -7,10 +7,20 @@
             <div class="flex items-center gap-3">
                 <span class="badge badge-error badge-sm font-bold uppercase">{{
                     $t('admin.role')
-                    }}</span>
+                }}</span>
                 <span class="text-base-content/70 font-medium">{{
                     username
-                    }}</span>
+                }}</span>
+
+                <button class="btn btn-xs btn-outline ml-3" :class="{ 'loading': healthLoading }"
+                    @click="loadStatusHealth()" title="Refresh status system health">
+                    {{ $t('admin.health.refresh') }}
+                </button>
+
+                <label class="ml-2 flex items-center gap-2 text-sm">
+                    <input type="checkbox" v-model="includeDetailed" class="checkbox checkbox-sm" />
+                    <span class="text-base-content/60">{{ $t('admin.health.detailed') }}</span>
+                </label>
             </div>
         </div>
 
@@ -66,7 +76,116 @@
             </div>
         </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300">
+        <div v-if="healthData" class="card bg-base-200 shadow-md border border-base-300 mt-6">
+            <div class="card-body p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-lg font-semibold">{{ $t('admin.health.title') }}</h3>
+                        <p class="text-sm text-base-content/70">{{ healthData.timestamp }}</p>
+                    </div>
+
+                    <div class="text-right">
+                        <span
+                            :class="healthData.system_health?.cache_health?.status === 'healthy' ? 'badge badge-success' : 'badge badge-warning'">
+                            {{ healthData.system_health?.cache_health?.status || 'unknown' }}
+                        </span>
+                        <button class="btn btn-ghost btn-xs ml-2" @click="healthData = null">{{ $t('common.close')
+                        }}</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="p-3 bg-base-100 rounded">
+                        <div class="text-sm text-base-content/70">Online users</div>
+                        <div class="text-2xl font-bold">{{ healthData.system_health?.cache_health?.online_users ?? '-'
+                        }}</div>
+                        <div class="text-xs text-base-content/60 mt-1">{{ $t('admin.health.responseTime') }} {{
+                            healthData.system_health?.cache_health?.response_time_ms ?? '-' }}</div>
+                    </div>
+
+                    <div class="p-3 bg-base-100 rounded">
+                        <div class="text-sm text-base-content/70">Cache coverage</div>
+                        <div class="text-2xl font-bold">{{ formatPercent(healthData.system_health?.cache_coverage) }}
+                        </div>
+                        <div class="text-xs text-base-content/60 mt-1">Hit rate: {{
+                            formatPercent(healthData.system_health?.cache_hit_rate) }}</div>
+                    </div>
+
+                    <div class="p-3 bg-base-100 rounded">
+                        <div class="text-sm text-base-content/70">Totals</div>
+                        <div class="text-2xl font-bold">{{ healthData.system_health?.total_users_with_status ?? '-' }}
+                        </div>
+                        <div class="text-xs text-base-content/60 mt-1">Cached: {{ healthData.system_health?.cached_users
+                            ?? '-' }}</div>
+                    </div>
+                </div>
+
+                <div v-if="healthData.system_health?.cache_health?.connection_pool"
+                    class="mt-4 p-3 bg-base-100 rounded">
+                    <div class="text-sm text-base-content/70">Redis</div>
+                    <div class="text-sm">{{ healthData.system_health.cache_health.connection_pool.host }}:{{
+                        healthData.system_health.cache_health.connection_pool.port }} (db {{
+                            healthData.system_health.cache_health.connection_pool.db }})</div>
+                </div>
+
+                <div v-if="healthData.system_health?.operations_per_metric" class="mt-4">
+                    <div class="text-sm text-base-content/70 mb-2">Key metrics</div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <div v-for="key in ['get_status', 'set_status', 'bulk_get', 'bulk_set', 'cache_hits', 'cache_misses']"
+                            :key="key" class="p-2 bg-base-100 rounded text-sm">
+                            <div class="text-xs text-base-content/60">{{ key }}</div>
+                            <div class="font-medium">{{ healthData.system_health.operations_per_metric[key] ?? '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="healthData.recent_status_changes?.length" class="mt-4">
+                    <div class="text-sm text-base-content/70 mb-2">Recent status changes (latest)</div>
+                    <ul class="max-h-40 overflow-y-auto text-sm space-y-1">
+                        <li v-for="(c, idx) in healthData.recent_status_changes.slice(0, 12)" :key="idx"
+                            class="p-2 bg-base-100 rounded flex justify-between">
+                            <div>
+                                <span class="font-medium">#{{ c.user_id }}</span>
+                                <span class="text-base-content/70 ml-2">{{ c.action }}</span>
+                                <div class="text-xs text-base-content/60">{{ c.timestamp }}</div>
+                            </div>
+                            <div class="text-xs text-right">
+                                <div>{{ c.status?.current_client ?? '-' }}</div>
+                                <div class="text-base-content/60">{{ c.status?.last_seen ?? '' }}</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div v-if="healthData.analytics" class="mt-4">
+                    <div class="text-sm text-base-content/70 mb-2">Analytics (last hour)</div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                        <div class="p-2 bg-base-100 rounded">
+                            <div class="text-xs text-base-content/60">Online users</div>
+                            <div class="font-medium">{{ healthData.analytics.last_hour.current_online_users ?? '-' }}
+                            </div>
+                        </div>
+                        <div class="p-2 bg-base-100 rounded">
+                            <div class="text-xs text-base-content/60">Unique active</div>
+                            <div class="font-medium">{{ healthData.analytics.last_hour.unique_active_users ?? '-' }}
+                            </div>
+                        </div>
+                        <div class="p-2 bg-base-100 rounded">
+                            <div class="text-xs text-base-content/60">Online events</div>
+                            <div class="font-medium">{{ healthData.analytics.last_hour.online_events ?? '-' }}</div>
+                        </div>
+                        <div class="p-2 bg-base-100 rounded">
+                            <div class="text-xs text-base-content/60">Avg changes/user</div>
+                            <div class="font-medium">{{
+                                formatNumber(healthData.analytics.last_hour.avg_changes_per_user) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
             <div class="card-body p-0">
                 <div class="flex justify-between items-center p-6 border-b border-base-300">
                     <h2 class="text-lg font-semibold text-primary-focus">
@@ -143,8 +262,8 @@
                                     <div class="flex gap-2 flex-wrap">
                                         <button v-if="!user.is_staff" @click="toggleUserStatus(user)"
                                             class="btn btn-xs transition-all duration-200" :class="user.is_active
-                                                    ? 'btn-error hover:scale-105'
-                                                    : 'btn-success hover:scale-105'
+                                                ? 'btn-error hover:scale-105'
+                                                : 'btn-success hover:scale-105'
                                                 " :disabled="actionLoading">
                                             {{
                                                 user.is_active
@@ -206,6 +325,8 @@
             </div>
         </div>
 
+
+
         <div v-if="loading" class="flex flex-col items-center justify-center py-16 text-base-content/70">
             <div class="loading loading-spinner loading-lg mb-4"></div>
             <p class="font-medium">{{ $t('common.loading') }}</p>
@@ -220,6 +341,7 @@ import {
     adminService,
     type AdminStats,
     type AdminUser,
+    type AdminHealthResponse,
 } from '../services/adminService';
 import { useToast } from '../services/toastService';
 
@@ -238,6 +360,10 @@ const searchQuery = ref('');
 const loading = ref(false);
 const actionLoading = ref(false);
 const username = ref('');
+
+const healthData = ref<AdminHealthResponse | null>(null);
+const healthLoading = ref(false);
+const includeDetailed = ref(true);
 
 const getUserStatusClass = (user: AdminUser) => {
     if (!user.is_active) return 'inactive';
@@ -342,6 +468,7 @@ const debouncedSearch = () => {
 const checkAdminAccess = async () => {
     try {
         const adminStatus = await adminService.checkAdminStatus();
+
         if (!adminStatus.is_admin) {
             addToast(t('admin.errors.accessDenied'), 'error');
             return false;
@@ -355,10 +482,34 @@ const checkAdminAccess = async () => {
     }
 };
 
+const formatPercent = (v: number | undefined | null) => {
+    if (v === undefined || v === null) return '-';
+    return `${Math.round((v as number) * 1000) / 10}%`;
+};
+
+const formatNumber = (v: number | undefined | null) => {
+    if (v === undefined || v === null) return '-';
+    return Number.isFinite(v) ? Math.round((v as number) * 100) / 100 : v;
+};
+
+const loadStatusHealth = async () => {
+    healthLoading.value = true;
+    try {
+        const resp = await adminService.getStatusSystemHealth(includeDetailed.value);
+        healthData.value = resp as unknown as AdminHealthResponse;
+    } catch (error) {
+        console.error('Failed to load status health:', error);
+        addToast(t('admin.errors.statsLoadFailed'), 'error');
+    } finally {
+        healthLoading.value = false;
+    }
+};
+
 onMounted(async () => {
     const hasAccess = await checkAdminAccess();
     if (hasAccess) {
         await Promise.all([loadDashboardStats(), loadUsers()]);
+        loadStatusHealth().catch(() => { });
     }
 });
 </script>

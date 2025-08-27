@@ -1,5 +1,38 @@
 <template>
     <div class="container mx-auto mt-4">
+        <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
+            <div class="card-body">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <h1 class="card-title text-2xl flex items-center gap-3">
+                        <Save class="w-6 h-6 text-primary" />
+                        {{ t('theme.preset') }}
+                    </h1>
+
+                    <div class="flex flex-wrap items-center gap-2 justify-end">
+                        <div class="flex gap-2">
+                            <button class="btn btn-primary btn-sm flex items-center gap-2"
+                                @click="importPresetFromClipboard">
+                                <ClipboardPaste class="w-4 h-4" />
+                                <span class="hidden sm:inline">{{ t('theme.import_preset') }}</span>
+                            </button>
+
+                            <button class="btn btn-secondary btn-sm flex items-center gap-2"
+                                @click="exportPresetToClipboard">
+                                <ClipboardCopy class="w-4 h-4" />
+                                <span class="hidden sm:inline">{{ t('theme.export_preset') }}</span>
+                            </button>
+
+                            <button class="btn btn-outline btn-sm flex items-center gap-2" @click="resetStyles">
+                                <RotateCcw class="w-4 h-4" />
+                                <span class="hidden sm:inline">{{ t('theme.reset_button') }}</span>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6">
                 <h2 class="text-xl font-semibold mb-4">{{ t('theme.select_theme') }}</h2>
@@ -91,43 +124,13 @@
                                     </div>
                                 </div>
 
-                                <div class="space-y-2">
-                                    <div>
-                                        <div class="flex items-center justify-between">
-                                            <label class="text-sm font-medium flex items-center gap-1">
-                                                <Square class="w-4 h-4" />
-                                                {{ t('theme.primary_color_override') }}
-                                            </label>
-                                            <input type="color" class="input input-bordered w-16 h-8 p-0"
-                                                :value="primaryColor"
-                                                @input="handlePrimaryColorChange(($event.target as HTMLInputElement).value)" />
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center justify-between">
-                                        <label class="text-sm font-medium flex items-center gap-2">
-                                            <GripVertical class="w-4 h-4" />
-                                            {{ t('theme.remove_animations') }}
-                                        </label>
-                                        <input type="checkbox" class="toggle toggle-primary" v-model="reduceMotion"
-                                            @change="handleReduceMotionChange" />
-                                    </div>
-                                </div>
-
-
-                                <div class="flex gap-2 pt-2">
-                                    <button class="btn btn-outline btn-sm" @click="resetCardStyles">
-                                        <RotateCcw class="w-4 h-4 mr-1" />
-                                        {{ t('theme.reset_button') }}
-                                    </button>
-                                    <button class="btn btn-primary btn-sm" @click="exportPresetToClipboard">
-                                        <ClipboardCopy class="w-4 h-4 mr-1" />
-                                        {{ t('theme.export_preset') }}
-                                    </button>
-                                    <button class="btn btn-secondary btn-sm" @click="importPresetFromClipboard">
-                                        <ClipboardPaste class="w-4 h-4 mr-1" />
-                                        {{ t('theme.import_preset') }}
-                                    </button>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-sm font-medium flex items-center gap-2">
+                                        <GripVertical class="w-4 h-4" />
+                                        {{ t('theme.remove_animations') }}
+                                    </label>
+                                    <input type="checkbox" class="toggle toggle-primary" v-model="reduceMotion"
+                                        @change="handleReduceMotionChange" />
                                 </div>
                             </div>
 
@@ -149,6 +152,201 @@
                 </div>
 
                 <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body p-6">
+                        <h2 class="card-title flex items-center gap-3 text-2xl font-bold text-base-content">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01">
+                                </path>
+                            </svg>
+                            {{ t('theme.colors') }}
+                        </h2>
+
+                        <div class="mb-8">
+                            <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('theme.base_colors') }}</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.base100')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="base100"
+                                        @input="handleColorInput('base100', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.base200')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="base200"
+                                        @input="handleColorInput('base200', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.base300')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="base300"
+                                        @input="handleColorInput('base300', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.base_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="baseContent"
+                                        @input="handleColorInput('baseContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <h3 class="text-xl font-semibold mb-4 text-base-content">{{
+                                t('theme.primary_secondary_accent') }}</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.primary_color_override') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="primaryColor"
+                                        @input="handleColorInput('primaryColorOverride', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.primary_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="primaryContent"
+                                        @input="handleColorInput('primaryContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.secondary')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="secondary"
+                                        @input="handleColorInput('secondary', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.secondary_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="secondaryContent"
+                                        @input="handleColorInput('secondaryContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.accent')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="accent"
+                                        @input="handleColorInput('accent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.accent_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="accentContent"
+                                        @input="handleColorInput('accentContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('theme.semantic_colors') }}
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.neutral')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="neutral"
+                                        @input="handleColorInput('neutral', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.neutral_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="neutralContent"
+                                        @input="handleColorInput('neutralContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.info')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="info"
+                                        @input="handleColorInput('info', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.info_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="infoContent"
+                                        @input="handleColorInput('infoContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.success')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="success"
+                                        @input="handleColorInput('success', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.success_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="successContent"
+                                        @input="handleColorInput('successContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.warning')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="warning"
+                                        @input="handleColorInput('warning', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.warning_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="warningContent"
+                                        @input="handleColorInput('warningContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{ t('theme.error')
+                                        }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="error"
+                                        @input="handleColorInput('error', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                                <div class="form-control">
+                                    <label class="label text-sm font-medium text-base-content">{{
+                                        t('theme.error_content') }}</label>
+                                    <input type="color"
+                                        class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                                        :value="errorContent"
+                                        @input="handleColorInput('errorContent', ($event.target as HTMLInputElement).value)" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
                     <div class="card-body">
                         <div @click="toggleExpertMode" class="cursor-pointer flex items-center justify-between">
                             <h2 class="card-title flex items-center gap-2">
@@ -208,7 +406,7 @@
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                        }}</label>
+                                            }}</label>
                                         <VueMonacoEditor v-model:value="customCSS" language="css"
                                             :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
                                                 readOnly: !enableCustomCSS,
@@ -262,9 +460,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, reactive } from 'vue';
+import { ref, onMounted, onUnmounted, watch, reactive, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ClipboardCopy, ClipboardPaste } from 'lucide-vue-next';
+import { ClipboardCopy, ClipboardPaste, Save } from 'lucide-vue-next';
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../services/toastService';
 import { themeService } from '../services/themeService';
@@ -297,17 +495,17 @@ const selectedTheme = ref(document.documentElement.getAttribute('data-theme') ||
 const showExpertOptions = ref(false);
 const expertAnimationActive = ref(false);
 
-const customCSS = ref(themeService.settings.customCSS);
-const enableCustomCSS = ref(themeService.settings.enableCustomCSS);
+const customCSS = ref(themeService.presetSettings.customCSS);
+const enableCustomCSS = ref(themeService.presetSettings.enableCustomCSS);
 
 watch(customCSS, (val) => {
     if (enableCustomCSS.value) {
-        themeService.updateCardSettings({ customCSS: val });
+        themeService.updatePresetSettings({ customCSS: val });
     }
 });
 
 watch(enableCustomCSS, (val) => {
-    themeService.updateCardSettings({ enableCustomCSS: val });
+    themeService.updatePresetSettings({ enableCustomCSS: val });
 });
 
 const demoClient = reactive({
@@ -395,13 +593,104 @@ const findOptionIndex = (options: { value: string }[], value: string | undefined
     return index >= 0 ? index : defaultIndex;
 };
 
-const radiusIndex = ref(findOptionIndex(radiusOptions, themeService.settings.borderRadius, 2));
-const shadowIndex = ref(findOptionIndex(shadowOptions, themeService.settings.shadow, 2));
-const paddingIndex = ref(findOptionIndex(paddingOptions, themeService.settings.padding, 1));
+const radiusIndex = ref(findOptionIndex(radiusOptions, themeService.presetSettings.borderRadius, 2));
+const shadowIndex = ref(findOptionIndex(shadowOptions, themeService.presetSettings.shadow, 2));
+const paddingIndex = ref(findOptionIndex(paddingOptions, themeService.presetSettings.padding, 1));
 
-const globalRadiusIndex = ref(findOptionIndex(radiusOptions, themeService.settings.globalRadius, 2));
-const primaryColor = ref(themeService.settings.primaryColorOverride || '#000000');
-const reduceMotion = ref<boolean>(themeService.settings.reduceMotion);
+const globalRadiusIndex = ref(findOptionIndex(radiusOptions, themeService.presetSettings.globalRadius, 2));
+const primaryColor = ref(themeService.presetSettings.primaryColorOverride || '#000000');
+const reduceMotion = ref<boolean>(themeService.presetSettings.reduceMotion);
+
+const base100 = ref<string>(themeService.presetSettings.base100 || '');
+const base200 = ref<string>(themeService.presetSettings.base200 || '');
+const base300 = ref<string>(themeService.presetSettings.base300 || '');
+const baseContent = ref<string>(themeService.presetSettings.baseContent || '');
+
+const primaryContent = ref<string>(themeService.presetSettings.primaryContent || '');
+const secondary = ref<string>(themeService.presetSettings.secondary || '');
+const secondaryContent = ref<string>(themeService.presetSettings.secondaryContent || '');
+const accent = ref<string>(themeService.presetSettings.accent || '');
+const accentContent = ref<string>(themeService.presetSettings.accentContent || '');
+
+const neutral = ref<string>(themeService.presetSettings.neutral || '');
+const neutralContent = ref<string>(themeService.presetSettings.neutralContent || '');
+const info = ref<string>(themeService.presetSettings.info || '');
+const infoContent = ref<string>(themeService.presetSettings.infoContent || '');
+const success = ref<string>(themeService.presetSettings.success || '');
+const successContent = ref<string>(themeService.presetSettings.successContent || '');
+const warning = ref<string>(themeService.presetSettings.warning || '');
+const warningContent = ref<string>(themeService.presetSettings.warningContent || '');
+const error = ref<string>(themeService.presetSettings.error || '');
+const errorContent = ref<string>(themeService.presetSettings.errorContent || '');
+
+const _colorRefs: Record<string, Ref<string>> = {
+    base100,
+    base200,
+    base300,
+    baseContent,
+    primaryColorOverride: primaryColor,
+    primaryContent,
+    secondary,
+    secondaryContent,
+    accent,
+    accentContent,
+    neutral,
+    neutralContent,
+    info,
+    infoContent,
+    success,
+    successContent,
+    warning,
+    warningContent,
+    error,
+    errorContent
+};
+
+const handleColorInput = (settingKey: string, color: string): void => {
+    const r = _colorRefs[settingKey];
+    if (r) {
+        r.value = color;
+    }
+
+    const payload: Record<string, string | null> = {};
+    payload[settingKey] = color && color.trim().length > 0 ? color : null;
+    themeService.updatePresetSettings(payload);
+};
+
+watch(
+    [
+        base100, base200, base300, baseContent,
+        primaryContent, secondary, secondaryContent, accent, accentContent,
+        neutral, neutralContent, info, infoContent, success, successContent,
+        warning, warningContent, error, errorContent
+    ],
+    () => {
+        themeService.updatePresetSettings({
+            base100: base100.value ? base100.value : null,
+            base200: base200.value ? base200.value : null,
+            base300: base300.value ? base300.value : null,
+            baseContent: baseContent.value ? baseContent.value : null,
+
+            primaryContent: primaryContent.value ? primaryContent.value : null,
+            secondary: secondary.value ? secondary.value : null,
+            secondaryContent: secondaryContent.value ? secondaryContent.value : null,
+            accent: accent.value ? accent.value : null,
+            accentContent: accentContent.value ? accentContent.value : null,
+
+            neutral: neutral.value ? neutral.value : null,
+            neutralContent: neutralContent.value ? neutralContent.value : null,
+            info: info.value ? info.value : null,
+            infoContent: infoContent.value ? infoContent.value : null,
+            success: success.value ? success.value : null,
+            successContent: successContent.value ? successContent.value : null,
+            warning: warning.value ? warning.value : null,
+            warningContent: warningContent.value ? warningContent.value : null,
+            error: error.value ? error.value : null,
+            errorContent: errorContent.value ? errorContent.value : null,
+        });
+    },
+    { deep: false }
+);
 
 const changeTheme = async (theme: string) => {
     try {
@@ -433,37 +722,32 @@ const changeTheme = async (theme: string) => {
 
 const handleRadiusChange = () => {
     const index = radiusIndex.value >= 0 && radiusIndex.value < radiusOptions.length ? radiusIndex.value : 2;
-    themeService.updateCardSettings({
+    themeService.updatePresetSettings({
         borderRadius: radiusOptions[index].value
     });
 };
 
 const handleShadowChange = () => {
     const index = shadowIndex.value >= 0 && shadowIndex.value < shadowOptions.length ? shadowIndex.value : 2;
-    themeService.updateCardSettings({
+    themeService.updatePresetSettings({
         shadow: shadowOptions[index].value
     });
 };
 
 const handlePaddingChange = () => {
     const index = paddingIndex.value >= 0 && paddingIndex.value < paddingOptions.length ? paddingIndex.value : 1;
-    themeService.updateCardSettings({
+    themeService.updatePresetSettings({
         padding: paddingOptions[index].value
     });
 };
 
 const handleGlobalRadiusChange = () => {
     const idx = globalRadiusIndex.value >= 0 && globalRadiusIndex.value < radiusOptions.length ? globalRadiusIndex.value : 2;
-    themeService.updateCardSettings({ globalRadius: radiusOptions[idx].value });
-};
-
-const handlePrimaryColorChange = (color: string) => {
-    primaryColor.value = color;
-    themeService.updateCardSettings({ primaryColorOverride: color });
+    themeService.updatePresetSettings({ globalRadius: radiusOptions[idx].value });
 };
 
 const handleReduceMotionChange = () => {
-    themeService.updateCardSettings({ reduceMotion: !!reduceMotion.value });
+    themeService.updatePresetSettings({ reduceMotion: !!reduceMotion.value });
 };
 
 const exportPresetToClipboard = async () => {
@@ -487,14 +771,15 @@ const importPresetFromClipboard = async () => {
             addToast(t('theme.import_too_large'), 'error');
             return;
         }
+
         themeService.importPreset(txt);
 
-        radiusIndex.value = findOptionIndex(radiusOptions, themeService.settings.borderRadius, 2);
-        shadowIndex.value = findOptionIndex(shadowOptions, themeService.settings.shadow, 2);
-        paddingIndex.value = findOptionIndex(paddingOptions, themeService.settings.padding, 1);
-        globalRadiusIndex.value = findOptionIndex(radiusOptions, themeService.settings.globalRadius, 2);
-        primaryColor.value = themeService.settings.primaryColorOverride || '#000000';
-        reduceMotion.value = themeService.settings.reduceMotion;
+        radiusIndex.value = findOptionIndex(radiusOptions, themeService.presetSettings.borderRadius, 2);
+        shadowIndex.value = findOptionIndex(shadowOptions, themeService.presetSettings.shadow, 2);
+        paddingIndex.value = findOptionIndex(paddingOptions, themeService.presetSettings.padding, 1);
+        globalRadiusIndex.value = findOptionIndex(radiusOptions, themeService.presetSettings.globalRadius, 2);
+        primaryColor.value = themeService.presetSettings.primaryColorOverride || '#000000';
+        reduceMotion.value = themeService.presetSettings.reduceMotion;
 
         addToast(t('theme.import_success'), 'success');
     } catch (e) {
@@ -552,25 +837,50 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 const applyCustomCSS = () => {
-    themeService.updateCardSettings({
+    themeService.updatePresetSettings({
         customCSS: customCSS.value,
         enableCustomCSS: enableCustomCSS.value
     });
 };
 
-const resetCardStyles = () => {
-    themeService.resetCardSettings();
+const resetStyles = () => {
+    themeService.resetPresetSettings();
 
-    const newRadiusIndex = radiusOptions.findIndex(opt => opt.value === themeService.settings.borderRadius);
-    const newShadowIndex = shadowOptions.findIndex(opt => opt.value === themeService.settings.shadow);
-    const newPaddingIndex = paddingOptions.findIndex(opt => opt.value === themeService.settings.padding);
+    const newRadiusIndex = radiusOptions.findIndex(opt => opt.value === themeService.presetSettings.borderRadius);
+    const newShadowIndex = shadowOptions.findIndex(opt => opt.value === themeService.presetSettings.shadow);
+    const newPaddingIndex = paddingOptions.findIndex(opt => opt.value === themeService.presetSettings.padding);
 
     radiusIndex.value = newRadiusIndex >= 0 ? newRadiusIndex : 2;
     shadowIndex.value = newShadowIndex >= 0 ? newShadowIndex : 2;
     paddingIndex.value = newPaddingIndex >= 0 ? newPaddingIndex : 1;
 
-    customCSS.value = themeService.settings.customCSS;
-    enableCustomCSS.value = themeService.settings.enableCustomCSS;
+    customCSS.value = themeService.presetSettings.customCSS;
+    enableCustomCSS.value = themeService.presetSettings.enableCustomCSS;
+
+    base100.value = themeService.presetSettings.base100 || '';
+    base200.value = themeService.presetSettings.base200 || '';
+    base300.value = themeService.presetSettings.base300 || '';
+    baseContent.value = themeService.presetSettings.baseContent || '';
+
+    primaryContent.value = themeService.presetSettings.primaryContent || '';
+    secondary.value = themeService.presetSettings.secondary || '';
+    secondaryContent.value = themeService.presetSettings.secondaryContent || '';
+    accent.value = themeService.presetSettings.accent || '';
+    accentContent.value = themeService.presetSettings.accentContent || '';
+
+    neutral.value = themeService.presetSettings.neutral || '';
+    neutralContent.value = themeService.presetSettings.neutralContent || '';
+    info.value = themeService.presetSettings.info || '';
+    infoContent.value = themeService.presetSettings.infoContent || '';
+    success.value = themeService.presetSettings.success || '';
+    successContent.value = themeService.presetSettings.successContent || '';
+    warning.value = themeService.presetSettings.warning || '';
+    warningContent.value = themeService.presetSettings.warningContent || '';
+    error.value = themeService.presetSettings.error || '';
+    errorContent.value = themeService.presetSettings.errorContent || '';
+
+    primaryColor.value = themeService.presetSettings.primaryColorOverride || '#000000';
+    reduceMotion.value = !!themeService.presetSettings.reduceMotion;
 };
 
 const openExportModal = async () => {
