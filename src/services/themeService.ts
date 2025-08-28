@@ -139,7 +139,7 @@ const applyPreset = () => {
     }
 };
 
-const loadCardSettings = () => {
+const loadSettings = () => {
     try {
         const savedSettings = localStorage.getItem('presetSettings');
         if (savedSettings) {
@@ -256,7 +256,7 @@ const importPreset = (presetJSON: string): void => {
     }
 };
 
-loadCardSettings();
+loadSettings();
 
 watchEffect(() => {
     applyPreset();
@@ -266,7 +266,7 @@ export const themeService = {
     presetSettings,
     updatePresetSettings,
     resetPresetSettings,
-    loadCardSettings,
+    loadSettings,
     saveCardSettings,
     exportPreset,
     importPreset

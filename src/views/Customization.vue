@@ -33,9 +33,18 @@
             </div>
         </div>
 
+        <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
+            <div class="card-body">
+                <PresetManager />
+            </div>
+        </div>
+
         <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6">
-                <h2 class="text-xl font-semibold mb-4">{{ t('theme.select_theme') }}</h2>
+                <h2 class="card-title flex items-center gap-2">
+                    <SunMoon class="w-5 h-5 text-primary" />
+                    {{ t('theme.select_theme') }}
+                </h2>
                 <p class="text-base-content/70 mb-4">{{ t('theme.description') }}</p>
 
                 <div class="flex flex-col gap-4">
@@ -153,7 +162,7 @@
 
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body p-6">
-                        <h2 class="card-title flex items-center gap-3 text-2xl font-bold text-base-content">
+                        <h2 class="card-title flex items-center gap-2">
                             <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -168,7 +177,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.base100')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="base100"
@@ -176,7 +185,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.base200')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="base200"
@@ -184,7 +193,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.base300')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="base300"
@@ -223,7 +232,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.secondary')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="secondary"
@@ -239,7 +248,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.accent')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="accent"
@@ -262,7 +271,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.neutral')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="neutral"
@@ -278,7 +287,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.info')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="info"
@@ -294,7 +303,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.success')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="success"
@@ -310,7 +319,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.warning')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="warning"
@@ -326,7 +335,7 @@
                                 </div>
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{ t('theme.error')
-                                        }}</label>
+                                    }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="error"
@@ -406,7 +415,7 @@
                                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                                     <div>
                                         <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                            }}</label>
+                                        }}</label>
                                         <VueMonacoEditor v-model:value="customCSS" language="css"
                                             :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
                                                 readOnly: !enableCustomCSS,
@@ -462,12 +471,13 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, reactive, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ClipboardCopy, ClipboardPaste, Save } from 'lucide-vue-next';
+import { ClipboardCopy, ClipboardPaste, Save, SunMoon } from 'lucide-vue-next';
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../services/toastService';
 import { themeService } from '../services/themeService';
 import ClientCard from '../components/features/clients/ClientCard.vue';
 import AnimatedSlider from '../components/ui/AnimatedSlider.vue';
+import PresetManager from '../components/features/PresetManager.vue';
 import {
     Moon,
     Sun,

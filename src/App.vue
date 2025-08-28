@@ -208,7 +208,7 @@ const applyThemeOnStartup = async () => {
             }
         }
 
-        themeService.loadCardSettings();
+        themeService.loadSettings();
     } catch (error) {
         console.error('Failed to apply theme on startup:', error);
         const localTheme = localStorage.getItem('theme');
@@ -220,7 +220,7 @@ const applyThemeOnStartup = async () => {
             currentTheme.value = 'dark';
         }
 
-        themeService.loadCardSettings();
+        themeService.loadSettings();
     }
 };
 
@@ -791,7 +791,7 @@ onUnmounted(() => {
 
     <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu" />
 
-    <div class="flex animate-fadeIn h-screen" v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
+    <div class="flex h-screen" v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
         <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
             :is-online="isOnline" :is-authenticated="isAuthenticated" />
         <main class="ml-20 w-full p-6 bg-base-200 min-h-screen overflow-scroll overflow-x-hidden">
@@ -813,12 +813,6 @@ onUnmounted(() => {
     <RegisterPromptModal v-model="showRegistrationPrompt" @register="handleRegisterPrompt"
         @cancel="hideRegistrationPrompt" />
 </template>
-
-<style>
-body {
-    transition: background 0.5s ease;
-}
-</style>
 
 <style scoped>
 #preloader {

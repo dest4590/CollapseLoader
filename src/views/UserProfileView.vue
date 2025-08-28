@@ -40,7 +40,7 @@
                                     <div class="w-3 h-3 bg-success rounded-full"></div>
                                     <span class="text-success font-medium">{{
                                         t('userProfile.online')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div v-else-if="userProfile.status.last_seen" class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
@@ -55,7 +55,7 @@
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
                                     <span class="text-base-content/70">{{
                                         t('userProfile.offline')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -73,19 +73,19 @@
                             <span class="text-base-content/70">{{ t('userProfile.username') }}:</span>
                             <span class="font-medium">{{
                                 displayUsername
-                            }}</span>
+                                }}</span>
                         </div>
                         <div v-if="userProfile.nickname" class="flex justify-between items-center">
                             <span class="text-base-content/70">{{ t('userProfile.nickname') }}:</span>
                             <span class="font-medium">{{
                                 displayNickname
-                            }}</span>
+                                }}</span>
                         </div>
                         <div v-if="userProfile.member_since" class="flex justify-between items-center">
                             <span class="text-base-content/70">{{ t('userProfile.member_since') }}:</span>
                             <span class="font-medium">{{
                                 formatDate(userProfile.member_since)
-                            }}</span>
+                                }}</span>
                         </div>
                     </div>
                 </div>
@@ -446,13 +446,13 @@ const formatLastSeen = (lastSeen: string): string => {
 const formatDate = (dateString: string): string => {
     try {
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Unknown';
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-
+        const year = String(date.getFullYear());
         return `${day}/${month}/${year}`;
-    } catch (e) {
-        return t('userProfile.unknown');
+    } catch {
+        return 'Unknown';
     }
 };
 
