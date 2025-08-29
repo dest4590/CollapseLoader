@@ -93,6 +93,19 @@
       "cancel": "Отмена",
       "nickname_taken": "Этот никнейм уже занят"
     },
+    "social_links": {
+      "title": "Социальные ссылки",
+      "add_title": "Добавить ссылку",
+      "edit_title": "Редактировать ссылку",
+      "fill_fields": "Пожалуйста, выберите платформу и введите корректную ссылку.",
+      "added": "Ссылка добавлена.",
+      "add_failed": "Не удалось добавить ссылку.",
+      "load_failed": "Не удалось загрузить ссылки.",
+      "deleted": "Ссылка удалена.",
+      "delete_failed": "Не удалось удалить ссылку.",
+      "updated": "Ссылка обновлена.",
+      "update_failed": "Не удалось обновить ссылку."
+    },
     "edit_account": {
       "username_label": "Имя пользователя",
       "tags_label": "Теги (через запятую)",
@@ -245,7 +258,10 @@
     "profile_load_failed": "Не удалось загрузить профиль пользователя.",
     "user_info_load_failed": "Не удалось загрузить информацию пользователя.",
     "using_cached_data": "Вы в офлайне - изменения статуса отключено",
-    "logout_confirm_title": "Подтвердить выход"
+    "logout_confirm_title": "Подтвердить выход",
+    "social_links": "Социальные ссылки",
+    "social_links_description": "Управляйте ссылками на ваши социальные профили",
+    "no_social_links": "Ссылки не добавлены"
   },
   "appLogs": {
     "autoScroll": "Автоматическая прокрутка",
@@ -309,7 +325,9 @@
     "ok": "Окей",
     "close": "Закрыть",
     "save": "Сохранить",
-    "browse": "Выбрать"
+    "browse": "Выбрать",
+    "edit": "Редактировать",
+    "add": "Добавить"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -454,12 +472,136 @@
     "copied": "Скопировано!",
     "copy_failed": "Не удалось скопировать",
     "import": "Импортировать",
-    "import_success": "CSS успешно импортирован!",
-    "import_invalid": "Некорректный или опасный CSS. Импорт не выполнен."
+    "import_success": "Пресет успешно импортирован!",
+    "import_invalid": "Некорректный пресет. Импорт не выполнен.",
+    "global_radius": "Глобальный радиус углов",
+    "primary_color_override": "Основной цвет",
+    "remove_animations": "Убрать все анимации",
+    "export_preset": "Экспорт пресета",
+    "import_preset": "Импортировать пресет",
+    "import_empty": "Буфер обмена пуст",
+    "import_too_large": "Пресет слишком большой",
+    "export_success": "Пресет скопирован в буфер обмена",
+    "export_failed": "Не удалось экспортировать пресет",
+    "colors": "Цвета",
+    "base_colors": "Базовые цвета",
+    "base100": "База 100",
+    "base200": "База 200",
+    "base300": "База 300",
+    "base_content": "Цвет контента (база)",
+    "primary_secondary_accent": "Основной / Вторичный / Акцент",
+    "primary_content": "Цвет основного текста",
+    "secondary": "Вторичный",
+    "secondary_content": "Цвет вторичного текста",
+    "accent": "Акцент",
+    "accent_content": "Цвет акцента",
+    "semantic_colors": "Семантические цвета",
+    "neutral": "Нейтральный",
+    "neutral_content": "Цвет нейтрального текста",
+    "info": "Информация",
+    "info_content": "Цвет информации",
+    "success": "Успех",
+    "success_content": "Цвет успеха",
+    "warning": "Предупреждение",
+    "warning_content": "Цвет предупреждения",
+    "error": "Ошибка",
+    "error_content": "Цвет ошибки",
+    "preset": "Пресет",
+    "presets": {
+      "title": "Пресеты тем",
+      "description": "Сохраняйте и управляйте пресетами настроек",
+      "save_current": "Сохранить текущие",
+      "import": "Импорт",
+      "create_first_preset": "Создать первый пресет",
+      "no_presets_title": "Пресетов пока нет",
+      "no_presets_description": "Создайте свой первый пресет, сохранив текущие настройки",
+      "loading": "Загрузка пресетов...",
+      "apply_preset": "Применить пресет",
+      "edit": "Редактировать",
+      "duplicate": "Дублировать",
+      "export": "Экспорт",
+      "delete": "Удалить",
+      "apply": "Применить",
+      "created": "Создан {date}",
+      "create_modal": {
+        "title_create": "Создать новый пресет",
+        "title_edit": "Редактировать пресет",
+        "name_label": "Название пресета",
+        "name_required": "Название пресета обязательно",
+        "name_too_long": "Название пресета должно быть не более 50 символов",
+        "name_placeholder": "Введите название пресета",
+        "description_label": "Описание",
+        "description_placeholder": "Дополнительное описание пресета",
+        "source_info": "Источник пресета",
+        "source_create": "Будут сохранены текущие настройки",
+        "source_edit": "Редактирование существующего пресета",
+        "create_button": "Создать пресет",
+        "update_button": "Обновить пресет",
+        "cancel": "Отмена"
+      },
+      "import_modal": {
+        "title": "Импорт пресета",
+        "method_label": "Метод импорта",
+        "method_file": "Файл",
+        "method_json": "JSON",
+        "file_label": "Выберите файл пресета",
+        "file_help": "Выберите .json файл пресета",
+        "json_label": "Вставьте JSON данные",
+        "json_placeholder": "Вставьте JSON данные пресета сюда...",
+        "preview_title": "Предпросмотр",
+        "preview_name": "Название",
+        "preview_description": "Описание",
+        "import_button": "Импортировать пресет",
+        "importing": "Импортируем...",
+        "cancel": "Отмена",
+        "error_invalid_file": "Неверный JSON файл",
+        "error_no_name": "Пресет должен иметь название",
+        "error_invalid_json": "Неверный JSON"
+      },
+      "delete_modal": {
+        "title": "Удалить пресет",
+        "message": "Вы уверены, что хотите удалить пресет \"{name}\"?",
+        "warning": "Это действие нельзя отменить.",
+        "delete_button": "Удалить пресет",
+        "cancel": "Отмена"
+      },
+      "messages": {
+        "load_error": "Не удалось загрузить пресеты",
+        "create_success": "Пресет \"{name}\" успешно создан",
+        "create_error": "Не удалось создать пресет",
+        "update_success": "Пресет \"{name}\" успешно обновлён",
+        "update_error": "Не удалось обновить пресет",
+        "delete_success": "Пресет \"{name}\" успешно удалён",
+        "delete_error": "Не удалось удалить пресет",
+        "duplicate_success": "Пресет \"{name}\" успешно продублирован",
+        "duplicate_error": "Не удалось продублировать пресет",
+        "apply_success": "Применён пресет \"{name}\"",
+        "apply_error": "Не удалось применить пресет",
+        "import_success": "Пресет успешно импортирован",
+        "import_error": "Не удалось импортировать пресет",
+        "import_no_name": "Пресет должен иметь название",
+        "import_invalid_json": "Некорректный JSON",
+        "created_success": "Пресет \"{name}\" успешно создан",
+        "updated_success": "Пресет \"{name}\" успешно обновлён",
+        "deleted_success": "Пресет \"{name}\" успешно удалён",
+        "duplicated_success": "Пресет \"{name}\" успешно продублирован",
+        "applied_success": "Применён пресет \"{name}\"",
+        "imported_success": "Пресет успешно импортирован",
+        "load_failed": "Не удалось загрузить пресеты",
+        "create_failed": "Не удалось создать пресет",
+        "update_failed": "Не удалось обновить пресет",
+        "delete_failed": "Не удалось удалить пресет",
+        "duplicate_failed": "Не удалось продублировать пресет",
+        "apply_failed": "Не удалось применить пресет",
+        "import_failed": "Не удалось импортировать пресет",
+        "import_missing_name": "Пресет должен иметь название"
+      }
+    }
   },
   "logs": {
     "copy_logs": "Копировать логи",
-    "title": "Логи {client}"
+    "title": "Логи {client}",
+    "view": "Просмотреть логи"
   },
   "installation": {
     "downloading": "Загрузка",
@@ -604,6 +746,9 @@
     "profile_load_failed": "Не удалось загрузить профиль пользователя",
     "friend_request_sent_success": "Запрос в друзья отправлен {name}",
     "friend_request_failed": "Не удалось отправить запрос в друзья",
+    "copy_username": "Копировать имя пользователя",
+    "copied_username": "{name} скопировано в буфер обмена",
+    "copy_failed": "Не удалось скопировать имя пользователя",
     "friend_request_canceled": "Запрос в друзья успешно отменен",
     "friend_request_cancel_failed": "Не удалось отменить запрос в друзья",
     "friend_removed_success": "{name} удален из друзей",
@@ -612,7 +757,8 @@
     "friend_request_respond_failed": "Не удалось {action} запрос в друзья",
     "friend_request_not_found": "Запрос в друзья не найден",
     "user_blocked_success": "{name} заблокирован",
-    "user_block_failed": "Не удалось заблокировать пользователя"
+    "user_block_failed": "Не удалось заблокировать пользователя",
+    "social_links": "Социальные ссылки"
   },
   "sync": {
     "last_sync": "Последняя синхронизация",
@@ -638,6 +784,10 @@
       "example": "Это пример уведомления!",
       "menu_opened": "Меню разработчика открыто",
       "flags_reset": "Флаги сброшены!"
+    },
+    "theme": {
+      "emergency_reset_done": "Кастомный CSS сброшен. {action}",
+      "emergency_reset_toggle_instruction": "Чтобы снова включить кастомный CSS, откройте настройки темы и выключите, затем включите 'Включить кастомный CSS'."
     },
     "client": {
       "crashed": "Клиент {name} крашнул. {error}",
@@ -758,6 +908,11 @@
     "success": {
       "userStatusChanged": "Статус пользователя {username} успешно изменен.",
       "userLoggedOut": "Пользователь {username} принудительно выведен из системы."
+    },
+    "health": {
+      "title": "Статус системы",
+      "responseTime": "Ответ (мс):",
+      "detailed": "Детально"
     }
   },
   "discord": {
@@ -841,65 +996,8 @@
     },
     "insecure_tooltip": "Этот клиент помечен как непроверенный, нажмите, чтобы просмотреть детали"
   },
-  "plugins": {
-    "title": "Плагины",
-    "add_plugin": "Добавить плагин",
-    "show_enabled_only": "Показать только включённые",
-    "all_categories": "Все категории",
-    "categories": {
-      "appearance": "Внешний вид",
-      "functionality": "Функциональность",
-      "integration": "Интеграция",
-      "utility": "Утилиты"
-    },
-    "total_plugins": "Всего плагинов",
-    "enabled_plugins": "Включено",
-    "no_plugins_title": "Плагины не найдены",
-    "no_plugins_description": "Добавьте плагины для начала работы",
-    "configure": "Настроить",
-    "enable": "Включить",
-    "disable": "Отключить",
-    "remove": "Удалить",
-    "visit_website": "Посетить сайт",
-    "enabled": "Включён {name}",
-    "disabled": "Отключён {name}",
-    "removed": "Удалён {name}",
-    "add_modal": {
-      "title": "Добавить новый плагин",
-      "description": "Вставьте код плагина ниже, и мы извлечём метаданные",
-      "paste_label": "Код плагина",
-      "paste_hint": "Метаданные плагина должны быть включены в блок комментариев вверху",
-      "preview": "Предпросмотр",
-      "validation_errors": "Ошибки валидации",
-      "metadata_help_title": "Нужна помощь с метаданными?",
-      "metadata_help_desc": "Включите информацию о плагине в блок комментариев:",
-      "website": "Веб-сайт",
-      "add_button": "Добавить плагин",
-      "adding": "Добавление...",
-      "invalid_plugin": "Валидация плагина не прошла",
-      "add_success": "{name} успешно добавлен",
-      "add_failed": "Не удалось добавить плагин",
-      "add_error": "Произошла ошибка при добавлении плагина"
-    },
-    "configure_plugin": "Настройка плагина",
-    "config_saved": "Конфиг сохранён.",
-    "config_save_failed": "Ошибка сохранения конфига: {error}",
-    "reset_defaults": "Сбросить по умолчанию",
-    "no_config_options": "Нет никаких настроек для плагина",
-    "error": "Ошибка плагина в {name}",
-    "edit": {
-      "save_and_close": "Сохранить и закрыть",
-      "load_error": "Ошибка загрузки плагина",
-      "save_error": "Ошибка сохранения",
-      "save_success": "Успешно сохранено"
-    },
-    "toggle_failed": "Не удалось переключить плагин {name}",
-    "remove_failed": "Не удается удалить плагин {name}",
-    "description": "Расширяйте функционал CollapseLoader с помощью плагинов"
-  },
   "customization": {
-    "theme": "Тема",
-    "plugins": "Плагины"
+    "theme": "Тема"
   },
   "updater": {
     "update_available": "Доступно обновление",
@@ -907,7 +1005,6 @@
     "latest": "Последняя",
     "critical": "Критическое",
     "version_info": "Текущая: {current} → Последняя: {latest}",
-    "release_notes": "Примечания к выпуску",
     "changelog": "Список изменений",
     "download_install": "Скачать и установить",
     "downloading": "Скачивание...",
@@ -930,13 +1027,7 @@
       "bugfix": "Исправления ошибок",
       "other": "Прочее"
     },
-    "changelogs": {
-      "feature": {
-        "v0_1_7": {
-          "added_custom_clients": "Добавлена система своих клиентов"
-        }
-      }
-    }
+    "no_update": "Обновления не найдены"
   },
   "custom_clients": {
     "add": "Добавить свой клиент",
@@ -949,6 +1040,8 @@
     "display_settings": "Настройка отображения",
     "display_mode_global": "Глобально",
     "display_mode": "Режим отображения",
-    "display_mode_separate": "Отдельно"
+    "display_mode_separate": "Отдельно",
+    "no_results": "Попробуйте изменить поисковый запрос",
+    "no_clients_yet": "Добавьте свой первый клиент, чтобы начать"
   }
 }

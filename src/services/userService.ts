@@ -75,6 +75,13 @@ interface PublicUserProfile {
         client_version?: string;
     };
     member_since: string | null;
+    social_links?: Array<{
+        id: number;
+        platform: string;
+        url: string;
+        created_at?: string;
+        updated_at?: string;
+    }>;
 }
 
 const CACHE_KEY = 'userData';

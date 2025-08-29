@@ -4,7 +4,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { onMounted, ref } from 'vue';
 import { useToast } from '../services/toastService';
 import { useI18n } from 'vue-i18n';
-import { updaterService } from '../services/updaterService';
+import { UpdateInfo, updaterService } from '../services/updaterService';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -56,7 +56,10 @@ const openDiscord = async () => {
 const checkForUpdates = async () => {
     isCheckingUpdates.value = true;
     try {
-        await updaterService.checkForUpdates(false, t);
+        const updateInfo: UpdateInfo | null = await updaterService.checkForUpdates(false, t);
+        if (!updateInfo?.available) {
+            addToast(t('updater.no_update'), 'success');
+        }
     } finally {
         isCheckingUpdates.value = false;
     }

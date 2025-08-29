@@ -8,36 +8,35 @@ import {
     User,
     Users,
     ShieldAlert,
+    SlidersVertical,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
-import { Vue3Lottie } from 'vue3-lottie';
-import customization_idle from '../../assets/misc/customization_idle.json';
-import customization_animated from '../../assets/misc/customization_animated.json';
 
 const { t } = useI18n();
 const { adminStatus } = useUser();
 
-const props = defineProps<{
+defineProps<{
     activeTab: string;
     isOnline: boolean;
     isAuthenticated: boolean;
 }>();
 
 const emit = defineEmits(['changeTab', 'open-dev-menu']);
+const visible = ref(false);
 const isAltPressed = ref(false);
-const isSlideOutActive = ref(false);
-const terminalButtonRef = ref<HTMLButtonElement | null>(null);
+const altPressCount = ref(0);
+const altPressTimeout = ref<number | null>(null);
 
 const isAdmin = computed(() => adminStatus.value?.is_admin || false);
 
-const { onlineFriendsCount } = useFriends();
+const { onlineFriendsCount, friendRequests } = useFriends();
+const incomingRequestsCount = computed(() => (friendRequests.value?.received?.length) || 0);
 
 let homeClickCount = 0;
 const homeClickTimeout = ref<number | null>(null);
-const slideOutTimeout = ref<number | null>(null);
 
 const changeTab = (tab: string) => {
     if (tab === 'home') {
@@ -63,60 +62,63 @@ const changeTab = (tab: string) => {
         }
     }
 
-    if (tab != 'app_logs') {
-        isSlideOutActive.value = true;
-    }
 
     emit('changeTab', tab);
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Alt') {
-        isAltPressed.value = true;
-        isSlideOutActive.value = false;
+        altPressCount.value++;
 
-        if (slideOutTimeout.value) {
-            clearTimeout(slideOutTimeout.value);
-            slideOutTimeout.value = null;
+        if (altPressTimeout.value) {
+            clearTimeout(altPressTimeout.value);
         }
-    }
-};
 
-const handleKeyUp = (event: KeyboardEvent) => {
-    if (event.key === 'Alt' && props.activeTab !== 'app_logs') {
-        isSlideOutActive.value = true;
+        altPressTimeout.value = setTimeout(() => {
+            altPressCount.value = 0;
+            altPressTimeout.value = null;
+        }, 600) as unknown as number;
 
-        slideOutTimeout.value = setTimeout(() => {
-            isAltPressed.value = false;
-            isSlideOutActive.value = false;
-        }, 300) as unknown as number;
+        if (altPressCount.value === 2) {
+            altPressCount.value = 0;
+            if (altPressTimeout.value) {
+                clearTimeout(altPressTimeout.value);
+                altPressTimeout.value = null;
+            }
+            isAltPressed.value = !isAltPressed.value;
+        }
     }
 };
 onMounted(async () => {
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+
+    visible.value = false;
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            visible.value = true;
+        }, 40);
+    });
 });
 
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeyDown);
-    window.removeEventListener('keyup', handleKeyUp);
 
     if (homeClickTimeout.value) {
         clearTimeout(homeClickTimeout.value);
     }
 
-    if (slideOutTimeout.value) {
-        clearTimeout(slideOutTimeout.value);
+    if (altPressTimeout.value) {
+        clearTimeout(altPressTimeout.value);
     }
 });
 </script>
 
 <template>
     <div
-        class="w-20 h-screen fixed left-0 top-0 bg-base-300 flex flex-col items-center py-6 shadow-md border-r border-base-content/10 z-50">
+        :class="['w-20 h-screen fixed left-0 top-0 bg-base-300 flex flex-col items-center py-6 shadow-md border-r border-base-content/10 z-50', visible ? 'sidebar-entered' : 'sidebar-hidden']">
         <div class="flex flex-col gap-4">
             <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.home')">
-                <button class="btn btn-ghost btn-square rounded-lg relative sidebar-btn" :class="{
+                <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'home',
                 }" @click="changeTab('home')">
@@ -137,6 +139,11 @@ onUnmounted(() => {
                     <span v-if="onlineFriendsCount > 0"
                         class="absolute -top-1 -right-1 bg-success text-success-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
                         {{ onlineFriendsCount }}
+                    </span>
+
+                    <span v-if="incomingRequestsCount > 0"
+                        class="absolute -bottom-1 -right-1 bg-info text-info-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
+                        {{ incomingRequestsCount }}
                     </span>
                 </button>
             </div>
@@ -159,24 +166,16 @@ onUnmounted(() => {
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'customization',
                 }" @click="changeTab('customization')">
-                    <Vue3Lottie :animation-data="customization_animated" class="w-5 h-5 customization-light-selected"
-                        v-if="activeTab === 'customization'" :class="{
-                            'invert': activeTab === 'customization'
-                        }" />
-                    <Vue3Lottie :animation-data="customization_idle" class="w-5 h-5 customization-light" v-else />
+                    <SlidersVertical class="w-5 h-5" />
                 </button>
             </div>
 
             <div v-show="isAltPressed" class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.logs')">
-                <button ref="terminalButtonRef" class="btn btn-ghost btn-square rounded-lg terminal-button sidebar-btn"
-                    :class="{
-                        'bg-primary text-primary-content shadow-lg scale-110':
-                            activeTab === 'app_logs',
-                        'slide-out': isSlideOutActive,
-                    }" @click="changeTab('app_logs')">
-                    <img src="/src/assets/images/sidebar/terminal-blink.svg" alt="Terminal Icon" class="w-5 h-5"
-                        v-if="activeTab === 'app_logs'" />
-                    <Terminal class="w-5 h-5" v-if="activeTab !== 'app_logs'" />
+                <button class="btn btn-ghost btn-square rounded-lg sidebar-btn" :class="{
+                    'bg-primary text-primary-content shadow-lg scale-110':
+                        activeTab === 'app_logs',
+                }" @click="changeTab('app_logs')">
+                    <Terminal class="w-5 h-5" />
                 </button>
             </div>
         </div>
@@ -227,6 +226,7 @@ onUnmounted(() => {
     transition:
         all 0.2s cubic-bezier(0.4, 0, 0.2, 1),
         transform 0.15s ease-out;
+    outline: none;
 }
 
 .btn-square:hover {
@@ -241,50 +241,97 @@ onUnmounted(() => {
     transition: transform 1s ease;
 }
 
-.terminal-button {
-    animation: fadeIn 0.3s ease-out;
-    opacity: 0;
-    animation-fill-mode: forwards;
-    transform: translateY(10px);
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.slide-out {
-    animation: slideOut 0.3s ease-out forwards;
-}
-
-@keyframes slideOut {
-    from {
-        opacity: 1;
-        transform: translateY(0px);
-    }
-
-    to {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-}
-
 .invert {
     filter: invert(1);
 }
 
-html[data-theme="light"] .customization-light {
-    filter: invert(1);
+.sidebar-btn,
+.btn-square.sidebar-btn,
+.btn-square.sidebar-btn>* {
+    border-radius: var(--radius-box, 0.5rem) !important;
+    overflow: visible !important;
 }
 
-html[data-theme="light"] .customization-light-selected {
-    filter: invert(0);
+.sidebar-btn {
+    will-change: transform, box-shadow;
+}
+
+html[data-reduce-motion='true'] .sidebar-btn,
+html[data-reduce-motion='true'] .btn-square.sidebar-btn {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+}
+
+.sidebar-hidden {
+    transform: translateX(-28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-entered {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 1.6s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.5s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-entered {
+        transition: none !important;
+    }
+}
+
+.sidebar-hidden .flex>*,
+.sidebar-hidden .mt-auto>* {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+}
+
+.sidebar-entered .flex>*,
+.sidebar-entered .mt-auto>* {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.42s ease;
+}
+
+.sidebar-entered .flex>*:nth-child(1) {
+    transition-delay: 0.06s;
+}
+
+.sidebar-entered .flex>*:nth-child(2) {
+    transition-delay: 0.10s;
+}
+
+.sidebar-entered .flex>*:nth-child(3) {
+    transition-delay: 0.14s;
+}
+
+.sidebar-entered .flex>*:nth-child(4) {
+    transition-delay: 0.18s;
+}
+
+.sidebar-entered .mt-auto>*:nth-child(1) {
+    transition-delay: 0.22s;
+}
+
+.sidebar-entered .mt-auto>*:nth-child(2) {
+    transition-delay: 0.26s;
+}
+
+.sidebar-entered .mt-auto>*:nth-child(3) {
+    transition-delay: 0.30s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .sidebar-hidden .flex>*,
+    .sidebar-hidden .mt-auto>*,
+    .sidebar-entered .flex>*,
+    .sidebar-entered .mt-auto>* {
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
 }
 </style>

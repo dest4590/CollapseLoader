@@ -108,7 +108,6 @@ const handleRegister = async () => {
                 }
             );
 
-            console.log('Auto-login response:', loginResponse);
             const authToken = loginResponse.data?.auth_token || loginResponse.data?.token || loginResponse.auth_token || loginResponse.token;
 
             if (authToken) {

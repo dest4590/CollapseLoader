@@ -93,6 +93,19 @@
       "cancel": "Cancel",
       "nickname_taken": "This nickname is already taken"
     },
+    "social_links": {
+      "title": "Social Links",
+      "add_title": "Add Social Link",
+      "edit_title": "Edit Social Link",
+      "fill_fields": "Please select a platform and enter a valid URL.",
+      "added": "Social link added.",
+      "add_failed": "Failed to add social link.",
+      "load_failed": "Failed to load social links.",
+      "deleted": "Social link deleted.",
+      "delete_failed": "Failed to delete social link.",
+      "updated": "Social link updated.",
+      "update_failed": "Failed to update social link."
+    },
     "edit_account": {
       "username_label": "Username",
       "tags_label": "Tags (comma separated)",
@@ -245,7 +258,10 @@
     "profile_load_failed": "Failed to load user profile.",
     "invisible_enabled": "Invisible mode enabled",
     "invisible_disabled": "Invisible mode disabled",
-    "logout_confirm_title": "Confirm Logout"
+    "logout_confirm_title": "Confirm Logout",
+    "social_links": "Social Links",
+    "social_links_description": "Manage links to your social profiles",
+    "no_social_links": "No social links added yet."
   },
   "time": {
     "offline": "Offline",
@@ -276,7 +292,9 @@
     "ok": "Ok",
     "close": "Close",
     "save": "Save",
-    "browse": "Browse"
+    "browse": "Browse",
+    "edit": "Edit",
+    "add": "Add"
   },
   "auth": {
     "logout": {
@@ -454,12 +472,122 @@
     "copied": "Copied!",
     "copy_failed": "Failed to copy",
     "import": "Import",
-    "import_success": "CSS imported successfully!",
-    "import_invalid": "Invalid or unsafe CSS. Import failed."
+    "import_success": "Preset imported successfully!",
+    "import_invalid": "Invalid preset. Import failed.",
+    "global_radius": "Global UI Radius",
+    "primary_color_override": "Primary color",
+    "remove_animations": "Remove all animations",
+    "export_preset": "Export preset",
+    "import_preset": "Import preset",
+    "import_empty": "Clipboard is empty",
+    "import_too_large": "Preset too large",
+    "export_success": "Preset copied to clipboard",
+    "export_failed": "Failed to export preset",
+    "colors": "Colors",
+    "base_colors": "Base Colors",
+    "base100": "Base 100",
+    "base200": "Base 200",
+    "base300": "Base 300",
+    "base_content": "Base content",
+    "primary_secondary_accent": "Primary / Secondary / Accent",
+    "primary_content": "Primary content",
+    "secondary": "Secondary",
+    "secondary_content": "Secondary content",
+    "accent": "Accent",
+    "accent_content": "Accent content",
+    "semantic_colors": "Semantic Colors",
+    "neutral": "Neutral",
+    "neutral_content": "Neutral content",
+    "info": "Info",
+    "info_content": "Info content",
+    "success": "Success",
+    "success_content": "Success content",
+    "warning": "Warning",
+    "warning_content": "Warning content",
+    "error": "Error",
+    "error_content": "Error content",
+    "preset": "Preset",
+    "presets": {
+      "title": "Theme Presets",
+      "description": "Save and manage your customization presets",
+      "save_current": "Save Current",
+      "import": "Import",
+      "create_first_preset": "Create First Preset",
+      "no_presets_title": "No presets yet",
+      "no_presets_description": "Create your first preset by saving your current customization settings",
+      "loading": "Loading presets...",
+      "apply_preset": "Apply Preset",
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "export": "Export",
+      "delete": "Delete",
+      "apply": "Apply",
+      "created": "Created {date}",
+      "create_modal": {
+        "title_create": "Create New Preset",
+        "title_edit": "Edit Preset",
+        "name_label": "Preset Name",
+        "name_required": "Preset name is required",
+        "name_too_long": "Preset name must be 50 characters or less",
+        "name_placeholder": "Enter preset name",
+        "description_label": "Description",
+        "description_placeholder": "Optional description for this preset",
+        "source_info": "Preset Source",
+        "source_create": "Will capture current customization settings",
+        "source_edit": "Editing existing preset",
+        "create_button": "Create Preset",
+        "update_button": "Update Preset",
+        "cancel": "Cancel"
+      },
+      "import_modal": {
+        "title": "Import Preset",
+        "method_label": "Import Method",
+        "method_file": "File",
+        "method_json": "JSON",
+        "file_label": "Select Preset File",
+        "file_help": "Choose a .json preset file",
+        "json_label": "Paste JSON Data",
+        "json_placeholder": "Paste your preset JSON data here...",
+        "preview_title": "Preview",
+        "preview_name": "Name",
+        "preview_description": "Description",
+        "import_button": "Import Preset",
+        "importing": "Importing...",
+        "cancel": "Cancel",
+        "error_invalid_file": "Invalid JSON file",
+        "error_no_name": "Preset must have a name",
+        "error_invalid_json": "Invalid JSON"
+      },
+      "delete_modal": {
+        "title": "Delete Preset",
+        "message": "Are you sure you want to delete the preset \"{name}\"?",
+        "warning": "This action cannot be undone.",
+        "delete_button": "Delete Preset",
+        "cancel": "Cancel"
+      },
+      "messages": {
+        "load_error": "Failed to load presets",
+        "create_success": "Preset \"{name}\" created successfully",
+        "create_error": "Failed to create preset",
+        "update_success": "Preset \"{name}\" updated successfully",
+        "update_error": "Failed to update preset",
+        "delete_success": "Preset \"{name}\" deleted successfully",
+        "delete_error": "Failed to delete preset",
+        "duplicate_success": "Preset \"{name}\" duplicated successfully",
+        "duplicate_error": "Failed to duplicate preset",
+        "apply_success": "Applied preset \"{name}\"",
+        "apply_error": "Failed to apply preset",
+        "import_success": "Preset imported successfully",
+        "import_error": "Failed to import preset",
+        "import_no_name": "Preset must have a name",
+        "import_invalid_json": "Invalid JSON"
+      }
+    }
   },
   "logs": {
     "copy_logs": "Copy logs",
-    "title": "{client} Logs"
+    "title": "{client} Logs",
+    "view": "View logs"
   },
   "installation": {
     "downloading": "Downloading",
@@ -604,6 +732,9 @@
     "profile_load_failed": "Failed to load user profile",
     "friend_request_sent_success": "Friend request sent to {name}",
     "friend_request_failed": "Failed to send friend request",
+    "copy_username": "Copy username",
+    "copied_username": "{name} copied to clipboard",
+    "copy_failed": "Failed to copy username",
     "friend_request_canceled": "Friend request canceled successfully",
     "friend_request_cancel_failed": "Failed to cancel friend request",
     "friend_removed_success": "{name} removed from friends",
@@ -612,7 +743,8 @@
     "friend_request_respond_failed": "Failed to {action} friend request",
     "friend_request_not_found": "Friend request not found",
     "user_blocked_success": "{name} has been blocked",
-    "user_block_failed": "Failed to block user"
+    "user_block_failed": "Failed to block user",
+    "social_links": "Social links"
   },
   "sync": {
     "last_sync": "Last sync",
@@ -678,6 +810,12 @@
     "success": {
       "userStatusChanged": "User {username} status changed successfully.",
       "userLoggedOut": "User {username} has been logged out."
+    },
+    "health": {
+      "title": "Status System Health",
+      "responseTime": "Response (ms):",
+      "refresh": "Health",
+      "detailed": "Detailed"
     }
   },
   "toast": {
@@ -685,6 +823,10 @@
       "example": "This is an example toast!",
       "menu_opened": "Developer menu opened",
       "flags_reset": "Flags have been reset!"
+    },
+    "theme": {
+      "emergency_reset_done": "Custom CSS reset. {action}",
+      "emergency_reset_toggle_instruction": "To re-enable custom CSS, open Theme settings and toggle 'Enable custom CSS' off and on."
     },
     "client": {
       "crashed": "Client {name} has crashed. {error}",
@@ -841,65 +983,8 @@
     },
     "insecure_tooltip": "This client is marked as insecure, tap to view details"
   },
-  "plugins": {
-    "title": "Plugins",
-    "description": "Extend CollapseLoader functionality with custom plugins",
-    "add_plugin": "Add Plugin",
-    "show_enabled_only": "Show enabled only",
-    "all_categories": "All categories",
-    "categories": {
-      "appearance": "Appearance",
-      "functionality": "Functionality",
-      "integration": "Integration",
-      "utility": "Utility"
-    },
-    "total_plugins": "Total Plugins",
-    "enabled_plugins": "Enabled",
-    "no_plugins_title": "No plugins found",
-    "no_plugins_description": "Add some plugins to get started",
-    "configure": "Configure",
-    "enable": "Enable",
-    "disable": "Disable",
-    "remove": "Remove",
-    "visit_website": "Visit Website",
-    "enabled": "Enabled {name}",
-    "disabled": "Disabled {name}",
-    "removed": "Removed {name}",
-    "add_modal": {
-      "title": "Add New Plugin",
-      "description": "Paste your plugin code below and we'll extract the metadata",
-      "paste_label": "Plugin Code",
-      "paste_hint": "Plugin metadata should be included in a comment block at the top",
-      "preview": "Preview",
-      "validation_errors": "Validation Errors",
-      "metadata_help_title": "Need help with metadata?",
-      "metadata_help_desc": "Include plugin information in a comment block:",
-      "website": "Website",
-      "add_button": "Add Plugin",
-      "adding": "Adding...",
-      "invalid_plugin": "Plugin validation failed",
-      "add_success": "Added {name} successfully",
-      "add_failed": "Failed to add plugin",
-      "add_error": "An error occurred while adding the plugin"
-    },
-    "configure_plugin": "Configure plugin",
-    "config_saved": "Config saved.",
-    "config_save_failed": "Cannot save config: {error}",
-    "reset_defaults": "Reset defaults",
-    "no_config_options": "There are no any plugin options",
-    "error": "Plugin error in {name}",
-    "edit": {
-      "save_and_close": "Save and close",
-      "load_error": "Plugin code load error",
-      "save_success": "Save success",
-      "save_error": "Save error"
-    },
-    "toggle_failed": "Failed to toggle plugin {name}",
-    "remove_failed": "Cannot remove plugin {name}"
-  },
   "customization": {
-    "theme": "Theme",
-    "plugins": "Plugins"
+    "theme": "Theme"
   },
   "updater": {
     "update_available": "Update Available",
@@ -907,7 +992,6 @@
     "latest": "Latest",
     "critical": "Critical",
     "version_info": "Current: {current} → Latest: {latest}",
-    "release_notes": "Release Notes",
     "changelog": "Changelog",
     "download_install": "Download & Install",
     "downloading": "Downloading...",
@@ -931,13 +1015,7 @@
       "bugfix": "Bug Fixes",
       "other": "Other Changes"
     },
-    "changelogs": {
-      "feature": {
-        "v0_1_7": {
-          "added_custom_clients": "Added custom clients management system"
-        }
-      }
-    }
+    "no_update": "Updated not found"
   },
   "custom_clients": {
     "add": "Add custom client",
@@ -950,6 +1028,8 @@
     "display_settings": "Display settings",
     "display_mode": "Display Mode",
     "display_mode_separate": "Separate",
-    "display_mode_global": "Global"
+    "display_mode_global": "Global",
+    "no_results": "Try adjusting your search query.",
+    "no_clients_yet": "Add your first custom client to get started."
   }
 }

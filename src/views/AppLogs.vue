@@ -93,120 +93,34 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="app-log-view-container slide-up">
-        <div class="log-viewer-header">
-            <div class="log-viewer-actions">
+    <div class="w-full flex flex-col">
+        <div class="flex justify-between items-center p-3">
+            <div class="flex items-center gap-3">
                 <button @click="copyLogs" class="btn btn-ghost">
-                    <Copy class="w-4 h-4"></Copy>
+                    <Copy class="w-4 h-4" />
                     {{ $t('appLogs.copyLogs') }}
                 </button>
 
-                <label class="auto-scroll-toggle">
-                    <input class="checkbox" type="checkbox" v-model="autoScroll" />
+                <label class="flex items-center gap-2 text-sm cursor-pointer">
+                    <input class="toggle toggle-sm" type="checkbox" v-model="autoScroll" />
                     <span>{{ $t('appLogs.autoScroll') }}</span>
                 </label>
             </div>
         </div>
-        <div class="card bg-base-200 shadow-md border border-base-300">
-            <div class="card-body p-2">
-                <div ref="logsContainer" class="log-viewer-content" @scroll="handleScroll">
-                    <div v-if="appLogs.length === 0" class="no-logs">
+
+        <div class="card bg-base-200 shadow-md border border-base-300 flex-1">
+            <div class="card-body p-2 flex flex-col">
+                <div ref="logsContainer"
+                    class="flex-1 h-64 overflow-y-auto p-4 font-mono text-sm leading-6 whitespace-pre-wrap bg-base-100 rounded"
+                    @scroll="handleScroll">
+                    <div v-if="appLogs.length === 0" class="text-center p-5 text-neutral">
                         <p>{{ $t('appLogs.noLogs') }}</p>
                     </div>
-                    <pre v-else><code>{{ appLogs.join('\n') }}</code></pre>
+                    <pre v-else class="whitespace-pre-wrap"><code>{{ appLogs.join('\n') }}</code></pre>
                 </div>
             </div>
         </div>
     </div>
 </template>
 
-<style scoped>
-.app-log-view-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.animate-fadeInUp {
-    animation: fadeInUp 0.5s ease-out forwards;
-    opacity: 0;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.log-viewer-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-}
-
-.log-viewer-header h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.log-viewer-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.auto-scroll-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    cursor: pointer;
-}
-
-.auto-scroll-toggle input {
-    cursor: pointer;
-}
-
-.card {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.card-body {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-}
-
-.log-viewer-content {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 16px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    color: #ddd;
-}
-
-.log-viewer-content pre {
-    margin: 0;
-}
-
-.no-logs {
-    text-align: center;
-    padding: 20px;
-    color: #888;
-}
-</style>
+<!-- Styling replaced by Tailwind + daisyUI utility classes -->

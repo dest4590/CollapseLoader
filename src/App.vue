@@ -76,6 +76,7 @@ const activeTab = ref<
     | 'news'
 >('home');
 const showPreloader = ref(true);
+const contentVisible = ref(false);
 const loadingState = ref(t('preloader.initializing'));
 const loadingStates = [
     t('preloader.initializing'),
@@ -208,7 +209,7 @@ const applyThemeOnStartup = async () => {
             }
         }
 
-        themeService.loadCardSettings();
+        themeService.loadSettings();
     } catch (error) {
         console.error('Failed to apply theme on startup:', error);
         const localTheme = localStorage.getItem('theme');
@@ -220,7 +221,7 @@ const applyThemeOnStartup = async () => {
             currentTheme.value = 'dark';
         }
 
-        themeService.loadCardSettings();
+        themeService.loadSettings();
     }
 };
 
@@ -413,6 +414,14 @@ const initApp = async () => {
 
         setTimeout(() => {
             showPreloader.value = false;
+            try {
+                document.documentElement.classList.add('app-ready');
+            } catch (e) {
+                // ignore
+            }
+            setTimeout(() => {
+                contentVisible.value = true;
+            }, 80);
         }, 800);
     } else {
         showPreloader.value = false;
@@ -637,13 +646,13 @@ const initializeUserData = async () => {
         console.log(`Friends loaded: ${friends.value.length} total, ${onlineFriendsCount.value} online`);
 
         console.log(
-            'Enhanced user data and friends system initialized successfully on startup'
+            'User data and friends system initialized successfully on startup'
         );
         console.log(`Loading state: ${friendsLoading.value ? 'Loading...' : 'Complete'}`);
         console.log(`User authentication: ${userAuthenticated.value ? 'Authenticated' : 'Not authenticated'}`);
         console.log(`User online status: ${userOnline.value ? 'Online' : 'Offline'}`);
     } catch (error) {
-        console.error('Failed to initialize enhanced user data on startup:', error);
+        console.error('Failed to initialize user data on startup:', error);
     }
 };
 
@@ -745,14 +754,42 @@ onMounted(() => {
             globalUserStatus.setOffline();
         }
     });
+
+    const emergencyHandler = (e: KeyboardEvent) => {
+        try {
+            if (e.ctrlKey && e.shiftKey && (e.key === 'Home' || e.code === 'Home')) {
+                const active = document.activeElement as HTMLElement | null;
+                const isTyping = !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+                if (isTyping) return;
+
+                console.warn('Emergency theme reset triggered via Ctrl+Shift+Home');
+                themeService.emergencyReset();
+
+                addToast(
+                    t('toast.theme.emergency_reset_done', {
+                        action: t('toast.theme.emergency_reset_toggle_instruction')
+                    }),
+                    'info',
+                    8000
+                );
+            }
+        } catch (err) {
+            console.error('Error during emergency theme reset:', err);
+        }
+    };
+
+    window.addEventListener('keydown', emergencyHandler);
+    onUnmounted(() => {
+        window.removeEventListener('keydown', emergencyHandler);
+    });
 });
 
 onUnmounted(() => {
-    console.log('App unmounting, stopping enhanced systems...');
+    console.log('App unmounting, stopping systems...');
     stopStatusSync();
     updaterService.stopPeriodicCheck();
     window.removeEventListener('beforeunload', () => { });
-    console.log('Enhanced status sync stopped');
+    console.log('Status sync stopped');
 });
 </script>
 
@@ -791,7 +828,8 @@ onUnmounted(() => {
 
     <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu" />
 
-    <div class="flex animate-fadeIn h-screen" v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
+    <div :class="['flex h-screen', contentVisible ? 'content-entered' : 'content-hidden']"
+        v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
         <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
             :is-online="isOnline" :is-authenticated="isAuthenticated" />
         <main class="ml-20 w-full p-6 bg-base-200 min-h-screen overflow-scroll overflow-x-hidden">

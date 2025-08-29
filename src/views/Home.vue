@@ -59,9 +59,21 @@ const favoriteClients = ref<number[]>([]);
 const error = ref('');
 const runningClients = ref<number[]>([]);
 const isLeaving = ref(false);
+const viewVisible = ref(false);
 const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
+
+const HOME_ANIM_KEY = 'homeAnimPlayed';
+const hasAnimatedBefore = ref<boolean>(false);
+try {
+    hasAnimatedBefore.value = sessionStorage.getItem(HOME_ANIM_KEY) === '1';
+} catch (e) {
+    hasAnimatedBefore.value = false;
+}
+if (hasAnimatedBefore.value) {
+    viewVisible.value = true;
+}
 
 const accounts = ref<Account[]>([]);
 const selectedAccountId = ref<string>('');
@@ -439,7 +451,20 @@ const checkRunningStatus = async () => {
     if (isLeaving.value) return;
     try {
         const response = await invoke<number[]>('get_running_client_ids');
-        runningClients.value = response;
+        let currentRunning: number[] = response || [];
+
+        if (customClientsDisplayMode.value === 'global') {
+            try {
+                const customResponse = await invoke<number[]>('get_running_custom_client_ids');
+                if (Array.isArray(customResponse)) {
+                    currentRunning = Array.from(new Set([...currentRunning, ...customResponse]));
+                }
+            } catch (err) {
+                console.error('Error checking custom client running status:', err);
+            }
+        }
+
+        runningClients.value = currentRunning;
     } catch (err) {
         console.error('Error checking running status:', err);
     }
@@ -1149,6 +1174,16 @@ onMounted(async () => {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('click', handleDocumentClick);
+
+    if (!hasAnimatedBefore.value) {
+        setTimeout(() => {
+            viewVisible.value = true;
+            try {
+                sessionStorage.setItem(HOME_ANIM_KEY, '1');
+            } catch (e) {
+            }
+        }, 80);
+    }
 });
 
 onBeforeUnmount(() => {
@@ -1169,21 +1204,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-
-    <div class="flex items-center gap-2 mb-6">
-        <SearchBar @search="handleSearch" class="flex-1 mr-2" :initial-value="searchQuery"
+    <div :class="['flex items-center gap-2 mb-6 top-menu', viewVisible ? 'home-entered' : 'home-hidden']">
+        <SearchBar @search="handleSearch" class="flex-1 mr-2 home-search" :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')" />
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.custom_clients')">
             <button @click="$emit('change-view', 'custom_clients')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0"
-                style="border: var(--border) solid #0000">
+                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 home-action-btn"
+                :style="{ border: 'var(--border) solid #0000', transitionDelay: '0.5s' }">
                 <FileText class="w-4 h-4" />
             </button>
         </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
             <button @click="$emit('change-view', 'news')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 relative"
-                style="border: var(--border) solid #0000">
+                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 relative home-action-btn"
+                :style="{ border: 'var(--border) solid #0000', transitionDelay: '1s' }">
                 <Newspaper class="w-4 h-4" />
                 <span v-if="props.unreadNewsCount && props.unreadNewsCount > 0"
                     class="absolute -top-2 -right-2 bg-primary text-primary-content text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center border-2 border-base-100 px-1">
@@ -1415,10 +1449,6 @@ onBeforeUnmount(() => {
     }
 }
 
-.menu.dropdown-content {
-    transform-origin: top left;
-}
-
 @keyframes scaleIn {
     from {
         opacity: 0;
@@ -1562,5 +1592,64 @@ onBeforeUnmount(() => {
 .button-fade-leave-from {
     opacity: 1;
     transform: scale(1) translateY(0);
+}
+
+.top-menu {
+    position: relative;
+    z-index: 10;
+}
+
+.home-hidden {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.home-entered {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.5s cubic-bezier(0.2, 0.9, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.home-search {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+    transition: transform 0.48s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.48s ease;
+}
+
+.home-entered .home-search {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition-delay: 0.08s;
+}
+
+.home-action-btn {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+    transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.42s ease;
+}
+
+.home-entered .home-action-btn {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.home-entered .home-action-btn:nth-child(1) {
+    transition-delay: 0.12s;
+}
+
+.home-entered .home-action-btn:nth-child(2) {
+    transition-delay: 0.16s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .home-hidden,
+    .home-entered,
+    .home-search,
+    .home-action-btn {
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
 }
 </style>

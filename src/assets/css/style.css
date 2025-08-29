@@ -71,6 +71,10 @@
     --noise: 0;
 }
 
+html {
+    @apply bg-base-200;
+}
+
 .slide-up {
     animation: slideUp 0.5s ease forwards;
 }
@@ -106,6 +110,14 @@
     --client-card-radius: var(--radius-box);
     --client-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --client-card-padding: 1rem;
+}
+
+html[data-reduce-motion='true'] *,
+html[data-reduce-motion='true'] *::before,
+html[data-reduce-motion='true'] *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
 }
 
 .client-card {

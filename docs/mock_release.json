@@ -1,0 +1,15 @@
+{
+  "tag_name": "v0.1.8",
+  "name": "v0.1.8",
+  "body": "```changelog\n{\n  \"entries\": [\n    {\n      \"version\": \"v0.1.8\",\n      \"date\": \"2025-08-29\",\n      \"highlights\": [\"Public release with changelog parsing\"],\n      \"changes\": [\n        {\n          \"category\": \"feature\",\n          \"description_key\": \"updater.changelogs.feature.v0_1_8.added_auto_parse\",\n          \"icon\": \"✨\"\n        },\n        {\n          \"category\": \"bugfix\",\n          \"description_key\": \"Fixed crash when opening settings\",\n          \"icon\": \"🐛\"\n        }\n      ]\n    }\n  ],\n  \"translations\": {\n    \"en\": {\n      \"updater\": {\n        \"changelogs\": {\n          \"feature\": {\n            \"v0_1_8\": { \"added_auto_parse\": \"Added GitHub release changelog parsing\" }\n          }\n        }\n      }\n    },\n    \"ru\": {\n      \"updater\": {\n        \"changelogs\": {\n          \"feature\": {\n            \"v0_1_8\": { \"added_auto_parse\": \"Добавлен разбор changelog из релиза GitHub\" }\n          }\n        }\n      }\n    }\n  }\n}\n```\n\nRelease notes: This is a mock release used for testing the updater.\n",
+  "html_url": "https://github.com/dest4590/CollapseLoader/releases/tag/v0.1.8",
+  "assets": [
+    {
+      "name": "CollapseLoader-0.1.8.msi",
+      "browser_download_url": "https://example.com/CollapseLoader-0.1.8.msi",
+      "size": 100
+    }
+  ],
+  "published_at": "2025-08-29T12:00:00Z",
+  "prerelease": false
+}

@@ -1,6 +1,5 @@
 import { ref, computed, reactive, watch } from 'vue';
 import { apiClient } from '../services/apiClient';
-import { sendNativeNotification } from '../services/notificationService';
 
 interface Friend {
     id: number;
@@ -30,7 +29,6 @@ interface FriendsMetrics {
     cacheHitRate: number;
     statusUpdateCount: number;
     avgStatusResponseTime: number;
-    notificationsSent: number;
 }
 
 interface GlobalFriendsState {
@@ -61,8 +59,7 @@ const friendsMetrics = reactive<FriendsMetrics>({
     lastBulkUpdate: 0,
     cacheHitRate: 0,
     statusUpdateCount: 0,
-    avgStatusResponseTime: 0,
-    notificationsSent: 0
+    avgStatusResponseTime: 0
 });
 
 const isStatusLoading = ref(false);
@@ -117,7 +114,7 @@ export function useFriends() {
         const startTime = Date.now();
 
         try {
-            console.log('Loading friends data via optimized batch endpoint...');
+            console.log('Loading friends data via batch endpoint...');
 
             const batchData = await apiClient.get('/auth/friends/batch/');
 
@@ -129,7 +126,7 @@ export function useFriends() {
                 optimized: batchData.performance_info?.optimized || false
             });
 
-            const newRequests = checkForNewRequests({
+            checkForNewRequests({
                 sent: batchData.requests?.sent || [],
                 received: batchData.requests?.received || []
             });
@@ -146,16 +143,11 @@ export function useFriends() {
             friendsMetrics.lastBulkUpdate = Date.now();
             friendsMetrics.cacheHitRate = apiClient.getCacheStats().hitRate;
 
-            if (newRequests.length > 0) {
-                notifyNewFriendRequests(newRequests);
-                friendsMetrics.notificationsSent += newRequests.length;
-            }
-
             if (!statusUpdateInterval.current) {
                 startIntelligentStatusUpdates();
             }
 
-            console.log('Friends data loaded successfully via optimized batch endpoint');
+            console.log('Friends data loaded successfully via batch endpoint');
         } catch (error) {
             console.error('Failed to load friends data via batch endpoint:', error);
 
@@ -302,19 +294,6 @@ export function useFriends() {
             return newRequests;
         }
         return [];
-    };
-
-
-    const notifyNewFriendRequests = (newRequests: FriendRequest[]): void => {
-        newRequests.forEach(request => {
-            const requester = request.requester;
-            const displayName = requester.nickname || requester.username;
-
-            sendNativeNotification(
-                'New Friend Request',
-                `${displayName} sent you a friend request`
-            );
-        });
     };
 
     const searchUsers = async (query: string): Promise<any[]> => {
@@ -467,7 +446,6 @@ export function useFriends() {
 
         getOnlineFriends,
         checkForNewRequests,
-        notifyNewFriendRequests,
 
         startIntelligentStatusUpdates,
         stopStatusUpdates,

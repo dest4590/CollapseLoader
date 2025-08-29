@@ -975,19 +975,23 @@ const handleToastPositionChange = (position: ToastPosition) => {
 }
 
 .tab {
-    @apply rounded-md;
+    border-radius: var(--radius-box, 0.5rem) !important;
+    overflow: hidden;
 }
 
-@keyframes slideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
+.tabs.tabs-boxed .tab {
+    border-radius: var(--radius-box, 0.5rem) !important;
+}
 
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.tab.tab-active,
+.tab-active {
+    border-radius: var(--radius-box, 0.5rem) !important;
+    overflow: hidden;
+}
+
+.tabs .tab,
+.tabs .tab>* {
+    border-radius: var(--radius-box, 0.5rem) !important;
 }
 
 .settings-card {
@@ -1100,5 +1104,23 @@ html[data-theme='dark'] .discord-icon {
 
 html[data-theme='light'] .discord-icon {
     filter: invert(0%) sepia(15%) saturate(17%) hue-rotate(253deg) brightness(95%) contrast(103%);
+}
+
+html[data-reduce-motion='true'] .settings-card,
+html[data-reduce-motion='true'] .animate-fadeInUp,
+html[data-reduce-motion='true'] .animate-slide-up,
+html[data-reduce-motion='true'] .animate-slide-in-right,
+html[data-reduce-motion='true'] .animate-bounce-gentle,
+html[data-reduce-motion='true'] .animate-pulse-gentle,
+html[data-reduce-motion='true'] .slide-up,
+html[data-reduce-motion='true'] .tab-switch-enter-from,
+html[data-reduce-motion='true'] .tab-switch-leave-to,
+html[data-reduce-motion='true'] .expert-fade-enter-from,
+html[data-reduce-motion='true'] .expert-fade-leave-to {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    max-height: none !important;
 }
 </style>

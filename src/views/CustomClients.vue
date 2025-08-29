@@ -21,6 +21,7 @@ import AddCustomClientModal from '../components/modals/AddCustomClientModal.vue'
 import EditCustomClientModal from '../components/modals/EditCustomClientModal.vue';
 import DeleteCustomClientConfirmModal from '../components/modals/DeleteCustomClientConfirmModal.vue';
 import CustomClientDisplaySettingsModal from '../components/modals/CustomClientDisplaySettingsModal.vue';
+import LogViewerModal from '../components/modals/LogViewerModal.vue';
 
 const { t } = useI18n();
 
@@ -63,7 +64,7 @@ const loadCustomClients = async () => {
     }
 };
 
-const checkRunningStatus = async () => {
+const checkCustomClientRunningStatus = async () => {
     try {
         const response = await invoke<number[]>('get_running_custom_client_ids');
         runningCustomClients.value = response;
@@ -96,7 +97,7 @@ const handleLaunchClient = async (client: CustomClient) => {
         });
 
         await new Promise((resolve) => setTimeout(resolve, 500));
-        await checkRunningStatus();
+        await checkCustomClientRunningStatus();
     } catch (err) {
         addToast(`Failed to launch ${client.name}: ${err}`, 'error');
     }
@@ -111,7 +112,7 @@ const stopCustomClient = async (id: number) => {
         await invoke('stop_custom_client', { id });
 
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        await checkRunningStatus();
+        await checkCustomClientRunningStatus();
     } catch (err) {
         console.error('Error stopping custom client:', err);
         addToast(`Error stopping client: ${err}`, 'error');
@@ -145,6 +146,24 @@ const handleDeleteClient = (client: CustomClient) => {
     });
 };
 
+const openLogViewer = (client: CustomClient) => {
+    showModal(
+        `log-viewer-${client.id}`,
+        LogViewerModal,
+        {
+            title: t('logs.title', { client: client.name }),
+            contentClass: 'wide',
+        },
+        {
+            clientId: client.id,
+            clientName: client.name,
+        },
+        {
+            close: () => { },
+        }
+    );
+};
+
 const loadDisplayMode = async () => {
     try {
         const flags = await invoke('get_flags');
@@ -164,20 +183,29 @@ const handleDisplaySettings = () => {
     showModal('custom-client-display-settings', CustomClientDisplaySettingsModal, { title: t("custom_clients.display_settings") }, {}, {});
 }
 
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+const formatDate = (dateString: string): string => {
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Unknown';
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = String(date.getFullYear());
+        return `${day}/${month}/${year}`;
+    } catch {
+        return 'Unknown';
+    }
 };
 
 onMounted(async () => {
     await loadCustomClients();
     await loadDisplayMode();
-    await checkRunningStatus();
+    await checkCustomClientRunningStatus();
 
     if (statusInterval.value !== null) {
         clearInterval(statusInterval.value);
     }
 
-    statusInterval.value = setInterval(checkRunningStatus, 5000) as unknown as number;
+    statusInterval.value = setInterval(checkCustomClientRunningStatus, 5000) as unknown as number;
 });
 
 onBeforeUnmount(() => {
@@ -234,8 +262,8 @@ const handleSearch = (query: string) => {
                 </h3>
                 <p class="text-base-content/70 mb-6">
                     {{ searchQuery
-                        ? 'Try adjusting your search query.'
-                        : 'Add your first custom client to get started.'
+                        ? t('custom_clients.no_results')
+                        : t('custom_clients.no_clients_yet')
                     }}
                 </p>
                 <button v-if="!searchQuery" @click="handleAddClient" class="btn btn-primary">
@@ -303,6 +331,10 @@ const handleSearch = (query: string) => {
                                 <Play v-else class="w-4 h-4" />
                                 {{ isCustomClientRunning(client.id) ? $t('custom_clients.stop') :
                                     $t('custom_clients.launch') }}
+                            </button>
+                            <button @click="openLogViewer(client)" class="btn btn-sm btn-ghost gap-2">
+                                <FileText class="w-4 h-4" />
+                                {{ $t('logs.view') }}
                             </button>
                         </div>
                     </div>
