@@ -4,9 +4,13 @@ use core::clients::{
 };
 use tauri::AppHandle;
 
-use crate::core::network::analytics::Analytics;
 use crate::core::utils::utils::emit_to_main_window;
 use crate::core::utils::{discord_rpc, logging};
+use crate::core::{
+    clients::custom_clients::{CustomClient, Version},
+    network::analytics::Analytics,
+    storage::custom_clients::{CustomClientUpdate, CUSTOM_CLIENT_MANAGER},
+};
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
     storage::common::JsonStorage,
@@ -455,8 +459,8 @@ fn calculate_md5_hash(path: &std::path::PathBuf) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn get_custom_clients() -> Vec<crate::core::clients::custom_clients::CustomClient> {
-    crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+pub fn get_custom_clients() -> Vec<CustomClient> {
+    CUSTOM_CLIENT_MANAGER
         .lock()
         .ok()
         .map(|manager| manager.clients.clone())
@@ -471,28 +475,21 @@ pub fn add_custom_client(
     file_path: String,
     main_class: String,
 ) -> Result<(), String> {
-    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+    let mut manager = CUSTOM_CLIENT_MANAGER
         .lock()
         .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
-    let version_enum = crate::core::clients::custom_clients::Version::from_string(&version);
+    let version_enum = Version::from_string(&version);
     let path_buf = PathBuf::from(file_path);
 
-    let custom_client = crate::core::clients::custom_clients::CustomClient::new(
-        0,
-        name,
-        version_enum,
-        filename,
-        path_buf,
-        main_class,
-    );
+    let custom_client = CustomClient::new(0, name, version_enum, filename, path_buf, main_class);
 
     manager.add_client(custom_client)
 }
 
 #[tauri::command]
 pub fn remove_custom_client(id: u32) -> Result<(), String> {
-    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+    let mut manager = CUSTOM_CLIENT_MANAGER
         .lock()
         .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
@@ -506,14 +503,13 @@ pub fn update_custom_client(
     version: Option<String>,
     main_class: Option<String>,
 ) -> Result<(), String> {
-    let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+    let mut manager = CUSTOM_CLIENT_MANAGER
         .lock()
         .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
-    let version_enum =
-        version.map(|v| crate::core::clients::custom_clients::Version::from_string(&v));
+    let version_enum = version.map(|v| Version::from_string(&v));
 
-    let updates = crate::core::storage::custom_clients::CustomClientUpdate {
+    let updates = CustomClientUpdate {
         name,
         version: version_enum,
         main_class,
@@ -529,7 +525,7 @@ pub async fn launch_custom_client(
     app_handle: AppHandle,
 ) -> Result<(), String> {
     let custom_client = {
-        let mut manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        let mut manager = CUSTOM_CLIENT_MANAGER
             .lock()
             .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
@@ -566,7 +562,7 @@ pub async fn launch_custom_client(
 #[tauri::command]
 pub async fn get_running_custom_client_ids() -> Vec<u32> {
     let handle = tokio::task::spawn_blocking(|| {
-        crate::core::clients::custom_clients::CustomClient::get_running_custom_clients()
+        CustomClient::get_running_custom_clients()
             .iter()
             .map(|client| client.id)
             .collect()
@@ -578,7 +574,7 @@ pub async fn get_running_custom_client_ids() -> Vec<u32> {
 #[tauri::command]
 pub async fn stop_custom_client(id: u32) -> Result<(), String> {
     let custom_client = {
-        let manager = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        let manager = CUSTOM_CLIENT_MANAGER
             .lock()
             .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 

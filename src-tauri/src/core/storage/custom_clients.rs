@@ -1,6 +1,7 @@
 use std::{fs, path::PathBuf, sync::Mutex};
 
 use crate::core::clients::custom_clients::CustomClient;
+use crate::core::clients::custom_clients::Version;
 use crate::core::storage::data::DATA;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -41,7 +42,13 @@ impl CustomClientManager {
                 .map_err(|e| format!("Failed to create custom clients directory: {}", e))?;
         }
 
-        let target_path = custom_clients_dir.join(&custom_client.filename);
+        let client_dir = custom_clients_dir.join(&custom_client.name);
+        if !client_dir.exists() {
+            fs::create_dir_all(&client_dir)
+                .map_err(|e| format!("Failed to create client directory: {}", e))?;
+        }
+
+        let target_path = client_dir.join(&custom_client.filename);
         fs::copy(&custom_client.file_path, &target_path)
             .map_err(|e| format!("Failed to copy file: {}", e))?;
 
@@ -109,7 +116,7 @@ impl CustomClientManager {
 #[derive(Debug)]
 pub struct CustomClientUpdate {
     pub name: Option<String>,
-    pub version: Option<crate::core::clients::custom_clients::Version>,
+    pub version: Option<Version>,
     pub main_class: Option<String>,
 }
 

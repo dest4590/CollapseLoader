@@ -365,10 +365,17 @@ impl Client {
                 )
             };
 
-            let client_folder = DATA
-                .root_dir
-                .join(DATA.get_as_folder_string(&self_clone.filename));
-            let client_jar_path = client_folder.join(&self_clone.filename);
+            let (client_folder, client_jar_path) = if self_clone.meta.is_custom {
+                let folder = DATA.root_dir.join("custom_clients").join(&self_clone.name);
+                let jar = folder.join(&self_clone.filename);
+                (folder, jar)
+            } else {
+                let folder = DATA
+                    .root_dir
+                    .join(DATA.get_as_folder_string(&self_clone.filename));
+                let jar = folder.join(&self_clone.filename);
+                (folder, jar)
+            };
 
             let agent_overlay_folder = DATA.root_dir.join("agent_overlay");
 
