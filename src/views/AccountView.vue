@@ -1,141 +1,147 @@
 <template>
-    <div class="max-w-xl mx-auto p-6 slide-up">
-        <div class="card bg-gradient-to-br from-primary/10 to-primary/5 shadow-md border border-primary/20 mb-6">
-            <div class="card-body">
-                <div class="flex items-center gap-4 mb-4">
-                    <UserAvatar :name="userInfo.nickname || userInfo.username || 'User'" size="lg" />
-                    <div class="flex-1">
-                        <h2 class="text-xl font-semibold text-primary-focus flex items-center gap-2">
-                            {{
-                                userInfo.nickname || userInfo.username || 'User'
-                            }}
-                            <button @click="openNicknameModal" class="btn btn-ghost btn-xs p-1 h-auto min-h-0"
-                                :disabled="isLoadingFromCache">
-                                <edit-icon class="w-3 h-3" />
-                            </button>
-                        </h2>
-                        <p class="text-base-content/70 text-sm">
-                            @{{ userInfo.username || 'username' }}
-                        </p>
-                        <p class="text-base-content/60 text-xs">
-                            {{ userInfo.email || t('account.no_email') }}
-                        </p>
-                        <div class="flex items-center mt-2 text-sm">
-                            <div class="badge" :class="invisibleMode
-                                ? 'badge-secondary'
-                                : 'badge-success'
-                                ">
-                                {{
-                                    invisibleMode
-                                        ? t('time.offline')
-                                        : t('time.online')
-                                }}
+    <div class="max-w-3xl mx-auto p-6 slide-up">
+        <div class="grid gap-6 grid-cols-1 md:grid-cols-2">
+            <div class="col-span-1 md:col-span-2">
+                <div class="card shadow-md border border-base-300">
+                    <div class="card-body">
+                        <div class="flex items-center gap-4 mb-4">
+                            <UserAvatar :name="userInfo.nickname || userInfo.username || 'User'" size="lg" />
+                            <div class="flex-1">
+                                <div class="flex items-start justify-between">
+                                    <h2 class="text-xl font-semibold text-primary-focus flex items-center gap-2">
+                                        {{ userInfo.nickname || userInfo.username || 'User' }}
+                                        <button @click="openNicknameModal"
+                                            class="btn btn-ghost btn-xs p-1 h-auto min-h-0"
+                                            :disabled="isLoadingFromCache">
+                                            <EditIcon class="w-3 h-3" />
+                                        </button>
+                                    </h2>
+                                </div>
+                                <p class="text-base-content/70 text-sm mt-1">
+                                    @{{ userInfo.username || 'username' }}
+                                </p>
+                                <p class="text-base-content/60 text-xs mt-1">
+                                    <button class="btn btn-ghost btn-sm p-0 h-auto min-h-0" @click="toggleShowEmail"
+                                        :disabled="isLoadingFromCache">
+                                        {{ showEmail ? (userInfo.email || t('account.no_email')) : (maskedEmail ||
+                                            t('account.no_email')) }}
+                                    </button>
+                                </p>
+                                <div class="flex items-center mt-3 text-sm">
+                                    <div class="badge" :class="invisibleMode ? 'badge-secondary' : 'badge-success'">
+                                        {{ invisibleMode ? t('time.offline') : t('time.online') }}
+                                    </div>
+                                    <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
+                                        t('account.social_links') }}</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-            <div class="card-body">
-                <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                    {{ t('account.invisible_mode') }}
-                </h2>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium">
+            <div>
+                <div class="card bg-base-200 shadow-md border border-base-300 h-full">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-2">
                             {{ t('account.invisible_mode') }}
-                        </h3>
-                        <p class="text-sm text-base-content/70">
-                            {{ t('account.invisible_mode_description') }}
-                        </p>
+                        </h2>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">
+                                    {{ t('account.invisible_mode') }}
+                                </h3>
+                                <p class="text-sm text-base-content/70">
+                                    {{ t('account.invisible_mode_description') }}
+                                </p>
+                            </div>
+                            <input type="checkbox" class="checkbox" v-model="invisibleMode"
+                                @change="handleInvisibleModeToggle" :disabled="isLoadingFromCache" />
+                        </div>
+                        <div v-if="isLoadingFromCache" class="text-sm text-warning mt-3">
+                            <span>{{ t('account.using_cached_data') }}</span>
+                        </div>
                     </div>
-                    <input type="checkbox" class="checkbox" v-model="invisibleMode" @change="handleInvisibleModeToggle"
-                        :disabled="isLoadingFromCache" />
-                </div>
-                <div v-if="isLoadingFromCache" class="text-sm text-warning">
-                    <span v-if="isLoadingFromCache">{{
-                        t('account.using_cached_data')
-                    }}</span>
                 </div>
             </div>
-        </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-            <div class="card-body">
-                <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                    {{ t('account.streamer_mode') }}
-                </h2>
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-medium">
+            <div>
+                <div class="card bg-base-200 shadow-md border border-base-300 h-full">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-2">
                             {{ t('account.streamer_mode') }}
-                        </h3>
-                        <p class="text-sm text-base-content/70">
-                            {{ t('account.streamer_mode_description') }}
-                        </p>
+                        </h2>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-medium">
+                                    {{ t('account.streamer_mode') }}
+                                </h3>
+                                <p class="text-sm text-base-content/70">
+                                    {{ t('account.streamer_mode_description') }}
+                                </p>
+                            </div>
+                            <input type="checkbox" class="checkbox" v-model="streamerMode"
+                                @change="handleStreamerModeToggle" />
+                        </div>
                     </div>
-                    <input type="checkbox" class="checkbox" v-model="streamerMode" @change="handleStreamerModeToggle" />
                 </div>
             </div>
-        </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-            <div class="card-body">
-                <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                    {{ t('account.change_password') }}
-                </h2>
-                <form @submit.prevent="handleChangePassword">
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text">{{
-                                t('account.current_password')
-                            }}</span>
-                        </label>
-                        <input v-model="currentPassword" type="password" :placeholder="t('account.current_password')"
-                            class="input input-bordered w-full bg-base-100" required :disabled="isLoadingFromCache" />
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
+                            {{ t('account.change_password') }}
+                        </h2>
+                        <form @submit.prevent="handleChangePassword">
+                            <div class="form-control mb-4">
+                                <label class="label">
+                                    <span class="label-text">{{ t('account.current_password') }}</span>
+                                </label>
+                                <input v-model="currentPassword" type="password"
+                                    :placeholder="t('account.current_password')"
+                                    class="input input-bordered w-full bg-base-100" required
+                                    :disabled="isLoadingFromCache" />
+                            </div>
+                            <div class="form-control mb-4">
+                                <label class="label">
+                                    <span class="label-text">{{ t('account.new_password') }}</span>
+                                </label>
+                                <input v-model="newPassword" type="password" :placeholder="t('account.new_password')"
+                                    class="input input-bordered w-full bg-base-100" required
+                                    :disabled="isLoadingFromCache" />
+                            </div>
+                            <div class="form-control mb-6">
+                                <label class="label">
+                                    <span class="label-text">{{ t('account.confirm_password') }}</span>
+                                </label>
+                                <input v-model="confirmNewPassword" type="password"
+                                    :placeholder="t('account.confirm_password')"
+                                    class="input input-bordered w-full bg-base-100" required
+                                    :disabled="isLoadingFromCache" />
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full" :disabled="isLoadingFromCache">
+                                {{ isLoadingFromCache ? t('account.using_cached_data') : t('account.change_password') }}
+                            </button>
+                        </form>
                     </div>
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text">{{
-                                t('account.new_password')
-                            }}</span>
-                        </label>
-                        <input v-model="newPassword" type="password" :placeholder="t('account.new_password')"
-                            class="input input-bordered w-full bg-base-100" required :disabled="isLoadingFromCache" />
-                    </div>
-                    <div class="form-control mb-6">
-                        <label class="label">
-                            <span class="label-text">{{
-                                t('account.confirm_password')
-                            }}</span>
-                        </label>
-                        <input v-model="confirmNewPassword" type="password" :placeholder="t('account.confirm_password')"
-                            class="input input-bordered w-full bg-base-100" required :disabled="isLoadingFromCache" />
-                    </div>
-                    <button type="submit" class="btn btn-primary w-full" :disabled="isLoadingFromCache">
-                        {{
-                            isLoadingFromCache
-                                ? t('account.using_cached_data')
-                                : t('account.change_password')
-                        }}
-                    </button>
-                </form>
+                </div>
             </div>
-        </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300">
-            <div class="card-body">
-                <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                    {{ t('common.logout') }}
-                </h2>
-                <p class="text-base-content/70 mb-4">
-                    {{ t('auth.logout.confirm') }}
-                </p>
-                <button @click="handleLogout" class="btn btn-error w-full">
-                    {{ t('common.logout') }}
-                </button>
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
+                            {{ t('common.logout') }}
+                        </h2>
+                        <p class="text-base-content/70 mb-4">
+                            {{ t('auth.logout.confirm') }}
+                        </p>
+                        <button @click="handleLogout" class="btn btn-error w-full">
+                            {{ t('common.logout') }}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -147,6 +153,7 @@ import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
 import EditNicknameModal from '../components/modals/EditNicknameModal.vue';
+import SocialLinksModal from '../components/modals/SocialLinksModal.vue';
 import ChangePasswordConfirmModal from '../components/modals/ChangePasswordConfirmModal.vue';
 import LogoutConfirmModal from '../components/modals/LogoutConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
@@ -166,6 +173,7 @@ const currentPassword = ref('');
 const newPassword = ref('');
 const confirmNewPassword = ref('');
 const nickname = ref('');
+const showEmail = ref(false);
 
 const {
     username,
@@ -206,6 +214,26 @@ const userInfo = computed(() => {
 });
 
 const isLoadingFromCache = computed(() => isLoadingUserData.value);
+
+const maskedEmail = computed(() => {
+    const email = userInfo.value.email || '';
+    if (!email) return '';
+    const parts = email.split('@');
+    if (parts.length !== 2) return '*****';
+    const local = parts[0];
+    const domain = parts[1];
+
+    const maskedLocal = local.length > 2 ? `${local[0]}***${local.slice(-1)}` : '*'.repeat(Math.max(1, local.length - 1));
+
+    const lastDot = domain.lastIndexOf('.');
+    const maskedDomain = lastDot > 0 ? `*****${domain.slice(lastDot)}` : '*****';
+
+    return `${maskedLocal}@${maskedDomain}`;
+});
+
+const toggleShowEmail = () => {
+    showEmail.value = !showEmail.value;
+};
 
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
@@ -278,6 +306,18 @@ const openNicknameModal = () => {
                 }
             },
             close: () => hideModal('edit-nickname'),
+        }
+    );
+};
+
+const openSocialLinks = () => {
+    showModal(
+        'social-links',
+        SocialLinksModal,
+        { title: t('modals.social_links.title') },
+        {},
+        {
+            close: () => hideModal('social-links'),
         }
     );
 };

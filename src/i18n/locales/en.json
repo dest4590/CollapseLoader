@@ -93,6 +93,19 @@
       "cancel": "Cancel",
       "nickname_taken": "This nickname is already taken"
     },
+    "social_links": {
+      "title": "Social Links",
+      "add_title": "Add Social Link",
+      "edit_title": "Edit Social Link",
+      "fill_fields": "Please select a platform and enter a valid URL.",
+      "added": "Social link added.",
+      "add_failed": "Failed to add social link.",
+      "load_failed": "Failed to load social links.",
+      "deleted": "Social link deleted.",
+      "delete_failed": "Failed to delete social link.",
+      "updated": "Social link updated.",
+      "update_failed": "Failed to update social link."
+    },
     "edit_account": {
       "username_label": "Username",
       "tags_label": "Tags (comma separated)",
@@ -245,7 +258,10 @@
     "profile_load_failed": "Failed to load user profile.",
     "invisible_enabled": "Invisible mode enabled",
     "invisible_disabled": "Invisible mode disabled",
-    "logout_confirm_title": "Confirm Logout"
+    "logout_confirm_title": "Confirm Logout",
+    "social_links": "Social Links",
+    "social_links_description": "Manage links to your social profiles",
+    "no_social_links": "No social links added yet."
   },
   "time": {
     "offline": "Offline",
@@ -276,7 +292,9 @@
     "ok": "Ok",
     "close": "Close",
     "save": "Save",
-    "browse": "Browse"
+    "browse": "Browse",
+    "edit": "Edit",
+    "add": "Add"
   },
   "auth": {
     "logout": {
@@ -568,7 +586,8 @@
   },
   "logs": {
     "copy_logs": "Copy logs",
-    "title": "{client} Logs"
+    "title": "{client} Logs",
+    "view": "View logs"
   },
   "installation": {
     "downloading": "Downloading",
@@ -713,6 +732,9 @@
     "profile_load_failed": "Failed to load user profile",
     "friend_request_sent_success": "Friend request sent to {name}",
     "friend_request_failed": "Failed to send friend request",
+    "copy_username": "Copy username",
+    "copied_username": "{name} copied to clipboard",
+    "copy_failed": "Failed to copy username",
     "friend_request_canceled": "Friend request canceled successfully",
     "friend_request_cancel_failed": "Failed to cancel friend request",
     "friend_removed_success": "{name} removed from friends",
@@ -721,7 +743,8 @@
     "friend_request_respond_failed": "Failed to {action} friend request",
     "friend_request_not_found": "Friend request not found",
     "user_blocked_success": "{name} has been blocked",
-    "user_block_failed": "Failed to block user"
+    "user_block_failed": "Failed to block user",
+    "social_links": "Social links"
   },
   "sync": {
     "last_sync": "Last sync",
@@ -800,6 +823,10 @@
       "example": "This is an example toast!",
       "menu_opened": "Developer menu opened",
       "flags_reset": "Flags have been reset!"
+    },
+    "theme": {
+      "emergency_reset_done": "Custom CSS reset. {action}",
+      "emergency_reset_toggle_instruction": "To re-enable custom CSS, open Theme settings and toggle 'Enable custom CSS' off and on."
     },
     "client": {
       "crashed": "Client {name} has crashed. {error}",
@@ -965,7 +992,6 @@
     "latest": "Latest",
     "critical": "Critical",
     "version_info": "Current: {current} → Latest: {latest}",
-    "release_notes": "Release Notes",
     "changelog": "Changelog",
     "download_install": "Download & Install",
     "downloading": "Downloading...",
@@ -989,13 +1015,7 @@
       "bugfix": "Bug Fixes",
       "other": "Other Changes"
     },
-    "changelogs": {
-      "feature": {
-        "v0_1_7": {
-          "added_custom_clients": "Added custom clients management system"
-        }
-      }
-    }
+    "no_update": "Updated not found"
   },
   "custom_clients": {
     "add": "Add custom client",
@@ -1008,6 +1028,8 @@
     "display_settings": "Display settings",
     "display_mode": "Display Mode",
     "display_mode_separate": "Separate",
-    "display_mode_global": "Global"
+    "display_mode_global": "Global",
+    "no_results": "Try adjusting your search query.",
+    "no_clients_yet": "Add your first custom client to get started."
   }
 }
