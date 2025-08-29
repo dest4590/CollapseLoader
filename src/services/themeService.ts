@@ -66,6 +66,15 @@ const defaultSettings: CardSettings = {
 
 const presetSettings = reactive<CardSettings>({ ...defaultSettings });
 
+export const cssVarList = [
+    '--client-card-radius', '--client-card-shadow', '--client-card-padding',
+    '--radius-box', '--radius-field', '--radius-selector', '--color-primary',
+    '--color-base-100', '--color-base-200', '--color-base-300', '--color-base-content',
+    '--color-primary-content', '--color-secondary', '--color-secondary-content', '--color-accent', '--color-accent-content',
+    '--color-neutral', '--color-neutral-content', '--color-info', '--color-info-content', '--color-success', '--color-success-content',
+    '--color-warning', '--color-warning-content', '--color-error', '--color-error-content'
+];
+
 const applyPreset = () => {
     const root = document.documentElement;
 
@@ -179,6 +188,25 @@ const resetPresetSettings = () => {
     applyPreset();
 };
 
+const clearCustomTheme = () => {
+    const styleEl = document.getElementById('custom-theme-styles');
+    if (styleEl && styleEl.parentNode) {
+        styleEl.parentNode.removeChild(styleEl);
+    }
+
+    const root = document.documentElement;
+    cssVarList.forEach(v => root.style.removeProperty(v));
+};
+
+const emergencyReset = () => {
+    Object.assign(presetSettings, defaultSettings);
+    presetSettings.enableCustomCSS = false;
+    saveCardSettings();
+    applyPreset();
+
+    clearCustomTheme();
+};
+
 const exportPreset = (): string => {
     const preset = {
         borderRadius: presetSettings.borderRadius,
@@ -266,6 +294,8 @@ export const themeService = {
     presetSettings,
     updatePresetSettings,
     resetPresetSettings,
+    clearCustomTheme,
+    emergencyReset,
     loadSettings,
     saveCardSettings,
     exportPreset,
