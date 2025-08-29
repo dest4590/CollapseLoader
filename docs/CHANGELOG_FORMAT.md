@@ -145,5 +145,3 @@ Notes for maintainers:
 - If the release body does not contain a `changelog` fenced block, the updater will fall back to built-in static changelog entries included in the application binary.
  - If the release body does not contain a `changelog` fenced block, the application will not show any changelog entries (there is no built-in fallback anymore). Always include a `changelog` block in releases to ensure users see the changelog.
 - Keep translation keys stable across versions when possible to reduce duplication in locale files. You can scope them by version (e.g. `v0_1_8`) or by feature name.
-
-If you need help adding keys to locales or verifying the JSON block, I can generate the JSON or update locale files for you.
