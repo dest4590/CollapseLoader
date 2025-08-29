@@ -4,7 +4,7 @@
             <label class="label">
                 <span class="label-text">{{
                     t('modals.add_friend.search_label')
-                }}</span>
+                    }}</span>
             </label>
             <input v-model="searchQuery" type="text" :placeholder="t('modals.add_friend.search_placeholder')"
                 class="input input-bordered w-full" @input="handleSearch" />
@@ -82,7 +82,8 @@
             </div>
         </div>
 
-        <div class="modal-action flex-shrink-0 pt-4 border-t border-base-300">
+        <div class="modal-action flex-shrink-0 pt-4"
+            :class="{ 'border-t border-base-300': searchResults.length !== 0 }">
             <button @click="$emit('close')" class="btn btn-outline w-full sm:w-auto">
                 {{ t('modals.add_friend.close') }}
             </button>

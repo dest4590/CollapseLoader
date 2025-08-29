@@ -71,6 +71,10 @@
     --noise: 0;
 }
 
+html {
+    @apply bg-base-200;
+}
+
 .slide-up {
     animation: slideUp 0.5s ease forwards;
 }

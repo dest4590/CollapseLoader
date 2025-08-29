@@ -1058,6 +1058,10 @@ onBeforeUnmount(() => {
     border-radius: var(--client-card-radius, 0.5rem);
     box-shadow: var(--client-card-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
     padding: var(--client-card-padding, 1rem);
+
+    scrollbar-gutter: stable both-edges;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 }
 
 .client-details {
@@ -1065,8 +1069,35 @@ onBeforeUnmount(() => {
     max-height: 0px;
     overflow: hidden;
     display: none;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    scrollbar-gutter: stable;
+}
+
+.timeline {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+}
+
+.client-card::-webkit-scrollbar,
+.timeline::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.client-card::-webkit-scrollbar-track,
+.timeline::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.client-card::-webkit-scrollbar-thumb,
+.timeline::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 100, 100, 0.35);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+.client-card[style*="position: fixed"] {
+    scrollbar-gutter: stable;
 }
 
 .status-section {
