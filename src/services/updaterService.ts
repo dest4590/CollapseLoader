@@ -2,14 +2,28 @@ import { invoke } from '@tauri-apps/api/core';
 import { useModal } from './modalService';
 import { useToast } from './toastService';
 import UpdateModal from '../components/modals/UpdateModal.vue';
+import i18n from '../i18n';
+
+interface ChangeItem {
+    category: string;
+    description_key: string;
+    icon?: string;
+}
+
+interface ChangelogEntry {
+    version: string;
+    changes: ChangeItem[];
+    date?: string;
+    highlights?: string[];
+}
 
 interface UpdateInfo {
     available: boolean;
     current_version: string;
     latest_version: string;
     download_url?: string;
-    changelog?: string;
-    release_notes?: string;
+    changelog?: ChangelogEntry[];
+    translations?: Record<string, any>;
 }
 
 class UpdaterService {
@@ -27,6 +41,36 @@ class UpdaterService {
         try {
             console.log('Checking for updates...');
             const updateInfo = await invoke<UpdateInfo>('check_for_updates');
+            if (updateInfo?.translations && typeof updateInfo.translations === 'object') {
+                try {
+                    const translations = updateInfo.translations as Record<string, any>;
+                    const isObject = (v: any) => v && typeof v === 'object' && !Array.isArray(v);
+
+                    const deepMerge = (target: any, source: any): any => {
+                        if (!isObject(target)) return source;
+                        const out: any = { ...target };
+                        Object.keys(source).forEach(key => {
+                            const sVal = source[key];
+                            const tVal = out[key];
+                            if (isObject(sVal) && isObject(tVal)) {
+                                out[key] = deepMerge(tVal, sVal);
+                            } else {
+                                out[key] = sVal;
+                            }
+                        });
+                        return out;
+                    };
+
+                    Object.keys(translations).forEach(locale => {
+                        const existing = i18n.global.getLocaleMessage(locale) || {};
+                        const merged = deepMerge(existing, translations[locale]);
+                        i18n.global.setLocaleMessage(locale, merged);
+                    });
+                    console.log('Merged release translations into i18n:', Object.keys(translations));
+                } catch (e) {
+                    console.warn('Failed to merge release translations:', e);
+                }
+            }
             console.log('Update check result:', updateInfo);
 
             if (updateInfo.available) {

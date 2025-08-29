@@ -10,23 +10,13 @@
                     <ChevronRight class="w-4 h-4 text-base-content/40" />
                     <div class="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
                         <span class="text-base-content/60">{{ t('updater.latest') }}:</span>
-                        <code class="text-primary font-mono font-bold">v{{ updateInfo.latest_version }}</code>
+                        <code class="text-primary font-mono font-bold">{{ updateInfo.latest_version }}</code>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="flex-1 overflow-y-auto min-h-0 space-y-6" style="max-height: calc(80vh - 160px);">
-            <div v-if="updateInfo.release_notes" class="bg-base-200/50 rounded-lg p-4 border border-base-300/50">
-                <h4 class="font-semibold mb-3 flex items-center gap-2 text-primary">
-                    <FileText class="w-4 h-4" />
-                    {{ t('updater.release_notes') }}
-                </h4>
-                <div class="prose prose-sm max-w-none text-base-content/80 [&>p]:mb-2 [&>ul]:mb-2 [&>li]:mb-1">
-                    <div v-html="formatReleaseNotes(updateInfo.release_notes)"></div>
-                </div>
-            </div>
-
             <div v-if="updateInfo.changelog && updateInfo.changelog.length > 0" class="space-y-4">
                 <div class="divider">
                     <h4 class="font-semibold flex items-center gap-2 text-primary">
@@ -46,7 +36,7 @@
                         <div class="flex items-center gap-4 mb-4">
                             <div class="flex-1">
                                 <div class="flex items-center gap-3 mb-1">
-                                    <h5 class="text-lg font-bold">v{{ entry.version }}</h5>
+                                    <h5 class="text-lg font-bold">{{ entry.version }}</h5>
                                     <span class="text-xs text-base-content/50">
                                         {{ entry.date }}
                                     </span>
@@ -84,12 +74,7 @@
                                         :class="getCategoryBgClass(category)">
                                         <span class="text-lg flex-shrink-0 mt-0.5">{{ change.icon }}</span>
                                         <span class="text-sm text-base-content/80 leading-relaxed">
-                                            {{
-                                                t(
-                                                    `updater.changelogs.${category}.v${entry.version.replace(/\./g,
-                                                        "_")}.${change.description_key}`
-                                                )
-                                            }}
+                                            {{ resolveDescription(change, entry) }}
                                         </span>
                                     </div>
                                 </div>
@@ -160,7 +145,6 @@ interface UpdateInfo {
     available: boolean;
     current_version: string;
     latest_version: string;
-    release_notes: string;
     download_url: string;
     changelog: ChangelogEntry[];
     release_date: string;
@@ -191,14 +175,6 @@ const displayedChangelogEntries = computed(() => {
 
 const toggleShowAllChangelog = () => {
     showAllChangelog.value = !showAllChangelog.value;
-};
-
-const formatReleaseNotes = (notes: string): string => {
-    return notes
-        .replace(/\n/g, '<br>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/`(.*?)`/g, '<code class="bg-base-300 px-1 rounded text-sm">$1</code>');
 };
 
 const groupChangesByCategory = (changes: ChangeItem[]) => {
@@ -269,6 +245,25 @@ const handleDownload = async () => {
         emit('download');
     } finally {
     }
+};
+
+// Resolve description: try full key, then scoped key, then literal text.
+const resolveDescription = (change: ChangeItem, entry: ChangelogEntry) => {
+    const raw = change.description_key || '';
+    // If looks like a translation key, try to resolve directly
+    if (raw.includes('.')) {
+        const val = t(raw as any) as string;
+        if (val && val !== raw) return val;
+    }
+
+    // Try scoped key: updater.changelogs.<category>.v<version_underscored>.<raw>
+    const versionKey = `v${entry.version.replace(/\./g, '_')}`;
+    const scoped = `updater.changelogs.${change.category}.${versionKey}.${raw}`;
+    const scopedVal = t(scoped as any) as string;
+    if (scopedVal && scopedVal !== scoped) return scopedVal;
+
+    // Fallback: if raw contains no dots, return raw as literal text
+    return raw;
 };
 </script>
 

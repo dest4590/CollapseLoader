@@ -3,6 +3,7 @@ use crate::{
     log_debug, log_warn,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use std::cmp::Ordering;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -55,6 +56,7 @@ pub struct UpdateInfo {
     pub release_notes: String,
     pub download_url: String,
     pub changelog: Vec<ChangelogEntry>,
+    pub translations: Option<JsonValue>,
     pub release_date: String,
     pub is_critical: bool,
 }
@@ -93,22 +95,6 @@ fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
     }
 }
 
-fn get_changelog_entries() -> Vec<ChangelogEntry> {
-    vec![ChangelogEntry {
-        version: "0.1.7".to_string(),
-        changes: vec![ChangeItem {
-            category: Category::Feature,
-            description_key: "added_custom_clients".to_string(),
-            icon: "🎮".to_string(),
-        }],
-        date: "27.07.2025".to_string(),
-        highlights: vec![
-            "Public alpha release".to_string(),
-            "Core client management".to_string(),
-        ],
-    }]
-}
-
 #[tauri::command]
 pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     let current_version = env!("CARGO_PKG_VERSION");
@@ -118,6 +104,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         "https://api.github.com/repos/{}/{}/releases/latest",
         GITHUB_REPO_OWNER, GITHUB_REPO_NAME
     );
+    // let url = "http://127.0.0.1:8000/repos/dest4590/CollapseLoader/releases/latest".to_string();
 
     let response = client
         .get(&url)
@@ -145,6 +132,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
             release_notes: "Latest release is a prerelease".to_string(),
             download_url: String::new(),
             changelog: get_changelog(),
+            translations: None,
             release_date: release.published_at,
             is_critical: false,
         });
@@ -188,13 +176,18 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         ));
     }
 
+    let (parsed_changelog, parsed_translations) = extract_changelog_json_block(&release.body)
+        .and_then(|content| parse_changelog_and_translations(&content).ok())
+        .unwrap_or_default();
+
     Ok(UpdateInfo {
         available: is_newer,
         current_version: current_version.to_string(),
         latest_version: release.tag_name,
         release_notes: release.body.clone(),
         download_url,
-        changelog: get_changelog(),
+        changelog: parsed_changelog,
+        translations: parsed_translations,
         release_date: release.published_at,
         is_critical: release.body.to_lowercase().contains("security")
             || release.body.to_lowercase().contains("critical"),
@@ -272,5 +265,60 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
 
 #[tauri::command]
 pub fn get_changelog() -> Vec<ChangelogEntry> {
-    get_changelog_entries()
+    Vec::new()
+}
+
+fn extract_changelog_json_block(body: &str) -> Option<String> {
+    let marker = if let Some(idx) = body.find("```changelog") {
+        (idx, "```changelog")
+    } else if let Some(idx) = body.find("``` changelog") {
+        (idx, "``` changelog")
+    } else {
+        return None;
+    };
+
+    let start_idx = marker.0;
+
+    let after_marker = &body[start_idx..];
+    let first_newline = after_marker.find('\n')?;
+    let content_start = start_idx + first_newline + 1;
+
+    let rest = &body[content_start..];
+    if let Some(closing_rel) = rest.find("```") {
+        let closing_idx = content_start + closing_rel;
+        let content = &body[content_start..closing_idx];
+        return Some(content.trim().to_string());
+    }
+
+    None
+}
+
+fn parse_changelog_and_translations(
+    content: &str,
+) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
+    if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) {
+        return Ok((v, None));
+    }
+
+    if let Ok(entry) = serde_json::from_str::<ChangelogEntry>(content) {
+        return Ok((vec![entry], None));
+    }
+
+    let root: JsonValue = serde_json::from_str(content)
+        .map_err(|e| format!("Failed to parse changelog JSON root: {}", e))?;
+
+    if root.is_object() {
+        let entries_val = root.get("entries");
+        let translations_val = root.get("translations").cloned();
+
+        if let Some(ev) = entries_val {
+            let entries_json = serde_json::to_string(ev)
+                .map_err(|e| format!("Failed to serialize entries node: {}", e))?;
+            let entries: Vec<ChangelogEntry> = serde_json::from_str(&entries_json)
+                .map_err(|e| format!("Failed to parse entries array: {}", e))?;
+            return Ok((entries, translations_val));
+        }
+    }
+
+    Err("Changelog JSON is not in a recognized format".to_string())
 }
