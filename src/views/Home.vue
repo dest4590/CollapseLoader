@@ -439,7 +439,20 @@ const checkRunningStatus = async () => {
     if (isLeaving.value) return;
     try {
         const response = await invoke<number[]>('get_running_client_ids');
-        runningClients.value = response;
+        let currentRunning: number[] = response || [];
+
+        if (customClientsDisplayMode.value === 'global') {
+            try {
+                const customResponse = await invoke<number[]>('get_running_custom_client_ids');
+                if (Array.isArray(customResponse)) {
+                    currentRunning = Array.from(new Set([...currentRunning, ...customResponse]));
+                }
+            } catch (err) {
+                console.error('Error checking custom client running status:', err);
+            }
+        }
+
+        runningClients.value = currentRunning;
     } catch (err) {
         console.error('Error checking running status:', err);
     }
