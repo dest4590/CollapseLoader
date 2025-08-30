@@ -33,6 +33,8 @@
                                     </div>
                                     <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
                                         t('account.social_links') }}</button>
+                                    <span v-if="roleBadge" :class="roleBadge.className + ' ml-2 text-sm'">{{
+                                        roleBadge.text }}</span>
                                 </div>
                             </div>
                         </div>
@@ -164,6 +166,7 @@ import { apiPost } from '../services/authClient';
 import { getCurrentLanguage } from '../i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
 import { useUser } from '../composables/useUser';
+import getRoleBadge from '../utils/roleBadge';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -197,12 +200,14 @@ const userInfo = computed(() => {
     const nickname = userNickname.value;
     const user = username.value;
     const mail = email.value;
+    const role = (useUser().profile.value && (useUser().profile.value as any).role) || null;
 
     if (globalUserStatus.isStreamer.value) {
         return {
             nickname: '??????',
             username: 'unknown',
             email: 'unknown@*****.***',
+            role: null,
         };
     }
 
@@ -210,7 +215,12 @@ const userInfo = computed(() => {
         nickname: nickname,
         username: user,
         email: mail,
+        role: role,
     };
+});
+
+const roleBadge = computed(() => {
+    return getRoleBadge(userInfo.value.role, (k: string) => t(k));
 });
 
 const isLoadingFromCache = computed(() => isLoadingUserData.value);

@@ -263,6 +263,12 @@
     "social_links_description": "Manage links to your social profiles",
     "no_social_links": "No social links added yet."
   },
+  "roles": {
+    "user": "User",
+    "admin": "Admin",
+    "developer": "Developer",
+    "owner": "Owner"
+  },
   "time": {
     "offline": "Offline",
     "online": "Online"

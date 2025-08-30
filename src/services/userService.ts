@@ -6,6 +6,7 @@ interface UserProfile {
     favorites_data?: number[];
     accounts_data?: any[];
     last_sync_timestamp?: string;
+    role?: string;
 }
 
 interface UserInfo {
@@ -82,6 +83,7 @@ interface PublicUserProfile {
         created_at?: string;
         updated_at?: string;
     }>;
+    role?: string;
 }
 
 const CACHE_KEY = 'userData';

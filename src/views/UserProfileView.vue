@@ -16,8 +16,10 @@
                         <UserAvatar :name="displayNickname" size="lg" :show-status="false"
                             :is-online="userProfile.status.is_online" />
                         <div class="flex-1">
-                            <h1 class="text-2xl font-bold text-primary-focus">
+                            <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
+                                <span v-if="roleBadge" :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
+                                    }}</span>
                             </h1>
                             <p class="text-lg text-base-content/70">
                                 @{{ displayUsername }}
@@ -40,7 +42,7 @@
                                     <div class="w-3 h-3 bg-success rounded-full"></div>
                                     <span class="text-success font-medium">{{
                                         t('userProfile.online')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div v-else-if="userProfile.status.last_seen" class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
@@ -55,7 +57,7 @@
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
                                     <span class="text-base-content/70">{{
                                         t('userProfile.offline')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -243,6 +245,7 @@ import {
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
+import getRoleBadge from '../utils/roleBadge';
 
 interface Props {
     userId?: number;
@@ -274,6 +277,11 @@ const displayUsername = computed(() => {
         return 'streamer';
     }
     return userProfile.value.username;
+});
+
+const roleBadge = computed(() => {
+    if (!userProfile.value) return null;
+    return getRoleBadge((userProfile.value as any).role, (k: string) => t(k));
 });
 
 const loadUserProfile = async () => {
