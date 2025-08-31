@@ -9,9 +9,17 @@ pub fn get_version() -> Result<serde_json::Value, String> {
       "version":  env!("CARGO_PKG_VERSION").to_string(),
       "codename": CODENAME,
       "commitHash": env!("GIT_HASH").to_string(),
+      "branch": env!("GIT_BRANCH").to_string(),
+      "development": env!("DEVELOPMENT").to_string(),
     });
 
     Ok(result)
+}
+
+#[tauri::command]
+pub fn is_development() -> Result<bool, String> {
+    let development = env!("DEVELOPMENT").to_string();
+    Ok(development == "true")
 }
 
 #[tauri::command]

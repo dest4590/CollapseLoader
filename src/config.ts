@@ -2,7 +2,16 @@ import { invoke } from '@tauri-apps/api/core';
 
 export const DEV_AUTH_URL = "http://127.0.0.1:8000";
 
-export const USE_DEV_AUTH = false;
+export let USE_DEV_AUTH = false;
+
+await invoke('is_development').then((result) => {
+    if (result === true) {
+        console.log("Development mode detected. Using development Auth URL.");
+        USE_DEV_AUTH = true;
+    }
+}).catch((error) => {
+    console.error("Error checking development mode:", error);
+});
 
 let currentAuthUrl = "";
 let isInitialized = false;

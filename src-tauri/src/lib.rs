@@ -64,6 +64,7 @@ pub fn run() {
             commands::settings::remove_favorite_client,
             commands::settings::is_client_favorite,
             commands::utils::get_version,
+            commands::utils::is_development,
             commands::utils::get_auth_url,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,

@@ -66,6 +66,8 @@ pub fn check_webview2() -> Result<bool, String> {
 }
 
 fn main() {
+    let _ = dotenvy::dotenv();
+
     #[cfg(target_os = "windows")]
     if let Err(e) = check_webview2() {
         if let Err(msgbox_err) = win_msgbox::show::<Okay>(&format!("Error checking WebView2: {e}"))
