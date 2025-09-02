@@ -28,3 +28,4 @@ crash-reports/
 
 TODO.md
 .env
+**/*.bak
