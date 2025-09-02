@@ -10,7 +10,7 @@
                     <span class="text-primary text-lg mr-2.5 leading-5">•</span>
                     <span>{{
                         t('modals.telemetry_consent.data_collected.performance')
-                        }}</span>
+                    }}</span>
                 </li>
                 <li class="flex items-start">
                     <span class="text-primary text-lg mr-2.5 leading-5">•</span>
@@ -53,6 +53,7 @@
 import { Check as CheckIcon } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
-const emit = defineEmits(['close']);
+defineEmits(['close']);
+
 const { t } = useI18n();
 </script>

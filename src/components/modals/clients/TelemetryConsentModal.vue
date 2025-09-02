@@ -93,7 +93,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../services/toastService';
 
 defineProps<{
     show: boolean;

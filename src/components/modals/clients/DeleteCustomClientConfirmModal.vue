@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { useToast } from '../../services/toastService';
-import { useModal } from '../../services/modalService';
+import { useToast } from '../../../services/toastService';
+import { useModal } from '../../../services/modalService';
 import { Trash2 } from 'lucide-vue-next';
-import type { CustomClient } from '../../types/ui';
+import type { CustomClient } from '../../../types/ui';
 
 const { addToast } = useToast();
 const { getModals } = useModal();

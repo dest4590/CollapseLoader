@@ -64,8 +64,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useToast } from '../../services/toastService';
-import { apiGet, apiPost, apiPatch, apiDelete } from '../../services/authClient';
+import { useToast } from '../../../../services/toastService';
+import { apiGet, apiPost, apiPatch, apiDelete } from '../../../../services/authClient';
 
 const { t } = useI18n();
 const { addToast } = useToast();

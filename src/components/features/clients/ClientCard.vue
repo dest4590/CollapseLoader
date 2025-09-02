@@ -10,11 +10,16 @@ import {
     ChevronLeft,
     ChevronRight,
     ZoomIn,
+    ExternalLink,
+    ScrollText,
+    Info,
+    ZoomOut,
+    RefreshCw,
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import gsap from 'gsap';
 import type { Client, InstallProgress, ClientDetails } from '../../../types/ui';
-import InsecureClientWarningModal from '../../modals/InsecureClientWarningModal.vue';
+import InsecureClientWarningModal from '../../modals/clients/InsecureClientWarningModal.vue';
 import ClientInfo from './ClientInfo.vue';
 import { invoke } from '@tauri-apps/api/core';
 import { useModal } from '../../../services/modalService';
@@ -136,15 +141,6 @@ const clientIsInstalling = computed(() => props.isClientInstalling(props.client)
 const currentInstallStatus = computed(() => props.installationStatus.get(props.client.filename));
 const isHashVerifying = computed(() => props.isHashVerifying || false);
 
-const cardBorderRadius = computed(() => {
-    return getComputedStyle(document.documentElement).getPropertyValue('--client-card-radius')?.trim() || '0.5rem';
-});
-const cardBoxShadow = computed(() => {
-    return getComputedStyle(document.documentElement).getPropertyValue('--client-card-shadow')?.trim() || '0 4px 6px -1px rgba(0,0,0,0.1)';
-});
-const cardPadding = computed(() => {
-    return getComputedStyle(document.documentElement).getPropertyValue('--client-card-padding')?.trim() || '1rem';
-});
 
 const expandCard = async () => {
     const card = cardRef.value;
@@ -643,11 +639,7 @@ onBeforeUnmount(() => {
         'hover:border-primary/30': isMultiSelectMode && !isSelected,
         'hover:bg-primary/10': isMultiSelectMode && !isSelected,
         'transition-all duration-200 ease-out': !isExpanded
-    }" :data-client-id="client.id" @contextmenu="handleShowContextMenu" @click="handleCardClick" :style="{
-        borderRadius: cardBorderRadius,
-        boxShadow: cardBoxShadow,
-        padding: cardPadding
-    }">
+    }" :data-client-id="client.id" @contextmenu="handleShowContextMenu" @click="handleCardClick">
         <div v-if="isSelected && !isExpanded" class="absolute -z-0" style="right: 1.1rem; top: 1.1rem;">
             <div class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                 <svg class="w-3 h-3 text-primary-content" fill="currentColor" viewBox="0 0 20 20">
@@ -672,7 +664,7 @@ onBeforeUnmount(() => {
             </button>
         </transition>
 
-        <div class="card-body p-4 flex flex-col">
+        <div class="card-body flex flex-col p-0">
             <div class="flex justify-between items-start">
                 <h2 class="card-title text-base">
                     {{ client.name }}
@@ -794,16 +786,7 @@ onBeforeUnmount(() => {
                                                         rel="noopener noreferrer"
                                                         class="link link-primary link-hover inline-flex items-center gap-1.5 text-xs truncate">
                                                         <span>{{ clientDetails.source_link }}</span>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
-                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2.5" stroke-linecap="round"
-                                                            stroke-linejoin="round" class="opacity-70 flex-shrink-0">
-                                                            <path
-                                                                d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6">
-                                                            </path>
-                                                            <polyline points="15 3 21 3 21 9"></polyline>
-                                                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                                                        </svg>
+                                                        <ExternalLink class="w-3 h-3" />
                                                     </a>
                                                 </dd>
                                             </div>
@@ -820,17 +803,7 @@ onBeforeUnmount(() => {
 
                                     <div class="divider before:bg-base-content/10 after:bg-base-content/10 my-0">
                                         <h4 class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7v4a2 2 0 01-2 2H7a2 2 0 01-2-2V7" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 7V5a2 2 0 012-2h10a2 2 0 012 2v2" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M5 17h14" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 21h6" />
-                                            </svg>
+                                            <ScrollText class="w-4 h-4" />
                                             {{ t('client.details.changelog') }}
                                         </h4>
                                     </div>
@@ -850,12 +823,7 @@ onBeforeUnmount(() => {
                                                     </span>
                                                 </div>
                                                 <div class="timeline-middle">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                                                        fill="currentColor" class="w-5 h-5 text-primary/70">
-                                                        <path fill-rule="evenodd"
-                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.06 0l4-5.5z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
+                                                    <Info class="w-4 h-4 text-base-content/50" />
                                                 </div>
                                                 <div
                                                     class="timeline-end timeline-box shadow-sm bg-base-200/40 w-full mb-2 transition-all duration-300 border-primary/10">
@@ -874,12 +842,7 @@ onBeforeUnmount(() => {
                                     </div>
                                     <div v-else
                                         class="mt-6 flex flex-col items-center justify-center text-center p-8 bg-base-200/50 border-2 border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            class="w-10 h-10 text-base-content/30 mb-3" fill="none" viewBox="0 0 24 24"
-                                            stroke="currentColor" stroke-width="1.5">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                                        </svg>
+                                        <Info class="w-8 h-8 text-base-content/50 mb-2" />
                                         <p class="text-sm font-medium text-base-content/70">{{
                                             t('client.details.no_changelog') }}</p>
                                         <p class="text-xs text-base-content/50 mt-1">{{
@@ -949,29 +912,21 @@ onBeforeUnmount(() => {
                         :disabled="zoomScale >= maxZoom" :class="{
                             'cursor-not-allowed opacity-50': zoomScale >= maxZoom
                         }">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
+                        <ZoomIn class="w-5 h-5" />
                     </button>
                     <button @click.stop="zoomOut"
                         class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
                         :disabled="zoomScale <= minZoom" :class="{
                             'cursor-not-allowed opacity-50': zoomScale <= minZoom
                         }">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                        </svg>
+                        <ZoomOut class="w-5 h-5" />
                     </button>
                     <button @click.stop="resetZoom"
                         class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
                         :disabled="!isZoomed" :class="{
                             'cursor-not-allowed opacity-50': !isZoomed
                         }">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
+                        <RefreshCw class="w-5 h-5" />
                     </button>
                 </div>
 
@@ -1055,9 +1010,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .client-card {
     position: relative;
-    border-radius: var(--client-card-radius, 0.5rem);
-    box-shadow: var(--client-card-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
-    padding: var(--client-card-padding, 1rem);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
 
     scrollbar-gutter: stable both-edges;
     -webkit-overflow-scrolling: touch;

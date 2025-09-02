@@ -23,7 +23,7 @@ import {
 } from 'lucide-vue-next';
 import AnimatedSlider from '../ui/AnimatedSlider.vue';
 import { invoke } from '@tauri-apps/api/core';
-import RegistrationForm from '../forms/RegistrationForm.vue';
+import RegistrationForm from '../layout/forms/RegistrationForm.vue';
 
 const props = defineProps({
     showFirstRun: Boolean,

@@ -44,9 +44,11 @@
             <div class="card-body p-4">
                 <h4 class="card-title text-sm">{{ $t('theme.presets.import_modal.preview_title') }}</h4>
                 <div class="text-sm space-y-1">
-                    <div><strong>{{ $t('theme.presets.import_modal.preview_name') }}:</strong> {{ previewData.name }}</div>
+                    <div><strong>{{ $t('theme.presets.import_modal.preview_name') }}:</strong> {{ previewData.name }}
+                    </div>
                     <div v-if="previewData.description">
-                        <strong>{{ $t('theme.presets.import_modal.preview_description') }}:</strong> {{ previewData.description }}
+                        <strong>{{ $t('theme.presets.import_modal.preview_description') }}:</strong> {{
+                        previewData.description }}
                     </div>
                 </div>
             </div>
@@ -54,13 +56,14 @@
     </div>
 
     <div class="flex gap-3 p-6 border-t border-base-300">
-        <button @click="close" class="btn btn-ghost flex-1">
-            {{ $t('theme.presets.import_modal.cancel') }}
-        </button>
         <button @click="importPreset" class="btn btn-primary flex-1" :class="{ 'loading': importing }"
             :disabled="importing || !canImport">
             <Upload class="w-4 h-4 mr-2" v-if="!importing" />
-            {{ importing ? $t('theme.presets.import_modal.importing') : $t('theme.presets.import_modal.import_button') }}
+            {{ importing ? $t('theme.presets.import_modal.importing') : $t('theme.presets.import_modal.import_button')
+            }}
+        </button>
+        <button @click="close" class="btn btn-ghost flex-1">
+            {{ $t('theme.presets.import_modal.cancel') }}
         </button>
     </div>
 </template>
@@ -69,7 +72,7 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Upload, FileText } from 'lucide-vue-next';
-import { usePresets } from '../../composables/usePresets';
+import { usePresets } from '../../../../composables/usePresets';
 
 const { t } = useI18n();
 
@@ -110,7 +113,8 @@ const handleFileChange = async (event: Event) => {
         const data = JSON.parse(text);
         previewData.value = data;
         error.value = '';
-    } catch (err) {
+    } catch (e) {
+        console.error('Failed to parse preset file:', e);
         error.value = t('theme.presets.import_modal.error_invalid_file');
         previewData.value = null;
     }

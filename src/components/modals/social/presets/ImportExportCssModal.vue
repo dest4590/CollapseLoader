@@ -1,6 +1,5 @@
 <template>
     <div>
-        <h2 class="text-lg font-bold mb-4">{{ t('theme.import_export_css') }}</h2>
         <div v-if="mode === 'export'">
             <p class="mb-2">{{ t('theme.export_desc') }}</p>
             <textarea class="textarea textarea-bordered w-full mb-4" rows="4" readonly :value="exportedCode" />
@@ -9,17 +8,16 @@
         <div v-else>
             <p class="mb-2">{{ t('theme.import_desc') }}</p>
             <textarea v-model="importCode" class="textarea textarea-bordered w-full mb-4" rows="4" />
-            <button class="btn btn-primary w-full mb-2" @click="importCss">{{ t('theme.import') }}</button>
+
             <div v-if="importError" class="text-error text-sm mt-2">{{ importError }}</div>
         </div>
-        <div class="flex justify-end mt-4">
-            <button class="btn btn-outline btn-error btn-sm flex items-center gap-2" @click="$emit('close')"
-                aria-label="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span>{{ t('common.close') }}</span>
+        <div class="flex gap-3 p-6 border-t border-base-300">
+            <button class="btn btn-primary flex-1" @click="importCss">
+                <Upload class="w-4 h-4 mr-2" />
+                {{ t('theme.import') }}
+            </button>
+            <button @click="$emit('close')" class="btn btn-ghost flex-1">
+                {{ $t('theme.presets.import_modal.cancel') }}
             </button>
         </div>
     </div>
@@ -29,7 +27,8 @@
 import { ref, onMounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { useI18n } from 'vue-i18n';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../../services/toastService';
+import { Upload } from 'lucide-vue-next';
 
 const props = defineProps<{
     mode: 'import' | 'export',
@@ -48,6 +47,7 @@ onMounted(async () => {
         try {
             exportedCode.value = await invoke('encode_base64', { input: props.css });
         } catch (e) {
+            console.error('Failed to encode CSS to base64:', e);
             exportedCode.value = '';
         }
     }

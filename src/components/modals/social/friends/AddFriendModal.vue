@@ -93,12 +93,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useToast } from '../../services/toastService';
-import { userService, type SearchUser } from '../../services/userService';
+import { useToast } from '../../../../services/toastService';
+import { userService, type SearchUser } from '../../../../services/userService';
 import { UserPlus, Users } from 'lucide-vue-next';
-import UserAvatar from '../ui/UserAvatar.vue';
+import UserAvatar from '../../../ui/UserAvatar.vue';
 import { useI18n } from 'vue-i18n';
-import { globalUserStatus } from '../../composables/useUserStatus';
+import { globalUserStatus } from '../../../../composables/useUserStatus';
 
 const emit = defineEmits(['close', 'friend-added', 'view-profile']);
 const { addToast } = useToast();

@@ -34,11 +34,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useToast } from '../../services/toastService';
-import { userService } from '../../services/userService';
+import { useToast } from '../../../services/toastService';
+import { userService } from '../../../services/userService';
 import { useI18n } from 'vue-i18n';
-import { apiPost } from '../../services/authClient';
-import { getCurrentLanguage } from '../../i18n';
+import { apiPost } from '../../../services/authClient';
+import { getCurrentLanguage } from '../../../i18n';
 
 interface Props {
     showCancelButton?: boolean;

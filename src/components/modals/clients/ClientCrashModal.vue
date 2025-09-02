@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../services/toastService';
 import { useI18n } from 'vue-i18n';
 
 interface Props {

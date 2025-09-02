@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { useModal } from '../../services/modalService';
 import { useI18n } from 'vue-i18n';
-import CustomModal from '../ui/CustomModal.vue';
+import CustomModal from '../modals/CustomModal.vue';
 
 const { getModals, hideModal } = useModal();
 const { locale } = useI18n();

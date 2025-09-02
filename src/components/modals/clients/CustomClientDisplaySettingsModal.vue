@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { invoke } from '@tauri-apps/api/core';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../services/toastService';
 import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

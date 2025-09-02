@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { Trash2, X } from 'lucide-vue-next';
-import type { ThemePreset } from '../../types/presets';
+import type { ThemePreset } from '../../../../types/presets';
 
 const props = defineProps<{
     preset: ThemePreset;

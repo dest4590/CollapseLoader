@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { useToast } from '../../services/toastService';
-import { useModal } from '../../services/modalService';
-import type { CustomClient } from '../../types/ui';
+import { useToast } from '../../../services/toastService';
+import { useModal } from '../../../services/modalService';
+import type { CustomClient } from '../../../types/ui';
 
 const { addToast } = useToast();
 const { getModals } = useModal();

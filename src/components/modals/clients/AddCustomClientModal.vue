@@ -2,7 +2,7 @@
 import { ref, reactive } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../services/toastService';
 
 const { addToast } = useToast();
 

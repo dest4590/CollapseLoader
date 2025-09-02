@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../../services/toastService';
 import { useI18n } from 'vue-i18n';
 
 const emit = defineEmits(['close', 'account-added']);

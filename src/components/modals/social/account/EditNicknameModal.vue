@@ -30,9 +30,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useToast } from '../../services/toastService';
+import { useToast } from '../../../../services/toastService';
 import { Check as CheckIcon, X as XIcon } from 'lucide-vue-next';
-import { apiPatch } from '../../services/authClient';
+import { apiPatch } from '../../../../services/authClient';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
