@@ -5,24 +5,25 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Vue3Lottie } from 'vue3-lottie';
 import preloader from './assets/misc/preloader.json';
-import GlobalModal from './components/common/GlobalModal.vue';
+import GlobalModal from './components/modals/GlobalModal.vue';
 import DevMenuModal from './components/core/DevMenuModal.vue';
 import InitialSetupModals from './components/core/InitialSetupModals.vue';
 import DownloadProgress from './components/features/download/DownloadProgress.vue';
 import Sidebar from './components/layout/Sidebar.vue';
-import ClientCrashModal from './components/modals/ClientCrashModal.vue';
-import RegisterPromptModal from './components/modals/RegisterPromptModal.vue';
+import ClientCrashModal from './components/modals/clients/ClientCrashModal.vue';
+import RegisterPromptModal from './components/modals/social/account/RegisterPromptModal.vue';
 import ToastContainer from './components/notifications/ToastContainer.vue';
+import BootLogs from './components/core/BootLogs.vue';
 import { globalFriends } from './composables/useFriends';
 import { useUser } from './composables/useUser';
 import { globalUserStatus } from './composables/useUserStatus';
-import { changeLanguage } from './i18n';
 import { useModal } from './services/modalService';
 import { syncService } from './services/syncService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
 import { apiPreload } from './services/apiClient';
+import { bootLogService } from './services/bootLogService';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AdminView from './views/AdminView.vue';
@@ -37,8 +38,13 @@ import Customization from './views/Customization.vue';
 import UserProfileView from './views/UserProfileView.vue';
 import News from './views/News.vue';
 import CustomClients from './views/CustomClients.vue';
+import Marketplace from './views/Marketplace.vue';
 import { apiGet } from './services/apiClient';
 import { getCurrentLanguage } from './i18n';
+import { fetchSettings, applyLanguageOnStartup, applyThemeOnStartup } from './utils/settings';
+import { getDiscordState } from './utils/discord';
+import { VALID_TABS } from './utils/tabs';
+import { getIsDevelopment } from './utils/isDevelopment';
 
 interface Setting<T> {
     description: string;
@@ -59,22 +65,7 @@ interface AppSettings {
 
 const { t, locale } = useI18n();
 
-const activeTab = ref<
-    | 'home'
-    | 'settings'
-    | 'app_logs'
-    | 'customization'
-    | 'custom_clients'
-    | 'about'
-    | 'account'
-    | 'login'
-    | 'register'
-    | 'friends'
-    | 'user-profile'
-    | 'blocked-users'
-    | 'admin'
-    | 'news'
->('home');
+const activeTab = ref<'home' | 'settings' | 'app_logs' | 'customization' | 'custom_clients' | 'about' | 'account' | 'login' | 'register' | 'friends' | 'user-profile' | 'blocked-users' | 'admin' | 'news' | 'marketplace'>('home');
 const showPreloader = ref(true);
 const contentVisible = ref(false);
 const loadingState = ref(t('preloader.initializing'));
@@ -99,6 +90,8 @@ const isNavigatingToProfile = ref(false);
 const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
+const isDev = ref(false);
+
 
 const { loadUserData, displayName, isAuthenticated: userAuthenticated } = useUser();
 const {
@@ -120,110 +113,28 @@ const handleUnreadNewsCountUpdated = (count: number) => {
 };
 
 const setActiveTab = (tab: string) => {
-    if (
-        [
-            'home',
-            'custom_clients',
-            'settings',
-            'app_logs',
-            'customization',
-            'about',
-            'account',
-            'login',
-            'register',
-            'friends',
-            'admin',
-            'news',
-        ].includes(tab)
-    ) {
-        previousTab.value = activeTab.value;
-        isNavigatingToProfile.value = false;
-        activeTab.value = tab as
-            | 'home'
-            | 'custom_clients'
-            | 'settings'
-            | 'app_logs'
-            | 'customization'
-            | 'about'
-            | 'account'
-            | 'login'
-            | 'register'
-            | 'friends'
-            | 'admin'
-            | 'news';
-        currentUserId.value = null;
-    }
+    if (!VALID_TABS.includes(tab)) return;
+    previousTab.value = activeTab.value;
+    isNavigatingToProfile.value = false;
+    activeTab.value = tab as any;
+    currentUserId.value = null;
 };
 
 const showUserProfile = (userId: number | string) => {
     previousTab.value = activeTab.value;
+    isNavigatingToProfile.value = true;
 
     if (userId === 'blocked-users') {
-        isNavigatingToProfile.value = true;
         activeTab.value = 'blocked-users';
         currentUserId.value = null;
     } else {
-        isNavigatingToProfile.value = true;
         currentUserId.value = userId as number;
         activeTab.value = 'user-profile';
     }
 
-    setTimeout(() => {
-        isNavigatingToProfile.value = false;
-    }, 600);
+    setTimeout(() => (isNavigatingToProfile.value = false), 600);
 };
 
-const applyLanguageOnStartup = async () => {
-    try {
-        const currentSettings = await invoke<AppSettings>('get_settings');
-        if (currentSettings.language && currentSettings.language.value) {
-            await changeLanguage(currentSettings.language.value);
-        } else {
-            const localLanguage = localStorage.getItem('language') || 'en';
-            await changeLanguage(localLanguage);
-        }
-    } catch (error) {
-        console.error('Failed to apply language on startup:', error);
-        const localLanguage = localStorage.getItem('language') || 'en';
-        await changeLanguage(localLanguage);
-    }
-};
-
-const applyThemeOnStartup = async () => {
-    try {
-        const currentSettings = await invoke<AppSettings>('get_settings');
-        if (currentSettings.theme && currentSettings.theme.value) {
-            document.documentElement.setAttribute(
-                'data-theme',
-                currentSettings.theme.value
-            );
-            currentTheme.value = currentSettings.theme.value;
-        } else {
-            const localTheme = localStorage.getItem('theme');
-            if (localTheme && ['light', 'dark'].includes(localTheme)) {
-                document.documentElement.setAttribute('data-theme', localTheme);
-                currentTheme.value = localTheme;
-            } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                currentTheme.value = 'dark';
-            }
-        }
-
-        themeService.loadSettings();
-    } catch (error) {
-        console.error('Failed to apply theme on startup:', error);
-        const localTheme = localStorage.getItem('theme');
-        if (localTheme && ['light', 'dark'].includes(localTheme)) {
-            document.documentElement.setAttribute('data-theme', localTheme);
-            currentTheme.value = localTheme;
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            currentTheme.value = 'dark';
-        }
-
-        themeService.loadSettings();
-    }
-};
 
 const checkAuthStatus = () => {
     const token = localStorage.getItem('authToken');
@@ -251,29 +162,40 @@ const fetchNewsAndUpdateUnreadCount = async () => {
         unreadNewsCount.value = news.value.filter(
             (article) => !readNews.includes(getNewsUniqueId(article))
         ).length;
-    } catch (err) {
+    } catch (e) {
+        console.error('Failed to fetch news:', e);
         unreadNewsCount.value = 0;
     }
 };
 
 const initApp = async () => {
+    bootLogService.start();
+    bootLogService.systemInit();
+
     try {
         await invoke('initialize_rpc');
-
     } catch (error) {
         console.error('Failed to initialize Discord RPC:', error);
+        bootLogService.addCustomLog('WARN', 'rpc', `Discord RPC init failed: ${String(error)}`);
     }
 
     await applyThemeOnStartup();
 
+    bootLogService.themeApplied(currentTheme.value);
+
     await applyLanguageOnStartup();
+
+    bootLogService.languageApplied(locale.value || getCurrentLanguage() || 'en');
 
     const { getToastPosition } = useToast();
     getToastPosition();
+    bootLogService.toastSystemReady();
 
     showPreloader.value = true;
     currentProgress.value = 0;
     totalSteps.value = 4;
+
+    bootLogService.eventListenersInit();
 
     listen('client-crashed', (event) => {
         const payload = event.payload as {
@@ -313,17 +235,26 @@ const initApp = async () => {
         );
     });
 
+    bootLogService.eventListenersReady();
+
     loadingState.value = loadingStates[0];
     currentProgress.value = 1;
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
+        bootLogService.serverConnectivityCheck();
         const connectivity = await invoke<{
             cdn_online: boolean;
             auth_online: boolean;
         }>('get_server_connectivity_status');
         isOnline.value = connectivity.cdn_online && connectivity.auth_online;
         console.log('Server connectivity status:', connectivity);
+
+        if (connectivity.cdn_online) bootLogService.cdnOnline();
+        else bootLogService.cdnOffline();
+
+        if (connectivity.auth_online) bootLogService.webApiOnline();
+        else bootLogService.webApiOffline();
 
         if (!isOnline.value) {
             let offlineMessage = t('toast.server.offline_base');
@@ -340,6 +271,7 @@ const initApp = async () => {
         console.error('Failed to get server connectivity status:', error);
         isOnline.value = false;
         addToast(t('toast.server.offline'), 'error');
+        bootLogService.addCustomLog('ERROR', 'network', `Connectivity check failed: ${String(error)}`);
     }
 
     loadingState.value = loadingStates[1];
@@ -347,21 +279,32 @@ const initApp = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
+        bootLogService.apiInit();
         await invoke('initialize_api');
+        bootLogService.apiInitSuccess();
     } catch (error) {
         console.error('Failed to initialize API:', error);
         addToast(t('toast.server.api_init_failed', { error }), 'error');
+        bootLogService.apiInitFailed();
     }
 
+    bootLogService.authCheck();
     checkAuthStatus();
+    if (isAuthenticated.value) bootLogService.authSuccess();
+    else bootLogService.authSkipped();
 
     if (isAuthenticated.value && isOnline.value) {
         try {
+            bootLogService.userDataInit();
             await initializeUserData();
+            bootLogService.userDataSuccess();
 
             globalUserStatus.initializeStatusSystem();
+            bootLogService.syncInit();
+            bootLogService.syncReady();
         } catch (error) {
             console.error('Failed to initialize user data on startup:', error);
+            bootLogService.userDataFailed();
         }
     }
 
@@ -376,10 +319,12 @@ const initApp = async () => {
             showInitialDisclaimer.value = true;
         }
         initialModalsLoaded.value = true;
+        bootLogService.flagsLoaded();
     } catch (error) {
         console.error('Failed to load flags for initial modals:', error);
         addToast(t('toast.settings.flags_load_failed', { error }), 'error');
         initialModalsLoaded.value = true;
+        bootLogService.flagsLoadFailed();
     }
 
     await new Promise<void>((resolve) => {
@@ -417,10 +362,16 @@ const initApp = async () => {
             try {
                 document.documentElement.classList.add('app-ready');
             } catch (e) {
-                // ignore
+                console.error('Failed to add app-ready class:', e);
             }
             setTimeout(() => {
                 contentVisible.value = true;
+                bootLogService.systemReady();
+                try {
+                    bootLogService.clear();
+                } catch (e) {
+                    console.error('Failed to clear boot logs:', e);
+                }
             }, 80);
         }, 800);
     } else {
@@ -536,68 +487,25 @@ const views: Record<string, any> = {
     'user-profile': UserProfileView,
     'blocked-users': BlockedUsersView,
     admin: AdminView,
+    marketplace: Marketplace,
 };
 
 const currentView = computed(() => views[activeTab.value] || Home);
 
 const updateDiscordRPC = async (tab?: string) => {
     try {
-        const settings = await invoke<AppSettings>('get_settings');
-        if (!settings.discord_rpc_enabled?.value) {
+        const settings = await fetchSettings();
+        if (!settings?.discord_rpc_enabled?.value) {
             console.log('Discord RPC is disabled in settings, skipping update');
             return;
         }
 
         const currentTab = tab || activeTab.value;
-
-        let details = t('discord.details.in_menu');
-        let state;
-
-        console.log(`Updating Discord RPC for tab: ${currentTab}`);
-
-        switch (currentTab) {
-            case 'home':
-                state = t('discord.states.browsing_clients');
-                break;
-            case 'custom_clients':
-                state = t('discord.states.browsing_custom_clients');
-                break;
-            case 'news':
-                state = t('discord.states.browsing_news');
-                break;
-            case 'settings':
-                state = t('discord.states.configuring_settings');
-                break;
-            case 'friends':
-                state = t('discord.states.browsing_friends');
-                break;
-            case 'blocked-users':
-                state = t('discord.states.configuring_settings');
-                break;
-            case 'theme':
-                state = t('discord.states.enjoying_visuals');
-                break;
-            case 'app_logs':
-                state = t('discord.states.watching_client_behavior');
-                break;
-            case 'user-profile':
-                state = t('discord.states.in_profile');
-                break;
-            case 'about':
-                state = t('discord.states.watching_about');
-                break;
-            case 'login':
-                state = t('discord.states.logging_in');
-                break;
-            default:
-                state = t('discord.states.browsing_clients');
-                break;
-        }
+        const details = t('discord.details.in_menu');
+        const state = getDiscordState(currentTab, (k: string) => t(k));
 
         await invoke('update_presence', { details, state });
-        console.log(
-            `Discord RPC updated for tab: ${currentTab} - ${details}: ${state}`
-        );
+        console.log(`Discord RPC updated for tab: ${currentTab} - ${details}: ${state}`);
     } catch (error) {
         console.error('Failed to update Discord RPC:', error);
     }
@@ -690,6 +598,9 @@ const getTransitionName = () => {
 onMounted(() => {
     initApp();
     checkAuthStatus();
+    (async () => {
+        isDev.value = await getIsDevelopment();
+    })();
     listen('client-launched', async (event) => {
         const payload = event.payload as {
             id: number;
@@ -795,7 +706,9 @@ onUnmounted(() => {
 
 <template>
     <div id="preloader" v-if="showPreloader" class="fixed inset-0 bg-base-300 flex items-center justify-center">
-        <div class="flex flex-col items-center justify-center h-full w-screen relative z-10">
+        <BootLogs v-if="isDev" :current-progress="currentProgress / totalSteps" :loading-state="loadingState" />
+
+        <div class="flex flex-col items-center justify-center h-full w-screen relative z-[10]">
             <div class="w-48 h-48 animate-pulse-subtle">
                 <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
             </div>
@@ -977,31 +890,5 @@ onUnmounted(() => {
 .slide-fade-leave-to {
     transform: translateY(-15px);
     opacity: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    .slide-up-enter-active,
-    .slide-up-leave-active,
-    .slide-down-enter-active,
-    .slide-down-leave-active,
-    .fade-slide-enter-active,
-    .fade-slide-leave-active,
-    .profile-slide-enter-active,
-    .profile-slide-leave-active {
-        transition: opacity 0.2s ease;
-    }
-
-    .slide-up-enter-from,
-    .slide-up-leave-to,
-    .slide-down-enter-from,
-    .slide-down-leave-to,
-    .fade-slide-enter-from,
-    .fade-slide-leave-to,
-    .profile-slide-enter-from,
-    .profile-slide-leave-to {
-        transform: none;
-        filter: none;
-    }
 }
 </style>

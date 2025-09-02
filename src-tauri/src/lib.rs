@@ -69,6 +69,8 @@ pub fn run() {
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::reset_cache,
+            commands::utils::get_data_folder,
+            commands::utils::change_data_folder,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::analytics::send_client_analytics,
@@ -81,8 +83,24 @@ pub fn run() {
             let app_handle = app.handle();
             *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
+            // dev info
+            let is_dev = env!("DEVELOPMENT").to_string() == "true";
+            let git_hash = env!("GIT_HASH")
+                .to_string()
+                .chars()
+                .take(7)
+                .collect::<String>();
+            let git_branch = env!("GIT_BRANCH").to_string();
+
             let version = env!("CARGO_PKG_VERSION");
-            let window_title = format!("CollapseLoader v{version}");
+            let window_title = format!(
+                "CollapseLoader v{version} {}",
+                if is_dev {
+                    format!("(development build, {git_hash}, {git_branch} branch)")
+                } else {
+                    "".to_string()
+                }
+            );
 
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.set_title(&window_title);

@@ -2,6 +2,9 @@ use base64::{engine::general_purpose, Engine};
 
 use crate::core::utils::globals::CODENAME;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
+use std::{fs, path::PathBuf};
+use tauri::{AppHandle, Emitter, Manager};
+use tokio::task;
 
 #[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
@@ -46,6 +49,92 @@ pub fn reset_cache() -> Result<(), String> {
     if let Err(e) = DATA.reset_cache() {
         return Err(format!("Failed to reset cache: {e}"));
     }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_data_folder() -> Result<String, String> {
+    Ok(DATA.root_dir.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn change_data_folder(
+    app: AppHandle,
+    new_path: String,
+    mode: String, // "move" | "wipe"
+) -> Result<(), String> {
+    let new_dir = PathBuf::from(new_path.clone());
+    if new_dir.as_os_str().is_empty() {
+        return Err("Target path is empty".to_string());
+    }
+
+    // Ensure target directory exists
+    if !new_dir.exists() {
+        fs::create_dir_all(&new_dir).map_err(|e| format!("Failed to create target dir: {e}"))?;
+    }
+
+    // Stop all clients (both built-in and custom)
+    let running: Vec<u32> = crate::commands::clients::get_running_client_ids().await;
+    for id in running {
+        let _ = crate::commands::clients::stop_client(id).await;
+    }
+    let running_custom: Vec<u32> = crate::commands::clients::get_running_custom_client_ids().await;
+    for id in running_custom {
+        let _ = crate::commands::clients::stop_custom_client(id).await;
+    }
+
+    // Current dir
+    let current_dir = PathBuf::from(DATA.root_dir.clone());
+
+    if mode == "move" {
+        if current_dir.exists() {
+            // Move: copy contents to new folder, then leave old folder as-is or empty
+            // We'll copy recursively to handle cross-volume moves; then wipe old.
+            task::spawn_blocking(move || -> Result<(), String> {
+                fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {
+                    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
+                        let entry = entry.map_err(|e| e.to_string())?;
+                        let path = entry.path();
+                        let target = dst.join(entry.file_name());
+                        if path.is_dir() {
+                            fs::create_dir_all(&target).map_err(|e| e.to_string())?;
+                            copy_dir_recursive(&path, &target)?;
+                        } else {
+                            fs::copy(&path, &target).map_err(|e| e.to_string())?;
+                        }
+                    }
+                    Ok(())
+                }
+                copy_dir_recursive(&current_dir, &new_dir)?;
+                // Try remove old dir to avoid duplication
+                if let Err(e) = fs::remove_dir_all(&current_dir) {
+                    let _ = e;
+                }
+                Ok(())
+            })
+            .await
+            .map_err(|e| format!("Task join error: {e}"))??;
+        }
+    } else if mode == "wipe" {
+        if current_dir.exists() {
+            fs::remove_dir_all(&current_dir)
+                .map_err(|e| format!("Failed to wipe old folder: {e}"))?;
+        }
+    } else {
+        return Err("Invalid mode".to_string());
+    }
+
+    // Write override file so app uses new path next start
+    let roaming_dir = std::env::var("APPDATA")
+        .unwrap_or_else(|_| std::env::var("HOME").unwrap_or_else(|_| ".".to_string()));
+    let override_file = PathBuf::from(roaming_dir).join("CollapseLoaderRoot.txt");
+    fs::write(&override_file, &new_path).map_err(|e| format!("Failed to write override: {e}"))?;
+
+    // Inform UI to restart (optional event)
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.emit("data-folder-changed", &new_path);
+    }
+
     Ok(())
 }
 

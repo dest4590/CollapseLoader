@@ -9,11 +9,13 @@ import {
     Users,
     ShieldAlert,
     SlidersVertical,
+    UserCog,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
+import { getIsDevelopment } from '../../utils/isDevelopment';
 
 const { t } = useI18n();
 const { adminStatus } = useUser();
@@ -30,6 +32,7 @@ const isAltPressed = ref(false);
 const altPressCount = ref(0);
 const altPressTimeout = ref<number | null>(null);
 
+const isDev = ref(false);
 const isAdmin = computed(() => adminStatus.value?.is_admin || false);
 
 const { onlineFriendsCount, friendRequests } = useFriends();
@@ -89,6 +92,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
         }
     }
 };
+
 onMounted(async () => {
     window.addEventListener('keydown', handleKeyDown);
 
@@ -98,6 +102,9 @@ onMounted(async () => {
             visible.value = true;
         }, 40);
     });
+
+
+    isDev.value = await getIsDevelopment();
 });
 
 onUnmounted(() => {
@@ -127,6 +134,7 @@ onUnmounted(() => {
                         class="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-base-300"></span>
                 </button>
             </div>
+
 
             <div v-if="isAuthenticated" class="tooltip tooltip-right tooltip-accent"
                 :data-tip="t('navigation.friends')">
@@ -204,6 +212,7 @@ onUnmounted(() => {
                     ].includes(activeTab),
                 }" @click="changeTab(isAuthenticated ? 'account' : 'login')">
                     <LogIn v-if="!isAuthenticated" class="w-5 h-5" />
+                    <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5" />
                     <User v-else class="w-5 h-5" />
                 </button>
             </div>
@@ -249,20 +258,12 @@ onUnmounted(() => {
 .btn-square.sidebar-btn,
 .btn-square.sidebar-btn>* {
     border-radius: var(--radius-box, 0.5rem) !important;
-    overflow: visible !important;
 }
 
 .sidebar-btn {
     will-change: transform, box-shadow;
 }
 
-html[data-reduce-motion='true'] .sidebar-btn,
-html[data-reduce-motion='true'] .btn-square.sidebar-btn {
-    animation: none !important;
-    transition: none !important;
-    transform: none !important;
-    opacity: 1 !important;
-}
 
 .sidebar-hidden {
     transform: translateX(-28px);
@@ -274,12 +275,6 @@ html[data-reduce-motion='true'] .btn-square.sidebar-btn {
     transform: translateX(0);
     opacity: 1;
     transition: transform 1.6s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.5s ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .sidebar-entered {
-        transition: none !important;
-    }
 }
 
 .sidebar-hidden .flex>*,
@@ -321,17 +316,5 @@ html[data-reduce-motion='true'] .btn-square.sidebar-btn {
 
 .sidebar-entered .mt-auto>*:nth-child(3) {
     transition-delay: 0.30s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    .sidebar-hidden .flex>*,
-    .sidebar-hidden .mt-auto>*,
-    .sidebar-entered .flex>*,
-    .sidebar-entered .mt-auto>* {
-        transition: none !important;
-        transform: none !important;
-        opacity: 1 !important;
-    }
 }
 </style>
