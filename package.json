@@ -9,7 +9,10 @@
         "preview": "vite preview",
         "tauri": "tauri",
         "tauri:build": "tauri build",
-        "tauri:dev": "tauri dev"
+        "tauri:dev": "tauri dev",
+        "check": "vue-tsc --noEmit",
+        "lint": "eslint --ext .ts,.tsx,.vue src",
+        "lint:fix": "eslint --ext .ts,.tsx,.vue src --fix"
     },
     "dependencies": {
         "@guolao/vue-monaco-editor": "^1.5.5",
@@ -30,7 +33,11 @@
         "@tailwindcss/vite": "4.1.12",
         "@tauri-apps/cli": "2.8.3",
         "@types/node": "24.3.0",
+        "@typescript-eslint/eslint-plugin": "^8.42.0",
+        "@typescript-eslint/parser": "^8.42.0",
         "@vitejs/plugin-vue": "6.0.1",
+        "eslint": "^9.34.0",
+        "eslint-plugin-vue": "^10.4.0",
         "tailwindcss": "4.1.12",
         "typescript": "5.9.2",
         "vite": "7.1.3",
