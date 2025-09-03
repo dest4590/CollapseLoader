@@ -120,14 +120,9 @@ export function usePresets() {
             const input: CreatePresetInput = {
                 name: presetData.name + ' (Imported)',
                 description: presetData.description,
-                border_radius: presetData.border_radius || presetData.borderRadius || '0.5rem',
-                shadow: presetData.shadow || '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                padding: presetData.padding || '0.5rem',
                 custom_css: presetData.custom_css || presetData.customCSS || '',
                 enable_custom_css: presetData.enable_custom_css ?? presetData.enableCustomCSS ?? false,
-                global_radius: presetData.global_radius || presetData.globalRadius || '0.5rem',
-                primary_color_override: presetData.primary_color_override || presetData.primaryColorOverride,
-                reduce_motion: presetData.reduce_motion ?? presetData.reduceMotion ?? false,
+                primary: presetData.primary || presetData.primaryColorOverride,
 
                 base100: presetData.base100,
                 base200: presetData.base200,

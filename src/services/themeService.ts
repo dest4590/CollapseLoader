@@ -1,14 +1,9 @@
 import { reactive, watchEffect } from 'vue';
 
-interface CardSettings {
-    borderRadius: string;
-    shadow: string;
-    padding: string;
+interface ThemeSettings {
     customCSS: string;
     enableCustomCSS: boolean;
-    globalRadius: string;
-    primaryColorOverride: string | null;
-    reduceMotion: boolean;
+    primary: string | null;
 
     base100?: string | null;
     base200?: string | null;
@@ -32,15 +27,10 @@ interface CardSettings {
     errorContent?: string | null;
 }
 
-const defaultSettings: CardSettings = {
-    borderRadius: '0.5rem',
-    shadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    padding: '0.5rem',
+const defaultSettings: ThemeSettings = {
     customCSS: '',
     enableCustomCSS: false,
-    globalRadius: '0.5rem',
-    primaryColorOverride: null,
-    reduceMotion: false,
+    primary: null,
 
     base100: null,
     base200: null,
@@ -64,11 +54,10 @@ const defaultSettings: CardSettings = {
     errorContent: null,
 };
 
-const presetSettings = reactive<CardSettings>({ ...defaultSettings });
+const presetSettings = reactive<ThemeSettings>({ ...defaultSettings });
 
 export const cssVarList = [
-    '--client-card-radius', '--client-card-shadow', '--client-card-padding',
-    '--radius-box', '--radius-field', '--radius-selector', '--color-primary',
+    '--color-primary',
     '--color-base-100', '--color-base-200', '--color-base-300', '--color-base-content',
     '--color-primary-content', '--color-secondary', '--color-secondary-content', '--color-accent', '--color-accent-content',
     '--color-neutral', '--color-neutral-content', '--color-info', '--color-info-content', '--color-success', '--color-success-content',
@@ -78,16 +67,8 @@ export const cssVarList = [
 const applyPreset = () => {
     const root = document.documentElement;
 
-    root.style.setProperty('--client-card-radius', presetSettings.borderRadius);
-    root.style.setProperty('--client-card-shadow', presetSettings.shadow);
-    root.style.setProperty('--client-card-padding', presetSettings.padding);
-
-    root.style.setProperty('--radius-box', presetSettings.globalRadius);
-    root.style.setProperty('--radius-field', presetSettings.globalRadius);
-    root.style.setProperty('--radius-selector', presetSettings.globalRadius);
-
-    if (presetSettings.primaryColorOverride && presetSettings.primaryColorOverride.trim().length > 0) {
-        root.style.setProperty('--color-primary', presetSettings.primaryColorOverride);
+    if (presetSettings.primary && presetSettings.primary.trim().length > 0) {
+        root.style.setProperty('--color-primary', presetSettings.primary);
     } else {
         root.style.removeProperty('--color-primary');
     }
@@ -125,8 +106,6 @@ const applyPreset = () => {
 
     setOrRemove('--color-error', presetSettings.error ?? null);
     setOrRemove('--color-error-content', presetSettings.errorContent ?? null);
-
-    root.setAttribute('data-reduce-motion', presetSettings.reduceMotion ? 'true' : 'false');
 
     let styleEl = document.getElementById('custom-theme-styles');
     if (!styleEl) {
@@ -176,7 +155,7 @@ const saveCardSettings = () => {
     }
 };
 
-const updatePresetSettings = (settings: Partial<CardSettings>) => {
+const updatePresetSettings = (settings: Partial<ThemeSettings>) => {
     Object.assign(presetSettings, settings);
     saveCardSettings();
     applyPreset();
@@ -209,14 +188,9 @@ const emergencyReset = () => {
 
 const exportPreset = (): string => {
     const preset = {
-        borderRadius: presetSettings.borderRadius,
-        shadow: presetSettings.shadow,
-        padding: presetSettings.padding,
         customCSS: presetSettings.customCSS,
         enableCustomCSS: presetSettings.enableCustomCSS,
-        globalRadius: presetSettings.globalRadius,
-        primaryColorOverride: presetSettings.primaryColorOverride,
-        reduceMotion: presetSettings.reduceMotion,
+        primaryColorOverride: presetSettings.primary,
 
         base100: presetSettings.base100,
         base200: presetSettings.base200,
@@ -246,16 +220,11 @@ const importPreset = (presetJSON: string): void => {
     try {
         const parsed = JSON.parse(presetJSON);
         updatePresetSettings({
-            borderRadius: typeof parsed.borderRadius === 'string' ? parsed.borderRadius : presetSettings.borderRadius,
-            shadow: typeof parsed.shadow === 'string' ? parsed.shadow : presetSettings.shadow,
-            padding: typeof parsed.padding === 'string' ? parsed.padding : presetSettings.padding,
             customCSS: typeof parsed.customCSS === 'string' ? parsed.customCSS : presetSettings.customCSS,
             enableCustomCSS: typeof parsed.enableCustomCSS === 'boolean' ? parsed.enableCustomCSS : presetSettings.enableCustomCSS,
-            globalRadius: typeof parsed.globalRadius === 'string' ? parsed.globalRadius : presetSettings.globalRadius,
-            primaryColorOverride: typeof parsed.primaryColorOverride === 'string' || parsed.primaryColorOverride === null
+            primary: typeof parsed.primaryColorOverride === 'string' || parsed.primaryColorOverride === null
                 ? parsed.primaryColorOverride
-                : presetSettings.primaryColorOverride,
-            reduceMotion: typeof parsed.reduceMotion === 'boolean' ? parsed.reduceMotion : presetSettings.reduceMotion,
+                : presetSettings.primary,
 
             base100: typeof parsed.base100 === 'string' || parsed.base100 === null ? parsed.base100 : presetSettings.base100,
             base200: typeof parsed.base200 === 'string' || parsed.base200 === null ? parsed.base200 : presetSettings.base200,

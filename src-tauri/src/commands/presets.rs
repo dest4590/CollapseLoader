@@ -6,21 +6,16 @@ use uuid::Uuid;
 pub struct CreatePresetInput {
     pub name: String,
     pub description: Option<String>,
-    pub border_radius: String,
-    pub shadow: String,
-    pub padding: String,
     pub custom_css: String,
     pub enable_custom_css: bool,
-    pub global_radius: String,
-    pub primary_color_override: Option<String>,
-    pub reduce_motion: bool,
-    
+
     // daisyui
     pub base100: Option<String>,
     pub base200: Option<String>,
     pub base300: Option<String>,
     pub base_content: Option<String>,
-    
+
+    pub primary: Option<String>,
     pub primary_content: Option<String>,
     pub secondary: Option<String>,
     pub secondary_content: Option<String>,
@@ -43,21 +38,16 @@ pub struct UpdatePresetInput {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
-    pub border_radius: String,
-    pub shadow: String,
-    pub padding: String,
     pub custom_css: String,
     pub enable_custom_css: bool,
-    pub global_radius: String,
-    pub primary_color_override: Option<String>,
-    pub reduce_motion: bool,
-    
+
     // daisyui
     pub base100: Option<String>,
     pub base200: Option<String>,
     pub base300: Option<String>,
     pub base_content: Option<String>,
-    
+
+    pub primary: Option<String>,
     pub primary_content: Option<String>,
     pub secondary: Option<String>,
     pub secondary_content: Option<String>,
@@ -78,7 +68,11 @@ pub struct UpdatePresetInput {
 #[tauri::command]
 pub fn get_all_presets() -> Result<Vec<ThemePreset>, String> {
     let preset_manager = PRESET_MANAGER.lock().unwrap();
-    let presets = preset_manager.get_all_presets().into_iter().cloned().collect();
+    let presets = preset_manager
+        .get_all_presets()
+        .into_iter()
+        .cloned()
+        .collect();
     Ok(presets)
 }
 
@@ -91,26 +85,21 @@ pub fn get_preset(id: String) -> Result<Option<ThemePreset>, String> {
 #[tauri::command]
 pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
     let mut preset_manager = PRESET_MANAGER.lock().unwrap();
-    
+
     let preset = ThemePreset {
         id: Uuid::new_v4().to_string(),
         name: input.name,
         description: input.description,
         created_at: Utc::now().to_rfc3339(),
-        border_radius: input.border_radius,
-        shadow: input.shadow,
-        padding: input.padding,
         custom_css: input.custom_css,
         enable_custom_css: input.enable_custom_css,
-        global_radius: input.global_radius,
-        primary_color_override: input.primary_color_override,
-        reduce_motion: input.reduce_motion,
-        
+
         base100: input.base100,
         base200: input.base200,
         base300: input.base300,
         base_content: input.base_content,
-        
+
+        primary: input.primary,
         primary_content: input.primary_content,
         secondary: input.secondary,
         secondary_content: input.secondary_content,
@@ -127,7 +116,7 @@ pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
         error: input.error,
         error_content: input.error_content,
     };
-    
+
     preset_manager.add_preset(preset.clone())?;
     Ok(preset)
 }
@@ -135,33 +124,28 @@ pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
 #[tauri::command]
 pub fn update_preset(input: UpdatePresetInput) -> Result<ThemePreset, String> {
     let mut preset_manager = PRESET_MANAGER.lock().unwrap();
-    
+
     if !preset_manager.preset_exists(&input.id) {
         return Err(format!("Preset with ID '{}' not found", input.id));
     }
 
     let existing_preset = preset_manager.get_preset(&input.id).unwrap();
     let created_at = existing_preset.created_at.clone();
-    
+
     let preset = ThemePreset {
         id: input.id,
         name: input.name,
         description: input.description,
         created_at,
-        border_radius: input.border_radius,
-        shadow: input.shadow,
-        padding: input.padding,
         custom_css: input.custom_css,
         enable_custom_css: input.enable_custom_css,
-        global_radius: input.global_radius,
-        primary_color_override: input.primary_color_override,
-        reduce_motion: input.reduce_motion,
-        
+
         base100: input.base100,
         base200: input.base200,
         base300: input.base300,
         base_content: input.base_content,
-        
+
+        primary: input.primary,
         primary_content: input.primary_content,
         secondary: input.secondary,
         secondary_content: input.secondary_content,
@@ -178,7 +162,7 @@ pub fn update_preset(input: UpdatePresetInput) -> Result<ThemePreset, String> {
         error: input.error,
         error_content: input.error_content,
     };
-    
+
     preset_manager.update_preset(preset.clone())?;
     Ok(preset)
 }
@@ -192,29 +176,25 @@ pub fn delete_preset(id: String) -> Result<(), String> {
 #[tauri::command]
 pub fn duplicate_preset(id: String, new_name: String) -> Result<ThemePreset, String> {
     let mut preset_manager = PRESET_MANAGER.lock().unwrap();
-    
-    let existing_preset = preset_manager.get_preset(&id)
+
+    let existing_preset = preset_manager
+        .get_preset(&id)
         .ok_or_else(|| format!("Preset with ID '{}' not found", id))?;
-    
+
     let new_preset = ThemePreset {
         id: Uuid::new_v4().to_string(),
         name: new_name,
         description: existing_preset.description.clone(),
         created_at: Utc::now().to_rfc3339(),
-        border_radius: existing_preset.border_radius.clone(),
-        shadow: existing_preset.shadow.clone(),
-        padding: existing_preset.padding.clone(),
         custom_css: existing_preset.custom_css.clone(),
         enable_custom_css: existing_preset.enable_custom_css,
-        global_radius: existing_preset.global_radius.clone(),
-        primary_color_override: existing_preset.primary_color_override.clone(),
-        reduce_motion: existing_preset.reduce_motion,
-        
+
         base100: existing_preset.base100.clone(),
         base200: existing_preset.base200.clone(),
         base300: existing_preset.base300.clone(),
         base_content: existing_preset.base_content.clone(),
-        
+
+        primary: existing_preset.primary.clone(),
         primary_content: existing_preset.primary_content.clone(),
         secondary: existing_preset.secondary.clone(),
         secondary_content: existing_preset.secondary_content.clone(),
@@ -231,7 +211,7 @@ pub fn duplicate_preset(id: String, new_name: String) -> Result<ThemePreset, Str
         error: existing_preset.error.clone(),
         error_content: existing_preset.error_content.clone(),
     };
-    
+
     preset_manager.add_preset(new_preset.clone())?;
     Ok(new_preset)
 }

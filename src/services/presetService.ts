@@ -33,20 +33,15 @@ export class PresetService {
         return {
             name,
             description,
-            border_radius: settings.borderRadius,
-            shadow: settings.shadow,
-            padding: settings.padding,
             custom_css: settings.customCSS,
             enable_custom_css: settings.enableCustomCSS,
-            global_radius: settings.globalRadius,
-            primary_color_override: settings.primaryColorOverride || undefined,
-            reduce_motion: settings.reduceMotion,
 
             base100: settings.base100 || undefined,
             base200: settings.base200 || undefined,
             base300: settings.base300 || undefined,
             base_content: settings.baseContent || undefined,
 
+            primary: settings.primary || undefined,
             primary_content: settings.primaryContent || undefined,
             secondary: settings.secondary || undefined,
             secondary_content: settings.secondaryContent || undefined,
@@ -67,20 +62,15 @@ export class PresetService {
 
     applyPresetToTheme(preset: ThemePreset): void {
         themeService.updatePresetSettings({
-            borderRadius: preset.border_radius,
-            shadow: preset.shadow,
-            padding: preset.padding,
             customCSS: preset.custom_css,
             enableCustomCSS: preset.enable_custom_css,
-            globalRadius: preset.global_radius,
-            primaryColorOverride: preset.primary_color_override,
-            reduceMotion: preset.reduce_motion,
 
             base100: preset.base100,
             base200: preset.base200,
             base300: preset.base300,
             baseContent: preset.base_content,
 
+            primary: preset.primary,
             primaryContent: preset.primary_content,
             secondary: preset.secondary,
             secondaryContent: preset.secondary_content,

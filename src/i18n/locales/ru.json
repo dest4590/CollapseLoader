@@ -229,7 +229,9 @@
     "description": "Присоединяйтесь к нашему сообществу, чтобы получать обновления, поддержку, и сообщать о любых проблемах, с которыми вы можете столкнуться.",
     "open_failed": "Не удалось открыть {platform}",
     "title": "Об CollapseLoader",
-    "version": "Версия"
+    "version": "Версия",
+    "branch": "Бренч",
+    "development": "Режим разработчика"
   },
   "account": {
     "change_password": "Изменить пароль",
@@ -333,7 +335,9 @@
     "save": "Сохранить",
     "browse": "Выбрать",
     "edit": "Редактировать",
-    "add": "Добавить"
+    "add": "Добавить",
+    "details": "Подробности",
+    "send": "Отправить"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -481,7 +485,7 @@
     "import_success": "Пресет успешно импортирован!",
     "import_invalid": "Некорректный пресет. Импорт не выполнен.",
     "global_radius": "Глобальный радиус углов",
-    "primary_color_override": "Основной цвет",
+    "primary": "Основной цвет",
     "remove_animations": "Убрать все анимации",
     "export_preset": "Экспорт пресета",
     "import_preset": "Импортировать пресет",
@@ -518,6 +522,11 @@
       "description": "Сохраняйте и управляйте пресетами настроек",
       "save_current": "Сохранить текущие",
       "import": "Импорт",
+        "pagination": {
+          "per_page": "На странице",
+          "page_of": "Страница {current} из {total}",
+          "pageOf": "Страница {current} из {total}"
+        },
       "create_first_preset": "Создать первый пресет",
       "no_presets_title": "Пресетов пока нет",
       "no_presets_description": "Создайте свой первый пресет, сохранив текущие настройки",
@@ -529,6 +538,13 @@
       "delete": "Удалить",
       "apply": "Применить",
       "created": "Создан {date}",
+      "selected_count": "Выбрано пресетов: {count}",
+      "actions": {
+        "apply_first": "Применить первый выбранный",
+        "export_selected": "Экспортировать выбранные",
+        "duplicate_selected": "Дублировать выбранные",
+        "delete_selected": "Удалить выбранные"
+      },
       "create_modal": {
         "title_create": "Создать новый пресет",
         "title_edit": "Редактировать пресет",
@@ -600,7 +616,10 @@
         "duplicate_failed": "Не удалось продублировать пресет",
         "apply_failed": "Не удалось применить пресет",
         "import_failed": "Не удалось импортировать пресет",
-        "import_missing_name": "Пресет должен иметь название"
+        "import_missing_name": "Пресет должен иметь название",
+        "multiple_deleted": "Удалено пресетов: {count}",
+        "multiple_duplicated": "Продублировано пресетов: {count}",
+        "multiple_exported": "Экспортировано пресетов: {count}"
       }
     }
   },
@@ -715,7 +734,23 @@
     "reset_cache_failed": "Не удалось удалить кэш, попробуйте еще раз",
     "hash_verify": "Проверка хэша ",
     "irc_chat": "IRC чат",
-    "save_flags_failed": "Не удалось сохранить флаги: {error}"
+    "save_flags_failed": "Не удалось сохранить флаги: {error}",
+    "change_root": {
+      "title": "Изменить папку данных",
+      "action": "Сменить папку данных",
+      "target_folder": "Новая папка",
+      "hint": "Выберите папку, где будут храниться файлы CollapseLoader (клиенты, кэш и т.д.)",
+      "mode": "Что сделать со старой папкой?",
+      "mode_move": "Перенести",
+      "mode_wipe": "Удалить",
+      "mode_move_desc": "Перенести все данные из старой папки в новую (рекомендуется)",
+      "mode_wipe_desc": "Удалить старую папку (все данные будут удалены)",
+      "select_folder_first": "Сначала выберите папку",
+      "success": "Папка данных изменена",
+      "failed": "Не удалось изменить папку данных: {error}",
+      "restart_required": "Перезапустите приложение, чтобы изменения вступили в силу",
+      "stopping_clients": "Останавливаем запущенные клиенты..."
+    }
   },
   "userProfile": {
     "playing": "Играет в",
@@ -1049,5 +1084,44 @@
     "display_mode_separate": "Отдельно",
     "no_results": "Попробуйте изменить поисковый запрос",
     "no_clients_yet": "Добавьте свой первый клиент, чтобы начать"
+  },
+  "marketplace": {
+    "title": "Маркетплейс",
+    "open_marketplace": "Маркетплейс",
+    "search_placeholder": "Поиск пресетов...",
+    "share_local": "Поделиться своим пресетом",
+    "share_current": "Поделиться текущим пресетом",
+    "share_modal_title": "Поделиться пресетом",
+    "title_label": "Название",
+    "title_placeholder": "Мой пресет",
+    "description_label": "Описание",
+    "description_placeholder": "Опишите ваш пресет",
+    "public_label": "Публичный",
+    "private_label": "Приватный",
+    "make_private": "Сделать приватным",
+    "make_public": "Сделать публичным",
+    "edit_modal_title": "Редактировать пресет",
+    "delete_confirm": "Вы уверены, что хотите удалить этот пресет? Это действие нельзя отменить.",
+    "share": "Поделиться",
+    "sharing": "Публикация...",
+    "shared_success": "Пресет опубликован!",
+    "shared_failed": "Не удалось опубликовать пресет",
+    "updated_success": "Пресет обновлён",
+    "updated_failed": "Не удалось обновить пресет",
+    "deleted_success": "Пресет удалён",
+    "deleted_failed": "Не удалось удалить пресет",
+    "apply": "Применить",
+    "like": "Лайк",
+    "by_user": "от {name}",
+    "no_items": "Пока нет пресетов",
+    "preset_details_title": "Подробности пресета",
+    "preset_details": "Детали пресета",
+    "comments": "Комментарии",
+    "no_comments": "Пока нет комментариев",
+    "add_comment": "Добавить комментарий",
+    "comment_placeholder": "Напишите комментарий...",
+    "preset_picker_label": "Выберите локальный пресет",
+    "preset_picker_placeholder": "Выберите пресет...",
+    "no_local_presets": "У вас пока нет пресетов"
   }
 }
