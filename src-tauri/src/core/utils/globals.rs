@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
-use crate::{core::network::servers::Server, log_info};
+use crate::{core::network::servers::Server, log_debug, log_info};
 
 pub static CODENAME: &str = "Dioxide";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
@@ -36,8 +36,22 @@ lazy_static! {
     },  Server::new("https://collapse.ttfdk.lol/auth/")];
     pub static ref ROOT_DIR: String = {
         let roaming_dir = std::env::var("APPDATA").unwrap_or_else(|_| {
+            // fallback for non-windows systems (aka linux/mac)
             std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
         });
+
+        let override_file = PathBuf::from(&roaming_dir).join("CollapseLoaderRoot.txt");
+        if let Ok(contents) = fs::read_to_string(&override_file) {
+            let override_path = contents.trim_matches(['\n', '\r', '"', '\'']).trim();
+            if !override_path.is_empty() {
+                let path = PathBuf::from(override_path);
+                if path.exists() {
+                    log_debug!("Using override path: {}", path.display());
+                    return path.to_string_lossy().to_string();
+                }
+            }
+        }
+
         let collapse_dir = PathBuf::from(roaming_dir).join("CollapseLoader");
         collapse_dir.to_string_lossy().to_string()
     };
