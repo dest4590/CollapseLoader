@@ -387,7 +387,7 @@ pub async fn delete_client(id: u32) -> Result<(), String> {
 #[tauri::command]
 pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
     let api_url = crate::commands::utils::get_auth_url().await?;
-    let url = format!("{api_url}/api/client/{client_id}/detailed");
+    let url = format!("{api_url}api/client/{client_id}/detailed");
 
     let client = reqwest::Client::new();
     let response = client

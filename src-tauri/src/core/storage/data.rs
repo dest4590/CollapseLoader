@@ -1,3 +1,4 @@
+use crate::core::clients::clients::CLIENT_MANAGER;
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::globals::ROOT_DIR;
@@ -8,7 +9,6 @@ use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
 use std::time::Duration;
 use std::{fs, io};
-use crate::core::clients::clients::CLIENT_MANAGER;
 
 pub struct DataManager {
     pub root_dir: PathBuf,

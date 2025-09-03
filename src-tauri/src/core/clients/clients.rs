@@ -97,18 +97,9 @@ impl ClientManager {
                 }
 
                 client.meta.size = client.size;
-
-                log_debug!(
-                    "Client {} has cached size: {} MB",
-                    client.name,
-                    client.meta.size
-                );
             }
 
-            log_info!(
-                "ClientManager initialized from cache with {} clients",
-                clients.len()
-            );
+            log_info!("ClientManager initialized from cache with {} clients — operating offline mode", clients.len());
             Ok(ClientManager { clients })
         }
     }

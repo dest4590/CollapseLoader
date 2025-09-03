@@ -105,7 +105,7 @@ pub fn run() {
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.set_title(&window_title);
             }
-
+            
             Analytics::send_start_analytics();
 
             Ok(())

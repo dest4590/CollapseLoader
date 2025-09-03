@@ -1,6 +1,6 @@
+use crate::core::network::servers::SERVERS;
 use crate::log_debug;
 use std::thread;
-use crate::core::network::servers::SERVERS;
 
 pub struct Analytics;
 

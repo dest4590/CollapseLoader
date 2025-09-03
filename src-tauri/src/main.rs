@@ -70,6 +70,7 @@ fn main() {
 
     #[cfg(target_os = "windows")]
     if let Err(e) = check_webview2() {
+        eprintln!("WebView2 check failed: {e}");
         if let Err(msgbox_err) = win_msgbox::show::<Okay>(&format!("Error checking WebView2: {e}"))
         {
             eprintln!("Failed to display error message box: {msgbox_err:?}");

@@ -85,7 +85,7 @@ impl CustomClient {
             },
         }
     }
-    
+
     pub fn validate_file(&self) -> Result<(), String> {
         if !self.file_path.exists() {
             return Err(format!("File {} does not exist", self.file_path.display()));
