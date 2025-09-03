@@ -41,6 +41,7 @@ pub fn get_app_logs() -> Vec<String> {
         .lock()
         .map(|logs| logs.clone())
         .unwrap_or_default()
+        .into()
 }
 
 #[tauri::command]
@@ -52,8 +53,6 @@ pub async fn initialize_api() -> Result<(), String> {
 pub fn initialize_rpc() -> Result<(), String> {
     if let Err(e) = discord_rpc::initialize() {
         log_error!("Failed to initialize Discord RPC: {}", e);
-    } else {
-        log_info!("Discord RPC initialized successfully");
     }
     Ok(())
 }
