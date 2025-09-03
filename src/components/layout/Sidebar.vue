@@ -213,7 +213,7 @@ onUnmounted(() => {
                 }" @click="changeTab(isAuthenticated ? 'account' : 'login')">
                     <LogIn v-if="!isAuthenticated" class="w-5 h-5" />
                     <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5" />
-                    <User v-else class="w-5 h-5" />
+                    <User v-if="isAuthenticated && !isDev" class="w-5 h-5" />
                 </button>
             </div>
 

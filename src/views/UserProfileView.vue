@@ -215,6 +215,11 @@
                     {{ t('userProfile.back_to_friends') }}
                 </button>
             </div>
+            <div class="card mt-6">
+                <div class="card-body">
+                    <PresetGallery v-if="userProfile" :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -224,9 +229,10 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { userService, type PublicUserProfile } from '../services/userService';
-import BlockUnblockConfirmModal from '../components/modals/BlockUnblockConfirmModal.vue';
-import RemoveFriendConfirmModal from '../components/modals/RemoveFriendConfirmModal.vue';
+import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
+import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import PresetGallery from '../components/presets/PresetGallery.vue';
 import DiscordIcon from '../components/ui/icons/DiscordIcon.vue';
 import TelegramIcon from '../components/ui/icons/TelegramIcon.vue';
 import YoutubeIcon from '../components/ui/icons/YoutubeIcon.vue';
@@ -252,7 +258,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['change-view']);
+defineEmits(['change-view']);
 
 const { t } = useI18n();
 const { addToast } = useToast();

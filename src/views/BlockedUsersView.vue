@@ -37,14 +37,14 @@ import { useModal } from '../services/modalService';
 import { userService, type Friend } from '../services/userService';
 import { ArrowLeft, Shield } from 'lucide-vue-next';
 import BlockedUserCard from '../components/features/friends/BlockedUserCard.vue';
-import BlockUnblockConfirmModal from '../components/modals/BlockUnblockConfirmModal.vue';
+import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
 
 const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const { t } = useI18n();
 
-const emit = defineEmits(['back-to-friends', 'show-user-profile']);
+defineEmits(['back-to-friends', 'show-user-profile']);
 
 const blockedUsers = ref<Friend[]>([]);
 const isLoading = ref(false);

@@ -707,15 +707,12 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
                     <div v-else-if="isHashVerifying && !isAnimating" class="w-full">
-                        <div class="flex justify-between mb-1 text-xs text-base-content">
+                        <div class="flex justify-between mb-1 text-xs text-base-content items-center">
                             <span class="truncate max-w-[90%]">
                                 {{ t('home.verifying_hash') }}
                                 {{ client.name }}
                             </span>
-                            <span class="loading loading-spinner loading-xs"></span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar animate-pulse" style="width: 100%;"></div>
+                            <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
                         </div>
                     </div>
                     <div v-else-if="!isAnimating" class="flex items-center space-x-2">

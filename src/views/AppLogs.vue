@@ -108,10 +108,10 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300 flex-1">
-            <div class="card-body p-2 flex flex-col">
+        <div class="card bg-base-200 shadow-md border border-base-300 h-90">
+            <div class="card-body p-2 flex flex-col h-full">
                 <div ref="logsContainer"
-                    class="flex-1 h-64 overflow-y-auto p-4 font-mono text-sm leading-6 whitespace-pre-wrap bg-base-100 rounded"
+                    class="flex-1 overflow-y-auto p-4 font-mono text-sm leading-6 whitespace-pre-wrap bg-base-100 rounded-lg h-full"
                     @scroll="handleScroll">
                     <div v-if="appLogs.length === 0" class="text-center p-5 text-neutral">
                         <p>{{ $t('appLogs.noLogs') }}</p>
@@ -122,5 +122,3 @@ onUnmounted(() => {
         </div>
     </div>
 </template>
-
-<!-- Styling replaced by Tailwind + daisyUI utility classes -->

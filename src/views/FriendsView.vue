@@ -107,9 +107,9 @@ import {
     type UserStatus,
 } from '../services/userService';
 import { useFriends } from '../composables/useFriends';
-import AddFriendModal from '../components/modals/AddFriendModal.vue';
-import BlockUnblockConfirmModal from '../components/modals/BlockUnblockConfirmModal.vue';
-import RemoveFriendConfirmModal from '../components/modals/RemoveFriendConfirmModal.vue';
+import AddFriendModal from '../components/modals/social/friends/AddFriendModal.vue';
+import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
+import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
 import FriendCard from '../components/features/friends/FriendCard.vue';
 import FriendRequestCard from '../components/features/friends/FriendRequestCard.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';

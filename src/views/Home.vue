@@ -14,6 +14,7 @@ import {
     Newspaper,
     StopCircle,
     FileText,
+    X
 } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
@@ -22,8 +23,8 @@ import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
 import type { Client, InstallProgress } from '../types/ui';
 import type { CustomClient } from '../types/ui';
-import LogViewerModal from '../components/modals/LogViewerModal.vue';
-import InsecureClientWarningModal from '../components/modals/InsecureClientWarningModal.vue';
+import LogViewerModal from '../components/modals/clients/LogViewerModal.vue';
+import InsecureClientWarningModal from '../components/modals/clients/InsecureClientWarningModal.vue';
 
 interface Account {
     id: string;
@@ -69,10 +70,20 @@ const hasAnimatedBefore = ref<boolean>(false);
 try {
     hasAnimatedBefore.value = sessionStorage.getItem(HOME_ANIM_KEY) === '1';
 } catch (e) {
+    console.error('Failed to read sessionStorage:', e);
     hasAnimatedBefore.value = false;
 }
 if (hasAnimatedBefore.value) {
     viewVisible.value = true;
+}
+
+const STAGGER_KEY = 'staggerCardsPlayed';
+const hasStaggerPlayed = ref<boolean>(false);
+try {
+    hasStaggerPlayed.value = sessionStorage.getItem(STAGGER_KEY) === '1';
+} catch (e) {
+    console.error('Failed to read sessionStorage:', e);
+    hasStaggerPlayed.value = false;
 }
 
 const accounts = ref<Account[]>([]);
@@ -136,6 +147,10 @@ const handleLaunchCustomClient = async (client: Client) => {
         const userToken = localStorage.getItem('authToken') || 'null';
         addToast(t('home.launching', { client: client.name }), 'info', 2000);
 
+        if (!runningClients.value.includes(client.id)) {
+            runningClients.value = Array.from(new Set([...runningClients.value, client.id]));
+        }
+
         await invoke('launch_custom_client', {
             id: client.id,
             userToken,
@@ -144,6 +159,7 @@ const handleLaunchCustomClient = async (client: Client) => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         await checkRunningStatus();
     } catch (err) {
+        runningClients.value = runningClients.value.filter((i) => i !== client.id);
         addToast(`Failed to launch ${client.name}: ${err}`, 'error');
     }
 };
@@ -393,10 +409,16 @@ const launchClient = async (id: number) => {
 
         const userToken = localStorage.getItem('authToken') || 'null';
 
+
         await invoke('increment_client_counter', { id, counterType: 'launch' });
         await getClients();
 
-        await invoke('launch_client', { id, userToken });
+        try {
+            await invoke('launch_client', { id, userToken });
+        } catch (invokeErr) {
+            runningClients.value = runningClients.value.filter((i) => i !== id);
+            throw invokeErr;
+        }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
         await checkRunningStatus();
@@ -642,9 +664,12 @@ const setupEventListeners = async () => {
     const hashVerificationDoneListener = await listen('client-hash-verification-done', (event: any) => {
         const { id } = event.payload;
 
-        setTimeout(() => {
-            hashVerifyingClients.value.delete(id);
-        }, 1000);
+        hashVerifyingClients.value.delete(id);
+        setTimeout(async () => {
+            if (!runningClients.value.includes(id)) {
+                await checkRunningStatus();
+            }
+        }, 800);
     });
 
     const hashVerificationFailedListener = await listen('client-hash-verification-failed', (event: any) => {
@@ -1181,8 +1206,28 @@ onMounted(async () => {
             try {
                 sessionStorage.setItem(HOME_ANIM_KEY, '1');
             } catch (e) {
+                console.error('Failed to set sessionStorage item:', e);
             }
         }, 80);
+    }
+
+    try {
+        if (!hasStaggerPlayed.value) {
+            const maxIndex = Math.max(0, filteredClients.value.length - 1);
+            const perItemDelay = 70;
+            const animDuration = 400;
+            const total = maxIndex * perItemDelay + animDuration + 80;
+            setTimeout(() => {
+                try {
+                    sessionStorage.setItem(STAGGER_KEY, '1');
+                    hasStaggerPlayed.value = true;
+                } catch (e) {
+                    console.error('Failed to set stagger session key:', e);
+                }
+            }, total);
+        }
+    } catch (e) {
+        console.error('Error scheduling stagger flag:', e);
     }
 });
 
@@ -1237,16 +1282,19 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <ClientCard v-for="(client, index) in filteredClients" :key="client.id" :client="client"
-            :isClientRunning="isClientRunning" :isClientInstalling="isClientInstalling"
-            :installationStatus="installationStatus" :isRequirementsInProgress="isRequirementsInProgress"
-            :isAnyClientDownloading="isAnyClientDownloading" :isFavorite="isClientFavorite(client.id)"
-            :isSelected="isClientSelected(client.id)" :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
-            :isHashVerifying="isClientHashVerifying(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
-            @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
-            @show-context-menu="showContextMenu" @client-click="handleClientClick"
-            @expanded-state-changed="handleExpandedStateChanged" class="client-card-item"
-            :style="{ 'animation-delay': index * 0.07 + 's' }" />
+        <div v-for="(client, index) in filteredClients" :key="client.id"
+            :class="['client-card-item', !hasStaggerPlayed ? 'stagger-animate' : '']"
+            :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }">
+            <ClientCard :client="client" :isClientRunning="isClientRunning" :isClientInstalling="isClientInstalling"
+                :installationStatus="installationStatus" :isRequirementsInProgress="isRequirementsInProgress"
+                :isAnyClientDownloading="isAnyClientDownloading" :isFavorite="isClientFavorite(client.id)"
+                :isSelected="isClientSelected(client.id)"
+                :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
+                :isHashVerifying="isClientHashVerifying(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
+                @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
+                @show-context-menu="showContextMenu" @client-click="handleClientClick"
+                @expanded-state-changed="handleExpandedStateChanged" />
+        </div>
     </div>
 
     <div v-if="contextMenu.visible" :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
@@ -1403,12 +1451,7 @@ onBeforeUnmount(() => {
             " class="border-l border-neutral-content/30 h-5 sm:h-6 mx-1"></div>
 
             <button @click="clearSelection" class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                    class="w-4 h-4 sm:w-5 sm:h-5">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <X class="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
         </div>
     </transition>
@@ -1416,11 +1459,10 @@ onBeforeUnmount(() => {
 
 <style>
 .client-card-item {
-    animation: fadeInUp 0.4s ease-out forwards;
     transition:
         transform 0.2s ease-out,
         box-shadow 0.2s ease-out;
-    opacity: 0;
+    opacity: 1;
 }
 
 @keyframes fadeInUp {
@@ -1601,19 +1643,19 @@ onBeforeUnmount(() => {
 
 .home-hidden {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(-100vh);
 }
 
 .home-entered {
     opacity: 1;
     transform: translateY(0);
-    transition: opacity 0.5s cubic-bezier(0.2, 0.9, 0.2, 1), transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+    transition: opacity 0.5s cubic-bezier(0.2, 0.9, 0.2, 1), transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .home-search {
     opacity: 0;
-    transform: translateY(8px) scale(0.995);
-    transition: transform 0.48s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.48s ease;
+    transform: translateY(-30px) scale(0.995);
+    transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.6s ease;
 }
 
 .home-entered .home-search {
@@ -1624,8 +1666,8 @@ onBeforeUnmount(() => {
 
 .home-action-btn {
     opacity: 0;
-    transform: translateY(8px) scale(0.995);
-    transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.42s ease;
+    transform: translateY(-30px) scale(0.995);
+    transition: transform 0.56s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.56s ease;
 }
 
 .home-entered .home-action-btn {
@@ -1641,15 +1683,14 @@ onBeforeUnmount(() => {
     transition-delay: 0.16s;
 }
 
-@media (prefers-reduced-motion: reduce) {
 
-    .home-hidden,
-    .home-entered,
-    .home-search,
-    .home-action-btn {
-        transition: none !important;
-        transform: none !important;
-        opacity: 1 !important;
-    }
+.client-card-item {
+    opacity: 1;
+}
+
+.client-card-item.stagger-animate {
+    opacity: 0;
+    transform: translateY(15px);
+    animation: fadeInUp 0.4s ease-out forwards;
 }
 </style>

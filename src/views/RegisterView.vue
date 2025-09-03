@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import RegistrationForm from '../components/forms/RegistrationForm.vue';
+import RegistrationForm from '../components/layout/forms/RegistrationForm.vue';
 
 const { t } = useI18n();
 const emit = defineEmits(['registered', 'logged-in', 'change-view']);
