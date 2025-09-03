@@ -29,6 +29,16 @@ impl LogChecker {
 
                 if let Some(crash_type) = self.detect_crash_type(&full_log_string) {
                     self.handle_crash(crash_type, client_logs, app_handle_clone_for_crash_handling);
+                } else {
+                    if full_log_string.contains("Exception in thread \"")
+                        || full_log_string.contains("Caused by: java.")
+                    {
+                        self.handle_crash(
+                            CrashType::GameCrashed,
+                            client_logs,
+                            app_handle_clone_for_crash_handling,
+                        );
+                    }
                 }
             }
         }
@@ -41,6 +51,10 @@ impl LogChecker {
             Some(CrashType::OutOfMemory)
         } else if log_string.contains("#@!@# Game crashed!")
             || log_string.contains("Error occurred during initialization of VM")
+            || log_string.contains("Exception in thread \"")
+            || log_string.contains("Caused by: java.")
+            || log_string.contains("java.lang.NoClassDefFoundError")
+            || log_string.contains("java.lang.UnsupportedClassVersionError")
         {
             Some(CrashType::GameCrashed)
         } else {
@@ -76,9 +90,27 @@ impl LogChecker {
                     self.client.id
                 );
                 self.emit_crash_details(client_logs, app_handle);
+                emit_to_main_window_filtered(
+                    app_handle,
+                    "client-crashed",
+                    serde_json::json!({
+                        "id": self.client.id,
+                        "name": self.client.name.clone(),
+                        "error": "OutOfMemoryError"
+                    }),
+                );
             }
             CrashType::GameCrashed => {
                 self.emit_crash_details(client_logs, app_handle);
+                emit_to_main_window_filtered(
+                    app_handle,
+                    "client-crashed",
+                    serde_json::json!({
+                        "id": self.client.id,
+                        "name": self.client.name.clone(),
+                        "error": "JVM crash or uncaught exception"
+                    }),
+                );
             }
         }
     }
