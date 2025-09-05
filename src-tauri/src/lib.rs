@@ -1,5 +1,7 @@
 use tauri::Manager;
 
+use crate::core::utils::globals::CODENAME;
+
 use self::core::network::analytics::Analytics;
 
 mod commands;
@@ -94,8 +96,9 @@ pub fn run() {
             let git_branch = env!("GIT_BRANCH").to_string();
 
             let version = env!("CARGO_PKG_VERSION");
+            let codename = CODENAME.to_string().to_uppercase();
             let window_title = format!(
-                "CollapseLoader v{version} {}",
+                "CollapseLoader v{version} ({codename}) {}",
                 if is_dev {
                     format!("(development build, {git_hash}, {git_branch} branch)")
                 } else {
@@ -106,7 +109,7 @@ pub fn run() {
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.set_title(&window_title);
             }
-            
+
             Analytics::send_start_analytics();
 
             Ok(())
