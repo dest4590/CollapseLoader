@@ -139,7 +139,6 @@ const showInsecureWarning = () => {
 const clientIsRunning = computed(() => props.isClientRunning(props.client.id));
 const clientIsInstalling = computed(() => props.isClientInstalling(props.client));
 const currentInstallStatus = computed(() => props.installationStatus.get(props.client.filename));
-const isHashVerifying = computed(() => props.isHashVerifying || false);
 
 
 const expandCard = async () => {
@@ -706,15 +705,6 @@ onBeforeUnmount(() => {
                             }"></div>
                         </div>
                     </div>
-                    <div v-else-if="isHashVerifying && !isAnimating" class="w-full">
-                        <div class="flex justify-between mb-1 text-xs text-base-content items-center">
-                            <span class="truncate max-w-[90%]">
-                                {{ t('home.verifying_hash') }}
-                                {{ client.name }}
-                            </span>
-                            <span class="loading loading-spinner loading-xs" aria-hidden="true"></span>
-                        </div>
-                    </div>
                     <div v-else-if="!isAnimating" class="flex items-center space-x-2">
                         <button v-if="!client.meta.installed" @click="handleDownloadClick"
                             class="btn btn-sm btn-primary min-w-[7rem] download-btn relative overflow-hidden" :disabled="isRequirementsInProgress || !client.working
@@ -733,19 +723,12 @@ onBeforeUnmount(() => {
                             </span>
                         </button>
                         <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-[5rem] launch-btn"
-                            :disabled="isRequirementsInProgress || isHashVerifying" :class="clientIsRunning
+                            :disabled="isRequirementsInProgress" :class="clientIsRunning
                                 ? 'btn-error focus:ring-error'
                                 : 'btn-primary focus:ring-primary'
                                 ">
                             <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
-                            <span v-if="isHashVerifying" class="loading loading-spinner loading-sm mr-1"></span>
-                            {{
-                                isHashVerifying
-                                    ? t('home.verifying')
-                                    : clientIsRunning
-                                        ? t('home.stop')
-                                        : t('home.launch')
-                            }}
+                            {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
                         </button>
                     </div>
                 </transition>
@@ -1014,6 +997,12 @@ onBeforeUnmount(() => {
     scrollbar-gutter: stable both-edges;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+}
+
+.card-actions {
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
 }
 
 .client-details {

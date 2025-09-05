@@ -125,10 +125,6 @@ const handleLaunchClick = (client: Client) => {
         return;
     }
 
-    if (hashVerifyingClients.value.has(client.id)) {
-        return;
-    }
-
     if (client.insecure && !warnedInsecureClients.value.has(client.id)) {
         showInsecureClientWarning(client);
         return;
@@ -409,6 +405,9 @@ const launchClient = async (id: number) => {
 
         const userToken = localStorage.getItem('authToken') || 'null';
 
+        if (!runningClients.value.includes(id)) {
+            runningClients.value = Array.from(new Set([...runningClients.value, id]));
+        }
 
         await invoke('increment_client_counter', { id, counterType: 'launch' });
         await getClients();
