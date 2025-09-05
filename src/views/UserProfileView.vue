@@ -16,8 +16,10 @@
                         <UserAvatar :name="displayNickname" size="lg" :show-status="false"
                             :is-online="userProfile.status.is_online" />
                         <div class="flex-1">
-                            <h1 class="text-2xl font-bold text-primary-focus">
+                            <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
+                                <span v-if="roleBadge" :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
+                                    }}</span>
                             </h1>
                             <p class="text-lg text-base-content/70">
                                 @{{ displayUsername }}
@@ -40,7 +42,7 @@
                                     <div class="w-3 h-3 bg-success rounded-full"></div>
                                     <span class="text-success font-medium">{{
                                         t('userProfile.online')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <div v-else-if="userProfile.status.last_seen" class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
@@ -55,7 +57,7 @@
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
                                     <span class="text-base-content/70">{{
                                         t('userProfile.offline')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -213,6 +215,11 @@
                     {{ t('userProfile.back_to_friends') }}
                 </button>
             </div>
+            <div class="card mt-6">
+                <div class="card-body">
+                    <PresetGallery v-if="userProfile" :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -222,9 +229,10 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { userService, type PublicUserProfile } from '../services/userService';
-import BlockUnblockConfirmModal from '../components/modals/BlockUnblockConfirmModal.vue';
-import RemoveFriendConfirmModal from '../components/modals/RemoveFriendConfirmModal.vue';
+import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
+import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import PresetGallery from '../components/presets/PresetGallery.vue';
 import DiscordIcon from '../components/ui/icons/DiscordIcon.vue';
 import TelegramIcon from '../components/ui/icons/TelegramIcon.vue';
 import YoutubeIcon from '../components/ui/icons/YoutubeIcon.vue';
@@ -243,13 +251,14 @@ import {
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
+import getRoleBadge from '../utils/roleBadge';
 
 interface Props {
     userId?: number;
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['change-view']);
+defineEmits(['change-view']);
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -274,6 +283,11 @@ const displayUsername = computed(() => {
         return 'streamer';
     }
     return userProfile.value.username;
+});
+
+const roleBadge = computed(() => {
+    if (!userProfile.value) return null;
+    return getRoleBadge((userProfile.value as any).role, (k: string) => t(k));
 });
 
 const loadUserProfile = async () => {

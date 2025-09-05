@@ -9,6 +9,9 @@
                         <h2 class="text-2xl font-bold text-primary mb-4">
                             Developer Menu
                         </h2>
+                        <button class="btn btn-primary mb-4" @click="handleMeow">
+                            Meow
+                        </button>
                         <button class="btn btn-primary mb-4" @click="resetFlags">
                             Reset Flags
                         </button>
@@ -28,6 +31,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../../services/toastService';
 import { useI18n } from 'vue-i18n';
+import meowUrl from '../../assets/misc/cat-meow.mp3';
 
 const { addToast } = useToast();
 const { t } = useI18n();
@@ -36,7 +40,7 @@ defineProps<{
     showDevMenu: boolean;
 }>();
 
-const emit = defineEmits(['close', 'update:registerPrompt']);
+const emit = defineEmits(['close']);
 
 const closeDevMenu = () => {
     emit('close');
@@ -45,6 +49,17 @@ const closeDevMenu = () => {
 const resetFlags = async () => {
     await invoke('reset_flags');
     addToast(t('toast.dev.flags_reset'), 'success');
+};
+const handleMeow = async () => {
+    try {
+        const audio = new Audio(meowUrl);
+        audio.volume = 0.9;
+        await audio.play();
+        addToast("Meow!", 'success');
+    } catch (err) {
+        addToast('Unable to play sound', 'error');
+        console.error('Meow playback failed', err);
+    }
 };
 </script>
 

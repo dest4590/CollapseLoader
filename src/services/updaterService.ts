@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { useModal } from './modalService';
 import { useToast } from './toastService';
-import UpdateModal from '../components/modals/UpdateModal.vue';
+import UpdateModal from '../components/modals/settings/UpdateModal.vue';
 import i18n from '../i18n';
 
 interface ChangeItem {

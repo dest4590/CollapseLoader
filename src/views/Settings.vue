@@ -35,11 +35,12 @@ import type { ToastPosition } from '../types/toast';
 import { syncService, type SyncServiceState } from '../services/syncService';
 import { globalUserStatus } from '../composables/useUserStatus';
 import SyncStatus from '../components/common/SyncStatus.vue';
-import AddAccountModal from '../components/modals/AddAccountModal.vue';
-import EditAccountModal from '../components/modals/EditAccountModal.vue';
-import ResetConfirmModal from '../components/modals/ResetConfirmModal.vue';
-import TelemetryInfoModal from '../components/modals/TelemetryInfoModal.vue';
-import DeleteAccountConfirmModal from '../components/modals/DeleteAccountConfirmModal.vue';
+import AddAccountModal from '../components/modals/social/account/AddAccountModal.vue';
+import EditAccountModal from '../components/modals/social/account/EditAccountModal.vue';
+import ResetConfirmModal from '../components/modals/settings/ResetConfirmModal.vue';
+import TelemetryInfoModal from '../components/modals/clients/TelemetryInfoModal.vue';
+import ChangeRootFolderModal from '../components/modals/settings/ChangeRootFolderModal.vue';
+import DeleteAccountConfirmModal from '../components/modals/social/account/DeleteAccountConfirmModal.vue';
 import {
     changeLanguage,
     getAvailableLanguages,
@@ -310,6 +311,16 @@ const showTelemetryModal = () => {
     );
 };
 
+const showChangeRootFolderDialog = () => {
+    showModal(
+        'change-root-folder',
+        ChangeRootFolderModal,
+        { title: t('settings.change_root.title') },
+        {},
+        {}
+    );
+};
+
 const handleAccountAdded = async () => {
     await loadAccounts();
 };
@@ -363,7 +374,7 @@ const formatDate = (dateString: string) => {
 
         return `${day}/${month}/${year} ${hours}:${minutes}`;
     } catch (e) {
-        console.error('Invalid date string:', dateString);
+        console.error('Invalid date string:', dateString, e);
         return 'N/A';
     }
 };
@@ -738,6 +749,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     @click="openDataFolder">
                                     <Folder class="w-4 h-4" />
                                     {{ $t('settings.open_data') }}
+                                </button>
+                                <button
+                                    class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-primary-focus transition-all duration-200"
+                                    @click="showChangeRootFolderDialog">
+                                    <Folder class="w-4 h-4" />
+                                    {{ $t('settings.change_root.action') }}
                                 </button>
                                 <button
                                     class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-secondary-focus transition-all duration-200"

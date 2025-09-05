@@ -1,9 +1,12 @@
 use tauri::Manager;
 
+use crate::core::utils::globals::CODENAME;
+
 use self::core::network::analytics::Analytics;
 
 mod commands;
 mod core;
+pub mod tags;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -64,10 +67,13 @@ pub fn run() {
             commands::settings::remove_favorite_client,
             commands::settings::is_client_favorite,
             commands::utils::get_version,
+            commands::utils::is_development,
             commands::utils::get_auth_url,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::reset_cache,
+            commands::utils::get_data_folder,
+            commands::utils::change_data_folder,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::analytics::send_client_analytics,
@@ -80,8 +86,25 @@ pub fn run() {
             let app_handle = app.handle();
             *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
+            // dev info
+            let is_dev = env!("DEVELOPMENT").to_string() == "true";
+            let git_hash = env!("GIT_HASH")
+                .to_string()
+                .chars()
+                .take(7)
+                .collect::<String>();
+            let git_branch = env!("GIT_BRANCH").to_string();
+
             let version = env!("CARGO_PKG_VERSION");
-            let window_title = format!("CollapseLoader v{version}");
+            let codename = CODENAME.to_string().to_uppercase();
+            let window_title = format!(
+                "CollapseLoader v{version} ({codename}) {}",
+                if is_dev {
+                    format!("(development build, {git_hash}, {git_branch} branch)")
+                } else {
+                    "".to_string()
+                }
+            );
 
             if let Some(window) = app_handle.get_webview_window("main") {
                 let _ = window.set_title(&window_title);

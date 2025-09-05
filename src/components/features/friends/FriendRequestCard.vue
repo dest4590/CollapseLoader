@@ -40,7 +40,7 @@ import { Check, X } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { useModal } from '../../../services/modalService';
 import UserAvatar from '../../ui/UserAvatar.vue';
-import CancelFriendRequestConfirmModal from '../../modals/CancelFriendRequestConfirmModal.vue';
+import CancelFriendRequestConfirmModal from '../../modals/social/friends/CancelFriendRequestConfirmModal.vue';
 import type { Friend } from '../../../services/userService';
 import { globalUserStatus } from '../../../composables/useUserStatus';
 import { computed } from 'vue';

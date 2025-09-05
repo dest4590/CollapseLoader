@@ -9,17 +9,11 @@
                     </h1>
 
                     <div class="flex flex-wrap items-center gap-2 justify-end">
-                        <div class="flex gap-2">
-                            <button class="btn btn-primary btn-sm flex items-center gap-2"
-                                @click="importPresetFromClipboard">
-                                <ClipboardPaste class="w-4 h-4" />
-                                <span class="hidden sm:inline">{{ t('theme.import_preset') }}</span>
-                            </button>
-
-                            <button class="btn btn-secondary btn-sm flex items-center gap-2"
-                                @click="exportPresetToClipboard">
-                                <ClipboardCopy class="w-4 h-4" />
-                                <span class="hidden sm:inline">{{ t('theme.export_preset') }}</span>
+                        <div class="flex gap-2 flex-wrap">
+                            <button class="btn btn-accent btn-sm flex items-center gap-2"
+                                @click="$emit('change-view', 'marketplace')">
+                                <Store class="w-4 h-4" />
+                                <span class="hidden sm:inline">{{ t('marketplace.open_marketplace') }}</span>
                             </button>
 
                             <button class="btn btn-outline btn-sm flex items-center gap-2" @click="resetStyles">
@@ -66,100 +60,6 @@
             </div>
 
             <div class="lg:col-span-8">
-                <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-                    <div class="card-body">
-                        <h2 class="card-title flex items-center gap-2">
-                            <LayoutPanelLeft class="w-5 h-5 text-primary" />
-                            {{ t('theme.card_configure_title') }}
-                        </h2>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-                            <div>
-                                <div class="space-y-6">
-                                    <div>
-                                        <div class="flex items-center justify-between mb-2">
-                                            <label class="text-sm font-medium flex items-center gap-1">
-                                                <Radius class="w-4 h-4" />
-                                                {{ t('theme.card_radius') }}
-                                            </label>
-                                            <span class="text-xs text-base-content/70">
-                                                {{ getRadiusLabel(radiusIndex) }}
-                                            </span>
-                                        </div>
-                                        <AnimatedSlider v-model="radiusIndex" :min="0" :max="radiusOptions.length - 1"
-                                            @update:modelValue="handleRadiusChange" />
-                                    </div>
-
-                                    <div>
-                                        <div class="flex items-center justify-between mb-2">
-                                            <label class="text-sm font-medium flex items-center gap-1">
-                                                <Square class="w-4 h-4" />
-                                                {{ t('theme.card_shadow_label') }}
-                                            </label>
-                                            <span class="text-xs text-base-content/70">
-                                                {{ getShadowLabel(shadowIndex) }}
-                                            </span>
-                                        </div>
-                                        <AnimatedSlider v-model="shadowIndex" :min="0" :max="shadowOptions.length - 1"
-                                            @update:modelValue="handleShadowChange" />
-                                    </div>
-
-                                    <div>
-                                        <div class="flex items-center justify-between mb-2">
-                                            <label class="text-sm font-medium flex items-center gap-1">
-                                                <GripVertical class="w-4 h-4" />
-                                                {{ t('theme.card_padding_label') }}
-                                            </label>
-                                            <span class="text-xs text-base-content/70">
-                                                {{ getPaddingLabel(paddingIndex) }}
-                                            </span>
-                                        </div>
-                                        <AnimatedSlider v-model="paddingIndex" :min="0" :max="paddingOptions.length - 1"
-                                            @update:modelValue="handlePaddingChange" />
-                                    </div>
-                                    <div>
-                                        <div class="flex items-center justify-between mb-2">
-                                            <label class="text-sm font-medium flex items-center gap-1">
-                                                <Radius class="w-4 h-4" />
-                                                {{ t('theme.global_radius') }}
-                                            </label>
-                                            <span class="text-xs text-base-content/70">
-                                                {{ getRadiusLabel(globalRadiusIndex) }}
-                                            </span>
-                                        </div>
-                                        <AnimatedSlider v-model="globalRadiusIndex" :min="0"
-                                            :max="radiusOptions.length - 1"
-                                            @update:modelValue="handleGlobalRadiusChange" class="mb-7" />
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between">
-                                    <label class="text-sm font-medium flex items-center gap-2">
-                                        <GripVertical class="w-4 h-4" />
-                                        {{ t('theme.remove_animations') }}
-                                    </label>
-                                    <input type="checkbox" class="toggle toggle-primary" v-model="reduceMotion"
-                                        @change="handleReduceMotionChange" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 class="font-medium text-base mb-3">
-                                    {{ t('theme.card_preview') }}
-                                </h3>
-                                <p class="text-sm text-base-content/70 mb-4">
-                                    {{ t('theme.card_preview_desc') }}
-                                </p>
-                                <div class="card-preview">
-                                    <ClientCard :client="demoClient" :is-client-running="() => false"
-                                        :is-client-installing="() => false" :installation-status="new Map()"
-                                        :is-requirements-in-progress="false" :is-favorite="true" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body p-6">
                         <h2 class="card-title flex items-center gap-2">
@@ -216,7 +116,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
                                 <div class="form-control">
                                     <label class="label text-sm font-medium text-base-content">{{
-                                        t('theme.primary_color_override') }}</label>
+                                        t('theme.primary') }}</label>
                                     <input type="color"
                                         class="input input-bordered w-full h-10 p-0 rounded-md border-base-300 focus:border-primary focus:ring-1 focus:ring-primary"
                                         :value="primaryColor"
@@ -469,30 +369,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, reactive, type Ref } from 'vue';
+defineEmits(['change-view']);
+import { ref, onMounted, onUnmounted, watch, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ClipboardCopy, ClipboardPaste, Save, SunMoon } from 'lucide-vue-next';
+import { ClipboardCopy, ClipboardPaste, Save, Store, SunMoon } from 'lucide-vue-next';
 import { invoke } from '@tauri-apps/api/core';
 import { useToast } from '../services/toastService';
 import { themeService } from '../services/themeService';
-import ClientCard from '../components/features/clients/ClientCard.vue';
-import AnimatedSlider from '../components/ui/AnimatedSlider.vue';
 import PresetManager from '../components/features/PresetManager.vue';
 import {
     Moon,
     Sun,
     RotateCcw,
-    LayoutPanelLeft,
-    Radius,
-    Square,
-    GripVertical,
     Code,
     HelpCircle,
     ChevronDown,
     ChevronUp,
 } from 'lucide-vue-next';
 import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
-import ImportExportCssModal from '../components/modals/ImportExportCssModal.vue';
+import ImportExportCssModal from '../components/modals/social/presets/ImportExportCssModal.vue';
 import { useModal } from '../services/modalService';
 
 const i18n = useI18n();
@@ -518,73 +413,7 @@ watch(enableCustomCSS, (val) => {
     themeService.updatePresetSettings({ enableCustomCSS: val });
 });
 
-const demoClient = reactive({
-    id: 0,
-    name: 'Demo Client',
-    version: '1.0.0',
-    meta: {
-        size: '128',
-        installed: true,
-        category: 'demo'
-    },
-    working: true,
-    required_files: [],
-    url: '',
-    filename: 'demo.zip',
-    description: 'This is a demo client for preview purposes',
-    insecure: false,
-    md5_hash: 'demo-md5-hash',
-    main_class: 'com.demo.Main',
-    show: true,
-    launches: 1337,
-    downloads: 1337
-});
 
-const radiusOptions = [
-    { value: '0', label: 'None' },
-    { value: '0.375rem', label: 'Small' },
-    { value: '0.5rem', label: 'Medium' },
-    { value: '0.75rem', label: 'Large' },
-    { value: '1rem', label: 'Extra Large' }
-];
-
-const shadowOptions = [
-    { value: 'none', label: 'None' },
-    { value: '0 1px 3px rgba(0,0,0,0.1)', label: 'Small' },
-    { value: '0 4px 6px -1px rgba(0,0,0,0.1)', label: 'Medium' },
-    { value: '0 10px 15px -3px rgba(0,0,0,0.1)', label: 'Large' },
-    { value: '0 20px 25px -5px rgba(0,0,0,0.1)', label: 'Extra Large' }
-];
-
-const paddingOptions = [
-    { value: '0.5rem', label: 'Small' },
-    { value: '1rem', label: 'Medium' },
-    { value: '1.5rem', label: 'Large' },
-    { value: '2rem', label: 'Extra Large' }
-];
-
-const getRadiusLabel = (index: number) => {
-    return t(`theme.card_radius_${radiusOptions[index]?.value === '0' ? 'none' :
-        index === 1 ? 'sm' :
-            index === 2 ? 'md' :
-                index === 3 ? 'lg' :
-                    index === 4 ? 'xl' : 'md'}`);
-};
-
-const getShadowLabel = (index: number) => {
-    return t(`theme.card_shadow_${index === 0 ? 'none' :
-        index === 1 ? 'sm' :
-            index === 2 ? 'md' :
-                index === 3 ? 'lg' :
-                    index === 4 ? 'xl' : 'md'}`);
-};
-
-const getPaddingLabel = (index: number) => {
-    return t(`theme.card_padding_${index === 0 ? 'sm' :
-        index === 1 ? 'md' :
-            index === 2 ? 'lg' :
-                index === 3 ? 'xl' : 'md'}`);
-};
 
 const cssExamples = [
     {
@@ -597,19 +426,8 @@ const cssExamples = [
     },
 ];
 
-const findOptionIndex = (options: { value: string }[], value: string | undefined, defaultIndex: number): number => {
-    if (!value) return defaultIndex;
-    const index = options.findIndex(opt => opt.value === value);
-    return index >= 0 ? index : defaultIndex;
-};
 
-const radiusIndex = ref(findOptionIndex(radiusOptions, themeService.presetSettings.borderRadius, 2));
-const shadowIndex = ref(findOptionIndex(shadowOptions, themeService.presetSettings.shadow, 2));
-const paddingIndex = ref(findOptionIndex(paddingOptions, themeService.presetSettings.padding, 1));
-
-const globalRadiusIndex = ref(findOptionIndex(radiusOptions, themeService.presetSettings.globalRadius, 2));
-const primaryColor = ref(themeService.presetSettings.primaryColorOverride || '#000000');
-const reduceMotion = ref<boolean>(themeService.presetSettings.reduceMotion);
+const primaryColor = ref(themeService.presetSettings.primary || '#000000');
 
 const base100 = ref<string>(themeService.presetSettings.base100 || '');
 const base200 = ref<string>(themeService.presetSettings.base200 || '');
@@ -730,73 +548,6 @@ const changeTheme = async (theme: string) => {
     }
 };
 
-const handleRadiusChange = () => {
-    const index = radiusIndex.value >= 0 && radiusIndex.value < radiusOptions.length ? radiusIndex.value : 2;
-    themeService.updatePresetSettings({
-        borderRadius: radiusOptions[index].value
-    });
-};
-
-const handleShadowChange = () => {
-    const index = shadowIndex.value >= 0 && shadowIndex.value < shadowOptions.length ? shadowIndex.value : 2;
-    themeService.updatePresetSettings({
-        shadow: shadowOptions[index].value
-    });
-};
-
-const handlePaddingChange = () => {
-    const index = paddingIndex.value >= 0 && paddingIndex.value < paddingOptions.length ? paddingIndex.value : 1;
-    themeService.updatePresetSettings({
-        padding: paddingOptions[index].value
-    });
-};
-
-const handleGlobalRadiusChange = () => {
-    const idx = globalRadiusIndex.value >= 0 && globalRadiusIndex.value < radiusOptions.length ? globalRadiusIndex.value : 2;
-    themeService.updatePresetSettings({ globalRadius: radiusOptions[idx].value });
-};
-
-const handleReduceMotionChange = () => {
-    themeService.updatePresetSettings({ reduceMotion: !!reduceMotion.value });
-};
-
-const exportPresetToClipboard = async () => {
-    try {
-        const json = themeService.exportPreset();
-        await navigator.clipboard.writeText(json);
-        addToast(t('theme.export_success'), 'success');
-    } catch (e) {
-        addToast(t('theme.export_failed'), 'error');
-    }
-};
-
-const importPresetFromClipboard = async () => {
-    try {
-        const txt = await navigator.clipboard.readText();
-        if (!txt || txt.trim().length === 0) {
-            addToast(t('theme.import_empty'), 'warning');
-            return;
-        }
-        if (txt.length > 20000) {
-            addToast(t('theme.import_too_large'), 'error');
-            return;
-        }
-
-        themeService.importPreset(txt);
-
-        radiusIndex.value = findOptionIndex(radiusOptions, themeService.presetSettings.borderRadius, 2);
-        shadowIndex.value = findOptionIndex(shadowOptions, themeService.presetSettings.shadow, 2);
-        paddingIndex.value = findOptionIndex(paddingOptions, themeService.presetSettings.padding, 1);
-        globalRadiusIndex.value = findOptionIndex(radiusOptions, themeService.presetSettings.globalRadius, 2);
-        primaryColor.value = themeService.presetSettings.primaryColorOverride || '#000000';
-        reduceMotion.value = themeService.presetSettings.reduceMotion;
-
-        addToast(t('theme.import_success'), 'success');
-    } catch (e) {
-        console.error('Import preset error:', e);
-        addToast(t('theme.import_invalid'), 'error');
-    }
-};
 
 const toggleExpertMode = () => {
     expertAnimationActive.value = true;
@@ -856,14 +607,6 @@ const applyCustomCSS = () => {
 const resetStyles = () => {
     themeService.resetPresetSettings();
 
-    const newRadiusIndex = radiusOptions.findIndex(opt => opt.value === themeService.presetSettings.borderRadius);
-    const newShadowIndex = shadowOptions.findIndex(opt => opt.value === themeService.presetSettings.shadow);
-    const newPaddingIndex = paddingOptions.findIndex(opt => opt.value === themeService.presetSettings.padding);
-
-    radiusIndex.value = newRadiusIndex >= 0 ? newRadiusIndex : 2;
-    shadowIndex.value = newShadowIndex >= 0 ? newShadowIndex : 2;
-    paddingIndex.value = newPaddingIndex >= 0 ? newPaddingIndex : 1;
-
     customCSS.value = themeService.presetSettings.customCSS;
     enableCustomCSS.value = themeService.presetSettings.enableCustomCSS;
 
@@ -889,8 +632,7 @@ const resetStyles = () => {
     error.value = themeService.presetSettings.error || '';
     errorContent.value = themeService.presetSettings.errorContent || '';
 
-    primaryColor.value = themeService.presetSettings.primaryColorOverride || '#000000';
-    reduceMotion.value = !!themeService.presetSettings.reduceMotion;
+    primaryColor.value = themeService.presetSettings.primary || '#000000';
 };
 
 const openExportModal = async () => {

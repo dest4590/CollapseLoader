@@ -33,6 +33,8 @@
                                     </div>
                                     <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
                                         t('account.social_links') }}</button>
+                                    <span v-if="roleBadge" :class="roleBadge.className + ' ml-2 text-sm'">{{
+                                        roleBadge.text }}</span>
                                 </div>
                             </div>
                         </div>
@@ -152,10 +154,10 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
-import EditNicknameModal from '../components/modals/EditNicknameModal.vue';
-import SocialLinksModal from '../components/modals/SocialLinksModal.vue';
-import ChangePasswordConfirmModal from '../components/modals/ChangePasswordConfirmModal.vue';
-import LogoutConfirmModal from '../components/modals/LogoutConfirmModal.vue';
+import EditNicknameModal from '../components/modals/social/account/EditNicknameModal.vue';
+import SocialLinksModal from '../components/modals/social/account/SocialLinksModal.vue';
+import ChangePasswordConfirmModal from '../components/modals/social/account/ChangePasswordConfirmModal.vue';
+import LogoutConfirmModal from '../components/modals/social/account/LogoutConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
 import { userService } from '../services/userService';
 import { syncService, type SyncServiceState } from '../services/syncService';
@@ -164,6 +166,7 @@ import { apiPost } from '../services/authClient';
 import { getCurrentLanguage } from '../i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
 import { useUser } from '../composables/useUser';
+import getRoleBadge from '../utils/roleBadge';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -197,12 +200,14 @@ const userInfo = computed(() => {
     const nickname = userNickname.value;
     const user = username.value;
     const mail = email.value;
+    const role = (useUser().profile.value && (useUser().profile.value as any).role) || null;
 
     if (globalUserStatus.isStreamer.value) {
         return {
             nickname: '??????',
             username: 'unknown',
             email: 'unknown@*****.***',
+            role: null,
         };
     }
 
@@ -210,7 +215,12 @@ const userInfo = computed(() => {
         nickname: nickname,
         username: user,
         email: mail,
+        role: role,
     };
+});
+
+const roleBadge = computed(() => {
+    return getRoleBadge(userInfo.value.role, (k: string) => t(k));
 });
 
 const isLoadingFromCache = computed(() => isLoadingUserData.value);

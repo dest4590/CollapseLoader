@@ -17,11 +17,11 @@ import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
 import type { CustomClient } from '../types/ui';
-import AddCustomClientModal from '../components/modals/AddCustomClientModal.vue';
-import EditCustomClientModal from '../components/modals/EditCustomClientModal.vue';
-import DeleteCustomClientConfirmModal from '../components/modals/DeleteCustomClientConfirmModal.vue';
-import CustomClientDisplaySettingsModal from '../components/modals/CustomClientDisplaySettingsModal.vue';
-import LogViewerModal from '../components/modals/LogViewerModal.vue';
+import AddCustomClientModal from '../components/modals/clients/AddCustomClientModal.vue';
+import EditCustomClientModal from '../components/modals/clients/EditCustomClientModal.vue';
+import DeleteCustomClientConfirmModal from '../components/modals/clients/DeleteCustomClientConfirmModal.vue';
+import CustomClientDisplaySettingsModal from '../components/modals/clients/CustomClientDisplaySettingsModal.vue';
+import LogViewerModal from '../components/modals/clients/LogViewerModal.vue';
 
 const { t } = useI18n();
 
@@ -258,14 +258,9 @@ const handleSearch = (query: string) => {
             <div class="max-w-md mx-auto">
                 <FileText class="w-16 h-16 text-base-content/30 mx-auto mb-4" />
                 <h3 class="text-xl font-semibold mb-2">
-                    {{ searchQuery ? 'No custom clients found' : 'No custom clients yet' }}
+                    {{ searchQuery ? t('custom_clients.no_results') : t('custom_clients.no_clients_yet') }}
                 </h3>
-                <p class="text-base-content/70 mb-6">
-                    {{ searchQuery
-                        ? t('custom_clients.no_results')
-                        : t('custom_clients.no_clients_yet')
-                    }}
-                </p>
+
                 <button v-if="!searchQuery" @click="handleAddClient" class="btn btn-primary">
                     <Plus class="w-4 h-4 mr-2" />
                     {{ $t('custom_clients.add') }}

@@ -41,6 +41,7 @@ impl LogChecker {
             Some(CrashType::OutOfMemory)
         } else if log_string.contains("#@!@# Game crashed!")
             || log_string.contains("Error occurred during initialization of VM")
+            || log_string.contains("java.lang.UnsupportedClassVersionError")
         {
             Some(CrashType::GameCrashed)
         } else {
@@ -76,9 +77,27 @@ impl LogChecker {
                     self.client.id
                 );
                 self.emit_crash_details(client_logs, app_handle);
+                emit_to_main_window_filtered(
+                    app_handle,
+                    "client-crashed",
+                    serde_json::json!({
+                        "id": self.client.id,
+                        "name": self.client.name.clone(),
+                        "error": "OutOfMemoryError"
+                    }),
+                );
             }
             CrashType::GameCrashed => {
                 self.emit_crash_details(client_logs, app_handle);
+                emit_to_main_window_filtered(
+                    app_handle,
+                    "client-crashed",
+                    serde_json::json!({
+                        "id": self.client.id,
+                        "name": self.client.name.clone(),
+                        "error": "JVM crash or uncaught exception"
+                    }),
+                );
             }
         }
     }

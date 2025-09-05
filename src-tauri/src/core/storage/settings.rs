@@ -1,9 +1,9 @@
 use super::common::JsonStorage;
-use super::data::DATA;
 use paste::paste;
 use serde::{Deserialize, Serialize};
 use std::{fmt, path::PathBuf, sync::Mutex as StdMutex};
 
+use crate::core::utils::globals::ROOT_DIR;
 use lazy_static::lazy_static;
 
 fn default_show_true() -> bool {
@@ -69,7 +69,7 @@ macro_rules! define_settings {
                         $(
                             $field: Setting::new($default_val, $show_val),
                         )*
-                        config_path: DATA.get_local("config.json"),
+                        config_path: PathBuf::from(&*ROOT_DIR).join("config.json"),
                     }
                 }
             }
@@ -88,7 +88,10 @@ macro_rules! define_settings {
                 }
 
                 pub fn load_from_disk(path: PathBuf) -> Self {
-                    <Self as JsonStorage>::load_from_disk(path)
+                    // update config_path here, because value is computed at runtime
+                    let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+                    loaded.config_path = path;
+                    loaded
                 }
             }
 
@@ -123,6 +126,7 @@ define_settings! {
 }
 
 lazy_static! {
-    pub static ref SETTINGS: StdMutex<Settings> =
-        StdMutex::new(Settings::load_from_disk(DATA.get_local("config.json")));
+    pub static ref SETTINGS: StdMutex<Settings> = StdMutex::new(Settings::load_from_disk(
+        PathBuf::from(&*ROOT_DIR).join("config.json")
+    ));
 }
