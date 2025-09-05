@@ -15,13 +15,7 @@ lazy_static! {
 
 pub fn initialize() -> Result<(), String> {
     std::thread::spawn(|| {
-        let mut client = match DiscordIpcClient::new(DISCORD_APP_ID) {
-            Ok(client) => client,
-            Err(e) => {
-                log_debug!("Failed to create Discord client: {}", e);
-                return;
-            }
-        };
+        let mut client = DiscordIpcClient::new(DISCORD_APP_ID);
 
         if let Err(e) = client.connect() {
             log_debug!("Could not connect to Discord: {}", e);
