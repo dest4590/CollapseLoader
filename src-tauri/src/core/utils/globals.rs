@@ -3,7 +3,7 @@ use std::{fs, path::PathBuf};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Dioxide";
+pub static CODENAME: &str = "Cricket";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
