@@ -54,15 +54,13 @@ impl Logger {
 
         fn emoji_for_module(tag: &str) -> Option<&'static str> {
             if tag.contains("core.network") {
-                Some("📶")
+                Some("\u{2601}") // ☁
             } else if tag.contains("core.clients") {
-                Some("🎮")
+                Some("\u{2609}") // ☉
             } else if tag.contains("core.storage") {
-                Some("💾")
+                Some("\u{26C3}") // ⛃
             } else if tag.contains("core.utils") {
-                Some("🧰")
-            } else if tag.contains("commands") {
-                Some("📜")
+                Some("\u{2692}") // ⚒
             } else {
                 None
             }
@@ -114,16 +112,12 @@ impl fmt::Display for LogLevel {
 }
 
 impl Logger {
-    /// Change global log level at runtime
-    // TODO: use it somewhere
     #[allow(dead_code)]
     pub fn set_level(&self, level: LogLevel) {
         if let Ok(mut gl) = LOG_LEVEL.lock() {
             *gl = level;
         }
     }
-    /// Read current global log level
-    // TODO: use it somewhere
     #[allow(dead_code)]
     pub fn get_level(&self) -> LogLevel {
         if let Ok(gl) = LOG_LEVEL.lock() {
