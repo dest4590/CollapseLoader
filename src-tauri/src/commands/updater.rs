@@ -225,7 +225,7 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
         .await
         .map_err(|e| format!("Failed to read update data: {}", e))?;
 
-    log_debug!("Downloaded {} bytes", bytes.len());
+    log_debug!("Downloaded {} mb", bytes.len() / (1024 * 1024));
 
     let temp_dir = std::env::temp_dir();
     let file_name = download_url.split('/').last().unwrap_or("update.msi");
@@ -244,16 +244,72 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
 
     #[cfg(target_os = "windows")]
     {
-        let mut command = std::process::Command::new("msiexec");
-        command.arg("/i");
-        command.arg(&temp_file);
-        command.arg("/norestart");
+        use std::io::Write;
+        use std::os::windows::process::CommandExt;
 
-        command
-            .spawn()
-            .map_err(|e| format!("Failed to start installer: {}", e))?;
+        let current_exe_name = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.file_name().map(|s| s.to_string_lossy().to_string()))
+            .unwrap_or_else(|| "collapseloader.exe".to_string());
 
-        std::thread::sleep(std::time::Duration::from_secs(3));
+        let msi_path = temp_file.to_string_lossy().to_string();
+        let script_path = std::env::temp_dir().join("cl_update_and_restart.bat");
+
+        let quoted_msi = msi_path.replace('"', "\"");
+
+        let script_content = format!(
+            r#"@echo off
+setlocal enabledelayedexpansion
+echo Waiting for process {exe} to exit...
+:waitloop
+tasklist /FI "IMAGENAME eq {exe}" | find /I "{exe}" >nul
+if %ERRORLEVEL%==0 (
+    timeout /t 1 >nul
+    goto waitloop
+)
+echo Installing update silently...
+msiexec /i "{msi}" /qn /norestart >nul 2>&1
+set "TP1=%ProgramFiles%\collapseloader\collapseloader.exe"
+call set "TP2=%%ProgramFiles(x86)%%\collapseloader\collapseloader.exe"
+set "TP3=%LocalAppData%\Programs\collapseloader\collapseloader.exe"
+
+set "EXE_PATH=%ProgramFiles%\collapseloader\collapseloader.exe"
+if not exist "%EXE_PATH%" call set "EXE_PATH=%%ProgramFiles(x86)%%\collapseloader\collapseloader.exe"
+if not exist "%EXE_PATH%" set "EXE_PATH=%LocalAppData%\Programs\collapseloader\collapseloader.exe"
+
+if exist "%EXE_PATH%" (
+    echo Launching updated application...
+    start "" "%EXE_PATH%"
+) else (
+    echo Could not locate installed application. Please start it manually.
+    echo Tried paths:
+    echo   !TP1!
+    echo   !TP2!
+    echo   !TP3!
+    timeout /t 5 >nul
+)
+
+del "{msi}" >nul 2>&1
+exit
+"#,
+            exe = current_exe_name,
+            msi = quoted_msi
+        );
+
+        {
+            let mut file = std::fs::File::create(&script_path)
+                .map_err(|e| format!("Failed to create updater script: {}", e))?;
+            file.write_all(script_content.as_bytes())
+                .map_err(|e| format!("Failed to write updater script: {}", e))?;
+        }
+
+        let mut cmd = std::process::Command::new("cmd.exe");
+        cmd.args(&["/C", "start", "", &script_path.to_string_lossy()]);
+        const DETACHED_PROCESS: u32 = 0x00000008;
+        cmd.creation_flags(DETACHED_PROCESS);
+        cmd.spawn()
+            .map_err(|e| format!("Failed to launch updater script: {}", e))?;
+
         std::process::exit(0);
     }
 
