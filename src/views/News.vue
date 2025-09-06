@@ -177,7 +177,7 @@ const fetchNews = async () => {
             },
         });
 
-        const allNews = response.data as NewsArticle[];
+        const allNews = response as NewsArticle[];
 
         let filteredNews: NewsArticle[] = Array.isArray(allNews)
             ? allNews.filter(

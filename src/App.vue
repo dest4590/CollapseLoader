@@ -150,7 +150,7 @@ const fetchNewsAndUpdateUnreadCount = async () => {
                 'Content-Type': 'application/json',
             },
         });
-        const allNews = response.data as any[];
+        const allNews = response as any[];
         let filteredNews = allNews.filter(
             (article) => article.language === currentLanguage
         );
