@@ -84,14 +84,17 @@ pub async fn change_data_folder(
     }
 
     // Current dir
-    let current_dir = PathBuf::from(DATA.root_dir.clone());
+    let current_dir = DATA.root_dir.clone();
 
     if mode == "move" {
         if current_dir.exists() {
             // Move: copy contents to new folder, then leave old folder as-is or empty
             // We'll copy recursively to handle cross-volume moves; then wipe old.
             task::spawn_blocking(move || -> Result<(), String> {
-                fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> Result<(), String> {
+                fn copy_dir_recursive(
+                    src: &std::path::Path,
+                    dst: &std::path::Path,
+                ) -> Result<(), String> {
                     for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
                         let entry = entry.map_err(|e| e.to_string())?;
                         let path = entry.path();

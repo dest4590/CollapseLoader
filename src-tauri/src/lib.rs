@@ -6,7 +6,6 @@ use self::core::network::analytics::Analytics;
 
 mod commands;
 mod core;
-pub mod tags;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -87,7 +86,7 @@ pub fn run() {
             *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
             // dev info
-            let is_dev = env!("DEVELOPMENT").to_string() == "true";
+            let is_dev = env!("DEVELOPMENT") == "true";
             let git_hash = env!("GIT_HASH")
                 .to_string()
                 .chars()

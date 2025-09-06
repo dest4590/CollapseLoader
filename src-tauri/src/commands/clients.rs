@@ -1,10 +1,10 @@
 use core::clients::{
     client::{Client, CLIENT_LOGS},
-    clients::{initialize_client_manager, CLIENT_MANAGER},
+    manager::{initialize_client_manager, CLIENT_MANAGER},
 };
 use tauri::AppHandle;
 
-use crate::core::utils::utils::emit_to_main_window;
+use crate::core::utils::helpers::emit_to_main_window;
 use crate::core::utils::{discord_rpc, logging};
 use crate::core::{
     clients::custom_clients::{CustomClient, Version},

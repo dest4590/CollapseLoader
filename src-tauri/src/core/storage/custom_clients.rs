@@ -39,18 +39,18 @@ impl CustomClientManager {
         let custom_clients_dir = DATA.get_local("custom_clients");
         if !custom_clients_dir.exists() {
             fs::create_dir_all(&custom_clients_dir)
-                .map_err(|e| format!("Failed to create custom clients directory: {}", e))?;
+                .map_err(|e| format!("Failed to create custom clients directory: {e}"))?;
         }
 
         let client_dir = custom_clients_dir.join(&custom_client.name);
         if !client_dir.exists() {
             fs::create_dir_all(&client_dir)
-                .map_err(|e| format!("Failed to create client directory: {}", e))?;
+                .map_err(|e| format!("Failed to create client directory: {e}"))?;
         }
 
         let target_path = client_dir.join(&custom_client.filename);
         fs::copy(&custom_client.file_path, &target_path)
-            .map_err(|e| format!("Failed to copy file: {}", e))?;
+            .map_err(|e| format!("Failed to copy file: {e}"))?;
 
         custom_client.file_path = target_path;
         custom_client.is_installed = true;
@@ -66,7 +66,7 @@ impl CustomClientManager {
 
             if client.file_path.exists() {
                 fs::remove_file(&client.file_path)
-                    .map_err(|e| format!("Failed to remove file: {}", e))?;
+                    .map_err(|e| format!("Failed to remove file: {e}"))?;
             }
 
             self.clients.remove(index);
@@ -88,7 +88,7 @@ impl CustomClientManager {
     pub fn update_client(&mut self, id: u32, updates: CustomClientUpdate) -> Result<(), String> {
         if let Some(ref name) = updates.name {
             if self.clients.iter().any(|c| c.id != id && c.name == *name) {
-                return Err(format!("A client with name '{}' already exists", name));
+                return Err(format!("A client with name '{name}' already exists"));
             }
         }
 

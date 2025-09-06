@@ -101,8 +101,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
 
     let client = reqwest::Client::new();
     let url = format!(
-        "https://api.github.com/repos/{}/{}/releases/latest",
-        GITHUB_REPO_OWNER, GITHUB_REPO_NAME
+        "https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
     );
     // let url = "http://127.0.0.1:8000/repos/dest4590/CollapseLoader/releases/latest".to_string();
 
@@ -113,7 +112,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         .header("X-GitHub-Api-Version", "2022-11-28")
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch releases: {}", e))?;
+        .map_err(|e| format!("Failed to fetch releases: {e}"))?;
 
     if !response.status().is_success() {
         return Err(format!("GitHub API error: {}", response.status()));
@@ -122,7 +121,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     let release: GitHubRelease = response
         .json()
         .await
-        .map_err(|e| format!("Failed to parse release data: {}", e))?;
+        .map_err(|e| format!("Failed to parse release data: {e}"))?;
 
     if release.prerelease {
         return Ok(UpdateInfo {
@@ -203,7 +202,7 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()
-        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+        .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
 
     log_debug!("Downloading from: {}", download_url);
 
@@ -211,7 +210,7 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
         .get(&download_url)
         .send()
         .await
-        .map_err(|e| format!("Failed to download update: {}", e))?;
+        .map_err(|e| format!("Failed to download update: {e}"))?;
 
     if !response.status().is_success() {
         return Err(format!(
@@ -223,24 +222,23 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
     let bytes = response
         .bytes()
         .await
-        .map_err(|e| format!("Failed to read update data: {}", e))?;
+        .map_err(|e| format!("Failed to read update data: {e}"))?;
 
     log_debug!("Downloaded {} mb", bytes.len() / (1024 * 1024));
 
     let temp_dir = std::env::temp_dir();
-    let file_name = download_url.split('/').last().unwrap_or("update.msi");
+    let file_name = download_url.split('/').next_back().unwrap_or("update.msi");
     let temp_file = temp_dir.join(file_name);
 
     log_debug!("Writing to temp file: {:?}", temp_file);
 
     if !file_name.ends_with(".msi") {
         return Err(format!(
-            "Downloaded file is not an MSI. Please download manually from {}",
-            download_url
+            "Downloaded file is not an MSI. Please download manually from {download_url}"
         ));
     }
 
-    std::fs::write(&temp_file, bytes).map_err(|e| format!("Failed to write update file: {}", e))?;
+    std::fs::write(&temp_file, bytes).map_err(|e| format!("Failed to write update file: {e}"))?;
 
     #[cfg(target_os = "windows")]
     {
@@ -255,20 +253,20 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
         let msi_path = temp_file.to_string_lossy().to_string();
         let script_path = std::env::temp_dir().join("cl_update_and_restart.bat");
 
-        let quoted_msi = msi_path.replace('"', "\"");
+        let quoted_msi = msi_path; // no-op replace removed
 
         let script_content = format!(
             r#"@echo off
 setlocal enabledelayedexpansion
-echo Waiting for process {exe} to exit...
+echo Waiting for process {current_exe_name} to exit...
 :waitloop
-tasklist /FI "IMAGENAME eq {exe}" | find /I "{exe}" >nul
+tasklist /FI "IMAGENAME eq {current_exe_name}" | find /I "{current_exe_name}" >nul
 if %ERRORLEVEL%==0 (
     timeout /t 1 >nul
     goto waitloop
 )
 echo Installing update silently...
-msiexec /i "{msi}" /qn /norestart >nul 2>&1
+msiexec /i "{quoted_msi}" /qn /norestart >nul 2>&1
 set "TP1=%ProgramFiles%\collapseloader\collapseloader.exe"
 call set "TP2=%%ProgramFiles(x86)%%\collapseloader\collapseloader.exe"
 set "TP3=%LocalAppData%\Programs\collapseloader\collapseloader.exe"
@@ -289,26 +287,24 @@ if exist "%EXE_PATH%" (
     timeout /t 5 >nul
 )
 
-del "{msi}" >nul 2>&1
+del "{quoted_msi}" >nul 2>&1
 exit
-"#,
-            exe = current_exe_name,
-            msi = quoted_msi
+"#
         );
 
         {
             let mut file = std::fs::File::create(&script_path)
-                .map_err(|e| format!("Failed to create updater script: {}", e))?;
+                .map_err(|e| format!("Failed to create updater script: {e}"))?;
             file.write_all(script_content.as_bytes())
-                .map_err(|e| format!("Failed to write updater script: {}", e))?;
+                .map_err(|e| format!("Failed to write updater script: {e}"))?;
         }
 
         let mut cmd = std::process::Command::new("cmd.exe");
-        cmd.args(&["/C", "start", "", &script_path.to_string_lossy()]);
+        cmd.args(["/C", "start", "", &script_path.to_string_lossy()]);
         const DETACHED_PROCESS: u32 = 0x00000008;
         cmd.creation_flags(DETACHED_PROCESS);
         cmd.spawn()
-            .map_err(|e| format!("Failed to launch updater script: {}", e))?;
+            .map_err(|e| format!("Failed to launch updater script: {e}"))?;
 
         std::process::exit(0);
     }
@@ -361,7 +357,7 @@ fn parse_changelog_and_translations(
     }
 
     let root: JsonValue = serde_json::from_str(content)
-        .map_err(|e| format!("Failed to parse changelog JSON root: {}", e))?;
+        .map_err(|e| format!("Failed to parse changelog JSON root: {e}"))?;
 
     if root.is_object() {
         let entries_val = root.get("entries");
@@ -369,9 +365,9 @@ fn parse_changelog_and_translations(
 
         if let Some(ev) = entries_val {
             let entries_json = serde_json::to_string(ev)
-                .map_err(|e| format!("Failed to serialize entries node: {}", e))?;
+                .map_err(|e| format!("Failed to serialize entries node: {e}"))?;
             let entries: Vec<ChangelogEntry> = serde_json::from_str(&entries_json)
-                .map_err(|e| format!("Failed to parse entries array: {}", e))?;
+                .map_err(|e| format!("Failed to parse entries array: {e}"))?;
             return Ok((entries, translations_val));
         }
     }

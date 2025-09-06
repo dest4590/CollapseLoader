@@ -18,7 +18,7 @@ fn force_println(msg: &str) {
 #[cfg(windows)]
 fn force_println(msg: &str) {
     if let Ok(mut tty) = OpenOptions::new().write(true).open("CONOUT$") {
-        let _ = writeln!(tty, "{}", msg);
+        let _ = writeln!(tty, "{msg}");
     }
 }
 
@@ -29,16 +29,16 @@ fn main() -> io::Result<()> {
         force_println("\n");
         let width = NAME.len() + 4;
         force_println(&format!("+{}+", "-".repeat(width)));
-        force_println(&format!("|  {}  |", NAME));
+        force_println(&format!("|  {NAME}  |"));
         force_println(&format!("+{}+", "-".repeat(width)));
     }
 
     fn info(msg: &str) {
-        force_println(&format!("info: {}", msg));
+        force_println(&format!("info: {msg}"));
     }
 
     fn warn(msg: &str) {
-        force_println(&format!("warning: {}", msg));
+        force_println(&format!("warning: {msg}"));
     }
 
     fn fence() {
@@ -73,7 +73,7 @@ fn main() -> io::Result<()> {
         })
         .unwrap_or_else(|_| {
             std::fs::read_to_string("../.env")
-                .map_err(|e| println!("cargo:warning=Failed to read .env file: {}", e))
+                .map_err(|e| println!("cargo:warning=Failed to read .env file: {e}"))
                 .ok()
                 .and_then(|s| {
                     s.lines()
@@ -96,7 +96,7 @@ fn main() -> io::Result<()> {
                 })
                 .unwrap_or(false)
         });
-    println!("cargo:rustc-env=DEVELOPMENT={}", development);
+    println!("cargo:rustc-env=DEVELOPMENT={development}");
     println!("cargo:rerun-if-env-changed=DEVELOPMENT");
     println!("cargo:rerun-if-changed=../.env");
 
@@ -109,17 +109,17 @@ fn main() -> io::Result<()> {
     let git_hash = execute_git_command(&["rev-parse", "HEAD"]).unwrap_or_else(|_| "unknown".into());
     let git_branch = execute_git_command(&["rev-parse", "--abbrev-ref", "HEAD"])
         .unwrap_or_else(|_| "unknown".into());
-    println!("cargo:rustc-env=GIT_HASH={}", git_hash);
-    println!("cargo:rustc-env=GIT_BRANCH={}", git_branch);
+    println!("cargo:rustc-env=GIT_HASH={git_hash}");
+    println!("cargo:rustc-env=GIT_BRANCH={git_branch}");
 
-    info(&format!("Build kind: {}", build_kind));
-    info(&format!("Profile: {}", profile));
+    info(&format!("Build kind: {build_kind}"));
+    info(&format!("Profile: {profile}"));
     if development {
         warn("DEVELOPMENT mode: true");
     } else {
         info("DEVELOPMENT mode: false");
     }
-    info(&format!("Git branch: {}", git_branch));
+    info(&format!("Git branch: {git_branch}"));
     info(&format!(
         "Git hash: {}",
         git_hash.chars().take(7).collect::<String>()

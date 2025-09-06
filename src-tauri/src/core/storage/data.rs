@@ -1,8 +1,8 @@
-use crate::core::clients::clients::CLIENT_MANAGER;
+use crate::core::clients::manager::CLIENT_MANAGER;
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::globals::ROOT_DIR;
-use crate::core::utils::utils::emit_to_main_window;
+use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
 use lazy_static::lazy_static;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
@@ -108,7 +108,7 @@ impl DataManager {
 
     pub fn get_as_folder_string(&self, file: &str) -> String {
         let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
-        format!("{}{}", file_name, MAIN_SEPARATOR)
+        format!("{file_name}{MAIN_SEPARATOR}")
     }
 
     pub fn get_filename(&self, file: &str) -> String {

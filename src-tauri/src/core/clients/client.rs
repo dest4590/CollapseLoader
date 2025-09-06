@@ -9,12 +9,12 @@ use std::{
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
-use super::clients::CLIENT_MANAGER;
+use super::manager::CLIENT_MANAGER;
 use crate::core::clients::internal::agent_overlay::AgentArguments;
 use crate::core::clients::log_checker::LogChecker;
 use crate::core::network::analytics::Analytics;
 use crate::core::storage::accounts::ACCOUNT_MANAGER;
-use crate::core::utils::utils::{emit_to_main_window, emit_to_main_window_filtered};
+use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
 use crate::{
     core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,

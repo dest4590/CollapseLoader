@@ -9,18 +9,20 @@ pub enum Version {
 }
 
 impl Version {
-    pub fn to_string(&self) -> String {
-        match self {
-            Version::V1_16_5 => "1.16.5".to_string(),
-            Version::V1_12_2 => "1.12.2".to_string(),
-        }
-    }
-
     pub fn from_string(version: &str) -> Self {
         match version {
             "1.16.5" => Version::V1_16_5,
             "1.12.2" => Version::V1_12_2,
             _ => Version::V1_16_5,
+        }
+    }
+}
+
+impl std::fmt::Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Version::V1_16_5 => write!(f, "1.16.5"),
+            Version::V1_12_2 => write!(f, "1.12.2"),
         }
     }
 }

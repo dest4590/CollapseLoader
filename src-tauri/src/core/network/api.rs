@@ -12,7 +12,7 @@ use super::servers::{Server, SERVERS};
 
 pub const API_CACHE_DIR: &str = "cache/";
 
-pub struct CAPI {
+pub struct Api {
     pub api_server: Server,
 }
 
@@ -20,7 +20,7 @@ fn sanitize_path_for_filename(path: &str) -> String {
     path.replace(['/', '\\'], "_") + ".json"
 }
 
-impl CAPI {
+impl Api {
     pub fn json<T: DeserializeOwned>(&self, path: &str) -> Result<T, Box<dyn std::error::Error>> {
         let cache_dir = DATA.root_dir.join(API_CACHE_DIR);
         if !cache_dir.exists() {
@@ -208,9 +208,9 @@ impl CAPI {
 }
 
 lazy_static! {
-    pub static ref API: Option<CAPI> = {
+    pub static ref API: Option<Api> = {
         match SERVERS.selected_auth_server.clone() {
-            Some(auth_s) => Some(CAPI { api_server: auth_s }),
+            Some(auth_s) => Some(Api { api_server: auth_s }),
             _ => {
                 log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
                 None

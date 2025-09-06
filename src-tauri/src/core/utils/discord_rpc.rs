@@ -63,7 +63,7 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         .unwrap()
         .as_secs();
 
-    let large_text = format!("Version {}", env!("CARGO_PKG_VERSION"));
+    let large_text = format!("Version {env}", env = env!("CARGO_PKG_VERSION"));
 
     let assets = activity::Assets::new()
         .large_image("https://i.imgur.com/ZpWg110.gif")

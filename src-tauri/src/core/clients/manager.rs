@@ -3,7 +3,7 @@ use std::{fs::File, io::BufReader, sync::Mutex};
 use tauri::AppHandle;
 
 use super::client::Client;
-use crate::core::utils::utils::emit_to_main_window;
+use crate::core::utils::helpers::emit_to_main_window;
 use crate::{
     core::{
         network::api::{API, API_CACHE_DIR},
@@ -99,7 +99,10 @@ impl ClientManager {
                 client.meta.size = client.size;
             }
 
-            log_info!("ClientManager initialized from cache with {} clients — operating offline mode", clients.len());
+            log_info!(
+                "ClientManager initialized from cache with {} clients — operating offline mode",
+                clients.len()
+            );
             Ok(ClientManager { clients })
         }
     }

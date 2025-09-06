@@ -68,7 +68,10 @@ impl JsonStorage for PresetManager {
 impl PresetManager {
     pub fn add_preset(&mut self, preset: ThemePreset) -> Result<(), String> {
         if self.presets.contains_key(&preset.id) {
-            return Err(format!("Preset with ID '{}' already exists", preset.id));
+            return Err(format!(
+                "Preset with ID '{id}' already exists",
+                id = preset.id
+            ));
         }
 
         self.presets.insert(preset.id.clone(), preset);
@@ -78,7 +81,7 @@ impl PresetManager {
 
     pub fn update_preset(&mut self, preset: ThemePreset) -> Result<(), String> {
         if !self.presets.contains_key(&preset.id) {
-            return Err(format!("Preset with ID '{}' not found", preset.id));
+            return Err(format!("Preset with ID '{id}' not found", id = preset.id));
         }
 
         self.presets.insert(preset.id.clone(), preset);
@@ -88,7 +91,7 @@ impl PresetManager {
 
     pub fn delete_preset(&mut self, id: &str) -> Result<(), String> {
         if self.presets.remove(id).is_none() {
-            return Err(format!("Preset with ID '{}' not found", id));
+            return Err(format!("Preset with ID '{id}' not found"));
         }
 
         self.save_to_disk();
