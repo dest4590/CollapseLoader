@@ -1,5 +1,5 @@
 import { ref, computed, reactive } from 'vue';
-import { apiClient } from '../services/apiClient';
+import { apiClient, apiHeartbeat } from '../services/apiClient';
 
 interface StatusData {
     isOnline: boolean;
@@ -61,7 +61,15 @@ const pollingConfig = {
     maxUnchangedPolls: 5,
 };
 
+const heartbeatConfig = {
+    interval: 45000,
+    enabled: true,
+    maxConsecutiveErrors: 3,
+    consecutiveErrors: 0
+};
+
 let statusSyncInterval: ReturnType<typeof setInterval> | null = null;
+let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let changeDetectionTimeout: NodeJS.Timeout | null = null;
 let pendingStatusUpdate: Promise<any> | null = null;
 
@@ -76,6 +84,28 @@ export function useUserStatus() {
         globalStatus.streamerMode = savedStreamerMode;
 
         return isAuth;
+    };
+
+    const sendHeartbeat = async (): Promise<boolean> => {
+        if (!checkAuthStatus()) {
+            return false;
+        }
+
+        try {
+            await apiHeartbeat();
+            heartbeatConfig.consecutiveErrors = 0;
+            console.log('Heartbeat sent successfully');
+            return true;
+        } catch (error) {
+            heartbeatConfig.consecutiveErrors++;
+            console.error('Heartbeat failed:', error);
+
+            if (heartbeatConfig.consecutiveErrors >= heartbeatConfig.maxConsecutiveErrors) {
+                console.warn('Too many heartbeat errors, disabling for this session');
+                heartbeatConfig.enabled = false;
+            }
+            return false;
+        }
     };
 
     const syncStatusToServer = async (force = false): Promise<any> => {
@@ -262,6 +292,9 @@ export function useUserStatus() {
         if (statusSyncInterval) {
             clearInterval(statusSyncInterval);
         }
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+        }
 
         statusSyncInterval = setInterval(() => {
             if (checkAuthStatus()) {
@@ -273,6 +306,15 @@ export function useUserStatus() {
                 stopStatusSync();
             }
         }, pollingConfig.currentInterval);
+
+        if (heartbeatConfig.enabled) {
+            heartbeatInterval = setInterval(() => {
+                if (checkAuthStatus() && heartbeatConfig.enabled) {
+                    sendHeartbeat();
+                }
+            }, heartbeatConfig.interval);
+            console.log(`Started heartbeat with ${heartbeatConfig.interval}ms interval`);
+        }
 
         console.log(`Started intelligent polling with ${pollingConfig.currentInterval}ms interval`);
     };
@@ -301,6 +343,11 @@ export function useUserStatus() {
         if (statusSyncInterval) {
             clearInterval(statusSyncInterval);
             statusSyncInterval = null;
+        }
+
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+            heartbeatInterval = null;
         }
 
         if (changeDetectionTimeout) {

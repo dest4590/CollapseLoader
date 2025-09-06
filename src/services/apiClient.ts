@@ -356,6 +356,10 @@ class ApiClient {
             console.error('Failed to preload critical data:', error);
         }
     }
+
+    async heartbeat(): Promise<{ success: boolean; timestamp: string }> {
+        return this.post('/auth/heartbeat/', {});
+    }
 }
 
 export const apiClient = new ApiClient();
@@ -370,5 +374,6 @@ export const apiBatchGet = apiClient.batchGet.bind(apiClient);
 export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
 export const apiMetrics = apiClient.getMetrics.bind(apiClient);
 export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
+export const apiHeartbeat = apiClient.heartbeat.bind(apiClient);
 
 export default apiClient;
