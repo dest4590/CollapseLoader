@@ -404,6 +404,11 @@ class ApiClient {
     async heartbeat(): Promise<{ success: boolean; timestamp: string }> {
         return this.post('/auth/heartbeat/', {});
     }
+
+    public invalidateProfileCaches() {
+        this.invalidateCache('/auth/profile/');
+        this.invalidateCache('/auth/init/');
+    }
 }
 
 export const apiClient = new ApiClient();
@@ -419,5 +424,6 @@ export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
 export const apiMetrics = apiClient.getMetrics.bind(apiClient);
 export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
 export const apiHeartbeat = apiClient.heartbeat.bind(apiClient);
+export const apiInvalidateProfile = apiClient.invalidateProfileCaches.bind(apiClient);
 
 export default apiClient;

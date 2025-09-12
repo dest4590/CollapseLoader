@@ -5,13 +5,17 @@
                 <div class="card shadow-md border border-base-300">
                     <div class="card-body">
                         <div class="flex items-center gap-4 mb-4">
-                            <UserAvatar :name="userInfo.nickname || userInfo.username || 'User'" size="lg" />
+                            <UserAvatar :name="userInfo.nickname || userInfo.username || 'User'" size="lg"
+                                :is-clickable="true"
+                                :src="(useUser().profile.value as any)?.avatar_url || null"
+                                    :original-src="(useUser().profile.value as any)?.avatar_url || null" />
                             <div class="flex-1">
                                 <div class="flex items-start justify-between">
                                     <h2 class="text-xl font-semibold text-primary-focus flex items-center gap-2">
                                         {{ userInfo.nickname || userInfo.username || 'User' }}
-                                        <button @click="openNicknameModal"
-                                            class="btn btn-ghost btn-xs p-1 h-auto min-h-0"
+                                        <span v-if="roleBadge" :class="roleBadge.className + ' text-sm'">{{
+                                            roleBadge.text }}</span>
+                                        <button @click="openNicknameModal" class="btn btn-ghost btn-xs p-1 "
                                             :disabled="isLoadingFromCache">
                                             <EditIcon class="w-3 h-3" />
                                         </button>
@@ -21,7 +25,7 @@
                                     @{{ userInfo.username || 'username' }}
                                 </p>
                                 <p class="text-base-content/60 text-xs mt-1">
-                                    <button class="btn btn-ghost btn-sm p-0 h-auto min-h-0" @click="toggleShowEmail"
+                                    <button class="btn btn-ghost btn-sm p-0" @click="toggleShowEmail"
                                         :disabled="isLoadingFromCache">
                                         {{ showEmail ? (userInfo.email || t('account.no_email')) : (maskedEmail ||
                                             t('account.no_email')) }}
@@ -35,8 +39,12 @@
                                         <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
                                             t('account.social_links') }}</button>
                                     </span>
-                                    <span v-if="roleBadge" :class="roleBadge.className + ' ml-2 text-sm'">{{
-                                        roleBadge.text }}</span>
+
+                                </div>
+                                <div class="mt-3">
+                                    <AvatarUploader
+                                        :current-url="(useUser().profile.value as any)?.avatar_url || null"
+                                        @uploaded="onAvatarUploaded" />
                                 </div>
                             </div>
                         </div>
@@ -161,6 +169,7 @@ import SocialLinksModal from '../components/modals/social/account/SocialLinksMod
 import ChangePasswordConfirmModal from '../components/modals/social/account/ChangePasswordConfirmModal.vue';
 import LogoutConfirmModal from '../components/modals/social/account/LogoutConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import AvatarUploader from '../components/features/Profile/AvatarUploader.vue';
 import { userService } from '../services/userService';
 import { syncService, type SyncServiceState } from '../services/syncService';
 import { EditIcon } from 'lucide-vue-next';
@@ -429,6 +438,10 @@ const handleLogout = async () => {
             close: () => hideModal('logout-confirm'),
         }
     );
+};
+
+const onAvatarUploaded = async () => {
+    try { await useUser().refreshUserData(); } catch { }
 };
 </script>
 

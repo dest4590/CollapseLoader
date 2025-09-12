@@ -6,7 +6,7 @@ Purpose: GUI (Vue 3 + Tauri 2) launcher for secure Minecraft clients. Paired Dja
 
 -   Frontend: Vue 3 (script setup + composition API), TypeScript, Vite, Tailwind (via `@tailwindcss/vite`) + DaisyUI.
 -   Desktop wrapper: Tauri 2 (`src-tauri/tauri.conf.json`); backend commands defined there (`beforeDevCommand`, `beforeBuildCommand`).
--   Build scripts: `yarn dev` (Vite + Tauri dev auto-run), `yarn build` (type check + build), `yarn tauri:dev`, `yarn tauri:build`.
+-   Build scripts: `npm run tauri dev` (Vite + Tauri dev auto-run), `npm run build` (type check + build), `npm run tauri dev`, `npm run tauri build`.
 -   Type safety: Always run `yarn check` before large refactors; keep zero vue-tsc errors.
 
 ### Runtime Initialization Flow

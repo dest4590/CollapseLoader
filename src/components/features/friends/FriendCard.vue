@@ -5,7 +5,9 @@
                 <div class="flex items-center gap-4">
                     <div @click="$emit('viewProfile', friend.id)" class="avatar-click-area">
                         <UserAvatar :name="friend.nickname || friend.username" :show-status="true"
-                            :is-online="friend.status.is_online" :is-clickable="true" />
+                            :is-online="friend.status.is_online" :is-clickable="true"
+                            :src="(friend as any).avatar_url || null"
+                            :original-src="(friend as any).avatar_url || null" />
                     </div>
                     <div class="flex-1">
                         <p class="font-medium">{{ displayNickname }}</p>
@@ -25,7 +27,7 @@
                         <div v-else-if="friend.status.is_online" class="flex items-center gap-2 mt-1">
                             <span class="text-xs text-success">{{
                                 t('userProfile.online')
-                                }}</span>
+                            }}</span>
                         </div>
 
                         <div v-else-if="friend.status.last_seen" class="flex items-center gap-2 mt-1">

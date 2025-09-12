@@ -264,7 +264,14 @@
     "logout_confirm_title": "Confirm Logout",
     "social_links": "Social Links",
     "social_links_description": "Manage links to your social profiles",
-    "no_social_links": "No social links added yet."
+    "no_social_links": "No social links added yet.",
+    "avatar_help": "PNG, JPG, GIF, WEBP up to 5MB",
+    "avatar_drop": "Drop or click to upload avatar",
+    "change_avatar": "Change avatar",
+    "avatar_type_error": "Unsupported file type",
+    "avatar_size_error": "File is too large (max 5MB)",
+    "avatar_uploaded": "Avatar updated",
+    "avatar_upload_failed": "Failed to upload avatar"
   },
   "roles": {
     "user": "User",

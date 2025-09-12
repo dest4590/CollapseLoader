@@ -7,6 +7,7 @@ interface UserProfile {
     accounts_data?: any[];
     last_sync_timestamp?: string;
     role?: string;
+    avatar_url?: string | null;
 }
 
 interface UserInfo {
@@ -76,6 +77,7 @@ interface PublicUserProfile {
         client_version?: string;
     };
     member_since: string | null;
+    avatar_url?: string | null;
     social_links?: Array<{
         id: number;
         platform: string;
@@ -183,6 +185,28 @@ class UserService {
         } catch (error: any) {
             console.error('Failed to update user profile:', error);
             const errorMessage = error.response?.data?.error || 'Failed to update profile';
+            return { success: false, error: errorMessage };
+        }
+    }
+
+    async uploadAvatar(file: File): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+        try {
+            const form = new FormData();
+            form.append('avatar', file);
+
+            const resp = await apiClient.post('/auth/profile/avatar/', form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            const profile = (resp as any).profile as UserProfile;
+            if (profile) {
+                this.setCachedData({ profile });
+            }
+            return { success: true, profile };
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.error || 'Failed to upload avatar';
             return { success: false, error: errorMessage };
         }
     }

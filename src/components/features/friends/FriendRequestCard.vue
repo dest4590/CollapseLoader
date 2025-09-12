@@ -4,7 +4,9 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div @click="$emit('viewProfile', user.id)" class="avatar-click-area">
-                        <UserAvatar :name="displayNickname" :is-clickable="true" />
+                        <UserAvatar :name="displayNickname" :is-clickable="true"
+                            :src="(props.user as any).avatar_url || null"
+                            :original-src="(props.user as any).avatar_url || null" />
                     </div>
                     <div>
                         <p class="font-medium">{{ displayNickname }}</p>

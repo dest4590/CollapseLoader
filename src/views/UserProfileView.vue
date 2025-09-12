@@ -14,12 +14,14 @@
                 <div class="card-body">
                     <div class="flex flex-col md:flex-row md:items-center gap-6">
                         <UserAvatar :name="displayNickname" size="lg" :show-status="false"
-                            :is-online="userProfile.status.is_online" />
+                            :is-online="userProfile.status.is_online" :is-clickable="true"
+                                :src="userProfile.avatar_url || null"
+                            :original-src="userProfile.avatar_url || null" />
                         <div class="flex-1">
                             <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
                                 <span v-if="roleBadge" :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
-                                }}</span>
+                                    }}</span>
                             </h1>
                             <p class="text-lg text-base-content/70">
                                 @{{ displayUsername }}
@@ -42,7 +44,7 @@
                                     <div class="w-3 h-3 bg-success rounded-full"></div>
                                     <span class="text-success font-medium">{{
                                         t('userProfile.online')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div v-else-if="userProfile.status.last_seen" class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
@@ -57,7 +59,7 @@
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
                                     <span class="text-base-content/70">{{
                                         t('userProfile.offline')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -80,7 +82,7 @@
                                     </a>
                                     <button v-else @click.stop="copySocialHandle(link)" type="button"
                                         class="group inline-flex items-center cursor-pointer"
-                                        :title="t('userProfile.copy_username') || 'Copy username'">
+                                        :title="t('userProfile.copy_username')">
                                         <DiscordIcon :size="20" class="w-5 h-5 text-primary" />
                                         <span
                                             class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap">
@@ -113,7 +115,7 @@
                                 <span class="text-base-content/70">{{ t('userProfile.username') }}:</span>
                                 <div class="flex items-center">
                                     <button @click="copyUsername" class="btn btn-ghost btn-xs"
-                                        :title="t('userProfile.copy_username') || 'Copy username'">
+                                        :title="t('userProfile.copy_username')">
                                         <Copy class="w-4 h-4" />
                                     </button>
                                     <span class="font-medium">{{ displayUsername }}</span>
@@ -364,7 +366,6 @@ const loadUserPresets = async () => {
     presetsLoading.value = true;
     try {
         const data = await marketplaceService.listPresets({ owner: props.userId });
-        // API may return array or paginated object; handle both
         if (Array.isArray(data)) presets.value = data;
         else if (data && Array.isArray((data as any).results)) presets.value = (data as any).results;
         else presets.value = [];
@@ -612,7 +613,7 @@ const displayHandle = (_platform: string, handle: string) => {
 const copySocialHandle = async (link: any) => {
     try {
         if (!link || !link.url) {
-            addToast(t('userProfile.copy_failed') || 'Nothing to copy', 'error');
+            addToast(t('userProfile.copy_failed'), 'error');
             return;
         }
         const raw = link.url.startsWith('@') ? link.url.substring(1) : link.url;
@@ -623,24 +624,24 @@ const copySocialHandle = async (link: any) => {
         );
     } catch (err) {
         console.error('Failed to copy social handle:', err);
-        addToast(t('userProfile.copy_failed') || 'Failed to copy', 'error');
+        addToast(t('userProfile.copy_failed'), 'error');
     }
 };
 
 const copyUsername = async () => {
     try {
         if (!userProfile.value) {
-            addToast(t('userProfile.copy_failed') || 'Nothing to copy', 'error');
+            addToast(t('userProfile.copy_failed'), 'error');
             return;
         }
         await navigator.clipboard.writeText(userProfile.value.username);
         addToast(
-            t('userProfile.copied_username', { name: userProfile.value.username }) || `${userProfile.value.username} copied`,
+            t('userProfile.copied_username', { name: userProfile.value.username }),
             'success'
         );
     } catch (err) {
         console.error('Failed to copy username:', err);
-        addToast(t('userProfile.copy_failed') || 'Failed to copy', 'error');
+        addToast(t('userProfile.copy_failed'), 'error');
     }
 };
 

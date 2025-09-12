@@ -264,7 +264,14 @@
     "logout_confirm_title": "Подтвердить выход",
     "social_links": "Социальные ссылки",
     "social_links_description": "Управляйте ссылками на ваши социальные профили",
-    "no_social_links": "Ссылки не добавлены"
+    "no_social_links": "Ссылки не добавлены",
+    "avatar_help": "PNG, JPG, GIF, WEBP до 5МБ",
+    "avatar_drop": "Перетащите или кликните, чтобы загрузить аватар",
+    "change_avatar": "Изменить аватар",
+    "avatar_type_error": "Неподдерживаемый тип файла",
+    "avatar_size_error": "Файл слишком большой (макс 5МБ)",
+    "avatar_uploaded": "Аватар обновлён",
+    "avatar_upload_failed": "Не удалось загрузить аватар"
   },
   "roles": {
     "user": "Пользователь",

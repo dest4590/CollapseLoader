@@ -1,8 +1,17 @@
 <template>
-    <div class="avatar placeholder avatar-clickable" :class="{ relative: showStatus, clickable: isClickable }">
-        <div class="bg-base-100 text-primary-content rounded-full flex content-center avatar-inner"
+    <div class="avatar placeholder avatar-clickable"
+        :class="{ relative: showStatus, clickable: isClickable || !!resolvedSrc }" @click="openAvatarModal">
+        <div class="bg-base-100 text-primary-content rounded-full flex content-center avatar-inner overflow-hidden"
             :class="[sizeClasses, backgroundClass]">
-            <span class="font-bold text-primary flex justify-center avatar-text" :class="textSizeClass">
+            <img v-if="resolvedSrc && !imageError" :src="resolvedSrc" alt="avatar" class="w-full h-full object-cover"
+                @error="onImageError" />
+            <template v-else-if="resolvedSrc && imageError">
+                <div class="w-full h-full flex items-center justify-center bg-transparent">
+                    <ImageOff class="text-base-content" width="48" height="48" />
+                </div>
+            </template>
+            <span class="font-bold text-primary flex justify-center items-center avatar-text" :class="textSizeClass"
+                v-else>
                 {{ getInitials(displayName) }}
             </span>
         </div>
@@ -13,8 +22,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { globalUserStatus } from '../../composables/useUserStatus';
+import { ImageOff } from 'lucide-vue-next';
+import AvatarModal from '../modals/AvatarModal.vue';
+import { useModal } from '../../services/modalService';
+
 
 interface Props {
     name: string;
@@ -23,6 +36,8 @@ interface Props {
     isOnline?: boolean;
     backgroundClass?: string;
     isClickable?: boolean;
+    src?: string | null;
+    originalSrc?: string | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,6 +46,8 @@ const props = withDefaults(defineProps<Props>(), {
     isOnline: false,
     backgroundClass: 'bg-base-100',
     isClickable: false,
+    src: null,
+    originalSrc: null,
 });
 
 const sizeClasses = computed(() => {
@@ -71,9 +88,46 @@ const displayName = computed(() => {
     return globalUserStatus.isStreamer.value ? 'Streamer' : props.name;
 });
 
+const resolvedSrc = computed(() => {
+    if (globalUserStatus.isStreamer.value) return null;
+    return props.src || null;
+});
+
+const imageError = ref(false);
+
+const onImageError = () => {
+    imageError.value = true;
+};
+
+watch(
+    () => resolvedSrc.value,
+    (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+            imageError.value = false;
+        }
+    }
+);
+
+watch(
+    () => props.src,
+    (newVal, oldVal) => {
+        if (newVal !== oldVal) imageError.value = false;
+    }
+);
+
 const getInitials = (name: string): string => {
     if (!name) return '?';
     return name.charAt(0).toUpperCase();
+};
+
+
+const { showModal } = useModal();
+
+const openAvatarModal = () => {
+    const srcToShow = props.originalSrc || props.src || null;
+    if (!srcToShow) return;
+
+    showModal('avatar-view', AvatarModal, { contentClass: 'large full-mobile' }, { src: props.src, originalSrc: props.originalSrc });
 };
 </script>
 
