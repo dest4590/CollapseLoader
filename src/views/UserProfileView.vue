@@ -19,7 +19,7 @@
                             <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
                                 <span v-if="roleBadge" :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
-                                    }}</span>
+                                }}</span>
                             </h1>
                             <p class="text-lg text-base-content/70">
                                 @{{ displayUsername }}
@@ -61,7 +61,7 @@
                                 </div>
                             </div>
 
-                            <div v-if="userProfile.social_links && userProfile.social_links.length > 0"
+                            <div v-if="!globalUserStatus.isStreamer.value && userProfile.social_links && userProfile.social_links.length > 0"
                                 class="mt-2 flex items-center gap-3 flex-wrap">
                                 <template v-for="link in userProfile.social_links" :key="link.id">
                                     <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
@@ -215,9 +215,31 @@
                     {{ t('userProfile.back_to_friends') }}
                 </button>
             </div>
-            <div class="card mt-6">
-                <div class="card-body">
-                    <PresetGallery v-if="userProfile" :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-primary-focus">{{ t('userProfile.presets_title') }}</h2>
+                    <span class="text-sm text-base-content/60">{{ presetsCountLabel }}</span>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <template v-if="presetsLoading">
+                            <div class="flex items-center gap-2 text-base-content/70">
+                                <span class="loading loading-spinner loading-sm"></span>
+                                <span>{{ t('common.loading') }}</span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <div v-if="presets && presets.length">
+                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+                            </div>
+                            <div v-else class="text-center py-8 text-base-content/70">
+                                <p class="mb-3">{{ t('userProfile.no_presets') }}</p>
+                                <button v-if="isOwnProfile" @click="$emit('change-view', 'presets')"
+                                    class="btn btn-primary">{{ t('userProfile.create_preset') }}</button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
@@ -229,6 +251,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { userService, type PublicUserProfile } from '../services/userService';
+import { useFriends } from '../composables/useFriends';
 import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
 import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
@@ -252,6 +275,8 @@ import {
 import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
 import getRoleBadge from '../utils/roleBadge';
+import { marketplaceService } from '../services/marketplaceService';
+import { useUser } from '../composables/useUser';
 
 interface Props {
     userId?: number;
@@ -268,6 +293,21 @@ const userProfile = ref<PublicUserProfile | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const sendingRequest = ref(false);
+
+const presets = ref<any[] | null>(null);
+const presetsLoading = ref(false);
+
+const { username } = useUser();
+
+const isOwnProfile = computed(() => {
+    return !!userProfile.value && username.value && userProfile.value.username === username.value;
+});
+
+const presetsCountLabel = computed(() => {
+    if (presetsLoading.value) return t('common.loading');
+    const count = presets.value ? presets.value.length : 0;
+    return `${count} ${t('userProfile.presets')}`;
+});
 
 const displayNickname = computed(() => {
     if (!userProfile.value) return '';
@@ -312,6 +352,27 @@ const loadUserProfile = async () => {
         }
     } finally {
         loading.value = false;
+    }
+};
+
+const loadUserPresets = async () => {
+    if (!props.userId) {
+        presets.value = [];
+        return;
+    }
+
+    presetsLoading.value = true;
+    try {
+        const data = await marketplaceService.listPresets({ owner: props.userId });
+        // API may return array or paginated object; handle both
+        if (Array.isArray(data)) presets.value = data;
+        else if (data && Array.isArray((data as any).results)) presets.value = (data as any).results;
+        else presets.value = [];
+    } catch (e) {
+        console.error('Failed to load user presets count:', e);
+        presets.value = [];
+    } finally {
+        presetsLoading.value = false;
     }
 };
 
@@ -383,6 +444,10 @@ const handleRespondToRequest = async (action: 'accept' | 'reject') => {
         }
 
         await userService.respondToFriendRequest(request.id, action);
+        try {
+            const { loadFriendsData } = useFriends();
+            await loadFriendsData(true);
+        } catch { }
         addToast(
             t('userProfile.friend_request_responded', { action }),
             'success'
@@ -518,7 +583,7 @@ const platformHref = (platform: string, handle: string) => {
         case 'telegram':
             return `https://t.me/${h}`;
         case 'youtube':
-            return `https://www.youtube.com/${h}`;
+            return `https://www.youtube.com/@${h}`;
         default:
             return '#';
     }
@@ -579,7 +644,8 @@ const copyUsername = async () => {
     }
 };
 
-onMounted(() => {
-    loadUserProfile();
+onMounted(async () => {
+    await loadUserProfile();
+    await loadUserPresets();
 });
 </script>

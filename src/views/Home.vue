@@ -59,6 +59,7 @@ const customClientsDisplayMode = ref<'global' | 'separate'>('separate');
 const favoriteClients = ref<number[]>([]);
 const error = ref('');
 const runningClients = ref<number[]>([]);
+const skipNextRunningCheck = ref<Set<number>>(new Set());
 const isLeaving = ref(false);
 const viewVisible = ref(false);
 const { addToast } = useToast();
@@ -470,6 +471,14 @@ const stopCustomClient = async (id: number) => {
 
 const checkRunningStatus = async () => {
     if (isLeaving.value) return;
+    if (skipNextRunningCheck.value.size > 0) {
+        const idsToKeep = Array.from(skipNextRunningCheck.value);
+        if (idsToKeep.length > 0) {
+            runningClients.value = Array.from(new Set([...runningClients.value, ...idsToKeep]));
+        }
+        skipNextRunningCheck.value.clear();
+        return;
+    }
     try {
         const response = await invoke<number[]>('get_running_client_ids');
         let currentRunning: number[] = response || [];
@@ -691,6 +700,29 @@ const setupEventListeners = async () => {
     eventListeners.value.push(hashVerificationDoneListener);
     eventListeners.value.push(hashVerificationFailedListener);
     eventListeners.value.push(redownloadCompleteListener);
+
+    const clientLaunchedListener = await listen('client-launched', (event: any) => {
+        try {
+            const { id } = event.payload as { id: number };
+            skipNextRunningCheck.value.add(id);
+        } catch (e) {
+            console.error('Error handling client-launched event:', e);
+        }
+    });
+
+    const customClientLaunchedListener = await listen('custom-client-launched', (event: any) => {
+        try {
+            const payload = event.payload as any;
+            if (payload && typeof payload.id === 'number') {
+                skipNextRunningCheck.value.add(payload.id);
+            }
+        } catch (e) {
+            console.error('Error handling custom-client-launched event:', e);
+        }
+    });
+
+    eventListeners.value.push(clientLaunchedListener);
+    eventListeners.value.push(customClientLaunchedListener);
 };
 
 const updateClientInstallStatus = (filename: string) => {

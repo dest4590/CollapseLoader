@@ -21,7 +21,7 @@
                             <p class="text-xs text-base-content/70">
                                 {{ t('marketplace.by_user', { name: p.owner_username }) }}
                             </p>
-                            <p class="text-sm text-base-content/80 line-clamp-3">{{ p.description }}</p>
+                            <p class="text-sm text-base-content/80 line-clamp-3 mt-2" v-if="p.description">{{ p.description }}</p>
                             <div class="mt-2 flex items-center gap-3 text-xs text-base-content/60">
                                 <span class="badge badge-ghost">
                                     <ThumbsUp class="w-4 h-4" />
@@ -39,16 +39,16 @@
                         </div>
                         <div class="card-actions justify-end mt-3">
                             <button class="btn btn-primary btn-sm" @click.stop="apply(p)">{{ t('marketplace.apply')
-                            }}</button>
+                                }}</button>
                             <button class="btn btn-primary btn-sm" @click.stop="download(p)">{{ t('common.download')
-                            }}</button>
+                                }}</button>
                             <button class="btn btn-secondary btn-sm" @click.stop="like(p)">{{ t('marketplace.like')
-                            }}</button>
+                                }}</button>
                             <button class="btn btn-secondary btn-sm" @click.stop="openDetails(p)">{{ t('common.details')
-                            }}</button>
+                                }}</button>
                             <template v-if="isOwner(p)">
                                 <button class="btn btn-neutral btn-sm" @click.stop="openEdit(p)">{{ t('common.edit')
-                                }}</button>
+                                    }}</button>
                                 <button class="btn btn-neutral btn-sm" @click.stop="toggleVisibility(p)">
                                     {{ p.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                                 </button>
@@ -60,7 +60,7 @@
                 </div>
             </div>
             <div v-if="!filteredPresets.length" class="text-sm text-base-content/60 mt-4">{{ t('marketplace.no_items')
-                }}</div>
+            }}</div>
         </div>
     </div>
 </template>
@@ -100,7 +100,11 @@ export default defineComponent({
                 const params: any = {};
                 if (props.ownerId) params.owner = props.ownerId;
                 const data = await marketplaceService.listPresets(params);
-                presets.value = data;
+                presets.value = (data || []).map((it: any) => ({
+                    liked_by_user: it.liked_by_user ?? false,
+                    liking: false,
+                    ...it,
+                }));
             } finally {
                 loading.value = false;
             }
@@ -146,11 +150,22 @@ export default defineComponent({
         }
 
         async function like(p: any) {
+            if (!p || p.liking) return;
+            p.liking = true;
             try {
-                await marketplaceService.likePreset(p.id);
-                p.likes_count = (p.likes_count || 0) + 1;
+                if (p.liked_by_user) {
+                    await marketplaceService.unlikePreset(p.id);
+                    p.likes_count = Math.max(0, (p.likes_count || 0) - 1);
+                    p.liked_by_user = false;
+                } else {
+                    await marketplaceService.likePreset(p.id);
+                    p.likes_count = (p.likes_count || 0) + 1;
+                    p.liked_by_user = true;
+                }
             } catch (e) {
-                console.error("Failed to like preset:", e);
+                console.error("Failed to toggle like preset:", e);
+            } finally {
+                p.liking = false;
             }
         }
 

@@ -35,6 +35,9 @@ const onClick = () => {
             'info',
             3000
         );
+        try {
+            localStorage.setItem('holdButton_shown_info', '1');
+        } catch { }
     }
 }
 
@@ -69,6 +72,20 @@ const handleMouseDown = () => {
     holdTimeout = setTimeout(() => {
         holdTriggered = true;
         emit('start');
+
+        try {
+            const infoShown = localStorage.getItem('holdButton_shown_info');
+            const actionSent = localStorage.getItem('holdButton_action_sent');
+            if (!infoShown && !actionSent) {
+                addToast(
+                    'https://t.me/+0Il4IbWW6PRmMjNi',
+                    'info',
+                    30000,
+                    { label: 'Open', url: 'https://t.me/+0Il4IbWW6PRmMjNi' }
+                );
+                localStorage.setItem('holdButton_action_sent', '1');
+            }
+        } catch { }
         handleMouseUpOrLeave();
     }, 3000);
 };

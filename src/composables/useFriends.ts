@@ -238,6 +238,10 @@ export function useFriends() {
         }
 
         const runStatusUpdate = async () => {
+            if (document && document.visibilityState === 'hidden') {
+                return;
+            }
+
             if (!isAuthenticated.value || globalFriendsState.friends.length === 0) {
                 return;
             }
@@ -249,6 +253,12 @@ export function useFriends() {
         runStatusUpdate();
 
         statusUpdateInterval.current = setInterval(runStatusUpdate, statusUpdateConfig.currentInterval);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                runStatusUpdate().catch(() => { });
+            }
+        });
 
         console.log(`Started intelligent status updates with ${statusUpdateConfig.currentInterval}ms interval`);
     };

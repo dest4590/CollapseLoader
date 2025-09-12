@@ -105,5 +105,6 @@ await apiPost('/auth/friends/send/', { username }); // related friends caches au
 -   Do NOT call axios directly; breaks caching & metrics.
 -   Do NOT duplicate polling timers; reuse existing adaptive logic or centralize new pollers similarly.
 -   Avoid refetch loops: always check freshness timestamps like friends module (<30s shortcut) before heavy reloads.
+-   Do NOT run `yarn check` after changes, i will check it myself, and say if there are any issues.
 
 Questions / gaps: If adding (1) new batch patterns, (2) new Tauri commands, or (3) complex cache invalidation groups—highlight them for doc update.

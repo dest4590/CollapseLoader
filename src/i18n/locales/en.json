@@ -104,7 +104,8 @@
       "deleted": "Social link deleted.",
       "delete_failed": "Failed to delete social link.",
       "updated": "Social link updated.",
-      "update_failed": "Failed to update social link."
+      "update_failed": "Failed to update social link.",
+      "hidden_in_streamer_mode": "Social links hidden in streamer mode."
     },
     "edit_account": {
       "username_label": "Username",
@@ -304,7 +305,8 @@
     "edit": "Edit",
     "add": "Add",
     "details": "Details",
-    "send": "Send"
+    "send": "Send",
+    "copied_to_clipboard": "Color {color} copied to clipboard"
   },
   "auth": {
     "logout": {
@@ -687,7 +689,8 @@
       "optional_telemetry": "Allow anonymous analytics to help improve CollapseLoader. No personal information is collected.",
       "cordshare": "Share your coordinates with friends to show your location in-game, even when you're outside loaded chunks.",
       "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
-      "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date."
+      "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
+      "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients."
     },
     "telemetry": "Analytics",
     "telemetry_toggle": "Enable anonymous analytics",
@@ -785,7 +788,11 @@
     "friend_request_not_found": "Friend request not found",
     "user_blocked_success": "{name} has been blocked",
     "user_block_failed": "Failed to block user",
-    "social_links": "Social links"
+    "social_links": "Social links",
+    "presets_title": "Presets",
+    "presets": "presets",
+    "no_presets": "This user hasn't shared any presets yet.",
+    "create_preset": "Create Preset"
   },
   "sync": {
     "last_sync": "Last sync",

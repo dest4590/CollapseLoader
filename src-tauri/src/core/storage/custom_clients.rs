@@ -3,6 +3,8 @@ use std::{fs, path::PathBuf, sync::Mutex};
 use crate::core::clients::custom_clients::CustomClient;
 use crate::core::clients::custom_clients::Version;
 use crate::core::storage::data::DATA;
+use crate::core::storage::settings::SETTINGS;
+use crate::log_warn;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
@@ -54,6 +56,20 @@ impl CustomClientManager {
 
         custom_client.file_path = target_path;
         custom_client.is_installed = true;
+
+        if SETTINGS
+            .lock()
+            .map(|s| s.sync_client_settings.value)
+            .unwrap_or(false)
+        {
+            if let Err(e) = DATA.ensure_client_synced(&custom_client.name) {
+                log_warn!(
+                    "Failed to ensure client sync for custom client {}: {}",
+                    custom_client.name,
+                    e
+                );
+            }
+        }
 
         self.clients.push(custom_client);
         self.save_to_disk();

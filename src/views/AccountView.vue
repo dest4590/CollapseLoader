@@ -31,8 +31,10 @@
                                     <div class="badge" :class="invisibleMode ? 'badge-secondary' : 'badge-success'">
                                         {{ invisibleMode ? t('time.offline') : t('time.online') }}
                                     </div>
-                                    <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
-                                        t('account.social_links') }}</button>
+                                    <span>
+                                        <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
+                                            t('account.social_links') }}</button>
+                                    </span>
                                     <span v-if="roleBadge" :class="roleBadge.className + ' ml-2 text-sm'">{{
                                         roleBadge.text }}</span>
                                 </div>

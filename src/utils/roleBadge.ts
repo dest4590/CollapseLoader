@@ -1,6 +1,4 @@
-export function getRoleBadge(role: string | null | undefined, t: (key: string) => string) {
-    console.log(role);
-    
+export function getRoleBadge(role: string | null | undefined, t: (key: string) => string) {    
     if (!role) return null;
 
     const mapping: Record<string, { class: string; key: string }> = {

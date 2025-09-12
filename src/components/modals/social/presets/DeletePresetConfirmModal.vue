@@ -21,15 +21,28 @@
 <script setup lang="ts">
 import { Trash2, X } from 'lucide-vue-next';
 import type { ThemePreset } from '../../../../types/presets';
+import { computed } from 'vue';
 
 const props = defineProps<{
-    preset: ThemePreset;
+    preset?: ThemePreset;
+    id?: string | number;
 }>();
 
-const emit = defineEmits(['close', 'preset-deleted']);
+const emit = defineEmits(['close', 'preset-deleted', 'deleted']);
+
+const targetId = computed(() => {
+    return props.preset?.id ?? props.id;
+});
 
 const confirmDelete = () => {
-    emit('preset-deleted', props.preset.id);
+    const id = targetId.value;
+    if (id === undefined || id === null) {
+        emit('close');
+        return;
+    }
+    const idStr = String(id);
+    emit('preset-deleted', idStr);
+    emit('deleted', idStr);
     emit('close');
 };
 </script>

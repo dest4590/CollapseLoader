@@ -1,5 +1,6 @@
 import { ref, computed, reactive } from 'vue';
 import { apiClient, apiHeartbeat } from '../services/apiClient';
+import { useStreamerMode } from './useStreamerMode';
 
 interface StatusData {
     isOnline: boolean;
@@ -74,14 +75,18 @@ let changeDetectionTimeout: NodeJS.Timeout | null = null;
 let pendingStatusUpdate: Promise<any> | null = null;
 
 export function useUserStatus() {
+    const streamer = useStreamerMode();
+    // subscribe to streamer changes so globalStatus stays in sync
+    streamer.onChange((enabled) => {
+        globalStatus.streamerMode = enabled;
+    });
 
     const checkAuthStatus = (): boolean => {
         const token = localStorage.getItem('authToken');
         const isAuth = !!token;
         isAuthenticated.value = isAuth;
 
-        const savedStreamerMode = localStorage.getItem('streamerModeEnabled') === 'true';
-        globalStatus.streamerMode = savedStreamerMode;
+        globalStatus.streamerMode = streamer.isStreamerModeEnabled.value;
 
         return isAuth;
     };
@@ -234,28 +239,28 @@ export function useUserStatus() {
         statusMetrics.avgResponseTime = statusMetrics.avgResponseTime * 0.8 + responseTime * 0.2;
     };
 
-    const setOnline = () => {
+    const setOnline = (shouldQueue: boolean = true) => {
         console.log('Setting user online (no client)');
         globalStatus.isOnline = true;
         globalStatus.currentClient = null;
-        queueStatusUpdate('online');
+        if (shouldQueue) queueStatusUpdate('online');
     };
 
-    const setOffline = () => {
+    const setOffline = (shouldQueue: boolean = true) => {
         console.log('Setting user offline');
         globalStatus.isOnline = false;
         globalStatus.currentClient = null;
-        queueStatusUpdate('offline');
+        if (shouldQueue) queueStatusUpdate('offline');
     };
 
-    const setPlayingClient = (clientName: string) => {
+    const setPlayingClient = (clientName: string, shouldQueue: boolean = true) => {
         console.log(`Setting user playing client: ${clientName}`);
         globalStatus.isOnline = true;
         globalStatus.currentClient = clientName;
-        queueStatusUpdate('client_change');
+        if (shouldQueue) queueStatusUpdate('client_change');
     };
 
-    const setInvisibleMode = (enable: boolean) => {
+    const setInvisibleMode = (enable: boolean, shouldQueue: boolean = true) => {
         console.log(`Setting invisible mode: ${enable ? 'enabled' : 'disabled'}`);
         globalStatus.invisibleMode = enable;
 
@@ -265,13 +270,18 @@ export function useUserStatus() {
         } else {
             globalStatus.isOnline = true;
         }
-        queueStatusUpdate('invisible_toggle');
+        if (shouldQueue) queueStatusUpdate('invisible_toggle');
     };
 
     const setStreamerMode = (enable: boolean) => {
         console.log(`Setting streamer mode: ${enable ? 'enabled' : 'disabled'}`);
-        globalStatus.streamerMode = enable;
-        localStorage.setItem('streamerModeEnabled', enable.toString());
+        try {
+            streamer.setStreamerMode(enable);
+        } catch (e) {
+            console.warn('Failed to set streamer mode through composable, falling back', e);
+            globalStatus.streamerMode = enable;
+            try { localStorage.setItem('streamerModeEnabled', enable.toString()); } catch { }
+        }
     };
 
 
@@ -296,7 +306,11 @@ export function useUserStatus() {
             clearInterval(heartbeatInterval);
         }
 
-        statusSyncInterval = setInterval(() => {
+        const pollWrapper = async () => {
+            if (document && document.visibilityState === 'hidden') {
+                return;
+            }
+
             if (checkAuthStatus()) {
                 syncStatusToServer().catch(error => {
                     console.error('Scheduled status sync failed:', error);
@@ -305,7 +319,15 @@ export function useUserStatus() {
                 console.log('Auth check failed in sync interval, stopping sync');
                 stopStatusSync();
             }
-        }, pollingConfig.currentInterval);
+        };
+
+        statusSyncInterval = setInterval(pollWrapper, pollingConfig.currentInterval);
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                pollWrapper().catch(() => { });
+            }
+        });
 
         if (heartbeatConfig.enabled) {
             heartbeatInterval = setInterval(() => {
@@ -401,7 +423,7 @@ export function useUserStatus() {
             pollingConfig.currentInterval = pollingConfig.baseInterval;
             pollingConfig.consecutiveUnchangedPolls = 0;
 
-            setOnline();
+            setOnline(false);
             startStatusSync();
 
             console.log('Status sync system initialized');

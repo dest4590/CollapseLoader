@@ -23,7 +23,7 @@ impl ClientManager {
         if let Some(api_instance) = api_option {
             let mut clients: Vec<Client> = match api_instance.json::<Vec<Client>>("clients") {
                 Ok(clients) => {
-                    log_info!("Successfully fetched {} clients from API", clients.len());
+                    log_info!("Fetched {} clients from API", clients.len());
                     clients
                 }
                 Err(e) => {
@@ -51,12 +51,23 @@ impl ClientManager {
                 }
             };
 
+            match api_instance.json::<Vec<Client>>("fabric-clients") {
+                Ok(mut fabric_clients) => {
+                    if !fabric_clients.is_empty() {
+                        log_info!("Fetched {} fabric clients from API", fabric_clients.len());
+                        clients.append(&mut fabric_clients);
+                    }
+                }
+                Err(e) => {
+                    log_warn!("Failed to fetch fabric clients: {}", e);
+                }
+            }
+
             for client in &mut clients {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
                 {
-                    client.meta =
-                        super::client::Meta::new(&client.version, &client.filename.clone());
+                    client.meta = super::client::Meta::new(&client.version, &client.filename);
                 }
 
                 client.meta.size = client.size;
@@ -92,8 +103,9 @@ impl ClientManager {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
                 {
-                    client.meta =
-                        super::client::Meta::new(&client.version, &client.filename.clone());
+                    // Pass the original filename to Meta::new so it can correctly
+                    // detect fabric clients (which rely on the "fabric/" prefix)
+                    client.meta = super::client::Meta::new(&client.version, &client.filename);
                 }
 
                 client.meta.size = client.size;

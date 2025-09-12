@@ -5,30 +5,40 @@
         </div>
 
         <div v-else class="flex-1 min-h-0 overflow-y-auto">
-            <div v-if="links.length === 0" class="text-sm text-base-content/70 p-2">
-                {{ t('account.no_social_links') }}
+            <div v-if="isStreamerMode" class="p-4 text-center text-base-content/70">
+                {{ t('modals.social_links.hidden_in_streamer_mode') }}
             </div>
 
-            <div class="space-y-2 p-2">
-                <div v-for="link in links" :key="link.id"
-                    class="social-link-row flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 rounded-md bg-base-100">
-                    <div class="flex-1 min-w-0">
-                        <div class="font-medium truncate">{{ platformLabel(link.platform) }}</div>
-                        <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
-                            target="_blank" class="text-sm text-primary hover:underline truncate block break-words" rel="noreferrer">{{ displayHref(link.platform, link.url) }}</a>
-                        <div v-else class="text-sm truncate block">{{ displayHandle(link.platform, link.url) }}</div>
-                    </div>
+            <div v-else>
+                <div v-if="links.length === 0" class="text-sm text-base-content/70 p-2">
+                    {{ t('account.no_social_links') }}
+                </div>
 
-                    <div class="flex items-center gap-2 mt-2 sm:mt-0 ml-0 sm:ml-4 flex-shrink-0">
-                        <button type="button" @click="startEdit(link)" class="btn btn-ghost btn-sm">{{ t('common.edit') }}</button>
-                        <button type="button" @click="confirmDelete(link)" class="btn btn-ghost btn-sm text-error">{{ t('common.delete') }}</button>
+                <div class="space-y-2 p-2">
+                    <div v-for="link in links" :key="link.id"
+                        class="social-link-row flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 rounded-md bg-base-100">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium truncate">{{ platformLabel(link.platform) }}</div>
+                            <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
+                                target="_blank" class="text-sm text-primary hover:underline truncate block break-words"
+                                rel="noreferrer">{{ displayHref(link.platform, link.url) }}</a>
+                            <div v-else class="text-sm truncate block">{{ displayHandle(link.platform, link.url) }}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 mt-2 sm:mt-0 ml-0 sm:ml-4 flex-shrink-0">
+                            <button v-if="!isStreamerMode" type="button" @click="startEdit(link)"
+                                class="btn btn-ghost btn-sm">{{ t('common.edit') }}</button>
+                            <button v-if="!isStreamerMode" type="button" @click="confirmDelete(link)"
+                                class="btn btn-ghost btn-sm text-error">{{ t('common.delete') }}</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="pt-4 border-t border-base-300 mt-4 flex-shrink-0">
-            <div v-if="!editing">
+            <div v-if="!editing && !isStreamerMode">
                 <h4 class="font-medium mb-2">{{ t('modals.social_links.add_title') }}</h4>
                 <div class="grid grid-cols-1 gap-2">
                     <select v-model="newPlatform" class="select select-bordered w-full bg-base-100">
@@ -44,7 +54,7 @@
                 </div>
             </div>
 
-            <div v-else class="mt-2">
+            <div v-else-if="!isStreamerMode" class="mt-2">
                 <h4 class="font-medium mb-2">{{ t('modals.social_links.edit_title') }}</h4>
                 <div class="grid grid-cols-1 gap-2">
                     <select v-model="editing.platform" class="select select-bordered w-full bg-base-100">
@@ -62,7 +72,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { globalUserStatus } from '../../../../composables/useUserStatus';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../../../services/toastService';
 import { apiGet, apiPost, apiPatch, apiDelete } from '../../../../services/authClient';
@@ -72,6 +83,8 @@ const { addToast } = useToast();
 
 const links = ref<any[]>([]);
 const loading = ref(true);
+
+const isStreamerMode = computed(() => globalUserStatus.isStreamer.value);
 
 const platformOptions: Record<string, string> = {
     discord: 'Discord',
@@ -101,6 +114,7 @@ const loadLinks = async () => {
 const platformLabel = (key: string) => platformOptions[key] || key;
 
 const addLink = async () => {
+    if (isStreamerMode.value) return;
     if (!newPlatform.value || !newUrl.value.trim()) {
         addToast(t('modals.social_links.fill_fields'), 'error');
         return;
@@ -125,6 +139,7 @@ const confirmDelete = (link: any) => {
 };
 
 const deleteLink = async (link: any) => {
+    if (isStreamerMode.value) return;
     try {
         await apiDelete(`/auth/profile/social-links/${link.id}/`);
         links.value = links.value.filter((l) => l.id !== link.id);
@@ -136,6 +151,7 @@ const deleteLink = async (link: any) => {
 };
 
 const startEdit = (link: any) => {
+    if (isStreamerMode.value) return;
     editing.value = { ...link };
 };
 

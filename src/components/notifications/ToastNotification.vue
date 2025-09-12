@@ -6,6 +6,8 @@
                 <component :is="currentIcon" v-if="currentIcon" class="w-5 h-5" />
             </div>
             <div class="toast-message">{{ displayMessage }}</div>
+            <button v-if="props.toast.action" class="toast-action-btn" @click.stop="handleActionClick">{{
+                props.toast.action.label }}</button>
             <button class="toast-close-btn" @click.stop="closeToast">
                 <X class="w-4 h-4" />
             </button>
@@ -28,6 +30,7 @@ import {
     X,
 } from 'lucide-vue-next';
 import { useToast } from '../../services/toastService';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 interface Props {
     toast: ToastMessage;
@@ -51,6 +54,17 @@ const displayMessage = computed(() => getDisplayMessage(props.toast));
 
 const closeToast = () => {
     emit('close', props.toast.id);
+};
+
+const handleActionClick = async () => {
+    const action = props.toast.action;
+    if (action && action.url) {
+        try {
+            await openUrl(action.url);
+        } catch (e) {
+            console.error('Failed to open URL via Tauri shell: ', e);
+        }
+    }
 };
 
 const handleMouseEnter = () => {
@@ -168,6 +182,21 @@ const handleMouseLeave = () => {
     transform: scale(1.1);
 }
 
+.toast-action-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: inherit;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.toast-action-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
 .toast-progress-container {
     height: 3px;
     width: 100%;
@@ -186,8 +215,7 @@ const handleMouseLeave = () => {
 }
 
 .toast-error .toast-progress {
-    background-color: var(--color-error, #f44336);
-}
+    background-color: var(--color-error, #f44336);}
 
 .toast-info .toast-progress {
     background-color: var(--color-info, #2196f3);

@@ -49,34 +49,47 @@
         </div>
     </div>
 
-    <div v-if="
-        friendRequests.received.length > 0 || friendRequests.sent.length > 0
-    " class="mb-6">
-        <h2 class="text-lg font-medium mb-4">
-            {{ t('friends.friendRequests') }}
-        </h2>
-
-        <div v-if="friendRequests.received.length > 0" class="mb-4">
-            <h3 class="text-md font-medium mb-2 text-info">
-                {{ t('friends.receivedRequests') }}
-            </h3>
-            <div class="grid gap-3">
-                <FriendRequestCard v-for="request in friendRequests.received" :key="request.id"
-                    :user="{ ...request.requester, status: { ...request.requester.status, username: request.requester.username } }"
-                    :request-id="request.id" type="received" @accept="respondToRequest($event, 'accept')"
-                    @reject="respondToRequest($event, 'reject')" @view-profile="$emit('show-user-profile', $event)" />
+    <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0" class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-medium">
+                {{ t('friends.friendRequests') }}
+            </h2>
+            <div class="flex items-center gap-3">
+                <span v-if="friendRequests.received.length > 0" class="badge badge-info badge-sm">{{
+                    friendRequests.received.length }} {{ t('friends.receivedRequests') }}</span>
+                <span v-if="friendRequests.sent.length > 0" class="badge badge-warning badge-sm">{{
+                    friendRequests.sent.length }} {{ t('friends.sentRequests') }}</span>
             </div>
         </div>
 
-        <div v-if="friendRequests.sent.length > 0">
-            <h3 class="text-md font-medium mb-2 text-warning">
-                {{ t('friends.sentRequests') }}
-            </h3>
-            <div class="grid gap-3">
-                <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
-                    :user="{ ...request.addressee, status: { ...request.addressee.status, username: request.addressee.username } }"
-                    :request-id="request.id" type="sent" @cancel="cancelRequest"
-                    @view-profile="$emit('show-user-profile', $event)" />
+        <div class="requests-grid grid gap-4 md:grid-cols-2">
+            <div v-if="friendRequests.received.length > 0"
+                :class="['requests-panel', { 'md:col-span-2': friendRequests.sent.length === 0 }]">
+                <div class="panel-header flex items-center justify-between mb-2">
+                    <h3 class="text-md font-medium text-info">{{ t('friends.receivedRequests') }}</h3>
+                    <span class="text-sm text-base-content/60">{{ friendRequests.received.length }}</span>
+                </div>
+                <div class="requests-list space-y-2">
+                    <FriendRequestCard v-for="request in friendRequests.received" :key="request.id"
+                        :user="{ ...request.requester, status: { ...request.requester.status, username: request.requester.username } }"
+                        :request-id="request.id" type="received" @accept="respondToRequest($event, 'accept')"
+                        @reject="respondToRequest($event, 'reject')"
+                        @view-profile="$emit('show-user-profile', $event)" />
+                </div>
+            </div>
+
+            <div v-if="friendRequests.sent.length > 0"
+                :class="['requests-panel', { 'md:col-span-2': friendRequests.received.length === 0 }]">
+                <div class="panel-header flex items-center justify-between mb-2">
+                    <h3 class="text-md font-medium text-warning">{{ t('friends.sentRequests') }}</h3>
+                    <span class="text-sm text-base-content/60">{{ friendRequests.sent.length }}</span>
+                </div>
+                <div class="requests-list space-y-2">
+                    <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
+                        :user="{ ...request.addressee, status: { ...request.addressee.status, username: request.addressee.username } }"
+                        :request-id="request.id" type="sent" @cancel="cancelRequest"
+                        @view-profile="$emit('show-user-profile', $event)" />
+                </div>
             </div>
         </div>
     </div>
@@ -251,7 +264,7 @@ const respondToRequest = async (
                 : t('friends.request_rejected'),
             'success'
         );
-        await loadFriendsData();
+        await loadFriendsData(true);
     } catch (error) {
         console.error(`Failed to ${action} friend request:`, error);
         addToast(t('friends.request_failed', { action }), 'error');
@@ -262,7 +275,7 @@ const cancelRequest = async (requestId: number) => {
     try {
         await userService.cancelFriendRequest(requestId);
         addToast(t('friends.request_canceled'), 'success');
-        await loadFriendsData();
+        await loadFriendsData(true);
     } catch (error) {
         console.error('Failed to cancel friend request:', error);
         addToast(t('friends.request_failed', { action: 'cancel' }), 'error');
@@ -287,7 +300,7 @@ const removeFriend = async (friend: Friend) => {
                         }),
                         'success'
                     );
-                    await loadFriendsData();
+                    await loadFriendsData(true);
                 } catch (error) {
                     console.error('Failed to remove friend:', error);
                     addToast(t('friends.remove_failed'), 'error');
@@ -315,7 +328,7 @@ const blockFriend = async (friend: Friend) => {
                         }),
                         'success'
                     );
-                    await Promise.all([loadFriendsData(), loadBlockedUsers()]);
+                    await Promise.all([loadFriendsData(true), loadBlockedUsers()]);
                 } catch (error) {
                     console.error('Failed to block user:', error);
                     addToast(t('friends.block_failed'), 'error');
@@ -371,5 +384,38 @@ const unblockUser = async (user: Friend) => {
 
 .avatar-click-area:active {
     transform: scale(0.98);
+}
+
+.requests-grid {
+    grid-template-columns: 1fr;
+}
+
+.requests-panel {
+    background: var(--b3);
+    border: 1px solid var(--b2);
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+}
+
+.requests-list {
+    max-height: 18rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.panel-header {
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.04);
+    padding-bottom: 0.4rem;
+}
+
+@media (min-width: 768px) {
+    .requests-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.badge-sm {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
 }
 </style>

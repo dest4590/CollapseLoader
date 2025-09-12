@@ -22,7 +22,6 @@ import { syncService } from './services/syncService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
-import { apiPreload } from './services/apiClient';
 import { bootLogService } from './services/bootLogService';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
@@ -542,8 +541,6 @@ const initializeUserData = async () => {
     if (!isAuthenticated.value || !isOnline.value) return;
 
     try {
-        await apiPreload();
-
         await loadUserData();
         console.log(`User loaded: ${displayName.value || 'Unknown'}`);
 

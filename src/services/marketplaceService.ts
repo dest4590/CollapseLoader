@@ -17,6 +17,10 @@ class MarketplaceService {
         return apiPost(`/api/presets/${id}/like/`);
     }
 
+    async unlikePreset(id: number): Promise<any> {
+        return apiPost(`/api/presets/${id}/unlike/`);
+    }
+
     async downloadPreset(id: number): Promise<any> {
         return apiPost(`/api/presets/${id}/download/`);
     }

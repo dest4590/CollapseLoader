@@ -3,9 +3,11 @@ use std::{fs, path::PathBuf};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Cricket";
+pub static CODENAME: &str = "Fabric";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
+
+pub static JDK_FOLDER: &str = "jdk-21.0.2";
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var)
@@ -46,6 +48,7 @@ lazy_static! {
     } else {
         Server::new("https://auth.collapseloader.org/")
     },  Server::new("https://collapse.ttfdk.lol/auth/")];
+
     pub static ref ROOT_DIR: String = {
         let roaming_dir = std::env::var("APPDATA").unwrap_or_else(|_| {
             // fallback for non-windows systems (aka linux/mac)

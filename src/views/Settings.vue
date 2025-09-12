@@ -29,6 +29,7 @@ import {
     MessagesSquare,
     BadgeCheck,
     FileText,
+    FolderSync,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -394,6 +395,10 @@ const getFormattedLabel = (key: string) => {
         return t('settings.hash_verify');
     }
 
+    if (key === 'sync_client_settings') {
+        return t('settings.sync_client_settings');
+    }
+
     if (key === 'discord_rpc_enabled') {
         return 'Discord Rich Presence';
     }
@@ -638,6 +643,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <MessagesSquare v-if="key === 'irc_chat'" class="w-5 h-5 text-primary" />
                                 <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
                                 <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
+                                <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
 
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
