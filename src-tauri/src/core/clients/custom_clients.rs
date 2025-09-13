@@ -84,6 +84,7 @@ impl CustomClient {
             size: 0,
             requirement_mods: None,
             client_type: ClientType::Default,
+            created_at: chrono::Utc::now(),
             meta: Meta {
                 is_new: self.version == Version::V1_16_5,
                 asset_index: String::new(),

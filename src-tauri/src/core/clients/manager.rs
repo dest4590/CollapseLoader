@@ -53,9 +53,13 @@ impl ClientManager {
 
             match api_instance.json::<Vec<Client>>("fabric-clients") {
                 Ok(mut fabric_clients) => {
-                    if !fabric_clients.is_empty() {
-                        log_info!("Fetched {} fabric clients from API", fabric_clients.len());
+                    let fabric_count = fabric_clients.len();
+                    if fabric_count > 0 {
+                        log_info!("Fetched {} fabric clients from API", fabric_count);
                         clients.append(&mut fabric_clients);
+                        clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+                    } else {
+                        log_debug!("API returned 0 fabric clients");
                     }
                 }
                 Err(e) => {
@@ -73,7 +77,10 @@ impl ClientManager {
                 client.meta.size = client.size;
             }
 
-            log_debug!("ClientManager initialized with {} clients", clients.len());
+            log_debug!(
+                "ClientManager initialized with {} clients (including fabric)",
+                clients.len()
+            );
             Ok(ClientManager { clients })
         } else {
             log_warn!("API instance not available. Attempting to load clients from cache.");
@@ -103,8 +110,6 @@ impl ClientManager {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
                 {
-                    // Pass the original filename to Meta::new so it can correctly
-                    // detect fabric clients (which rely on the "fabric/" prefix)
                     client.meta = super::client::Meta::new(&client.version, &client.filename);
                 }
 

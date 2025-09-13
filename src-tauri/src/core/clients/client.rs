@@ -20,6 +20,7 @@ use crate::{
     log_debug, log_error, log_info,
 };
 use semver::Version;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::Semaphore;
@@ -122,6 +123,8 @@ pub struct Client {
     pub requirement_mods: Option<Vec<String>>,
     #[serde(default)]
     pub client_type: ClientType,
+    #[serde(default = "default_created_at")]
+    pub created_at: DateTime<Utc>,
 }
 
 fn default_meta() -> Meta {
@@ -132,6 +135,10 @@ fn default_meta() -> Meta {
         is_custom: false,
         size: 0,
     }
+}
+
+fn default_created_at() -> DateTime<Utc> {
+    Utc::now()
 }
 
 pub struct LaunchOptions {
@@ -323,6 +330,26 @@ impl Client {
             let dest_path = DATA.root_dir.join("libraries_fabric").join(fabric_jar);
             if !dest_path.exists() {
                 need_download = true;
+            }
+        }
+
+        if self.client_type == ClientType::Fabric {
+            if let Some(mods) = &self.requirement_mods {
+                let client_base = DATA.get_filename(&self.filename);
+                let mods_folder = DATA.root_dir.join(&client_base).join("mods");
+                for mod_name in mods.iter() {
+                    let mod_basename = if mod_name.ends_with(".jar") {
+                        mod_name.trim_end_matches(".jar").to_string()
+                    } else {
+                        mod_name.clone()
+                    };
+
+                    let dest_path = mods_folder.join(format!("{}.jar", mod_basename));
+                    if !dest_path.exists() {
+                        need_download = true;
+                        break;
+                    }
+                }
             }
         }
 
