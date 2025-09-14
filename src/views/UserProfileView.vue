@@ -13,10 +13,9 @@
             <div class="card shadow-md border border-base-300">
                 <div class="card-body">
                     <div class="flex flex-col md:flex-row md:items-center gap-6">
-                        <UserAvatar :name="displayNickname" size="lg" :show-status="false"
+                        <UserAvatar :name="displayNickname" size="xl" :show-status="false"
                             :is-online="userProfile.status.is_online" :is-clickable="true"
-                                :src="userProfile.avatar_url || null"
-                            :original-src="userProfile.avatar_url || null" />
+                            :src="userProfile.avatar_url || null" :original-src="userProfile.avatar_url || null" />
                         <div class="flex-1">
                             <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
@@ -277,6 +276,7 @@ import {
 import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
 import getRoleBadge from '../utils/roleBadge';
+import { formatDate } from '../utils/utils';
 import { marketplaceService } from '../services/marketplaceService';
 import { useUser } from '../composables/useUser';
 
@@ -552,18 +552,6 @@ const formatLastSeen = (lastSeen: string): string => {
     return date.toLocaleDateString();
 };
 
-const formatDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Unknown';
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = String(date.getFullYear());
-        return `${day}/${month}/${year}`;
-    } catch {
-        return 'Unknown';
-    }
-};
 
 const platformLabel = (key: string) => {
     const map: Record<string, string> = {

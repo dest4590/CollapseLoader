@@ -268,6 +268,9 @@
     "avatar_help": "PNG, JPG, GIF, WEBP up to 5MB",
     "avatar_drop": "Drop or click to upload avatar",
     "change_avatar": "Change avatar",
+    "upload_avatar": "Upload avatar",
+    "avatar_upload_success": "Avatar uploaded successfully!",
+    "avatar_upload_refresh_failed": "Avatar uploaded but failed to refresh. Restart app if needed.",
     "avatar_type_error": "Unsupported file type",
     "avatar_size_error": "File is too large (max 5MB)",
     "avatar_uploaded": "Avatar updated",
@@ -313,7 +316,8 @@
     "add": "Add",
     "details": "Details",
     "send": "Send",
-    "copied_to_clipboard": "Color {color} copied to clipboard"
+    "copied_to_clipboard": "Color {color} copied to clipboard",
+    "done": "Done"
   },
   "auth": {
     "logout": {
@@ -746,7 +750,8 @@
       "failed": "Failed to change data folder: {error}",
       "restart_required": "Please restart the app for changes to take effect",
       "stopping_clients": "Stopping running clients..."
-    }
+    },
+    "sync_client_settings": "Sync client settings"
   },
   "userProfile": {
     "back_to_friends": "Back to Friends",
@@ -849,7 +854,11 @@
     "actions": {
       "activate": "Activate",
       "deactivate": "Deactivate",
-      "forceLogout": "Force Logout"
+      "forceLogout": "Force Logout",
+      "edit": "Edit",
+      "ban": "Ban",
+      "unban": "Unban",
+      "delete": "Delete"
     },
     "pagination": {
       "pageOf": "Page {current} of {total}",
@@ -864,7 +873,11 @@
     },
     "success": {
       "userStatusChanged": "User {username} status changed successfully.",
-      "userLoggedOut": "User {username} has been logged out."
+      "userLoggedOut": "User {username} has been logged out.",
+      "userBanned": "User {username} has been banned.",
+      "userUnbanned": "User {username} has been unbanned.",
+      "userUpdated": "User {username} updated successfully.",
+      "userDeleted": "User {username} deleted."
     },
     "health": {
       "title": "Status System Health",

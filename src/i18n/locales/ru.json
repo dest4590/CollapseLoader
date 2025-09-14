@@ -346,7 +346,8 @@
     "add": "Добавить",
     "details": "Подробности",
     "send": "Отправить",
-    "copied_to_clipboard": "Цвет {color} скопирован в буфер обмена"
+    "copied_to_clipboard": "Цвет {color} скопирован в буфер обмена",
+    "done": "Готово"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -760,7 +761,8 @@
       "failed": "Не удалось изменить папку данных: {error}",
       "restart_required": "Перезапустите приложение, чтобы изменения вступили в силу",
       "stopping_clients": "Останавливаем запущенные клиенты..."
-    }
+    },
+    "sync_client_settings": "Синхронизировать настройки клиента"
   },
   "userProfile": {
     "playing": "Играет в",
@@ -943,7 +945,11 @@
     "actions": {
       "activate": "Активировать",
       "deactivate": "Деактивировать",
-      "forceLogout": "Принудительный выход"
+      "forceLogout": "Принудительный выход",
+      "edit": "Редактировать",
+      "ban": "Заблокировать",
+      "unban": "Разблокировать",
+      "delete": "Удалить"
     },
     "pagination": {
       "page_of": "Страница {current} из {total}",
@@ -958,7 +964,11 @@
     },
     "success": {
       "userStatusChanged": "Статус пользователя {username} успешно изменен.",
-      "userLoggedOut": "Пользователь {username} принудительно выведен из системы."
+      "userLoggedOut": "Пользователь {username} принудительно выведен из системы.",
+      "userBanned": "Пользователь {username} заблокирован.",
+      "userUnbanned": "Пользователь {username} разблокирован.",
+      "userUpdated": "Пользователь {username} успешно обновлен.",
+      "userDeleted": "Пользователь {username} удален."
     },
     "health": {
       "title": "Статус системы",

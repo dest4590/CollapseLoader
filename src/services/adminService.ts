@@ -126,6 +126,34 @@ class AdminService {
             { headers: this.getHeaders() }
         );
     }
+
+    async banUser(userId: number, reason: string = ''): Promise<void> {
+        await apiPost('/auth/admin/users/ban/',
+            { user_id: userId, reason },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async unbanUser(userId: number): Promise<void> {
+        await apiPost('/auth/admin/users/unban/',
+            { user_id: userId },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async updateUser(userId: number, payload: { email?: string; nickname?: string; is_active?: boolean; is_staff?: boolean; role?: string }): Promise<void> {
+        await apiPost('/auth/admin/users/update/',
+            { user_id: userId, ...payload },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async deleteUser(userId: number): Promise<void> {
+        await apiPost('/auth/admin/users/delete/',
+            { user_id: userId },
+            { headers: this.getHeaders() }
+        );
+    }
 }
 
 export const adminService = new AdminService();

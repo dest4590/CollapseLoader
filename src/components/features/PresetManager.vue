@@ -197,6 +197,7 @@ import CreatePresetModal from '../modals/social/presets/CreatePresetModal.vue';
 import ImportPresetModal from '../modals/social/presets/ImportPresetModal.vue';
 import DeletePresetConfirmModal from '../modals/social/presets/DeletePresetConfirmModal.vue';
 import { useI18n } from 'vue-i18n';
+import { formatDate } from '../../utils/utils';
 import { useToast } from '../../services/toastService';
 
 const {
@@ -243,18 +244,7 @@ watch(presets, () => {
 });
 
 
-const formatDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Unknown';
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = String(date.getFullYear());
-        return `${day}/${month}/${year}`;
-    } catch {
-        return 'Unknown';
-    }
-};
+// formatDate imported from `src/utils/utils.ts`
 
 const openCreateModal = () => {
     showModal(

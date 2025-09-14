@@ -6,9 +6,9 @@
                     <div class="card-body">
                         <div class="flex items-center gap-4 mb-4">
                             <UserAvatar :name="userInfo.nickname || userInfo.username || 'User'" size="lg"
-                                :is-clickable="true"
-                                :src="(useUser().profile.value as any)?.avatar_url || null"
-                                    :original-src="(useUser().profile.value as any)?.avatar_url || null" />
+                                :is-clickable="true" :src="(useUser().profile.value as any)?.avatar_url || null"
+                                :original-src="(useUser().profile.value as any)?.avatar_url || null"
+                                @click="openAvatarModal" />
                             <div class="flex-1">
                                 <div class="flex items-start justify-between">
                                     <h2 class="text-xl font-semibold text-primary-focus flex items-center gap-2">
@@ -40,11 +40,6 @@
                                             t('account.social_links') }}</button>
                                     </span>
 
-                                </div>
-                                <div class="mt-3">
-                                    <AvatarUploader
-                                        :current-url="(useUser().profile.value as any)?.avatar_url || null"
-                                        @uploaded="onAvatarUploaded" />
                                 </div>
                             </div>
                         </div>
@@ -169,7 +164,7 @@ import SocialLinksModal from '../components/modals/social/account/SocialLinksMod
 import ChangePasswordConfirmModal from '../components/modals/social/account/ChangePasswordConfirmModal.vue';
 import LogoutConfirmModal from '../components/modals/social/account/LogoutConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
-import AvatarUploader from '../components/features/Profile/AvatarUploader.vue';
+import AvatarUploadModal from '../components/modals/social/account/AvatarUploadModal.vue';
 import { userService } from '../services/userService';
 import { syncService, type SyncServiceState } from '../services/syncService';
 import { EditIcon } from 'lucide-vue-next';
@@ -440,8 +435,25 @@ const handleLogout = async () => {
     );
 };
 
-const onAvatarUploaded = async () => {
-    try { await useUser().refreshUserData(); } catch { }
+const openAvatarModal = () => {
+    showModal(
+        'avatar-upload',
+        AvatarUploadModal,
+        { title: t('account.upload_avatar') },
+        { currentUrl: (useUser().profile.value as any)?.avatar_url || null },
+        {
+            uploaded: async () => {
+                try {
+                    await useUser().refreshUserData();
+                    addToast(t('account.avatar_upload_success'), 'success');
+                } catch {
+                    addToast(t('account.avatar_upload_refresh_failed'), 'warning');
+                }
+                hideModal('avatar-upload');
+            },
+            close: () => hideModal('avatar-upload'),
+        }
+    );
 };
 </script>
 

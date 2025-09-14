@@ -93,6 +93,7 @@ import { useI18n } from 'vue-i18n';
 import { useToast } from '../services/toastService';
 import { apiGet } from '../services/apiClient';
 import { getCurrentLanguage } from '../i18n';
+import { formatDate } from '../utils/utils';
 import { RefreshCcw } from 'lucide-vue-next';
 
 interface NewsArticle {
@@ -225,32 +226,6 @@ const filteredNews = computed(() => {
     );
 });
 
-const formatDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffTime = now.getTime() - date.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-        const diffMinutes = Math.floor(diffTime / (1000 * 60));
-
-        if (diffMinutes < 1) return t('news.time.just_now');
-        if (diffMinutes < 60)
-            return t('news.time.minutes_ago', { count: diffMinutes });
-        if (diffHours < 24)
-            return t('news.time.hours_ago', { count: diffHours });
-        if (diffDays < 7) return t('news.time.days_ago', { count: diffDays });
-
-        return date.toLocaleDateString(currentLanguage.value, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    } catch (e) {
-        console.error('Error formatting date:', e);
-        return dateString;
-    }
-};
 
 const sanitizeHtml = (html: string): string => {
     const allowedTags = [

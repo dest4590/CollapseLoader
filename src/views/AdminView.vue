@@ -7,13 +7,13 @@
             <div class="flex items-center gap-3">
                 <span class="badge badge-error badge-sm font-bold uppercase">{{
                     $t('admin.role')
-                }}</span>
+                    }}</span>
                 <span class="text-base-content/70 font-medium">{{
                     username
-                }}</span>
+                    }}</span>
 
-                <button class="btn btn-xs btn-outline ml-3" :class="{ 'loading': healthLoading }"
-                    @click="loadStatusHealth()" title="Refresh status system health">
+                <button class="btn btn-xs btn-outline ml-3" :class="{ 'loading': healthLoading }" @click="openHealth()"
+                    title="Show status system health">
                     {{ $t('admin.health.refresh') }}
                 </button>
 
@@ -76,7 +76,7 @@
             </div>
         </div>
 
-        <div v-if="healthData" class="card bg-base-200 shadow-md border border-base-300 mt-6">
+        <div v-if="showHealth && healthData" class="card bg-base-200 shadow-md border border-base-300 mt-6">
             <div class="card-body p-4">
                 <div class="flex justify-between items-start">
                     <div>
@@ -89,8 +89,8 @@
                             :class="healthData.system_health?.cache_health?.status === 'healthy' ? 'badge badge-success' : 'badge badge-warning'">
                             {{ healthData.system_health?.cache_health?.status || 'unknown' }}
                         </span>
-                        <button class="btn btn-ghost btn-xs ml-2" @click="healthData = null">{{ $t('common.close')
-                        }}</button>
+                        <button class="btn btn-ghost btn-xs ml-2" @click="closeHealth()">{{ $t('common.close')
+                            }}</button>
                     </div>
                 </div>
 
@@ -98,7 +98,7 @@
                     <div class="p-3 bg-base-100 rounded">
                         <div class="text-sm text-base-content/70">Online users</div>
                         <div class="text-2xl font-bold">{{ healthData.system_health?.cache_health?.online_users ?? '-'
-                        }}</div>
+                            }}</div>
                         <div class="text-xs text-base-content/60 mt-1">{{ $t('admin.health.responseTime') }} {{
                             healthData.system_health?.cache_health?.response_time_ms ?? '-' }}</div>
                     </div>
@@ -224,7 +224,7 @@
                                 'border-l-4 border-l-error': user.is_staff,
                                 'bg-success/10': user.status?.is_online,
                             }">
-                                <td class="py-4">
+                                <td class="py-2">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <span class="font-medium text-base-content">{{ user.username }}</span>
                                         <span v-if="user.profile?.nickname" class="text-base-content/70 text-sm">({{
@@ -234,11 +234,11 @@
                                     </div>
                                 </td>
 
-                                <td class="text-base-content/70 break-all py-4">
+                                <td class="text-base-content/70 break-all py-2">
                                     {{ user.email }}
                                 </td>
 
-                                <td class="py-4">
+                                <td class="py-2">
                                     <span class="badge badge-sm" :class="{
                                         'badge-success':
                                             getUserStatusClass(user) ===
@@ -254,38 +254,70 @@
                                     </span>
                                 </td>
 
-                                <td class="text-base-content/70 text-sm py-4">
+                                <td class="text-base-content/70 text-sm py-2">
                                     {{ formatLastSeen(user) }}
                                 </td>
 
-                                <td class="py-4">
-                                    <div class="flex gap-2 flex-wrap">
-                                        <button v-if="!user.is_staff" @click="toggleUserStatus(user)"
-                                            class="btn btn-xs transition-all duration-200" :class="user.is_active
-                                                ? 'btn-error hover:scale-105'
-                                                : 'btn-success hover:scale-105'
-                                                " :disabled="actionLoading">
-                                            {{
-                                                user.is_active
-                                                    ? $t(
-                                                        'admin.actions.deactivate'
-                                                    )
-                                                    : $t(
-                                                        'admin.actions.activate'
-                                                    )
-                                            }}
-                                        </button>
+                                <td class="py-0 align-middle">
+                                    <div class="flex items-center h-12">
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0"
+                                                class="btn btn-ghost btn-sm rounded-md px-2 py-1 flex items-center gap-2"
+                                                :class="{ 'opacity-50': actionLoading }">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M12 6v.01M12 12v.01M12 18v.01" />
+                                                </svg>
+                                            </label>
+                                            <ul tabindex="0"
+                                                class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-44 text-sm">
+                                                <li>
+                                                    <button class="w-full text-left" @click="openEditUser(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.edit') }}
+                                                    </button>
+                                                </li>
 
-                                        <button v-if="
-                                            user.status?.is_online &&
-                                            !user.is_staff
-                                        " @click="forceLogout(user)"
-                                            class="btn btn-warning btn-xs hover:scale-105 transition-all duration-200"
-                                            :disabled="actionLoading">
-                                            {{
-                                                $t('admin.actions.forceLogout')
-                                            }}
-                                        </button>
+
+
+                                                <li>
+                                                    <button class="w-full text-left" @click="toggleUserStatus(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ user.is_active ? $t('admin.actions.deactivate') :
+                                                            $t('admin.actions.activate') }}
+                                                    </button>
+                                                </li>
+
+                                                <li v-if="user.status?.is_online && !user.is_staff">
+                                                    <button class="w-full text-left" @click="forceLogout(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.forceLogout') }}
+                                                    </button>
+                                                </li>
+
+                                                <li v-if="!user.is_staff">
+                                                    <button class="w-full text-left" @click="banUser(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.ban') }}
+                                                    </button>
+                                                </li>
+
+                                                <li v-if="user.is_staff">
+                                                    <button class="w-full text-left" @click="unbanUser(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.unban') }}
+                                                    </button>
+                                                </li>
+
+                                                <li>
+                                                    <button class="w-full text-left text-error"
+                                                        @click="deleteUser(user)" :disabled="actionLoading">
+                                                        {{ $t('admin.actions.delete') }}
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -337,6 +369,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatDate } from '../utils/utils';
 import {
     adminService,
     type AdminStats,
@@ -344,6 +377,9 @@ import {
     type AdminHealthResponse,
 } from '../services/adminService';
 import { useToast } from '../services/toastService';
+import { useModal } from '../services/modalService';
+import UserEditModal from '../components/admin/UserEditModal.vue';
+import ConfirmModal from '../components/common/ConfirmModal.vue';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -363,7 +399,10 @@ const username = ref('');
 
 const healthData = ref<AdminHealthResponse | null>(null);
 const healthLoading = ref(false);
-const includeDetailed = ref(true);
+const includeDetailed = ref(false);
+const showHealth = ref(false);
+
+const { showModal, hideModal } = useModal();
 
 const getUserStatusClass = (user: AdminUser) => {
     if (!user.is_active) return 'inactive';
@@ -382,8 +421,12 @@ const formatLastSeen = (user: AdminUser) => {
     if (user.status?.is_online) return t('admin.status.online');
 
     if (user.status?.last_seen) {
-        const date = new Date(user.status.last_seen);
-        return date.toLocaleString();
+        try {
+            return formatDate(user.status.last_seen);
+        } catch (e) {
+            console.error('Failed to format last_seen for admin view:', e);
+            return String(user.status.last_seen);
+        }
     }
 
     return t('admin.status.never');
@@ -450,6 +493,96 @@ const forceLogout = async (user: AdminUser) => {
     }
 };
 
+const banUser = async (user: AdminUser) => {
+    const onConfirm = async () => {
+        hideModal(`ban-${user.id}`);
+        actionLoading.value = true;
+        try {
+            await adminService.banUser(user.id);
+            addToast(t('admin.success.userBanned', { username: user.username }), 'success');
+            await loadUsers(pagination.value.page);
+        } catch (err: any) {
+            console.error('Failed to ban user:', err);
+            addToast(err.message || t('admin.errors.actionFailed'), 'error');
+        } finally {
+            actionLoading.value = false;
+        }
+    };
+
+    showModal(`ban-${user.id}`, ConfirmModal, { title: 'Ban user', message: `Ban ${user.username}?` }, {}, { confirm: onConfirm, cancel: () => hideModal(`ban-${user.id}`) });
+};
+
+const unbanUser = async (user: AdminUser) => {
+    actionLoading.value = true;
+    try {
+        await adminService.unbanUser(user.id);
+        addToast(t('admin.success.userUnbanned', { username: user.username }), 'success');
+        await loadUsers(pagination.value.page);
+    } catch (err: any) {
+        console.error('Failed to unban user:', err);
+        addToast(err.message || t('admin.errors.actionFailed'), 'error');
+    } finally {
+        actionLoading.value = false;
+    }
+};
+
+
+
+const openEditUser = (user: AdminUser) => {
+    const id = `edit-${user.id}`;
+    showModal(
+        id,
+        UserEditModal,
+        {
+            title: `Edit ${user.username}`,
+            email: user.email,
+            nickname: user.profile?.nickname || '',
+            is_active: user.is_active,
+            is_staff: user.is_staff,
+            role: (user.profile && (user.profile as any).role) || 'user',
+        },
+        {},
+        {
+            save: async (payload: { email: string; nickname: string; role?: string; is_active?: boolean; is_staff?: boolean }) => {
+                hideModal(id);
+                actionLoading.value = true;
+                try {
+                    await adminService.updateUser(user.id, payload as any);
+                    addToast(t('admin.success.userUpdated', { username: user.username }), 'success');
+                    await loadUsers(pagination.value.page);
+                } catch (err: any) {
+                    console.error('Failed to update user:', err);
+                    addToast(err.message || t('admin.errors.actionFailed'), 'error');
+                } finally {
+                    actionLoading.value = false;
+                }
+            },
+            cancel: () => hideModal(id),
+        }
+    );
+};
+
+const deleteUser = async (user: AdminUser) => {
+    const id = `delete-${user.id}`;
+    showModal(id, ConfirmModal, { title: 'Delete user', message: `Permanently delete ${user.username}?` }, {}, {
+        confirm: async () => {
+            hideModal(id);
+            actionLoading.value = true;
+            try {
+                await adminService.deleteUser(user.id);
+                addToast(t('admin.success.userDeleted', { username: user.username }), 'success');
+                await loadUsers(pagination.value.page);
+            } catch (err: any) {
+                console.error('Failed to delete user:', err);
+                addToast(err.message || t('admin.errors.actionFailed'), 'error');
+            } finally {
+                actionLoading.value = false;
+            }
+        },
+        cancel: () => hideModal(id),
+    });
+};
+
 const goToPage = (page: number) => {
     if (page >= 1 && page <= pagination.value.total_pages) {
         loadUsers(page);
@@ -505,11 +638,21 @@ const loadStatusHealth = async () => {
     }
 };
 
+const openHealth = async () => {
+    showHealth.value = true;
+    // load health data when panel is opened
+    await loadStatusHealth();
+};
+
+const closeHealth = () => {
+    showHealth.value = false;
+};
+
 onMounted(async () => {
     const hasAccess = await checkAdminAccess();
     if (hasAccess) {
         await Promise.all([loadDashboardStats(), loadUsers()]);
-        loadStatusHealth().catch(() => { });
+        // don't auto-load health; user can open it via the Health button
     }
 });
 </script>
@@ -563,5 +706,43 @@ onMounted(async () => {
 
 .transition-colors {
     transition: background-color 0.2s ease;
+}
+
+/* Compact table row styles */
+table.table tr td,
+table.table tr th {
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    height: 48px;
+    /* fixed row height */
+}
+
+.table tbody tr td {
+    padding-top: 0.25rem;
+    /* reduce vertical padding */
+    padding-bottom: 0.25rem;
+}
+
+.table .badge-xs {
+    transform: translateY(-1px);
+}
+
+.dropdown-content.menu li button {
+    padding: 0.4rem 0.5rem;
+}
+
+.table tbody tr td .font-medium {
+    line-height: 1.1;
+}
+
+.table tbody tr td span.text-sm {
+    margin-left: 6px;
+}
+
+.btn.btn-ghost.btn-sm {
+    height: 32px;
+    min-width: 36px;
 }
 </style>

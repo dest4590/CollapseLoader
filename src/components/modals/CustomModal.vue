@@ -156,7 +156,7 @@ onUnmounted(() => {
 
 .custom-modal-body {
     flex: 1;
-    overflow-y: auto;
+    overflow-y: hidden;
     overflow-x: hidden;
     word-wrap: break-word;
     word-break: break-word;

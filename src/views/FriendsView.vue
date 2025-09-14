@@ -1,26 +1,29 @@
 <template>
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-semibold text-primary-focus">
-            {{ t('friends.title', { count: friends.length }) }}
-        </h1>
-        <div class="flex gap-2">
-            <div v-if="blockedUsers.length > 0" class="dropdown dropdown-end relative z-[9999]">
-                <div tabindex="0" role="button" class="btn btn-outline btn-sm">
-                    <Shield class="w-4 h-4 mr-2" />
-                    {{
-                        t('blockedUsers.title', { count: blockedUsers.length })
-                    }}
-                </div>
-                <div tabindex="0"
-                    class="dropdown-content card card-compact w-80 p-2 shadow bg-base-100 border border-base-300 absolute right-0 top-full mt-2 z-[9999]">
-                    <div class="card-body">
-                        <div class="space-y-2 max-h-60 overflow-y-auto">
+    <div class="header flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+        <div class="title-row flex items-center gap-3">
+            <h1 class="text-2xl font-semibold text-primary-focus">
+                {{ t('friends.title', { count: friends.length }) }}
+            </h1>
+        </div>
+
+        <div class="controls flex items-center gap-2">
+            <div v-if="blockedUsers.length > 0" class="relative">
+                <button @click.stop="toggleBlockedDropdown()" class="btn btn-outline btn-sm flex items-center gap-2"
+                    aria-haspopup="true" aria-expanded="false">
+                    <Shield class="w-4 h-4" />
+                    <span class="ml-1">{{ t('blockedUsers.title', { count: blockedUsers.length }) }}</span>
+                </button>
+
+                <div ref="blockedDropdown"
+                    class="hidden dropdown-content card card-compact w-72 p-2 shadow bg-base-100 border border-base-300 absolute right-0 mt-2 z-[9999]"
+                    role="dialog">
+                    <div class="card-body p-2">
+                        <div class="space-y-2 max-h-64 overflow-y-auto">
                             <div v-for="user in blockedUsers" :key="user.id"
                                 class="flex items-center justify-between p-2 bg-base-200 rounded-lg">
                                 <div class="flex items-center gap-2">
-                                    <div @click="
-                                        $emit('show-user-profile', user.id)
-                                        " class="avatar-click-area cursor-pointer">
+                                    <div @click="$emit('show-user-profile', user.id)"
+                                        class="avatar-click-area cursor-pointer">
                                         <UserAvatar :name="getDisplayNickname(user)" size="sm" />
                                     </div>
                                     <div>
@@ -42,34 +45,21 @@
                 </div>
             </div>
 
-            <button @click="showAddFriendModal" class="btn btn-primary btn-sm">
-                <UserPlus class="w-4 h-4 mr-2" />
-                {{ t('friends.addFriend') }}
+            <button @click="showAddFriendModal" class="btn btn-primary btn-sm flex items-center gap-2">
+                <UserPlus class="w-4 h-4" />
+                <span class="hidden sm:inline">{{ t('friends.addFriend') }}</span>
             </button>
         </div>
     </div>
 
     <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0" class="mb-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-medium">
-                {{ t('friends.friendRequests') }}
-            </h2>
-            <div class="flex items-center gap-3">
-                <span v-if="friendRequests.received.length > 0" class="badge badge-info badge-sm">{{
-                    friendRequests.received.length }} {{ t('friends.receivedRequests') }}</span>
-                <span v-if="friendRequests.sent.length > 0" class="badge badge-warning badge-sm">{{
-                    friendRequests.sent.length }} {{ t('friends.sentRequests') }}</span>
-            </div>
-        </div>
-
-        <div class="requests-grid grid gap-4 md:grid-cols-2">
-            <div v-if="friendRequests.received.length > 0"
-                :class="['requests-panel', { 'md:col-span-2': friendRequests.sent.length === 0 }]">
+        <div class="requests-grid grid gap-4 sm:grid-cols-2 items-stretch">
+            <div v-if="friendRequests.received.length > 0" class="requests-panel">
                 <div class="panel-header flex items-center justify-between mb-2">
                     <h3 class="text-md font-medium text-info">{{ t('friends.receivedRequests') }}</h3>
                     <span class="text-sm text-base-content/60">{{ friendRequests.received.length }}</span>
                 </div>
-                <div class="requests-list space-y-2">
+                <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
                     <FriendRequestCard v-for="request in friendRequests.received" :key="request.id"
                         :user="{ ...request.requester, status: { ...request.requester.status, username: request.requester.username } }"
                         :request-id="request.id" type="received" @accept="respondToRequest($event, 'accept')"
@@ -78,13 +68,12 @@
                 </div>
             </div>
 
-            <div v-if="friendRequests.sent.length > 0"
-                :class="['requests-panel', { 'md:col-span-2': friendRequests.received.length === 0 }]">
+            <div v-if="friendRequests.sent.length > 0" class="requests-panel">
                 <div class="panel-header flex items-center justify-between mb-2">
                     <h3 class="text-md font-medium text-warning">{{ t('friends.sentRequests') }}</h3>
                     <span class="text-sm text-base-content/60">{{ friendRequests.sent.length }}</span>
                 </div>
-                <div class="requests-list space-y-2">
+                <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
                     <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
                         :user="{ ...request.addressee, status: { ...request.addressee.status, username: request.addressee.username } }"
                         :request-id="request.id" type="sent" @cancel="cancelRequest"
@@ -100,7 +89,7 @@
             <p>{{ t('friends.noFriends') }}</p>
         </div>
 
-        <div v-else class="grid gap-4">
+        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <FriendCard v-for="friend in friends" :key="friend.id"
                 :friend="{ ...friend, status: { ...friend.status, username: friend.username } }"
                 @remove-friend="removeFriend" @block-friend="blockFriend"
@@ -152,6 +141,12 @@ const { friends, friendRequests, loadFriendsData, updateFriendStatuses } =
     useFriends();
 const currentUserStatus = ref<UserStatus | null>(null);
 const blockedUsers = ref<Friend[]>([]);
+const blockedDropdown = ref<HTMLElement | null>(null);
+
+const toggleBlockedDropdown = () => {
+    if (!blockedDropdown.value) return;
+    blockedDropdown.value.classList.toggle('hidden');
+};
 
 const getDisplayNickname = (user: Friend) => {
     if (globalUserStatus.isStreamer.value) {
@@ -393,7 +388,6 @@ const unblockUser = async (user: Friend) => {
 .requests-panel {
     background: var(--b3);
     border: 1px solid var(--b2);
-    padding: 0.6rem;
     border-radius: 0.5rem;
 }
 

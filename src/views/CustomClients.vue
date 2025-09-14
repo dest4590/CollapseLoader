@@ -16,6 +16,7 @@ import SearchBar from '../components/common/SearchBar.vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
+import { formatDate } from '../utils/utils';
 import type { CustomClient } from '../types/ui';
 import AddCustomClientModal from '../components/modals/clients/AddCustomClientModal.vue';
 import EditCustomClientModal from '../components/modals/clients/EditCustomClientModal.vue';
@@ -183,18 +184,6 @@ const handleDisplaySettings = () => {
     showModal('custom-client-display-settings', CustomClientDisplaySettingsModal, { title: t("custom_clients.display_settings") }, {}, {});
 }
 
-const formatDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Unknown';
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = String(date.getFullYear());
-        return `${day}/${month}/${year}`;
-    } catch {
-        return 'Unknown';
-    }
-};
 
 onMounted(async () => {
     await loadCustomClients();
