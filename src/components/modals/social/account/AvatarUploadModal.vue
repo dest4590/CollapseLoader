@@ -13,7 +13,6 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { defineEmits, defineProps } from 'vue';
 import AvatarUploader from '../../../../components/features/profile/AvatarUploader.vue';
 
 const props = defineProps<{ title?: string; currentUrl?: string }>();
