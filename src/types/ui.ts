@@ -10,11 +10,12 @@ export interface Client {
     insecure: boolean;
     launches: number;
     downloads: number;
+    client_type?: string; // 'default' | 'fabric'
     meta: {
         [key: string]: any;
         installed?: boolean;
         is_custom?: boolean;
-        size?: string;
+        size?: string | number;
     };
 }
 
@@ -38,6 +39,7 @@ export interface ClientDetails {
         content: string;
         created_at: string;
     }[];
+    client_type?: string;
     created_at: string;
 }
 

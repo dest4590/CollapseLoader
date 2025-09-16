@@ -4,7 +4,7 @@
             <label class="label">
                 <span class="label-text">{{
                     t('modals.add_friend.search_label')
-                    }}</span>
+                }}</span>
             </label>
             <input v-model="searchQuery" type="text" :placeholder="t('modals.add_friend.search_placeholder')"
                 class="input input-bordered w-full" @input="handleSearch" />
@@ -22,7 +22,9 @@
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0 flex-1">
                                 <div @click="$emit('view-profile', user.id)" class="avatar-click-area flex-shrink-0">
-                                    <UserAvatar :name="getDisplayNickname(user)" :is-clickable="true" />
+                                    <UserAvatar :name="getDisplayNickname(user)" :is-clickable="true"
+                                        :src="(user as any).avatar_url || null"
+                                        :original-src="(user as any).avatar_url || null" />
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="font-medium truncate">

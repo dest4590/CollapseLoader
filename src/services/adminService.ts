@@ -29,6 +29,7 @@ export interface AdminUser {
     profile: {
         nickname: string | null;
         created_at: string | null;
+        role?: string | null;
     };
     status: {
         is_online: boolean;
@@ -56,7 +57,6 @@ export interface AdminStatusResponse {
 export interface AdminHealthResponse {
     system_health: any;
     timestamp: string;
-    // only on detailed
     analytics?: any;
     recent_status_changes?: any;
 }
@@ -87,7 +87,7 @@ class AdminService {
         return response?.data ?? response;
     }
 
-    async getUsersList(page: number = 1, pageSize: number = 20, search: string = ''): Promise<AdminUsersResponse> {
+    async getUsersList(page: number = 1, pageSize: number = 200, search: string = '', ordering?: string): Promise<AdminUsersResponse> {
         const params = new URLSearchParams({
             page: page.toString(),
             page_size: pageSize.toString(),
@@ -95,6 +95,9 @@ class AdminService {
 
         if (search.trim()) {
             params.append('search', search);
+        }
+        if (ordering && ordering.trim()) {
+            params.append('ordering', ordering.trim());
         }
 
         const response = await apiGet(`/auth/admin/users/?${params}`, {
@@ -122,6 +125,34 @@ class AdminService {
 
     async forceLogoutUser(userId: number): Promise<void> {
         await apiPost('/auth/admin/users/force-logout/',
+            { user_id: userId },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async banUser(userId: number, reason: string = ''): Promise<void> {
+        await apiPost('/auth/admin/users/ban/',
+            { user_id: userId, reason },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async unbanUser(userId: number): Promise<void> {
+        await apiPost('/auth/admin/users/unban/',
+            { user_id: userId },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async updateUser(userId: number, payload: { email?: string; nickname?: string; is_active?: boolean; is_staff?: boolean; role?: string }): Promise<void> {
+        await apiPost('/auth/admin/users/update/',
+            { user_id: userId, ...payload },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    async deleteUser(userId: number): Promise<void> {
+        await apiPost('/auth/admin/users/delete/',
             { user_id: userId },
             { headers: this.getHeaders() }
         );

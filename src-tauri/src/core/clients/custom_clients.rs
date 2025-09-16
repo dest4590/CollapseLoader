@@ -1,4 +1,8 @@
-use crate::core::clients::client::{Client, Meta};
+use crate::core::{
+    clients::client::{Client, ClientType, Meta},
+    storage::{custom_clients::CUSTOM_CLIENT_MANAGER, data::DATA},
+    utils::globals::JDK_FOLDER,
+};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -9,18 +13,20 @@ pub enum Version {
 }
 
 impl Version {
-    pub fn to_string(&self) -> String {
-        match self {
-            Version::V1_16_5 => "1.16.5".to_string(),
-            Version::V1_12_2 => "1.12.2".to_string(),
-        }
-    }
-
     pub fn from_string(version: &str) -> Self {
         match version {
             "1.16.5" => Version::V1_16_5,
             "1.12.2" => Version::V1_12_2,
             _ => Version::V1_16_5,
+        }
+    }
+}
+
+impl std::fmt::Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Version::V1_16_5 => write!(f, "1.16.5"),
+            Version::V1_12_2 => write!(f, "1.12.2"),
         }
     }
 }
@@ -76,6 +82,9 @@ impl CustomClient {
             launches: self.launches,
             downloads: 0,
             size: 0,
+            requirement_mods: None,
+            client_type: ClientType::Default,
+            created_at: chrono::Utc::now(),
             meta: Meta {
                 is_new: self.version == Version::V1_16_5,
                 asset_index: String::new(),
@@ -109,13 +118,12 @@ impl CustomClient {
     }
 
     pub fn get_running_custom_clients() -> Vec<CustomClient> {
-        use crate::core::storage::data::DATA;
         use std::process::Command;
 
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
 
-        let jps_path = DATA.root_dir.join("jdk-21.0.2").join("bin").join("jps.exe");
+        let jps_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("jps.exe");
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
@@ -131,7 +139,7 @@ impl CustomClient {
         let binding = String::from_utf8_lossy(&output.stdout);
         let outputs: Vec<&str> = binding.lines().collect();
 
-        let custom_clients = crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
+        let custom_clients = CUSTOM_CLIENT_MANAGER
             .lock()
             .ok()
             .map(|manager| manager.clients.clone())
@@ -150,7 +158,7 @@ impl CustomClient {
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
 
-        let jps_path = DATA.root_dir.join("jdk-21.0.2").join("bin").join("jps.exe");
+        let jps_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("jps.exe");
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]

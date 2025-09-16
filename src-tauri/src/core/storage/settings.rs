@@ -122,6 +122,7 @@ define_settings! {
         cordshare: Setting<bool> = (true, true),
         irc_chat: Setting<bool> = (true, true),
         hash_verify: Setting<bool> = (true, true),
+        sync_client_settings: Setting<bool> = (true, true),
     }
 }
 

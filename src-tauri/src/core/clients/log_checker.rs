@@ -1,6 +1,6 @@
 use tauri::AppHandle;
 
-use crate::core::utils::utils::emit_to_main_window_filtered;
+use crate::core::utils::helpers::emit_to_main_window_filtered;
 use crate::{
     core::clients::client::{Client, CLIENT_LOGS},
     log_info,
@@ -49,12 +49,7 @@ impl LogChecker {
         }
     }
 
-    fn handle_crash(
-        &self,
-        crash_type: CrashType,
-        client_logs: &Vec<String>,
-        app_handle: &AppHandle,
-    ) {
+    fn handle_crash(&self, crash_type: CrashType, client_logs: &[String], app_handle: &AppHandle) {
         match crash_type {
             CrashType::MissingMainClass => {
                 log_info!(

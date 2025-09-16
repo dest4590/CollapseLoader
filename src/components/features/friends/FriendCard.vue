@@ -1,13 +1,16 @@
 <template>
-    <div class="card bg-base-200 shadow-md border border-base-300 hover:shadow-lg transition-shadow">
-        <div class="card-body p-4">
-            <div class="flex items-center justify-between">
+    <div
+        class="card bg-base-200 shadow-md border border-base-300 hover:shadow-lg transition-shadow h-full flex flex-col">
+        <div class="card-body p-4 flex-1 flex items-center">
+            <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-4">
                     <div @click="$emit('viewProfile', friend.id)" class="avatar-click-area">
                         <UserAvatar :name="friend.nickname || friend.username" :show-status="true"
-                            :is-online="friend.status.is_online" :is-clickable="true" />
+                            :is-online="friend.status.is_online" :is-clickable="true"
+                            :src="(friend as any).avatar_url || null"
+                            :original-src="(friend as any).avatar_url || null" />
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-h-[56px]">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}
@@ -23,9 +26,8 @@
                         </div>
 
                         <div v-else-if="friend.status.is_online" class="flex items-center gap-2 mt-1">
-                            <span class="text-xs text-success">{{
-                                t('userProfile.online')
-                                }}</span>
+                            <span class="w-2 h-2 rounded-full bg-success inline-block" aria-hidden="true"></span>
+                            <span class="text-xs text-success">{{ t('userProfile.online') }}</span>
                         </div>
 
                         <div v-else-if="friend.status.last_seen" class="flex items-center gap-2 mt-1">
@@ -42,7 +44,8 @@
                     <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
                         <MoreVertical class="w-4 h-4" />
                     </div>
-                    <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-[9999]">
+                    <ul tabindex="0"
+                        class="dropdown-content menu p-2 bg-base-200 shadow-xl border border-base-300 rounded-box w-52 z-[9999]">
                         <li>
                             <a @click="handleRemoveFriend" class="text-error">
                                 <UserMinus class="w-4 h-4" />

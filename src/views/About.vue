@@ -5,6 +5,10 @@ import { onMounted, ref } from 'vue';
 import { useToast } from '../services/toastService';
 import { useI18n } from 'vue-i18n';
 import { UpdateInfo, updaterService } from '../services/updaterService';
+import Logo from '../assets/images/logo.svg';
+import IconGitHub from '../assets/icons/github.svg';
+import IconTelegram from '../assets/icons/telegram.svg';
+import IconDiscord from '../assets/icons/discord.svg';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -71,51 +75,50 @@ const checkForUpdates = async () => {
 
 onMounted(async () => {
     await getVersion();
-    const versionElement = document.querySelector('#version');
-    if (versionElement) {
-        versionElement.textContent = `v${version.value}`;
-    }
 });
 </script>
 
 <template>
     <div class="slide-up">
         <div class="flex flex-col items-center mb-4">
-            <img src="../assets/images/logo.svg" alt="CollapseLoader Logo" class="w-36 h-36" />
+            <img :src="Logo" alt="CollapseLoader Logo" class="w-36 h-36" />
 
             <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">CollapseLoader (ALPHA)</h1>
+                <h1 class="text-4xl font-bold mb-2">CollapseLoader (BETA)</h1>
                 <div class="tooltip tooltip-bottom hover:underline cursor-pointer" id="codename"
-                    @click="openRepository()">
+                    @click="openRepository">
                     <div class="tooltip-content flex flex-col">
                         <span class="text-sm font-semibold text-base-content">{{
                             codename
-                        }}</span>
+                            }}</span>
                         <span class="text-xs text-base-content/50">{{
                             commitHash
-                        }}</span>
+                            }}</span>
                     </div>
-                    <p class="text-base-content/70">v{{ version }}</p>
+                    <p class="text-base-content/70">{{ version ? `v${version}` : '-' }}</p>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto mb-5">
-            <button @click="openRepository"
-                class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-primary border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2">
-                <img src="@/assets/icons/github.svg" class="w-8 h-8 github-icon" />
+            <button type="button" @click="openRepository"
+                class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-primary border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2"
+                aria-label="Open GitHub repository">
+                <img :src="IconGitHub" class="w-8 h-8 github-icon" alt="GitHub" />
                 <span class="text-sm font-medium">GitHub</span>
             </button>
 
-            <button @click="openTelegram"
-                class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-info border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2">
-                <img src="@/assets/icons/telegram.svg" class="w-8 h-8 telegram-icon" />
+            <button type="button" @click="openTelegram"
+                class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-info border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2"
+                aria-label="Open Telegram">
+                <img :src="IconTelegram" class="w-8 h-8 telegram-icon" alt="Telegram" />
                 <span class="text-sm font-medium">Telegram</span>
             </button>
 
-            <button @click="openDiscord"
-                class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-indigo-500 border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2">
-                <img src="@/assets/icons/discord.svg" class="w-8 h-8 discord-icon" />
+            <button type="button" @click="openDiscord"
+                class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-indigo-500 border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2"
+                aria-label="Open Discord">
+                <img :src="IconDiscord" class="w-8 h-8 discord-icon" alt="Discord" />
                 <span class="text-sm font-medium">Discord</span>
             </button>
         </div>
@@ -136,21 +139,21 @@ onMounted(async () => {
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.version')
-                    }}</span>
+                        }}</span>
                     <span class="font-medium">{{ version }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.codename')
-                    }}</span>
+                        }}</span>
                     <span class="font-medium">{{ codename }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.commit')
-                    }}</span>
+                        }}</span>
                     <code class="bg-base-300 px-2 py-1 rounded text-xs">{{
                         commitHash
                     }}</code>

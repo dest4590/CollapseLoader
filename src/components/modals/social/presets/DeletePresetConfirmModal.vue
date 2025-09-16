@@ -1,7 +1,7 @@
 <template>
     <div>
         <p class="text-sm text-base-content/70">
-            {{ $t('theme.presets.delete_modal.message', { name: preset?.name }) }}
+            {{ $t('theme.presets.delete_modal.message', { name: presetName }) }}
             {{ $t('theme.presets.delete_modal.warning') }}
         </p>
 
@@ -21,15 +21,39 @@
 <script setup lang="ts">
 import { Trash2, X } from 'lucide-vue-next';
 import type { ThemePreset } from '../../../../types/presets';
+import { computed } from 'vue';
+import { usePresets } from '../../../../composables/usePresets';
 
 const props = defineProps<{
-    preset: ThemePreset;
+    preset?: ThemePreset;
+    id?: string | number;
 }>();
 
-const emit = defineEmits(['close', 'preset-deleted']);
+const emit = defineEmits(['close', 'preset-deleted', 'deleted']);
+
+const { getPresetById } = usePresets();
+
+const targetId = computed(() => {
+    return props.preset?.id ?? props.id;
+});
+
+const presetName = computed(() => {
+    if (props.preset && props.preset.name) return props.preset.name;
+    const id = targetId.value;
+    if (id === undefined || id === null) return '';
+    const p = getPresetById(String(id));
+    return p?.name ?? '';
+});
 
 const confirmDelete = () => {
-    emit('preset-deleted', props.preset.id);
+    const id = targetId.value;
+    if (id === undefined || id === null) {
+        emit('close');
+        return;
+    }
+    const idStr = String(id);
+    emit('preset-deleted', idStr);
+    emit('deleted', idStr);
     emit('close');
 };
 </script>

@@ -13,8 +13,11 @@
             <div class="card shadow-md border border-base-300">
                 <div class="card-body">
                     <div class="flex flex-col md:flex-row md:items-center gap-6">
-                        <UserAvatar :name="displayNickname" size="lg" :show-status="false"
-                            :is-online="userProfile.status.is_online" />
+                        <UserAvatar :name="displayNickname" size="xl" :show-status="false"
+                            :is-online="userProfile.status.is_online"
+                            :is-clickable="!isOwnProfile && !!(userProfile.avatar_url)"
+                            :src="userProfile.avatar_url || null" :original-src="userProfile.avatar_url || null"
+                            @click="onAvatarClick" />
                         <div class="flex-1">
                             <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
@@ -31,6 +34,7 @@
                                     <span class="text-primary">{{ t('userProfile.playing') }}
                                         {{
                                             userProfile.status.current_client
+
                                         }}</span>
                                     <span v-if="userProfile.status.client_version" class="text-base-content/50 text-sm">
                                         ({{
@@ -42,7 +46,7 @@
                                     <div class="w-3 h-3 bg-success rounded-full"></div>
                                     <span class="text-success font-medium">{{
                                         t('userProfile.online')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                                 <div v-else-if="userProfile.status.last_seen" class="flex items-center gap-2">
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
@@ -57,11 +61,11 @@
                                     <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
                                     <span class="text-base-content/70">{{
                                         t('userProfile.offline')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
-                            <div v-if="userProfile.social_links && userProfile.social_links.length > 0"
+                            <div v-if="!globalUserStatus.isStreamer.value && userProfile.social_links && userProfile.social_links.length > 0"
                                 class="mt-2 flex items-center gap-3 flex-wrap">
                                 <template v-for="link in userProfile.social_links" :key="link.id">
                                     <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
@@ -80,7 +84,7 @@
                                     </a>
                                     <button v-else @click.stop="copySocialHandle(link)" type="button"
                                         class="group inline-flex items-center cursor-pointer"
-                                        :title="t('userProfile.copy_username') || 'Copy username'">
+                                        :title="t('userProfile.copy_username')">
                                         <DiscordIcon :size="20" class="w-5 h-5 text-primary" />
                                         <span
                                             class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap">
@@ -113,7 +117,7 @@
                                 <span class="text-base-content/70">{{ t('userProfile.username') }}:</span>
                                 <div class="flex items-center">
                                     <button @click="copyUsername" class="btn btn-ghost btn-xs"
-                                        :title="t('userProfile.copy_username') || 'Copy username'">
+                                        :title="t('userProfile.copy_username')">
                                         <Copy class="w-4 h-4" />
                                     </button>
                                     <span class="font-medium">{{ displayUsername }}</span>
@@ -215,9 +219,31 @@
                     {{ t('userProfile.back_to_friends') }}
                 </button>
             </div>
-            <div class="card mt-6">
-                <div class="card-body">
-                    <PresetGallery v-if="userProfile" :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-primary-focus">{{ t('userProfile.presets_title') }}</h2>
+                    <span class="text-sm text-base-content/60">{{ presetsCountLabel }}</span>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <template v-if="presetsLoading">
+                            <div class="flex items-center gap-2 text-base-content/70">
+                                <span class="loading loading-spinner loading-sm"></span>
+                                <span>{{ t('common.loading') }}</span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <div v-if="presets && presets.length">
+                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+                            </div>
+                            <div v-else class="text-center py-8 text-base-content/70">
+                                <p class="mb-3">{{ t('userProfile.no_presets') }}</p>
+                                <button v-if="isOwnProfile" @click="$emit('change-view', 'presets')"
+                                    class="btn btn-primary">{{ t('userProfile.create_preset') }}</button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
@@ -229,9 +255,11 @@ import { ref, onMounted, computed } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { userService, type PublicUserProfile } from '../services/userService';
+import { useFriends } from '../composables/useFriends';
 import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
 import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import FullscreenAvatarModal from '../components/modals/common/FullscreenAvatarModal.vue';
 import PresetGallery from '../components/presets/PresetGallery.vue';
 import DiscordIcon from '../components/ui/icons/DiscordIcon.vue';
 import TelegramIcon from '../components/ui/icons/TelegramIcon.vue';
@@ -252,6 +280,9 @@ import {
 import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
 import getRoleBadge from '../utils/roleBadge';
+import { formatDate } from '../utils/utils';
+import { marketplaceService } from '../services/marketplaceService';
+import { useUser } from '../composables/useUser';
 
 interface Props {
     userId?: number;
@@ -268,6 +299,21 @@ const userProfile = ref<PublicUserProfile | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const sendingRequest = ref(false);
+
+const presets = ref<any[] | null>(null);
+const presetsLoading = ref(false);
+
+const { username } = useUser();
+
+const isOwnProfile = computed(() => {
+    return !!userProfile.value && username.value && userProfile.value.username === username.value;
+});
+
+const presetsCountLabel = computed(() => {
+    if (presetsLoading.value) return t('common.loading');
+    const count = presets.value ? presets.value.length : 0;
+    return `${count} ${t('userProfile.presets')}`;
+});
 
 const displayNickname = computed(() => {
     if (!userProfile.value) return '';
@@ -312,6 +358,26 @@ const loadUserProfile = async () => {
         }
     } finally {
         loading.value = false;
+    }
+};
+
+const loadUserPresets = async () => {
+    if (!props.userId) {
+        presets.value = [];
+        return;
+    }
+
+    presetsLoading.value = true;
+    try {
+        const data = await marketplaceService.listPresets({ owner: props.userId });
+        if (Array.isArray(data)) presets.value = data;
+        else if (data && Array.isArray((data as any).results)) presets.value = (data as any).results;
+        else presets.value = [];
+    } catch (e) {
+        console.error('Failed to load user presets count:', e);
+        presets.value = [];
+    } finally {
+        presetsLoading.value = false;
     }
 };
 
@@ -383,6 +449,10 @@ const handleRespondToRequest = async (action: 'accept' | 'reject') => {
         }
 
         await userService.respondToFriendRequest(request.id, action);
+        try {
+            const { loadFriendsData } = useFriends();
+            await loadFriendsData(true);
+        } catch { }
         addToast(
             t('userProfile.friend_request_responded', { action }),
             'success'
@@ -486,18 +556,6 @@ const formatLastSeen = (lastSeen: string): string => {
     return date.toLocaleDateString();
 };
 
-const formatDate = (dateString: string): string => {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return 'Unknown';
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = String(date.getFullYear());
-        return `${day}/${month}/${year}`;
-    } catch {
-        return 'Unknown';
-    }
-};
 
 const platformLabel = (key: string) => {
     const map: Record<string, string> = {
@@ -518,7 +576,7 @@ const platformHref = (platform: string, handle: string) => {
         case 'telegram':
             return `https://t.me/${h}`;
         case 'youtube':
-            return `https://www.youtube.com/${h}`;
+            return `https://www.youtube.com/@${h}`;
         default:
             return '#';
     }
@@ -547,7 +605,7 @@ const displayHandle = (_platform: string, handle: string) => {
 const copySocialHandle = async (link: any) => {
     try {
         if (!link || !link.url) {
-            addToast(t('userProfile.copy_failed') || 'Nothing to copy', 'error');
+            addToast(t('userProfile.copy_failed'), 'error');
             return;
         }
         const raw = link.url.startsWith('@') ? link.url.substring(1) : link.url;
@@ -558,28 +616,42 @@ const copySocialHandle = async (link: any) => {
         );
     } catch (err) {
         console.error('Failed to copy social handle:', err);
-        addToast(t('userProfile.copy_failed') || 'Failed to copy', 'error');
+        addToast(t('userProfile.copy_failed'), 'error');
     }
 };
 
 const copyUsername = async () => {
     try {
         if (!userProfile.value) {
-            addToast(t('userProfile.copy_failed') || 'Nothing to copy', 'error');
+            addToast(t('userProfile.copy_failed'), 'error');
             return;
         }
         await navigator.clipboard.writeText(userProfile.value.username);
         addToast(
-            t('userProfile.copied_username', { name: userProfile.value.username }) || `${userProfile.value.username} copied`,
+            t('userProfile.copied_username', { name: userProfile.value.username }),
             'success'
         );
     } catch (err) {
         console.error('Failed to copy username:', err);
-        addToast(t('userProfile.copy_failed') || 'Failed to copy', 'error');
+        addToast(t('userProfile.copy_failed'), 'error');
     }
 };
 
-onMounted(() => {
-    loadUserProfile();
+const onAvatarClick = () => {
+    if (!userProfile.value || !userProfile.value.avatar_url) return;
+    showModal(
+        'avatar-fullscreen',
+        FullscreenAvatarModal,
+        { contentClass: 'full' },
+        { src: userProfile.value.avatar_url, alt: displayNickname.value },
+        {
+            close: () => hideModal('avatar-fullscreen'),
+        }
+    );
+};
+
+onMounted(async () => {
+    await loadUserProfile();
+    await loadUserPresets();
 });
 </script>

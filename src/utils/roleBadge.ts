@@ -1,10 +1,9 @@
 export function getRoleBadge(role: string | null | undefined, t: (key: string) => string) {
-    console.log(role);
-    
     if (!role) return null;
 
     const mapping: Record<string, { class: string; key: string }> = {
         user: { class: 'badge badge-outline', key: 'roles.user' },
+        tester: { class: 'badge badge-info', key: 'roles.tester' },
         admin: { class: 'badge badge-error', key: 'roles.admin' },
         developer: { class: 'badge badge-primary', key: 'roles.developer' },
         owner: { class: 'badge badge-error', key: 'roles.owner' },

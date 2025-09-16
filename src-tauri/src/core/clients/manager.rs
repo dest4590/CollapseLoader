@@ -3,7 +3,7 @@ use std::{fs::File, io::BufReader, sync::Mutex};
 use tauri::AppHandle;
 
 use super::client::Client;
-use crate::core::utils::utils::emit_to_main_window;
+use crate::core::utils::helpers::emit_to_main_window;
 use crate::{
     core::{
         network::api::{API, API_CACHE_DIR},
@@ -23,7 +23,7 @@ impl ClientManager {
         if let Some(api_instance) = api_option {
             let mut clients: Vec<Client> = match api_instance.json::<Vec<Client>>("clients") {
                 Ok(clients) => {
-                    log_info!("Successfully fetched {} clients from API", clients.len());
+                    log_info!("Fetched {} clients from API", clients.len());
                     clients
                 }
                 Err(e) => {
@@ -51,18 +51,36 @@ impl ClientManager {
                 }
             };
 
+            match api_instance.json::<Vec<Client>>("fabric-clients") {
+                Ok(mut fabric_clients) => {
+                    let fabric_count = fabric_clients.len();
+                    if fabric_count > 0 {
+                        log_info!("Fetched {} fabric clients from API", fabric_count);
+                        clients.append(&mut fabric_clients);
+                        clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+                    } else {
+                        log_debug!("API returned 0 fabric clients");
+                    }
+                }
+                Err(e) => {
+                    log_warn!("Failed to fetch fabric clients: {}", e);
+                }
+            }
+
             for client in &mut clients {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
                 {
-                    client.meta =
-                        super::client::Meta::new(&client.version, &client.filename.clone());
+                    client.meta = super::client::Meta::new(&client.version, &client.filename);
                 }
 
                 client.meta.size = client.size;
             }
 
-            log_debug!("ClientManager initialized with {} clients", clients.len());
+            log_debug!(
+                "ClientManager initialized with {} clients (including fabric)",
+                clients.len()
+            );
             Ok(ClientManager { clients })
         } else {
             log_warn!("API instance not available. Attempting to load clients from cache.");
@@ -92,14 +110,16 @@ impl ClientManager {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
                 {
-                    client.meta =
-                        super::client::Meta::new(&client.version, &client.filename.clone());
+                    client.meta = super::client::Meta::new(&client.version, &client.filename);
                 }
 
                 client.meta.size = client.size;
             }
 
-            log_info!("ClientManager initialized from cache with {} clients — operating offline mode", clients.len());
+            log_info!(
+                "ClientManager initialized from cache with {} clients — operating offline mode",
+                clients.len()
+            );
             Ok(ClientManager { clients })
         }
     }

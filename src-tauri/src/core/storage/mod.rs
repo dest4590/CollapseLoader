@@ -6,4 +6,3 @@ pub mod favorites;
 pub mod flags;
 pub mod presets;
 pub mod settings;
-pub mod telemetry;

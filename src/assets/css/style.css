@@ -106,6 +106,7 @@ html {
     outline: none;
 }
 
-.label {
+.label,
+.label-text {
     display: block;
 }

@@ -179,7 +179,7 @@ pub fn duplicate_preset(id: String, new_name: String) -> Result<ThemePreset, Str
 
     let existing_preset = preset_manager
         .get_preset(&id)
-        .ok_or_else(|| format!("Preset with ID '{}' not found", id))?;
+        .ok_or_else(|| format!("Preset with ID '{id}' not found"))?;
 
     let new_preset = ThemePreset {
         id: Uuid::new_v4().to_string(),

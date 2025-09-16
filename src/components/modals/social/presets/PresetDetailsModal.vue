@@ -39,11 +39,11 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                }}</button>
-                <button class="btn btn-neutral btn-sm" :disabled="liking" @click="likeFromDetails">{{
+                    }}</button>
+                <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
                     <button class="btn btn-neutral btn-sm" @click="openEdit">{{ t('common.edit') }}</button>
@@ -51,7 +51,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                    }}</button>
+                        }}</button>
                 </template>
             </div>
 
@@ -65,8 +65,10 @@
                     <div class="md:col-span-2">
                         <div v-if="displayedColors.length" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             <div v-for="c in displayedColors" :key="c" class="tooltip" :data-tip="c">
-                                <div class="h-10 rounded-box border border-base-300"
-                                    :style="{ backgroundColor: pData[c] }"></div>
+                                <div class="h-10 rounded-box border border-base-300 cursor-pointer focus:outline-none focus:ring"
+                                    :style="{ backgroundColor: pData[c] }" role="button" tabindex="0"
+                                    :aria-label="`Copy ${c} color ${pData[c]}`" @click="copyColor(c)"
+                                    @keydown.enter.prevent="copyColor(c)" @keydown.space.prevent="copyColor(c)"></div>
                                 <div class="text-xs opacity-70 mt-1 truncate">{{ c }}</div>
                             </div>
                         </div>
@@ -108,7 +110,7 @@
                                                 <div class="truncate">
                                                     <span class="font-medium mr-2">{{ c.author_username }}</span>
                                                     <span class="text-[11px] opacity-60">{{ formatDate(c.created_at)
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
@@ -156,6 +158,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatDate } from '../../../../utils/utils';
 import { marketplaceService } from '../../../../services/marketplaceService';
 import { useUser } from '../../../../composables/useUser';
 import { ChevronLeft, ChevronRight, Download, ThumbsUp } from 'lucide-vue-next';
@@ -179,7 +182,6 @@ const comments = ref<any[]>([]);
 const commentsLoading = ref(false);
 const newComment = ref('');
 const creating = ref(false);
-const liking = ref(false);
 const downloading = ref(false);
 const toggling = ref(false);
 
@@ -221,21 +223,21 @@ const displayedColors = computed(() => {
     return keys.filter(k => pd[k] !== undefined && pd[k] !== null && pd[k] !== '');
 });
 
-const formatDate = (dateString: string) => {
-    try {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-    } catch (e) {
-        console.error('Invalid date string:', dateString, e);
-        return 'N/A';
+async function copyColor(key: string) {
+    const color = pData.value?.[key];
+    if (!color) {
+        return;
     }
-};
+
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(color);
+        }
+        addToast(t('common.copied_to_clipboard', { value: color }) || color, 'success');
+    } catch (e) {
+        console.error('Copy failed', e);
+    }
+}
 
 function canDelete(c: any): boolean {
     return !!username.value && (c.author_username === username.value || (preset.value && preset.value.owner_username === username.value));
@@ -244,7 +246,8 @@ function canDelete(c: any): boolean {
 async function loadPreset() {
     loading.value = true;
     try {
-        preset.value = await marketplaceService.getPreset(props.id);
+        const data = await marketplaceService.getPreset(props.id);
+        preset.value = { liking: false, liked_by_user: data?.liked_by_user ?? false, ...data };
     } finally {
         loading.value = false;
     }
@@ -312,15 +315,23 @@ function applyFromDetails() {
 }
 
 async function likeFromDetails() {
-    if (!preset.value || liking.value) return;
-    liking.value = true;
+    if (!preset.value) return;
+    if (preset.value.liking) return;
+    preset.value.liking = true;
     try {
-        await marketplaceService.likePreset(preset.value.id);
-        preset.value.likes_count = (preset.value.likes_count || 0) + 1;
+        if (preset.value.liked_by_user) {
+            await marketplaceService.unlikePreset(preset.value.id);
+            preset.value.likes_count = Math.max(0, (preset.value.likes_count || 0) - 1);
+            preset.value.liked_by_user = false;
+        } else {
+            await marketplaceService.likePreset(preset.value.id);
+            preset.value.likes_count = (preset.value.likes_count || 0) + 1;
+            preset.value.liked_by_user = true;
+        }
     } catch (e) {
-        console.error('Failed to like preset:', e);
+        console.error('Failed to toggle like preset:', e);
     } finally {
-        liking.value = false;
+        preset.value.liking = false;
     }
 }
 

@@ -1,19 +1,21 @@
 <template>
-    <div class="card bg-base-200 shadow-sm border border-base-300">
-        <div class="card-body p-4">
-            <div class="flex items-center justify-between">
+    <div class="card bg-base-200 shadow-sm border border-base-300 h-full flex flex-col">
+        <div class="card-body p-4 flex-1 flex items-center">
+            <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
                     <div @click="$emit('viewProfile', user.id)" class="avatar-click-area">
-                        <UserAvatar :name="displayNickname" :is-clickable="true" />
+                        <UserAvatar :name="displayNickname" :is-clickable="true"
+                            :src="(props.user as any).avatar_url || null"
+                            :original-src="(props.user as any).avatar_url || null" />
                     </div>
-                    <div>
+                    <div class="min-h-[56px]">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}
                         </p>
                     </div>
                 </div>
-                <div v-if="type === 'received'" class="flex gap-2">
+                <div v-if="type === 'received'" class="flex gap-2 items-center">
                     <button @click="$emit('accept', requestId)" class="btn btn-success btn-sm">
                         <Check class="w-4 h-4" />
                     </button>
@@ -22,9 +24,6 @@
                     </button>
                 </div>
                 <div v-else-if="type === 'sent'" class="flex gap-2 items-center">
-                    <div class="badge badge-warning">
-                        {{ t('friends.pending') }}
-                    </div>
                     <button @click="confirmCancel" class="btn btn-error btn-outline btn-sm">
                         <X class="w-4 h-4" />
                         {{ t('common.cancel') }}
@@ -105,5 +104,19 @@ const confirmCancel = () => {
 
 .avatar-click-area:active {
     transform: scale(0.98);
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body>.flex {
+    flex: 1 1 auto;
 }
 </style>

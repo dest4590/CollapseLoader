@@ -29,6 +29,7 @@ import {
     MessagesSquare,
     BadgeCheck,
     FileText,
+    FolderSync,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -47,6 +48,7 @@ import {
     getCurrentLanguage,
 } from '../i18n';
 import { useI18n } from 'vue-i18n';
+import { formatDate } from '../utils/utils';
 import { useModal } from '../services/modalService';
 
 interface Setting<T> {
@@ -363,21 +365,6 @@ const setActiveAccount = async (account: Account) => {
     }
 };
 
-const formatDate = (dateString: string) => {
-    try {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-    } catch (e) {
-        console.error('Invalid date string:', dateString, e);
-        return 'N/A';
-    }
-};
 
 const getFormattedLabel = (key: string) => {
     const words = key.split('_');
@@ -392,6 +379,10 @@ const getFormattedLabel = (key: string) => {
 
     if (key === 'hash_verify') {
         return t('settings.hash_verify');
+    }
+
+    if (key === 'sync_client_settings') {
+        return t('settings.sync_client_settings');
     }
 
     if (key === 'discord_rpc_enabled') {
@@ -638,6 +629,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <MessagesSquare v-if="key === 'irc_chat'" class="w-5 h-5 text-primary" />
                                 <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
                                 <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
+                                <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
 
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')

@@ -69,7 +69,7 @@ class ApiClient {
             config.headers['Accept-Language'] = getCurrentLanguage() || 'en';
 
 
-            const requestKey = `${config.method}:${config.url}:${Date.now()}`;
+            const requestKey = `${(config.method || 'GET').toUpperCase()}:${config.url}:${this.normalizeParams(config.params)}`;
             this.requestTimings.set(requestKey, Date.now());
 
             (config as any).__timingKey = requestKey;
@@ -127,10 +127,26 @@ class ApiClient {
     }
 
     private getCacheKey(url: string, config?: AxiosRequestConfig): string {
-        const method = config?.method || 'GET';
-        const params = config?.params ? JSON.stringify(config.params) : '';
+        const method = (config?.method || 'GET').toUpperCase();
+        const params = config?.params ? this.normalizeParams(config.params) : '';
         const data = config?.data ? JSON.stringify(config.data) : '';
         return `${method}:${url}:${params}:${data}`;
+    }
+
+    private normalizeParams(params: any): string {
+        try {
+            if (!params) return '';
+            if (typeof params !== 'object') return String(params);
+            const keys = Object.keys(params).sort();
+            const normalized: any = {};
+            for (const k of keys) {
+                normalized[k] = params[k];
+            }
+            return JSON.stringify(normalized);
+        } catch (e) {
+            console.error('Failed to normalize params:', e);
+            return JSON.stringify(params);
+        }
     }
 
     private shouldCache(url: string, method: string = 'GET'): boolean {
@@ -162,40 +178,64 @@ class ApiClient {
         const cacheKey = this.getCacheKey(url, config);
         const method = 'GET';
 
+        const cached = this.cache.get(cacheKey);
+
         if (this.shouldCache(url, method)) {
-            const cached = this.cache.get(cacheKey);
             if (cached && Date.now() - cached.timestamp < cached.ttl) {
                 this.metrics.cacheHits++;
                 console.log(`Cache hit for ${url}`);
                 return cached.data;
             }
-            this.metrics.cacheMisses++;
         }
 
         if (this.pendingRequests.has(cacheKey)) {
             console.log(`Deduplicating request for ${url}`);
-            return this.pendingRequests.get(cacheKey);
+            return this.pendingRequests.get(cacheKey) as Promise<T>;
         }
 
-        const requestPromise = this.executeRequest<T>(url, { ...config, method });
+        // If we have an expired cached entry with an ETag, add conditional header
+        const requestConfig: AxiosRequestConfig = { ...(config || {}), method };
+        if (cached && cached.etag) {
+            requestConfig.headers = { ...(requestConfig.headers || {}) };
+            requestConfig.headers['If-None-Match'] = cached.etag;
+        }
 
-        this.pendingRequests.set(cacheKey, requestPromise);
+        const requestPromise = (async () => {
+            try {
+                const response = await this.executeRequest<T>(url, requestConfig);
 
-        try {
-            const result = await requestPromise;
+                // axios response handled in executeRequest now returns AxiosResponse
+                const axiosResp: any = response as any;
 
-            if (this.shouldCache(url, method)) {
-                this.cache.set(cacheKey, {
-                    data: result,
-                    timestamp: Date.now(),
-                    ttl: this.getCacheTTL(url)
-                });
+                if (axiosResp.status === 304 && cached) {
+                    // server indicates not modified
+                    cached.timestamp = Date.now();
+                    this.metrics.cacheHits++;
+                    return cached.data as T;
+                }
+
+                const result = axiosResp.data as T;
+
+                if (this.shouldCache(url, method)) {
+                    const etag = axiosResp.headers?.etag || axiosResp.headers?.ETag;
+                    this.cache.set(cacheKey, {
+                        data: result,
+                        timestamp: Date.now(),
+                        ttl: this.getCacheTTL(url),
+                        etag: etag
+                    });
+                    this.metrics.cacheMisses++;
+                }
+
+                return result;
+            } finally {
+                this.pendingRequests.delete(cacheKey);
             }
+        })();
 
-            return result;
-        } finally {
-            this.pendingRequests.delete(cacheKey);
-        }
+        this.pendingRequests.set(cacheKey, requestPromise as Promise<any>);
+
+        return requestPromise as Promise<T>;
     }
 
     async batchGet<T = any>(requests: Array<{ url: string; config?: AxiosRequestConfig }>): Promise<T[]> {
@@ -243,30 +283,34 @@ class ApiClient {
     async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
 
-        return this.executeRequest<T>(url, { ...config, method: 'POST', data });
+        const resp = await this.executeRequest<T>(url, { ...config, method: 'POST', data });
+        return resp.data as T;
     }
 
 
     async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
-        return this.executeRequest<T>(url, { ...config, method: 'PUT', data });
+        const resp = await this.executeRequest<T>(url, { ...config, method: 'PUT', data });
+        return resp.data as T;
     }
 
 
     async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
-        return this.executeRequest<T>(url, { ...config, method: 'PATCH', data });
+        const resp = await this.executeRequest<T>(url, { ...config, method: 'PATCH', data });
+        return resp.data as T;
     }
 
 
     async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
-        return this.executeRequest<T>(url, { ...config, method: 'DELETE' });
+        const resp = await this.executeRequest<T>(url, { ...config, method: 'DELETE' });
+        return resp.data as T;
     }
 
-    private async executeRequest<T>(url: string, config: AxiosRequestConfig): Promise<T> {
+    private async executeRequest<T>(url: string, config: AxiosRequestConfig): Promise<import('axios').AxiosResponse<T>> {
         const response = await this.client.request<T>({ url, ...config });
-        return response.data;
+        return response;
     }
 
     private invalidateCache(url: string) {
@@ -356,6 +400,15 @@ class ApiClient {
             console.error('Failed to preload critical data:', error);
         }
     }
+
+    async heartbeat(): Promise<{ success: boolean; timestamp: string }> {
+        return this.post('/auth/heartbeat/', {});
+    }
+
+    public invalidateProfileCaches() {
+        this.invalidateCache('/auth/profile/');
+        this.invalidateCache('/auth/init/');
+    }
 }
 
 export const apiClient = new ApiClient();
@@ -370,5 +423,7 @@ export const apiBatchGet = apiClient.batchGet.bind(apiClient);
 export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
 export const apiMetrics = apiClient.getMetrics.bind(apiClient);
 export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
+export const apiHeartbeat = apiClient.heartbeat.bind(apiClient);
+export const apiInvalidateProfile = apiClient.invalidateProfileCaches.bind(apiClient);
 
 export default apiClient;

@@ -5,7 +5,7 @@ use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use lazy_static::lazy_static;
 
 use crate::core::storage::settings::SETTINGS;
-use crate::{log_debug, log_warn};
+use crate::{log_debug, log_error, log_warn};
 
 const DISCORD_APP_ID: &str = "1225803664204234772";
 
@@ -63,7 +63,7 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         .unwrap()
         .as_secs();
 
-    let large_text = format!("Version {}", env!("CARGO_PKG_VERSION"));
+    let large_text = format!("Version {env}", env = env!("CARGO_PKG_VERSION"));
 
     let assets = activity::Assets::new()
         .large_image("https://i.imgur.com/ZpWg110.gif")
@@ -76,12 +76,12 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         .timestamps(activity::Timestamps::new().start(start_time as i64));
 
     if let Err(e) = discord_client.set_activity(activity.clone()) {
-        log_debug!("Failed to update Discord activity: {}", e);
+        log_error!("Failed to update Discord activity: {}", e);
 
         if let Err(e) = discord_client.connect() {
-            log_debug!("Failed to reconnect to Discord: {}", e);
+            log_error!("Failed to reconnect to Discord: {}", e);
         } else if let Err(e) = discord_client.set_activity(activity) {
-            log_debug!(
+            log_error!(
                 "Failed to update Discord activity after reconnection: {}",
                 e
             );
@@ -94,7 +94,7 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
 pub fn update_activity_async(details: String, state: String) {
     std::thread::spawn(move || {
         if let Err(e) = update_activity(details, state) {
-            log_debug!("Failed to update Discord activity asynchronously: {}", e);
+            log_error!("Failed to update Discord activity asynchronously: {}", e);
         }
     });
 }

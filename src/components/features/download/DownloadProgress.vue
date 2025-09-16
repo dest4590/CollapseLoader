@@ -23,16 +23,7 @@ const listeners = ref<any[]>([]);
 const activeDownloads = ref<Set<string>>(new Set());
 
 const isEssentialFile = (filename: string): boolean => {
-    const essentialFiles = [
-        'jdk-21.0.2.zip',
-        'assets.zip',
-        'natives.zip',
-        'libraries.zip',
-        'natives-1.12.zip',
-        'libraries-1.12.zip',
-    ];
-
-    return essentialFiles.includes(filename);
+    return filename.endsWith('.zip');
 };
 
 const isClientFile = (filename: string): boolean => {

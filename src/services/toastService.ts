@@ -9,7 +9,7 @@ export type ToastPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-
 
 const toastPosition = ref<ToastPosition>('bottom-right');
 
-function addToast(message: string, type: ToastType, duration: number = 5000) {
+function addToast(message: string, type: ToastType, duration: number = 5000, action?: { label: string; url: string }) {
     const now = Date.now();
     const existingToast = toasts.value.find(toast =>
         toast.message === message &&
@@ -43,6 +43,10 @@ function addToast(message: string, type: ToastType, duration: number = 5000) {
         duration,
         remainingDuration: duration,
         count: 1
+    } as ToastMessage;
+
+    if (action) {
+        toast.action = action;
     };
 
     toasts.value.push(toast);

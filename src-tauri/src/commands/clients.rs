@@ -1,11 +1,9 @@
 use core::clients::{
     client::{Client, CLIENT_LOGS},
-    clients::{initialize_client_manager, CLIENT_MANAGER},
+    manager::{initialize_client_manager, CLIENT_MANAGER},
 };
 use tauri::AppHandle;
 
-use crate::core::utils::utils::emit_to_main_window;
-use crate::core::utils::{discord_rpc, logging};
 use crate::core::{
     clients::custom_clients::{CustomClient, Version},
     network::analytics::Analytics,
@@ -15,10 +13,23 @@ use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
     storage::common::JsonStorage,
 };
+use crate::core::{
+    storage::settings::SETTINGS,
+    utils::{discord_rpc, logging},
+};
+use crate::{
+    commands::utils::get_auth_url,
+    core::{
+        clients::client::ClientType,
+        network::servers::{ServerConnectivityStatus, SERVERS},
+        utils::helpers::emit_to_main_window,
+    },
+};
 use crate::{
     core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
 };
+use std::path::MAIN_SEPARATOR;
 
 use std::path::PathBuf;
 
@@ -58,8 +69,8 @@ pub fn initialize_rpc() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_server_connectivity_status() -> core::network::servers::ServerConnectivityStatus {
-    let servers = &core::network::servers::SERVERS;
+pub fn get_server_connectivity_status() -> ServerConnectivityStatus {
+    let servers = &SERVERS;
     servers.connectivity_status.lock().unwrap().clone()
 }
 
@@ -80,8 +91,24 @@ pub async fn launch_client(
 ) -> Result<(), String> {
     let client = get_client_by_id(id)?;
 
+    let filename_for_if = if client.filename.contains("fabric/") {
+        client.filename.replace("fabric/", "")
+    } else if client.filename.contains("/fabric") {
+        client.filename.replace("/fabric", "")
+    } else {
+        client.filename.clone()
+    };
+
     let file_name = DATA.get_filename(&client.filename);
-    let jar_path = DATA.get_local(&format!("{file_name}/{}", client.filename));
+    let jar_path = match client.client_type {
+        ClientType::Default => {
+            DATA.get_local(&format!("{file_name}{MAIN_SEPARATOR}{}", client.filename))
+        }
+        ClientType::Fabric => DATA.get_local(&format!(
+            "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{}",
+            filename_for_if
+        )),
+    };
 
     if !jar_path.exists() {
         return Err(format!(
@@ -91,7 +118,7 @@ pub async fn launch_client(
     }
 
     let hash_verify_enabled = {
-        let settings = core::storage::settings::SETTINGS
+        let settings = SETTINGS
             .lock()
             .map_err(|_| "Failed to access settings".to_string())?;
         log_debug!("Hash verification setting: {}", settings.hash_verify.value);
@@ -385,7 +412,7 @@ pub async fn delete_client(id: u32) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
-    let api_url = crate::commands::utils::get_auth_url().await?;
+    let api_url = get_auth_url().await?;
     let url = format!("{api_url}api/client/{client_id}/detailed");
 
     let client = reqwest::Client::new();

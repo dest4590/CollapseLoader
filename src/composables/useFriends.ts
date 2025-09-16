@@ -144,7 +144,7 @@ export function useFriends() {
             friendsMetrics.cacheHitRate = apiClient.getCacheStats().hitRate;
 
             if (!statusUpdateInterval.current) {
-                startIntelligentStatusUpdates();
+                startStatusUpdates();
             }
 
             console.log('Friends data loaded successfully via batch endpoint');
@@ -232,12 +232,16 @@ export function useFriends() {
     };
 
 
-    const startIntelligentStatusUpdates = (): void => {
+    const startStatusUpdates = (): void => {
         if (statusUpdateInterval.current) {
             clearInterval(statusUpdateInterval.current);
         }
 
         const runStatusUpdate = async () => {
+            if (document && document.visibilityState === 'hidden') {
+                return;
+            }
+
             if (!isAuthenticated.value || globalFriendsState.friends.length === 0) {
                 return;
             }
@@ -250,7 +254,13 @@ export function useFriends() {
 
         statusUpdateInterval.current = setInterval(runStatusUpdate, statusUpdateConfig.currentInterval);
 
-        console.log(`Started intelligent status updates with ${statusUpdateConfig.currentInterval}ms interval`);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                runStatusUpdate().catch(() => { });
+            }
+        });
+
+        console.log(`Started status updates with ${statusUpdateConfig.currentInterval}ms interval`);
     };
 
 
@@ -411,7 +421,7 @@ export function useFriends() {
         if (statusUpdateInterval.current) {
             clearInterval(statusUpdateInterval.current);
             statusUpdateInterval.current = null;
-            console.log('Stopped intelligent status updates');
+            console.log('Stopped status updates');
         }
     };
 
@@ -447,7 +457,7 @@ export function useFriends() {
         getOnlineFriends,
         checkForNewRequests,
 
-        startIntelligentStatusUpdates,
+        startStatusUpdates,
         stopStatusUpdates,
 
         lastStatusUpdate: computed(() => globalFriendsState.lastStatusUpdate)

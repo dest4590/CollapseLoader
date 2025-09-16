@@ -1,20 +1,31 @@
 <template>
-    <div class="avatar placeholder avatar-clickable" :class="{ relative: showStatus, clickable: isClickable }">
-        <div class="bg-base-100 text-primary-content rounded-full flex content-center avatar-inner"
-            :class="[sizeClasses, backgroundClass]">
-            <span class="font-bold text-primary flex justify-center avatar-text" :class="textSizeClass">
+    <div class="avatar placeholder avatar-clickable"
+        :class="{ relative: showStatus, clickable: isClickable || !!resolvedSrc }" @click="handleClick">
+        <div class="bg-base-100 text-primary-content rounded-full flex content-center overflow-hidden"
+            :class="[sizeClasses, backgroundClass, { 'avatar-inner': !resolvedSrc }]">
+            <img v-if="resolvedSrc && !imageError" :src="resolvedSrc" alt="avatar" class="w-full h-full object-cover"
+                @error="onImageError" />
+            <template v-else-if="resolvedSrc && imageError">
+                <div class="w-full h-full flex items-center justify-center bg-transparent">
+                    <ImageOff class="text-base-content" width="48" height="48" />
+                </div>
+            </template>
+            <span class="font-bold text-primary flex justify-center items-center avatar-text" :class="textSizeClass"
+                v-else>
                 {{ getInitials(displayName) }}
             </span>
         </div>
 
-        <div v-if="showStatus" class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-base-200"
+        <div v-if="showStatus"
+            class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-base-200 bg-base-200"
             :class="[statusClass, { 'status-indicator': isOnline }]"></div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { globalUserStatus } from '../../composables/useUserStatus';
+import { ImageOff } from 'lucide-vue-next';
 
 interface Props {
     name: string;
@@ -23,6 +34,8 @@ interface Props {
     isOnline?: boolean;
     backgroundClass?: string;
     isClickable?: boolean;
+    src?: string | null;
+    originalSrc?: string | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,6 +44,8 @@ const props = withDefaults(defineProps<Props>(), {
     isOnline: false,
     backgroundClass: 'bg-base-100',
     isClickable: false,
+    src: null,
+    originalSrc: null,
 });
 
 const sizeClasses = computed(() => {
@@ -64,16 +79,51 @@ const textSizeClass = computed(() => {
 });
 
 const statusClass = computed(() => {
-    return props.isOnline ? 'bg-success' : 'bg-base-content/30';
+    return props.isOnline ? 'bg-success' : 'bg-base-300';
 });
 
 const displayName = computed(() => {
     return globalUserStatus.isStreamer.value ? 'Streamer' : props.name;
 });
 
+const resolvedSrc = computed(() => {
+    if (globalUserStatus.isStreamer.value) return null;
+    return props.src || props.originalSrc || null;
+});
+
+const imageError = ref(false);
+
+const onImageError = () => {
+    imageError.value = true;
+};
+
+watch(
+    () => resolvedSrc.value,
+    (newVal, oldVal) => {
+        if (newVal !== oldVal) {
+            imageError.value = false;
+        }
+    }
+);
+
+watch(
+    () => props.src,
+    (newVal, oldVal) => {
+        if (newVal !== oldVal) imageError.value = false;
+    }
+);
+
 const getInitials = (name: string): string => {
     if (!name) return '?';
     return name.charAt(0).toUpperCase();
+};
+
+const emit = defineEmits(['click']);
+
+const handleClick = () => {
+    if (props.isClickable && resolvedSrc.value) {
+        emit('click', resolvedSrc.value);
+    }
 };
 </script>
 

@@ -12,8 +12,8 @@
                     username
                 }}</span>
 
-                <button class="btn btn-xs btn-outline ml-3" :class="{ 'loading': healthLoading }"
-                    @click="loadStatusHealth()" title="Refresh status system health">
+                <button class="btn btn-xs btn-outline ml-3" :class="{ 'loading': healthLoading }" @click="openHealth()"
+                    title="Show status system health">
                     {{ $t('admin.health.refresh') }}
                 </button>
 
@@ -76,7 +76,7 @@
             </div>
         </div>
 
-        <div v-if="healthData" class="card bg-base-200 shadow-md border border-base-300 mt-6">
+        <div v-if="showHealth && healthData" class="card bg-base-200 shadow-md border border-base-300 mt-6">
             <div class="card-body p-4">
                 <div class="flex justify-between items-start">
                     <div>
@@ -89,7 +89,7 @@
                             :class="healthData.system_health?.cache_health?.status === 'healthy' ? 'badge badge-success' : 'badge badge-warning'">
                             {{ healthData.system_health?.cache_health?.status || 'unknown' }}
                         </span>
-                        <button class="btn btn-ghost btn-xs ml-2" @click="healthData = null">{{ $t('common.close')
+                        <button class="btn btn-ghost btn-xs ml-2" @click="closeHealth()">{{ $t('common.close')
                         }}</button>
                     </div>
                 </div>
@@ -195,6 +195,26 @@
                         <input v-model="searchQuery" type="text" :placeholder="$t('admin.users.searchPlaceholder')"
                             class="input input-bordered input-sm w-64" @input="debouncedSearch" />
                     </div>
+                    <div class="form-control ml-4">
+                            <select class="select select-sm" v-model.number="pagination.page_size" @change="onPageSizeChange">
+                            <option :value="20">20</option>
+                            <option :value="50">50</option>
+                            <option :value="100">100</option>
+                            <option :value="200">200</option>
+                            <option :value="500">500</option>
+                        </select>
+                    </div>
+                        <div class="form-control ml-4 flex items-center gap-2">
+                            <select class="select select-sm" v-model="sortKey" @change="() => { pagination.page = 1; loadUsers(1); }">
+                                <option value="status">{{ $t('admin.users.status') }}</option>
+                                <option value="last_seen">{{ $t('admin.users.lastSeen') }}</option>
+                                <option value="username">{{ $t('admin.users.username') }}</option>
+                            </select>
+                            <select class="select select-sm" v-model="sortOrder" @change="() => { pagination.page = 1; loadUsers(1); }">
+                                <option value="desc">Desc</option>
+                                <option value="asc">Asc</option>
+                            </select>
+                        </div>
                 </div>
 
                 <div class="overflow-x-auto" v-if="users.length > 0">
@@ -202,16 +222,35 @@
                         <thead>
                             <tr class="border-b border-base-300">
                                 <th class="text-base-content/70 font-medium">
-                                    {{ $t('admin.users.username') }}
+                                    <button class="flex items-center gap-2" @click="setSort('username')">
+                                        <span>{{ $t('admin.users.username') }}</span>
+                                        <span class="text-xs text-base-content/50">
+                                            <span v-if="sortKey === 'username'">
+                                                {{ sortOrder === 'asc' ? '▲' : '▼' }}
+                                            </span>
+                                        </span>
+                                    </button>
                                 </th>
                                 <th class="text-base-content/70 font-medium">
                                     {{ $t('admin.users.email') }}
                                 </th>
                                 <th class="text-base-content/70 font-medium">
-                                    {{ $t('admin.users.status') }}
+                                    <button class="flex items-center gap-2" @click="setSort('status')">
+                                        <span>{{ $t('admin.users.status') }}</span>
+                                        <span class="text-xs text-base-content/50">
+                                            <span v-if="sortKey === 'status'">{{ sortOrder === 'asc' ? '▲' : '▼'
+                                                }}</span>
+                                        </span>
+                                    </button>
                                 </th>
                                 <th class="text-base-content/70 font-medium">
-                                    {{ $t('admin.users.lastSeen') }}
+                                    <button class="flex items-center gap-2" @click="setSort('last_seen')">
+                                        <span>{{ $t('admin.users.lastSeen') }}</span>
+                                        <span class="text-xs text-base-content/50">
+                                            <span v-if="sortKey === 'last_seen'">{{ sortOrder === 'asc' ? '▲' : '▼'
+                                                }}</span>
+                                        </span>
+                                    </button>
                                 </th>
                                 <th class="text-base-content/70 font-medium">
                                     {{ $t('admin.users.actions') }}
@@ -222,23 +261,24 @@
                             <tr v-for="user in users" :key="user.id" class="hover transition-colors" :class="{
                                 'opacity-60': !user.is_active,
                                 'border-l-4 border-l-error': user.is_staff,
-                                'bg-success/10': user.status?.is_online,
                             }">
-                                <td class="py-4">
+                                <td class="py-2">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <span class="font-medium text-base-content">{{ user.username }}</span>
                                         <span v-if="user.profile?.nickname" class="text-base-content/70 text-sm">({{
                                             user.profile.nickname }})</span>
                                         <span v-if="user.is_staff"
                                             class="badge badge-error badge-xs font-bold">ADMIN</span>
+                                        <span v-else-if="user.profile?.role && user.profile.role !== 'user'"
+                                            class="badge badge-ghost badge-xs">{{ user.profile.role }}</span>
                                     </div>
                                 </td>
 
-                                <td class="text-base-content/70 break-all py-4">
+                                <td class="text-base-content/70 break-all py-2">
                                     {{ user.email }}
                                 </td>
 
-                                <td class="py-4">
+                                <td class="py-2">
                                     <span class="badge badge-sm" :class="{
                                         'badge-success':
                                             getUserStatusClass(user) ===
@@ -254,38 +294,70 @@
                                     </span>
                                 </td>
 
-                                <td class="text-base-content/70 text-sm py-4">
+                                <td class="text-base-content/70 text-sm py-2">
                                     {{ formatLastSeen(user) }}
                                 </td>
 
-                                <td class="py-4">
-                                    <div class="flex gap-2 flex-wrap">
-                                        <button v-if="!user.is_staff" @click="toggleUserStatus(user)"
-                                            class="btn btn-xs transition-all duration-200" :class="user.is_active
-                                                ? 'btn-error hover:scale-105'
-                                                : 'btn-success hover:scale-105'
-                                                " :disabled="actionLoading">
-                                            {{
-                                                user.is_active
-                                                    ? $t(
-                                                        'admin.actions.deactivate'
-                                                    )
-                                                    : $t(
-                                                        'admin.actions.activate'
-                                                    )
-                                            }}
-                                        </button>
+                                <td class="py-0 align-middle">
+                                    <div class="flex items-center h-12">
+                                        <div class="dropdown dropdown-end">
+                                            <label tabindex="0"
+                                                class="btn btn-ghost btn-sm rounded-md px-2 py-1 flex items-center gap-2"
+                                                :class="{ 'opacity-50': actionLoading }">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M12 6v.01M12 12v.01M12 18v.01" />
+                                                </svg>
+                                            </label>
+                                            <ul tabindex="0"
+                                                class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-44 text-sm">
+                                                <li>
+                                                    <button class="w-full text-left" @click="openEditUser(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.edit') }}
+                                                    </button>
+                                                </li>
 
-                                        <button v-if="
-                                            user.status?.is_online &&
-                                            !user.is_staff
-                                        " @click="forceLogout(user)"
-                                            class="btn btn-warning btn-xs hover:scale-105 transition-all duration-200"
-                                            :disabled="actionLoading">
-                                            {{
-                                                $t('admin.actions.forceLogout')
-                                            }}
-                                        </button>
+
+
+                                                <li>
+                                                    <button class="w-full text-left" @click="toggleUserStatus(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ user.is_active ? $t('admin.actions.deactivate') :
+                                                            $t('admin.actions.activate') }}
+                                                    </button>
+                                                </li>
+
+                                                <li v-if="user.status?.is_online && !user.is_staff">
+                                                    <button class="w-full text-left" @click="forceLogout(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.forceLogout') }}
+                                                    </button>
+                                                </li>
+
+                                                <li v-if="!user.is_staff">
+                                                    <button class="w-full text-left" @click="banUser(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.ban') }}
+                                                    </button>
+                                                </li>
+
+                                                <li v-if="user.is_staff">
+                                                    <button class="w-full text-left" @click="unbanUser(user)"
+                                                        :disabled="actionLoading">
+                                                        {{ $t('admin.actions.unban') }}
+                                                    </button>
+                                                </li>
+
+                                                <li>
+                                                    <button class="w-full text-left text-error"
+                                                        @click="deleteUser(user)" :disabled="actionLoading">
+                                                        {{ $t('admin.actions.delete') }}
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -337,6 +409,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { formatDate } from '../utils/utils';
 import {
     adminService,
     type AdminStats,
@@ -344,6 +417,9 @@ import {
     type AdminHealthResponse,
 } from '../services/adminService';
 import { useToast } from '../services/toastService';
+import { useModal } from '../services/modalService';
+import UserEditModal from '../components/admin/UserEditModal.vue';
+import ConfirmModal from '../components/common/ConfirmModal.vue';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -361,9 +437,65 @@ const loading = ref(false);
 const actionLoading = ref(false);
 const username = ref('');
 
+const sortKey = ref<'status' | 'last_seen' | 'username'>('status');
+const sortOrder = ref<'asc' | 'desc'>('desc');
+
+const setSort = (key: typeof sortKey.value) => {
+    if (sortKey.value === key) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortOrder.value = key === 'username' ? 'asc' : 'desc';
+    }
+    // ask server for ordered data (reset to first page)
+    pagination.value.page = 1;
+    void loadUsers(1);
+};
+
+const statusWeight = (user: AdminUser) => {
+    if (!user.is_active) return 0;
+    if (user.status?.is_online) return 3;
+    return 2;
+};
+
+const parseLastSeen = (user: AdminUser) => {
+    const val = user.status?.last_seen;
+    if (!val) return 0;
+    const t = Date.parse(String(val));
+    return Number.isNaN(t) ? 0 : t;
+};
+
+const sortUsers = () => {
+    users.value.sort((a, b) => {
+        if (sortKey.value === 'status') {
+            const wa = statusWeight(a);
+            const wb = statusWeight(b);
+            if (wa !== wb) return sortOrder.value === 'desc' ? wb - wa : wa - wb;
+            const la = parseLastSeen(a);
+            const lb = parseLastSeen(b);
+            if (la !== lb) return sortOrder.value === 'desc' ? lb - la : la - lb;
+            return a.username.localeCompare(b.username);
+        }
+
+        if (sortKey.value === 'last_seen') {
+            const la = parseLastSeen(a);
+            const lb = parseLastSeen(b);
+            if (la !== lb) return sortOrder.value === 'desc' ? lb - la : la - lb;
+            return a.username.localeCompare(b.username);
+        }
+
+        return sortOrder.value === 'desc'
+            ? b.username.localeCompare(a.username)
+            : a.username.localeCompare(b.username);
+    });
+};
+
 const healthData = ref<AdminHealthResponse | null>(null);
 const healthLoading = ref(false);
-const includeDetailed = ref(true);
+const includeDetailed = ref(false);
+const showHealth = ref(false);
+
+const { showModal, hideModal } = useModal();
 
 const getUserStatusClass = (user: AdminUser) => {
     if (!user.is_active) return 'inactive';
@@ -382,8 +514,12 @@ const formatLastSeen = (user: AdminUser) => {
     if (user.status?.is_online) return t('admin.status.online');
 
     if (user.status?.last_seen) {
-        const date = new Date(user.status.last_seen);
-        return date.toLocaleString();
+        try {
+            return formatDate(user.status.last_seen);
+        } catch (e) {
+            console.error('Failed to format last_seen for admin view:', e);
+            return String(user.status.last_seen);
+        }
     }
 
     return t('admin.status.never');
@@ -398,22 +534,43 @@ const loadDashboardStats = async () => {
     }
 };
 
+const computeOrdering = () => {
+    // map sortKey + sortOrder to server ordering param
+    if (sortKey.value === 'status') return 'status';
+    if (sortKey.value === 'last_seen') return (sortOrder.value === 'desc' ? '-last_seen' : 'last_seen');
+    // username
+    return sortOrder.value === 'desc' ? '-username' : 'username';
+};
+
 const loadUsers = async (page: number = 1) => {
     loading.value = true;
     try {
+        const ordering = computeOrdering();
         const response = await adminService.getUsersList(
             page,
             pagination.value.page_size,
-            searchQuery.value
+            searchQuery.value,
+            ordering
         );
         users.value = response.users;
         pagination.value = response.pagination;
+        // server-side ordering applied; keep client-side sort as fallback
+        // If server returns unsorted data for some reason, keep client-side stable sort
+        if (!['status', 'last_seen', 'username'].includes(computeOrdering().replace('-', ''))) {
+            sortUsers();
+        }
     } catch (error) {
         console.error('Failed to load users:', error);
         addToast(t('admin.errors.usersLoadFailed'), 'error');
     } finally {
         loading.value = false;
     }
+};
+
+const onPageSizeChange = () => {
+    // reset to first page when page size changes
+    pagination.value.page = 1;
+    loadUsers(1);
 };
 
 const toggleUserStatus = async (user: AdminUser) => {
@@ -448,6 +605,96 @@ const forceLogout = async (user: AdminUser) => {
     } finally {
         actionLoading.value = false;
     }
+};
+
+const banUser = async (user: AdminUser) => {
+    const onConfirm = async () => {
+        hideModal(`ban-${user.id}`);
+        actionLoading.value = true;
+        try {
+            await adminService.banUser(user.id);
+            addToast(t('admin.success.userBanned', { username: user.username }), 'success');
+            await loadUsers(pagination.value.page);
+        } catch (err: any) {
+            console.error('Failed to ban user:', err);
+            addToast(err.message || t('admin.errors.actionFailed'), 'error');
+        } finally {
+            actionLoading.value = false;
+        }
+    };
+
+    showModal(`ban-${user.id}`, ConfirmModal, { title: 'Ban user', message: `Ban ${user.username}?` }, {}, { confirm: onConfirm, cancel: () => hideModal(`ban-${user.id}`) });
+};
+
+const unbanUser = async (user: AdminUser) => {
+    actionLoading.value = true;
+    try {
+        await adminService.unbanUser(user.id);
+        addToast(t('admin.success.userUnbanned', { username: user.username }), 'success');
+        await loadUsers(pagination.value.page);
+    } catch (err: any) {
+        console.error('Failed to unban user:', err);
+        addToast(err.message || t('admin.errors.actionFailed'), 'error');
+    } finally {
+        actionLoading.value = false;
+    }
+};
+
+
+
+const openEditUser = (user: AdminUser) => {
+    const id = `edit-${user.id}`;
+    showModal(
+        id,
+        UserEditModal,
+        {
+            title: `Edit ${user.username}`,
+            email: user.email,
+            nickname: user.profile?.nickname || '',
+            is_active: user.is_active,
+            is_staff: user.is_staff,
+            role: (user.profile && (user.profile as any).role) || 'user',
+        },
+        {},
+        {
+            save: async (payload: { email: string; nickname: string; role?: string; is_active?: boolean; is_staff?: boolean }) => {
+                hideModal(id);
+                actionLoading.value = true;
+                try {
+                    await adminService.updateUser(user.id, payload as any);
+                    addToast(t('admin.success.userUpdated', { username: user.username }), 'success');
+                    await loadUsers(pagination.value.page);
+                } catch (err: any) {
+                    console.error('Failed to update user:', err);
+                    addToast(err.message || t('admin.errors.actionFailed'), 'error');
+                } finally {
+                    actionLoading.value = false;
+                }
+            },
+            cancel: () => hideModal(id),
+        }
+    );
+};
+
+const deleteUser = async (user: AdminUser) => {
+    const id = `delete-${user.id}`;
+    showModal(id, ConfirmModal, { title: 'Delete user', message: `Permanently delete ${user.username}?` }, {}, {
+        confirm: async () => {
+            hideModal(id);
+            actionLoading.value = true;
+            try {
+                await adminService.deleteUser(user.id);
+                addToast(t('admin.success.userDeleted', { username: user.username }), 'success');
+                await loadUsers(pagination.value.page);
+            } catch (err: any) {
+                console.error('Failed to delete user:', err);
+                addToast(err.message || t('admin.errors.actionFailed'), 'error');
+            } finally {
+                actionLoading.value = false;
+            }
+        },
+        cancel: () => hideModal(id),
+    });
 };
 
 const goToPage = (page: number) => {
@@ -505,11 +752,19 @@ const loadStatusHealth = async () => {
     }
 };
 
+const openHealth = async () => {
+    showHealth.value = true;
+    await loadStatusHealth();
+};
+
+const closeHealth = () => {
+    showHealth.value = false;
+};
+
 onMounted(async () => {
     const hasAccess = await checkAdminAccess();
     if (hasAccess) {
         await Promise.all([loadDashboardStats(), loadUsers()]);
-        loadStatusHealth().catch(() => { });
     }
 });
 </script>
@@ -563,5 +818,40 @@ onMounted(async () => {
 
 .transition-colors {
     transition: background-color 0.2s ease;
+}
+
+table.table tr td,
+table.table tr th {
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    height: 48px;
+}
+
+.table tbody tr td {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.table .badge-xs {
+    transform: translateY(-1px);
+}
+
+.dropdown-content.menu li button {
+    padding: 0.4rem 0.5rem;
+}
+
+.table tbody tr td .font-medium {
+    line-height: 1.1;
+}
+
+.table tbody tr td span.text-sm {
+    margin-left: 6px;
+}
+
+.btn.btn-ghost.btn-sm {
+    height: 32px;
+    min-width: 36px;
 }
 </style>

@@ -22,7 +22,6 @@ import { syncService } from './services/syncService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
-import { apiPreload } from './services/apiClient';
 import { bootLogService } from './services/bootLogService';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
@@ -150,7 +149,7 @@ const fetchNewsAndUpdateUnreadCount = async () => {
                 'Content-Type': 'application/json',
             },
         });
-        const allNews = response.data as any[];
+        const allNews = response as any[];
         let filteredNews = allNews.filter(
             (article) => article.language === currentLanguage
         );
@@ -542,8 +541,6 @@ const initializeUserData = async () => {
     if (!isAuthenticated.value || !isOnline.value) return;
 
     try {
-        await apiPreload();
-
         await loadUserData();
         console.log(`User loaded: ${displayName.value || 'Unknown'}`);
 
@@ -705,13 +702,17 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="preloader" v-if="showPreloader" class="fixed inset-0 bg-base-300 flex items-center justify-center">
+    <div id="preloader" v-if="showPreloader" role="status" aria-live="polite" :aria-label="loadingState"
+        class="fixed inset-0 bg-base-300 flex items-center justify-center">
         <BootLogs v-if="isDev" :current-progress="currentProgress / totalSteps" :loading-state="loadingState" />
 
         <div class="flex flex-col items-center justify-center h-full w-screen relative z-[10]">
             <div class="w-48 h-48 animate-pulse-subtle">
                 <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
             </div>
+
+            <span class="sr-only">{{ loadingState }}</span>
+
             <div class="loading-status mt-6">
                 <transition name="slide-fade" mode="out-in">
                     <span :key="loadingState" class="text-lg font-medium"
@@ -720,17 +721,22 @@ onUnmounted(() => {
                         }}</span>
                 </transition>
             </div>
+
             <div class="w-80 progress-container mt-4" :class="{ invert: currentTheme === 'light' }">
                 <div class="bg-base-100 rounded-full h-3 overflow-hidden shadow-inner progress-track">
-                    <div class="bg-primary h-full rounded-full transition-all duration-700 ease-out progress-fill"
+                    <div class="bg-primary h-full rounded-full transition-all duration-500 ease-out progress-fill"
                         :style="{
                             width: `${(currentProgress / totalSteps) * 100}%`,
                         }"></div>
                 </div>
-                <div class="text-center mt-4 text-sm opacity-60">
+                <div class="text-center mt-3 text-sm opacity-75">
                     {{ currentProgress }} / {{ totalSteps }}
                 </div>
             </div>
+
+            <button v-if="isDev" @click="showPreloader = false" class="btn btn-sm btn-ghost mt-6">
+                Skip intro
+            </button>
         </div>
     </div>
 
@@ -772,17 +778,19 @@ onUnmounted(() => {
     height: 100%;
     left: 0;
     top: 0;
-    background-color: rgba(0, 0, 0, 0.96);
+    background-color: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     z-index: 1337;
     transition:
-        opacity 0.5s,
-        transform 0.8s,
-        filter 0.8s,
-        background-color 1s;
+        opacity 0.4s ease,
+        transform 0.6s ease,
+        filter 0.6s ease,
+        background-color 0.6s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 #preloader.animate-out {

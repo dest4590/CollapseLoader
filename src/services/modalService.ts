@@ -3,6 +3,7 @@ import { reactive, markRaw } from 'vue';
 export interface ModalOptions {
     title?: string;
     contentClass?: string;
+    [key: string]: any;
 }
 
 export interface ModalConfig extends ModalOptions {

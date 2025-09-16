@@ -29,7 +29,7 @@ impl Logger {
         let timestamp = Local::now().format("%H:%M:%S").to_string();
 
         let short = tag
-            .rsplit(|c: char| c == '.' || c == ':' || c == '/')
+            .rsplit(|c: char| ['.', ':', '/'].contains(&c))
             .next()
             .unwrap_or(tag)
             .to_uppercase();
@@ -50,7 +50,7 @@ impl Logger {
         let shorted_tag = tag.rsplit("collapseloader_lib.").next().unwrap_or(tag);
 
         let ts_colored = timestamp.dimmed();
-        let tag_colored = format!("{}", shorted_tag).white();
+        let tag_colored = shorted_tag.white();
 
         fn emoji_for_module(tag: &str) -> Option<&'static str> {
             if tag.contains("core.network") {
@@ -67,7 +67,7 @@ impl Logger {
         }
 
         let emoji = emoji_for_module(tag)
-            .map(|e| format!(" {} |", e))
+            .map(|e| format!(" {e} |"))
             .unwrap_or_default();
 
         println!(
@@ -75,11 +75,11 @@ impl Logger {
             ts_colored,
             level_colored,
             emoji,
-            format!("{}", tag_colored).bold(),
+            tag_colored.bold(),
             message
         );
 
-        let plain = format!("{} [{}] [{}] {}", timestamp, level_name, short, message);
+        let plain = format!("{timestamp} [{level_name}] [{short}] {message}");
         const MAX_APP_LOGS: usize = 1000;
         if let Ok(mut app_logs) = APP_LOGS.lock() {
             app_logs.push_back(plain);

@@ -10,4 +10,8 @@ export interface ToastMessage {
     remainingDuration?: number;
     startTime?: number;
     count?: number;
+    action?: {
+        label: string;
+        url: string;
+    };
 }

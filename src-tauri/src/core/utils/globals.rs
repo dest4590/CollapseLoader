@@ -3,21 +3,35 @@ use std::{fs, path::PathBuf};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Cricket";
+pub static CODENAME: &str = "Fabric";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
+pub static JDK_FOLDER: &str = "jdk-21.0.2";
+
+fn parse_env_bool(var: &str) -> bool {
+    std::env::var(var)
+        .ok()
+        .map(|s| {
+            let s = s.trim().to_ascii_lowercase();
+            matches!(s.as_str(), "1" | "true" | "yes" | "on")
+        })
+        .unwrap_or(false)
+}
+
 lazy_static! {
     pub static ref LOCAL_DEVELOPMENT: bool = {
-        let val = std::env::var("DEVELOPMENT")
-            .ok()
-            .map(|s| {
-                let s = s.trim().to_ascii_lowercase();
-                matches!(s.as_str(), "1" | "true" | "yes" | "on")
-            })
-            .unwrap_or(false);
+        let val = parse_env_bool("DEVELOPMENT");
         if val {
             log_info!("Local development mode: {}", val);
+        }
+        val
+    };
+
+    pub static ref USE_LOCAL_SERVER: bool = {
+        let val = parse_env_bool("USE_LOCAL_SERVER");
+        if val {
+            log_info!("Using local server: {}", val);
         }
         val
     };
@@ -29,11 +43,12 @@ lazy_static! {
             "https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/collapse/o/",
         ),
     ];
-    pub static ref AUTH_SERVERS: Vec<Server> = vec![if *LOCAL_DEVELOPMENT {
+    pub static ref AUTH_SERVERS: Vec<Server> = vec![if *USE_LOCAL_SERVER {
         Server::new("http://localhost:8000/")
     } else {
         Server::new("https://auth.collapseloader.org/")
     },  Server::new("https://collapse.ttfdk.lol/auth/")];
+
     pub static ref ROOT_DIR: String = {
         let roaming_dir = std::env::var("APPDATA").unwrap_or_else(|_| {
             // fallback for non-windows systems (aka linux/mac)
