@@ -100,7 +100,6 @@ jobs:
                   PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
                   PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
               with:
-                  createRelease: false
                   includeUpdaterJson: true
                   updaterJsonKeepUniversal: true
 
