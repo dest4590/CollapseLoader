@@ -445,7 +445,6 @@ const openAvatarModal = () => {
             uploaded: async () => {
                 try {
                     await useUser().refreshUserData();
-                    addToast(t('account.avatar_upload_success'), 'success');
                 } catch {
                     addToast(t('account.avatar_upload_refresh_failed'), 'warning');
                 }

@@ -269,7 +269,6 @@
     "avatar_drop": "Drop or click to upload avatar",
     "change_avatar": "Change avatar",
     "upload_avatar": "Upload avatar",
-    "avatar_upload_success": "Avatar uploaded successfully!",
     "avatar_upload_refresh_failed": "Avatar uploaded but failed to refresh. Restart app if needed.",
     "avatar_type_error": "Unsupported file type",
     "avatar_size_error": "File is too large (max 5MB)",
