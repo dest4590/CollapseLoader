@@ -211,6 +211,20 @@ class UserService {
         }
     }
 
+    async resetAvatar(): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+        try {
+            const resp = await apiClient.post('/auth/profile/avatar/reset/');
+            const profile = (resp as any).profile as UserProfile;
+            if (profile) {
+                this.setCachedData({ profile });
+            }
+            return { success: true, profile };
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.error || 'Failed to reset avatar';
+            return { success: false, error: errorMessage };
+        }
+    }
+
     async syncDataToCloud(data: SyncData): Promise<{ success: boolean; error?: string }> {
         try {
             await apiClient.post('/auth/sync/', data);

@@ -121,8 +121,8 @@ const getInitials = (name: string): string => {
 const emit = defineEmits(['click']);
 
 const handleClick = () => {
-    if (props.isClickable && resolvedSrc.value) {
-        emit('click', resolvedSrc.value);
+    if (props.isClickable) {
+        emit('click', resolvedSrc.value || null);
     }
 };
 </script>
