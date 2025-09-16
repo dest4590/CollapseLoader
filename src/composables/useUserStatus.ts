@@ -338,7 +338,7 @@ export function useUserStatus() {
             console.log(`Started heartbeat with ${heartbeatConfig.interval}ms interval`);
         }
 
-        console.log(`Started intelligent polling with ${pollingConfig.currentInterval}ms interval`);
+        console.log(`Started polling with ${pollingConfig.currentInterval}ms interval`);
     };
 
     const startStatusSync = () => {

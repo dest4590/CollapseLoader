@@ -75,7 +75,7 @@ import { useToast } from '../../services/toastService';
 import { useModal } from '../../services/modalService';
 import MarketplaceEditPresetModal from '../modals/social/presets/MarketplaceEditPresetModal.vue';
 import PresetDetailsModal from '../modals/social/presets/PresetDetailsModal.vue';
-import MarketplaceDeleteConfirmModal from '../modals/social/presets/DeletePresetConfirmModal.vue';
+import MarketplaceDeleteConfirmModal from '../modals/social/presets/MarketplaceDeleteConfirmModal.vue';
 import { Download, ThumbsUp } from 'lucide-vue-next';
 
 export default defineComponent({

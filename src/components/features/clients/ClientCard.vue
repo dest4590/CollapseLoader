@@ -29,9 +29,9 @@ const { showModal, hideModal } = useModal();
 
 const props = defineProps<{
     client: Client;
-    isClientRunning: (id: number) => boolean;
-    isClientInstalling: (client: Client) => boolean;
-    installationStatus: Map<string, InstallProgress>;
+    isClientRunning?: boolean;
+    isClientInstalling?: boolean;
+    installationStatus?: InstallProgress | undefined;
     isRequirementsInProgress: boolean;
     isAnyClientDownloading?: boolean;
     isFavorite?: boolean;
@@ -136,9 +136,9 @@ const showInsecureWarning = () => {
     );
 };
 
-const clientIsRunning = computed(() => props.isClientRunning(props.client.id));
-const clientIsInstalling = computed(() => props.isClientInstalling(props.client));
-const currentInstallStatus = computed(() => props.installationStatus.get(props.client.filename));
+const clientIsRunning = computed(() => !!props.isClientRunning);
+const clientIsInstalling = computed(() => !!props.isClientInstalling);
+const currentInstallStatus = computed(() => props.installationStatus);
 
 
 const expandCard = async () => {
@@ -713,10 +713,10 @@ onBeforeUnmount(() => {
                                 <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                 <span v-if="client.working">{{
                                     t('home.download')
-                                    }}</span>
+                                }}</span>
                                 <span v-else-if="!client.working">{{
                                     t('home.unavailable')
-                                    }}</span>
+                                }}</span>
                             </span>
                             <span class="flex items-center get-text absolute inset-0 opacity-0">
                                 {{ client.meta.size || '0' }} MB

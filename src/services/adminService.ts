@@ -29,6 +29,7 @@ export interface AdminUser {
     profile: {
         nickname: string | null;
         created_at: string | null;
+        role?: string | null;
     };
     status: {
         is_online: boolean;
@@ -56,7 +57,6 @@ export interface AdminStatusResponse {
 export interface AdminHealthResponse {
     system_health: any;
     timestamp: string;
-    // only on detailed
     analytics?: any;
     recent_status_changes?: any;
 }
@@ -87,7 +87,7 @@ class AdminService {
         return response?.data ?? response;
     }
 
-    async getUsersList(page: number = 1, pageSize: number = 20, search: string = ''): Promise<AdminUsersResponse> {
+    async getUsersList(page: number = 1, pageSize: number = 200, search: string = '', ordering?: string): Promise<AdminUsersResponse> {
         const params = new URLSearchParams({
             page: page.toString(),
             page_size: pageSize.toString(),
@@ -95,6 +95,9 @@ class AdminService {
 
         if (search.trim()) {
             params.append('search', search);
+        }
+        if (ordering && ordering.trim()) {
+            params.append('ordering', ordering.trim());
         }
 
         const response = await apiGet(`/auth/admin/users/?${params}`, {

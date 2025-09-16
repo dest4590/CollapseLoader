@@ -24,9 +24,6 @@
                     </button>
                 </div>
                 <div v-else-if="type === 'sent'" class="flex gap-2 items-center">
-                    <div class="badge badge-warning">
-                        {{ t('friends.pending') }}
-                    </div>
                     <button @click="confirmCancel" class="btn btn-error btn-outline btn-sm">
                         <X class="w-4 h-4" />
                         {{ t('common.cancel') }}
@@ -109,7 +106,17 @@ const confirmCancel = () => {
     transform: scale(0.98);
 }
 
-.card { display: flex; flex-direction: column; }
-.card-body { display: flex; flex-direction: column; }
-.card-body > .flex { flex: 1 1 auto; }
+.card {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-body>.flex {
+    flex: 1 1 auto;
+}
 </style>

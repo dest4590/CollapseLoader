@@ -19,8 +19,8 @@ use crate::{
     core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,
 };
-use semver::Version;
 use chrono::{DateTime, Utc};
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::Semaphore;
@@ -311,11 +311,11 @@ impl Client {
             requirements_to_check.push("libraries_fabric.zip".to_string());
         }
 
-        let mut fabric_main_jar: Option<String> = None;
+        let mut client_jar: Option<String> = None;
         if self.client_type == ClientType::Fabric {
             let sanitized_version = self.version.replace(' ', "_");
             let fabric_name = format!("fabric_{}.jar", sanitized_version);
-            fabric_main_jar = Some(fabric_name);
+            client_jar = Some(fabric_name);
         }
 
         let files_to_download: Vec<String> = requirements_to_check
@@ -326,7 +326,7 @@ impl Client {
 
         let mut need_download = !files_to_download.is_empty();
 
-        if let Some(ref fabric_jar) = fabric_main_jar {
+        if let Some(ref fabric_jar) = client_jar {
             let dest_path = DATA.root_dir.join("libraries_fabric").join(fabric_jar);
             if !dest_path.exists() {
                 need_download = true;
@@ -377,19 +377,26 @@ impl Client {
             log_info!("Successfully downloaded {}", file_to_dl);
         }
 
-        if let Some(fabric_jar) = fabric_main_jar {
-            let dest_path = DATA.root_dir.join("libraries_fabric").join(&fabric_jar);
+        if let Some(client_jar) = client_jar {
+            let dest_path = DATA.root_dir.join("minecraft_versions").join(&client_jar);
             if !dest_path.exists() {
-                log_info!("Downloading Fabric main jar: {}", fabric_jar);
-                DATA.download_to_folder(&fabric_jar, "libraries_fabric")
+                log_info!("Downloading minecraft client jar: {}", client_jar);
+                DATA.download_to_folder(&client_jar, "minecraft_versions")
                     .await
                     .map_err(|e| {
-                        log_error!("Failed to download fabric main jar {}: {}", fabric_jar, e);
-                        format!("Failed to download fabric main jar {fabric_jar}: {e}")
+                        log_error!(
+                            "Failed to download minecraft client jar {}: {}",
+                            client_jar,
+                            e
+                        );
+                        format!("Failed to download minecraft client jar {client_jar}: {e}")
                     })?;
-                log_info!("Successfully downloaded Fabric jar {}", fabric_jar);
+                log_info!(
+                    "Successfully downloaded minecraft client jar {}",
+                    client_jar
+                );
             } else {
-                log_info!("Fabric main jar {} already present", fabric_jar);
+                log_info!("Minecraft client jar {} already present", client_jar);
             }
         }
 
@@ -537,12 +544,17 @@ impl Client {
             };
 
             let agent_overlay_folder = DATA.root_dir.join("agent_overlay");
+            let minecraft_client_folder = DATA.root_dir.join("minecraft_versions");
 
             let sep = if cfg!(windows) { ";" } else { ":" };
 
             let classpath = if self_clone.client_type == ClientType::Fabric {
                 format!(
-                    "{}{}*{}{}",
+                    "{}{}{}{}*{}{}",
+                    minecraft_client_folder
+                        .join(format!("fabric_{}.jar", self.version))
+                        .display(),
+                    sep,
                     libraries_path.display(),
                     std::path::MAIN_SEPARATOR,
                     sep,

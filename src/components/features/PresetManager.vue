@@ -295,7 +295,7 @@ const openDeleteModal = (preset: ThemePreset) => {
         {
             title: 'Delete Preset',
         },
-        { preset },
+        { preset, id: preset.id },
         {
             'preset-deleted': handleDeletePreset,
         }

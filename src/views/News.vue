@@ -263,9 +263,7 @@ watch(() => getCurrentLanguage(), (newLang) => {
 });
 
 onMounted(() => {
-    fetchNews().then(() => {
-        markAllNewsAsRead();
-    });
+    fetchNews();
 });
 </script>
 

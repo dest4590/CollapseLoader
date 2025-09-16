@@ -7,10 +7,10 @@
             <div class="flex items-center gap-3">
                 <span class="badge badge-error badge-sm font-bold uppercase">{{
                     $t('admin.role')
-                    }}</span>
+                }}</span>
                 <span class="text-base-content/70 font-medium">{{
                     username
-                    }}</span>
+                }}</span>
 
                 <button class="btn btn-xs btn-outline ml-3" :class="{ 'loading': healthLoading }" @click="openHealth()"
                     title="Show status system health">
@@ -90,7 +90,7 @@
                             {{ healthData.system_health?.cache_health?.status || 'unknown' }}
                         </span>
                         <button class="btn btn-ghost btn-xs ml-2" @click="closeHealth()">{{ $t('common.close')
-                            }}</button>
+                        }}</button>
                     </div>
                 </div>
 
@@ -98,7 +98,7 @@
                     <div class="p-3 bg-base-100 rounded">
                         <div class="text-sm text-base-content/70">Online users</div>
                         <div class="text-2xl font-bold">{{ healthData.system_health?.cache_health?.online_users ?? '-'
-                            }}</div>
+                        }}</div>
                         <div class="text-xs text-base-content/60 mt-1">{{ $t('admin.health.responseTime') }} {{
                             healthData.system_health?.cache_health?.response_time_ms ?? '-' }}</div>
                     </div>
@@ -195,6 +195,26 @@
                         <input v-model="searchQuery" type="text" :placeholder="$t('admin.users.searchPlaceholder')"
                             class="input input-bordered input-sm w-64" @input="debouncedSearch" />
                     </div>
+                    <div class="form-control ml-4">
+                            <select class="select select-sm" v-model.number="pagination.page_size" @change="onPageSizeChange">
+                            <option :value="20">20</option>
+                            <option :value="50">50</option>
+                            <option :value="100">100</option>
+                            <option :value="200">200</option>
+                            <option :value="500">500</option>
+                        </select>
+                    </div>
+                        <div class="form-control ml-4 flex items-center gap-2">
+                            <select class="select select-sm" v-model="sortKey" @change="() => { pagination.page = 1; loadUsers(1); }">
+                                <option value="status">{{ $t('admin.users.status') }}</option>
+                                <option value="last_seen">{{ $t('admin.users.lastSeen') }}</option>
+                                <option value="username">{{ $t('admin.users.username') }}</option>
+                            </select>
+                            <select class="select select-sm" v-model="sortOrder" @change="() => { pagination.page = 1; loadUsers(1); }">
+                                <option value="desc">Desc</option>
+                                <option value="asc">Asc</option>
+                            </select>
+                        </div>
                 </div>
 
                 <div class="overflow-x-auto" v-if="users.length > 0">
@@ -202,16 +222,35 @@
                         <thead>
                             <tr class="border-b border-base-300">
                                 <th class="text-base-content/70 font-medium">
-                                    {{ $t('admin.users.username') }}
+                                    <button class="flex items-center gap-2" @click="setSort('username')">
+                                        <span>{{ $t('admin.users.username') }}</span>
+                                        <span class="text-xs text-base-content/50">
+                                            <span v-if="sortKey === 'username'">
+                                                {{ sortOrder === 'asc' ? '▲' : '▼' }}
+                                            </span>
+                                        </span>
+                                    </button>
                                 </th>
                                 <th class="text-base-content/70 font-medium">
                                     {{ $t('admin.users.email') }}
                                 </th>
                                 <th class="text-base-content/70 font-medium">
-                                    {{ $t('admin.users.status') }}
+                                    <button class="flex items-center gap-2" @click="setSort('status')">
+                                        <span>{{ $t('admin.users.status') }}</span>
+                                        <span class="text-xs text-base-content/50">
+                                            <span v-if="sortKey === 'status'">{{ sortOrder === 'asc' ? '▲' : '▼'
+                                                }}</span>
+                                        </span>
+                                    </button>
                                 </th>
                                 <th class="text-base-content/70 font-medium">
-                                    {{ $t('admin.users.lastSeen') }}
+                                    <button class="flex items-center gap-2" @click="setSort('last_seen')">
+                                        <span>{{ $t('admin.users.lastSeen') }}</span>
+                                        <span class="text-xs text-base-content/50">
+                                            <span v-if="sortKey === 'last_seen'">{{ sortOrder === 'asc' ? '▲' : '▼'
+                                                }}</span>
+                                        </span>
+                                    </button>
                                 </th>
                                 <th class="text-base-content/70 font-medium">
                                     {{ $t('admin.users.actions') }}
@@ -222,7 +261,6 @@
                             <tr v-for="user in users" :key="user.id" class="hover transition-colors" :class="{
                                 'opacity-60': !user.is_active,
                                 'border-l-4 border-l-error': user.is_staff,
-                                'bg-success/10': user.status?.is_online,
                             }">
                                 <td class="py-2">
                                     <div class="flex items-center gap-2 flex-wrap">
@@ -231,6 +269,8 @@
                                             user.profile.nickname }})</span>
                                         <span v-if="user.is_staff"
                                             class="badge badge-error badge-xs font-bold">ADMIN</span>
+                                        <span v-else-if="user.profile?.role && user.profile.role !== 'user'"
+                                            class="badge badge-ghost badge-xs">{{ user.profile.role }}</span>
                                     </div>
                                 </td>
 
@@ -397,6 +437,59 @@ const loading = ref(false);
 const actionLoading = ref(false);
 const username = ref('');
 
+const sortKey = ref<'status' | 'last_seen' | 'username'>('status');
+const sortOrder = ref<'asc' | 'desc'>('desc');
+
+const setSort = (key: typeof sortKey.value) => {
+    if (sortKey.value === key) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortKey.value = key;
+        sortOrder.value = key === 'username' ? 'asc' : 'desc';
+    }
+    // ask server for ordered data (reset to first page)
+    pagination.value.page = 1;
+    void loadUsers(1);
+};
+
+const statusWeight = (user: AdminUser) => {
+    if (!user.is_active) return 0;
+    if (user.status?.is_online) return 3;
+    return 2;
+};
+
+const parseLastSeen = (user: AdminUser) => {
+    const val = user.status?.last_seen;
+    if (!val) return 0;
+    const t = Date.parse(String(val));
+    return Number.isNaN(t) ? 0 : t;
+};
+
+const sortUsers = () => {
+    users.value.sort((a, b) => {
+        if (sortKey.value === 'status') {
+            const wa = statusWeight(a);
+            const wb = statusWeight(b);
+            if (wa !== wb) return sortOrder.value === 'desc' ? wb - wa : wa - wb;
+            const la = parseLastSeen(a);
+            const lb = parseLastSeen(b);
+            if (la !== lb) return sortOrder.value === 'desc' ? lb - la : la - lb;
+            return a.username.localeCompare(b.username);
+        }
+
+        if (sortKey.value === 'last_seen') {
+            const la = parseLastSeen(a);
+            const lb = parseLastSeen(b);
+            if (la !== lb) return sortOrder.value === 'desc' ? lb - la : la - lb;
+            return a.username.localeCompare(b.username);
+        }
+
+        return sortOrder.value === 'desc'
+            ? b.username.localeCompare(a.username)
+            : a.username.localeCompare(b.username);
+    });
+};
+
 const healthData = ref<AdminHealthResponse | null>(null);
 const healthLoading = ref(false);
 const includeDetailed = ref(false);
@@ -441,22 +534,43 @@ const loadDashboardStats = async () => {
     }
 };
 
+const computeOrdering = () => {
+    // map sortKey + sortOrder to server ordering param
+    if (sortKey.value === 'status') return 'status';
+    if (sortKey.value === 'last_seen') return (sortOrder.value === 'desc' ? '-last_seen' : 'last_seen');
+    // username
+    return sortOrder.value === 'desc' ? '-username' : 'username';
+};
+
 const loadUsers = async (page: number = 1) => {
     loading.value = true;
     try {
+        const ordering = computeOrdering();
         const response = await adminService.getUsersList(
             page,
             pagination.value.page_size,
-            searchQuery.value
+            searchQuery.value,
+            ordering
         );
         users.value = response.users;
         pagination.value = response.pagination;
+        // server-side ordering applied; keep client-side sort as fallback
+        // If server returns unsorted data for some reason, keep client-side stable sort
+        if (!['status', 'last_seen', 'username'].includes(computeOrdering().replace('-', ''))) {
+            sortUsers();
+        }
     } catch (error) {
         console.error('Failed to load users:', error);
         addToast(t('admin.errors.usersLoadFailed'), 'error');
     } finally {
         loading.value = false;
     }
+};
+
+const onPageSizeChange = () => {
+    // reset to first page when page size changes
+    pagination.value.page = 1;
+    loadUsers(1);
 };
 
 const toggleUserStatus = async (user: AdminUser) => {
@@ -640,7 +754,6 @@ const loadStatusHealth = async () => {
 
 const openHealth = async () => {
     showHealth.value = true;
-    // load health data when panel is opened
     await loadStatusHealth();
 };
 
@@ -652,7 +765,6 @@ onMounted(async () => {
     const hasAccess = await checkAdminAccess();
     if (hasAccess) {
         await Promise.all([loadDashboardStats(), loadUsers()]);
-        // don't auto-load health; user can open it via the Health button
     }
 });
 </script>
@@ -708,7 +820,6 @@ onMounted(async () => {
     transition: background-color 0.2s ease;
 }
 
-/* Compact table row styles */
 table.table tr td,
 table.table tr th {
     vertical-align: middle;
@@ -716,12 +827,10 @@ table.table tr th {
 
 .table tbody tr {
     height: 48px;
-    /* fixed row height */
 }
 
 .table tbody tr td {
     padding-top: 0.25rem;
-    /* reduce vertical padding */
     padding-bottom: 0.25rem;
 }
 

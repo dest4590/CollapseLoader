@@ -278,6 +278,7 @@
   },
   "roles": {
     "user": "User",
+    "tester": "Tester",
     "admin": "Admin",
     "developer": "Developer",
     "owner": "Owner"
@@ -317,7 +318,8 @@
     "details": "Details",
     "send": "Send",
     "copied_to_clipboard": "Color {color} copied to clipboard",
-    "done": "Done"
+    "done": "Done",
+    "desc": "Desc"
   },
   "auth": {
     "logout": {
@@ -425,7 +427,22 @@
     "requirements": "requirements",
     "stop_selected": "Stop selected clients",
     "stopping_multiple": "Stopping {count} clients",
-    "multiple_clients_stopped": "{count} clients stopped successfully"
+    "multiple_clients_stopped": "{count} clients stopped successfully",
+    "filters_title": "Filters",
+    "sort": {
+      "popularity": "Popularity",
+      "name": "Name",
+      "newest": "Newest",
+      "version": "Version",
+      "order": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      }
+    },
+    "filters": {
+      "installed": "Installed",
+      "new": "New"
+    }
   },
   "theme": {
     "actions": {

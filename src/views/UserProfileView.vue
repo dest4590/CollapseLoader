@@ -14,8 +14,10 @@
                 <div class="card-body">
                     <div class="flex flex-col md:flex-row md:items-center gap-6">
                         <UserAvatar :name="displayNickname" size="xl" :show-status="false"
-                            :is-online="userProfile.status.is_online" :is-clickable="true"
-                            :src="userProfile.avatar_url || null" :original-src="userProfile.avatar_url || null" />
+                            :is-online="userProfile.status.is_online"
+                            :is-clickable="!isOwnProfile && !!(userProfile.avatar_url)"
+                            :src="userProfile.avatar_url || null" :original-src="userProfile.avatar_url || null"
+                            @click="onAvatarClick" />
                         <div class="flex-1">
                             <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
@@ -32,6 +34,7 @@
                                     <span class="text-primary">{{ t('userProfile.playing') }}
                                         {{
                                             userProfile.status.current_client
+
                                         }}</span>
                                     <span v-if="userProfile.status.client_version" class="text-base-content/50 text-sm">
                                         ({{
@@ -256,6 +259,7 @@ import { useFriends } from '../composables/useFriends';
 import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
 import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import FullscreenAvatarModal from '../components/modals/common/FullscreenAvatarModal.vue';
 import PresetGallery from '../components/presets/PresetGallery.vue';
 import DiscordIcon from '../components/ui/icons/DiscordIcon.vue';
 import TelegramIcon from '../components/ui/icons/TelegramIcon.vue';
@@ -631,6 +635,19 @@ const copyUsername = async () => {
         console.error('Failed to copy username:', err);
         addToast(t('userProfile.copy_failed'), 'error');
     }
+};
+
+const onAvatarClick = () => {
+    if (!userProfile.value || !userProfile.value.avatar_url) return;
+    showModal(
+        'avatar-fullscreen',
+        FullscreenAvatarModal,
+        { contentClass: 'full' },
+        { src: userProfile.value.avatar_url, alt: displayNickname.value },
+        {
+            close: () => hideModal('avatar-fullscreen'),
+        }
+    );
 };
 
 onMounted(async () => {

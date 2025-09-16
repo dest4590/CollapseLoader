@@ -47,7 +47,7 @@
 
             <button @click="showAddFriendModal" class="btn btn-primary btn-sm flex items-center gap-2">
                 <UserPlus class="w-4 h-4" />
-                <span class="hidden sm:inline">{{ t('friends.addFriend') }}</span>
+                {{ t('friends.addFriend') }}
             </button>
         </div>
     </div>
@@ -69,10 +69,7 @@
             </div>
 
             <div v-if="friendRequests.sent.length > 0" class="requests-panel">
-                <div class="panel-header flex items-center justify-between mb-2">
-                    <h3 class="text-md font-medium text-warning">{{ t('friends.sentRequests') }}</h3>
-                    <span class="text-sm text-base-content/60">{{ friendRequests.sent.length }}</span>
-                </div>
+                <h3 class="text-md font-medium text-warning mb-2">{{ t('friends.sentRequests') }}</h3>
                 <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
                     <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
                         :user="{ ...request.addressee, status: { ...request.addressee.status, username: request.addressee.username } }"

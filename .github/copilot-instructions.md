@@ -14,7 +14,7 @@ Purpose: GUI (Vue 3 + Tauri 2) launcher for secure Minecraft clients. Paired Dja
 1. Tauri starts, invokes Rust command `get_auth_url` -> `initializeAuthUrl()` stores base auth URL (`src/config.ts`).
 2. i18n loads saved language via Tauri `get_settings` (`src/i18n/index.ts`).
 3. Critical data preloading may call `/auth/init/` and `/auth/friends/batch/` (see `apiClient.preloadCriticalData`).
-4. Friends subsystem sets up intelligent status polling (`useFriends.ts`).
+4. Friends subsystem sets up status polling (`useFriends.ts`).
 
 ### API Layer Pattern (`src/services/apiClient.ts`)
 

@@ -10,7 +10,7 @@
                             :src="(friend as any).avatar_url || null"
                             :original-src="(friend as any).avatar_url || null" />
                     </div>
-                    <div class="flex-1 min-h-[56px]" :class="{ 'flex': friend.status.is_online }">
+                    <div class="flex-1 min-h-[56px]">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}
@@ -26,9 +26,8 @@
                         </div>
 
                         <div v-else-if="friend.status.is_online" class="flex items-center gap-2 mt-1">
-                            <span class="text-xs text-success">{{
-                                t('userProfile.online')
-                            }}</span>
+                            <span class="w-2 h-2 rounded-full bg-success inline-block" aria-hidden="true"></span>
+                            <span class="text-xs text-success">{{ t('userProfile.online') }}</span>
                         </div>
 
                         <div v-else-if="friend.status.last_seen" class="flex items-center gap-2 mt-1">

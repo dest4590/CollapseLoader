@@ -275,6 +275,7 @@
   },
   "roles": {
     "user": "Пользователь",
+    "tester": "Тестер",
     "admin": "Админ",
     "developer": "Разработчик",
     "owner": "Владелец"
@@ -347,7 +348,8 @@
     "details": "Подробности",
     "send": "Отправить",
     "copied_to_clipboard": "Цвет {color} скопирован в буфер обмена",
-    "done": "Готово"
+    "done": "Готово",
+    "desc": "Desc"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -422,7 +424,22 @@
     "requirements": "нужных файлов",
     "stop_selected": "Остановить выбранные клиенты",
     "stopping_multiple": "Останавливаем {count} клиентов",
-    "multiple_clients_stopped": "{count} клиентов остановлено"
+    "multiple_clients_stopped": "{count} клиентов остановлено",
+    "filters_title": "Фильтры",
+    "sort": {
+      "popularity": "Популярность",
+      "name": "Название",
+      "newest": "Новые",
+      "version": "Версия",
+      "order": {
+        "asc": "По возрастанию",
+        "desc": "По убыванию"
+      }
+    },
+    "filters": {
+      "installed": "Установленные",
+      "new": "Новые"
+    }
   },
   "theme": {
     "actions": {
@@ -811,7 +828,11 @@
     "friend_request_not_found": "Запрос в друзья не найден",
     "user_blocked_success": "{name} заблокирован",
     "user_block_failed": "Не удалось заблокировать пользователя",
-    "social_links": "Социальные ссылки"
+    "social_links": "Социальные ссылки",
+    "no_presets": "Этот пользователь еще не делился никакими пресетами.",
+    "create_preset": "Создать пресет",
+    "presets_title": "Пресеты",
+    "presets": "пресетов"
   },
   "sync": {
     "last_sync": "Последняя синхронизация",
