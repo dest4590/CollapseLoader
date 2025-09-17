@@ -712,6 +712,9 @@ impl DataManager {
             "assets_fabric.zip".to_string(),
             "libraries_fabric".to_string(),
             "libraries_fabric.zip".to_string(),
+            "natives_fabric".to_string(),
+            "natives_fabric.zip".to_string(),
+            "minecraft_versions".to_string(),
         ];
 
         for requirement in requirements.iter() {
