@@ -176,15 +176,6 @@ impl DataManager {
                     );
                     return Err(format!("Failed to create mods directory: {e}"));
                 }
-                if SETTINGS
-                    .lock()
-                    .map(|s| s.sync_client_settings.value)
-                    .unwrap_or(false)
-                {
-                    if let Err(e) = self.ensure_client_synced(&file_name) {
-                        log_warn!("Failed to ensure client sync for {}: {}", file_name, e);
-                    }
-                }
             } else {
                 let local_path = self.get_as_folder(file).to_path_buf();
                 if let Err(e) = fs::create_dir_all(&local_path) {
