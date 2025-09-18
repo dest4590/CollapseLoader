@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import AvatarUploader from '../../../../components/features/profile/AvatarUploader.vue';
+import AvatarUploader from '../../../../components/features/friends/AvatarUploader.vue';
 import { userService } from '../../../../services/userService';
 import { useToast } from '../../../../services/toastService';
 
