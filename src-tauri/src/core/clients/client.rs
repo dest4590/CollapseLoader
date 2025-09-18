@@ -10,11 +10,12 @@ use std::{
 use std::os::windows::process::CommandExt;
 
 use super::manager::CLIENT_MANAGER;
-use crate::core::clients::log_checker::LogChecker;
 use crate::core::network::analytics::Analytics;
 use crate::core::storage::accounts::ACCOUNT_MANAGER;
+use crate::core::utils::globals::FILE_EXTENSION;
 use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
 use crate::core::{clients::internal::agent_overlay::AgentArguments, utils::globals::JDK_FOLDER};
+use crate::core::{clients::log_checker::LogChecker, utils::globals::IS_LINUX};
 use crate::{
     core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,
@@ -213,7 +214,11 @@ impl Client {
     }
 
     pub fn get_running_clients() -> Vec<Client> {
-        let jps_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("jps.exe");
+        let jps_path = DATA
+            .root_dir
+            .join(JDK_FOLDER)
+            .join("bin")
+            .join("jps".to_owned() + FILE_EXTENSION);
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
@@ -242,7 +247,11 @@ impl Client {
     }
 
     pub fn stop(&self) -> Result<(), String> {
-        let jps_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("jps.exe");
+        let jps_path = DATA
+            .root_dir
+            .join(JDK_FOLDER)
+            .join("bin")
+            .join("jps".to_owned() + FILE_EXTENSION);
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
@@ -299,10 +308,18 @@ impl Client {
 
         if self.client_type == ClientType::Default {
             if self.meta.is_new {
-                requirements_to_check.push("natives.zip".to_string());
+                requirements_to_check.push(if !IS_LINUX {
+                    "natives.zip".to_string()
+                } else {
+                    "natives-linux.zip".to_string()
+                });
                 requirements_to_check.push("libraries.zip".to_string());
             } else {
-                requirements_to_check.push("natives-1.12.zip".to_string());
+                requirements_to_check.push(if !IS_LINUX {
+                    "natives-1.12.zip".to_string()
+                } else {
+                    "natives-linux.zip".to_string()
+                });
                 requirements_to_check.push("libraries-1.12.zip".to_string());
             }
         }
@@ -374,6 +391,30 @@ impl Client {
                 log_error!("Failed to download {}: {}", file_to_dl, e);
                 format!("Failed to download {file_to_dl}: {e}")
             })?;
+
+            if IS_LINUX && file_to_dl.starts_with(&format!("{JDK_FOLDER}"))
+                || file_to_dl == format!("{JDK_FOLDER}.zip")
+            {
+                let java_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("java");
+                if java_path.exists() {
+                    if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            perms.set_mode(0o755);
+                            if let Err(e) = std::fs::set_permissions(&java_path, perms) {
+                                log_error!(
+                                    "Failed to set executable permission on {}: {}",
+                                    java_path.display(),
+                                    e
+                                );
+                            } else {
+                                log_info!("Set executable permission on {}", java_path.display());
+                            }
+                        }
+                    }
+                }
+            }
             log_info!("Successfully downloaded {}", file_to_dl);
         }
 
@@ -509,7 +550,8 @@ impl Client {
         let handle = std::thread::spawn(move || -> Result<(), String> {
             let (natives_path, libraries_path) = if self_clone.meta.is_new {
                 (
-                    DATA.root_dir.join("natives"),
+                    DATA.root_dir
+                        .join("natives".to_owned() + if IS_LINUX { "-linux" } else { "" }),
                     if self_clone.client_type == ClientType::Fabric {
                         DATA.root_dir.join("libraries_fabric")
                     } else {
@@ -518,7 +560,8 @@ impl Client {
                 )
             } else {
                 (
-                    DATA.root_dir.join("natives-1.12"),
+                    DATA.root_dir
+                        .join("natives".to_owned() + if IS_LINUX { "-linux" } else { "-1.12" }),
                     DATA.root_dir.join("libraries-1.12"),
                 )
             };
@@ -546,7 +589,7 @@ impl Client {
             let agent_overlay_folder = DATA.root_dir.join("agent_overlay");
             let minecraft_client_folder = DATA.root_dir.join("minecraft_versions");
 
-            let sep = if cfg!(windows) { ";" } else { ":" };
+            let sep = if IS_LINUX { ":" } else { ";" };
 
             let classpath = if self_clone.client_type == ClientType::Fabric {
                 format!(
@@ -576,7 +619,7 @@ impl Client {
                 .root_dir
                 .join(JDK_FOLDER)
                 .join("bin")
-                .join(if cfg!(windows) { "java.exe" } else { "java" });
+                .join("java".to_owned() + FILE_EXTENSION);
 
             let mut command = Command::new(java_executable);
 
@@ -603,19 +646,23 @@ impl Client {
 
             let ram_mb = SETTINGS.lock().map(|s| s.ram.value).unwrap_or(3072);
 
-            command
-                .arg("-Xverify:none")
-                .arg(format!(
+            command.arg("-Xverify:none");
+
+            if !IS_LINUX {
+                command.arg(format!(
                     "-javaagent:{}={}",
                     agent_overlay_folder.join("CollapseAgent.jar").display(),
-                    agent_arguments.encrypt()
-                ))
-                .arg(format!("-Xmx{ram_mb}M"));
+                    agent_arguments.encode()
+                ));
+            }
+
+            command.arg(format!("-Xmx{ram_mb}M"));
 
             if self_clone.client_type != ClientType::Fabric {
                 command.arg(format!(
-                    "-Djava.library.path={};{}",
+                    "-Djava.library.path={}{}{}",
                     natives_path.display(),
+                    sep,
                     agent_overlay_folder.display()
                 ));
             } else if self_clone.client_type == ClientType::Fabric {

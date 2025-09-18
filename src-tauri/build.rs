@@ -73,7 +73,7 @@ fn main() -> io::Result<()> {
         })
         .unwrap_or_else(|_| {
             std::fs::read_to_string("../.env")
-                .map_err(|e| println!("cargo:warning=Failed to read .env file: {e}"))
+                .map_err(|_| {})
                 .ok()
                 .and_then(|s| {
                     s.lines()

@@ -37,7 +37,7 @@ impl AgentArguments {
             ircchat,
         }
     }
-    pub fn encrypt(&self) -> String {
+    pub fn encode(&self) -> String {
         let json = serde_json::to_string(self).unwrap_or_else(|e| {
             log_error!("Failed to serialize AgentArguments: {}", e);
             "{}".to_string()

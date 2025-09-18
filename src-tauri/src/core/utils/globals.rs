@@ -7,7 +7,10 @@ pub static CODENAME: &str = "Fabric";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
-pub static JDK_FOLDER: &str = "jdk-21.0.2";
+pub static IS_LINUX: bool = cfg!(target_os = "linux");
+pub static FILE_EXTENSION: &str = if IS_LINUX { "" } else { ".exe" };
+
+pub static JDK_FOLDER: &str = if IS_LINUX { "jdk-21.0.2_linux" } else { "jdk-21.0.2" };
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var)

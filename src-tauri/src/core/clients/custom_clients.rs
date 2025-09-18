@@ -1,7 +1,7 @@
 use crate::core::{
     clients::client::{Client, ClientType, Meta},
     storage::{custom_clients::CUSTOM_CLIENT_MANAGER, data::DATA},
-    utils::globals::JDK_FOLDER,
+    utils::globals::{FILE_EXTENSION, JDK_FOLDER},
 };
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -123,7 +123,11 @@ impl CustomClient {
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
 
-        let jps_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("jps.exe");
+        let jps_path = DATA
+            .root_dir
+            .join(JDK_FOLDER)
+            .join("bin")
+            .join("jps".to_owned() + FILE_EXTENSION);
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
@@ -158,7 +162,11 @@ impl CustomClient {
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
 
-        let jps_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("jps.exe");
+        let jps_path = DATA
+            .root_dir
+            .join(JDK_FOLDER)
+            .join("bin")
+            .join("jps".to_owned() + FILE_EXTENSION);
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
