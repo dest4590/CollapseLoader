@@ -397,8 +397,8 @@ impl Client {
             {
                 let java_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("java");
                 if java_path.exists() {
-                    if let Ok(mut _perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
-                        #[cfg(unix)]
+                    #[cfg(unix)]
+                    if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
                         {
                             use std::os::unix::fs::PermissionsExt;
                             perms.set_mode(0o755);
