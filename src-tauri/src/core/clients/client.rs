@@ -397,7 +397,7 @@ impl Client {
             {
                 let java_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("java");
                 if java_path.exists() {
-                    if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
+                    if let Ok(mut _perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
                         #[cfg(unix)]
                         {
                             use std::os::unix::fs::PermissionsExt;
@@ -666,8 +666,15 @@ impl Client {
                     agent_overlay_folder.display()
                 ));
             } else if self_clone.client_type == ClientType::Fabric {
+                let fabric_natives_path = if IS_LINUX {
+                    DATA.root_dir.join("natives-linux").display().to_string()
+                } else {
+                    "".to_string()
+                };
+
                 command.arg(format!(
-                    "-Djava.library.path={}",
+                    "-Djava.library.path={}{}",
+                    fabric_natives_path,
                     agent_overlay_folder.display()
                 ));
             }
