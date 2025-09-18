@@ -666,15 +666,8 @@ impl Client {
                     agent_overlay_folder.display()
                 ));
             } else if self_clone.client_type == ClientType::Fabric {
-                let fabric_natives_path = if IS_LINUX {
-                    DATA.root_dir.join("natives-linux").display().to_string()
-                } else {
-                    "".to_string()
-                };
-
                 command.arg(format!(
-                    "-Djava.library.path={}{}",
-                    fabric_natives_path,
+                    "-Djava.library.path={}",
                     agent_overlay_folder.display()
                 ));
             }
