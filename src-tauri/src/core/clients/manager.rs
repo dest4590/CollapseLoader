@@ -86,11 +86,8 @@ impl ClientManager {
                 client.meta.size = client.size;
             }
 
-            log_debug!(
-                "ClientManager initialized with {} clients (including fabric)",
-                clients.len()
-            );
-            log_info!("ClientManager initialization complete");
+            log_debug!("ClientManager initialized with {} clients", clients.len());
+
             Ok(ClientManager { clients })
         } else {
             log_warn!("API instance not available. Attempting to load clients from cache.");
