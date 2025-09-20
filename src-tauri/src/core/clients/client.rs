@@ -160,25 +160,44 @@ impl LaunchOptions {
 
 impl Client {
     pub async fn download(&self) -> Result<(), String> {
+        log_debug!(
+            "Starting download for client '{}' filename='{}'",
+            self.name,
+            self.filename
+        );
         match DATA.download(&self.filename).await {
             Ok(()) => {
-                log_info!("Successfully downloaded: {}", self.name);
+                log_info!("Successfully downloaded client '{}'", self.name);
                 if let Ok(mut manager) = CLIENT_MANAGER.lock() {
                     if let Some(manager) = manager.as_mut() {
                         if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
                             client.meta.installed = true;
                             client.meta.size = self.size;
+                            log_debug!(
+                                "Updated manager: marked '{}' installed, size={}",
+                                self.name,
+                                self.size
+                            );
                         }
                     }
                 }
                 Ok(())
             }
             Err(e) => {
-                log_error!("Failed to download client {}: {}", self.name, e);
+                log_error!(
+                    "Failed to download client '{}' filename='{}' : {}",
+                    self.name,
+                    self.filename,
+                    e
+                );
                 if let Ok(mut manager) = CLIENT_MANAGER.lock() {
                     if let Some(manager) = manager.as_mut() {
                         if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
                             client.meta.installed = false;
+                            log_debug!(
+                                "Updated manager: marked '{}' not installed after failure",
+                                self.name
+                            );
                         }
                     }
                 }
@@ -188,24 +207,38 @@ impl Client {
     }
 
     pub fn remove_installation(&self) -> Result<(), String> {
-        let file_name = DATA.get_filename(&self.filename);
-        let jar_path = format!(
-            "{}{}{}",
-            file_name,
-            std::path::MAIN_SEPARATOR,
-            self.filename
+        let client_folder = DATA.get_as_folder(&self.filename);
+        log_debug!(
+            "Removing installation for client '{}' at {}",
+            self.name,
+            client_folder.display()
         );
-        let jar_file = DATA.get_local(&jar_path);
 
-        if jar_file.exists() {
-            std::fs::remove_file(&jar_file)
-                .map_err(|e| format!("Failed to remove client JAR file: {e}"))?;
+        if client_folder.exists() {
+            std::fs::remove_dir_all(&client_folder).map_err(|e| {
+                log_error!(
+                    "Failed to remove client folder '{}' : {}",
+                    client_folder.display(),
+                    e
+                );
+                format!("Failed to remove client folder: {e}")
+            })?;
+            log_info!("Removed installation folder for '{}'", self.name);
+        } else {
+            log_debug!(
+                "No installation folder found for '{}', skipping removal",
+                self.name
+            );
         }
 
         if let Ok(mut manager) = CLIENT_MANAGER.lock() {
             if let Some(manager) = manager.as_mut() {
                 if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
                     client.meta.installed = false;
+                    log_debug!(
+                        "Updated manager: marked '{}' not installed after removal",
+                        self.name
+                    );
                 }
             }
         }
@@ -270,18 +303,36 @@ impl Client {
             if line.contains(&self.filename) {
                 process_found = true;
                 let pid = line.split_whitespace().next().unwrap_or_default();
-
                 let mut kill_command = Command::new("taskkill");
 
                 #[cfg(windows)]
                 kill_command.creation_flags(0x08000000);
 
-                kill_command
+                let kill_output = kill_command
                     .arg("/PID")
                     .arg(pid)
                     .arg("/F")
                     .output()
-                    .map_err(|e| format!("Failed to kill process: {e}"))?;
+                    .map_err(|e| {
+                        log_error!(
+                            "Failed to kill process {} for client '{}': {}",
+                            pid,
+                            self.name,
+                            e
+                        );
+                        format!("Failed to kill process: {e}")
+                    })?;
+
+                if !kill_output.status.success() {
+                    log_error!(
+                        "taskkill returned non-zero for PID {}: stdout='{}' stderr='{}'",
+                        pid,
+                        String::from_utf8_lossy(&kill_output.stdout),
+                        String::from_utf8_lossy(&kill_output.stderr)
+                    );
+                } else {
+                    log_info!("Successfully killed PID {} for client '{}'", pid, self.name);
+                }
             }
         }
 
@@ -293,10 +344,13 @@ impl Client {
     }
 
     pub async fn download_requirements(&self, app_handle: &AppHandle) -> Result<(), String> {
-        let _permit = REQUIREMENTS_SEMAPHORE
-            .acquire()
-            .await
-            .map_err(|_| "Failed to acquire requirements download semaphore".to_string())?;
+        let _permit = REQUIREMENTS_SEMAPHORE.acquire().await.map_err(|_| {
+            log_error!(
+                "Failed to acquire requirements download semaphore for '{}'",
+                self.name
+            );
+            "Failed to acquire requirements download semaphore".to_string()
+        })?;
 
         let mut requirements_to_check = vec![format!("{JDK_FOLDER}.zip")];
 
@@ -342,9 +396,14 @@ impl Client {
             .collect();
 
         let mut need_download = !files_to_download.is_empty();
+        log_debug!(
+            "Files missing check for '{}': missing_count={}",
+            self.name,
+            files_to_download.len()
+        );
 
         if let Some(ref fabric_jar) = client_jar {
-            let dest_path = DATA.root_dir.join("libraries_fabric").join(fabric_jar);
+            let dest_path = DATA.root_dir.join("minecraft_versions").join(fabric_jar);
             if !dest_path.exists() {
                 need_download = true;
             }
@@ -371,12 +430,18 @@ impl Client {
         }
 
         if !need_download {
+            log_info!(
+                "All requirements present for '{}', skipping downloads",
+                self.name
+            );
             return Ok(());
         }
 
-        log_info!("Need to download requirements: {:?}", files_to_download);
-
-        emit_to_main_window(app_handle, "requirements-status", true);
+        log_info!(
+            "Requirements missing for '{}' -> will download: {:?}",
+            self.name,
+            files_to_download
+        );
 
         {
             let mut downloading = REQUIREMENTS_DOWNLOADING
@@ -385,10 +450,21 @@ impl Client {
             *downloading = true;
         }
 
+        emit_to_main_window(app_handle, "requirements-status", true);
+
         for file_to_dl in files_to_download {
-            log_info!("Downloading requirement: {}", file_to_dl);
+            log_info!(
+                "Downloading requirement '{}' for client '{}'",
+                file_to_dl,
+                self.name
+            );
             DATA.download(&file_to_dl).await.map_err(|e| {
-                log_error!("Failed to download {}: {}", file_to_dl, e);
+                log_error!(
+                    "Failed to download '{}' for client '{}': {}",
+                    file_to_dl,
+                    self.name,
+                    e
+                );
                 format!("Failed to download {file_to_dl}: {e}")
             })?;
 
@@ -415,29 +491,43 @@ impl Client {
                     }
                 }
             }
-            log_info!("Successfully downloaded {}", file_to_dl);
+            log_info!(
+                "Successfully downloaded '{}' for '{}'",
+                file_to_dl,
+                self.name
+            );
         }
 
         if let Some(client_jar) = client_jar {
             let dest_path = DATA.root_dir.join("minecraft_versions").join(&client_jar);
             if !dest_path.exists() {
-                log_info!("Downloading minecraft client jar: {}", client_jar);
+                log_info!(
+                    "Downloading minecraft client jar '{}' for '{}'",
+                    client_jar,
+                    self.name
+                );
                 DATA.download_to_folder(&client_jar, "minecraft_versions")
                     .await
                     .map_err(|e| {
                         log_error!(
-                            "Failed to download minecraft client jar {}: {}",
+                            "Failed to download minecraft client jar '{}' for '{}': {}",
                             client_jar,
+                            self.name,
                             e
                         );
                         format!("Failed to download minecraft client jar {client_jar}: {e}")
                     })?;
                 log_info!(
-                    "Successfully downloaded minecraft client jar {}",
-                    client_jar
+                    "Successfully downloaded minecraft client jar '{}' for '{}'",
+                    client_jar,
+                    self.name
                 );
             } else {
-                log_info!("Minecraft client jar {} already present", client_jar);
+                log_debug!(
+                    "Minecraft client jar '{}' already exists for '{}'",
+                    client_jar,
+                    self.name
+                );
             }
         }
 
@@ -460,30 +550,27 @@ impl Client {
                         .join("mods")
                         .join(format!("{}.jar", mod_basename));
 
-                    if dest_path.exists() {
-                        log_info!("Requirement mod {} already present", dest_path.display());
-                        continue;
-                    }
-
-                    log_info!(
-                        "Downloading Fabric requirement mod from CDN: {}",
-                        filename_on_cdn
-                    );
-                    if let Err(e) = DATA
-                        .download_to_folder(&filename_on_cdn, &dest_folder)
-                        .await
-                    {
-                        log_error!(
-                            "Failed to download fabric requirement mod {}: {}",
-                            filename_on_cdn,
-                            e
+                    if !dest_path.exists() {
+                        log_info!(
+                            "Downloading Fabric requirement mod from CDN: {}",
+                            filename_on_cdn
                         );
-                        return Err(format!(
-                            "Failed to download fabric requirement mod {}: {}",
-                            filename_on_cdn, e
-                        ));
+                        if let Err(e) = DATA
+                            .download_to_folder(&filename_on_cdn, &dest_folder)
+                            .await
+                        {
+                            log_error!(
+                                "Failed to download fabric requirement mod {}: {}",
+                                filename_on_cdn,
+                                e
+                            );
+                            return Err(format!(
+                                "Failed to download fabric requirement mod {}: {}",
+                                filename_on_cdn, e
+                            ));
+                        }
+                        log_info!("Successfully downloaded mod {}", filename_on_cdn);
                     }
-                    log_info!("Successfully downloaded mod {}", filename_on_cdn);
                 }
             }
         }
@@ -532,8 +619,12 @@ impl Client {
 
         agent_arguments.log_info();
 
+        log_debug!(
+            "Preparing to download requirements for client '{}'",
+            self.name
+        );
         if let Err(e) = self.download_requirements(&app_handle_clone_for_run).await {
-            log_info!("Error downloading requirements: {}", e);
+            log_info!("Error downloading requirements for '{}' : {}", self.name, e);
             emit_to_main_window_filtered(
                 &app_handle_clone_for_crash_handling,
                 "client-crashed",
@@ -546,6 +637,7 @@ impl Client {
             return Err(e);
         }
 
+        log_debug!("Spawning thread to run client '{}'", self.name);
         let self_clone = self.clone();
         let handle = std::thread::spawn(move || -> Result<(), String> {
             let (natives_path, libraries_path) = if self_clone.meta.is_new {
@@ -622,6 +714,10 @@ impl Client {
                 .join("java".to_owned() + FILE_EXTENSION);
 
             let mut command = Command::new(java_executable);
+            log_debug!(
+                "Prepared java command for '{}' (will spawn shortly)",
+                self_clone.name
+            );
 
             #[cfg(windows)]
             command.creation_flags(0x08000000);
