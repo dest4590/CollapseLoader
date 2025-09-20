@@ -24,7 +24,12 @@ lazy_static! {
 impl DataManager {
     pub fn new(root_dir: PathBuf) -> Self {
         if !root_dir.exists() {
+            log_debug!(
+                "Root data directory does not exist, creating: {}",
+                root_dir.display()
+            );
             fs::create_dir_all(&root_dir).expect("Failed to create root directory");
+            log_info!("Created root data directory: {}", root_dir.display());
         }
 
         Self { root_dir }
@@ -48,6 +53,7 @@ impl DataManager {
                 unzip_path.display()
             );
         } else {
+            log_debug!("Creating unzip directory: {}", unzip_path.display());
             fs::create_dir_all(&unzip_path).map_err(|e| e.to_string())?;
         }
 
@@ -175,12 +181,16 @@ impl DataManager {
                         e
                     );
                     return Err(format!("Failed to create mods directory: {e}"));
+                } else {
+                    log_debug!("Created fabric mods directory: {}", mods_dir.display());
                 }
             } else {
                 let local_path = self.get_as_folder(file).to_path_buf();
                 if let Err(e) = fs::create_dir_all(&local_path) {
                     log_error!("Failed to create directory {}: {}", local_path.display(), e);
                     return Err(format!("Failed to create directory: {e}"));
+                } else {
+                    log_debug!("Created client local directory: {}", local_path.display());
                 }
                 if SETTINGS
                     .lock()
@@ -572,7 +582,6 @@ impl DataManager {
             let settings = SETTINGS
                 .lock()
                 .map_err(|_| "Failed to access settings".to_string())?;
-            log_debug!("Hash verification setting: {}", settings.hash_verify.value);
             settings.hash_verify.value
         };
 

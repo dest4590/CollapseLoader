@@ -11,7 +11,7 @@
             </button>
             <button @click="$emit('close')" class="btn btn-outline">
                 <x-icon class="w-4 h-4 mr-2" />
-                Cancel
+                {{ $t('common.cancel') }}
             </button>
         </div>
     </div>
@@ -21,6 +21,7 @@
 import { computed } from 'vue';
 import { Shield, ShieldOff, X as XIcon } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
+import { globalUserStatus } from '../../../../composables/useUserStatus';
 
 interface User {
     id: number;
@@ -41,11 +42,11 @@ const displayName = computed(() => props.user.nickname || props.user.username);
 const confirmationMessage = computed(() => {
     if (props.action === 'block') {
         return t('modals.block_unblock_confirm.block_message', {
-            displayName: displayName.value,
+            displayName: globalUserStatus.isStreamer.value ? '??' : displayName.value,
         });
     } else {
         return t('modals.block_unblock_confirm.unblock_message', {
-            displayName: displayName.value,
+            displayName: globalUserStatus.isStreamer.value ? '??' : displayName.value,
         });
     }
 });

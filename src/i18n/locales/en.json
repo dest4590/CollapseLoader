@@ -823,7 +823,8 @@
     "presets_title": "Presets",
     "presets": "presets",
     "no_presets": "This user hasn't shared any presets yet.",
-    "create_preset": "Create Preset"
+    "create_preset": "Create Preset",
+    "presets_hidden_streamer": "Presets are hidden due to streamer mode"
   },
   "sync": {
     "last_sync": "Last sync",

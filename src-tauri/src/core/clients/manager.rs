@@ -18,9 +18,11 @@ pub struct ClientManager {
 
 impl ClientManager {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        log_debug!("ClientManager::new() starting initialization");
         let api_option = API.as_ref();
 
         if let Some(api_instance) = api_option {
+            log_debug!("API instance available — fetching clients from API");
             let mut clients: Vec<Client> = match api_instance.json::<Vec<Client>>("clients") {
                 Ok(clients) => {
                     log_info!("Fetched {} clients from API", clients.len());
@@ -56,8 +58,14 @@ impl ClientManager {
                     let fabric_count = fabric_clients.len();
                     if fabric_count > 0 {
                         log_info!("Fetched {} fabric clients from API", fabric_count);
+                        let before = clients.len();
                         clients.append(&mut fabric_clients);
                         clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+                        log_debug!(
+                            "Appended fabric clients: before={} after={}",
+                            before,
+                            clients.len()
+                        );
                     } else {
                         log_debug!("API returned 0 fabric clients");
                     }
@@ -67,6 +75,7 @@ impl ClientManager {
                 }
             }
 
+            log_debug!("Normalizing client metadata for {} clients", clients.len());
             for client in &mut clients {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
@@ -81,10 +90,15 @@ impl ClientManager {
                 "ClientManager initialized with {} clients (including fabric)",
                 clients.len()
             );
+            log_info!("ClientManager initialization complete");
             Ok(ClientManager { clients })
         } else {
             log_warn!("API instance not available. Attempting to load clients from cache.");
             let clients_cache_path = DATA.root_dir.join(API_CACHE_DIR).join("clients.json");
+            log_debug!(
+                "Looking for cached clients at {}",
+                clients_cache_path.display()
+            );
 
             let mut clients: Vec<Client> = if clients_cache_path.exists() {
                 let file = File::open(clients_cache_path)?;
@@ -134,6 +148,7 @@ impl ClientManager {
     }
 
     pub fn update_status_on_client_exit(&self, app_handle: &AppHandle) -> Result<(), String> {
+        log_debug!("Updating user status on client exit to 'online' and clearing currentClient");
         emit_to_main_window(
             app_handle,
             "update-user-status",
@@ -154,20 +169,24 @@ lazy_static! {
 pub async fn initialize_client_manager() -> Result<(), String> {
     match ClientManager::new_async().await {
         Ok(manager) => {
+            log_info!("ClientManager async initialization succeeded — setting global manager");
             if let Ok(mut client_manager) = CLIENT_MANAGER.lock() {
                 *client_manager = Some(manager);
                 Ok(())
             } else {
+                log_error!("Failed to acquire lock on CLIENT_MANAGER during initialization");
                 Err("Failed to acquire lock on CLIENT_MANAGER".to_string())
             }
         }
         Err(e) => {
             log_error!("Failed to initialize ClientManager: {}", e);
+            log_warn!("Falling back to empty ClientManager instance");
 
             if let Ok(mut client_manager) = CLIENT_MANAGER.lock() {
                 *client_manager = Some(ClientManager {
                     clients: Vec::new(),
                 });
+                log_debug!("CLIENT_MANAGER set to empty instance after failure");
             }
             Err(format!("Failed to initialize ClientManager: {e}"))
         }
