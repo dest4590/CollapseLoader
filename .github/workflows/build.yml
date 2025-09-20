@@ -164,13 +164,20 @@ jobs:
                       artifacts-windows/*-setup.exe
                       artifacts-windows/*.exe
 
-            - name: Extract and Print URL of VirusTotal Scan (Windows only)
+            - name: Extract and Print URL(s) of VirusTotal Scan (Windows only)
               if: matrix.platform == 'windows-latest' && github.event.repository.fork == false && steps.virustotal.outputs.analysis != ''
               shell: bash
               run: |
                   ANALYSIS="${{ steps.virustotal.outputs.analysis }}"
-                  URL=$(echo $ANALYSIS | cut -d '=' -f 2-)
-                  echo "VIRUSTOTAL_URL=$URL" >> $GITHUB_ENV
+                  # Extract any VirusTotal GUI URLs from the analysis output; handles comma-separated entries
+                  urls=$(echo "$ANALYSIS" | tr ',' '\n' | grep -oE 'https?://[^[:space:]]*virustotal[^[:space:]]*' | sed 's/[[:space:]]*$//' | uniq)
+                  if [ -n "$urls" ]; then
+                    printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
+                    printf 'VIRUSTOTAL_LINE<<EOF\nVirusTotal scan:\n%s\nEOF\n' "$(echo "$urls" | sed 's/^/- /')" >> $GITHUB_ENV
+                  else
+                    echo "VIRUSTOTAL_URL=" >> $GITHUB_ENV
+                    echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
+                  fi
 
             - name: Write VirusTotal URL into artifacts (Windows only)
               if: matrix.platform == 'windows-latest' && env.VIRUSTOTAL_URL != ''
@@ -223,10 +230,18 @@ jobs:
               run: |
                   file=$(find release-artifacts -type f -name 'virustotal-url.txt' | head -n1 || true)
                   if [ -n "$file" ] && [ -f "$file" ]; then
-                    url=$(cat "$file" | tr -d '\r\n')
-                    echo "VIRUSTOTAL_URL=$url" >> $GITHUB_ENV
-                    echo "VIRUSTOTAL_LINE=VirusTotal scan: $url" >> $GITHUB_ENV
-                    echo "url=$url" >> $GITHUB_OUTPUT
+                    # Read all lines and create a bullet list
+                    urls=$(sed 's/\r$//' "$file" | sed '/^[[:space:]]*$/d')
+                    if [ -n "$urls" ]; then
+                      # prefix each line with '- ' for bullets
+                      bullets=$(echo "$urls" | sed 's/^/- /')
+                      printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
+                      printf 'VIRUSTOTAL_LINE<<EOF\nVirusTotal scan:\n%s\nEOF\n' "$bullets" >> $GITHUB_ENV
+                      echo "url=$urls" >> $GITHUB_OUTPUT
+                    else
+                      echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
+                      echo "url=" >> $GITHUB_OUTPUT
+                    fi
                   else
                     echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
                     echo "url=" >> $GITHUB_OUTPUT
