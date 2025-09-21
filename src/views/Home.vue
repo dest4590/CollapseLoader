@@ -193,6 +193,59 @@ const requirementsInProgress = ref<boolean>(false);
 const warnedInsecureClients = ref<Set<number>>(new Set());
 const hashVerifyingClients = ref<Set<number>>(new Set());
 
+const progressTargets = ref<Map<string, number>>(new Map());
+const progressAnimHandles = ref<Map<string, number>>(new Map());
+
+const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
+
+const smoothUpdateProgress = (file: string, targetPercentage: number, action: string) => {
+    const current = installationStatus.value.get(file)?.percentage ?? 0;
+    const safeTarget = Math.max(current, Math.min(100, Math.floor(targetPercentage)));
+
+    progressTargets.value.set(file, safeTarget);
+
+    if (progressAnimHandles.value.has(file)) return;
+
+    const startTime = performance.now();
+    const startValue = current;
+
+    const step = (now: number) => {
+        const target = progressTargets.value.get(file) ?? safeTarget;
+        const elapsed = now - startTime;
+        const duration = Math.max(120, (target - startValue) * 5);
+        const t = Math.min(1, elapsed / duration);
+        const eased = easeOutQuad(t);
+        const value = Math.floor(startValue + (target - startValue) * eased);
+
+        installationStatus.value.set(file, {
+            percentage: Math.min(100, value),
+            action,
+            isComplete: false,
+        });
+
+        if (value >= target && target >= 100) {
+            progressAnimHandles.value.delete(file);
+            return;
+        }
+
+        if (value >= target) {
+            progressAnimHandles.value.delete(file);
+            window.setTimeout(() => {
+                if ((progressTargets.value.get(file) ?? target) > value) {
+                    smoothUpdateProgress(file, progressTargets.value.get(file) ?? target, action);
+                }
+            }, 10);
+            return;
+        }
+
+        const handle = window.requestAnimationFrame(step);
+        progressAnimHandles.value.set(file, handle);
+    };
+
+    const handle = window.requestAnimationFrame(step);
+    progressAnimHandles.value.set(file, handle);
+};
+
 const contextMenu = ref({
     visible: false,
     x: 0,
@@ -846,11 +899,7 @@ const setupEventListeners = async () => {
     eventListeners.value.push(
         await listen('download-progress', (event: any) => {
             const data = event.payload as { file: string; percentage: number };
-            installationStatus.value.set(data.file, {
-                percentage: data.percentage,
-                action: t('installation.downloading'),
-                isComplete: false,
-            });
+            smoothUpdateProgress(data.file, data.percentage, t('installation.downloading'));
             updateClientInstallStatus(data.file);
         })
     );
@@ -858,6 +907,12 @@ const setupEventListeners = async () => {
     eventListeners.value.push(
         await listen('download-complete', (event: any) => {
             const filename = event.payload as string;
+            const handle = progressAnimHandles.value.get(filename);
+            if (handle != null) {
+                window.cancelAnimationFrame(handle);
+                progressAnimHandles.value.delete(filename);
+            }
+            progressTargets.value.delete(filename);
             installationStatus.value.set(filename, {
                 percentage: 100,
                 action: t('installation.download_complete'),
@@ -888,11 +943,7 @@ const setupEventListeners = async () => {
                 percentage: number;
                 action: string;
             };
-            installationStatus.value.set(data.file, {
-                percentage: data.percentage,
-                action: t('installation.extracting'),
-                isComplete: false,
-            });
+            smoothUpdateProgress(data.file, data.percentage, t('installation.extracting'));
             updateClientInstallStatus(data.file);
         })
     );
@@ -900,6 +951,12 @@ const setupEventListeners = async () => {
     eventListeners.value.push(
         await listen('unzip-complete', (event: any) => {
             const filename = event.payload as string;
+            const handle = progressAnimHandles.value.get(filename);
+            if (handle != null) {
+                window.cancelAnimationFrame(handle);
+                progressAnimHandles.value.delete(filename);
+            }
+            progressTargets.value.delete(filename);
             installationStatus.value.set(filename, {
                 percentage: 100,
                 action: t('installation.installation_complete'),
@@ -1605,6 +1662,9 @@ onBeforeUnmount(() => {
     document.removeEventListener('click', onDocumentClickForFilters);
     window.removeEventListener('blur', blurHandler);
     document.removeEventListener('visibilitychange', visibilityHandler);
+
+    progressAnimHandles.value.forEach((handle) => window.cancelAnimationFrame(handle));
+    progressAnimHandles.value.clear();
 });
 </script>
 

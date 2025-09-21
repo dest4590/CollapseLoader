@@ -58,14 +58,8 @@ impl ClientManager {
                     let fabric_count = fabric_clients.len();
                     if fabric_count > 0 {
                         log_info!("Fetched {} fabric clients from API", fabric_count);
-                        let before = clients.len();
                         clients.append(&mut fabric_clients);
                         clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
-                        log_debug!(
-                            "Appended fabric clients: before={} after={}",
-                            before,
-                            clients.len()
-                        );
                     } else {
                         log_debug!("API returned 0 fabric clients");
                     }
@@ -75,7 +69,6 @@ impl ClientManager {
                 }
             }
 
-            log_debug!("Normalizing client metadata for {} clients", clients.len());
             for client in &mut clients {
                 if client.meta.is_new
                     != (semver::Version::parse(&client.version).unwrap().minor > 6)
