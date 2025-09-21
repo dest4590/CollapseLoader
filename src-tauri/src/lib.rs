@@ -1,11 +1,57 @@
 use tauri::Manager;
 
-use crate::core::utils::globals::CODENAME;
+use crate::core::{
+    error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
+};
 
 use self::core::network::analytics::Analytics;
 
 mod commands;
 mod core;
+
+pub fn check_dependencies() -> Result<(), StartupError> {
+    check_platform_dependencies()
+}
+
+#[cfg(target_os = "windows")]
+pub fn handle_startup_error(error: StartupError) {
+    use native_dialog::DialogBuilder;
+
+    if let StartupError::WebView2NotInstalled = error {
+        use native_dialog::MessageLevel;
+
+        let should_install = DialogBuilder::message()
+            .set_level(MessageLevel::Info)
+            .set_title("WebView2 Not Installed")
+            .set_text("WebView2 is not installed. Would you like to download and install it now?")
+            .confirm()
+            .show()
+            .unwrap_or(false);
+
+        if should_install {
+            if let Err(install_error) = crate::core::platform::windows::attempt_install_webview2() {
+                install_error.show_and_exit();
+            } else {
+                let message = "WebView2 has been installed. Please restart the application.";
+                eprintln!("{message}");
+                DialogBuilder::message()
+                    .set_text(message)
+                    .set_title("Restart Required");
+
+                std::process::exit(0);
+            }
+        } else {
+            error.show_and_exit();
+        }
+    } else {
+        error.show_and_exit();
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn handle_startup_error(error: StartupError) {
+    error.show_and_exit(None);
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[allow(clippy::large_stack_frames)]
