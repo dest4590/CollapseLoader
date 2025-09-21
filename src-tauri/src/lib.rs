@@ -8,6 +8,7 @@ mod commands;
 mod core;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[allow(clippy::large_stack_frames)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
@@ -76,7 +77,6 @@ pub fn run() {
             commands::utils::change_data_folder,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
-            commands::analytics::send_client_analytics,
             commands::discord_rpc::update_presence,
             commands::updater::check_for_updates,
             commands::updater::download_and_install_update,
@@ -104,7 +104,7 @@ pub fn run() {
                 if is_dev {
                     format!("(development build, {git_hash}, {git_branch} branch)")
                 } else {
-                    "".to_string()
+                    String::new()
                 }
             );
 

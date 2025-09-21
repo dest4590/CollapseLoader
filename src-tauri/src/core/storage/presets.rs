@@ -1,7 +1,7 @@
 use super::common::JsonStorage;
 use super::data::DATA;
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 use std::{collections::HashMap, path::PathBuf, sync::Mutex as StdMutex};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -102,8 +102,8 @@ impl PresetManager {
         self.presets.get(id)
     }
 
-    pub fn get_all_presets(&self) -> Vec<&ThemePreset> {
-        self.presets.values().collect()
+    pub fn get_all_presets(&self) -> Vec<ThemePreset> {
+        self.presets.values().cloned().collect()
     }
 
     pub fn preset_exists(&self, id: &str) -> bool {
@@ -111,8 +111,8 @@ impl PresetManager {
     }
 }
 
-lazy_static! {
-    pub static ref PRESET_MANAGER: StdMutex<PresetManager> = StdMutex::new(
-        PresetManager::load_from_disk(DATA.get_local("presets.json"))
-    );
-}
+pub static PRESET_MANAGER: LazyLock<StdMutex<PresetManager>> = LazyLock::new(|| {
+    StdMutex::new(PresetManager::load_from_disk(
+        DATA.get_local("presets.json"),
+    ))
+});

@@ -1,5 +1,5 @@
-use lazy_static::lazy_static;
 use serde::de::DeserializeOwned;
+use std::sync::LazyLock;
 use std::{
     fs::{self, File},
     io::{BufReader, BufWriter},
@@ -86,13 +86,12 @@ impl Api {
                         );
                         let result: T = serde_json::from_value(cached)?;
                         return Ok(result);
-                    } else {
-                        return Err(format!(
-                            "API returned status {} and no cache available",
-                            response.status()
-                        )
-                        .into());
                     }
+                    return Err(format!(
+                        "API returned status {} and no cache available",
+                        response.status()
+                    )
+                    .into());
                 }
 
                 match response.text() {
@@ -106,19 +105,15 @@ impl Api {
                                 );
                                 let result: T = serde_json::from_value(cached)?;
                                 return Ok(result);
-                            } else {
-                                return Err(
-                                    "API returned empty response and no cache available".into()
-                                );
                             }
+                            return Err("API returned empty response and no cache available".into());
                         }
 
                         match serde_json::from_str::<serde_json::Value>(&body) {
                             Ok(api_data) => {
-                                let should_update_cache = match &cached_data {
-                                    Some(cached) => *cached != api_data,
-                                    None => true,
-                                };
+                                let should_update_cache = cached_data
+                                    .as_ref()
+                                    .is_none_or(|cached| *cached != api_data);
 
                                 if should_update_cache && cache_dir.exists() {
                                     match File::create(&cache_file_path) {
@@ -207,14 +202,12 @@ impl Api {
     }
 }
 
-lazy_static! {
-    pub static ref API: Option<Api> = {
-        match SERVERS.selected_auth_server.clone() {
-            Some(auth_s) => Some(Api { api_server: auth_s }),
-            _ => {
-                log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
-                None
-            }
-        }
-    };
-}
+pub static API: LazyLock<Option<Api>> = LazyLock::new(|| {
+    SERVERS.selected_auth.clone().map_or_else(
+        || {
+            log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
+            None
+        },
+        |auth_s| Some(Api { api_server: auth_s }),
+    )
+});

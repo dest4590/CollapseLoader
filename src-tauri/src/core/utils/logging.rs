@@ -1,9 +1,8 @@
 use chrono::Local;
-use colored::*;
-use lazy_static::lazy_static;
+use colored::Colorize;
 use std::collections::VecDeque;
 use std::fmt;
-use std::sync::Mutex;
+use std::sync::{LazyLock, Mutex};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LogLevel {
@@ -15,17 +14,14 @@ pub enum LogLevel {
 
 pub struct Logger;
 
-lazy_static! {
-    pub static ref APP_LOGS: Mutex<VecDeque<String>> = Mutex::new(VecDeque::new());
-    pub static ref LOG_LEVEL: Mutex<LogLevel> = Mutex::new(LogLevel::Debug);
-}
+pub static APP_LOGS: LazyLock<Mutex<VecDeque<String>>> =
+    LazyLock::new(|| Mutex::new(VecDeque::new()));
+pub static LOG_LEVEL: LazyLock<Mutex<LogLevel>> = LazyLock::new(|| Mutex::new(LogLevel::Debug));
+
+const MAX_APP_LOGS: usize = 1000;
 
 impl Logger {
-    pub fn new() -> Self {
-        Logger
-    }
-
-    pub fn log_with_module(&self, level: LogLevel, tag: &str, message: &str) {
+    pub fn log_with_module(level: LogLevel, tag: &str, message: &str) {
         let timestamp = Local::now().format("%H:%M:%S").to_string();
 
         let short = tag
@@ -52,21 +48,7 @@ impl Logger {
         let ts_colored = timestamp.dimmed();
         let tag_colored = shorted_tag.white();
 
-        fn emoji_for_module(tag: &str) -> Option<&'static str> {
-            if tag.contains("core.network") {
-                Some("\u{2601}") // ☁
-            } else if tag.contains("core.clients") {
-                Some("\u{2609}") // ☉
-            } else if tag.contains("core.storage") {
-                Some("\u{26C3}") // ⛃
-            } else if tag.contains("core.utils") {
-                Some("\u{2692}") // ⚒
-            } else {
-                None
-            }
-        }
-
-        let emoji = emoji_for_module(tag)
+        let emoji = Self::emoji_for_module(tag)
             .map(|e| format!(" {e} |"))
             .unwrap_or_default();
 
@@ -80,7 +62,6 @@ impl Logger {
         );
 
         let plain = format!("{timestamp} [{level_name}] [{short}] {message}");
-        const MAX_APP_LOGS: usize = 1000;
         if let Ok(mut app_logs) = APP_LOGS.lock() {
             app_logs.push_back(plain);
             if app_logs.len() > MAX_APP_LOGS {
@@ -88,19 +69,29 @@ impl Logger {
             }
         }
     }
-}
 
-lazy_static! {
-    pub static ref LOGGER: Logger = Logger::new();
+    fn emoji_for_module(tag: &str) -> Option<&'static str> {
+        if tag.contains("core.network") {
+            Some("\u{2601}") // ☁
+        } else if tag.contains("core.clients") {
+            Some("\u{2609}") // ☉
+        } else if tag.contains("core.storage") {
+            Some("\u{26C3}") // ⛃
+        } else if tag.contains("core.utils") {
+            Some("\u{2692}") // ⚒
+        } else {
+            None
+        }
+    }
 }
 
 impl LogLevel {
-    pub fn as_str(&self) -> &'static str {
+    pub const fn as_str(self) -> &'static str {
         match self {
-            LogLevel::Info => "INFO",
-            LogLevel::Warn => "WARN",
-            LogLevel::Error => "ERROR",
-            LogLevel::Debug => "DEBUG",
+            Self::Info => "INFO",
+            Self::Warn => "WARN",
+            Self::Error => "ERROR",
+            Self::Debug => "DEBUG",
         }
     }
 }
@@ -111,29 +102,12 @@ impl fmt::Display for LogLevel {
     }
 }
 
-impl Logger {
-    #[allow(dead_code)]
-    pub fn set_level(&self, level: LogLevel) {
-        if let Ok(mut gl) = LOG_LEVEL.lock() {
-            *gl = level;
-        }
-    }
-    #[allow(dead_code)]
-    pub fn get_level(&self) -> LogLevel {
-        if let Ok(gl) = LOG_LEVEL.lock() {
-            *gl
-        } else {
-            LogLevel::Info
-        }
-    }
-}
-
 #[macro_export]
 macro_rules! log_info {
     ($($arg:tt)*) => {
         {
             let __clp_tag = $crate::collapse_tag!();
-            $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::Logger::log_with_module(
                 $crate::core::utils::logging::LogLevel::Info,
                 &__clp_tag,
                 &format!($($arg)*)
@@ -147,7 +121,7 @@ macro_rules! log_warn {
     ($($arg:tt)*) => {
         {
             let __clp_tag = $crate::collapse_tag!();
-            $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::Logger::log_with_module(
                 $crate::core::utils::logging::LogLevel::Warn,
                 &__clp_tag,
                 &format!($($arg)*)
@@ -161,7 +135,7 @@ macro_rules! log_error {
     ($($arg:tt)*) => {
         {
             let __clp_tag = $crate::collapse_tag!();
-            $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::Logger::log_with_module(
                 $crate::core::utils::logging::LogLevel::Error,
                 &__clp_tag,
                 &format!($($arg)*)
@@ -175,7 +149,7 @@ macro_rules! log_debug {
     ($($arg:tt)*) => {
         {
             let __clp_tag = $crate::collapse_tag!();
-            $crate::core::utils::logging::LOGGER.log_with_module(
+            $crate::core::utils::logging::Logger::log_with_module(
                 $crate::core::utils::logging::LogLevel::Debug,
                 &__clp_tag,
                 &format!($($arg)*)

@@ -1,5 +1,5 @@
 use crate::core::network::servers::SERVERS;
-use crate::core::storage::data::DATA;
+use crate::core::storage::data::{Data, DATA};
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ pub struct AgentArguments {
 }
 
 impl AgentArguments {
-    pub fn new(
+    pub const fn new(
         token: String,
         client_name: String,
         analytics: bool,
@@ -62,7 +62,7 @@ pub struct AgentOverlayManager;
 impl AgentOverlayManager {
     fn get_api_base_url() -> Result<String, String> {
         SERVERS
-            .selected_auth_server
+            .selected_auth
             .as_ref()
             .map(|server| server.url.clone())
             .ok_or_else(|| "No API server available".to_string())
@@ -99,7 +99,7 @@ impl AgentOverlayManager {
                 e
             })?;
 
-        let downloaded_hash = Self::calculate_md5_hash(&agent_path)?;
+        let downloaded_hash = Data::calculate_md5_hash(&agent_path)?;
         if downloaded_hash != info.agent_hash {
             log_error!(
                 "Agent file hash mismatch. expected={} got={}",
@@ -123,7 +123,7 @@ impl AgentOverlayManager {
                 e
             })?;
 
-        let downloaded_overlay_hash = Self::calculate_md5_hash(&overlay_path)?;
+        let downloaded_overlay_hash = Data::calculate_md5_hash(&overlay_path)?;
         if downloaded_overlay_hash != info.overlay_hash {
             log_error!(
                 "Overlay file hash mismatch. expected={} got={}",
@@ -200,13 +200,6 @@ impl AgentOverlayManager {
         Ok(())
     }
 
-    fn calculate_md5_hash(path: &PathBuf) -> Result<String, String> {
-        let bytes = fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
-
-        let digest = md5::compute(&bytes);
-        Ok(format!("{digest:x}"))
-    }
-
     pub async fn verify_agent_overlay_files() -> Result<bool, String> {
         log_debug!("Verifying agent and overlay files...");
 
@@ -233,7 +226,7 @@ impl AgentOverlayManager {
 
         let info = Self::get_agent_overlay_info().await?;
 
-        let agent_hash = Self::calculate_md5_hash(&agent_path)?;
+        let agent_hash = Data::calculate_md5_hash(&agent_path)?;
         if agent_hash != info.agent_hash {
             log_error!(
                 "Agent file hash verification failed. Expected: {}, Got: {}",
@@ -243,7 +236,7 @@ impl AgentOverlayManager {
             return Ok(false);
         }
 
-        let overlay_hash = Self::calculate_md5_hash(&overlay_path)?;
+        let overlay_hash = Data::calculate_md5_hash(&overlay_path)?;
         if overlay_hash != info.overlay_hash {
             log_error!(
                 "Overlay file hash verification failed. Expected: {}, Got: {}",

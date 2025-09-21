@@ -139,11 +139,9 @@ pub async fn change_data_folder(
 
 #[tauri::command]
 pub async fn get_auth_url() -> Result<String, String> {
-    if let Some(auth_url) = SERVERS.get_auth_server_url() {
-        Ok(auth_url)
-    } else {
-        Ok("https://auth.collapseloader.org".to_string())
-    }
+    SERVERS
+        .get_auth_server_url()
+        .map_or_else(|| Ok("https://auth.collapseloader.org".to_string()), Ok)
 }
 
 #[tauri::command]
@@ -154,11 +152,11 @@ pub async fn encode_base64(input: String) -> Result<String, String> {
 
 #[tauri::command]
 pub async fn decode_base64(input: String) -> Result<String, String> {
-    match general_purpose::STANDARD.decode(&input) {
-        Ok(decoded) => match String::from_utf8(decoded) {
-            Ok(decoded_str) => Ok(decoded_str),
-            Err(_) => Err("Failed to decode base64 to UTF-8 string".to_string()),
+    general_purpose::STANDARD.decode(&input).ok().map_or_else(
+        || Err("Failed to decode base64".to_string()),
+        |decoded| {
+            String::from_utf8(decoded)
+                .map_err(|_| "Failed to decode base64 to UTF-8 string".to_string())
         },
-        Err(_) => Err("Failed to decode base64".to_string()),
-    }
+    )
 }

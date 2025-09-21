@@ -22,7 +22,7 @@ fn force_println(msg: &str) {
     }
 }
 
-fn main() -> io::Result<()> {
+fn main() {
     const NAME: &str = "CollapseBuilder";
 
     fn banner() {
@@ -66,12 +66,8 @@ fn main() -> io::Result<()> {
 
     banner();
 
-    let development: bool = std::env::var("DEVELOPMENT")
-        .map(|v| {
-            let lv = v.to_ascii_lowercase();
-            matches!(lv.as_str(), "1" | "true" | "yes" | "y" | "on")
-        })
-        .unwrap_or_else(|_| {
+    let development: bool = std::env::var("DEVELOPMENT").map_or_else(
+        |_| {
             std::fs::read_to_string("../.env")
                 .map_err(|_| {})
                 .ok()
@@ -90,12 +86,16 @@ fn main() -> io::Result<()> {
                             }
                         })
                 })
-                .map(|v| {
+                .is_some_and(|v| {
                     let lv = v.to_ascii_lowercase();
                     matches!(lv.as_str(), "1" | "true" | "yes" | "y" | "on")
                 })
-                .unwrap_or(false)
-        });
+        },
+        |v| {
+            let lv = v.to_ascii_lowercase();
+            matches!(lv.as_str(), "1" | "true" | "yes" | "y" | "on")
+        },
+    );
     println!("cargo:rustc-env=DEVELOPMENT={development}");
     println!("cargo:rerun-if-env-changed=DEVELOPMENT");
     println!("cargo:rerun-if-changed=../.env");
@@ -128,5 +128,4 @@ fn main() -> io::Result<()> {
     fence();
 
     tauri_build::build();
-    Ok(())
 }

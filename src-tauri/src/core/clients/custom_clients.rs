@@ -6,7 +6,7 @@ use crate::core::{
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum Version {
     V1_16_5,
     V1_12_2,
@@ -15,9 +15,9 @@ pub enum Version {
 impl Version {
     pub fn from_string(version: &str) -> Self {
         match version {
-            "1.16.5" => Version::V1_16_5,
-            "1.12.2" => Version::V1_12_2,
-            _ => Version::V1_16_5,
+            "1.16.5" => Self::V1_16_5,
+            "1.12.2" => Self::V1_12_2,
+            _ => Self::V1_16_5,
         }
     }
 }
@@ -25,13 +25,13 @@ impl Version {
 impl std::fmt::Display for Version {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Version::V1_16_5 => write!(f, "1.16.5"),
-            Version::V1_12_2 => write!(f, "1.12.2"),
+            Self::V1_16_5 => write!(f, "1.16.5"),
+            Self::V1_12_2 => write!(f, "1.12.2"),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CustomClient {
     pub id: u32,
     pub name: String,
@@ -54,7 +54,7 @@ impl CustomClient {
         file_path: PathBuf,
         main_class: String,
     ) -> Self {
-        CustomClient {
+        Self {
             id,
             name,
             version,
@@ -117,7 +117,7 @@ impl CustomClient {
         Ok(())
     }
 
-    pub fn get_running_custom_clients() -> Vec<CustomClient> {
+    pub fn get_running_custom_clients() -> Vec<Self> {
         use std::process::Command;
 
         #[cfg(target_os = "windows")]
@@ -131,7 +131,7 @@ impl CustomClient {
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
-        command.creation_flags(0x08000000);
+        command.creation_flags(0x0800_0000);
 
         let output = match command.arg("-m").output() {
             Ok(output) => output,
@@ -170,7 +170,7 @@ impl CustomClient {
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
-        command.creation_flags(0x08000000);
+        command.creation_flags(0x0800_0000);
 
         let output = command
             .arg("-m")
@@ -189,7 +189,7 @@ impl CustomClient {
                 let mut kill_command = Command::new("taskkill");
 
                 #[cfg(windows)]
-                kill_command.creation_flags(0x08000000);
+                kill_command.creation_flags(0x0800_0000);
 
                 kill_command
                     .arg("/PID")

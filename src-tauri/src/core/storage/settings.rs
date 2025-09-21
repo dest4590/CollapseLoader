@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::{fmt, path::PathBuf, sync::Mutex as StdMutex};
 
 use crate::core::utils::globals::ROOT_DIR;
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
 
-fn default_show_true() -> bool {
+const fn default_show_true() -> bool {
     true
 }
 
@@ -18,7 +18,7 @@ pub struct Setting<T> {
 }
 
 impl<T> Setting<T> {
-    pub fn new(value: T, show: bool) -> Self {
+    pub const fn new(value: T, show: bool) -> Self {
         Self { value, show }
     }
 }
@@ -126,8 +126,8 @@ define_settings! {
     }
 }
 
-lazy_static! {
-    pub static ref SETTINGS: StdMutex<Settings> = StdMutex::new(Settings::load_from_disk(
-        PathBuf::from(&*ROOT_DIR).join("config.json")
-    ));
-}
+pub static SETTINGS: LazyLock<StdMutex<Settings>> = LazyLock::new(|| {
+    StdMutex::new(Settings::load_from_disk(
+        PathBuf::from(&*ROOT_DIR).join("config.json"),
+    ))
+});

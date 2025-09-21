@@ -5,8 +5,8 @@ use crate::core::clients::custom_clients::Version;
 use crate::core::storage::data::DATA;
 use crate::core::storage::settings::SETTINGS;
 use crate::log_warn;
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 
 use super::common::JsonStorage;
 
@@ -164,8 +164,8 @@ impl Default for CustomClientManager {
     }
 }
 
-lazy_static! {
-    pub static ref CUSTOM_CLIENT_MANAGER: Mutex<CustomClientManager> = Mutex::new(
-        CustomClientManager::load_from_disk(DATA.get_local("custom_clients.json"))
-    );
-}
+pub static CUSTOM_CLIENT_MANAGER: LazyLock<Mutex<CustomClientManager>> = LazyLock::new(|| {
+    Mutex::new(CustomClientManager::load_from_disk(
+        DATA.get_local("custom_clients.json"),
+    ))
+});

@@ -1,5 +1,8 @@
 use crate::{
-    core::utils::globals::{GITHUB_REPO_NAME, GITHUB_REPO_OWNER},
+    core::{
+        storage::data::Data,
+        utils::globals::{GITHUB_REPO_NAME, GITHUB_REPO_OWNER},
+    },
     log_debug, log_warn,
 };
 use serde::{Deserialize, Serialize};
@@ -155,12 +158,12 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         release
             .assets
             .iter()
-            .find(|asset| asset.name.ends_with(".msi"))
+            .find(|asset| Data::has_extension(&asset.name, ".msi"))
             .or_else(|| {
                 release
                     .assets
                     .iter()
-                    .find(|asset| asset.name.ends_with(".exe"))
+                    .find(|asset| Data::has_extension(&asset.name, ".exe"))
             })
             .map(|asset| asset.browser_download_url.clone())
             .unwrap_or_else(|| {
@@ -304,7 +307,7 @@ exit
 
         let mut cmd = std::process::Command::new("cmd.exe");
         cmd.args(["/C", "start", "", &script_path.to_string_lossy()]);
-        const DETACHED_PROCESS: u32 = 0x00000008;
+        const DETACHED_PROCESS: u32 = 0x0000_0008;
         cmd.creation_flags(DETACHED_PROCESS);
         cmd.spawn()
             .map_err(|e| format!("Failed to launch updater script: {e}"))?;
@@ -319,7 +322,7 @@ exit
 }
 
 #[tauri::command]
-pub fn get_changelog() -> Vec<ChangelogEntry> {
+pub const fn get_changelog() -> Vec<ChangelogEntry> {
     Vec::new()
 }
 

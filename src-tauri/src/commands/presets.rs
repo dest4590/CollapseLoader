@@ -67,13 +67,10 @@ pub struct UpdatePresetInput {
 
 #[tauri::command]
 pub fn get_all_presets() -> Result<Vec<ThemePreset>, String> {
-    let preset_manager = PRESET_MANAGER.lock().unwrap();
-    let presets = preset_manager
-        .get_all_presets()
-        .into_iter()
-        .cloned()
-        .collect();
-    Ok(presets)
+    PRESET_MANAGER
+        .lock()
+        .map(|p| p.get_all_presets())
+        .map_err(|_| "Failed to get presets".to_string())
 }
 
 #[tauri::command]
@@ -118,6 +115,7 @@ pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
     };
 
     preset_manager.add_preset(preset.clone())?;
+    drop(preset_manager);
     Ok(preset)
 }
 
@@ -164,6 +162,7 @@ pub fn update_preset(input: UpdatePresetInput) -> Result<ThemePreset, String> {
     };
 
     preset_manager.update_preset(preset.clone())?;
+    drop(preset_manager);
     Ok(preset)
 }
 
@@ -213,5 +212,6 @@ pub fn duplicate_preset(id: String, new_name: String) -> Result<ThemePreset, Str
     };
 
     preset_manager.add_preset(new_preset.clone())?;
+    drop(preset_manager);
     Ok(new_preset)
 }

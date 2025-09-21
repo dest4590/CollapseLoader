@@ -2,16 +2,15 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
-use lazy_static::lazy_static;
+use std::sync::LazyLock;
 
 use crate::core::storage::settings::SETTINGS;
 use crate::{log_debug, log_error, log_warn};
 
 const DISCORD_APP_ID: &str = "1225803664204234772";
 
-lazy_static! {
-    static ref DISCORD_CLIENT: Mutex<Option<DiscordIpcClient>> = Mutex::new(None);
-}
+static DISCORD_CLIENT: LazyLock<Mutex<Option<DiscordIpcClient>>> =
+    LazyLock::new(|| Mutex::new(None));
 
 pub fn initialize() -> Result<(), String> {
     std::thread::spawn(|| {
@@ -45,17 +44,13 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         return Ok(());
     }
 
-    let mut discord_client_lock = match DISCORD_CLIENT.try_lock() {
-        Ok(lock) => lock,
-        Err(_) => {
-            log_debug!("Could not acquire Discord client lock, skipping update");
-            return Ok(());
-        }
+    let Ok(mut discord_client_lock) = DISCORD_CLIENT.try_lock() else {
+        log_debug!("Could not acquire Discord client lock, skipping update");
+        return Ok(());
     };
 
-    let discord_client = match &mut *discord_client_lock {
-        Some(client) => client,
-        None => return Err("Discord client not initialized".to_string()),
+    let Some(discord_client) = &mut *discord_client_lock else {
+        return Err("Discord client not initialized".to_string());
     };
 
     let start_time = SystemTime::now()
@@ -69,6 +64,7 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         .large_image("https://i.imgur.com/ZpWg110.gif")
         .large_text(&large_text);
 
+    #[allow(clippy::cast_possible_wrap)]
     let activity = activity::Activity::new()
         .details(&details)
         .state(&state)

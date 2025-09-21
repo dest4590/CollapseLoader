@@ -18,8 +18,8 @@ enum CrashType {
 }
 
 impl LogChecker {
-    pub fn new(client: Client) -> Self {
-        LogChecker { client }
+    pub const fn new(client: Client) -> Self {
+        Self { client }
     }
 
     pub fn check(&self, app_handle_clone_for_crash_handling: &AppHandle) {

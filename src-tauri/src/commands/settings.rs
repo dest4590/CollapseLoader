@@ -20,6 +20,7 @@ pub fn reset_flags() -> Result<(), String> {
     let mut flags = FLAGS_MANAGER.lock().unwrap();
     *flags = Flags::default();
     flags.save_to_disk();
+    drop(flags);
     Ok(())
 }
 
@@ -55,6 +56,7 @@ pub fn reset_settings() -> Result<(), String> {
     current_settings.config_path = Settings::default().config_path;
 
     current_settings.save_to_disk();
+    drop(current_settings);
 
     Ok(())
 }
@@ -64,6 +66,7 @@ pub fn mark_disclaimer_shown() -> Result<(), String> {
     let mut flags = FLAGS_MANAGER.lock().unwrap();
     flags.disclaimer_shown.value = true;
     flags.save_to_disk();
+    drop(flags);
     Ok(())
 }
 
@@ -72,6 +75,7 @@ pub fn mark_first_run_shown() -> Result<(), String> {
     let mut flags = FLAGS_MANAGER.lock().unwrap();
     flags.first_run.value = false;
     flags.save_to_disk();
+    drop(flags);
     Ok(())
 }
 
@@ -80,55 +84,58 @@ pub fn set_optional_telemetry(enabled: bool) -> Result<(), String> {
     let mut settings = SETTINGS.lock().unwrap();
     settings.optional_telemetry.value = enabled;
     settings.save_to_disk();
+    drop(settings);
     Ok(())
 }
 
 #[tauri::command]
 pub fn get_accounts() -> Vec<Account> {
-    if let Ok(account_manager) = ACCOUNT_MANAGER.lock() {
-        account_manager.accounts.clone()
-    } else {
-        Vec::new()
-    }
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |_| Vec::new(),
+        |account_manager| account_manager.accounts.clone(),
+    )
 }
 
 #[tauri::command]
 pub fn add_account(username: String, tags: Vec<String>) -> Result<String, String> {
-    if let Ok(mut account_manager) = ACCOUNT_MANAGER.lock() {
-        let id = account_manager.add_account(username, tags);
-        account_manager.save_to_disk();
-        Ok(id)
-    } else {
-        Err("Failed to acquire lock on account manager".to_string())
-    }
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on account manager".to_string()),
+        |mut account_manager| {
+            let id = account_manager.add_account(username, tags);
+            account_manager.save_to_disk();
+            Ok(id)
+        },
+    )
 }
 
 #[tauri::command]
 pub fn remove_account(id: String) -> Result<(), String> {
-    if let Ok(mut account_manager) = ACCOUNT_MANAGER.lock() {
-        if account_manager.remove_account(&id) {
-            account_manager.save_to_disk();
-            Ok(())
-        } else {
-            Err("Account not found".to_string())
-        }
-    } else {
-        Err("Failed to acquire lock on account manager".to_string())
-    }
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on account manager".to_string()),
+        |mut account_manager| {
+            if account_manager.remove_account(&id) {
+                account_manager.save_to_disk();
+                Ok(())
+            } else {
+                Err("Account not found".to_string())
+            }
+        },
+    )
 }
 
 #[tauri::command]
 pub fn set_active_account(id: String) -> Result<(), String> {
-    if let Ok(mut account_manager) = ACCOUNT_MANAGER.lock() {
-        if account_manager.set_active_account(&id) {
-            account_manager.save_to_disk();
-            Ok(())
-        } else {
-            Err("Account not found".to_string())
-        }
-    } else {
-        Err("Failed to acquire lock on account manager".to_string())
-    }
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on account manager".to_string()),
+        |mut account_manager| {
+            if account_manager.set_active_account(&id) {
+                account_manager.save_to_disk();
+                Ok(())
+            } else {
+                Err("Account not found".to_string())
+            }
+        },
+    )
 }
 
 #[tauri::command]
@@ -137,65 +144,65 @@ pub fn update_account(
     username: Option<String>,
     tags: Option<Vec<String>>,
 ) -> Result<(), String> {
-    if let Ok(mut account_manager) = ACCOUNT_MANAGER.lock() {
-        if account_manager.update_account(&id, username, tags) {
-            account_manager.save_to_disk();
-            Ok(())
-        } else {
-            Err("Account not found".to_string())
-        }
-    } else {
-        Err("Failed to acquire lock on account manager".to_string())
-    }
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on account manager".to_string()),
+        |mut account_manager| {
+            if account_manager.update_account(&id, username, tags) {
+                account_manager.save_to_disk();
+                Ok(())
+            } else {
+                Err("Account not found".to_string())
+            }
+        },
+    )
 }
 
 #[tauri::command]
 pub fn get_active_account() -> Option<Account> {
-    if let Ok(account_manager) = ACCOUNT_MANAGER.lock() {
-        account_manager.get_active_account().cloned()
-    } else {
-        None
-    }
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |_| None,
+        |account_manager| account_manager.get_active_account().cloned(),
+    )
 }
 
 #[tauri::command]
 pub fn get_favorite_clients() -> Result<Vec<u32>, String> {
-    if let Ok(favorite_manager) = FAVORITE_MANAGER.lock() {
-        Ok(favorite_manager.favorites.clone())
-    } else {
-        Err("Failed to acquire lock on favorite manager".to_string())
-    }
+    FAVORITE_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on favorite manager".to_string()),
+        |favorite_manager| Ok(favorite_manager.favorites.clone()),
+    )
 }
 
 #[tauri::command]
 pub fn add_favorite_client(client_id: u32) -> Result<(), String> {
-    if let Ok(mut favorite_manager) = FAVORITE_MANAGER.lock() {
-        favorite_manager.add_favorite(client_id);
-        favorite_manager.save_to_disk();
-        Ok(())
-    } else {
-        Err("Failed to acquire lock on favorite manager".to_string())
-    }
+    FAVORITE_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on favorite manager".to_string()),
+        |mut favorite_manager| {
+            favorite_manager.add_favorite(client_id);
+            favorite_manager.save_to_disk();
+            Ok(())
+        },
+    )
 }
 
 #[tauri::command]
 pub fn remove_favorite_client(client_id: u32) -> Result<(), String> {
-    if let Ok(mut favorite_manager) = FAVORITE_MANAGER.lock() {
-        favorite_manager.remove_favorite(client_id);
-        favorite_manager.save_to_disk();
-        Ok(())
-    } else {
-        Err("Failed to acquire lock on favorite manager".to_string())
-    }
+    FAVORITE_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on favorite manager".to_string()),
+        |mut favorite_manager| {
+            favorite_manager.remove_favorite(client_id);
+            favorite_manager.save_to_disk();
+            Ok(())
+        },
+    )
 }
 
 #[tauri::command]
 pub fn is_client_favorite(client_id: u32) -> Result<bool, String> {
-    if let Ok(favorite_manager) = FAVORITE_MANAGER.lock() {
-        Ok(favorite_manager.is_favorite(client_id))
-    } else {
-        Err("Failed to acquire lock on favorite manager".to_string())
-    }
+    FAVORITE_MANAGER.lock().map_or_else(
+        |_| Err("Failed to acquire lock on favorite manager".to_string()),
+        |favorite_manager| Ok(favorite_manager.is_favorite(client_id)),
+    )
 }
 
 #[tauri::command]
@@ -203,6 +210,7 @@ pub fn mark_telemetry_consent_shown() -> Result<(), String> {
     let mut flags = FLAGS_MANAGER.lock().unwrap();
     flags.telemetry_consent_shown.value = true;
     flags.save_to_disk();
+    drop(flags);
     Ok(())
 }
 
@@ -217,5 +225,6 @@ pub fn set_custom_clients_display(display: String) -> Result<(), String> {
     let mut flags = FLAGS_MANAGER.lock().unwrap();
     flags.set_custom_clients_display(display);
     flags.save_to_disk();
+    drop(flags);
     Ok(())
 }

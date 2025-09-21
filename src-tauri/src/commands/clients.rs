@@ -7,7 +7,10 @@ use tauri::AppHandle;
 use crate::core::{
     clients::custom_clients::{CustomClient, Version},
     network::analytics::Analytics,
-    storage::custom_clients::{CustomClientUpdate, CUSTOM_CLIENT_MANAGER},
+    storage::{
+        custom_clients::{CustomClientUpdate, CUSTOM_CLIENT_MANAGER},
+        data::Data,
+    },
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
@@ -99,14 +102,13 @@ pub async fn launch_client(
         client.filename.clone()
     };
 
-    let file_name = DATA.get_filename(&client.filename);
+    let file_name = Data::get_filename(&client.filename);
     let jar_path = match client.client_type {
         ClientType::Default => {
             DATA.get_local(&format!("{file_name}{MAIN_SEPARATOR}{}", client.filename))
         }
         ClientType::Fabric => DATA.get_local(&format!(
-            "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{}",
-            filename_for_if
+            "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{filename_for_if}"
         )),
     };
 
@@ -138,8 +140,22 @@ pub async fn launch_client(
             "Verifying MD5 hash for client {} before launch",
             client.name
         );
-        let current_hash = calculate_md5_hash(&jar_path)?;
-        if current_hash != client.md5_hash {
+        let current_hash = Data::calculate_md5_hash(&jar_path)?;
+        if current_hash == client.md5_hash {
+            log_info!(
+                "MD5 hash verification successful for client {}",
+                client.name
+            );
+
+            emit_to_main_window(
+                &app_handle,
+                "client-hash-verification-done",
+                &serde_json::json!({
+                    "id": id,
+                    "name": client.name
+                }),
+            );
+        } else {
             log_warn!(
                 "Hash mismatch for client {}. Expected: {}, Got: {}. Redownloading...",
                 client.name,
@@ -188,20 +204,6 @@ pub async fn launch_client(
             log_info!(
                 "Client {} redownloaded and verified successfully",
                 client.name
-            );
-        } else {
-            log_info!(
-                "MD5 hash verification successful for client {}",
-                client.name
-            );
-
-            emit_to_main_window(
-                &app_handle,
-                "client-hash-verification-done",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name
-                }),
             );
         }
     } else {
@@ -374,22 +376,20 @@ pub fn get_latest_client_logs(id: u32) -> Result<String, String> {
 
 #[tauri::command]
 pub fn update_client_installed_status(id: u32, installed: bool) -> Result<(), String> {
-    let mut manager = CLIENT_MANAGER
+    if let Some(client) = CLIENT_MANAGER
         .lock()
-        .map_err(|_| "Failed to acquire lock on client manager".to_string())?;
-
-    let manager = manager
+        .map_err(|_| "Failed to acquire lock on client manager".to_string())?
         .as_mut()
-        .ok_or_else(|| "Client manager not initialized".to_string())?;
-
-    let client = manager
+        .ok_or_else(|| "Client manager not initialized".to_string())?
         .clients
         .iter_mut()
         .find(|c| c.id == id)
-        .ok_or_else(|| "Client not found".to_string())?;
-
-    client.meta.installed = installed;
-    Ok(())
+    {
+        client.meta.installed = installed;
+        Ok(())
+    } else {
+        Err("Client not found".to_string())
+    }
 }
 
 #[tauri::command]
@@ -435,52 +435,42 @@ pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, Str
 
 #[tauri::command]
 pub fn increment_client_counter(id: u32, counter_type: String) -> Result<(), String> {
-    let mut manager = CLIENT_MANAGER
+    if let Some(client) = CLIENT_MANAGER
         .lock()
-        .map_err(|_| "Failed to acquire lock on client manager".to_string())?;
-
-    let manager = manager
+        .map_err(|_| "Failed to acquire lock on client manager".to_string())?
         .as_mut()
-        .ok_or_else(|| "Client manager not initialized".to_string())?;
-
-    let client = manager
+        .ok_or_else(|| "Client manager not initialized".to_string())?
         .clients
         .iter_mut()
         .find(|c| c.id == id)
-        .ok_or_else(|| "Client not found".to_string())?;
-
-    match counter_type.as_str() {
-        "download" => {
-            client.downloads += 1;
-            log_info!(
-                "Incremented download counter for client {} (ID: {}). New count: {}",
-                client.name,
-                id,
-                client.downloads
-            );
+    {
+        match counter_type.as_str() {
+            "download" => {
+                client.downloads += 1;
+                log_info!(
+                    "Incremented download counter for client {} (ID: {}). New count: {}",
+                    client.name,
+                    id,
+                    client.downloads
+                );
+            }
+            "launch" => {
+                client.launches += 1;
+                log_info!(
+                    "Incremented launch counter for client {} (ID: {}). New count: {}",
+                    client.name,
+                    id,
+                    client.launches
+                );
+            }
+            _ => {
+                return Err(format!("Invalid counter type: {counter_type}"));
+            }
         }
-        "launch" => {
-            client.launches += 1;
-            log_info!(
-                "Incremented launch counter for client {} (ID: {}). New count: {}",
-                client.name,
-                id,
-                client.launches
-            );
-        }
-        _ => {
-            return Err(format!("Invalid counter type: {counter_type}"));
-        }
+        Ok(())
+    } else {
+        Err("Client not found".to_string())
     }
-
-    Ok(())
-}
-
-fn calculate_md5_hash(path: &std::path::PathBuf) -> Result<String, String> {
-    let bytes = std::fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
-
-    let digest = md5::compute(&bytes);
-    Ok(format!("{digest:x}"))
 }
 
 #[tauri::command]
