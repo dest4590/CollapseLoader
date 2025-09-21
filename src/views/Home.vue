@@ -132,18 +132,28 @@ try {
 }
 const clientSortOrder = ref<'asc' | 'desc'>(initialSortOrder);
 
-let filtersDebounceTimer: number | null = null;
 const debouncedActiveFilters = ref<{ [key: string]: boolean }>({ ...initialFilters });
 
-const updateDebouncedFilters = () => {
+const debouncedClientSortKey = ref(clientSortKey.value);
+const debouncedClientSortOrder = ref(clientSortOrder.value);
+
+const applyFiltersAndSort = () => {
+    debouncedActiveFilters.value = { ...activeFilters.value };
+    debouncedClientSortKey.value = clientSortKey.value;
+    debouncedClientSortOrder.value = clientSortOrder.value;
+};
+
+let filtersDebounceTimer: number | null = null;
+
+const scheduleFilterUpdate = () => {
     if (filtersDebounceTimer !== null) {
         clearTimeout(filtersDebounceTimer);
     }
 
     filtersDebounceTimer = window.setTimeout(() => {
-        debouncedActiveFilters.value = { ...activeFilters.value };
+        applyFiltersAndSort();
         filtersDebounceTimer = null;
-    }, 100);
+    }, 300);
 };
 
 watch(
@@ -154,7 +164,7 @@ watch(
         } catch (e) {
             console.error('Failed to save active filters to localStorage:', e);
         }
-        updateDebouncedFilters();
+        scheduleFilterUpdate();
     },
     { deep: true }
 );
@@ -165,6 +175,7 @@ watch(clientSortKey, (val) => {
     } catch (e) {
         console.error('Failed to save client sort key to localStorage:', e);
     }
+    scheduleFilterUpdate();
 });
 
 watch(clientSortOrder, (val) => {
@@ -173,6 +184,7 @@ watch(clientSortOrder, (val) => {
     } catch (e) {
         console.error('Failed to save client sort order to localStorage:', e);
     }
+    scheduleFilterUpdate();
 });
 
 const installationStatus = ref<Map<string, InstallProgress>>(new Map());
@@ -180,6 +192,59 @@ const eventListeners = ref<(() => void)[]>([]);
 const requirementsInProgress = ref<boolean>(false);
 const warnedInsecureClients = ref<Set<number>>(new Set());
 const hashVerifyingClients = ref<Set<number>>(new Set());
+
+const progressTargets = ref<Map<string, number>>(new Map());
+const progressAnimHandles = ref<Map<string, number>>(new Map());
+
+const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
+
+const smoothUpdateProgress = (file: string, targetPercentage: number, action: string) => {
+    const current = installationStatus.value.get(file)?.percentage ?? 0;
+    const safeTarget = Math.max(current, Math.min(100, Math.floor(targetPercentage)));
+
+    progressTargets.value.set(file, safeTarget);
+
+    if (progressAnimHandles.value.has(file)) return;
+
+    const startTime = performance.now();
+    const startValue = current;
+
+    const step = (now: number) => {
+        const target = progressTargets.value.get(file) ?? safeTarget;
+        const elapsed = now - startTime;
+        const duration = Math.max(120, (target - startValue) * 5);
+        const t = Math.min(1, elapsed / duration);
+        const eased = easeOutQuad(t);
+        const value = Math.floor(startValue + (target - startValue) * eased);
+
+        installationStatus.value.set(file, {
+            percentage: Math.min(100, value),
+            action,
+            isComplete: false,
+        });
+
+        if (value >= target && target >= 100) {
+            progressAnimHandles.value.delete(file);
+            return;
+        }
+
+        if (value >= target) {
+            progressAnimHandles.value.delete(file);
+            window.setTimeout(() => {
+                if ((progressTargets.value.get(file) ?? target) > value) {
+                    smoothUpdateProgress(file, progressTargets.value.get(file) ?? target, action);
+                }
+            }, 10);
+            return;
+        }
+
+        const handle = window.requestAnimationFrame(step);
+        progressAnimHandles.value.set(file, handle);
+    };
+
+    const handle = window.requestAnimationFrame(step);
+    progressAnimHandles.value.set(file, handle);
+};
 
 const contextMenu = ref({
     visible: false,
@@ -360,7 +425,7 @@ const allClients = computed(() => {
 let filteredClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const filteredClients = computed(() => {
-    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${JSON.stringify(debouncedActiveFilters.value)}-${clientSortKey.value}-${clientSortOrder.value}`;
+    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${JSON.stringify(debouncedActiveFilters.value)}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}`;
 
     if (filteredClientsCache.key === cacheKey) {
         return filteredClientsCache.result;
@@ -411,29 +476,27 @@ const filteredClients = computed(() => {
     }
 
     const sorted = [...clientsList];
+    const sortKey = debouncedClientSortKey.value;
+    const sortOrder = debouncedClientSortOrder.value;
 
-    if (clientSortKey.value === 'newest') {
+    if (sortKey === 'newest') {
         sorted.sort((a, b) => {
             const aNew = a.meta && a.meta.is_new ? 1 : 0;
             const bNew = b.meta && b.meta.is_new ? 1 : 0;
-            
-            // If both clients are new or both are not new, sort by ID (newest first)
+
             if (aNew === bNew) {
                 if (aNew === 1) {
-                    // Both are new - sort by ID desc (largest ID first = newest)
-                    return clientSortOrder.value === 'desc' ? b.id - a.id : a.id - b.id;
+                    return sortOrder === 'desc' ? b.id - a.id : a.id - b.id;
                 } else {
-                    // Both are not new - sort by name
-                    return clientSortOrder.value === 'desc'
+                    return sortOrder === 'desc'
                         ? b.name.localeCompare(a.name)
                         : a.name.localeCompare(b.name);
                 }
             }
-            
-            // One is new, one is not - prioritize new clients
-            return clientSortOrder.value === 'desc' ? bNew - aNew : aNew - bNew;
+
+            return sortOrder === 'desc' ? bNew - aNew : aNew - bNew;
         });
-    } else if (clientSortKey.value === 'version') {
+    } else if (sortKey === 'version') {
         const parseVer = (v: string) => {
             if (!v) return [] as number[];
             const clean = v.replace(/^v/i, '').replace(/_/g, '.').replace(/[^0-9.]/g, '.');
@@ -447,24 +510,24 @@ const filteredClients = computed(() => {
             for (let i = 0; i < len; i++) {
                 const na = av[i] || 0;
                 const nb = bv[i] || 0;
-                if (na !== nb) return clientSortOrder.value === 'desc' ? nb - na : na - nb;
+                if (na !== nb) return sortOrder === 'desc' ? nb - na : na - nb;
             }
-            return clientSortOrder.value === 'desc'
+            return sortOrder === 'desc'
                 ? b.name.localeCompare(a.name)
                 : a.name.localeCompare(b.name);
         });
-    } else if (clientSortKey.value === 'popularity') {
+    } else if (sortKey === 'popularity') {
         sorted.sort((a, b) => {
             const av = a.launches ?? 0;
             const bv = b.launches ?? 0;
-            if (av !== bv) return clientSortOrder.value === 'desc' ? bv - av : av - bv;
-            return clientSortOrder.value === 'desc'
+            if (av !== bv) return sortOrder === 'desc' ? bv - av : av - bv;
+            return sortOrder === 'desc'
                 ? b.name.localeCompare(a.name)
                 : a.name.localeCompare(b.name);
         });
     } else {
         sorted.sort((a, b) =>
-            clientSortOrder.value === 'desc'
+            sortOrder === 'desc'
                 ? b.name.localeCompare(a.name)
                 : a.name.localeCompare(b.name)
         );
@@ -836,11 +899,7 @@ const setupEventListeners = async () => {
     eventListeners.value.push(
         await listen('download-progress', (event: any) => {
             const data = event.payload as { file: string; percentage: number };
-            installationStatus.value.set(data.file, {
-                percentage: data.percentage,
-                action: t('installation.downloading'),
-                isComplete: false,
-            });
+            smoothUpdateProgress(data.file, data.percentage, t('installation.downloading'));
             updateClientInstallStatus(data.file);
         })
     );
@@ -848,6 +907,12 @@ const setupEventListeners = async () => {
     eventListeners.value.push(
         await listen('download-complete', (event: any) => {
             const filename = event.payload as string;
+            const handle = progressAnimHandles.value.get(filename);
+            if (handle != null) {
+                window.cancelAnimationFrame(handle);
+                progressAnimHandles.value.delete(filename);
+            }
+            progressTargets.value.delete(filename);
             installationStatus.value.set(filename, {
                 percentage: 100,
                 action: t('installation.download_complete'),
@@ -878,11 +943,7 @@ const setupEventListeners = async () => {
                 percentage: number;
                 action: string;
             };
-            installationStatus.value.set(data.file, {
-                percentage: data.percentage,
-                action: t('installation.extracting'),
-                isComplete: false,
-            });
+            smoothUpdateProgress(data.file, data.percentage, t('installation.extracting'));
             updateClientInstallStatus(data.file);
         })
     );
@@ -890,6 +951,12 @@ const setupEventListeners = async () => {
     eventListeners.value.push(
         await listen('unzip-complete', (event: any) => {
             const filename = event.payload as string;
+            const handle = progressAnimHandles.value.get(filename);
+            if (handle != null) {
+                window.cancelAnimationFrame(handle);
+                progressAnimHandles.value.delete(filename);
+            }
+            progressTargets.value.delete(filename);
             installationStatus.value.set(filename, {
                 percentage: 100,
                 action: t('installation.installation_complete'),
@@ -1595,6 +1662,9 @@ onBeforeUnmount(() => {
     document.removeEventListener('click', onDocumentClickForFilters);
     window.removeEventListener('blur', blurHandler);
     document.removeEventListener('visibilitychange', visibilityHandler);
+
+    progressAnimHandles.value.forEach((handle) => window.cancelAnimationFrame(handle));
+    progressAnimHandles.value.clear();
 });
 </script>
 

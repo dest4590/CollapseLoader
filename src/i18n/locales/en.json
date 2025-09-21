@@ -270,6 +270,9 @@
     "change_avatar": "Change avatar",
     "upload_avatar": "Upload avatar",
     "avatar_upload_refresh_failed": "Avatar uploaded but failed to refresh. Restart app if needed.",
+    "reset_avatar": "Reset avatar",
+    "avatar_reset_success": "Avatar reset",
+    "avatar_reset_failed": "Failed to reset avatar",
     "avatar_type_error": "Unsupported file type",
     "avatar_size_error": "File is too large (max 5MB)",
     "avatar_uploaded": "Avatar updated",
@@ -820,7 +823,8 @@
     "presets_title": "Presets",
     "presets": "presets",
     "no_presets": "This user hasn't shared any presets yet.",
-    "create_preset": "Create Preset"
+    "create_preset": "Create Preset",
+    "presets_hidden_streamer": "Presets are hidden due to streamer mode"
   },
   "sync": {
     "last_sync": "Last sync",

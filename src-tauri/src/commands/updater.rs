@@ -100,10 +100,13 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     let current_version = env!("CARGO_PKG_VERSION");
 
     let client = reqwest::Client::new();
-    let url = format!(
-        "https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
-    );
-    // let url = "http://127.0.0.1:8000/repos/dest4590/CollapseLoader/releases/latest".to_string();
+    let url = if std::env::var("LOCAL_UPDATER_URL").unwrap_or_default() == "true" {
+        "http://127.0.0.1:8000/repos/dest4590/CollapseLoader/releases/latest".to_string()
+    } else {
+        format!(
+            "https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
+        )
+    };
 
     let response = client
         .get(&url)

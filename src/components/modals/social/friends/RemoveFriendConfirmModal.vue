@@ -20,6 +20,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { UserMinus, X } from 'lucide-vue-next';
+import { globalUserStatus } from '../../../../composables/useUserStatus';
 
 interface Friend {
     id: number;
@@ -34,7 +35,7 @@ const props = defineProps<{
 const emit = defineEmits(['close', 'confirm']);
 
 const displayName = computed(
-    () => props.friend.nickname || props.friend.username
+    () => globalUserStatus.isStreamer.value ? '??' : (props.friend.nickname || props.friend.username)
 );
 
 const confirmAction = () => {

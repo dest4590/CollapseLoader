@@ -121,7 +121,6 @@ pub async fn launch_client(
         let settings = SETTINGS
             .lock()
             .map_err(|_| "Failed to access settings".to_string())?;
-        log_debug!("Hash verification setting: {}", settings.hash_verify.value);
         settings.hash_verify.value
     };
 

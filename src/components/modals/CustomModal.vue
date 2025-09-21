@@ -32,6 +32,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'close']);
 
 const showContent = ref(false);
+import { lockScroll, unlockScroll } from '../../utils/scrollLock';
 
 const isOpen = computed({
     get: () => props.modelValue,
@@ -56,13 +57,13 @@ watch(
     isOpen,
     (newVal) => {
         if (newVal) {
-            document.body.style.overflow = 'hidden';
+            lockScroll();
             document.addEventListener('keydown', handleEscape);
             setTimeout(() => {
                 showContent.value = true;
             }, 150);
         } else {
-            document.body.style.overflow = '';
+            unlockScroll();
             document.removeEventListener('keydown', handleEscape);
             showContent.value = false;
         }
@@ -72,7 +73,9 @@ watch(
 
 onUnmounted(() => {
     document.removeEventListener('keydown', handleEscape);
-    document.body.style.overflow = '';
+    if (isOpen.value) {
+        unlockScroll();
+    }
 });
 </script>
 
@@ -91,6 +94,8 @@ onUnmounted(() => {
     backdrop-filter: blur(0px);
     animation: overlay-enter 0.4s ease-out forwards;
     padding: 1rem;
+    overflow: hidden;
+    overscroll-behavior: contain;
 }
 
 @keyframes overlay-enter {
@@ -157,6 +162,7 @@ onUnmounted(() => {
 .custom-modal-body {
     flex: 1;
     overflow-x: hidden;
+    overflow-y: auto;
     word-wrap: break-word;
     word-break: break-word;
     min-height: 0;

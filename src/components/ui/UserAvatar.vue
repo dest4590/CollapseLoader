@@ -16,7 +16,7 @@
             </span>
         </div>
 
-        <div v-if="showStatus"
+        <div v-if="showStatus && !globalUserStatus.isStreamer.value"
             class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-base-200 bg-base-200"
             :class="[statusClass, { 'status-indicator': isOnline }]"></div>
     </div>
@@ -121,8 +121,8 @@ const getInitials = (name: string): string => {
 const emit = defineEmits(['click']);
 
 const handleClick = () => {
-    if (props.isClickable && resolvedSrc.value) {
-        emit('click', resolvedSrc.value);
+    if (props.isClickable) {
+        emit('click', resolvedSrc.value || null);
     }
 };
 </script>

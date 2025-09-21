@@ -25,12 +25,14 @@
                             </span>
                         </div>
 
-                        <div v-else-if="friend.status.is_online" class="flex items-center gap-2 mt-1">
+                        <div v-else-if="friend.status.is_online && !globalUserStatus.isStreamer.value"
+                            class="flex items-center gap-2 mt-1">
                             <span class="w-2 h-2 rounded-full bg-success inline-block" aria-hidden="true"></span>
                             <span class="text-xs text-success">{{ t('userProfile.online') }}</span>
                         </div>
 
-                        <div v-else-if="friend.status.last_seen" class="flex items-center gap-2 mt-1">
+                        <div v-else-if="friend.status.last_seen && !globalUserStatus.isStreamer.value"
+                            class="flex items-center gap-2 mt-1">
                             <Clock class="w-3 h-3 text-base-content/50" />
                             <span class="text-xs text-base-content/50">
                                 {{ t('userProfile.last_seen') }}

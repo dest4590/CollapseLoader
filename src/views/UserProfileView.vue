@@ -21,7 +21,8 @@
                         <div class="flex-1">
                             <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
                                 {{ displayNickname }}
-                                <span v-if="roleBadge" :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
+                                <span v-if="roleBadge && !globalUserStatus.isStreamer.value"
+                                    :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
                                     }}</span>
                             </h1>
                             <p class="text-lg text-base-content/70">
@@ -108,7 +109,7 @@
                             {{ t('userProfile.profile_information') }}
                         </h2>
                         <div class="space-y-3">
-                            <div class="flex justify-between items-center">
+                            <div class="flex justify-between items-center" v-if="!globalUserStatus.isStreamer.value">
                                 <span class="text-base-content/70">ID:</span>
                                 <span class="font-medium">#{{ userProfile.id }}</span>
                             </div>
@@ -117,6 +118,7 @@
                                 <span class="text-base-content/70">{{ t('userProfile.username') }}:</span>
                                 <div class="flex items-center">
                                     <button @click="copyUsername" class="btn btn-ghost btn-xs"
+                                        v-if="!globalUserStatus.isStreamer.value"
                                         :title="t('userProfile.copy_username')">
                                         <Copy class="w-4 h-4" />
                                     </button>
@@ -131,7 +133,9 @@
 
                             <div v-if="userProfile.member_since" class="flex justify-between items-center">
                                 <span class="text-base-content/70">{{ t('userProfile.member_since') }}:</span>
-                                <span class="font-medium">{{ formatDate(userProfile.member_since) }}</span>
+                                <span class="font-medium" v-if="!globalUserStatus.isStreamer.value">{{
+                                    formatDate(userProfile.member_since) }}</span>
+                                <span class="font-medium" v-else>???</span>
                             </div>
                         </div>
                     </div>
@@ -219,7 +223,7 @@
                     {{ t('userProfile.back_to_friends') }}
                 </button>
             </div>
-            <div class="mt-6">
+            <div class="mt-6" v-if="!globalUserStatus.isStreamer.value">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-primary-focus">{{ t('userProfile.presets_title') }}</h2>
                     <span class="text-sm text-base-content/60">{{ presetsCountLabel }}</span>
@@ -244,6 +248,11 @@
                             </div>
                         </template>
                     </div>
+                </div>
+            </div>
+            <div class="mt-6" v-else>
+                <div class="alert alert-info">
+                    <span>{{ t('userProfile.presets_hidden_streamer') }}</span>
                 </div>
             </div>
         </div>
@@ -318,7 +327,7 @@ const presetsCountLabel = computed(() => {
 const displayNickname = computed(() => {
     if (!userProfile.value) return '';
     if (globalUserStatus.isStreamer.value) {
-        return 'Streamer';
+        return '???';
     }
     return userProfile.value.nickname || userProfile.value.username;
 });
@@ -326,7 +335,7 @@ const displayNickname = computed(() => {
 const displayUsername = computed(() => {
     if (!userProfile.value) return '';
     if (globalUserStatus.isStreamer.value) {
-        return 'streamer';
+        return '???';
     }
     return userProfile.value.username;
 });

@@ -37,7 +37,7 @@ impl AgentArguments {
             ircchat,
         }
     }
-    pub fn encrypt(&self) -> String {
+    pub fn encode(&self) -> String {
         let json = serde_json::to_string(self).unwrap_or_else(|e| {
             log_error!("Failed to serialize AgentArguments: {}", e);
             "{}".to_string()
@@ -75,7 +75,12 @@ impl AgentOverlayManager {
 
         let folder = DATA.root_dir.join("agent_overlay");
         if !folder.exists() {
+            log_debug!(
+                "Agent overlay folder missing, creating: {}",
+                folder.display()
+            );
             fs::create_dir_all(&folder).map_err(|e| format!("Failed to create directory: {e}"))?;
+            log_info!("Created agent overlay folder: {}", folder.display());
         }
 
         let agent_path = folder.join("CollapseAgent.jar");
@@ -83,29 +88,55 @@ impl AgentOverlayManager {
 
         let base_url = Self::get_api_base_url()?;
 
-        log_debug!("Downloading agent file...");
-        Self::download_file(&format!("{base_url}api/agent/download/"), &agent_path).await?;
+        log_info!(
+            "Downloading agent file from {}api/agent/download/",
+            base_url
+        );
+        Self::download_file(&format!("{base_url}api/agent/download/"), &agent_path)
+            .await
+            .map_err(|e| {
+                log_error!("Failed to download agent file: {}", e);
+                e
+            })?;
 
         let downloaded_hash = Self::calculate_md5_hash(&agent_path)?;
         if downloaded_hash != info.agent_hash {
+            log_error!(
+                "Agent file hash mismatch. expected={} got={}",
+                info.agent_hash,
+                downloaded_hash
+            );
             return Err(format!(
                 "Agent file hash mismatch. Expected: {}, Got: {}",
                 info.agent_hash, downloaded_hash
             ));
         }
 
-        log_debug!("Downloading overlay file...");
-        Self::download_file(&format!("{base_url}api/overlay/download/"), &overlay_path).await?;
+        log_info!(
+            "Downloading overlay file from {}api/overlay/download/",
+            base_url
+        );
+        Self::download_file(&format!("{base_url}api/overlay/download/"), &overlay_path)
+            .await
+            .map_err(|e| {
+                log_error!("Failed to download overlay file: {}", e);
+                e
+            })?;
 
         let downloaded_overlay_hash = Self::calculate_md5_hash(&overlay_path)?;
         if downloaded_overlay_hash != info.overlay_hash {
+            log_error!(
+                "Overlay file hash mismatch. expected={} got={}",
+                info.overlay_hash,
+                downloaded_overlay_hash
+            );
             return Err(format!(
                 "Overlay file hash mismatch. Expected: {}, Got: {}",
                 info.overlay_hash, downloaded_overlay_hash
             ));
         }
 
-        log_debug!("Agent and overlay files download completed successfully");
+        log_info!("Agent and overlay files downloaded and verified successfully");
         Ok(())
     }
 
@@ -124,35 +155,47 @@ impl AgentOverlayManager {
             return Err(format!("Backend returned error: {}", response.status()));
         }
 
-        let info: AgentOverlayInfo = response
-            .json()
-            .await
-            .map_err(|e| format!("Failed to parse agent/overlay info: {e}"))?;
+        let info: AgentOverlayInfo = response.json().await.map_err(|e| {
+            log_error!("Failed to parse agent/overlay info response: {}", e);
+            format!("Failed to parse agent/overlay info: {e}")
+        })?;
 
+        log_debug!(
+            "Fetched agent overlay info: agent_hash={}, overlay_hash={}",
+            info.agent_hash,
+            info.overlay_hash
+        );
         Ok(info)
     }
 
     async fn download_file(url: &str, path: &PathBuf) -> Result<(), String> {
         let client = reqwest::Client::new();
-        let response = client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| format!("Failed to download file: {e}"))?;
+        let response = client.get(url).send().await.map_err(|e| {
+            log_error!("HTTP request failed for {}: {}", url, e);
+            format!("Failed to download file: {e}")
+        })?;
 
         if !response.status().is_success() {
+            log_error!("Download failed for {}: HTTP {}", url, response.status());
             return Err(format!(
                 "Download failed with status: {}",
                 response.status()
             ));
         }
 
-        let bytes = response
-            .bytes()
-            .await
-            .map_err(|e| format!("Failed to read file bytes: {e}"))?;
+        let bytes = response.bytes().await.map_err(|e| {
+            log_error!("Failed to read bytes from response for {}: {}", url, e);
+            format!("Failed to read file bytes: {e}")
+        })?;
 
-        fs::write(path, bytes).map_err(|e| format!("Failed to write file to disk: {e}"))?;
+        fs::write(path, bytes).map_err(|e| {
+            log_error!(
+                "Failed to write downloaded file to {}: {}",
+                path.display(),
+                e
+            );
+            format!("Failed to write file to disk: {e}")
+        })?;
 
         Ok(())
     }
@@ -169,6 +212,10 @@ impl AgentOverlayManager {
 
         let folder = DATA.root_dir.join("agent_overlay");
         if !folder.exists() {
+            log_debug!(
+                "Agent overlay folder missing during verify, creating: {}",
+                folder.display()
+            );
             fs::create_dir_all(&folder).map_err(|e| format!("Failed to create directory: {e}"))?;
         }
 
@@ -176,7 +223,11 @@ impl AgentOverlayManager {
         let overlay_path = folder.join("CollapseOverlay.dll");
 
         if !agent_path.exists() || !overlay_path.exists() {
-            log_warn!("Agent or overlay files are missing");
+            log_warn!(
+                "Agent or overlay files are missing: agent={}, overlay={}",
+                agent_path.exists(),
+                overlay_path.exists()
+            );
             return Ok(false);
         }
 
@@ -202,7 +253,7 @@ impl AgentOverlayManager {
             return Ok(false);
         }
 
-        log_debug!("Agent and overlay files verified successfully");
+        log_info!("Agent and overlay files verified successfully");
         Ok(true)
     }
 }

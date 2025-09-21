@@ -86,6 +86,8 @@ pub fn run() {
             let app_handle = app.handle();
             *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
+            crate::log_debug!("Tauri setup: application handle stored");
+
             // dev info
             let is_dev = env!("DEVELOPMENT") == "true";
             let git_hash = env!("GIT_HASH")
@@ -110,7 +112,9 @@ pub fn run() {
                 let _ = window.set_title(&window_title);
             }
 
+            crate::log_info!("Starting CollapseLoader: {}", window_title);
             Analytics::send_start_analytics();
+            crate::log_debug!("Analytics start event sent");
 
             Ok(())
         })

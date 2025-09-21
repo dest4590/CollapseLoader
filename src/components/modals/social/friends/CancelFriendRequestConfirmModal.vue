@@ -24,6 +24,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { X, ArrowLeft } from 'lucide-vue-next';
+import { globalUserStatus } from '../../../../composables/useUserStatus';
 
 interface User {
     id: number;
@@ -38,7 +39,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'confirm']);
 
-const displayName = computed(() => props.user.nickname || props.user.username);
+const displayName = computed(() => globalUserStatus.isStreamer.value ? '??' : (props.user.nickname || props.user.username));
 
 const confirmAction = () => {
     emit('confirm', props.requestId);
