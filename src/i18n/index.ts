@@ -3,10 +3,11 @@ import { invoke } from '@tauri-apps/api/core';
 
 import en from './locales/en.json';
 import ru from './locales/ru.json';
-
+import zh_cn from './locales/zh_cn.json'
 const messages = {
     en,
-    ru
+    ru,
+    zh_cn
 };
 
 interface Setting<T> {
@@ -88,6 +89,7 @@ export const getCurrentLanguage = () => {
 export const getAvailableLanguages = () => {
     return [
         { code: 'en', name: 'English', nativeName: 'English' },
-        { code: 'ru', name: 'Russian', nativeName: 'Русский' }
+        { code: 'ru', name: 'Russian', nativeName: 'Русский' },
+        { code: 'zh_cn', name: 'Chinese', nativeName: '简体中文' }
     ];
 };
