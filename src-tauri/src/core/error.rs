@@ -1,3 +1,4 @@
+use crate::log_error;
 use native_dialog::DialogBuilder;
 
 #[derive(Debug, thiserror::Error)]
@@ -19,7 +20,7 @@ impl StartupError {
         let title = "Startup Error";
         let message = self.to_string();
 
-        eprintln!("{title}: {message}");
+        log_error!("Startup Error: {}", message);
 
         DialogBuilder::message().set_text(&message).set_title(title);
 

@@ -5,11 +5,13 @@ use crate::core::{
 };
 
 use self::core::network::analytics::Analytics;
+pub use crate::core::utils::logging;
 
-mod commands;
-mod core;
+pub mod commands;
+pub mod core;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
+    log_info!("Checking platform dependencies...");
     check_platform_dependencies()
 }
 
@@ -155,7 +157,9 @@ pub fn run() {
             );
 
             if let Some(window) = app_handle.get_webview_window("main") {
-                let _ = window.set_title(&window_title);
+                if let Err(e) = window.set_title(&window_title) {
+                    log_warn!("Failed to set window title: {}", e);
+                }
             }
 
             crate::log_info!("Starting CollapseLoader: {}", window_title);
@@ -166,6 +170,7 @@ pub fn run() {
         })
         .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
+                log_info!("Window close requested. Shutting down Discord RPC.");
                 core::utils::discord_rpc::shutdown();
             }
         })

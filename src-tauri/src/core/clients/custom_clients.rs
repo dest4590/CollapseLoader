@@ -3,6 +3,7 @@ use crate::core::{
     storage::{custom_clients::CUSTOM_CLIENT_MANAGER, data::DATA},
     utils::globals::{FILE_EXTENSION, JDK_FOLDER},
 };
+use crate::{log_debug, log_error, log_info, log_warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -17,7 +18,13 @@ impl Version {
         match version {
             "1.16.5" => Self::V1_16_5,
             "1.12.2" => Self::V1_12_2,
-            _ => Self::V1_16_5,
+            _ => {
+                log_warn!(
+                    "Unsupported version string '{}', defaulting to 1.16.5",
+                    version
+                );
+                Self::V1_16_5
+            }
         }
     }
 }
@@ -96,12 +103,21 @@ impl CustomClient {
     }
 
     pub fn validate_file(&self) -> Result<(), String> {
+        log_debug!(
+            "Validating file for custom client '{}' at path: {}",
+            self.name,
+            self.file_path.display()
+        );
         if !self.file_path.exists() {
-            return Err(format!("File {} does not exist", self.file_path.display()));
+            let err_msg = format!("File {} does not exist", self.file_path.display());
+            log_error!("Validation failed for '{}': {}", self.name, err_msg);
+            return Err(err_msg);
         }
 
         if !self.file_path.is_file() {
-            return Err(format!("Path {} is not a file", self.file_path.display()));
+            let err_msg = format!("Path {} is not a file", self.file_path.display());
+            log_error!("Validation failed for '{}': {}", self.name, err_msg);
+            return Err(err_msg);
         }
 
         let extension = self
@@ -111,9 +127,15 @@ impl CustomClient {
             .unwrap_or("");
 
         if extension != "jar" {
-            return Err("File must be a .jar file".to_string());
+            let err_msg = "File must be a .jar file".to_string();
+            log_error!("Validation failed for '{}': {}", self.name, err_msg);
+            return Err(err_msg);
         }
 
+        log_debug!(
+            "File validation successful for custom client '{}'",
+            self.name
+        );
         Ok(())
     }
 
@@ -135,7 +157,8 @@ impl CustomClient {
 
         let output = match command.arg("-m").output() {
             Ok(output) => output,
-            Err(_) => {
+            Err(e) => {
+                log_error!("Failed to execute jps command: {}", e);
                 return Vec::new();
             }
         };
@@ -149,10 +172,12 @@ impl CustomClient {
             .map(|manager| manager.clients.clone())
             .unwrap_or_default();
 
-        custom_clients
+        let running_clients: Vec<Self> = custom_clients
             .into_iter()
             .filter(|client| outputs.iter().any(|line| line.contains(&client.filename)))
-            .collect()
+            .collect();
+
+        running_clients
     }
 
     pub fn stop(&self) -> Result<(), String> {
@@ -162,6 +187,7 @@ impl CustomClient {
         #[cfg(target_os = "windows")]
         use std::os::windows::process::CommandExt;
 
+        log_info!("Attempting to stop custom client '{}'", self.name);
         let jps_path = DATA
             .root_dir
             .join(JDK_FOLDER)
@@ -172,10 +198,10 @@ impl CustomClient {
         #[cfg(windows)]
         command.creation_flags(0x0800_0000);
 
-        let output = command
-            .arg("-m")
-            .output()
-            .map_err(|e| format!("Failed to execute jps command: {e}"))?;
+        let output = command.arg("-m").output().map_err(|e| {
+            log_error!("Failed to execute jps command for stopping: {}", e);
+            format!("Failed to execute jps command: {e}")
+        })?;
 
         let binding = String::from_utf8_lossy(&output.stdout);
         let outputs: Vec<&str> = binding.lines().collect();
@@ -185,18 +211,40 @@ impl CustomClient {
             if line.contains(&self.filename) {
                 process_found = true;
                 let pid = line.split_whitespace().next().unwrap_or_default();
+                log_debug!(
+                    "Found process for custom client '{}' with PID: {}",
+                    self.name,
+                    pid
+                );
 
                 let mut kill_command = Command::new("taskkill");
 
                 #[cfg(windows)]
                 kill_command.creation_flags(0x0800_0000);
 
-                kill_command
+                let kill_output = kill_command
                     .arg("/PID")
                     .arg(pid)
                     .arg("/F")
                     .output()
-                    .map_err(|e| format!("Failed to kill process: {e}"))?;
+                    .map_err(|e| {
+                        log_error!("Failed to execute taskkill for PID {}: {}", pid, e);
+                        format!("Failed to kill process: {e}")
+                    })?;
+
+                if kill_output.status.success() {
+                    log_info!(
+                        "Successfully killed process {} for custom client '{}'",
+                        pid,
+                        self.name
+                    );
+                } else {
+                    log_error!(
+                        "taskkill failed for PID {}: {}",
+                        pid,
+                        String::from_utf8_lossy(&kill_output.stderr)
+                    );
+                }
             }
         }
 

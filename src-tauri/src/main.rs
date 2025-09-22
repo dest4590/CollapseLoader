@@ -3,8 +3,10 @@
 
 fn main() {
     let _ = dotenvy::dotenv();
+    collapseloader_lib::log_info!("Application starting...");
 
     if let Err(e) = collapseloader_lib::check_dependencies() {
+        collapseloader_lib::log_error!("Dependency check failed: {}", e);
         collapseloader_lib::handle_startup_error(e);
     }
 

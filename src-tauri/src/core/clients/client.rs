@@ -590,7 +590,11 @@ impl Client {
         let agent_arguments = AgentArguments::new(
             options.user_token.clone(),
             client_name.clone(),
-            optional_analytics,
+            if self.meta.is_custom {
+                false
+            } else {
+                optional_analytics
+            },
             cordshare,
             irc_chat,
         );

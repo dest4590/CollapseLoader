@@ -131,8 +131,7 @@ impl Data {
 
     pub async fn download(&self, file: &str) -> Result<(), String> {
         let file_name = Self::get_filename(file);
-        let is_fabric_client =
-            Self::has_extension(file, ".jar") && Self::has_extension(file, "fabric/");
+        let is_fabric_client = file.starts_with("fabric/") && file.ends_with(".jar");
 
         let is_essential_requirement = file == format!("{JDK_FOLDER}.zip")
             || file.starts_with("assets")
@@ -245,19 +244,17 @@ impl Data {
         }
 
         let total_size = response.content_length();
-        let dest_path = if Self::has_extension(file, "jar") {
-            if is_fabric_client {
-                let jar_basename = Path::new(file)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or(file);
-                self.root_dir
-                    .join(&file_name)
-                    .join("mods")
-                    .join(jar_basename)
-            } else {
-                self.root_dir.join(format!("{file_name}/{file}"))
-            }
+        let dest_path = if is_fabric_client {
+            let jar_basename = Path::new(file)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(file);
+            self.root_dir
+                .join(&file_name)
+                .join("mods")
+                .join(jar_basename)
+        } else if Self::has_extension(file, "jar") {
+            self.root_dir.join(format!("{file_name}/{file}"))
         } else {
             self.root_dir.join(file)
         };
