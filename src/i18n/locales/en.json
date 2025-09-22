@@ -118,16 +118,6 @@
       "yes_delete": "Yes, Delete",
       "cancel": "Cancel"
     },
-    "change_password_confirm": {
-      "message": "Are you sure you want to change your password?",
-      "warning": "After changing your password, you will need to log in again on all other devices.",
-      "yes_change": "Yes, Change Password"
-    },
-    "logout_confirm": {
-      "message": "Are you sure you want to log out of your account?",
-      "info": "You will need to log in again to access your account features.",
-      "yes_logout": "Yes, Logout"
-    },
     "client_crash": {
       "error_occurred": "An error occurred: {error}",
       "crashed_message": "Client {clientName} has crashed. See the logs below for more details.",
@@ -268,11 +258,6 @@
     "avatar_help": "PNG, JPG, GIF, WEBP up to 5MB",
     "avatar_drop": "Drop or click to upload avatar",
     "change_avatar": "Change avatar",
-    "upload_avatar": "Upload avatar",
-    "avatar_upload_refresh_failed": "Avatar uploaded but failed to refresh. Restart app if needed.",
-    "reset_avatar": "Reset avatar",
-    "avatar_reset_success": "Avatar reset",
-    "avatar_reset_failed": "Failed to reset avatar",
     "avatar_type_error": "Unsupported file type",
     "avatar_size_error": "File is too large (max 5MB)",
     "avatar_uploaded": "Avatar updated",
@@ -628,16 +613,7 @@
         "delete_success": "Preset \"{name}\" deleted successfully",
         "delete_error": "Failed to delete preset",
         "duplicate_success": "Preset \"{name}\" duplicated successfully",
-        "duplicate_error": "Failed to duplicate preset",
-        "apply_success": "Applied preset \"{name}\"",
-        "apply_error": "Failed to apply preset",
-        "import_success": "Preset imported successfully",
-        "import_error": "Failed to import preset",
-        "import_no_name": "Preset must have a name",
-        "import_invalid_json": "Invalid JSON",
-        "multiple_deleted": "Deleted presets: {count}",
-        "multiple_duplicated": "Duplicated presets: {count}",
-        "multiple_exported": "Exported presets: {count}"
+        "duplicate_error": "Failed to duplicate preset"
       }
     }
   },
@@ -653,16 +629,6 @@
     "installation_complete": "Installation Complete"
   },
   "errors": {
-    "clients_load_failed": "Failed to load clients. Servers might be unavailable. Please check logs or try again later.",
-    "clients_unavailable": "Failed to load clients. Servers might be unavailable.",
-    "download_error": "Error downloading client: {error}",
-    "launch_error": "Error launching client: {error}",
-    "stop_error": "Error stopping client: {error}",
-    "folder_error": "Error opening folder: {error}",
-    "reinstall_error": "Error reinstalling client: {error}",
-    "logs_error": "Error copying logs: {error}",
-    "delete_error": "Error deleting client: {error}",
-    "status_update_error": "Failed to update {name} status: {error}",
     "favorites_error": "Error updating favorite: {error}",
     "load_accounts_error": "Error loading accounts: {error}",
     "launch_with_account_error": "Error launching client with account: {error}",
@@ -823,8 +789,7 @@
     "presets_title": "Presets",
     "presets": "presets",
     "no_presets": "This user hasn't shared any presets yet.",
-    "create_preset": "Create Preset",
-    "presets_hidden_streamer": "Presets are hidden due to streamer mode"
+    "create_preset": "Create Preset"
   },
   "sync": {
     "last_sync": "Last sync",

@@ -258,8 +258,6 @@
     "avatar_help": "PNG、JPG、GIF、WEBP，最大 5MB",
     "avatar_drop": "拖拽或点击上传头像",
     "change_avatar": "更换头像",
-    "upload_avatar": "上传头像",
-    "avatar_upload_refresh_failed": "头像已上传但刷新失败。如有需要请重启应用。",
     "avatar_type_error": "不支持的文件类型",
     "avatar_size_error": "文件过大（最大 5MB）",
     "avatar_uploaded": "头像已更新",
@@ -620,12 +618,6 @@
     }
   },
   "errors": {
-    "download_failed": "下载 {name} 失败：{error}",
-    "install_failed": "安装 {name} 失败：{error}",
-    "start_failed": "启动 {name} 失败：{error}",
-    "stop_failed": "停止 {name} 失败：{error}",
-    "delete_failed": "删除 {name} 失败：{error}",
-    "update_status_failed": "更新 {name} 状态失败：{error}",
     "favorites_error": "更新收藏时出错：{error}",
     "load_accounts_error": "加载账户时出错：{error}",
     "launch_with_account_error": "使用账户启动客户端时出错：{error}",
