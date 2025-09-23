@@ -52,7 +52,7 @@ pub fn handle_startup_error(error: StartupError) {
 
 #[cfg(not(target_os = "windows"))]
 pub fn handle_startup_error(error: StartupError) {
-    error.show_and_exit(None);
+    error.show_and_exit();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
