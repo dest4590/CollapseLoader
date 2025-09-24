@@ -25,7 +25,7 @@ pub fn check_webkit_warning() -> Result<(), StartupError> {
 }
 
 #[cfg(target_os = "windows")]
-pub fn handle_startup_error(error: StartupError) {
+pub fn handle_startup_error(error: &StartupError) {
     use native_dialog::DialogBuilder;
 
     if let StartupError::WebView2NotInstalled = error {
@@ -60,7 +60,7 @@ pub fn handle_startup_error(error: StartupError) {
 }
 
 #[cfg(not(target_os = "windows"))]
-pub fn handle_startup_error(error: StartupError) {
+pub fn handle_startup_error(error: &StartupError) {
     #[cfg(target_os = "linux")]
     if let StartupError::LinuxWebKitWarning = error {
         error.show_warning();

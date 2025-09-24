@@ -212,7 +212,6 @@ pub fn get_active_account() -> Option<Account> {
 
 #[tauri::command]
 pub fn get_favorite_clients() -> Result<Vec<u32>, String> {
-    log_debug!("Fetching favorite clients");
     FAVORITE_MANAGER.lock().map_or_else(
         |e| {
             log_error!("Failed to acquire lock on favorite manager: {}", e);

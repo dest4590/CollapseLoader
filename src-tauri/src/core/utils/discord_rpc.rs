@@ -53,10 +53,16 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         return Err("Discord client not initialized".to_string());
     };
 
-    let start_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+    let start_time = match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(dur) => dur.as_secs(),
+        Err(err) => {
+            log_warn!(
+                "System time is before UNIX_EPOCH, using 0 for start time: {:?}",
+                err
+            );
+            0
+        }
+    };
 
     let large_text = format!("Version {env}", env = env!("CARGO_PKG_VERSION"));
 
