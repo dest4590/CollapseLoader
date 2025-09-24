@@ -7,7 +7,7 @@ fn main() {
 
     if let Err(e) = collapseloader_lib::check_dependencies() {
         collapseloader_lib::log_error!("Dependency check failed: {}", e);
-        collapseloader_lib::handle_startup_error(e);
+        collapseloader_lib::handle_startup_error(&e);
     }
 
     collapseloader_lib::run()

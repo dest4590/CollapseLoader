@@ -16,7 +16,7 @@ pub fn check_dependencies() -> Result<(), StartupError> {
 }
 
 #[cfg(target_os = "windows")]
-pub fn handle_startup_error(error: StartupError) {
+pub fn handle_startup_error(error: &StartupError) {
     use native_dialog::DialogBuilder;
 
     if let StartupError::WebView2NotInstalled = error {
