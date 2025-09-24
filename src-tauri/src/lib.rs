@@ -4,6 +4,9 @@ use crate::core::{
     error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
 };
 
+#[cfg(target_os = "linux")]
+use crate::core::platform::check_webkit_environment;
+
 use self::core::network::analytics::Analytics;
 pub use crate::core::utils::logging;
 
@@ -13,6 +16,12 @@ pub mod core;
 pub fn check_dependencies() -> Result<(), StartupError> {
     log_info!("Checking platform dependencies...");
     check_platform_dependencies()
+}
+
+#[cfg(target_os = "linux")]
+pub fn check_webkit_warning() -> Result<(), StartupError> {
+    log_info!("Checking WebKit environment variables...");
+    check_webkit_environment()
 }
 
 #[cfg(target_os = "windows")]
@@ -52,7 +61,13 @@ pub fn handle_startup_error(error: StartupError) {
 
 #[cfg(not(target_os = "windows"))]
 pub fn handle_startup_error(error: StartupError) {
-    error.show_and_exit(None);
+    #[cfg(target_os = "linux")]
+    if let StartupError::LinuxWebKitWarning = error {
+        error.show_warning();
+        return;
+    }
+
+    error.show_and_exit();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

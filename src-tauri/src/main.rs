@@ -10,5 +10,10 @@ fn main() {
         collapseloader_lib::handle_startup_error(e);
     }
 
+    #[cfg(target_os = "linux")]
+    if let Err(e) = collapseloader_lib::check_webkit_warning() {
+        collapseloader_lib::handle_startup_error(e);
+    }
+
     collapseloader_lib::run()
 }

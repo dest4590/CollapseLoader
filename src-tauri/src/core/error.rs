@@ -13,6 +13,10 @@ pub enum StartupError {
     #[cfg(target_os = "linux")]
     #[error("webkit2gtk dependencies are missing. Please install them. For example: \n\nDebian/Ubuntu: sudo apt-get install libwebkit2gtk-4.0-37\nArch: sudo pacman -S webkit2gtk3\nFedora: sudo dnf install webkit2gtk3-devel")]
     LinuxDependenciesMissing,
+
+    #[cfg(target_os = "linux")]
+    #[error("Warning: WEBKIT_DISABLE_DMABUF_RENDERER environment variable is not set to 1.\n\nIf you experience a white screen or rendering issues, please set this variable before launching the application:\n\nWEBKIT_DISABLE_DMABUF_RENDERER=1 collapseloader\n\nOr add it to your shell profile for permanent use.")]
+    LinuxWebKitWarning,
 }
 
 impl StartupError {
@@ -22,8 +26,21 @@ impl StartupError {
 
         log_error!("Startup Error: {}", message);
 
-        DialogBuilder::message().set_text(&message).set_title(title);
+        let _ = DialogBuilder::message().set_text(&message).set_title(title);
 
         std::process::exit(1);
+    }
+
+    pub fn show_warning(&self) {
+        let title = "Warning";
+        let message = self.to_string();
+
+        eprintln!("\n==== WARNING ====");
+        eprintln!("{}", message);
+        eprintln!("================\n");
+
+        let _ = std::panic::catch_unwind(|| {
+            let _ = DialogBuilder::message().set_text(&message).set_title(title);
+        });
     }
 }
