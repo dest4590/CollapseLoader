@@ -118,6 +118,16 @@
       "yes_delete": "Yes, Delete",
       "cancel": "Cancel"
     },
+    "change_password_confirm": {
+      "message": "Are you sure you want to change your password? This will immediately update your account credentials.",
+      "warning": "If you lose access to your current password you may need to use account recovery to regain access.",
+      "yes_change": "Yes, change password"
+    },
+    "logout_confirm": {
+      "message": "Are you sure you want to log out of your account?",
+      "info": "This will sign you out locally and may require you to sign in again to access some features.",
+      "yes_logout": "Yes, log out"
+    },
     "client_crash": {
       "error_occurred": "An error occurred: {error}",
       "crashed_message": "Client {clientName} has crashed. See the logs below for more details.",
