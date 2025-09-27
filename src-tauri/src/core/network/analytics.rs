@@ -53,7 +53,7 @@ impl Analytics {
     }
 
     fn get_server_url(analytics_type: &str) -> Option<String> {
-        match SERVERS.selected_auth_server.clone() {
+        match SERVERS.selected_auth.clone() {
             Some(server) => Some(server.url),
             None => {
                 log_debug!("No Auth server selected for {}", analytics_type);

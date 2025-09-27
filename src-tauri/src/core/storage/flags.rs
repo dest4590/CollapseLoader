@@ -1,7 +1,7 @@
 use super::common::JsonStorage;
 use super::data::DATA;
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 use std::{path::PathBuf, sync::Mutex};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -10,7 +10,7 @@ pub struct Flag<T> {
 }
 
 impl<T> Flag<T> {
-    pub fn new(value: T) -> Self {
+    pub const fn new(value: T) -> Self {
         Self { value }
     }
 }
@@ -56,7 +56,5 @@ impl Default for Flags {
     }
 }
 
-lazy_static! {
-    pub static ref FLAGS_MANAGER: Mutex<Flags> =
-        Mutex::new(Flags::load_from_disk(DATA.get_local("flags.json")));
-}
+pub static FLAGS_MANAGER: LazyLock<Mutex<Flags>> =
+    LazyLock::new(|| Mutex::new(Flags::load_from_disk(DATA.get_local("flags.json"))));

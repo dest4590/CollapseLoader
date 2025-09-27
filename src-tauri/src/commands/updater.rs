@@ -1,6 +1,9 @@
 use crate::{
-    core::utils::globals::{GITHUB_REPO_NAME, GITHUB_REPO_OWNER},
-    log_debug, log_warn,
+    core::{
+        storage::data::Data,
+        utils::globals::{GITHUB_REPO_NAME, GITHUB_REPO_OWNER},
+    },
+    log_debug, log_error, log_info, log_warn,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -98,15 +101,18 @@ fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
 #[tauri::command]
 pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     let current_version = env!("CARGO_PKG_VERSION");
+    log_info!("Checking for updates. Current version: {}", current_version);
 
     let client = reqwest::Client::new();
     let url = if std::env::var("LOCAL_UPDATER_URL").unwrap_or_default() == "true" {
+        log_debug!("Using local updater URL for development");
         "http://127.0.0.1:8000/repos/dest4590/CollapseLoader/releases/latest".to_string()
     } else {
         format!(
             "https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
         )
     };
+    log_debug!("Fetching latest release from: {}", url);
 
     let response = client
         .get(&url)
@@ -115,18 +121,31 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         .header("X-GitHub-Api-Version", "2022-11-28")
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch releases: {e}"))?;
+        .map_err(|e| {
+            log_warn!("Failed to fetch releases from GitHub API: {}", e);
+            format!("Failed to fetch releases: {e}")
+        })?;
 
     if !response.status().is_success() {
+        log_warn!(
+            "GitHub API returned non-success status: {}",
+            response.status()
+        );
         return Err(format!("GitHub API error: {}", response.status()));
     }
 
-    let release: GitHubRelease = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse release data: {e}"))?;
+    let release: GitHubRelease = response.json().await.map_err(|e| {
+        log_warn!("Failed to parse release data from GitHub API: {}", e);
+        format!("Failed to parse release data: {e}")
+    })?;
+
+    log_debug!(
+        "Successfully fetched and parsed latest release: '{}'",
+        release.name
+    );
 
     if release.prerelease {
+        log_info!("Latest release is a pre-release, skipping update check.");
         return Ok(UpdateInfo {
             available: false,
             current_version: current_version.to_string(),
@@ -141,6 +160,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     }
 
     let latest_version = release.tag_name.trim_start_matches('v');
+    log_info!("Latest stable version found: {}", latest_version);
 
     let is_newer = match compare_versions(current_version, latest_version) {
         Ok(Ordering::Less) => true,
@@ -151,16 +171,22 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         }
     };
 
+    if is_newer {
+        log_info!("A new version is available: {}", latest_version);
+    } else {
+        log_info!("Application is up to date.");
+    }
+
     let download_url = if cfg!(target_os = "windows") {
         release
             .assets
             .iter()
-            .find(|asset| asset.name.ends_with(".msi"))
+            .find(|asset| Data::has_extension(&asset.name, ".msi"))
             .or_else(|| {
                 release
                     .assets
                     .iter()
-                    .find(|asset| asset.name.ends_with(".exe"))
+                    .find(|asset| Data::has_extension(&asset.name, ".exe"))
             })
             .map(|asset| asset.browser_download_url.clone())
             .unwrap_or_else(|| {
@@ -168,19 +194,34 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
                 String::new()
             })
     } else {
+        log_warn!("Auto-update not supported on this platform, no download URL will be provided.");
         String::new()
     };
 
     if download_url.is_empty() {
+        log_warn!("No suitable installer found for the current platform.");
         return Err(format!(
             "No suitable installer found. Please download manually from {}",
             release.html_url
         ));
     }
+    log_debug!("Found suitable installer URL: {}", download_url);
 
     let (parsed_changelog, parsed_translations) = extract_changelog_json_block(&release.body)
-        .and_then(|content| parse_changelog_and_translations(&content).ok())
-        .unwrap_or_default();
+        .and_then(|content| {
+            log_debug!("Found changelog JSON block in release notes");
+            parse_changelog_and_translations(&content).ok()
+        })
+        .unwrap_or_else(|| {
+            log_warn!("No valid changelog JSON block found in release notes");
+            Default::default()
+        });
+
+    let is_critical = release.body.to_lowercase().contains("security")
+        || release.body.to_lowercase().contains("critical");
+    if is_critical {
+        log_warn!("Update is marked as critical.");
+    }
 
     Ok(UpdateInfo {
         available: is_newer,
@@ -191,14 +232,15 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         changelog: parsed_changelog,
         translations: parsed_translations,
         release_date: release.published_at,
-        is_critical: release.body.to_lowercase().contains("security")
-            || release.body.to_lowercase().contains("critical"),
+        is_critical,
     })
 }
 
 #[tauri::command]
 pub async fn download_and_install_update(download_url: String) -> Result<(), String> {
+    log_info!("Starting update download and installation process.");
     if download_url.is_empty() {
+        log_warn!("Update process aborted: No download URL provided.");
         return Err("No download URL provided".to_string());
     }
 
@@ -207,41 +249,45 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
         .build()
         .map_err(|e| format!("Failed to build HTTP client: {e}"))?;
 
-    log_debug!("Downloading from: {}", download_url);
+    log_debug!("Downloading update from: {}", download_url);
 
-    let response = client
-        .get(&download_url)
-        .send()
-        .await
-        .map_err(|e| format!("Failed to download update: {e}"))?;
+    let response = client.get(&download_url).send().await.map_err(|e| {
+        log_error!("Failed to download update: {}", e);
+        format!("Failed to download update: {e}")
+    })?;
 
     if !response.status().is_success() {
+        log_error!("Update download failed with status: {}", response.status());
         return Err(format!(
             "Download failed with status: {}",
             response.status()
         ));
     }
 
-    let bytes = response
-        .bytes()
-        .await
-        .map_err(|e| format!("Failed to read update data: {e}"))?;
+    let bytes = response.bytes().await.map_err(|e| {
+        log_error!("Failed to read update data from response: {}", e);
+        format!("Failed to read update data: {e}")
+    })?;
 
-    log_debug!("Downloaded {} mb", bytes.len() / (1024 * 1024));
+    log_debug!("Downloaded {} MB", bytes.len() / (1024 * 1024));
 
     let temp_dir = std::env::temp_dir();
     let file_name = download_url.split('/').next_back().unwrap_or("update.msi");
     let temp_file = temp_dir.join(file_name);
 
-    log_debug!("Writing to temp file: {:?}", temp_file);
+    log_debug!("Writing update to temp file: {:?}", temp_file);
 
     if !file_name.ends_with(".msi") {
+        log_error!("Downloaded file is not an MSI installer: {}", file_name);
         return Err(format!(
             "Downloaded file is not an MSI. Please download manually from {download_url}"
         ));
     }
 
-    std::fs::write(&temp_file, bytes).map_err(|e| format!("Failed to write update file: {e}"))?;
+    std::fs::write(&temp_file, bytes).map_err(|e| {
+        log_error!("Failed to write update file to temp directory: {}", e);
+        format!("Failed to write update file: {e}")
+    })?;
 
     #[cfg(target_os = "windows")]
     {
@@ -252,11 +298,13 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
             .ok()
             .and_then(|p| p.file_name().map(|s| s.to_string_lossy().to_string()))
             .unwrap_or_else(|| "collapseloader.exe".to_string());
+        log_debug!("Current executable name: {}", current_exe_name);
 
         let msi_path = temp_file.to_string_lossy().to_string();
         let script_path = std::env::temp_dir().join("cl_update_and_restart.bat");
+        log_debug!("Updater script path: {:?}", script_path);
 
-        let quoted_msi = msi_path; // no-op replace removed
+        let quoted_msi = msi_path;
 
         let script_content = format!(
             r#"@echo off
@@ -300,15 +348,19 @@ exit
                 .map_err(|e| format!("Failed to create updater script: {e}"))?;
             file.write_all(script_content.as_bytes())
                 .map_err(|e| format!("Failed to write updater script: {e}"))?;
+            log_debug!("Updater script created successfully.");
         }
 
         let mut cmd = std::process::Command::new("cmd.exe");
         cmd.args(["/C", "start", "", &script_path.to_string_lossy()]);
-        const DETACHED_PROCESS: u32 = 0x00000008;
+        const DETACHED_PROCESS: u32 = 0x0000_0008;
         cmd.creation_flags(DETACHED_PROCESS);
-        cmd.spawn()
-            .map_err(|e| format!("Failed to launch updater script: {e}"))?;
+        cmd.spawn().map_err(|e| {
+            log_error!("Failed to launch updater script: {}", e);
+            format!("Failed to launch updater script: {e}")
+        })?;
 
+        log_info!("Updater script launched. Exiting application to allow update.");
         std::process::exit(0);
     }
 
@@ -319,7 +371,7 @@ exit
 }
 
 #[tauri::command]
-pub fn get_changelog() -> Vec<ChangelogEntry> {
+pub const fn get_changelog() -> Vec<ChangelogEntry> {
     Vec::new()
 }
 
@@ -329,6 +381,7 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     } else if let Some(idx) = body.find("``` changelog") {
         (idx, "``` changelog")
     } else {
+        log_debug!("No changelog JSON block marker found in release body.");
         return None;
     };
 
@@ -342,9 +395,11 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     if let Some(closing_rel) = rest.find("```") {
         let closing_idx = content_start + closing_rel;
         let content = &body[content_start..closing_idx];
+        log_debug!("Extracted changelog content block.");
         return Some(content.trim().to_string());
     }
 
+    log_warn!("Found changelog block marker but no closing '```'.");
     None
 }
 
@@ -352,10 +407,12 @@ fn parse_changelog_and_translations(
     content: &str,
 ) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
     if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) {
+        log_debug!("Parsed changelog as a direct array of entries.");
         return Ok((v, None));
     }
 
     if let Ok(entry) = serde_json::from_str::<ChangelogEntry>(content) {
+        log_debug!("Parsed changelog as a single entry object.");
         return Ok((vec![entry], None));
     }
 
@@ -371,9 +428,13 @@ fn parse_changelog_and_translations(
                 .map_err(|e| format!("Failed to serialize entries node: {e}"))?;
             let entries: Vec<ChangelogEntry> = serde_json::from_str(&entries_json)
                 .map_err(|e| format!("Failed to parse entries array: {e}"))?;
+            log_debug!(
+                "Parsed changelog from a root object with 'entries' and 'translations' keys."
+            );
             return Ok((entries, translations_val));
         }
     }
 
+    log_warn!("Changelog JSON is not in a recognized format.");
     Err("Changelog JSON is not in a recognized format".to_string())
 }

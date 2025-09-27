@@ -1,7 +1,7 @@
 use std::{path::PathBuf, sync::Mutex};
 
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 
 use crate::core::storage::data::DATA;
 
@@ -52,8 +52,8 @@ impl Default for FavoriteManager {
     }
 }
 
-lazy_static! {
-    pub static ref FAVORITE_MANAGER: Mutex<FavoriteManager> = Mutex::new(
-        FavoriteManager::load_from_disk(DATA.get_local("favorites.json"))
-    );
-}
+pub static FAVORITE_MANAGER: LazyLock<Mutex<FavoriteManager>> = LazyLock::new(|| {
+    Mutex::new(FavoriteManager::load_from_disk(
+        DATA.get_local("favorites.json"),
+    ))
+});

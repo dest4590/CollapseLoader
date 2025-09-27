@@ -6,22 +6,20 @@ use crate::core::utils::globals::{JDK_FOLDER, ROOT_DIR};
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
 use futures_util::StreamExt;
-use lazy_static::lazy_static;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
 use std::time::Duration;
 use std::{fs, io};
 use tokio::io::AsyncWriteExt;
 
-pub struct DataManager {
+pub struct Data {
     pub root_dir: PathBuf,
 }
 
-lazy_static! {
-    pub static ref APP_HANDLE: Mutex<Option<tauri::AppHandle>> = Mutex::new(None);
-}
+pub static APP_HANDLE: std::sync::LazyLock<Mutex<Option<tauri::AppHandle>>> =
+    std::sync::LazyLock::new(|| Mutex::new(None));
 
-impl DataManager {
+impl Data {
     pub fn new(root_dir: PathBuf) -> Self {
         if !root_dir.exists() {
             log_debug!(
@@ -33,6 +31,12 @@ impl DataManager {
         }
 
         Self { root_dir }
+    }
+
+    pub fn has_extension(file_path: &str, extension: &str) -> bool {
+        Path::new(file_path)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case(extension))
     }
 
     pub fn get_local(&self, relative_path: &str) -> PathBuf {
@@ -115,29 +119,29 @@ impl DataManager {
         self.root_dir.join(file_name)
     }
 
-    pub fn get_as_folder_string(&self, file: &str) -> String {
+    pub fn get_as_folder_string(file: &str) -> String {
         let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
         format!("{file_name}{MAIN_SEPARATOR}")
     }
 
-    pub fn get_filename(&self, file: &str) -> String {
+    pub fn get_filename(file: &str) -> String {
         let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
         file_name.to_string()
     }
 
     pub async fn download(&self, file: &str) -> Result<(), String> {
-        let file_name = self.get_filename(file);
-        let is_fabric_client = file.ends_with(".jar") && file.contains("fabric/");
+        let file_name = Self::get_filename(file);
+        let is_fabric_client = file.starts_with("fabric/") && file.ends_with(".jar");
 
         let is_essential_requirement = file == format!("{JDK_FOLDER}.zip")
             || file.starts_with("assets")
             || file.starts_with("natives")
             || file.starts_with("libraries");
 
-        let file_exists = if file.ends_with(".zip") {
+        let file_exists = if Self::has_extension(file, "zip") {
             let extract_path = self.root_dir.join(&file_name);
             extract_path.exists()
-        } else if file.ends_with(".jar") {
+        } else if Self::has_extension(file, "jar") {
             if is_fabric_client {
                 let jar_basename = Path::new(file)
                     .file_name()
@@ -171,7 +175,7 @@ impl DataManager {
             emit_to_main_window(app_handle, "download-start", &file);
         }
 
-        if file.ends_with(".jar") {
+        if Self::has_extension(file, "jar") {
             if is_fabric_client {
                 let mods_dir = self.root_dir.join(&file_name).join("mods");
                 if let Err(e) = fs::create_dir_all(&mods_dir) {
@@ -181,17 +185,15 @@ impl DataManager {
                         e
                     );
                     return Err(format!("Failed to create mods directory: {e}"));
-                } else {
-                    log_debug!("Created fabric mods directory: {}", mods_dir.display());
                 }
+                log_debug!("Created fabric mods directory: {}", mods_dir.display());
             } else {
-                let local_path = self.get_as_folder(file).to_path_buf();
+                let local_path = self.get_as_folder(file);
                 if let Err(e) = fs::create_dir_all(&local_path) {
                     log_error!("Failed to create directory {}: {}", local_path.display(), e);
                     return Err(format!("Failed to create directory: {e}"));
-                } else {
-                    log_debug!("Created client local directory: {}", local_path.display());
                 }
+                log_debug!("Created client local directory: {}", local_path.display());
                 if SETTINGS
                     .lock()
                     .map(|s| s.sync_client_settings.value)
@@ -204,7 +206,7 @@ impl DataManager {
             }
         }
 
-        let cdn_url = SERVERS.selected_cdn_server.as_ref().map_or_else(
+        let cdn_url = SERVERS.selected_cdn.as_ref().map_or_else(
             || {
                 log_error!("No CDN server available for download");
                 Err("No CDN server available for download.".to_string())
@@ -242,19 +244,17 @@ impl DataManager {
         }
 
         let total_size = response.content_length();
-        let dest_path = if file.ends_with(".jar") {
-            if is_fabric_client {
-                let jar_basename = Path::new(file)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or(file);
-                self.root_dir
-                    .join(&file_name)
-                    .join("mods")
-                    .join(jar_basename)
-            } else {
-                self.root_dir.join(format!("{file_name}/{file}"))
-            }
+        let dest_path = if is_fabric_client {
+            let jar_basename = Path::new(file)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(file);
+            self.root_dir
+                .join(&file_name)
+                .join("mods")
+                .join(jar_basename)
+        } else if Self::has_extension(file, "jar") {
+            self.root_dir.join(format!("{file_name}/{file}"))
         } else {
             self.root_dir.join(file)
         };
@@ -271,9 +271,6 @@ impl DataManager {
         let mut downloaded: u64 = 0;
         let mut last_percentage: u8 = 0;
         let mut stream = response.bytes_stream();
-
-        use futures_util::StreamExt;
-        use tokio::io::AsyncWriteExt;
 
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| {
@@ -292,11 +289,10 @@ impl DataManager {
 
             downloaded += chunk.len() as u64;
 
-            let percentage = if let Some(total) = total_size {
-                ((downloaded as f64 / total as f64) * 100.0) as u8
-            } else {
-                std::cmp::min(99, (downloaded / 1024 / 1024) as u8)
-            };
+            let percentage = total_size.map_or_else(
+                || std::cmp::min(99, (downloaded / 1024 / 1024) as u8),
+                |total| ((downloaded as f64 / total as f64) * 100.0) as u8,
+            );
 
             if percentage != last_percentage {
                 last_percentage = percentage;
@@ -322,24 +318,27 @@ impl DataManager {
             emit_to_main_window(app_handle, "download-complete", &file);
         }
 
-        if file.ends_with(".zip") {
+        if Self::has_extension(file, "zip") {
             self.unzip(file).map_err(|e| {
                 log_error!("Failed to extract {}: {}", file, e);
                 e
             })?;
         }
 
-        if file.ends_with(".jar") {
+        if Self::has_extension(file, "jar") {
             log_debug!("Verifying MD5 hash for client file: {}", file);
-            self.verify_client_hash(file, &dest_path).await?;
+            self.verify_client_hash(file, &dest_path).map_err(|e| {
+                log_error!("Failed to verify client hash for {}: {}", file, e);
+                e
+            })?;
         }
 
         Ok(())
     }
 
     pub fn ensure_client_synced(&self, client_base: &str) -> Result<(), String> {
-        let folders_to_sync = vec!["resourcepacks"];
-        let files_to_sync = vec!["options.txt", "optionsof.txt"];
+        let folders_to_sync = ["resourcepacks"];
+        let files_to_sync = ["options.txt", "optionsof.txt"];
 
         let global_options_dir = self.root_dir.join("synced_options");
         if !global_options_dir.exists() {
@@ -355,7 +354,7 @@ impl DataManager {
             }
         }
 
-        for folder in folders_to_sync.iter() {
+        for folder in &folders_to_sync {
             let target = global_options_dir.join(folder);
             if !target.exists() {
                 if let Err(e) = fs::create_dir_all(&target) {
@@ -394,7 +393,7 @@ impl DataManager {
             }
         }
 
-        for file in files_to_sync.iter() {
+        for file in &files_to_sync {
             let global_file = global_options_dir.join(file);
             if !global_file.exists() {
                 if let Err(e) = fs::write(&global_file, "") {
@@ -460,7 +459,7 @@ impl DataManager {
             emit_to_main_window(app_handle, "download-start", &file);
         }
 
-        let cdn_url = SERVERS.selected_cdn_server.as_ref().map_or_else(
+        let cdn_url = SERVERS.selected_cdn.as_ref().map_or_else(
             || {
                 log_error!("No CDN server available for download");
                 Err("No CDN server available for download.".to_string())
@@ -544,11 +543,10 @@ impl DataManager {
 
             downloaded += chunk.len() as u64;
 
-            let percentage = if let Some(total) = total_size {
-                ((downloaded as f64 / total as f64) * 100.0) as u8
-            } else {
-                std::cmp::min(99, (downloaded / 1024 / 1024) as u8)
-            };
+            let percentage = total_size.map_or_else(
+                || std::cmp::min(99, (downloaded / 1024 / 1024) as u8),
+                |total| ((downloaded as f64 / total as f64) * 100.0) as u8,
+            );
 
             if percentage != last_percentage {
                 last_percentage = percentage;
@@ -577,7 +575,7 @@ impl DataManager {
         Ok(())
     }
 
-    async fn verify_client_hash(&self, filename: &str, file_path: &PathBuf) -> Result<(), String> {
+    fn verify_client_hash(&self, filename: &str, file_path: &PathBuf) -> Result<(), String> {
         let hash_verify_enabled = {
             let settings = SETTINGS
                 .lock()
@@ -629,15 +627,15 @@ impl DataManager {
             filename
         );
         let calculated_hash = if is_fabric {
-            let client_folder = self.root_dir.join(self.get_filename(filename));
+            let client_folder = self.root_dir.join(Self::get_filename(filename));
             let jar_basename = std::path::Path::new(filename)
                 .file_name()
                 .and_then(|n| n.to_str())
                 .ok_or_else(|| "Invalid fabric client filename".to_string())?;
             let fabric_jar_path = client_folder.join("mods").join(jar_basename);
-            self.calculate_md5_hash(&fabric_jar_path)?
+            Self::calculate_md5_hash(&fabric_jar_path)?
         } else {
-            self.calculate_md5_hash(file_path)?
+            Self::calculate_md5_hash(file_path)?
         };
 
         if calculated_hash != expected_hash {
@@ -687,7 +685,7 @@ impl DataManager {
         Ok(())
     }
 
-    fn calculate_md5_hash(&self, path: &PathBuf) -> Result<String, String> {
+    pub fn calculate_md5_hash(path: &PathBuf) -> Result<String, String> {
         let bytes = fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
 
         let digest = md5::compute(&bytes);
@@ -717,7 +715,7 @@ impl DataManager {
             "minecraft_versions".to_string(),
         ];
 
-        for requirement in requirements.iter() {
+        for requirement in &requirements {
             let path = self.root_dir.join(requirement);
             if path.exists() {
                 if path.is_dir() {
@@ -740,6 +738,5 @@ impl DataManager {
     }
 }
 
-lazy_static! {
-    pub static ref DATA: DataManager = DataManager::new(ROOT_DIR.clone().into());
-}
+pub static DATA: std::sync::LazyLock<Data> =
+    std::sync::LazyLock::new(|| Data::new(ROOT_DIR.clone().into()));

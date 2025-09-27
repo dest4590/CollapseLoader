@@ -118,6 +118,16 @@
       "yes_delete": "是，删除",
       "cancel": "取消"
     },
+    "change_password_confirm": {
+      "message": "您确定要更改密码吗？这将立即更新您的账户凭据。",
+      "warning": "如果您无法访问当前密码，可能需要使用账户恢复来重新获得访问权限。",
+      "yes_change": "是的，修改密码"
+    },
+    "logout_confirm": {
+      "message": "您确定要退出您的账户吗？",
+      "info": "这将使您在本地登出，并可能需要您再次登录以访问某些功能。",
+      "yes_logout": "是的，退出"
+    },
     "client_crash": {
       "error_occurred": "发生错误：{error}",
       "crashed_message": "客户端 {clientName} 已崩溃。更多详情请查看下方日志。",
@@ -258,8 +268,6 @@
     "avatar_help": "PNG、JPG、GIF、WEBP，最大 5MB",
     "avatar_drop": "拖拽或点击上传头像",
     "change_avatar": "更换头像",
-    "upload_avatar": "上传头像",
-    "avatar_upload_refresh_failed": "头像已上传但刷新失败。如有需要请重启应用。",
     "avatar_type_error": "不支持的文件类型",
     "avatar_size_error": "文件过大（最大 5MB）",
     "avatar_uploaded": "头像已更新",
@@ -620,12 +628,6 @@
     }
   },
   "errors": {
-    "download_failed": "下载 {name} 失败：{error}",
-    "install_failed": "安装 {name} 失败：{error}",
-    "start_failed": "启动 {name} 失败：{error}",
-    "stop_failed": "停止 {name} 失败：{error}",
-    "delete_failed": "删除 {name} 失败：{error}",
-    "update_status_failed": "更新 {name} 状态失败：{error}",
     "favorites_error": "更新收藏时出错：{error}",
     "load_accounts_error": "加载账户时出错：{error}",
     "launch_with_account_error": "使用账户启动客户端时出错：{error}",

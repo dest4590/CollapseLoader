@@ -15,7 +15,66 @@ on:
     workflow_dispatch:
 
 jobs:
+    check-skip:
+        runs-on: ubuntu-latest
+        outputs:
+            skip: ${{ steps.check.outputs.skip }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Check commit messages for skip keywords
+              id: check
+              shell: bash
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+                  keywords='\[skip ci\]|\[ci skip\]|skip-ci|skip_ci|SKIP_CI|NO_CI'
+
+                  skip_found=false
+
+                  if [ -n "${GITHUB_SHA-}" ] && [ -n "${GITHUB_BASE_REF-}" ] || true; then
+                    git fetch --no-tags --depth=50 origin +refs/heads/*:refs/remotes/origin/* || true
+                    if [ -n "${{ github.event.before || '' }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+                      commit_range="${{ github.event.before }}..${{ github.event.after }}"
+                    else
+                      commit_range="${GITHUB_SHA}"
+                    fi
+                    messages=$(git log --pretty=%B $commit_range 2>/dev/null || true)
+                  else
+                    messages=""
+                  fi
+
+                  if [ -z "$(echo "$messages" | tr -d '[:space:]')" ]; then
+                    messages="$(jq -r '.commits[].message' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
+                  fi
+
+                  echo "---- Collected commit messages ----"
+                  if [ -n "$(echo "$messages" | tr -d '[:space:]')" ]; then
+                    printf "%s\n" "$messages"
+                  else
+                    echo "<no commit messages found>"
+                  fi
+                  echo "---- End commit messages ----"
+
+                  echo "---- Matching lines (case-insensitive) ----"
+                  # Print matching lines with context to aid debugging
+                  echo "$messages" | nl -ba | grep -Ei --color=never "$keywords" || true
+                  echo "---- End matching lines ----"
+
+                  if echo "$messages" | grep -Ei "$keywords" >/dev/null; then
+                    echo "Found skip keyword in commit message. Cancelling run."
+                    skip_found=true
+                  else
+                    echo "No skip keyword found in commits. Continuing run."
+                  fi
+
+                  echo "skip=$skip_found" >> $GITHUB_OUTPUT
+
     build:
+        needs: check-skip
+        if: needs.check-skip.outputs.skip != 'true'
         strategy:
             fail-fast: false
             matrix:
@@ -112,6 +171,7 @@ jobs:
               shell: pwsh
               run: |
                   mkdir -p artifacts-windows
+                  $version = "${{ steps.package-version-windows.outputs.current-version }}"
 
                   Get-ChildItem -Path ./src-tauri/target/release/bundle/msi/*.msi -Recurse | ForEach-Object {
                     Copy-Item $_.FullName -Destination artifacts-windows/
@@ -126,7 +186,11 @@ jobs:
                   }
 
                   Get-ChildItem -Path ./src-tauri/target/release/*.exe | ForEach-Object {
-                    Copy-Item $_.FullName -Destination artifacts-windows/
+                    $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+                    $extension = [System.IO.Path]::GetExtension($_.Name)
+                    $newName = "${baseName}_${version}${extension}"
+                    $newPath = Join-Path "artifacts-windows" $newName
+                    Copy-Item $_.FullName -Destination $newPath
                     $md5 = Get-FileHash $_.FullName -Algorithm MD5
                     echo "EXE_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
                   }
@@ -137,6 +201,7 @@ jobs:
               if: matrix.platform == 'ubuntu-latest'
               run: |
                   mkdir -p artifacts-ubuntu
+                  version="${{ steps.package-version-ubuntu.outputs.current-version }}"
 
                   find ./src-tauri/target/release/bundle/deb -name "*.deb" | while read file; do
                     cp "$file" artifacts-ubuntu/
@@ -148,6 +213,22 @@ jobs:
                     cp "$file" artifacts-ubuntu/
                     MD5=$(md5sum "$file" | awk '{ print $1 }')
                     echo "APPIMAGE_MD5=$MD5" >> $GITHUB_ENV
+                  done
+
+                  # Include the standalone Linux binary with version
+                  find ./src-tauri/target/release -maxdepth 1 -type f -executable -not -name "*.so" -not -name "*.d" | while read file; do
+                    if [ -f "$file" ] && file "$file" | grep -q "ELF.*executable"; then
+                      basename=$(basename "$file")
+                      extension=""
+                      if [[ "$basename" == *.* ]]; then
+                        extension=".${basename##*.}"
+                        basename="${basename%.*}"
+                      fi
+                      versioned_name="${basename}_${version}${extension}"
+                      cp "$file" "artifacts-ubuntu/$versioned_name"
+                      MD5=$(md5sum "$file" | awk '{ print $1 }')
+                      echo "BINARY_MD5=$MD5" >> $GITHUB_ENV
+                    fi
                   done
 
                   echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
@@ -168,7 +249,6 @@ jobs:
               shell: bash
               run: |
                   ANALYSIS="${{ steps.virustotal.outputs.analysis }}"
-                  # Extract any VirusTotal GUI URLs from the analysis output; handles comma-separated entries
                   urls=$(echo "$ANALYSIS" | tr ',' '\n' | grep -oE 'https?://[^[:space:]]*virustotal[^[:space:]]*' | sed 's/[[:space:]]*$//' | uniq)
                   if [ -n "$urls" ]; then
                     printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
@@ -178,13 +258,6 @@ jobs:
                     echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
                   fi
 
-            - name: Write VirusTotal URL into artifacts (Windows only)
-              if: matrix.platform == 'windows-latest' && env.VIRUSTOTAL_URL != ''
-              shell: pwsh
-              run: |
-                  if (!(Test-Path -Path artifacts-windows)) { New-Item -ItemType Directory -Path artifacts-windows | Out-Null }
-                  Set-Content -Path artifacts-windows/virustotal-url.txt -Value $env:VIRUSTOTAL_URL -Encoding utf8
-
             - name: Upload artifact
               uses: actions/upload-artifact@v4
               with:
@@ -192,7 +265,8 @@ jobs:
                   path: ${{ matrix.platform == 'windows-latest' && 'artifacts-windows/**' || 'artifacts-ubuntu/**' }}
 
     create-release:
-        needs: build
+        needs: [check-skip, build]
+        if: needs.check-skip.outputs.skip != 'true'
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -224,29 +298,6 @@ jobs:
             - name: List artifacts
               run: find release-artifacts -type f
 
-            - name: Extract VirusTotal URL (if present)
-              id: virustotal-url
-              run: |
-                  file=$(find release-artifacts -type f -name 'virustotal-url.txt' | head -n1 || true)
-                  if [ -n "$file" ] && [ -f "$file" ]; then
-                    # Read all lines and create a bullet list
-                    urls=$(sed 's/\r$//' "$file" | sed '/^[[:space:]]*$/d')
-                    if [ -n "$urls" ]; then
-                      # prefix each line with '- ' for bullets
-                      bullets=$(echo "$urls" | sed 's/^/- /')
-                      printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
-                      printf 'VIRUSTOTAL_LINE<<EOF\nVirusTotal scan:\n%s\nEOF\n' "$bullets" >> $GITHUB_ENV
-                      echo "url=$urls" >> $GITHUB_OUTPUT
-                    else
-                      echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
-                      echo "url=" >> $GITHUB_OUTPUT
-                    fi
-                  else
-                    echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
-                    echo "url=" >> $GITHUB_OUTPUT
-                  fi
-              shell: bash
-
             - name: Create Release
               uses: softprops/action-gh-release@v1
               env:
@@ -259,8 +310,8 @@ jobs:
 
                       Automatic build from GitHub Actions
 
-                      - Windows (.msi, .exe installer, standalone .exe)
-                      - Linux (.deb)
+                      - Windows (.msi, .exe installer, standalone .exe with version)
+                      - Linux (.deb, standalone binary with version)
 
                       Note: This is an automated build from the main branch.
                       Commit hash: ${{ env.HASH }}

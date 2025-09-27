@@ -1,9 +1,8 @@
-use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-static TAG_CACHE: Lazy<Mutex<HashMap<String, &'static str>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
+static TAG_CACHE: std::sync::LazyLock<Mutex<HashMap<String, &'static str>>> =
+    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
 fn make_tag_from_module_path(module_path: &str) -> String {
     let cleaned = module_path.replace("::", ".");

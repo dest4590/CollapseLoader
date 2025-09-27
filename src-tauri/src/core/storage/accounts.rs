@@ -1,7 +1,7 @@
 use std::{path::PathBuf, sync::Mutex};
 
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 
 use crate::core::storage::data::DATA;
 
@@ -123,8 +123,8 @@ impl Default for AccountManager {
     }
 }
 
-lazy_static! {
-    pub static ref ACCOUNT_MANAGER: Mutex<AccountManager> = Mutex::new(
-        AccountManager::load_from_disk(DATA.get_local("accounts.json"))
-    );
-}
+pub static ACCOUNT_MANAGER: LazyLock<Mutex<AccountManager>> = LazyLock::new(|| {
+    Mutex::new(AccountManager::load_from_disk(
+        DATA.get_local("accounts.json"),
+    ))
+});

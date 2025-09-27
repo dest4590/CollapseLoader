@@ -10,12 +10,12 @@ use std::{
 use std::os::windows::process::CommandExt;
 
 use super::manager::CLIENT_MANAGER;
-use crate::core::network::analytics::Analytics;
 use crate::core::storage::accounts::ACCOUNT_MANAGER;
 use crate::core::utils::globals::FILE_EXTENSION;
 use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
 use crate::core::{clients::internal::agent_overlay::AgentArguments, utils::globals::JDK_FOLDER};
 use crate::core::{clients::log_checker::LogChecker, utils::globals::IS_LINUX};
+use crate::core::{network::analytics::Analytics, storage::data::Data};
 use crate::{
     core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,
@@ -26,13 +26,14 @@ use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::Semaphore;
 
-lazy_static::lazy_static! {
-    pub static ref CLIENT_LOGS: Mutex<HashMap<u32, Vec<String>>> = Mutex::new(HashMap::new());
-    pub static ref REQUIREMENTS_DOWNLOADING: Mutex<bool> = Mutex::new(false);
-    pub static ref REQUIREMENTS_SEMAPHORE: Arc<Semaphore> = Arc::new(Semaphore::new(1));
-}
+pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
+    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
+pub static REQUIREMENTS_DOWNLOADING: std::sync::LazyLock<Mutex<bool>> =
+    std::sync::LazyLock::new(|| Mutex::new(false));
+pub static REQUIREMENTS_SEMAPHORE: std::sync::LazyLock<Arc<Semaphore>> =
+    std::sync::LazyLock::new(|| Arc::new(Semaphore::new(1)));
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct Meta {
     pub is_new: bool,
     pub asset_index: String,
@@ -51,20 +52,20 @@ impl Meta {
         let asset_index = format!("{}.{}", semver.major, semver.minor);
         let is_new_version = semver.minor >= 16;
 
-        let file_name = DATA.get_filename(filename);
+        let client_base_name = Data::get_filename(filename);
         let jar_path = if filename.contains("fabric/") {
             let jar_basename = std::path::Path::new(filename)
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or(filename);
             DATA.root_dir
-                .join(&file_name)
+                .join(&client_base_name)
                 .join("mods")
                 .join(jar_basename)
         } else {
             DATA.get_local(&format!(
                 "{}{}{}",
-                file_name,
+                client_base_name,
                 std::path::MAIN_SEPARATOR,
                 filename
             ))
@@ -88,21 +89,16 @@ fn add_log_line(client_id: u32, line: String) {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub enum ClientType {
     #[serde(rename = "default")]
+    #[default]
     Default,
     #[serde(rename = "fabric")]
     Fabric,
 }
 
-impl Default for ClientType {
-    fn default() -> Self {
-        ClientType::Default
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct Client {
     pub id: u32,
     pub name: String,
@@ -128,7 +124,7 @@ pub struct Client {
     pub created_at: DateTime<Utc>,
 }
 
-fn default_meta() -> Meta {
+const fn default_meta() -> Meta {
     Meta {
         is_new: false,
         asset_index: String::new(),
@@ -149,7 +145,7 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
-    pub fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
+    pub const fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
         Self {
             app_handle,
             user_token,
@@ -246,7 +242,7 @@ impl Client {
         Ok(())
     }
 
-    pub fn get_running_clients() -> Vec<Client> {
+    pub fn get_running_clients() -> Vec<Self> {
         let jps_path = DATA
             .root_dir
             .join(JDK_FOLDER)
@@ -255,7 +251,7 @@ impl Client {
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
-        command.creation_flags(0x08000000);
+        command.creation_flags(0x0800_0000);
 
         let output = match command.arg("-m").output() {
             Ok(output) => output,
@@ -288,7 +284,7 @@ impl Client {
         let mut command = Command::new(jps_path);
 
         #[cfg(windows)]
-        command.creation_flags(0x08000000);
+        command.creation_flags(0x0800_0000);
 
         let output = command
             .arg("-m")
@@ -306,7 +302,7 @@ impl Client {
                 let mut kill_command = Command::new("taskkill");
 
                 #[cfg(windows)]
-                kill_command.creation_flags(0x08000000);
+                kill_command.creation_flags(0x0800_0000);
 
                 let kill_output = kill_command
                     .arg("/PID")
@@ -343,52 +339,37 @@ impl Client {
         Ok(())
     }
 
-    pub async fn download_requirements(&self, app_handle: &AppHandle) -> Result<(), String> {
-        let _permit = REQUIREMENTS_SEMAPHORE.acquire().await.map_err(|_| {
-            log_error!(
-                "Failed to acquire requirements download semaphore for '{}'",
-                self.name
-            );
-            "Failed to acquire requirements download semaphore".to_string()
-        })?;
-
-        let mut requirements_to_check = vec![format!("{JDK_FOLDER}.zip")];
-
+    fn determine_requirements_to_check(&self) -> Vec<String> {
+        let mut requirements = vec![format!("{JDK_FOLDER}.zip")];
         if self.client_type == ClientType::Fabric {
-            requirements_to_check.push("assets_fabric.zip".to_string());
+            requirements.push("assets_fabric.zip".to_string());
+            requirements.push("libraries_fabric.zip".to_string());
         } else {
-            requirements_to_check.push("assets.zip".to_string());
-        }
-
-        if self.client_type == ClientType::Default {
+            requirements.push("assets.zip".to_string());
             if self.meta.is_new {
-                requirements_to_check.push(if !IS_LINUX {
+                requirements.push(if !IS_LINUX {
                     "natives.zip".to_string()
                 } else {
                     "natives-linux.zip".to_string()
                 });
-                requirements_to_check.push("libraries.zip".to_string());
+                requirements.push("libraries.zip".to_string());
             } else {
-                requirements_to_check.push(if !IS_LINUX {
+                requirements.push(if !IS_LINUX {
                     "natives-1.12.zip".to_string()
                 } else {
                     "natives-linux.zip".to_string()
                 });
-                requirements_to_check.push("libraries-1.12.zip".to_string());
+                requirements.push("libraries-1.12.zip".to_string());
             }
         }
+        requirements
+    }
 
-        if self.client_type == ClientType::Fabric {
-            requirements_to_check.push("libraries_fabric.zip".to_string());
-        }
-
-        let mut client_jar: Option<String> = None;
-        if self.client_type == ClientType::Fabric {
-            let sanitized_version = self.version.replace(' ', "_");
-            let fabric_name = format!("fabric_{}.jar", sanitized_version);
-            client_jar = Some(fabric_name);
-        }
-
+    fn check_if_download_needed(
+        &self,
+        requirements_to_check: &[String],
+        client_jar: &Option<String>,
+    ) -> (bool, Vec<String>) {
         let files_to_download: Vec<String> = requirements_to_check
             .iter()
             .filter(|file| !DATA.get_as_folder(file).exists())
@@ -403,31 +384,172 @@ impl Client {
         );
 
         if let Some(ref fabric_jar) = client_jar {
-            let dest_path = DATA.root_dir.join("minecraft_versions").join(fabric_jar);
-            if !dest_path.exists() {
+            if !DATA
+                .root_dir
+                .join("minecraft_versions")
+                .join(fabric_jar)
+                .exists()
+            {
                 need_download = true;
             }
         }
 
         if self.client_type == ClientType::Fabric {
             if let Some(mods) = &self.requirement_mods {
-                let client_base = DATA.get_filename(&self.filename);
+                let client_base = Data::get_filename(&self.filename);
                 let mods_folder = DATA.root_dir.join(&client_base).join("mods");
-                for mod_name in mods.iter() {
-                    let mod_basename = if mod_name.ends_with(".jar") {
-                        mod_name.trim_end_matches(".jar").to_string()
-                    } else {
-                        mod_name.clone()
-                    };
+                if mods.iter().any(|mod_name| {
+                    let mod_basename = mod_name.trim_end_matches(".jar");
+                    !mods_folder.join(format!("{mod_basename}.jar")).exists()
+                }) {
+                    need_download = true;
+                }
+            }
+        }
 
-                    let dest_path = mods_folder.join(format!("{}.jar", mod_basename));
-                    if !dest_path.exists() {
-                        need_download = true;
-                        break;
+        (need_download, files_to_download)
+    }
+
+    async fn download_file(&self, file_to_dl: &str) -> Result<(), String> {
+        log_info!(
+            "Downloading requirement '{}' for client '{}'",
+            file_to_dl,
+            self.name
+        );
+        DATA.download(file_to_dl).await.map_err(|e| {
+            log_error!(
+                "Failed to download '{}' for client '{}': {}",
+                file_to_dl,
+                self.name,
+                e
+            );
+            format!("Failed to download {file_to_dl}: {e}")
+        })?;
+
+        if IS_LINUX && file_to_dl.starts_with(JDK_FOLDER) {
+            let java_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("java");
+            if java_path.exists() {
+                #[cfg(unix)]
+                if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
+                    use std::os::unix::fs::PermissionsExt;
+                    perms.set_mode(0o755);
+                    if let Err(e) = std::fs::set_permissions(&java_path, perms) {
+                        log_error!("Failed to set exec perm on {}: {}", java_path.display(), e);
+                    } else {
+                        log_info!("Set exec perm on {}", java_path.display());
                     }
                 }
             }
         }
+        log_info!(
+            "Successfully downloaded '{}' for '{}'",
+            file_to_dl,
+            self.name
+        );
+        Ok(())
+    }
+
+    async fn download_fabric_mods(&self) -> Result<(), String> {
+        if self.client_type == ClientType::Fabric {
+            if let Some(mods) = &self.requirement_mods {
+                for mod_name in mods.iter() {
+                    let mod_basename = mod_name.trim_end_matches(".jar");
+                    let filename_on_cdn = format!("fabric/deps/{mod_basename}.jar");
+                    let client_base = Data::get_filename(&self.filename);
+                    let dest_folder = format!("{client_base}/mods");
+                    let dest_path = DATA
+                        .root_dir
+                        .join(&client_base)
+                        .join("mods")
+                        .join(format!("{mod_basename}.jar"));
+
+                    if !dest_path.exists() {
+                        log_info!("Downloading Fabric requirement mod: {}", filename_on_cdn);
+                        DATA.download_to_folder(&filename_on_cdn, &dest_folder)
+                            .await
+                            .map_err(|e| {
+                                log_error!("Failed to download mod {filename_on_cdn}: {e}");
+                                format!("Failed to download mod {filename_on_cdn}: {e}")
+                            })?;
+                        log_info!("Successfully downloaded mod {}", filename_on_cdn);
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn download_required_files(
+        &self,
+        app_handle: &AppHandle,
+        files_to_download: Vec<String>,
+        client_jar: Option<String>,
+    ) -> Result<(), String> {
+        {
+            let mut downloading = REQUIREMENTS_DOWNLOADING
+                .lock()
+                .map_err(|_| "Failed to lock REQUIREMENTS_DOWNLOADING mutex".to_string())?;
+            *downloading = true;
+        }
+        emit_to_main_window(app_handle, "requirements-status", true);
+
+        for file_to_dl in files_to_download {
+            self.download_file(&file_to_dl).await?;
+        }
+
+        if let Some(client_jar) = client_jar {
+            let dest_path = DATA.root_dir.join("minecraft_versions").join(&client_jar);
+            if !dest_path.exists() {
+                log_info!(
+                    "Downloading MC client jar '{}' for '{}'",
+                    client_jar,
+                    self.name
+                );
+                DATA.download_to_folder(&client_jar, "minecraft_versions")
+                    .await
+                    .map_err(|e| {
+                        log_error!("Failed to download MC client jar '{}': {}", client_jar, e);
+                        format!("Failed to download MC client jar {client_jar}: {e}")
+                    })?;
+                log_info!("Successfully downloaded MC client jar '{}'", client_jar);
+            }
+        }
+
+        self.download_fabric_mods().await?;
+
+        log_info!("All requirements downloaded successfully");
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+
+        {
+            let mut downloading = REQUIREMENTS_DOWNLOADING
+                .lock()
+                .map_err(|_| "Failed to lock REQUIREMENTS_DOWNLOADING mutex".to_string())?;
+            *downloading = false;
+        }
+        emit_to_main_window(app_handle, "requirements-status", false);
+
+        Ok(())
+    }
+
+    #[allow(clippy::cognitive_complexity)]
+    pub async fn download_requirements(&self, app_handle: &AppHandle) -> Result<(), String> {
+        let _permit = REQUIREMENTS_SEMAPHORE.acquire().await.map_err(|_| {
+            log_error!(
+                "Failed to acquire requirements semaphore for '{}'",
+                self.name
+            );
+            "Failed to acquire requirements semaphore".to_string()
+        })?;
+
+        let requirements_to_check = self.determine_requirements_to_check();
+        let client_jar = if self.client_type == ClientType::Fabric {
+            Some(format!("fabric_{}.jar", self.version.replace(' ', "_")))
+        } else {
+            None
+        };
+
+        let (need_download, files_to_download) =
+            self.check_if_download_needed(&requirements_to_check, &client_jar);
 
         if !need_download {
             log_info!(
@@ -443,152 +565,8 @@ impl Client {
             files_to_download
         );
 
-        {
-            let mut downloading = REQUIREMENTS_DOWNLOADING
-                .lock()
-                .map_err(|_| "Failed to lock REQUIREMENTS_DOWNLOADING mutex".to_string())?;
-            *downloading = true;
-        }
-
-        emit_to_main_window(app_handle, "requirements-status", true);
-
-        for file_to_dl in files_to_download {
-            log_info!(
-                "Downloading requirement '{}' for client '{}'",
-                file_to_dl,
-                self.name
-            );
-            DATA.download(&file_to_dl).await.map_err(|e| {
-                log_error!(
-                    "Failed to download '{}' for client '{}': {}",
-                    file_to_dl,
-                    self.name,
-                    e
-                );
-                format!("Failed to download {file_to_dl}: {e}")
-            })?;
-
-            if IS_LINUX && file_to_dl.starts_with(&format!("{JDK_FOLDER}"))
-                || file_to_dl == format!("{JDK_FOLDER}.zip")
-            {
-                let java_path = DATA.root_dir.join(JDK_FOLDER).join("bin").join("java");
-                if java_path.exists() {
-                    #[cfg(unix)]
-                    if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
-                        {
-                            use std::os::unix::fs::PermissionsExt;
-                            perms.set_mode(0o755);
-                            if let Err(e) = std::fs::set_permissions(&java_path, perms) {
-                                log_error!(
-                                    "Failed to set executable permission on {}: {}",
-                                    java_path.display(),
-                                    e
-                                );
-                            } else {
-                                log_info!("Set executable permission on {}", java_path.display());
-                            }
-                        }
-                    }
-                }
-            }
-            log_info!(
-                "Successfully downloaded '{}' for '{}'",
-                file_to_dl,
-                self.name
-            );
-        }
-
-        if let Some(client_jar) = client_jar {
-            let dest_path = DATA.root_dir.join("minecraft_versions").join(&client_jar);
-            if !dest_path.exists() {
-                log_info!(
-                    "Downloading minecraft client jar '{}' for '{}'",
-                    client_jar,
-                    self.name
-                );
-                DATA.download_to_folder(&client_jar, "minecraft_versions")
-                    .await
-                    .map_err(|e| {
-                        log_error!(
-                            "Failed to download minecraft client jar '{}' for '{}': {}",
-                            client_jar,
-                            self.name,
-                            e
-                        );
-                        format!("Failed to download minecraft client jar {client_jar}: {e}")
-                    })?;
-                log_info!(
-                    "Successfully downloaded minecraft client jar '{}' for '{}'",
-                    client_jar,
-                    self.name
-                );
-            } else {
-                log_debug!(
-                    "Minecraft client jar '{}' already exists for '{}'",
-                    client_jar,
-                    self.name
-                );
-            }
-        }
-
-        if self.client_type == ClientType::Fabric {
-            if let Some(mods) = &self.requirement_mods {
-                for mod_name in mods.iter() {
-                    let mod_basename = if mod_name.ends_with(".jar") {
-                        mod_name.trim_end_matches(".jar").to_string()
-                    } else {
-                        mod_name.clone()
-                    };
-
-                    let filename_on_cdn = format!("fabric/deps/{}.jar", mod_basename);
-
-                    let client_base = DATA.get_filename(&self.filename);
-                    let dest_folder = format!("{}/mods", client_base);
-                    let dest_path = DATA
-                        .root_dir
-                        .join(&client_base)
-                        .join("mods")
-                        .join(format!("{}.jar", mod_basename));
-
-                    if !dest_path.exists() {
-                        log_info!(
-                            "Downloading Fabric requirement mod from CDN: {}",
-                            filename_on_cdn
-                        );
-                        if let Err(e) = DATA
-                            .download_to_folder(&filename_on_cdn, &dest_folder)
-                            .await
-                        {
-                            log_error!(
-                                "Failed to download fabric requirement mod {}: {}",
-                                filename_on_cdn,
-                                e
-                            );
-                            return Err(format!(
-                                "Failed to download fabric requirement mod {}: {}",
-                                filename_on_cdn, e
-                            ));
-                        }
-                        log_info!("Successfully downloaded mod {}", filename_on_cdn);
-                    }
-                }
-            }
-        }
-
-        log_info!("All requirements downloaded successfully");
-
-        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-
-        {
-            let mut downloading = REQUIREMENTS_DOWNLOADING
-                .lock()
-                .map_err(|_| "Failed to lock REQUIREMENTS_DOWNLOADING mutex".to_string())?;
-            *downloading = false;
-        }
-
-        emit_to_main_window(app_handle, "requirements-status", false);
-
-        Ok(())
+        self.download_required_files(app_handle, files_to_download, client_jar)
+            .await
     }
 
     pub async fn run(self, options: LaunchOptions) -> Result<(), String> {
@@ -612,7 +590,11 @@ impl Client {
         let agent_arguments = AgentArguments::new(
             options.user_token.clone(),
             client_name.clone(),
-            optional_analytics,
+            if self.meta.is_custom {
+                false
+            } else {
+                optional_analytics
+            },
             cordshare,
             irc_chat,
         );
@@ -631,7 +613,7 @@ impl Client {
                 serde_json::json!({
                     "id": client_id,
                     "name": client_name.clone(),
-                    "error": e.clone()
+                    "error": e
                 }),
             );
             return Err(e);
@@ -663,7 +645,7 @@ impl Client {
                 let jar = folder.join(&self_clone.filename);
                 (folder, jar)
             } else if self_clone.filename.contains("fabric/") {
-                let base_name = DATA.get_filename(&self_clone.filename);
+                let base_name = Data::get_filename(&self_clone.filename);
                 let folder = DATA.root_dir.join(&base_name);
                 let jar_basename = std::path::Path::new(&self_clone.filename)
                     .file_name()
@@ -673,7 +655,7 @@ impl Client {
             } else {
                 let folder = DATA
                     .root_dir
-                    .join(DATA.get_as_folder_string(&self_clone.filename));
+                    .join(Data::get_as_folder_string(&self_clone.filename));
                 let jar = folder.join(&self_clone.filename);
                 (folder, jar)
             };
@@ -720,7 +702,7 @@ impl Client {
             );
 
             #[cfg(windows)]
-            command.creation_flags(0x08000000);
+            command.creation_flags(0x0800_0000);
 
             std::env::set_current_dir(&client_folder)
                 .map_err(|e| format!("Failed to set current directory: {e}"))?;
@@ -730,7 +712,7 @@ impl Client {
                 .ok()
                 .and_then(|manager| manager.get_active_account().map(|a| a.username.clone()))
                 .unwrap_or_else(|| {
-                    let random_digits = rand::random::<u32>() % 100000;
+                    let random_digits = rand::random::<u32>() % 100_000;
                     format!("Collapse{random_digits:05}")
                 });
 
@@ -883,7 +865,7 @@ impl Client {
                         serde_json::json!({
                             "id": client_id,
                             "name": self_clone.name.clone(),
-                            "error": log_line.clone()
+                            "error": log_line
                         }),
                     );
                     Err(log_line)

@@ -1,13 +1,77 @@
 use tauri::Manager;
 
-use crate::core::utils::globals::CODENAME;
+use crate::core::{
+    error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
+};
+
+#[cfg(target_os = "linux")]
+use crate::core::platform::check_webkit_environment;
 
 use self::core::network::analytics::Analytics;
+pub use crate::core::utils::logging;
 
-mod commands;
-mod core;
+pub mod commands;
+pub mod core;
+
+pub fn check_dependencies() -> Result<(), StartupError> {
+    log_info!("Checking platform dependencies...");
+    check_platform_dependencies()
+}
+
+#[cfg(target_os = "linux")]
+pub fn check_webkit_warning() -> Result<(), StartupError> {
+    log_info!("Checking WebKit environment variables...");
+    check_webkit_environment()
+}
+
+#[cfg(target_os = "windows")]
+pub fn handle_startup_error(error: &StartupError) {
+    use native_dialog::DialogBuilder;
+
+    if let StartupError::WebView2NotInstalled = error {
+        use native_dialog::MessageLevel;
+
+        let should_install = DialogBuilder::message()
+            .set_level(MessageLevel::Info)
+            .set_title("WebView2 Not Installed")
+            .set_text("WebView2 is not installed. Would you like to download and install it now?")
+            .confirm()
+            .show()
+            .unwrap_or(false);
+
+        if should_install {
+            if let Err(install_error) = crate::core::platform::windows::attempt_install_webview2() {
+                install_error.show_and_exit();
+            } else {
+                let message = "WebView2 has been installed. Please restart the application.";
+                eprintln!("{message}");
+                DialogBuilder::message()
+                    .set_text(message)
+                    .set_title("Restart Required");
+
+                std::process::exit(0);
+            }
+        } else {
+            error.show_and_exit();
+        }
+    } else {
+        error.show_and_exit();
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn handle_startup_error(error: &StartupError) {
+    #[cfg(target_os = "linux")]
+    if let StartupError::LinuxWebKitWarning = error {
+        error.show_warning();
+        return;
+    }
+
+    error.show_and_exit();
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
+#[allow(clippy::large_stack_frames)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
@@ -76,7 +140,6 @@ pub fn run() {
             commands::utils::change_data_folder,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
-            commands::analytics::send_client_analytics,
             commands::discord_rpc::update_presence,
             commands::updater::check_for_updates,
             commands::updater::download_and_install_update,
@@ -104,12 +167,14 @@ pub fn run() {
                 if is_dev {
                     format!("(development build, {git_hash}, {git_branch} branch)")
                 } else {
-                    "".to_string()
+                    String::new()
                 }
             );
 
             if let Some(window) = app_handle.get_webview_window("main") {
-                let _ = window.set_title(&window_title);
+                if let Err(e) = window.set_title(&window_title) {
+                    log_warn!("Failed to set window title: {}", e);
+                }
             }
 
             crate::log_info!("Starting CollapseLoader: {}", window_title);
@@ -120,6 +185,7 @@ pub fn run() {
         })
         .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
+                log_info!("Window close requested. Shutting down Discord RPC.");
                 core::utils::discord_rpc::shutdown();
             }
         })

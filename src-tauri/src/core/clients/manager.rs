@@ -1,5 +1,8 @@
-use lazy_static::lazy_static;
-use std::{fs::File, io::BufReader, sync::Mutex};
+use std::{
+    fs::File,
+    io::BufReader,
+    sync::{LazyLock, Mutex},
+};
 use tauri::AppHandle;
 
 use super::client::Client;
@@ -46,7 +49,7 @@ impl ClientManager {
                         cached_clients
                     } else {
                         log_warn!("Clients cache not found. Returning empty client list.");
-                        return Ok(ClientManager {
+                        return Ok(Self {
                             clients: Vec::new(),
                         });
                     }
@@ -81,7 +84,7 @@ impl ClientManager {
 
             log_debug!("ClientManager initialized with {} clients", clients.len());
 
-            Ok(ClientManager { clients })
+            Ok(Self { clients })
         } else {
             log_warn!("API instance not available. Attempting to load clients from cache.");
             let clients_cache_path = DATA.root_dir.join(API_CACHE_DIR).join("clients.json");
@@ -124,7 +127,7 @@ impl ClientManager {
                 "ClientManager initialized from cache with {} clients — operating offline mode",
                 clients.len()
             );
-            Ok(ClientManager { clients })
+            Ok(Self { clients })
         }
     }
 
@@ -152,21 +155,23 @@ impl ClientManager {
     }
 }
 
-lazy_static! {
-    pub static ref CLIENT_MANAGER: Mutex<Option<ClientManager>> = Mutex::new(None);
-}
+pub static CLIENT_MANAGER: LazyLock<Mutex<Option<ClientManager>>> =
+    LazyLock::new(|| Mutex::new(None));
 
 pub async fn initialize_client_manager() -> Result<(), String> {
     match ClientManager::new_async().await {
         Ok(manager) => {
             log_info!("ClientManager async initialization succeeded — setting global manager");
-            if let Ok(mut client_manager) = CLIENT_MANAGER.lock() {
-                *client_manager = Some(manager);
-                Ok(())
-            } else {
-                log_error!("Failed to acquire lock on CLIENT_MANAGER during initialization");
-                Err("Failed to acquire lock on CLIENT_MANAGER".to_string())
-            }
+            CLIENT_MANAGER.lock().map_or_else(
+                |_| {
+                    log_error!("Failed to acquire lock on CLIENT_MANAGER during initialization");
+                    Err("Failed to acquire lock on CLIENT_MANAGER".to_string())
+                },
+                |mut client_manager| {
+                    *client_manager = Some(manager);
+                    Ok(())
+                },
+            )
         }
         Err(e) => {
             log_error!("Failed to initialize ClientManager: {}", e);
