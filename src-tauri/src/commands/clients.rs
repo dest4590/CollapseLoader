@@ -51,7 +51,6 @@ fn get_client_by_id(id: u32) -> Result<Client, String> {
 
 #[tauri::command]
 pub fn get_app_logs() -> Vec<String> {
-    log_debug!("Retrieving application logs");
     logging::APP_LOGS
         .lock()
         .map(|logs| logs.clone())
