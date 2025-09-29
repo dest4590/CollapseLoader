@@ -17,7 +17,7 @@ pub struct AgentArguments {
     token: String,
     client_name: String,
     analytics: bool,
-    cordshare: bool,
+    // cordshare: bool,
     ircchat: bool,
 }
 
@@ -26,14 +26,14 @@ impl AgentArguments {
         token: String,
         client_name: String,
         analytics: bool,
-        cordshare: bool,
+        // cordshare: bool,
         ircchat: bool,
     ) -> Self {
         Self {
             token,
             client_name,
             analytics,
-            cordshare,
+            // cordshare,
             ircchat,
         }
     }
@@ -47,11 +47,11 @@ impl AgentArguments {
 
     pub fn log_info(&self) {
         log_info!(
-            "Running client with this agent arguments: Token: {}, Client Name: {}, Analytics: {}, Cordshare: {}, IRC Chat: {}",
+            "Running client with this agent arguments: Token: {}, Client Name: {}, Analytics: {}, IRC Chat: {}",
             "*".repeat(self.token.len() / 2),
             self.client_name,
             self.analytics,
-            self.cordshare,
+            // self.cordshare,
             self.ircchat
         );
     }

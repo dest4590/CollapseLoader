@@ -584,7 +584,7 @@ impl Client {
         let app_handle_clone_for_run = options.app_handle.clone();
         let app_handle_clone_for_crash_handling = options.app_handle.clone();
         let optional_analytics = SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value);
-        let cordshare = SETTINGS.lock().is_ok_and(|s| s.cordshare.value);
+        // let cordshare = SETTINGS.lock().is_ok_and(|s| s.cordshare.value);
         let irc_chat = SETTINGS.lock().is_ok_and(|s| s.irc_chat.value);
 
         let agent_arguments = AgentArguments::new(
@@ -595,7 +595,7 @@ impl Client {
             } else {
                 optional_analytics
             },
-            cordshare,
+            // cordshare,
             irc_chat,
         );
 

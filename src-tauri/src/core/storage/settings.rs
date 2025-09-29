@@ -119,7 +119,7 @@ define_settings! {
         language: Setting<String> = ("en".to_string(), true),
         discord_rpc_enabled: Setting<bool> = (true, true),
         optional_telemetry: Setting<bool> = (true, true),
-        cordshare: Setting<bool> = (true, true),
+        // cordshare: Setting<bool> = (true, true),
         irc_chat: Setting<bool> = (true, true),
         hash_verify: Setting<bool> = (true, true),
         sync_client_settings: Setting<bool> = (true, true),
