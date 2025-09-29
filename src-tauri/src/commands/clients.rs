@@ -11,6 +11,7 @@ use crate::core::{
         custom_clients::{CustomClientUpdate, CUSTOM_CLIENT_MANAGER},
         data::Data,
     },
+    utils::globals::SKIP_AGENT_OVERLAY_VERIFICATION,
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
@@ -235,10 +236,14 @@ pub async fn launch_client(
             log_debug!("Agent and overlay files verified successfully");
         }
         Ok(false) => {
-            log_warn!("Agent/overlay files verification failed, attempting to download...");
-            AgentOverlayManager::download_agent_overlay_files()
-                .await
-                .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
+            if !*SKIP_AGENT_OVERLAY_VERIFICATION {
+                log_warn!("Agent/overlay files verification failed, attempting to download...");
+                AgentOverlayManager::download_agent_overlay_files()
+                    .await
+                    .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
+            } else {
+                log_warn!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
+            }
         }
         Err(e) => {
             log_error!("Error verifying agent/overlay files: {}", e);
@@ -282,7 +287,6 @@ pub async fn stop_client(id: u32) -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_client_logs(id: u32) -> Vec<String> {
-    log_debug!("Fetching logs for client ID: {}", id);
     CLIENT_LOGS
         .lock()
         .ok()
