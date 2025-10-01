@@ -267,11 +267,16 @@
         "no_social_links": "Соціальні посилання ще не додано.",
         "avatar_help": "PNG, JPG, GIF, WEBP до 5МБ",
         "avatar_drop": "Перетягніть або натисніть, щоб завантажити аватар",
+        "upload_avatar": "Завантажити аватар",
+        "avatar_upload_refresh_failed": "Не вдалося оновити аватар після завантаження: {error}",
         "change_avatar": "Змінити аватар",
         "avatar_type_error": "Непідтримуваний тип файлу",
         "avatar_size_error": "Файл занадто великий (макс. 5МБ)",
         "avatar_uploaded": "Аватар оновлено",
-        "avatar_upload_failed": "Не вдалося завантажити аватар"
+        "avatar_upload_failed": "Не вдалося завантажити аватар",
+        "reset_avatar": "Скинути аватар",
+        "avatar_reset_success": "Аватар успішно скинуто",
+        "avatar_reset_failed": "Не вдалося скинути аватар: {error}"
     },
     "roles": {
         "user": "Користувач",
@@ -623,7 +628,15 @@
                 "delete_success": "Пресет \"{name}\" успішно видалено",
                 "delete_error": "Не вдалося видалити пресет",
                 "duplicate_success": "Пресет \"{name}\" успішно дубльовано",
-                "duplicate_error": "Не вдалося дублювати пресет"
+                "duplicate_error": "Не вдалося дублювати пресет",
+                "apply_success": "Пресет \"{name}\" успішно застосовано",
+                "apply_error": "Не вдалося застосувати пресет \"{name}\": {error}",
+                "import_success": "Пресет \"{name}\" успішно імпортовано",
+                "import_no_name": "Імпортований пресет не має назви",
+                "import_error": "Не вдалося імпортувати пресет: {error}",
+                "multiple_deleted": "{count} пресетів успішно видалено",
+                "multiple_duplicated": "{count} пресетів успішно дубльовано",
+                "multiple_exported": "{count} пресетів експортовано до буфера обміну"
             }
         }
     },
@@ -639,6 +652,14 @@
         "installation_complete": "Встановлення завершено"
     },
     "errors": {
+        "clients_load_failed": "Не вдалося завантажити клієнти: {error}",
+        "clients_unavailable": "Клієнти наразі недоступні.",
+        "stop_error": "Не вдалося зупинити клієнт: {error}",
+        "folder_error": "Не вдалося відкрити папку даних: {error}",
+        "reinstall_error": "Не вдалося переінсталювати {name}: {error}",
+        "logs_error": "Не вдалося отримати доступ до логів: {error}",
+        "delete_error": "Не вдалося видалити {name}: {error}",
+        "download_error": "Не вдалося завантажити {name}: {error}",
         "favorites_error": "Помилка оновлення обраного: {error}",
         "load_accounts_error": "Помилка завантаження акаунтів: {error}",
         "launch_with_account_error": "Помилка запуску клієнта з акаунтом: {error}",
@@ -799,7 +820,8 @@
         "presets_title": "Пресети",
         "presets": "пресетів",
         "no_presets": "Цей користувач ще не поділився жодними пресетами.",
-        "create_preset": "Створити пресет"
+        "create_preset": "Створити пресет",
+        "presets_hidden_streamer": "Пресети приховані в режимі стрімера."
     },
     "sync": {
         "last_sync": "Остання синхронізація",

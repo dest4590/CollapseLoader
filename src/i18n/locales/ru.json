@@ -267,11 +267,16 @@
     "no_social_links": "Ссылки не добавлены",
     "avatar_help": "PNG, JPG, GIF, WEBP до 5МБ",
     "avatar_drop": "Перетащите или кликните, чтобы загрузить аватар",
+    "upload_avatar": "Загрузить аватар",
+    "avatar_upload_refresh_failed": "Не удалось обновить аватар после загрузки: {error}",
     "change_avatar": "Изменить аватар",
     "avatar_type_error": "Неподдерживаемый тип файла",
     "avatar_size_error": "Файл слишком большой (макс 5МБ)",
     "avatar_uploaded": "Аватар обновлён",
-    "avatar_upload_failed": "Не удалось загрузить аватар"
+    "avatar_upload_failed": "Не удалось загрузить аватар",
+    "reset_avatar": "Сбросить аватар",
+    "avatar_reset_success": "Аватар успешно сброшен",
+    "avatar_reset_failed": "Не удалось сбросить аватар: {error}"
   },
   "roles": {
     "user": "Пользователь",
@@ -623,7 +628,15 @@
         "delete_success": "Пресет \"{name}\" успешно удалён",
         "delete_error": "Не удалось удалить пресет",
         "duplicate_success": "Пресет \"{name}\" успешно продублирован",
-        "duplicate_error": "Не удалось продублировать пресет"
+        "duplicate_error": "Не удалось продублировать пресет",
+        "apply_success": "Пресет \"{name}\" успешно применен",
+        "import_success": "Пресет \"{name}\" успешно импортирован",
+        "apply_error": "Не удалось применить пресет \"{name}\": {error}",
+        "import_no_name": "В импортируемом пресете отсутствует название",
+        "import_error": "Не удалось импортировать пресет: {error}",
+        "multiple_deleted": "{count} пресетов успешно удалено",
+        "multiple_duplicated": "{count} пресетов успешно дублировано",
+        "multiple_exported": "{count} пресетов экспортировано в буфер обмена"
       }
     }
   },
@@ -639,6 +652,14 @@
     "installation_complete": "Установка завершена"
   },
   "errors": {
+    "clients_load_failed": "Не удалось загрузить список клиентов: {error}",
+    "clients_unavailable": "Клиенты в данный момент недоступны.",
+    "stop_error": "Не удалось остановить клиент: {error}",
+    "folder_error": "Не удалось открыть папку данных: {error}",
+    "reinstall_error": "Не удалось переустановить {name}: {error}",
+    "logs_error": "Не удалось получить доступ к логам: {error}",
+    "delete_error": "Не удалось удалить {name}: {error}",
+    "download_error": "Не удалось загрузить {name}: {error}",
     "favorites_error": "Ошибка обновления избранного: {error}",
     "load_accounts_error": "Ошибка загрузки аккаунтов: {error}",
     "launch_with_account_error": "Ошибка запуска клиента с аккаунтом: {error}",
@@ -799,7 +820,8 @@
     "no_presets": "Этот пользователь еще не делился никакими пресетами.",
     "create_preset": "Создать пресет",
     "presets_title": "Пресеты",
-    "presets": "пресетов"
+    "presets": "пресетов",
+    "presets_hidden_streamer": "Пресеты скрыты в режиме стримера."
   },
   "sync": {
     "last_sync": "Последняя синхронизация",
