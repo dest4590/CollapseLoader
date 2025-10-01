@@ -19,6 +19,7 @@ pub struct AgentArguments {
     analytics: bool,
     // cordshare: bool,
     ircchat: bool,
+    lang: String, // short code e.g "en", "ru"
 }
 
 impl AgentArguments {
@@ -28,6 +29,7 @@ impl AgentArguments {
         analytics: bool,
         // cordshare: bool,
         ircchat: bool,
+        lang: String,
     ) -> Self {
         Self {
             token,
@@ -35,6 +37,7 @@ impl AgentArguments {
             analytics,
             // cordshare,
             ircchat,
+            lang,
         }
     }
     pub fn encode(&self) -> String {
@@ -47,12 +50,13 @@ impl AgentArguments {
 
     pub fn log_info(&self) {
         log_info!(
-            "Running client with this agent arguments: Token: {}, Client Name: {}, Analytics: {}, IRC Chat: {}",
+            "Running client with this agent arguments: Token: {}, Client Name: {}, Analytics: {}, IRC Chat: {}, Language: {}",
             "*".repeat(self.token.len() / 2),
             self.client_name,
             self.analytics,
             // self.cordshare,
-            self.ircchat
+            self.ircchat,
+            self.lang
         );
     }
 }

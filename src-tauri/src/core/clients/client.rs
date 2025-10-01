@@ -586,6 +586,11 @@ impl Client {
         let optional_analytics = SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value);
         // let cordshare = SETTINGS.lock().is_ok_and(|s| s.cordshare.value);
         let irc_chat = SETTINGS.lock().is_ok_and(|s| s.irc_chat.value);
+        let lang = SETTINGS
+            .lock()
+            .ok()
+            .map(|s| s.language.value.clone())
+            .unwrap_or_else(|| "en".to_string());
 
         let agent_arguments = AgentArguments::new(
             options.user_token.clone(),
@@ -597,6 +602,7 @@ impl Client {
             },
             // cordshare,
             irc_chat,
+            lang,
         );
 
         agent_arguments.log_info();
