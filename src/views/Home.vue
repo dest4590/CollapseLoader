@@ -425,7 +425,7 @@ const allClients = computed(() => {
 let filteredClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const filteredClients = computed(() => {
-    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${JSON.stringify(debouncedActiveFilters.value)}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}`;
+    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${JSON.stringify(debouncedActiveFilters.value)}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.join(',')}`;
 
     if (filteredClientsCache.key === cacheKey) {
         return filteredClientsCache.result;
@@ -533,8 +533,25 @@ const filteredClients = computed(() => {
         );
     }
 
-    filteredClientsCache = { key: cacheKey, result: sorted };
-    return sorted;
+    try {
+        const favSet = new Set(favoriteClients.value || []);
+
+        const favs: Client[] = [];
+        const others: Client[] = [];
+
+        for (const c of sorted) {
+            if (favSet.has(c.id)) favs.push(c);
+            else others.push(c);
+        }
+
+        const combined = [...favs, ...others];
+        filteredClientsCache = { key: cacheKey, result: combined };
+        return combined;
+    } catch (e) {
+        console.error('Error applying favorites-first ordering:', e);
+        filteredClientsCache = { key: cacheKey, result: sorted };
+        return sorted;
+    }
 });
 
 const loadFavorites = async () => {
