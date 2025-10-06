@@ -668,9 +668,9 @@ onBeforeUnmount(() => {
                 <h2 class="card-title text-base">
                     {{ client.name }}
                     <div v-if="client.insecure">
-                        <div class="tooltip tooltip-right" :data-tip="t('client.insecure_tooltip')"
+                        <div class="tooltip tooltip-left" :data-tip="t('client.insecure_tooltip')"
                             @click="showInsecureWarning">
-                            <AlertTriangle class="text-warning w-4 h-4 transition-all duration-500" />
+                            <AlertTriangle class="text-warning w-4 h-4 transition-all duration-500 hover:bg-base-200" />
                         </div>
                     </div>
                 </h2>
