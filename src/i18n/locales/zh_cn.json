@@ -433,9 +433,9 @@
     "filters_title": "筛选",
     "sort": {
       "popularity": "人气",
-      "name": "名称",
+      "name": "按名称",
       "newest": "最新",
-      "version": "版本",
+      "version": "据称",
       "order": {
         "asc": "升序",
         "desc": "降序"

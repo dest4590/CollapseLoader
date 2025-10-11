@@ -18,6 +18,7 @@ import {
 } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
+import FiltersMenu from '../components/common/FiltersMenu.vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
@@ -33,6 +34,13 @@ interface Account {
     created_at: string;
     last_used?: string;
     is_active: boolean;
+}
+
+interface Filters {
+    fabric: boolean;
+    vanilla: boolean;
+    installed: boolean;
+    new: boolean;
 }
 
 const { t } = useI18n();
@@ -93,17 +101,17 @@ const selectedAccountId = ref<string>('');
 const searchQuery = ref('');
 let searchDebounceTimer: number | null = null;
 const debouncedSearchQuery = ref('');
-const showFiltersMenu = ref(false);
 const ACTIVE_FILTERS_KEY = 'homeActiveFilters';
 const CLIENT_SORT_KEY = 'homeClientSortKey';
 const CLIENT_SORT_ORDER_KEY = 'homeClientSortOrder';
 
-let initialFilters: { [key: string]: boolean } = {
+let initialFilters: Filters = {
     fabric: false,
     vanilla: false,
     installed: false,
     new: false,
 };
+
 try {
     const stored = localStorage.getItem(ACTIVE_FILTERS_KEY);
     if (stored) {
@@ -112,15 +120,18 @@ try {
 } catch (e) {
     console.error('Failed to read active filters from localStorage:', e);
 }
-const activeFilters = ref<{ [key: string]: boolean }>(initialFilters);
 
-let initialSortKey: 'popularity' | 'name' | 'newest' | 'version' = 'newest';
+const activeFilters = ref<Filters>(initialFilters);
+
+let initialSortKey: 'popularity' | 'name' | 'newest' | 'version' = 'popularity';
+
 try {
     const stored = localStorage.getItem(CLIENT_SORT_KEY);
     if (stored) initialSortKey = stored as any;
 } catch (e) {
     console.error('Failed to read client sort key from localStorage:', e);
 }
+
 const clientSortKey = ref<'popularity' | 'name' | 'newest' | 'version'>(initialSortKey);
 
 let initialSortOrder: 'asc' | 'desc' = 'desc';
@@ -132,7 +143,7 @@ try {
 }
 const clientSortOrder = ref<'asc' | 'desc'>(initialSortOrder);
 
-const debouncedActiveFilters = ref<{ [key: string]: boolean }>({ ...initialFilters });
+const debouncedActiveFilters = ref<Filters>({ ...initialFilters });
 
 const debouncedClientSortKey = ref(clientSortKey.value);
 const debouncedClientSortOrder = ref(clientSortOrder.value);
@@ -858,22 +869,6 @@ const openLogViewer = (client: Client) => {
             close: () => hideModal(`log-viewer-${client.id}`),
         }
     );
-};
-
-const toggleFiltersMenu = (event?: Event) => {
-    if (event) event.stopPropagation();
-    showFiltersMenu.value = !showFiltersMenu.value;
-};
-
-const closeFiltersMenu = () => {
-    showFiltersMenu.value = false;
-};
-
-const onDocumentClickForFilters = (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest('.relative')) {
-        closeFiltersMenu();
-    }
 };
 
 const showInsecureClientWarning = (client: Client) => {
@@ -1614,7 +1609,6 @@ onMounted(async () => {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     document.addEventListener('click', handleDocumentClick);
-    document.addEventListener('click', onDocumentClickForFilters);
     window.addEventListener('blur', blurHandler);
     document.addEventListener('visibilitychange', visibilityHandler);
 
@@ -1676,7 +1670,6 @@ onBeforeUnmount(() => {
     document.removeEventListener('keydown', handleKeyDown);
     document.removeEventListener('keyup', handleKeyUp);
     document.removeEventListener('click', handleDocumentClick);
-    document.removeEventListener('click', onDocumentClickForFilters);
     window.removeEventListener('blur', blurHandler);
     document.removeEventListener('visibilitychange', visibilityHandler);
 
@@ -1690,46 +1683,8 @@ onBeforeUnmount(() => {
     <div :class="['flex items-center gap-2 mb-6 top-menu', viewVisible ? 'home-entered' : 'home-hidden']">
         <SearchBar @search="handleSearch" class="flex-1 mr-2 home-search" :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')" />
-        <div class="relative">
-            <button @click.stop="toggleFiltersMenu" class="btn btn-ghost btn-sm ml-2">
-                {{ t('home.filters_title') }}
-                <ChevronDown class="w-4 h-4 ml-1" />
-            </button>
-
-            <transition name="slide-up-filter">
-                <div v-if="showFiltersMenu"
-                    class="absolute right-0 mt-2 w-56 bg-base-200 rounded-box shadow-xl border border-base-300 z-50 p-3">
-                    <div class="flex flex-col gap-2 text-sm">
-                        <select class="select select-sm" v-model="clientSortKey">
-                            <option value="newest">{{ t('home.sort.newest') }}</option>
-                            <option value="popularity">{{ t('home.sort.popularity') }}</option>
-                            <option value="name">{{ t('home.sort.name') }}</option>
-                            <option value="version">{{ t('home.sort.version') }}</option>
-                        </select>
-                        <select class="select select-sm" v-model="clientSortOrder">
-                            <option value="asc">{{ t('home.sort.order.asc') }}</option>
-                            <option value="desc">{{ t('home.sort.order.desc') }}</option>
-                        </select>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" class="checkbox" v-model="activeFilters.fabric" />
-                            <span>Fabric</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" class="checkbox" v-model="activeFilters.vanilla" />
-                            <span>Vanilla</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" class="checkbox" v-model="activeFilters.installed" />
-                            <span>{{ t('home.filters.installed') }}</span>
-                        </label>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" class="checkbox" v-model="activeFilters.new" />
-                            <span>{{ t('home.filters.new') || 'New' }}</span>
-                        </label>
-                    </div>
-                </div>
-            </transition>
-        </div>
+        <FiltersMenu v-model:activeFilters="activeFilters" v-model:clientSortKey="clientSortKey"
+            v-model:clientSortOrder="clientSortOrder" />
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.custom_clients')">
             <button @click="$emit('change-view', 'custom_clients')"
                 class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 home-action-btn"
@@ -2092,17 +2047,6 @@ onBeforeUnmount(() => {
 .slide-up-bottom-leave-to {
     opacity: 0;
     transform: translateY(100px);
-}
-
-.slide-up-filter-enter-active,
-.slide-up-filter-leave-active {
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-
-.slide-up-filter-enter-from,
-.slide-up-filter-leave-to {
-    opacity: 0;
-    transform: translateY(10px);
 }
 
 .button-fade-enter-active,

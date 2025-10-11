@@ -432,10 +432,10 @@
     "multiple_clients_stopped": "{count} клиентов остановлено",
     "filters_title": "Фильтры",
     "sort": {
-      "popularity": "Популярность",
-      "name": "Название",
+      "popularity": "Популярные",
+      "name": "По названию",
       "newest": "Новые",
-      "version": "Версия",
+      "version": "По версии",
       "order": {
         "asc": "По возрастанию",
         "desc": "По убыванию"

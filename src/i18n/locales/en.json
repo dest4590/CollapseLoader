@@ -433,9 +433,9 @@
     "filters_title": "Filters",
     "sort": {
       "popularity": "Popularity",
-      "name": "Name",
+      "name": "By name",
       "newest": "Newest",
-      "version": "Version",
+      "version": "By version",
       "order": {
         "asc": "Ascending",
         "desc": "Descending"
