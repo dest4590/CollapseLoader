@@ -177,16 +177,30 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         log_info!("Application is up to date.");
     }
 
+    log_debug!(
+        "Found {} assets for release '{}':",
+        release.assets.len(),
+        release.name
+    );
+    for asset in &release.assets {
+        log_debug!(
+            "  - name: {}, url: {}, size: {}",
+            asset.name,
+            asset.browser_download_url,
+            asset.size
+        );
+    }
+
     let download_url = if cfg!(target_os = "windows") {
         release
             .assets
             .iter()
-            .find(|asset| Data::has_extension(&asset.name, ".msi"))
+            .find(|asset| Data::has_extension(&asset.name, "msi"))
             .or_else(|| {
                 release
                     .assets
                     .iter()
-                    .find(|asset| Data::has_extension(&asset.name, ".exe"))
+                    .find(|asset| Data::has_extension(&asset.name, "exe"))
             })
             .map(|asset| asset.browser_download_url.clone())
             .unwrap_or_else(|| {
@@ -198,20 +212,8 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         String::new()
     };
 
-    if download_url.is_empty() {
-        log_warn!("No suitable installer found for the current platform.");
-        return Err(format!(
-            "No suitable installer found. Please download manually from {}",
-            release.html_url
-        ));
-    }
-    log_debug!("Found suitable installer URL: {}", download_url);
-
     let (parsed_changelog, parsed_translations) = extract_changelog_json_block(&release.body)
-        .and_then(|content| {
-            log_debug!("Found changelog JSON block in release notes");
-            parse_changelog_and_translations(&content).ok()
-        })
+        .and_then(|content| parse_changelog_and_translations(&content).ok())
         .unwrap_or_else(|| {
             log_warn!("No valid changelog JSON block found in release notes");
             Default::default()
@@ -395,7 +397,6 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     if let Some(closing_rel) = rest.find("```") {
         let closing_idx = content_start + closing_rel;
         let content = &body[content_start..closing_idx];
-        log_debug!("Extracted changelog content block.");
         return Some(content.trim().to_string());
     }
 
@@ -407,12 +408,10 @@ fn parse_changelog_and_translations(
     content: &str,
 ) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
     if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) {
-        log_debug!("Parsed changelog as a direct array of entries.");
         return Ok((v, None));
     }
 
     if let Ok(entry) = serde_json::from_str::<ChangelogEntry>(content) {
-        log_debug!("Parsed changelog as a single entry object.");
         return Ok((vec![entry], None));
     }
 
@@ -428,9 +427,6 @@ fn parse_changelog_and_translations(
                 .map_err(|e| format!("Failed to serialize entries node: {e}"))?;
             let entries: Vec<ChangelogEntry> = serde_json::from_str(&entries_json)
                 .map_err(|e| format!("Failed to parse entries array: {e}"))?;
-            log_debug!(
-                "Parsed changelog from a root object with 'entries' and 'translations' keys."
-            );
             return Ok((entries, translations_val));
         }
     }
