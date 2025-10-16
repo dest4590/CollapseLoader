@@ -177,20 +177,6 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         log_info!("Application is up to date.");
     }
 
-    log_debug!(
-        "Found {} assets for release '{}':",
-        release.assets.len(),
-        release.name
-    );
-    for asset in &release.assets {
-        log_debug!(
-            "  - name: {}, url: {}, size: {}",
-            asset.name,
-            asset.browser_download_url,
-            asset.size
-        );
-    }
-
     let download_url = if cfg!(target_os = "windows") {
         release
             .assets
