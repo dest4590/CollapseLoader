@@ -36,7 +36,10 @@ impl LogChecker {
                     );
                     self.handle_crash(crash_type, client_logs, app_handle_clone_for_crash_handling);
                 } else {
-                    log_debug!("No crash detected in logs for client '{}'", self.client.name);
+                    log_debug!(
+                        "No crash detected in logs for client '{}'",
+                        self.client.name
+                    );
                 }
             } else {
                 log_warn!(
