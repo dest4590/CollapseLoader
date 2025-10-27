@@ -16,9 +16,12 @@ import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
 import { getIsDevelopment } from '../../utils/isDevelopment';
+import { isHalloweenEvent, getEventGreeting } from '../../utils/events';
 
 const { t } = useI18n();
 const { adminStatus } = useUser();
+const halloweenActive = ref(isHalloweenEvent());
+const halloweenGreeting = ref(getEventGreeting());
 
 defineProps<{
     activeTab: string;
@@ -124,12 +127,13 @@ onUnmounted(() => {
     <div
         :class="['w-20 h-screen fixed left-0 top-0 bg-base-300 flex flex-col items-center py-6 shadow-md border-r border-base-content/10 z-50', visible ? 'sidebar-entered' : 'sidebar-hidden']">
         <div class="flex flex-col gap-4">
-            <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.home')">
+            <div class="tooltip tooltip-right" :class="halloweenActive ? 'tooltip-warning' : 'tooltip-accent'" :data-tip="t('navigation.home') + (halloweenActive ? ' — ' + halloweenGreeting : '')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'home',
                 }" @click="changeTab('home')">
                     <Home class="w-5 h-5" />
+                    <span v-if="halloweenActive" class="absolute -top-1 -right-1 text-xl">🎃</span>
                     <span v-if="!isOnline"
                         class="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-base-300"></span>
                 </button>

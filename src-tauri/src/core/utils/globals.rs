@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Fabric";
+pub static CODENAME: &str = "The Halloween";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
@@ -29,6 +29,9 @@ pub static USE_LOCAL_SERVER: LazyLock<bool> = LazyLock::new(|| {
     }
     val
 });
+
+pub static SKIP_AGENT_OVERLAY_VERIFICATION: LazyLock<bool> =
+    LazyLock::new(|| parse_env_bool("SKIP_AGENT_OVERLAY_VERIFICATION"));
 
 pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     vec![

@@ -5,6 +5,7 @@ import { onMounted, ref } from 'vue';
 import { useToast } from '../services/toastService';
 import { useI18n } from 'vue-i18n';
 import { UpdateInfo, updaterService } from '../services/updaterService';
+import { isHalloweenEvent, getEventGreeting } from '../utils/events';
 import Logo from '../assets/images/logo.svg';
 import IconGitHub from '../assets/icons/github.svg';
 import IconTelegram from '../assets/icons/telegram.svg';
@@ -12,6 +13,8 @@ import IconDiscord from '../assets/icons/discord.svg';
 
 const { t } = useI18n();
 const { addToast } = useToast();
+const halloweenActive = ref(isHalloweenEvent());
+const halloweenGreeting = ref<string | undefined>(getEventGreeting() ?? undefined);
 
 const version = ref('');
 const codename = ref('');
@@ -84,7 +87,10 @@ onMounted(async () => {
             <img :src="Logo" alt="CollapseLoader Logo" class="w-36 h-36" />
 
             <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">CollapseLoader (BETA)</h1>
+                <h1 class="text-4xl font-bold mb-2">
+                    CollapseLoader (BETA)
+                    <span v-if="halloweenActive" class="text-2xl ml-2 animate-bounce" :title="halloweenGreeting">🎃</span>
+                </h1>
                 <div class="tooltip tooltip-bottom hover:underline cursor-pointer" id="codename"
                     @click="openRepository">
                     <div class="tooltip-content flex flex-col">

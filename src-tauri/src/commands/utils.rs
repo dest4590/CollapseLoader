@@ -92,7 +92,10 @@ pub async fn change_data_folder(
     }
 
     if !new_dir.exists() {
-        log_debug!("Target directory does not exist, creating it: {:?}", new_dir);
+        log_debug!(
+            "Target directory does not exist, creating it: {:?}",
+            new_dir
+        );
         fs::create_dir_all(&new_dir).map_err(|e| {
             log_error!("Failed to create target directory {:?}: {}", new_dir, e);
             format!("Failed to create target dir: {e}")

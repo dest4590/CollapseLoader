@@ -149,6 +149,29 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.custom-modal-content .custom-modal-body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.custom-modal-content .custom-modal-body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+.custom-modal-content .custom-modal-body::-webkit-scrollbar-track,
+.custom-modal-content .custom-modal-body::-webkit-scrollbar-thumb {
+    background: transparent;
+    display: none;
 }
 
 .custom-modal-header {

@@ -639,7 +639,7 @@ onBeforeUnmount(() => {
         'hover:bg-primary/10': isMultiSelectMode && !isSelected,
         'transition-all duration-200 ease-out': !isExpanded
     }" :data-client-id="client.id" @contextmenu="handleShowContextMenu" @click="handleCardClick">
-        <div v-if="isSelected && !isExpanded" class="absolute -z-0" style="right: 1.1rem; top: 1.1rem;">
+        <div v-if="isSelected && !isExpanded" class="absolute z-0" style="right: 1.1rem; top: 1.1rem;">
             <div class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                 <svg class="w-3 h-3 text-primary-content" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"
@@ -657,7 +657,7 @@ onBeforeUnmount(() => {
 
         <transition name="fade">
             <button v-if="isAnimating" @click="!isCollapsing && collapseCard()"
-                class="btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-[1001] text-base-content hover:bg-base-content/10"
+                class="btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-1001 text-base-content hover:bg-base-content/10"
                 :disabled="isCollapsing">
                 <X class="w-5 h-5" />
             </button>
@@ -668,9 +668,9 @@ onBeforeUnmount(() => {
                 <h2 class="card-title text-base">
                     {{ client.name }}
                     <div v-if="client.insecure">
-                        <div class="tooltip tooltip-right" :data-tip="t('client.insecure_tooltip')"
+                        <div class="tooltip tooltip-left" :data-tip="t('client.insecure_tooltip')"
                             @click="showInsecureWarning">
-                            <AlertTriangle class="text-warning w-4 h-4 transition-all duration-500" />
+                            <AlertTriangle class="text-warning w-4 h-4 transition-all duration-500 hover:bg-base-200" />
                         </div>
                     </div>
                 </h2>
@@ -707,22 +707,22 @@ onBeforeUnmount(() => {
                     </div>
                     <div v-else-if="!isAnimating" class="flex items-center space-x-2">
                         <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                            class="btn btn-sm btn-primary min-w-[7rem] download-btn relative overflow-hidden" :disabled="isRequirementsInProgress || !client.working
+                            class="btn btn-sm btn-primary download-btn relative overflow-hidden" :disabled="isRequirementsInProgress || !client.working
                                 ">
                             <span class="flex items-center download-text">
                                 <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                 <span v-if="client.working">{{
                                     t('home.download')
-                                }}</span>
+                                    }}</span>
                                 <span v-else-if="!client.working">{{
                                     t('home.unavailable')
-                                }}</span>
+                                    }}</span>
                             </span>
                             <span class="flex items-center get-text absolute inset-0 opacity-0">
                                 {{ client.meta.size || '0' }} MB
                             </span>
                         </button>
-                        <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-[5rem] launch-btn"
+                        <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20 launch-btn"
                             :disabled="isRequirementsInProgress" :class="clientIsRunning
                                 ? 'btn-error focus:ring-error'
                                 : 'btn-primary focus:ring-primary'
@@ -866,7 +866,7 @@ onBeforeUnmount(() => {
     <teleport to="body">
         <transition name="screenshot-viewer" appear>
             <div v-if="isScreenshotViewerOpen && clientDetails?.screenshot_urls" ref="screenshotViewerRef"
-                class="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm flex items-center justify-center"
+                class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-sm flex items-center justify-center"
                 @click="handleViewerBackgroundClick">
 
                 <button @click="handleScreenshotViewerClose"
@@ -927,7 +927,7 @@ onBeforeUnmount(() => {
                             <div v-if="isImageLoading" class="absolute inset-0 flex items-center justify-center z-20">
                                 <div class="skeleton-container">
                                     <div
-                                        class="skeleton-image animate-pulse bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 bg-[length:200%_100%] rounded-lg">
+                                        class="skeleton-image animate-pulse bg-linear-to-r from-gray-300 via-gray-200 to-gray-300 bg-size-[200%_100%] rounded-lg">
                                     </div>
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <div class="loading loading-spinner loading-lg text-white"></div>

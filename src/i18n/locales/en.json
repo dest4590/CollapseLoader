@@ -267,11 +267,16 @@
     "no_social_links": "No social links added yet.",
     "avatar_help": "PNG, JPG, GIF, WEBP up to 5MB",
     "avatar_drop": "Drop or click to upload avatar",
+    "upload_avatar": "Upload avatar",
+    "avatar_upload_refresh_failed": "Failed to refresh avatar after upload: {error}",
     "change_avatar": "Change avatar",
     "avatar_type_error": "Unsupported file type",
     "avatar_size_error": "File is too large (max 5MB)",
     "avatar_uploaded": "Avatar updated",
-    "avatar_upload_failed": "Failed to upload avatar"
+    "avatar_upload_failed": "Failed to upload avatar",
+    "reset_avatar": "Reset avatar",
+    "avatar_reset_success": "Avatar reset successfully",
+    "avatar_reset_failed": "Failed to reset avatar: {error}"
   },
   "roles": {
     "user": "User",
@@ -428,9 +433,9 @@
     "filters_title": "Filters",
     "sort": {
       "popularity": "Popularity",
-      "name": "Name",
+      "name": "By name",
       "newest": "Newest",
-      "version": "Version",
+      "version": "By version",
       "order": {
         "asc": "Ascending",
         "desc": "Descending"
@@ -623,7 +628,15 @@
         "delete_success": "Preset \"{name}\" deleted successfully",
         "delete_error": "Failed to delete preset",
         "duplicate_success": "Preset \"{name}\" duplicated successfully",
-        "duplicate_error": "Failed to duplicate preset"
+        "duplicate_error": "Failed to duplicate preset",
+        "apply_success": "Preset \"{name}\" applied successfully",
+        "apply_error": "Failed to apply preset \"{name}\": {error}",
+        "import_success": "Preset \"{name}\" imported successfully",
+        "import_no_name": "Imported preset is missing a name",
+        "import_error": "Failed to import preset: {error}",
+        "multiple_deleted": "{count} presets deleted successfully",
+        "multiple_duplicated": "{count} presets duplicated successfully",
+        "multiple_exported": "{count} presets exported to clipboard"
       }
     }
   },
@@ -639,6 +652,14 @@
     "installation_complete": "Installation Complete"
   },
   "errors": {
+    "clients_load_failed": "Failed to load clients: {error}",
+    "clients_unavailable": "Clients are currently unavailable.",
+    "stop_error": "Failed to stop client: {error}",
+    "folder_error": "Failed to open data folder: {error}",
+    "reinstall_error": "Failed to reinstall {name}: {error}",
+    "logs_error": "Failed to access logs: {error}",
+    "delete_error": "Failed to delete {name}: {error}",
+    "download_error": "Failed to download {name}: {error}",
     "favorites_error": "Error updating favorite: {error}",
     "load_accounts_error": "Error loading accounts: {error}",
     "launch_with_account_error": "Error launching client with account: {error}",
@@ -798,6 +819,7 @@
     "social_links": "Social links",
     "presets_title": "Presets",
     "presets": "presets",
+    "presets_hidden_streamer": "Presets are hidden in streamer mode.",
     "no_presets": "This user hasn't shared any presets yet.",
     "create_preset": "Create Preset"
   },
@@ -1134,5 +1156,12 @@
     "preset_picker_label": "Choose a local preset",
     "preset_picker_placeholder": "Select a preset...",
     "no_local_presets": "You don't have any presets yet"
+  },
+  "events": {
+    "halloween": {
+      "greeting": "Happy Halloween!",
+      "message": "Spooky season is here! 🎃",
+      "tooltip": "Happy Halloween! (Oct 25 - Nov 5)"
+    }
   }
 }

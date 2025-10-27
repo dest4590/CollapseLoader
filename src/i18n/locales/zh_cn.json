@@ -267,11 +267,16 @@
     "no_social_links": "尚未添加任何社交链接。",
     "avatar_help": "PNG、JPG、GIF、WEBP，最大 5MB",
     "avatar_drop": "拖拽或点击上传头像",
+    "upload_avatar": "上传头像",
+    "avatar_upload_refresh_failed": "上传后刷新头像失败：{error}",
     "change_avatar": "更换头像",
     "avatar_type_error": "不支持的文件类型",
     "avatar_size_error": "文件过大（最大 5MB）",
     "avatar_uploaded": "头像已更新",
-    "avatar_upload_failed": "上传头像失败"
+    "avatar_upload_failed": "上传头像失败",
+    "reset_avatar": "重置头像",
+    "avatar_reset_success": "头像重置成功",
+    "avatar_reset_failed": "重置头像失败：{error}"
   },
   "roles": {
     "user": "用户",
@@ -428,9 +433,9 @@
     "filters_title": "筛选",
     "sort": {
       "popularity": "人气",
-      "name": "名称",
+      "name": "按名称",
       "newest": "最新",
-      "version": "版本",
+      "version": "据称",
       "order": {
         "asc": "升序",
         "desc": "降序"
@@ -623,11 +628,27 @@
         "delete_success": "预设 \"{name}\" 删除成功",
         "delete_error": "删除预设失败",
         "duplicate_error": "复制预设失败",
-        "duplicate_success": "预设已复制"
+        "duplicate_success": "预设已复制",
+        "apply_success": "预设 \"{name}\" 应用成功",
+        "apply_error": "应用预设 \"{name}\" 失败：{error}",
+        "import_success": "预设 \"{name}\" 导入成功",
+        "import_no_name": "导入的预设缺少名称",
+        "import_error": "导入预设失败：{error}",
+        "multiple_deleted": "已成功删除 {count} 个预设",
+        "multiple_duplicated": "已成功复制 {count} 个预设",
+        "multiple_exported": "已将 {count} 个预设导出到剪贴板"
       }
     }
   },
   "errors": {
+    "clients_load_failed": "加载客户端列表失败：{error}",
+    "clients_unavailable": "客户端当前不可用。",
+    "stop_error": "停止客户端失败：{error}",
+    "folder_error": "打开数据文件夹失败：{error}",
+    "reinstall_error": "重新安装 {name} 失败：{error}",
+    "logs_error": "访问日志失败：{error}",
+    "delete_error": "删除 {name} 失败：{error}",
+    "download_error": "下载 {name} 失败：{error}",
     "favorites_error": "更新收藏时出错：{error}",
     "load_accounts_error": "加载账户时出错：{error}",
     "launch_with_account_error": "使用账户启动客户端时出错：{error}",
@@ -788,7 +809,8 @@
     "presets_title": "预设",
     "presets": "预设",
     "no_presets": "该用户尚未分享任何预设。",
-    "create_preset": "创建预设"
+    "create_preset": "创建预设",
+    "presets_hidden_streamer": "主播模式下已隐藏预设。"
   },
   "sync": {
     "last_sync": "上次同步",
@@ -1123,6 +1145,13 @@
     "preset_picker_label": "选择本地预设",
     "preset_picker_placeholder": "选择一个预设...",
     "no_local_presets": "您还没有任何预设"
+  },
+  "events": {
+    "halloween": {
+      "greeting": "万圣节快乐！",
+      "message": "诡异季节来了！🎃",
+      "tooltip": "万圣节快乐！（10月25日-11月5日）"
+    }
   },
   "logs": {
     "copy_logs": "复制日志",
