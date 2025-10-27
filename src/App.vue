@@ -44,6 +44,7 @@ import { fetchSettings, applyLanguageOnStartup, applyThemeOnStartup } from './ut
 import { getDiscordState } from './utils/discord';
 import { VALID_TABS } from './utils/tabs';
 import { getIsDevelopment } from './utils/isDevelopment';
+import { isHalloweenEvent, getEventGreeting } from './utils/events';
 
 interface Setting<T> {
     description: string;
@@ -90,7 +91,8 @@ const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
 const isDev = ref(false);
-
+const halloweenActive = ref(isHalloweenEvent());
+const halloweenGreeting = ref(getEventGreeting());
 
 const { loadUserData, displayName, isAuthenticated: userAuthenticated } = useUser();
 const {
@@ -370,6 +372,12 @@ const initApp = async () => {
                     bootLogService.clear();
                 } catch (e) {
                     console.error('Failed to clear boot logs:', e);
+                }
+
+                if (halloweenActive.value && halloweenGreeting.value) {
+                    setTimeout(() => {
+                        addToast(halloweenGreeting.value + ' 🎃', 'info', 5000);
+                    }, 4000);
                 }
             }, 80);
         }, 800);
@@ -706,9 +714,12 @@ onUnmounted(() => {
         class="fixed inset-0 bg-base-300 flex items-center justify-center">
         <BootLogs v-if="isDev" :current-progress="currentProgress / totalSteps" :loading-state="loadingState" />
 
-        <div class="flex flex-col items-center justify-center h-full w-screen relative z-[10]">
-            <div class="w-48 h-48 animate-pulse-subtle">
+        <div class="flex flex-col items-center justify-center h-full w-screen relative z-10">
+            <div v-if="!halloweenActive" class="w-48 h-48 animate-pulse-subtle">
                 <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
+            </div>
+            <div v-else class="w-48 h-48">
+                <img src="./assets/misc/ghosts.gif" alt="Loading..." />
             </div>
 
             <span class="sr-only">{{ loadingState }}</span>

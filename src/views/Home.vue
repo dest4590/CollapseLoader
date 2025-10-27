@@ -26,6 +26,7 @@ import type { Client, InstallProgress } from '../types/ui';
 import type { CustomClient } from '../types/ui';
 import LogViewerModal from '../components/modals/clients/LogViewerModal.vue';
 import InsecureClientWarningModal from '../components/modals/clients/InsecureClientWarningModal.vue';
+import { isHalloweenEvent } from '../utils/events';
 
 interface Account {
     id: string;
@@ -44,6 +45,7 @@ interface Filters {
 }
 
 const { t } = useI18n();
+const halloweenActive = ref(isHalloweenEvent());
 
 const props = defineProps<{
     isOnline: boolean;
@@ -1641,9 +1643,12 @@ onMounted(async () => {
     } catch (e) {
         console.error('Error scheduling stagger flag:', e);
     }
+
+
 });
 
 onBeforeUnmount(() => {
+
     if (statusInterval.value !== null) {
         clearInterval(statusInterval.value);
         statusInterval.value = null;
@@ -1679,22 +1684,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-
     <div :class="['flex items-center gap-2 mb-6 top-menu', viewVisible ? 'home-entered' : 'home-hidden']">
         <SearchBar @search="handleSearch" class="flex-1 mr-2 home-search" :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')" />
         <FiltersMenu v-model:activeFilters="activeFilters" v-model:clientSortKey="clientSortKey"
             v-model:clientSortOrder="clientSortOrder" />
+        <div v-if="halloweenActive" class="tooltip tooltip-bottom" :data-tip="t('events.halloween.tooltip')">
+            <div class="px-3 py-2 bg-warning/10 border border-warning/30 rounded-lg text-warning">
+                <span class="text-xl">🎃</span>
+            </div>
+        </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.custom_clients')">
             <button @click="$emit('change-view', 'custom_clients')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 home-action-btn"
+                class="btn btn-ghost border-base-300 btn-primary gap-2 home-action-btn"
                 :style="{ border: 'var(--border) solid #0000', transitionDelay: '0.5s' }">
                 <FileText class="w-4 h-4" />
             </button>
         </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
             <button @click="$emit('change-view', 'news')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 flex-shrink-0 relative home-action-btn"
+                class="btn btn-ghost border-base-300 btn-primary gap-2 relative home-action-btn"
                 :style="{ border: 'var(--border) solid #0000', transitionDelay: '1s' }">
                 <Newspaper class="w-4 h-4" />
                 <span v-if="props.unreadNewsCount && props.unreadNewsCount > 0"

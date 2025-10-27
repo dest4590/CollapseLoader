@@ -1156,5 +1156,12 @@
     "preset_picker_label": "Choose a local preset",
     "preset_picker_placeholder": "Select a preset...",
     "no_local_presets": "You don't have any presets yet"
+  },
+  "events": {
+    "halloween": {
+      "greeting": "Happy Halloween!",
+      "message": "Spooky season is here! 🎃",
+      "tooltip": "Happy Halloween! (Oct 25 - Nov 5)"
+    }
   }
 }

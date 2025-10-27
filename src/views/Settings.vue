@@ -641,7 +641,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             <div v-if="key === 'ram'" class="space-y-3">
                                 <div class="flex items-center gap-2">
                                     <AnimatedSlider v-model="ramOptionIndex" :min="0" :max="ramOptions.length - 1"
-                                        @update:modelValue="handleSliderChange" class="flex-grow" />
+                                        @update:modelValue="handleSliderChange" class="grow" />
                                     <div class="flex items-center gap-2 rounded-md p-2">
                                         <input v-if="settings.ram" v-model.number="settings.ram.value" type="number"
                                             min="512" step="512"
@@ -858,7 +858,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -867,7 +867,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>

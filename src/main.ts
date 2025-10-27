@@ -4,6 +4,7 @@ import Vue3Lottie from "vue3-lottie";
 import i18n from './i18n/index';
 import { initializeAuthUrl } from './config';
 import { loader } from '@guolao/vue-monaco-editor';
+import { applyCursorForEvent } from "./utils/events";
 
 loader.config({
   paths: {
@@ -13,6 +14,8 @@ loader.config({
 
 initializeAuthUrl()
   .finally(() => {
+    applyCursorForEvent();
+
     createApp(App)
       .use(Vue3Lottie)
       .use(i18n)
