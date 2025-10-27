@@ -44,11 +44,12 @@ impl Logger {
         }
 
         let shorted_tag = tag.rsplit("collapseloader_lib.").next().unwrap_or(tag);
+        let shorted_tag = shorted_tag.replace("collapse.module.collapseloader_lib", "core.init");
 
         let ts_colored = timestamp.dimmed();
         let tag_colored = shorted_tag.white();
 
-        let emoji = Self::emoji_for_module(tag)
+        let emoji = Self::emoji_for_module(&shorted_tag)
             .map(|e| format!(" {e} |"))
             .unwrap_or_default();
 
@@ -79,6 +80,10 @@ impl Logger {
             Some("\u{26C3}") // ⛃
         } else if tag.contains("core.utils") {
             Some("\u{2692}") // ⚒
+        } else if tag.contains("core.init") {
+            Some("\u{2699}") // ⚙
+        } else if tag.contains("commands.") {
+            Some("\u{25CF}") // ●
         } else {
             None
         }
