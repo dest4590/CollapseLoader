@@ -166,7 +166,7 @@ const scheduleFilterUpdate = () => {
     filtersDebounceTimer = window.setTimeout(() => {
         applyFiltersAndSort();
         filtersDebounceTimer = null;
-    }, 300);
+    }, 100);
 };
 
 watch(
@@ -179,7 +179,7 @@ watch(
         }
         scheduleFilterUpdate();
     },
-    { deep: true }
+    { deep: true, flush: 'post' }
 );
 
 watch(clientSortKey, (val) => {
@@ -438,45 +438,44 @@ const allClients = computed(() => {
 let filteredClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const filteredClients = computed(() => {
-    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${JSON.stringify(debouncedActiveFilters.value)}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.join(',')}`;
+    const filters = debouncedActiveFilters.value;
+    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${filters.fabric}-${filters.vanilla}-${filters.installed}-${filters.new}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.length}`;
 
     if (filteredClientsCache.key === cacheKey) {
         return filteredClientsCache.result;
     }
 
-    let clientsList = allClients.value;
-
-    if (debouncedSearchQuery.value.trim()) {
-        const query = debouncedSearchQuery.value.toLowerCase().trim();
-        clientsList = clientsList.filter(
-            (client) =>
-                client.name.toLowerCase().includes(query) ||
-                client.version.toLowerCase().includes(query)
-        );
-    }
-
-    const filters = debouncedActiveFilters.value;
+    const query = debouncedSearchQuery.value.trim();
+    const queryLower = query ? query.toLowerCase() : '';
     const hasActiveFilters = filters.fabric || filters.vanilla || filters.installed || filters.new;
 
-    if (hasActiveFilters) {
+    let clientsList = allClients.value;
+
+    if (queryLower || hasActiveFilters) {
         clientsList = clientsList.filter((client) => {
-            if (filters.installed && !(client.meta && client.meta.installed)) {
-                return false;
+            if (queryLower) {
+                const nameMatch = client.name.toLowerCase().includes(queryLower);
+                const versionMatch = client.version.toLowerCase().includes(queryLower);
+                if (!nameMatch && !versionMatch) return false;
             }
 
-            if (filters.new && !(client.meta && client.meta.is_new)) {
-                return false;
-            }
+            if (hasActiveFilters) {
+                if (filters.installed && !(client.meta?.installed)) {
+                    return false;
+                }
 
-            if (filters.fabric || filters.vanilla) {
-                const clientTypeRaw = (client as any).client_type || (client.meta && client.meta.client_type) || '';
-                const clientType = String(clientTypeRaw).toLowerCase();
+                if (filters.new && !(client.meta?.is_new)) {
+                    return false;
+                }
 
-                const isFabric = clientType === 'fabric' || (Array.isArray(client.meta?.tags) && client.meta.tags.some((t: string) => t.toLowerCase().includes('fabric')));
-                const isVanilla = !isFabric;
+                if (filters.fabric || filters.vanilla) {
+                    const clientTypeRaw = (client as any).client_type || client.meta?.client_type || '';
+                    const clientType = String(clientTypeRaw).toLowerCase();
+                    const isFabric = clientType === 'fabric' || (Array.isArray(client.meta?.tags) && client.meta.tags.some((t: string) => t.toLowerCase().includes('fabric')));
 
-                const allowedByType = (isFabric && filters.fabric) || (isVanilla && filters.vanilla);
-                if (!allowedByType) return false;
+                    const allowedByType = (isFabric && filters.fabric) || (!isFabric && filters.vanilla);
+                    if (!allowedByType) return false;
+                }
             }
 
             return true;
@@ -488,83 +487,83 @@ const filteredClients = computed(() => {
         return clientsList;
     }
 
-    const sorted = [...clientsList];
     const sortKey = debouncedClientSortKey.value;
     const sortOrder = debouncedClientSortOrder.value;
+    const sortMultiplier = sortOrder === 'desc' ? -1 : 1;
 
     if (sortKey === 'newest') {
-        sorted.sort((a, b) => {
-            const aNew = a.meta && a.meta.is_new ? 1 : 0;
-            const bNew = b.meta && b.meta.is_new ? 1 : 0;
+        clientsList.sort((a, b) => {
+            const aNew = a.meta?.is_new ? 1 : 0;
+            const bNew = b.meta?.is_new ? 1 : 0;
 
-            if (aNew === bNew) {
-                if (aNew === 1) {
-                    return sortOrder === 'desc' ? b.id - a.id : a.id - b.id;
-                } else {
-                    return sortOrder === 'desc'
-                        ? b.name.localeCompare(a.name)
-                        : a.name.localeCompare(b.name);
-                }
+            if (aNew !== bNew) {
+                return (bNew - aNew) * sortMultiplier;
             }
 
-            return sortOrder === 'desc' ? bNew - aNew : aNew - bNew;
+            if (aNew === 1) {
+                return (b.id - a.id) * sortMultiplier;
+            }
+
+            return b.name.localeCompare(a.name) * sortMultiplier;
         });
     } else if (sortKey === 'version') {
-        const parseVer = (v: string) => {
-            if (!v) return [] as number[];
+        const parseVer = (v: string): number[] => {
+            if (!v) return [];
             const clean = v.replace(/^v/i, '').replace(/_/g, '.').replace(/[^0-9.]/g, '.');
-            return clean.split('.').map(s => parseInt(s, 10)).map(n => isNaN(n) ? 0 : n);
+            return clean.split('.').map(s => {
+                const n = parseInt(s, 10);
+                return isNaN(n) ? 0 : n;
+            });
         };
 
-        sorted.sort((a, b) => {
+        clientsList.sort((a, b) => {
             const av = parseVer(a.version || '');
             const bv = parseVer(b.version || '');
             const len = Math.max(av.length, bv.length);
+
             for (let i = 0; i < len; i++) {
                 const na = av[i] || 0;
                 const nb = bv[i] || 0;
-                if (na !== nb) return sortOrder === 'desc' ? nb - na : na - nb;
+                if (na !== nb) {
+                    return (nb - na) * sortMultiplier;
+                }
             }
-            return sortOrder === 'desc'
-                ? b.name.localeCompare(a.name)
-                : a.name.localeCompare(b.name);
+
+            return b.name.localeCompare(a.name) * sortMultiplier;
         });
     } else if (sortKey === 'popularity') {
-        sorted.sort((a, b) => {
+        clientsList.sort((a, b) => {
             const av = a.launches ?? 0;
             const bv = b.launches ?? 0;
-            if (av !== bv) return sortOrder === 'desc' ? bv - av : av - bv;
-            return sortOrder === 'desc'
-                ? b.name.localeCompare(a.name)
-                : a.name.localeCompare(b.name);
+            if (av !== bv) {
+                return (bv - av) * sortMultiplier;
+            }
+            return b.name.localeCompare(a.name) * sortMultiplier;
         });
     } else {
-        sorted.sort((a, b) =>
-            sortOrder === 'desc'
-                ? b.name.localeCompare(a.name)
-                : a.name.localeCompare(b.name)
+        clientsList.sort((a, b) =>
+            b.name.localeCompare(a.name) * sortMultiplier
         );
     }
 
-    try {
-        const favSet = new Set(favoriteClients.value || []);
-
+    const favSet = new Set(favoriteClients.value);
+    if (favSet.size > 0) {
         const favs: Client[] = [];
         const others: Client[] = [];
 
-        for (const c of sorted) {
-            if (favSet.has(c.id)) favs.push(c);
-            else others.push(c);
+        for (const c of clientsList) {
+            if (favSet.has(c.id)) {
+                favs.push(c);
+            } else {
+                others.push(c);
+            }
         }
 
-        const combined = [...favs, ...others];
-        filteredClientsCache = { key: cacheKey, result: combined };
-        return combined;
-    } catch (e) {
-        console.error('Error applying favorites-first ordering:', e);
-        filteredClientsCache = { key: cacheKey, result: sorted };
-        return sorted;
+        clientsList = [...favs, ...others];
     }
+
+    filteredClientsCache = { key: cacheKey, result: clientsList };
+    return clientsList;
 });
 
 const loadFavorites = async () => {
@@ -654,17 +653,19 @@ const launchClientWithAccount = async (client: Client, accountId: string) => {
     hideContextMenu();
 };
 
+const invalidateAllCaches = () => {
+    customClientsAsClientsCache = { key: '', result: [] };
+    allClientsCache = { key: '', result: [] };
+    invalidateClientCaches();
+};
+
 const getClients = async () => {
     try {
         error.value = '';
         const response = await invoke<Client[]>('get_clients');
         if (response && response.length > 0) {
             clients.value = response;
-            customClientsAsClientsCache = { key: '', result: [] };
-            allClientsCache = { key: '', result: [] };
-            filteredClientsCache = { key: '', result: [] };
-            selectedClientsDataCache = { key: '', result: [] };
-            downloadingClientsCache = { key: '', result: false };
+            invalidateAllCaches();
         } else {
             clients.value = [];
             if (response !== null && response.length === 0) {
@@ -1076,15 +1077,19 @@ const setupEventListeners = async () => {
     eventListeners.value.push(customClientLaunchedListener);
 };
 
+const invalidateClientCaches = () => {
+    filteredClientsCache = { key: '', result: [] };
+    selectedClientsDataCache = { key: '', result: [] };
+    downloadingClientsCache = { key: '', result: false };
+};
+
 const updateClientInstallStatus = (filename: string) => {
     const client = clients.value.find((c) => c.filename === filename);
     if (client) {
         const status = installationStatus.value.get(filename);
         if (status && status.isComplete) {
             client.meta.installed = true;
-            filteredClientsCache = { key: '', result: [] };
-            selectedClientsDataCache = { key: '', result: [] };
-            downloadingClientsCache = { key: '', result: false };
+            invalidateClientCaches();
         }
     }
 };
@@ -1093,9 +1098,7 @@ const markClientAsInstalled = async (filename: string) => {
     const client = clients.value.find((c) => c.filename === filename);
     if (client) {
         client.meta.installed = true;
-        filteredClientsCache = { key: '', result: [] };
-        selectedClientsDataCache = { key: '', result: [] };
-        downloadingClientsCache = { key: '', result: false };
+        invalidateClientCaches();
 
         try {
             await invoke('update_client_installed_status', {
