@@ -41,7 +41,6 @@ interface Filters {
     fabric: boolean;
     vanilla: boolean;
     installed: boolean;
-    new: boolean;
 }
 
 const { t } = useI18n();
@@ -110,8 +109,7 @@ const CLIENT_SORT_ORDER_KEY = 'homeClientSortOrder';
 let initialFilters: Filters = {
     fabric: false,
     vanilla: false,
-    installed: false,
-    new: false,
+    installed: false
 };
 
 try {
@@ -145,15 +143,21 @@ try {
 }
 const clientSortOrder = ref<'asc' | 'desc'>(initialSortOrder);
 
-const debouncedActiveFilters = ref<Filters>({ ...initialFilters });
+const debouncedActiveFilters = shallowRef<Filters>({ ...initialFilters });
 
 const debouncedClientSortKey = ref(clientSortKey.value);
 const debouncedClientSortOrder = ref(clientSortOrder.value);
 
 const applyFiltersAndSort = () => {
-    debouncedActiveFilters.value = { ...activeFilters.value };
-    debouncedClientSortKey.value = clientSortKey.value;
-    debouncedClientSortOrder.value = clientSortOrder.value;
+    if (JSON.stringify(debouncedActiveFilters.value) !== JSON.stringify(activeFilters.value)) {
+        debouncedActiveFilters.value = { ...activeFilters.value };
+    }
+    if (debouncedClientSortKey.value !== clientSortKey.value) {
+        debouncedClientSortKey.value = clientSortKey.value;
+    }
+    if (debouncedClientSortOrder.value !== clientSortOrder.value) {
+        debouncedClientSortOrder.value = clientSortOrder.value;
+    }
 };
 
 let filtersDebounceTimer: number | null = null;
@@ -439,7 +443,7 @@ let filteredClientsCache: { key: string; result: Client[] } = { key: '', result:
 
 const filteredClients = computed(() => {
     const filters = debouncedActiveFilters.value;
-    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${filters.fabric}-${filters.vanilla}-${filters.installed}-${filters.new}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.length}`;
+    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${filters.fabric}-${filters.vanilla}-${filters.installed}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.length}`;
 
     if (filteredClientsCache.key === cacheKey) {
         return filteredClientsCache.result;
@@ -447,7 +451,7 @@ const filteredClients = computed(() => {
 
     const query = debouncedSearchQuery.value.trim();
     const queryLower = query ? query.toLowerCase() : '';
-    const hasActiveFilters = filters.fabric || filters.vanilla || filters.installed || filters.new;
+    const hasActiveFilters = filters.fabric || filters.vanilla || filters.installed;
 
     let clientsList = allClients.value;
 
@@ -461,10 +465,6 @@ const filteredClients = computed(() => {
 
             if (hasActiveFilters) {
                 if (filters.installed && !(client.meta?.installed)) {
-                    return false;
-                }
-
-                if (filters.new && !(client.meta?.is_new)) {
                     return false;
                 }
 

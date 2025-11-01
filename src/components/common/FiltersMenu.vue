@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { ChevronDown } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
@@ -7,7 +7,6 @@ interface Filters {
     fabric: boolean;
     vanilla: boolean;
     installed: boolean;
-    new: boolean;
 }
 
 type SortKey = 'popularity' | 'name' | 'newest' | 'version';
@@ -29,32 +28,19 @@ const { t } = useI18n();
 
 const showFiltersMenu = ref(false);
 
-const localFilters = ref<Filters>({ ...props.activeFilters });
-const localSortKey = ref<SortKey>(props.clientSortKey);
-const localSortOrder = ref<SortOrder>(props.clientSortOrder);
-
-watch(() => props.activeFilters, (newFilters) => {
-    localFilters.value = { ...newFilters };
-}, { deep: true });
-
-watch(() => props.clientSortKey, (newSortKey) => {
-    localSortKey.value = newSortKey;
+const localFilters = computed({
+    get: () => props.activeFilters,
+    set: (value) => emit('update:activeFilters', value),
 });
 
-watch(() => props.clientSortOrder, (newSortOrder) => {
-    localSortOrder.value = newSortOrder;
+const localSortKey = computed({
+    get: () => props.clientSortKey,
+    set: (value) => emit('update:clientSortKey', value),
 });
 
-watch(localFilters, (newFilters) => {
-    emit('update:activeFilters', { ...newFilters });
-}, { deep: true });
-
-watch(localSortKey, (newSortKey) => {
-    emit('update:clientSortKey', newSortKey);
-});
-
-watch(localSortOrder, (newSortOrder) => {
-    emit('update:clientSortOrder', newSortOrder);
+const localSortOrder = computed({
+    get: () => props.clientSortOrder,
+    set: (value) => emit('update:clientSortOrder', value),
 });
 
 const toggleFiltersMenu = (event?: Event) => {
@@ -123,11 +109,6 @@ onBeforeUnmount(() => {
                     <label class="flex items-center gap-2">
                         <input type="checkbox" class="checkbox" v-model="localFilters.installed" />
                         <span>{{ t('home.filters.installed') }}</span>
-                    </label>
-
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" class="checkbox" v-model="localFilters.new" />
-                        <span>{{ t('home.filters.new') }}</span>
                     </label>
                 </div>
             </div>
