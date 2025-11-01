@@ -26,7 +26,7 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-2 mt-2 sm:mt-0 ml-0 sm:ml-4 flex-shrink-0">
+                        <div class="flex items-center gap-2 mt-2 sm:mt-0 ml-0 sm:ml-4 shrink-0">
                             <button v-if="!isStreamerMode" type="button" @click="startEdit(link)"
                                 class="btn btn-ghost btn-sm">{{ t('common.edit') }}</button>
                             <button v-if="!isStreamerMode" type="button" @click="confirmDelete(link)"
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <div class="pt-4 border-t border-base-300 mt-4 flex-shrink-0">
+        <div class="pt-4 border-t border-base-300 mt-4 shrink-0">
             <div v-if="!editing && !isStreamerMode">
                 <h4 class="font-medium mb-2">{{ t('modals.social_links.add_title') }}</h4>
                 <div class="grid grid-cols-1 gap-2">

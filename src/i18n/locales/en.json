@@ -709,6 +709,9 @@
     "load_accounts_failed": "Failed to load accounts: {error}",
     "load_flags_failed": "Failed to load flags: {error}",
     "language_change_failed": "Failed to change language: {error}",
+    "ram": {
+      "warning": "Warning: You have selected {selectedRamMb} MB of RAM. This exceeds the recommended 6 GB limit and may cause performance issues or crashes."
+    },
     "descriptions": {
       "ram": "Amount of RAM to allocate in MB.",
       "language": "The application language (e.g., en, ru).",
@@ -718,6 +721,11 @@
       "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
       "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
       "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients."
+    },
+    "ram_warning": {
+      "title": "RAM Warning",
+      "exceeds_system": "The selected RAM ({selected} MB) exceeds 6 GB. This may cause performance issues or system instability.",
+      "reduce_recommended": "Consider reducing the RAM allocation to prevent potential problems."
     },
     "telemetry": "Analytics",
     "telemetry_toggle": "Enable anonymous analytics",

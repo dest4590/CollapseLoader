@@ -1,11 +1,11 @@
 <template>
     <transition name="disclaimer-fade">
         <div v-if="show"
-            class="fixed inset-0 bg-black/80 z-[1400] p-9 flex items-center justify-center backdrop-blur-md">
+            class="fixed inset-0 bg-black/80 z-1400 p-9 flex items-center justify-center backdrop-blur-md">
             <transition name="disclaimer-scale">
                 <div v-if="show"
                     class="bg-base-200 rounded-xl shadow-2xl border border-base-300 w-full max-w-2xl flex flex-col max-h-[80vh]">
-                    <div class="flex flex-col items-center text-center p-6 flex-grow overflow-y-auto">
+                    <div class="flex flex-col items-center text-center p-6 grow overflow-y-auto">
                         <h2 class="text-2xl font-bold text-primary mb-4">
                             {{ t('modals.telemetry_consent.title') }}
                         </h2>

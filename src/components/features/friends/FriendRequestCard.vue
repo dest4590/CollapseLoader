@@ -8,7 +8,7 @@
                             :src="(props.user as any).avatar_url || null"
                             :original-src="(props.user as any).avatar_url || null" />
                     </div>
-                    <div class="min-h-[56px]">
+                    <div class="min-h-14">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}

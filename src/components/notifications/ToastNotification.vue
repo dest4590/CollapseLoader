@@ -155,7 +155,7 @@ const handleMouseLeave = () => {
 }
 
 .toast-message {
-    flex-grow: 1;
+    grow: 1;
     font-size: 0.875rem;
     line-height: 1.4;
     word-break: break-word;

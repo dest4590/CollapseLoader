@@ -2,7 +2,7 @@
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useToast } from '../../services/toastService';
 import { useI18n } from 'vue-i18n';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import HoldButton from '../ui/HoldButton.vue';
 import {
     changeLanguage,
@@ -60,11 +60,26 @@ const ramOptions = [
     { mb: 32768, label: '32 GB' },
 ];
 const ramOptionIndex = ref(0);
+const systemMemory = ref<number | null>(null);
+const showRamWarning = ref(false);
 
 const showRegisterForm = ref(false);
 const registrationFormRef = ref<InstanceType<typeof RegistrationForm> | null>(
     null
 );
+
+const selectedRamMb = computed(() => ramOptions[ramOptionIndex.value]?.mb || 0);
+
+const checkRamWarning = () => {
+    if (selectedRamMb.value > 6144) { // 6 GB
+        showRamWarning.value = true;
+    } else {
+        showRamWarning.value = false;
+    }
+};
+
+watch(ramOptionIndex, checkRamWarning);
+watch(systemMemory, checkRamWarning);
 
 const goToStep = async (step: number) => {
     if (step >= 1 && step <= totalTutorialSteps) {
@@ -167,9 +182,18 @@ const handleRegistrationCancel = () => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     if (tutorialContentWrapper.value) {
         tutorialContentWrapper.value.scrollTop = 0;
+    }
+
+    try {
+        const memoryBytes = await invoke<number>('get_system_memory');
+        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024)); // Convert to MB
+        console.log('System memory detected:', systemMemory.value, 'MB');
+    } catch (error) {
+        console.error('Failed to get system memory:', error);
+        systemMemory.value = null;
     }
 });
 </script>
@@ -177,12 +201,12 @@ onMounted(() => {
 <template>
     <transition name="modal-fade">
         <div v-if="showFirstRun"
-            class="fixed inset-0 bg-gradient-to-br from-black/90 to-black/95 flex items-center justify-center z-[1500] backdrop-blur-sm">
+            class="fixed inset-0 bg-linear-to-br from-black/90 to-black/95 flex items-center justify-center z-1500 backdrop-blur-sm">
             <transition name="modal-scale">
                 <div v-if="showFirstRun"
                     class="bg-base-100 rounded-xl shadow-2xl w-full h-full max-w-none max-h-none modal-container">
                     <div class="flex flex-col h-full">
-                        <div class="bg-primary/5 px-8 py-3 border-b border-base-300 flex-shrink-0">
+                        <div class="bg-primary/5 px-8 py-3 border-b border-base-300 shrink-0">
                             <div class="flex items-center justify-between">
                                 <transition name="step-title" mode="out-in">
                                     <div v-if="currentTutorialStep === 1" key="step1" class="flex items-center gap-2">
@@ -267,7 +291,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div ref="tutorialContentWrapper" class="tutorial-content-wrapper flex-grow">
+                        <div ref="tutorialContentWrapper" class="tutorial-content-wrapper grow">
                             <div class="tutorial-content">
                                 <transition name="step-height" mode="out-in">
                                     <div v-if="currentTutorialStep === 1" key="step1" class="step-content">
@@ -305,7 +329,7 @@ onMounted(() => {
                                                         1
                                                         " @update:modelValue="
                                                             handleSliderChange
-                                                        " class="flex-grow" />
+                                                        " class="grow" />
                                                     <div
                                                         class="flex items-center gap-2 rounded-lg p-3 bg-base-200 min-w-fit shadow-md">
                                                         <span class="text-lg font-bold">{{
@@ -322,6 +346,10 @@ onMounted(() => {
                                                             MB
                                                         </div>
                                                     </div>
+                                                </div>
+                                                <div v-if="showRamWarning" class="alert alert-warning mt-4">
+                                                    <span>{{ t('modals.initial_setup.ram.warning', { selectedRamMb })
+                                                    }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -468,7 +496,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div class="bg-primary/5 px-8 py-4 border-t border-base-300 animate-slide-up flex-shrink-0">
+                        <div class="bg-primary/5 px-8 py-4 border-t border-base-300 animate-slide-up shrink-0">
                             <div class="flex items-center justify-between max-w-4xl mx-auto">
                                 <div class="flex items-center space-x-3">
                                     <button v-for="step in totalTutorialSteps" :key="step" @click="goToStep(step)"
@@ -504,11 +532,11 @@ onMounted(() => {
 
     <transition name="modal-fade">
         <div v-if="showDisclaimer"
-            class="fixed inset-0 bg-gradient-to-br from-black/90 to-black/95 flex items-center justify-center z-[1500] backdrop-blur-sm">
+            class="fixed inset-0 bg-linear-to-br from-black/90 to-black/95 flex items-center justify-center z-1500 backdrop-blur-sm">
             <transition name="modal-scale">
                 <div class="bg-base-100 rounded-xl shadow-2xl w-full h-full max-w-none max-h-none modal-container">
                     <div class="flex flex-col h-full">
-                        <div class="bg-error/10 px-8 py-6 border-b border-error/20 flex-shrink-0">
+                        <div class="bg-error/10 px-8 py-6 border-b border-error/20 shrink-0">
                             <h2 class="text-xl font-bold text-error animate-slide-in-left">
                                 <NotebookPen class="inline w-6 h-6 mr-2 text-error" />
                                 {{ t('modals.initial_setup.disclaimer.title') }}
@@ -516,7 +544,7 @@ onMounted(() => {
                         </div>
 
                         <div
-                            class="disclaimer-content flex-grow flex items-center justify-center px-8 py-8 animate-fade-in-up animation-delay-200">
+                            class="disclaimer-content grow flex items-center justify-center px-8 py-8 animate-fade-in-up animation-delay-200">
                             <div class="space-y-4 max-w-2xl mx-auto text-center">
                                 <p class="text-base text-base-content/80 mb-4">
                                     {{
@@ -535,7 +563,7 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <div class="animate-slide-up animation-delay-400 flex-shrink-0">
+                        <div class="animate-slide-up animation-delay-400 shrink-0">
                             <div class="bg-base-200 px-8 py-4 border-t border-base-300">
                                 <button @click="acceptDisclaimer"
                                     class="btn btn-error w-full hover:scale-105 transition-all duration-300">

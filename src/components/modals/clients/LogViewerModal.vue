@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col h-full max-h-[80vh]">
-        <div class="flex items-center justify-start gap-3 pb-4 border-b border-base-300/30 flex-shrink-0">
+        <div class="flex items-center justify-start gap-3 pb-4 border-b border-base-300/30 shrink-0">
             <label class="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" class="checkbox checkbox-sm" v-model="autoScroll" />
                 <span>{{ t('appLogs.autoScroll') }}</span>

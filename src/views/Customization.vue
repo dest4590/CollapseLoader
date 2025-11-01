@@ -274,7 +274,7 @@
                             <div v-if="showExpertOptions" class="mt-4">
                                 <div class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
                                     <div class="flex items-start gap-2">
-                                        <HelpCircle class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                                        <HelpCircle class="w-5 h-5 text-warning shrink-0 mt-0.5" />
                                         <p class="text-sm text-warning">
                                             {{ t('theme.expert_warning') }}
                                         </p>

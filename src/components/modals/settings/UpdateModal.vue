@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col h-full max-h-[80vh]">
-        <div class="text-center space-y-4 flex-shrink-0 pb-4">
+        <div class="text-center space-y-4 shrink-0 pb-4">
             <div class="space-y-2">
                 <div class="flex items-center justify-center gap-4 text-sm">
                     <div class="flex items-center gap-2 px-3 py-1 bg-base-200 rounded-full">
@@ -72,7 +72,7 @@
                                     <div v-for="change in categoryGroup" :key="change.description_key"
                                         class="flex items-start gap-3 p-3 rounded-lg transition-all duration-200 hover:bg-base-200/50"
                                         :class="getCategoryBgClass(category)">
-                                        <span class="text-lg flex-shrink-0 mt-0.5">{{ change.icon }}</span>
+                                        <span class="text-lg shrink-0 mt-0.5">{{ change.icon }}</span>
                                         <span class="text-sm text-base-content/80 leading-relaxed">
                                             {{ resolveDescription(change, entry) }}
                                         </span>

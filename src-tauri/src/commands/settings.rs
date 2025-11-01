@@ -5,6 +5,7 @@ use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
 use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
 use crate::{log_debug, log_error, log_info};
+use sysinfo::System;
 
 #[tauri::command]
 pub fn get_settings() -> Settings {
@@ -292,4 +293,15 @@ pub fn set_custom_clients_display(display: String) -> Result<(), String> {
     flags.save_to_disk();
     drop(flags);
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_system_memory() -> Result<u64, String> {
+    log_debug!("Fetching system memory information");
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let total_memory = sys.total_memory();
+    log_debug!("Total system memory: {} bytes", total_memory);
+    Ok(total_memory)
 }

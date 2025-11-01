@@ -1,7 +1,7 @@
 <template>
     <div class="bg-warning/10 border border-warning/30 rounded-lg shadow-sm p-3 space-y-2 mb-4">
         <div class="flex items-center gap-2">
-            <AlertTriangle class="w-6 h-6 text-warning flex-shrink-0" />
+            <AlertTriangle class="w-6 h-6 text-warning shrink-0" />
             <div>
                 <h3 class="font-semibold text-base text-warning">
                     {{ t('modals.insecure_client_warning.title') }}

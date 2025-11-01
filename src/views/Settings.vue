@@ -96,6 +96,21 @@ const ramOptions = [
     { mb: 32768, label: '32 GB' },
 ];
 const ramOptionIndex = ref(0);
+const systemMemory = ref<number | null>(null);
+const showRamWarning = ref(false);
+
+const selectedRamMb = computed(() => ramOptions[ramOptionIndex.value]?.mb || 0);
+
+const checkRamWarning = () => {
+    if (selectedRamMb.value > 6144) {
+        showRamWarning.value = true;
+    } else {
+        showRamWarning.value = false;
+    }
+};
+
+watch(ramOptionIndex, checkRamWarning);
+watch(systemMemory, checkRamWarning);
 
 const flags = reactive<Flags>({});
 
@@ -525,6 +540,15 @@ onMounted(async () => {
     await loadSettings();
     await loadFlags();
     await loadAccounts();
+
+    try {
+        const memoryBytes = await invoke<number>('get_system_memory');
+        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024)); // Convert to MB
+        console.log('System memory detected:', systemMemory.value, 'MB');
+    } catch (error) {
+        console.error('Failed to get system memory:', error);
+        systemMemory.value = null;
+    }
 });
 
 onUnmounted(() => {
@@ -652,6 +676,9 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <p class="text-xs text-base-content/70">
                                     {{ getSettingDescription(key) }}
                                 </p>
+                                <div v-if="showRamWarning" class="alert alert-warning mt-2">
+                                    <span>{{ t('settings.ram.warning', { selectedRamMb }) }}</span>
+                                </div>
                             </div>
                             <div v-else-if="key === 'language'" class="space-y-3">
                                 <select :value="currentLanguage" @change="
@@ -858,7 +885,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -867,7 +894,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>

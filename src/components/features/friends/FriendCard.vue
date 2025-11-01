@@ -10,7 +10,7 @@
                             :src="(friend as any).avatar_url || null"
                             :original-src="(friend as any).avatar_url || null" />
                     </div>
-                    <div class="flex-1 min-h-[56px]">
+                    <div class="flex-1 min-h-14">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}
@@ -47,7 +47,7 @@
                         <MoreVertical class="w-4 h-4" />
                     </div>
                     <ul tabindex="0"
-                        class="dropdown-content menu p-2 bg-base-200 shadow-xl border border-base-300 rounded-box w-52 z-[9999]">
+                        class="dropdown-content menu p-2 bg-base-200 shadow-xl border border-base-300 rounded-box w-52 z-9999">
                         <li>
                             <a @click="handleRemoveFriend" class="text-error">
                                 <UserMinus class="w-4 h-4" />

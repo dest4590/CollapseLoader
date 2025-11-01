@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-4 max-h-[70vh] overflow-hidden flex flex-col">
-        <div class="form-control flex-shrink-0">
+        <div class="form-control shrink-0">
             <label class="label">
                 <span class="label-text">{{
                     t('modals.add_friend.search_label')
@@ -21,7 +21,7 @@
                     <div class="card-body p-3">
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0 flex-1">
-                                <div @click="$emit('view-profile', user.id)" class="avatar-click-area flex-shrink-0">
+                                <div @click="$emit('view-profile', user.id)" class="avatar-click-area shrink-0">
                                     <UserAvatar :name="getDisplayNickname(user)" :is-clickable="true"
                                         :src="(user as any).avatar_url || null"
                                         :original-src="(user as any).avatar_url || null" />
@@ -36,7 +36,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex-shrink-0">
+                            <div class="shrink-0">
                                 <button v-if="user.friendship_status === null" @click="sendFriendRequest(user.username)"
                                     class="btn btn-primary btn-sm" :disabled="sendingRequest">
                                     <UserPlus class="w-4 h-4 mr-1" />
@@ -84,7 +84,7 @@
             </div>
         </div>
 
-        <div class="modal-action flex-shrink-0 pt-4"
+        <div class="modal-action shrink-0 pt-4"
             :class="{ 'border-t border-base-300': searchResults.length !== 0 }">
             <button @click="$emit('close')" class="btn btn-outline w-full sm:w-auto">
                 {{ t('modals.add_friend.close') }}
