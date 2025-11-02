@@ -37,6 +37,10 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         current_settings.discord_rpc_enabled.value != input_settings.discord_rpc_enabled.value;
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
 
+    // detect dpi bypass toggle
+    let dpi_bypass_changed = current_settings.dpi_bypass.value != input_settings.dpi_bypass.value;
+    let new_dpi_bypass_value = input_settings.dpi_bypass.value;
+
     log_debug!("Applying new settings");
     let new_settings = Settings::from_input(input_settings, config_path);
     *current_settings = new_settings.clone();
@@ -54,6 +58,12 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         if let Err(e) = discord_rpc::toggle_rpc(new_discord_rpc_value) {
             log_error!("Failed to toggle Discord RPC: {e}");
         }
+    }
+
+    // When DPI bypass is enabled, download, extract, and run general.bat (Windows only)
+    if dpi_bypass_changed && new_dpi_bypass_value {
+        log_info!("DPI bypass enabled. Preparing to download and run package");
+        crate::core::utils::dpi::enable_dpi_bypass_async();
     }
 
     Ok(())
@@ -302,6 +312,9 @@ pub fn get_system_memory() -> Result<u64, String> {
     sys.refresh_all();
 
     let total_memory = sys.total_memory();
-    log_debug!("Total system memory: {} bytes", total_memory);
+    log_debug!(
+        "Total system memory: {}gb",
+        total_memory / 1024 / 1024 / 1024
+    );
     Ok(total_memory)
 }

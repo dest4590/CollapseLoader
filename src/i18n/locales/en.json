@@ -720,6 +720,7 @@
       "cordshare": "Share your coordinates with friends to show your location in-game, even when you're outside loaded chunks.",
       "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
       "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
+      "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
       "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients."
     },
     "ram_warning": {

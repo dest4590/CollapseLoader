@@ -30,6 +30,7 @@ import {
     BadgeCheck,
     FileText,
     FolderSync,
+    CloudCog,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -408,6 +409,10 @@ const getFormattedLabel = (key: string) => {
         return t('settings.telemetry');
     }
 
+    if (key === 'dpi_bypass') {
+        return "DPI Bypass (Zapret by bol-van)";
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
@@ -543,7 +548,7 @@ onMounted(async () => {
 
     try {
         const memoryBytes = await invoke<number>('get_system_memory');
-        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024)); // Convert to MB
+        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024));
         console.log('System memory detected:', systemMemory.value, 'MB');
     } catch (error) {
         console.error('Failed to get system memory:', error);
@@ -654,6 +659,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
                                 <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
                                 <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
+                                <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
 
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
@@ -885,7 +891,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -894,7 +900,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>

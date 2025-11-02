@@ -182,6 +182,12 @@ pub fn run() {
             Analytics::send_start_analytics();
             crate::log_debug!("Analytics start event sent");
 
+            // Start DPI bypass background process on Windows if configured
+            #[cfg(target_os = "windows")]
+            {
+                crate::core::utils::dpi::start_winws_background_if_configured();
+            }
+
             Ok(())
         })
         .on_window_event(|_window, event| {
