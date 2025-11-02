@@ -155,7 +155,7 @@ const handleMouseLeave = () => {
 }
 
 .toast-message {
-    grow: 1;
+    flex-grow: 1;
     font-size: 0.875rem;
     line-height: 1.4;
     word-break: break-word;
@@ -215,7 +215,8 @@ const handleMouseLeave = () => {
 }
 
 .toast-error .toast-progress {
-    background-color: var(--color-error, #f44336);}
+    background-color: var(--color-error, #f44336);
+}
 
 .toast-info .toast-progress {
     background-color: var(--color-info, #2196f3);
