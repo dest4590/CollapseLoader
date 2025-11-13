@@ -8,13 +8,13 @@
         </div>
 
         <div ref="logsContainer"
-            class="flex-1 p-4 font-mono text-sm leading-6 whitespace-pre-wrap break-words text-base-content/90 bg-base-300/30 rounded mt-4 overflow-y-auto min-h-0"
+            class="flex-1 p-4 font-mono text-sm leading-6 whitespace-pre-wrap wrap-break-word text-base-content/90 bg-base-300/30 rounded mt-4 overflow-y-auto min-h-0"
             @scroll="handleScroll" style="max-height: calc(80vh - 120px);">
             <div v-if="logs.length === 0" class="text-center py-8 text-base-content/60">
                 {{ t('appLogs.noLogs') }}
             </div>
             <pre v-else
-                class="m-0 whitespace-pre-wrap break-words overflow-wrap-anywhere"><code>{{ logs.join('\n') }}</code></pre>
+                class="m-0 whitespace-pre-wrap wrap-break-word overflow-wrap-anywhere"><code>{{ logs.join('\n') }}</code></pre>
         </div>
     </div>
 </template>

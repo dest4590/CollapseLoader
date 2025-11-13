@@ -17,6 +17,7 @@ pub struct Logger;
 pub static APP_LOGS: LazyLock<Mutex<VecDeque<String>>> =
     LazyLock::new(|| Mutex::new(VecDeque::new()));
 pub static LOG_LEVEL: LazyLock<Mutex<LogLevel>> = LazyLock::new(|| Mutex::new(LogLevel::Debug));
+pub static STARTUP_PRINTED: LazyLock<Mutex<bool>> = LazyLock::new(|| Mutex::new(false));
 
 const MAX_APP_LOGS: usize = 1000;
 
@@ -73,19 +74,73 @@ impl Logger {
 
     fn emoji_for_module(tag: &str) -> Option<&'static str> {
         if tag.contains("core.network") {
-            Some("\u{2601}") // ☁
+            Some("\u{2601}")
         } else if tag.contains("core.clients") {
-            Some("\u{2609}") // ☉
+            Some("\u{2609}")
         } else if tag.contains("core.storage") {
-            Some("\u{26C3}") // ⛃
+            Some("\u{26C3}")
         } else if tag.contains("core.utils") {
-            Some("\u{2692}") // ⚒
+            Some("\u{2692}")
         } else if tag.contains("core.init") {
-            Some("\u{2699}") // ⚙
+            Some("\u{2699}")
         } else if tag.contains("commands.") {
-            Some("\u{25CF}") // ●
+            Some("\u{25CF}")
         } else {
             None
+        }
+    }
+}
+
+impl Logger {
+    pub fn print_startup_banner(
+        app_name: &str,
+        version: &str,
+        codename: &str,
+        is_dev: bool,
+        git_hash: &str,
+        git_branch: &str,
+    ) {
+        if let Ok(mut printed) = STARTUP_PRINTED.lock() {
+            if *printed {
+                return;
+            }
+            *printed = true;
+        }
+
+        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+        let header = format!("{} v{} ({})", app_name, version, codename);
+        let dev_info = if is_dev {
+            format!("development build - {} ({})", git_hash, git_branch)
+        } else {
+            String::new()
+        };
+
+        let os = std::env::consts::OS;
+        let arch = std::env::consts::ARCH;
+
+        println!();
+        println!("{}", "========================================".dimmed());
+        println!("{}", header.green().bold());
+        if !dev_info.is_empty() {
+            println!("{}", dev_info.yellow());
+        }
+        println!(
+            "{} {} | {}:{}",
+            "startup:".white(),
+            timestamp.dimmed(),
+            os,
+            arch
+        );
+        println!("{}", "========================================".dimmed());
+        println!();
+
+        let plain = format!("{timestamp} [STARTUP] {header} {dev_info} {os}/{arch}");
+        if let Ok(mut app_logs) = APP_LOGS.lock() {
+            app_logs.push_back(plain);
+            if app_logs.len() > MAX_APP_LOGS {
+                app_logs.pop_front();
+            }
         }
     }
 }

@@ -1,9 +1,11 @@
 use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
+use crate::core::storage::data::APP_HANDLE;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
 use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
-use crate::core::utils::discord_rpc;
+use crate::core::utils::helpers::emit_to_main_window;
+use crate::core::utils::{discord_rpc, dpi};
 use crate::{log_debug, log_error, log_info};
 use sysinfo::System;
 
@@ -37,7 +39,6 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         current_settings.discord_rpc_enabled.value != input_settings.discord_rpc_enabled.value;
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
 
-    // detect dpi bypass toggle
     let dpi_bypass_changed = current_settings.dpi_bypass.value != input_settings.dpi_bypass.value;
     let new_dpi_bypass_value = input_settings.dpi_bypass.value;
 
@@ -60,10 +61,20 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         }
     }
 
-    // When DPI bypass is enabled, download, extract, and run general.bat (Windows only)
     if dpi_bypass_changed && new_dpi_bypass_value {
         log_info!("DPI bypass enabled. Preparing to download and run package");
-        crate::core::utils::dpi::enable_dpi_bypass_async();
+        if let Err(e) = dpi::enable_dpi_bypass_async() {
+            log_error!("Failed to download and run DPI bypass package: {e}");
+            if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+                if e.contains("operation requires elevation") {
+                    emit_to_main_window(
+                        app_handle,
+                        "toast-error",
+                        "Failed to enable DPI bypass due to insufficient privileges. Please run the application as administrator and try again.",
+                    );
+                }
+            }
+        }
     }
 
     Ok(())
@@ -307,14 +318,9 @@ pub fn set_custom_clients_display(display: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_system_memory() -> Result<u64, String> {
-    log_debug!("Fetching system memory information");
     let mut sys = System::new_all();
     sys.refresh_all();
 
     let total_memory = sys.total_memory();
-    log_debug!(
-        "Total system memory: {}gb",
-        total_memory / 1024 / 1024 / 1024
-    );
     Ok(total_memory)
 }
