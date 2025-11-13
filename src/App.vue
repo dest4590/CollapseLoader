@@ -603,9 +603,11 @@ const getTransitionName = () => {
 onMounted(() => {
     initApp();
     checkAuthStatus();
+
     (async () => {
         isDev.value = await getIsDevelopment();
     })();
+
     listen('client-launched', async (event) => {
         const payload = event.payload as {
             id: number;
@@ -630,6 +632,7 @@ onMounted(() => {
             console.error('Failed to update playing status:', error);
         }
     });
+
     listen('client-exited', async (event) => {
         const payload = event.payload as {
             id: number;
@@ -663,6 +666,13 @@ onMounted(() => {
 
         console.log('Received status update event from backend:', payload);
         console.log('Backend status event ignored to prevent conflicts');
+    });
+
+    listen('toast-error', (event) => {
+        const payload = event.payload as {
+            message: string;
+        };
+        addToast(payload.message, 'error');
     });
 
     window.addEventListener('beforeunload', () => {

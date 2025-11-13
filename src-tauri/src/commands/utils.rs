@@ -4,6 +4,7 @@ use crate::commands::clients::{
     get_running_client_ids, get_running_custom_client_ids, stop_client, stop_custom_client,
 };
 use crate::core::utils::globals::CODENAME;
+use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::{log_debug, log_error, log_info, log_warn};
 use std::{fs, path::PathBuf};
@@ -18,7 +19,7 @@ pub fn get_version() -> Result<serde_json::Value, String> {
       "codename": CODENAME,
       "commitHash": env!("GIT_HASH").to_string(),
       "branch": env!("GIT_BRANCH").to_string(),
-      "development": env!("DEVELOPMENT").to_string(),
+      "development": env!("DEVELOPMENT").to_lowercase(),
     });
 
     Ok(result)
@@ -26,10 +27,7 @@ pub fn get_version() -> Result<serde_json::Value, String> {
 
 #[tauri::command]
 pub fn is_development() -> Result<bool, String> {
-    let development = env!("DEVELOPMENT").to_string();
-    let is_dev = development == "true";
-    log_debug!("Checking development status: {}", is_dev);
-    Ok(is_dev)
+    Ok(is_development_enabled())
 }
 
 #[tauri::command]
