@@ -98,9 +98,9 @@ fn enable_dpi_bypass_inner() -> Result<(), String> {
 
     DATA.unzip(DPI_ZIP_NAME)?;
 
-    if let Err(e) = std::fs::remove_file(DATA.root_dir.join(DPI_ZIP_NAME)) {
-        log_warn!("Failed to remove DPI zip file after extraction: {}", e);
-    }
+    //if let Err(e) = std::fs::remove_file(DATA.root_dir.join(DPI_ZIP_NAME)) {
+    //    log_warn!("Failed to remove DPI zip file after extraction: {}", e);
+    //}
 
     start_winws_background_inner()?;
 
@@ -168,20 +168,6 @@ fn start_winws_background_inner() -> Result<(), String> {
     args.push(format!(
         "--dpi-desync-fake-quic={}",
         p(bin_dir.join("quic_initial_www_google_com.bin"))
-    ));
-    args.push("--new".to_string());
-
-    args.push("--filter-tcp=80,443".to_string());
-    args.push(format!(
-        "--hostlist={}",
-        p(lists_dir.join("list-general.txt"))
-    ));
-    args.push("--dpi-desync=multisplit".to_string());
-    args.push("--dpi-desync-split-seqovl=568".to_string());
-    args.push("--dpi-desync-split-pos=1".to_string());
-    args.push(format!(
-        "--dpi-desync-split-seqovl-pattern={}",
-        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
     ));
     args.push("--new".to_string());
 
