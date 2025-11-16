@@ -30,7 +30,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   set -euo pipefail
-                  keywords='\[skip ci\]|\[ci skip\]|skip-ci|skip_ci|SKIP_CI|NO_CI'
+                  keywords='\[skip ci\]|\[ci skip\]|skip-ci|skip_ci|SKIP_CI|NO_CI|skipci'
 
                   skip_found=false
 
