@@ -660,10 +660,12 @@ onMounted(() => {
     });
 
     listen('toast-error', (event) => {
-        const payload = event.payload as {
-            message: string;
-        };
-        addToast(payload.message, 'error');
+        console.log(event);
+
+        let message: string;
+        message = String(event.payload);
+
+        addToast(message, 'error');
     });
 
     window.addEventListener('beforeunload', () => {

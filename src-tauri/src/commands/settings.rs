@@ -1,10 +1,8 @@
 use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
-use crate::core::storage::data::APP_HANDLE;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
 use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
-use crate::core::utils::helpers::emit_to_main_window;
 use crate::core::utils::{discord_rpc, dpi};
 use crate::{log_debug, log_error, log_info};
 use sysinfo::System;
@@ -63,17 +61,9 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
 
     if dpi_bypass_changed && new_dpi_bypass_value {
         log_info!("DPI bypass enabled. Preparing to download and run package");
+
         if let Err(e) = dpi::enable_dpi_bypass_async() {
-            log_error!("Failed to download and run DPI bypass package: {e}");
-            if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-                if e.contains("operation requires elevation") {
-                    emit_to_main_window(
-                        app_handle,
-                        "toast-error",
-                        "Failed to enable DPI bypass due to insufficient privileges. Please run the application as administrator and try again.",
-                    );
-                }
-            }
+            log_error!("Failed to initiate DPI bypass setup: {e}");
         }
     }
 

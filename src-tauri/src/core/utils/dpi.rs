@@ -1,5 +1,6 @@
-use crate::core::storage::data::DATA;
+use crate::core::storage::data::{APP_HANDLE, DATA};
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::helpers::emit_to_main_window;
 use crate::core::utils::helpers::is_development_enabled;
 use crate::{log_error, log_info, log_warn};
 
@@ -13,12 +14,24 @@ const DPI_FOLDER_NAME: &str = "ZapretCollapseLoader";
 
 #[cfg(target_os = "windows")]
 pub fn enable_dpi_bypass_async() -> Result<(), String> {
-    std::thread::spawn(|| {
+    let app_handle_clone = APP_HANDLE.lock().unwrap().clone();
+
+    std::thread::spawn(move || {
         if let Err(e) = enable_dpi_bypass_inner() {
             log_error!("DPI bypass setup failed: {}", e);
-            return Err(e);
+
+            if let Some(app_handle) = app_handle_clone.as_ref() {
+                if e.contains("operation requires elevation")
+                    || e.contains("Запрошенная операция требует повышения")
+                {
+                    emit_to_main_window(
+                        app_handle,
+                        "toast-error",
+                        "Failed to enable DPI bypass due to insufficient privileges. Please run the application as administrator and try again.",
+                    );
+                }
+            }
         }
-        Ok(())
     });
     Ok(())
 }
@@ -96,12 +109,6 @@ fn enable_dpi_bypass_inner() -> Result<(), String> {
     rt.block_on(async { DATA.download(&download_url).await })
         .map_err(|e| format!("Failed to download DPI package: {}", e))?;
 
-    log_info!("Download finished; download() performs extraction. Skipping duplicate unzip.");
-
-    //if let Err(e) = std::fs::remove_file(DATA.root_dir.join(DPI_ZIP_NAME)) {
-    //    log_warn!("Failed to remove DPI zip file after extraction: {}", e);
-    //}
-
     start_winws_background_inner()?;
 
     Ok(())
@@ -113,7 +120,9 @@ pub fn start_winws_background_if_configured() {
         if let Err(e) = start_winws_background_inner() {
             log_error!("winws background start failed: {}", e);
 
-            if e.contains("operation requires elevation") {
+            if e.contains("operation requires elevation")
+                || e.contains("Запрошенная операция требует повышения")
+            {
                 messagebox::show_error("Failed to start DPI bypass", "Starting the DPI bypass process requires administrator privileges. Please run CollapseLoader as administrator and try again.");
             }
         }
@@ -294,8 +303,6 @@ fn start_winws_background_inner() -> Result<(), String> {
     } else {
         0x08000000
     };
-
-    log_info!("winws start args: {:?}", args);
 
     match Command::new(&winws_path)
         .current_dir(&bin_dir)
