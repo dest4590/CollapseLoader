@@ -1,15 +1,26 @@
+#[cfg(target_os = "windows")]
 use crate::core::storage::data::{APP_HANDLE, DATA};
+#[cfg(target_os = "windows")]
 use crate::core::storage::settings::SETTINGS;
+#[cfg(target_os = "windows")]
 use crate::core::utils::helpers::emit_to_main_window;
+#[cfg(target_os = "windows")]
 use crate::core::utils::helpers::is_development_enabled;
-use crate::{log_error, log_info, log_warn};
+#[cfg(target_os = "windows")]
+use crate::messagebox;
+#[cfg(target_os = "windows")]
+use crate::{log_error, log_warn};
 
-use crate::core::platform::messagebox;
+use crate::log_info;
 
+#[cfg(target_os = "windows")]
 const DPI_RELEASE_API: &str =
     "https://api.github.com/repos/dest4590/ZapretCollapseLoader/releases/latest";
+#[cfg(target_os = "windows")]
 const DPI_ZIP_FALLBACK_URL: &str = "https://github.com/dest4590/ZapretCollapseLoader/releases/download/1.0.0/ZapretCollapseLoader.zip";
+#[cfg(target_os = "windows")]
 const DPI_ZIP_NAME: &str = "ZapretCollapseLoader.zip";
+#[cfg(target_os = "windows")]
 const DPI_FOLDER_NAME: &str = "ZapretCollapseLoader";
 
 #[cfg(target_os = "windows")]

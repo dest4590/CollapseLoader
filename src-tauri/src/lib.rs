@@ -1,3 +1,4 @@
+#[cfg(target_os = "windows")]
 use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};

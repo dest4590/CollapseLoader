@@ -1,9 +1,11 @@
+#[cfg(target_os = "windows")]
+use crate::core::platform::windows::dpi;
 use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
 use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
-use crate::core::utils::{discord_rpc, dpi};
+use crate::core::utils::discord_rpc;
 use crate::{log_debug, log_error, log_info};
 use sysinfo::System;
 
@@ -37,9 +39,6 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         current_settings.discord_rpc_enabled.value != input_settings.discord_rpc_enabled.value;
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
 
-    let dpi_bypass_changed = current_settings.dpi_bypass.value != input_settings.dpi_bypass.value;
-    let new_dpi_bypass_value = input_settings.dpi_bypass.value;
-
     log_debug!("Applying new settings");
     let new_settings = Settings::from_input(input_settings, config_path);
     *current_settings = new_settings.clone();
@@ -59,11 +58,18 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         }
     }
 
-    if dpi_bypass_changed && new_dpi_bypass_value {
-        log_info!("DPI bypass enabled. Preparing to download and run package");
+    #[cfg(target_os = "windows")]
+    {
+        let dpi_bypass_changed =
+            current_settings.dpi_bypass.value != input_settings.dpi_bypass.value;
+        let new_dpi_bypass_value = input_settings.dpi_bypass.value;
 
-        if let Err(e) = dpi::enable_dpi_bypass_async() {
-            log_error!("Failed to initiate DPI bypass setup: {e}");
+        if dpi_bypass_changed && new_dpi_bypass_value {
+            log_info!("DPI bypass enabled. Preparing to download and run package");
+
+            if let Err(e) = dpi::enable_dpi_bypass_async() {
+                log_error!("Failed to initiate DPI bypass setup: {e}");
+            }
         }
     }
 
