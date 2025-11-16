@@ -71,9 +71,25 @@ impl Data {
             fs::create_dir_all(&unzip_path).map_err(|e| e.to_string())?;
         }
 
-        let mut archive =
-            zip::ZipArchive::new(fs::File::open(&zip_path).map_err(|e| e.to_string())?)
-                .map_err(|e| e.to_string())?;
+        if !zip_path.exists() {
+            log_error!("Zip file not found at expected path: {}", zip_path.display());
+        } else {
+            match fs::metadata(&zip_path) {
+                Ok(md) => log_info!("Zip file metadata: {} bytes", md.len()),
+                Err(e) => log_warn!("Failed to read metadata for {}: {}", zip_path.display(), e),
+            }
+        }
+
+        let mut archive = zip::ZipArchive::new(
+            fs::File::open(&zip_path).map_err(|e| {
+                log_error!("Failed to open zip file {}: {}", zip_path.display(), e);
+                e.to_string()
+            })?,
+        )
+        .map_err(|e| {
+            log_error!("Failed to read zip archive {}: {}", zip_path.display(), e);
+            e.to_string()
+        })?;
 
         let total_files = archive.len() as u64;
 
@@ -88,10 +104,22 @@ impl Data {
                 fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
             } else {
                 if let Some(parent) = outpath.parent() {
-                    fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                    if !parent.exists() {
+                        log_debug!("Creating parent dir for {} -> {}", file_entry.name(), parent.display());
+                        fs::create_dir_all(parent).map_err(|e| {
+                            log_error!("Failed to create parent dir {}: {}", parent.display(), e);
+                            e.to_string()
+                        })?;
+                    }
                 }
-                let mut outfile = fs::File::create(&outpath).map_err(|e| e.to_string())?;
-                io::copy(&mut file_entry, &mut outfile).map_err(|e| e.to_string())?;
+                let mut outfile = fs::File::create(&outpath).map_err(|e| {
+                    log_error!("Failed to create output file {}: {}", outpath.display(), e);
+                    e.to_string()
+                })?;
+                io::copy(&mut file_entry, &mut outfile).map_err(|e| {
+                    log_error!("Failed to write extracted file {}: {}", outpath.display(), e);
+                    e.to_string()
+                })?;
             }
 
             files_extracted += 1;
@@ -280,6 +308,8 @@ impl Data {
             );
             format!("Failed to create file: {e}")
         })?;
+
+        log_info!("Created destination file: {}", dest_path.display());
 
         let mut downloaded: u64 = 0;
         let mut last_percentage: u8 = 0;
@@ -542,6 +572,8 @@ impl Data {
             );
             format!("Failed to create file: {e}")
         })?;
+
+        log_info!("Created destination file for folder download: {}", dest_path.display());
 
         let total_size = response.content_length();
         let mut downloaded: u64 = 0;

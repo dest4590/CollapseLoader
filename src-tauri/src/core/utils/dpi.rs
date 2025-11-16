@@ -96,7 +96,7 @@ fn enable_dpi_bypass_inner() -> Result<(), String> {
     rt.block_on(async { DATA.download(&download_url).await })
         .map_err(|e| format!("Failed to download DPI package: {}", e))?;
 
-    DATA.unzip(DPI_ZIP_NAME)?;
+    log_info!("Download finished; download() performs extraction. Skipping duplicate unzip.");
 
     //if let Err(e) = std::fs::remove_file(DATA.root_dir.join(DPI_ZIP_NAME)) {
     //    log_warn!("Failed to remove DPI zip file after extraction: {}", e);
@@ -180,13 +180,25 @@ fn start_winws_background_inner() -> Result<(), String> {
         0x08000000
     };
 
-    Command::new(&winws_path)
+    log_info!("winws start args: {:?}", args);
+
+    match Command::new(&winws_path)
         .current_dir(&bin_dir)
         .creation_flags(create_no_window)
-        .args(args)
+        .args(&args)
         .spawn()
-        .map_err(|e| format!("Failed to start winws.exe: {e}"))?;
-
-    log_info!("winws.exe started in background");
+    {
+        Ok(_child) => {
+            log_info!("winws.exe started in background (spawn ok)");
+        }
+        Err(e) => {
+            log_error!(
+                "Failed to spawn winws.exe at {}: {}",
+                winws_path.display(),
+                e
+            );
+            return Err(format!("Failed to start winws.exe: {}", e));
+        }
+    }
     Ok(())
 }
