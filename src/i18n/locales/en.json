@@ -5,17 +5,13 @@
         "title": "Welcome to CollapseLoader",
         "description": "We'll guide you through a quick setup to optimize performance and privacy.",
         "subtitle": "Quick setup to get you up and running",
-        "learn_more": "Learn more",
         "features": {
           "fast_startup": "Fast startup — minimal waiting time",
           "secure_clients": "Secure clients — verified and safe",
           "auto_updates": "Automatic updates — keep loader and clients up to date"
         }
       },
-      "gui": {
-        "title": "User-Friendly Interface",
-        "description": "Simple and intuitive interface for managing clients"
-      },
+      "gui": {},
       "ram": {
         "title": "Memory Settings",
         "subtitle": "Choose how much client memory to allocate for best performance",
@@ -23,13 +19,7 @@
         "warning": "Warning: You have selected {selectedRamMb} MB of RAM. This exceeds the recommended limit of 6 GB and may cause performance issues or crashes."
       },
       "registration": {
-        "title": "Create Account",
-        "description": "Register an account to sync your settings and unlock additional features",
-        "create_account": "Create Account",
-        "registering": "Registering...",
-        "success": "Account created successfully!",
-        "failed": "Registration failed. Please try again.",
-        "auto_login_success": "Account created successfully! You are now logged in."
+        "registering": "Registering..."
       },
       "feedback": {
         "title": "Feedback",
@@ -46,11 +36,7 @@
           "performance": "Performance metrics (startup time, memory usage)",
           "usage_patterns": "Usage patterns (most used clients, launch frequency)",
           "crash_reports": "Crash reports and errors to improve stability"
-        },
-        "privacy_note_title": "Privacy: ",
-        "privacy_note": "All data is anonymous and contains no personal information. You can disable this feature at any time in settings.",
-        "accept": "Allow Analytics",
-        "decline": "No Thanks"
+        }
       },
       "appreciation": {
         "title": "Thank You for Choosing CollapseLoader",
@@ -63,7 +49,6 @@
         "acknowledgment": "By using this application, you accept all risks",
         "accept": "I understand and accept"
       },
-      "lets_go": "Let's go!",
       "language_changed": "Language changed successfully!",
       "language_change_failed": "Failed to change language. Please try again.",
       "language_here": "You can change the language here"
@@ -76,13 +61,11 @@
     },
     "reset_confirm": {
       "message": "Are you sure you want to reset all settings to their default values? This action cannot be undone.",
-      "yes_reset": "Yes, Reset",
-      "cancel": "Cancel"
+      "yes_reset": "Yes, Reset"
     },
     "remove_friend_confirm": {
       "message": "Are you sure you want to remove {displayName} from your friends? This action cannot be undone.",
-      "yes_remove": "Yes, Remove",
-      "cancel": "Cancel"
+      "yes_remove": "Yes, Remove"
     },
     "cancel_friend_request_confirm": {
       "message": "Are you sure you want to cancel your friend request to {displayName}?",
@@ -103,9 +86,7 @@
       "label": "Nickname",
       "placeholder": "Enter your nickname",
       "description": "Optional - this is how others will see you",
-      "update": "Update Nickname",
-      "cancel": "Cancel",
-      "nickname_taken": "This nickname is already taken"
+      "update": "Update Nickname"
     },
     "social_links": {
       "title": "Social Links",
@@ -124,13 +105,11 @@
     "edit_account": {
       "username_label": "Username",
       "tags_label": "Tags (comma separated)",
-      "update": "Update Account",
-      "cancel": "Cancel"
+      "update": "Update Account"
     },
     "delete_account_confirm": {
       "message": "Are you sure you want to delete the account \"{username}\"? This action cannot be undone.",
-      "yes_delete": "Yes, Delete",
-      "cancel": "Cancel"
+      "yes_delete": "Yes, Delete"
     },
     "change_password_confirm": {
       "message": "Are you sure you want to change your password? This will immediately update your account credentials.",
@@ -145,7 +124,6 @@
     "client_crash": {
       "error_occurred": "An error occurred: {error}",
       "crashed_message": "Client {clientName} has crashed. See the logs below for more details.",
-      "crash_logs": "Crash Logs:",
       "no_logs": "No logs available.",
       "copy_logs": "Copy Logs",
       "close": "Close"
@@ -167,8 +145,7 @@
       "username_placeholder": "Enter username",
       "tags_label": "Tags (comma separated)",
       "tags_placeholder": "e.g. funtime, spookytime",
-      "add_account": "Add Account",
-      "cancel": "Cancel"
+      "add_account": "Add Account"
     },
     "telemetry_consent": {
       "title": "Optional Analytics Consent",
@@ -201,9 +178,7 @@
     "client_added": "Client added",
     "client_edited": "Client edited",
     "client_deleted": "Client deleted",
-    "delete_custom_client_confirm": {
-      "message": "Do you really want to delete this custom client?"
-    },
+    "delete_custom_client_confirm": {},
     "add_custom_client_modal": {
       "client_name": "Client Name",
       "enter_client_name": "Enter client name",
@@ -271,19 +246,15 @@
     "nickname_update_failed": "Failed to update nickname. Please try again when online.",
     "nickname_update_success": "Nickname updated successfully!",
     "nickname_label": "Edit nickname",
-    "user_info_load_failed": "Failed to load user info.",
-    "profile_load_failed": "Failed to load user profile.",
     "invisible_enabled": "Invisible mode enabled",
     "invisible_disabled": "Invisible mode disabled",
     "logout_confirm_title": "Confirm Logout",
     "social_links": "Social Links",
-    "social_links_description": "Manage links to your social profiles",
     "no_social_links": "No social links added yet.",
     "avatar_help": "PNG, JPG, GIF, WEBP up to 5MB",
     "avatar_drop": "Drop or click to upload avatar",
     "upload_avatar": "Upload avatar",
     "avatar_upload_refresh_failed": "Failed to refresh avatar after upload: {error}",
-    "change_avatar": "Change avatar",
     "avatar_type_error": "Unsupported file type",
     "avatar_size_error": "File is too large (max 5MB)",
     "avatar_uploaded": "Avatar updated",
@@ -309,18 +280,13 @@
     "unblock": "Unblock",
     "next": "Next",
     "previous": "Previous",
-    "install": "Install",
     "delete": "Delete",
     "username": "Username",
-    "email": "Email",
     "password": "Password",
     "login": "Login",
     "register": "Register",
     "download": "Download",
-    "launch": "Launch",
-    "stop": "Stop",
     "please_wait": "Please wait",
-    "unavailable": "Unavailable",
     "cancel": "Cancel",
     "reinstall": "Reinstall",
     "blocked": "Blocked",
@@ -334,8 +300,7 @@
     "details": "Details",
     "send": "Send",
     "copied_to_clipboard": "Color {color} copied to clipboard",
-    "done": "Done",
-    "desc": "Desc"
+    "done": "Done"
   },
   "auth": {
     "logout": {
@@ -376,13 +341,10 @@
   },
   "friends": {
     "addFriend": "Add Friend",
-    "friendRequests": "Friend Requests",
     "noFriends": "No friends yet. \nAdd some friends to get started!",
     "receivedRequests": "Received",
     "sentRequests": "Sent",
     "title": "Friends ({count})",
-    "pending": "Pending",
-    "cancel": "Cancel",
     "cancel_friend_request": "Cancel Friend Request",
     "remove_success": "{name} removed from friends",
     "block_success": "{name} has been blocked",
@@ -397,12 +359,9 @@
     "load_failed": "Failed to load friends data"
   },
   "home": {
-    "warning": "WARNING: This program builded for beta testers only, do not share it with anyone!",
-    "alpha": "WARNING: This program is in alpha stage, it may contain bugs and issues!",
     "search_placeholder": "Search clients...",
     "no_clients": "No clients found",
     "adjust_search": "Try adjusting your search query.",
-    "client_installed": "{name} installed successfully",
     "favorite_added": "Added to favorites",
     "favorite_removed": "Removed from favorites",
     "starting_download": "Starting download for {name}",
@@ -415,24 +374,17 @@
     "no_internet_reinstall": "Cannot reinstall client: No internet connection.",
     "logs_copied": "Logs for {name} copied to clipboard",
     "deleted_success": "{name} deleted successfully",
-    "please_wait": "Please wait",
     "unavailable": "Unavailable",
-    "downloading_other": "Downloading...",
     "download": "Download",
     "stop": "Stop",
     "launch": "Launch",
-    "verifying": "Verifying...",
-    "verifying_hash": "Verifying integrity",
     "start_with": "Start with",
-    "select_account": "Select an account",
-    "started_with_account": "Started {client} with account {account}",
     "selected_clients": "Selected: {count} clients",
     "multiple_clients_selected": "{count} clients selected",
     "download_selected": "Download Selected",
     "reinstall_selected": "Reinstall Selected",
     "delete_selected": "Delete Selected",
     "downloading_multiple": "Downloading {count} clients...",
-    "downloading_multiple_concurrent": "Downloading {count} clients concurrently",
     "deleting_multiple": "Deleting {count} clients...",
     "reinstalling_multiple": "Reinstalling {count} clients...",
     "multiple_clients_deleted": "{count} clients deleted successfully",
@@ -440,7 +392,6 @@
     "no_clients_to_download": "No clients available for download",
     "no_clients_to_delete": "No installed clients to delete",
     "no_clients_to_reinstall": "No installed clients to reinstall",
-    "requirements": "requirements",
     "stop_selected": "Stop selected clients",
     "stopping_multiple": "Stopping {count} clients",
     "multiple_clients_stopped": "{count} clients stopped successfully",
@@ -456,8 +407,7 @@
       }
     },
     "filters": {
-      "installed": "Installed",
-      "new": "New"
+      "installed": "Installed"
     }
   },
   "theme": {
@@ -466,46 +416,17 @@
       "remove_favorite": "Remove from Favorites",
       "open_folder": "Open Folder"
     },
-    "title": "Theme",
     "select_theme": "Select Theme",
     "description": "Select your preferred theme.",
-    "loading": "Loading theme settings...",
     "change_success": "Theme changed",
     "save_failed": "Failed to save theme: {error}",
-    "light": "Light",
-    "dark": "Dark",
-    "card_configure_title": "Card Configure",
-    "card_preview": "Client Card Preview",
-    "card_preview_desc": "This is how your client cards will look.",
-    "card_radius_none": "No Border Radius",
-    "card_radius_sm": "Small Border Radius",
-    "card_radius_md": "Medium Border Radius",
-    "card_radius_lg": "Large Border Radius",
-    "card_radius_xl": "Extra Large Border Radius",
-    "card_shadow_label": "Card Shadow",
-    "card_shadow_none": "No Shadow",
-    "card_shadow_sm": "Small Shadow",
-    "card_shadow_md": "Medium Shadow",
-    "card_shadow_lg": "Large Shadow",
-    "card_shadow_xl": "Extra Large Shadow",
-    "card_padding_label": "Card Padding",
-    "card_padding_sm": "Small Padding",
-    "card_padding_md": "Medium Padding",
-    "card_padding_lg": "Large Padding",
-    "card_padding_xl": "Extra Large Padding",
     "reset_button": "Reset",
     "expert_css_title": "Expert CSS Customization",
     "show_expert": "Show Expert",
     "hide_expert": "Hide Expert",
-    "documentation": "Documentation",
     "expert_warning": "Advanced users only. Invalid CSS may break the interface.",
     "custom_css_label": "Custom CSS",
-    "custom_variables_label": "CSS Variables",
-    "reset_css": "Reset CSS",
-    "reset_variables": "Reset Variables",
     "enable_custom_css": "Enable custom CSS",
-    "css_placeholder": "/* Custom CSS styles */\n.my-custom-class {\n  /* Your styles here */\n}",
-    "variables_placeholder": "--my-custom-color: #ff6b6b;\n--my-custom-size: 1.5rem;",
     "css_examples_title": "Examples",
     "example_1": "Add backdrop blur to cards",
     "example_inserted": "Example inserted",
@@ -516,12 +437,10 @@
     "tooltip_client_card": "Main class of the client card",
     "tooltip_sidebar_btn": "Class for left navigation buttons",
     "tooltip_launch_download_btn": "Classes of download and launch buttons",
-    "card_radius": "Card radius",
     "export_css_btn": "Export CSS",
     "import_css_btn": "Import CSS",
     "export_css_title": "Export Custom CSS",
     "import_css_title": "Import Custom CSS",
-    "import_export_css": "Import/Export CSS",
     "export_desc": "Copy the encoded CSS below and share it. Only safe CSS is allowed.",
     "import_desc": "Paste the encoded CSS here to import. Only safe CSS is allowed.",
     "copy": "Copy",
@@ -530,13 +449,7 @@
     "import": "Import",
     "import_success": "Preset imported successfully!",
     "import_invalid": "Invalid preset. Import failed.",
-    "global_radius": "Global UI Radius",
     "primary": "Primary color",
-    "remove_animations": "Remove all animations",
-    "export_preset": "Export preset",
-    "import_preset": "Import preset",
-    "import_empty": "Clipboard is empty",
-    "import_too_large": "Preset too large",
     "export_success": "Preset copied to clipboard",
     "export_failed": "Failed to export preset",
     "colors": "Colors",
@@ -570,8 +483,7 @@
       "import": "Import",
       "pagination": {
         "per_page": "Per page",
-        "page_of": "Page {current} of {total}",
-        "pageOf": "Page {current} of {total}"
+        "page_of": "Page {current} of {total}"
       },
       "create_first_preset": "Create First Preset",
       "no_presets_title": "No presets yet",
@@ -592,8 +504,6 @@
         "delete_selected": "Delete selected"
       },
       "create_modal": {
-        "title_create": "Create New Preset",
-        "title_edit": "Edit Preset",
         "name_label": "Preset Name",
         "name_required": "Preset name is required",
         "name_too_long": "Preset name must be 50 characters or less",
@@ -608,7 +518,6 @@
         "cancel": "Cancel"
       },
       "import_modal": {
-        "title": "Import Preset",
         "method_label": "Import Method",
         "method_file": "File",
         "method_json": "JSON",
@@ -627,7 +536,6 @@
         "error_invalid_json": "Invalid JSON"
       },
       "delete_modal": {
-        "title": "Delete Preset",
         "message": "Are you sure you want to delete the preset \"{name}\"?",
         "warning": "This action cannot be undone.",
         "delete_button": "Delete Preset",
@@ -674,14 +582,12 @@
     "logs_error": "Failed to access logs: {error}",
     "delete_error": "Failed to delete {name}: {error}",
     "download_error": "Failed to download {name}: {error}",
-    "favorites_error": "Error updating favorite: {error}",
     "load_accounts_error": "Error loading accounts: {error}",
     "launch_with_account_error": "Error launching client with account: {error}",
     "download_network_error": "Network connection error while downloading: {error}",
     "download_timeout_error": "Download timed out. Please check your connection: {error}",
     "download_disk_error": "Failed to save file to disk. Please check available storage: {error}",
     "hash_verification_failed": "File integrity check failed for {name}. The downloaded file is corrupted and has been removed. Please try downloading again.",
-    "hash_verification_download_failed": "Hash verification failed for {name}. Expected: {expected}, Got: {actual}. The file has been removed and needs to be redownloaded.",
     "hash_verification_launch_failed": "Cannot check hash for client {name}"
   },
   "validation": {
@@ -689,7 +595,6 @@
     "min_length": "{field} must be at least {length} characters long."
   },
   "settings": {
-    "title": "Settings",
     "general": "General Settings",
     "sync": "Cloud Sync",
     "accounts": "Account Management",
@@ -737,13 +642,8 @@
       "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
       "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients."
     },
-    "ram_warning": {
-      "title": "RAM Warning",
-      "exceeds_system": "The selected RAM ({selected} MB) exceeds 6 GB. This may cause performance issues or system instability.",
-      "reduce_recommended": "Consider reducing the RAM allocation to prevent potential problems."
-    },
+    "ram_warning": {},
     "telemetry": "Analytics",
-    "telemetry_toggle": "Enable anonymous analytics",
     "open_data": "Open data folder",
     "add_account_title": "Add New Account",
     "edit_account_title": "Edit account",
@@ -759,9 +659,7 @@
       "top_left": "Top Left",
       "bottom_center": "Bottom Center",
       "top_center": "Top Center",
-      "preview_message": "Toast position changed!",
-      "test_message": "This is a test notification!",
-      "test_toast": "Test Toast"
+      "preview_message": "Toast position changed!"
     },
     "telemetry_info_title": "Info about telemetry",
     "reset_requirements": "Reset loader files",
@@ -787,8 +685,7 @@
       "select_folder_first": "Select a folder first",
       "success": "Data folder changed",
       "failed": "Failed to change data folder: {error}",
-      "restart_required": "Please restart the app for changes to take effect",
-      "stopping_clients": "Stopping running clients..."
+      "restart_required": "Please restart the app for changes to take effect"
     },
     "sync_client_settings": "Sync client settings"
   },
@@ -807,7 +704,6 @@
     "minutes_ago": "{count}m ago",
     "hours_ago": "{count}h ago",
     "days_ago": "{count}d ago",
-    "unknown": "Unknown",
     "friends_with": "You are friends with {name}",
     "remove_friend": "Remove Friend",
     "friend_request_sent": "Friend request sent to {name}",
@@ -839,7 +735,6 @@
     "friend_request_not_found": "Friend request not found",
     "user_blocked_success": "{name} has been blocked",
     "user_block_failed": "Failed to block user",
-    "social_links": "Social links",
     "presets_title": "Presets",
     "presets": "presets",
     "presets_hidden_streamer": "Presets are hidden in streamer mode.",
@@ -856,7 +751,6 @@
     "home": "Home",
     "friends": "Friends",
     "settings": "Settings",
-    "theme": "Theme",
     "logs": "Application Logs",
     "account": "Account",
     "about": "About",
@@ -901,8 +795,7 @@
       "delete": "Delete"
     },
     "pagination": {
-      "pageOf": "Page {current} of {total}",
-      "page_of": "Page {current} of {total}"
+      "pageOf": "Page {current} of {total}"
     },
     "errors": {
       "accessDenied": "Access denied. Admin privileges required.",
@@ -928,7 +821,6 @@
   },
   "toast": {
     "dev": {
-      "example": "This is an example toast!",
       "menu_opened": "Developer menu opened",
       "flags_reset": "Flags have been reset!"
     },
@@ -941,7 +833,6 @@
       "crashed_incomplete": "Client {name} crashed due to incomplete download. Attempting auto-reinstall.",
       "reinstall_success": "Successfully reinstalled {name}. Please try launching again.",
       "reinstall_failed": "Failed to reinstall {name}: {error}. Please reinstall manually.",
-      "hash_verification_failed": "File integrity check failed for {name}. Redownloading...",
       "redownload_success": "Successfully redownloaded {name}. Hash verified."
     },
     "server": {
@@ -950,7 +841,6 @@
       "cdn_and_api_offline": "Cannot connect to CDN and Web API.",
       "cdn_offline": "Cannot connect to CDN.",
       "api_offline": "Cannot connect to Web API.",
-      "status_offline": "You are currently offline",
       "api_init_failed": "Failed to initialize API: {error}"
     },
     "settings": {
@@ -993,10 +883,7 @@
       "account_add_failed": "Failed to add account: {error}",
       "account_deleted": "Account deleted successfully!",
       "account_delete_failed": "Failed to delete account: {error}",
-      "nickname_update_failed": "Failed to update nickname. Please try again.",
-      "nickname_taken": "This nickname is already taken",
-      "username_taken": "This username is already taken",
-      "email_taken": "This email address is already taken"
+      "nickname_update_failed": "Failed to update nickname. Please try again."
     },
     "modal": {
       "settings_reset_success": "Settings reset successfully!",
@@ -1047,12 +934,7 @@
     "fetch_failed": "Failed to fetch news: {error}",
     "fetch_failed_toast": "Failed to load news",
     "new": "New",
-    "time": {
-      "just_now": "just now",
-      "minutes_ago": "{count} minutes ago",
-      "hours_ago": "{count} hours ago",
-      "days_ago": "{count} days ago"
-    },
+    "time": {},
     "search_placeholder": "News search...",
     "mark_all_read": "Mark everything as read",
     "refresh": "Refresh"
@@ -1072,11 +954,6 @@
       "no_changelog": "No changelog available",
       "no_screenshots": "No screenshots available",
       "screenshot_viewer": {
-        "close": "Close",
-        "zoom_in": "Zoom In",
-        "zoom_out": "Zoom Out",
-        "reset_zoom": "Reset Zoom",
-        "reset": "Reset",
         "zoom_percent": "{percent}%",
         "image_counter": "{current} / {total}",
         "controls": {
@@ -1091,23 +968,15 @@
     },
     "insecure_tooltip": "This client is marked as insecure, tap to view details"
   },
-  "customization": {
-    "theme": "Theme"
-  },
+  "customization": {},
   "updater": {
     "update_available": "Update Available",
     "current": "Current",
     "latest": "Latest",
-    "critical": "Critical",
-    "version_info": "Current: {current} → Latest: {latest}",
     "changelog": "Changelog",
     "download_install": "Download & Install",
     "downloading": "Downloading...",
     "skip": "Skip",
-    "view_changelog": "View Changelog",
-    "changelog_title": "Changelog",
-    "check_failed": "Failed to check for updates: {error}",
-    "no_download_url": "No download URL available for this platform",
     "starting_download": "Starting update download...",
     "update_installed": "Update installed successfully! The app will restart.",
     "update_failed": "Update failed: {error}",
@@ -1117,12 +986,7 @@
     "show_more": "Show {count} more versions",
     "show_less": "Show less",
     "release_types": {},
-    "categories": {
-      "feature": "New Features",
-      "improvement": "Improvements",
-      "bugfix": "Bug Fixes",
-      "other": "Other Changes"
-    },
+    "categories": {},
     "no_update": "Updates not found"
   },
   "custom_clients": {
@@ -1138,8 +1002,7 @@
     "display_mode_separate": "Separate",
     "display_mode_global": "Global",
     "no_results": "Try adjusting your search query.",
-    "no_clients_yet": "Add your first custom client to get started.",
-    "no_results_found": "No custom clients found"
+    "no_clients_yet": "Add your first custom client to get started."
   },
   "marketplace": {
     "title": "Marketplace",

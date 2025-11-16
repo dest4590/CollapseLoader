@@ -30,7 +30,7 @@
                         class="relative timeline-entry" :class="{ 'opacity-60': index > 0 }">
 
                         <div v-if="index < displayedChangelogEntries.length - 1"
-                            class="absolute left-6 top-14 w-0.5 h-full bg-gradient-to-b from-primary/40 to-transparent">
+                            class="absolute left-6 top-14 w-0.5 h-full bg-linear-to-b from-primary/40 to-transparent">
                         </div>
 
                         <div class="flex items-center gap-4 mb-4">
