@@ -4,7 +4,7 @@
         <div class="card-body p-4 flex-1 flex items-center">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-4">
-                    <div @click="$emit('viewProfile', friend.id)" class="avatar-click-area">
+                    <div @click="handleViewProfile" class="avatar-click-area">
                         <UserAvatar :name="friend.nickname || friend.username" :show-status="true"
                             :is-online="friend.status.is_online" :is-clickable="true"
                             :src="(friend as any).avatar_url || null"
@@ -144,6 +144,12 @@ const handleRemoveFriend = () => {
 
 const handleBlockFriend = () => {
     emit('blockFriend', props.friend);
+};
+
+const handleViewProfile = () => {
+    // emit both forms to be resilient to different listener naming conventions
+    emit('viewProfile', props.friend.id);
+    //emit('view-profile', props.friend.id as any);
 };
 </script>
 

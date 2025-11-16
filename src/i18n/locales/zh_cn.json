@@ -3,7 +3,14 @@
     "initial_setup": {
       "welcome": {
         "title": "欢迎使用 CollapseLoader",
-        "description": "让我们为您完成全部配置"
+        "description": "我们将引导您完成快速设置，以优化性能与隐私。",
+        "subtitle": "快速设置，立即开始",
+        "learn_more": "了解更多",
+        "features": {
+          "fast_startup": "快速启动 — 减少等待时间",
+          "secure_clients": "可靠的客户——经过验证并且完全安全。",
+          "auto_updates": "自动更新 — 保持加载器和客户端为最新"
+        }
       },
       "gui": {
         "title": "友好的用户界面",
@@ -11,7 +18,9 @@
       },
       "ram": {
         "title": "内存设置",
-        "description": "配置分配的内存大小以获得最佳性能"
+        "subtitle": "选择分配给客户端的内存量以获得最佳性能",
+        "description": "配置分配的内存大小以获得最佳性能",
+        "warning": "警告：您选择了 {selectedRamMb} MB 内存。这超过了 6 GB 的推荐限制，可能会导致性能问题或系统故障。"
       },
       "registration": {
         "title": "创建账户",
@@ -24,10 +33,13 @@
       },
       "feedback": {
         "title": "反馈",
-        "description": "加入我们的社区"
+        "subtitle": "与社区联系以获得支持和反馈",
+        "description": "加入我们的社区",
+        "optional": "非必需，但我们建议订阅"
       },
       "telemetry": {
         "title": "可选分析",
+        "subtitle": "分享匿名使用数据，帮助我们改进（可选）",
         "description": "通过分享匿名使用数据帮助我们改进 CollapseLoader。您可随时在设置菜单中更改此设置。",
         "data_collected_title": "我们收集：",
         "data_collected": {
@@ -42,6 +54,7 @@
       },
       "appreciation": {
         "title": "感谢选择 CollapseLoader",
+        "subtitle": "您已准备就绪 — 开始使用吧",
         "description": "希望您喜欢我们的加载器！"
       },
       "disclaimer": {
@@ -52,7 +65,8 @@
       },
       "lets_go": "开始吧！",
       "language_changed": "语言切换成功！",
-      "language_change_failed": "语言切换失败。请重试。"
+      "language_change_failed": "语言切换失败。请重试。",
+      "language_here": "您可以在这里更改语言"
     },
     "block_unblock_confirm": {
       "block_message": "确定要屏蔽 {displayName} 吗？这将把其从您的好友列表中移除，并阻止后续联系。",

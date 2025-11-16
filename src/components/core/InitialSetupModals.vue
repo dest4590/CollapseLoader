@@ -2,7 +2,8 @@
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useToast } from '../../services/toastService';
 import { useI18n } from 'vue-i18n';
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
+import i18n from '../../i18n';
 import HoldButton from '../ui/HoldButton.vue';
 import {
     changeLanguage,
@@ -12,7 +13,6 @@ import {
 import {
     Languages,
     MemoryStick,
-    UserPlus,
     ChartNoAxesCombined,
     DoorOpen,
     Cpu,
@@ -23,7 +23,6 @@ import {
 } from 'lucide-vue-next';
 import AnimatedSlider from '../ui/AnimatedSlider.vue';
 import { invoke } from '@tauri-apps/api/core';
-import RegistrationForm from '../layout/forms/RegistrationForm.vue';
 
 const props = defineProps({
     showFirstRun: Boolean,
@@ -44,12 +43,34 @@ const availableThemes = ref(['dark', 'light']);
 const selectedTheme = ref(props.currentTheme || 'dark');
 
 const currentTutorialStep = ref(1);
-const totalTutorialSteps = 6;
-
+const totalTutorialSteps = 5;
+const animateLanguage = ref(false);
+const showLanguageTooltip = ref(false);
 const tutorialContentWrapper = ref<HTMLElement | null>(null);
 
 const availableLanguages = ref(getAvailableLanguages());
 const selectedLanguage = ref(getCurrentLanguage());
+
+const tooltipIndex = ref(0);
+const tooltipInterval = ref<number | null>(null);
+
+const resolveKeyForLocale = (key: string, locale: string) => {
+    try {
+        const messages = i18n.global.getLocaleMessage(locale) as Record<string, any>;
+        return key.split('.').reduce((obj: any, part: string) => (obj && obj[part] !== undefined) ? obj[part] : null, messages) || null;
+    } catch {
+        return null;
+    }
+};
+
+const tooltipDisplayText = computed(() => {
+    const lang = availableLanguages.value[tooltipIndex.value];
+    if (!lang) return t('modals.initial_setup.language_here');
+    const resolved = resolveKeyForLocale('modals.initial_setup.language_here', lang.code);
+    if (typeof resolved === 'string' && resolved.length > 0) return resolved;
+    return lang.nativeName || t('modals.initial_setup.language_here');
+});
+
 
 const ramOptions = [
     { mb: 2048, label: '2 GB' },
@@ -63,15 +84,11 @@ const ramOptionIndex = ref(0);
 const systemMemory = ref<number | null>(null);
 const showRamWarning = ref(false);
 
-const showRegisterForm = ref(false);
-const registrationFormRef = ref<InstanceType<typeof RegistrationForm> | null>(
-    null
-);
 
 const selectedRamMb = computed(() => ramOptions[ramOptionIndex.value]?.mb || 0);
 
 const checkRamWarning = () => {
-    if (selectedRamMb.value > 6144) { // 6 GB
+    if (selectedRamMb.value > 6144) {
         showRamWarning.value = true;
     } else {
         showRamWarning.value = false;
@@ -156,41 +173,63 @@ const saveRamSettings = async () => {
     }
 };
 
-const handleRegistrationSuccess = () => {
-    addToast(t('modals.initial_setup.registration.success'), 'success');
-    showRegisterForm.value = false;
-    goToStep(currentTutorialStep.value + 1);
-
-    if (registrationFormRef.value) {
-        registrationFormRef.value.clearForm();
-    }
+const stopLanguageCycling = () => {
+    showLanguageTooltip.value = false;
+    animateLanguage.value = false;
 };
 
-const handleAutoLogin = () => {
-    showRegisterForm.value = false;
-    emit('auto-login');
-
-    if (registrationFormRef.value) {
-        registrationFormRef.value.clearForm();
-    }
-};
-
-const handleRegistrationCancel = () => {
-    showRegisterForm.value = false;
-    if (registrationFormRef.value) {
-        registrationFormRef.value.clearForm();
-    }
-};
 
 onMounted(async () => {
     if (tutorialContentWrapper.value) {
         tutorialContentWrapper.value.scrollTop = 0;
     }
 
+    setTimeout(() => {
+        animateLanguage.value = true;
+
+        setTimeout(() => {
+            showLanguageTooltip.value = true;
+        }, 500);
+    }, 5000);
+
+
+    setTimeout(() => {
+        showLanguageTooltip.value = false;
+
+        setTimeout(() => {
+            animateLanguage.value = false;
+        }, 500);
+    }, 10000);
+
+    watch(
+        showLanguageTooltip,
+        (val) => {
+            if (tooltipInterval.value !== null) {
+                clearInterval(tooltipInterval.value);
+                tooltipInterval.value = null;
+            }
+
+            if (val && availableLanguages.value && availableLanguages.value.length > 0) {
+                tooltipIndex.value = 0;
+                tooltipInterval.value = window.setInterval(() => {
+                    tooltipIndex.value = (tooltipIndex.value + 1) % availableLanguages.value.length;
+                }, 1600);
+            } else {
+                tooltipIndex.value = 0;
+            }
+        },
+    );
+
+    onUnmounted(() => {
+        if (tooltipInterval.value !== null) {
+            clearInterval(tooltipInterval.value);
+            tooltipInterval.value = null;
+        }
+    });
+
     try {
         const memoryBytes = await invoke<number>('get_system_memory');
-        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024)); // Convert to MB
-        console.log('System memory detected:', systemMemory.value, 'MB');
+        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024));
     } catch (error) {
         console.error('Failed to get system memory:', error);
         systemMemory.value = null;
@@ -210,83 +249,88 @@ onMounted(async () => {
                             <div class="flex items-center justify-between">
                                 <transition name="step-title" mode="out-in">
                                     <div v-if="currentTutorialStep === 1" key="step1" class="flex items-center gap-2">
-                                        <DoorOpen class="w-6 h-6 text-primary" />
-                                        <h3 class="text-2xl font-bold text-primary">
-                                            {{
-                                                t(
-                                                    'modals.initial_setup.welcome.title'
-                                                )
-                                            }}
-                                        </h3>
+                                        <DoorOpen class="w-10 h-10 text-primary mr-2" />
+                                        <div class="flex flex-col">
+                                            <h3 class="text-2xl font-bold text-primary">
+                                                {{ t('modals.initial_setup.welcome.title') }}
+                                            </h3>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ t('modals.initial_setup.welcome.subtitle') }}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div v-else-if="currentTutorialStep === 2" key="step2"
                                         class="flex items-center gap-2">
-                                        <MemoryStick class="w-6 h-6 text-primary" />
-                                        <h3 class="text-2xl font-bold text-primary">
-                                            {{
-                                                t(
-                                                    'modals.initial_setup.ram.title'
-                                                )
-                                            }}
-                                        </h3>
+                                        <MemoryStick class="w-10 h-10 text-primary mr-2" />
+                                        <div class="flex flex-col">
+                                            <h3 class="text-2xl font-bold text-primary">
+                                                {{ t('modals.initial_setup.ram.title') }}
+                                            </h3>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ t('modals.initial_setup.ram.subtitle') }}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div v-else-if="currentTutorialStep === 3" key="step3"
                                         class="flex items-center gap-2">
-                                        <ChartNoAxesCombined class="w-6 h-6 text-primary" />
-                                        <h3 class="text-2xl font-bold text-primary">
-                                            {{
-                                                t(
-                                                    'modals.initial_setup.telemetry.title'
-                                                )
-                                            }}
-                                        </h3>
+                                        <ChartNoAxesCombined class="w-10 h-10 text-primary mr-2" />
+                                        <div class="flex flex-col">
+                                            <h3 class="text-2xl font-bold text-primary">
+                                                {{ t('modals.initial_setup.telemetry.title') }}
+                                            </h3>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ t('modals.initial_setup.telemetry.subtitle') }}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div v-else-if="currentTutorialStep === 4" key="step4"
                                         class="flex items-center gap-2">
-                                        <UserPlus class="w-6 h-6 text-primary" />
-                                        <h3 class="text-2xl font-bold text-primary">
-                                            {{
-                                                t(
-                                                    'modals.initial_setup.registration.title'
-                                                )
-                                            }}
-                                        </h3>
+                                        <Headset class="w-10 h-10 text-primary mr-2" />
+                                        <div class="flex flex-col">
+                                            <h3 class="text-2xl font-bold text-primary">
+                                                {{ t('modals.initial_setup.feedback.title') }}
+                                            </h3>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ t('modals.initial_setup.feedback.subtitle') }}
+                                            </p>
+                                        </div>
                                     </div>
                                     <div v-else-if="currentTutorialStep === 5" key="step5"
                                         class="flex items-center gap-2">
-                                        <Headset class="w-6 h-6 text-primary" />
-                                        <h3 class="text-2xl font-bold text-primary">
-                                            {{
-                                                t(
-                                                    'modals.initial_setup.feedback.title'
-                                                )
-                                            }}
-                                        </h3>
-                                    </div>
-                                    <div v-else-if="currentTutorialStep === 6" key="step6"
-                                        class="flex items-center gap-2">
-                                        <Handshake class="w-6 h-6 text-primary" />
-                                        <h3 class="text-2xl font-bold text-primary">
-                                            {{
-                                                t(
-                                                    'modals.initial_setup.appreciation.title'
-                                                )
-                                            }}
-                                        </h3>
+                                        <Handshake class="w-10 h-10 text-primary mr-2" />
+                                        <div class="flex flex-col">
+                                            <h3 class="text-2xl font-bold text-primary">
+                                                {{ t('modals.initial_setup.appreciation.title') }}
+                                            </h3>
+                                            <p class="text-sm text-base-content/70">
+                                                {{ t('modals.initial_setup.appreciation.subtitle') }}
+                                            </p>
+                                        </div>
                                     </div>
                                 </transition>
-                                <div class="flex items-center gap-3 ml-auto animate-slide-in-right">
+                                <div class="flex items-center gap-3 ml-auto animate-slide-in-right transition-all duration-300"
+                                    :class="{ 'mr-9': animateLanguage }">
                                     <Languages class="w-5 h-5 text-primary" />
                                     <select v-model="selectedLanguage" @change="
                                         handleLanguageChange(
                                             selectedLanguage
                                         )
-                                        "
+                                        " @click="stopLanguageCycling"
                                         class="select select-bordered select-sm bg-base-100 min-w-0 w-auto transition-all duration-300 hover:scale-105">
                                         <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
                                             {{ lang.nativeName }}
                                         </option>
+
                                     </select>
+                                </div>
+
+                                <div class="absolute right-1 mr-5 -mb-16 flex items-center justify-center">
+                                    <transition name="tooltip-text" mode="out-in">
+                                        <div v-if="showLanguageTooltip" :key="tooltipIndex"
+                                            class="bg-base-100 text-sm text-base-content/80 rounded-md px-3 py-1 shadow-lg mt-2">
+                                            <span class="block animate-fade-in-up">{{ tooltipDisplayText }}</span>
+                                        </div>
+                                    </transition>
                                 </div>
                             </div>
                         </div>
@@ -295,24 +339,35 @@ onMounted(async () => {
                             <div class="tutorial-content">
                                 <transition name="step-height" mode="out-in">
                                     <div v-if="currentTutorialStep === 1" key="step1" class="step-content">
-                                        <div class="text-center">
-                                            <img src="../../assets/images/logo.svg" alt="CollapseLoader Logo"
-                                                class="w-24 h-24 mx-auto mb-6" />
+                                        <div class="text-center max-w-xl mx-auto">
+                                            <img src="../../assets/images/logo.svg" class="w-24 h-24 mx-auto mb-4" />
                                             <p
-                                                class="text-lg text-base-content/70 mb-6 animate-fade-in-up animation-delay-200">
-                                                {{
-                                                    t(
-                                                        'modals.initial_setup.welcome.description'
-                                                    )
-                                                }}
+                                                class="text-lg text-base-content/70 mb-4 animate-fade-in-up animation-delay-200">
+                                                {{ t('modals.initial_setup.welcome.description') }}
                                             </p>
+
+                                            <ul
+                                                class="text-sm text-base-content/70 mb-4 space-y-2 text-left mx-auto max-w-md">
+                                                <li class="flex items-start">
+                                                    <span class="text-primary mr-2">•</span>
+                                                    {{ t('modals.initial_setup.welcome.features.fast_startup') }}
+                                                </li>
+                                                <li class="flex items-start">
+                                                    <span class="text-primary mr-2">•</span>
+                                                    {{ t('modals.initial_setup.welcome.features.secure_clients') }}
+                                                </li>
+                                                <li class="flex items-start">
+                                                    <span class="text-primary mr-2">•</span>
+                                                    {{ t('modals.initial_setup.welcome.features.auto_updates') }}
+                                                </li>
+                                            </ul>
                                         </div>
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
                                     <div v-if="currentTutorialStep === 2" key="step3" class="step-content">
                                         <div class="text-center">
-                                            <Cpu class="w-16 h-16 mx-auto mb-4 text-primary animate-bounce-gentle" />
+                                            <Cpu class="w-16 h-16 mx-auto mb-4 text-primary" />
                                             <p
                                                 class="text-lg text-base-content/70 mb-6 animate-fade-in-up animation-delay-200">
                                                 {{
@@ -349,7 +404,7 @@ onMounted(async () => {
                                                 </div>
                                                 <div v-if="showRamWarning" class="alert alert-warning mt-4">
                                                     <span>{{ t('modals.initial_setup.ram.warning', { selectedRamMb })
-                                                    }}</span>
+                                                        }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -406,54 +461,24 @@ onMounted(async () => {
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 4" key="step4" class="step-content">
-                                        <div class="text-center">
-                                            <div v-if="!showRegisterForm">
-                                                <UserPlus class="w-16 h-16 mx-auto mb-4 text-primary" />
-                                                <p
-                                                    class="text-lg text-base-content/70 mb-6 animate-fade-in-up animation-delay-200">
-                                                    {{
-                                                        t(
-                                                            'modals.initial_setup.registration.description'
-                                                        )
-                                                    }}
-                                                </p>
-                                            </div>
-
-                                            <div v-if="!showRegisterForm"
-                                                class="space-y-4 animate-fade-in-up animation-delay-400 flex content-center justify-center gap-4">
-                                                <button @click="
-                                                    showRegisterForm = true
-                                                    " class="btn btn-primary">
-                                                    {{
-                                                        t(
-                                                            'modals.initial_setup.registration.create_account'
-                                                        )
-                                                    }}
-                                                </button>
-                                            </div>
-
-                                            <div v-else class="max-w-sm mx-auto animate-fade-in-up">
-                                                <RegistrationForm ref="registrationFormRef" :show-cancel-button="true"
-                                                    :compact="true" @registered="
-                                                        handleRegistrationSuccess
-                                                    " @logged-in="handleAutoLogin" @cancel="
-                                                        handleRegistrationCancel
-                                                    " />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </transition>
-                                <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 5" key="step5" class="step-content">
+                                    <div v-if="currentTutorialStep === 4" key="step5" class="step-content">
                                         <div class="text-center">
                                             <DoorOpen class="w-16 h-16 mx-auto mb-4 text-primary" />
 
                                             <p
-                                                class="text-lg text-base-content/70 mb-6 animate-fade-in-up animation-delay-200">
+                                                class="text-lg text-base-content/70 mb-2 animate-fade-in-up animation-delay-200">
                                                 {{
                                                     t(
                                                         'modals.initial_setup.feedback.description'
+                                                    )
+                                                }}
+                                            </p>
+
+                                            <p
+                                                class="text-sm text-base-content/70 mb-5 animate-fade-in-up animation-delay-300">
+                                                {{
+                                                    t(
+                                                        'modals.initial_setup.feedback.optional'
                                                     )
                                                 }}
                                             </p>
@@ -477,7 +502,7 @@ onMounted(async () => {
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 6" key="step6" class="step-content">
+                                    <div v-if="currentTutorialStep === 5" key="step6" class="step-content">
                                         <div class="text-center">
                                             <HeartHandshake class="w-16 h-16 mx-auto mb-4 text-primary" />
                                             <p
@@ -713,39 +738,6 @@ onMounted(async () => {
     }
 }
 
-@keyframes bounceGentle {
-
-    0%,
-    20%,
-    50%,
-    80%,
-    100% {
-        transform: translateY(0);
-    }
-
-    40% {
-        transform: translateY(-8px);
-    }
-
-    60% {
-        transform: translateY(-4px);
-    }
-}
-
-@keyframes pulseGentle {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.02);
-        opacity: 0.9;
-    }
-}
-
 .animate-fade-in-up {
     animation: fadeInUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
     opacity: 0;
@@ -766,24 +758,21 @@ onMounted(async () => {
     opacity: 0;
 }
 
-.animate-bounce-gentle {
-    animation: bounceGentle 2s infinite;
+.tooltip-text-enter-active,
+.tooltip-text-leave-active {
+    transition: all 220ms cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.animate-pulse-gentle {
-    animation: pulseGentle 2s infinite;
+.tooltip-text-enter-from,
+.tooltip-text-leave-to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
 }
 
-.animation-delay-200 {
-    animation-delay: 0.2s;
-}
-
-.animation-delay-400 {
-    animation-delay: 0.4s;
-}
-
-.animation-delay-600 {
-    animation-delay: 0.6s;
+.tooltip-text-enter-to,
+.tooltip-text-leave-from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 .btn {
@@ -818,7 +807,6 @@ button[class*='w-2 h-2']:hover:before {
     height: 200%;
 }
 
-/* Анимация для заголовков шагов в верхней панели */
 .step-title-enter-active,
 .step-title-leave-active {
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -826,18 +814,18 @@ button[class*='w-2 h-2']:hover:before {
 
 .step-title-enter-from {
     opacity: 0;
-    transform: translateX(20px) scale(0.95);
+    transform: translateX(20px);
 }
 
 .step-title-leave-to {
     opacity: 0;
-    transform: translateX(-20px) scale(0.95);
+    transform: translateX(-20px);
 }
 
 .step-title-enter-to,
 .step-title-leave-from {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateX(0);
 }
 
 @media (max-width: 768px) {

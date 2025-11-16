@@ -3,7 +3,14 @@
     "initial_setup": {
       "welcome": {
         "title": "Welcome to CollapseLoader",
-        "description": "Let's configure everything for you"
+        "description": "We'll guide you through a quick setup to optimize performance and privacy.",
+        "subtitle": "Quick setup to get you up and running",
+        "learn_more": "Learn more",
+        "features": {
+          "fast_startup": "Fast startup — minimal waiting time",
+          "secure_clients": "Secure clients — verified and safe",
+          "auto_updates": "Automatic updates — keep loader and clients up to date"
+        }
       },
       "gui": {
         "title": "User-Friendly Interface",
@@ -11,7 +18,9 @@
       },
       "ram": {
         "title": "Memory Settings",
-        "description": "Configure how much RAM to allocate for optimal performance"
+        "subtitle": "Choose how much client memory to allocate for best performance",
+        "description": "Configure how much RAM to allocate for optimal performance",
+        "warning": "Warning: You have selected {selectedRamMb} MB of RAM. This exceeds the recommended limit of 6 GB and may cause performance issues or crashes."
       },
       "registration": {
         "title": "Create Account",
@@ -24,10 +33,13 @@
       },
       "feedback": {
         "title": "Feedback",
-        "description": "Join our community"
+        "subtitle": "Connect and share feedback with our community",
+        "description": "Join our community",
+        "optional": "Optional, but we recommend to subscribe"
       },
       "telemetry": {
         "title": "Optional Analytics",
+        "subtitle": "Share anonymous usage data to help us prioritize improvements (optional)",
         "description": "Help us improve CollapseLoader by sharing anonymous usage data. You can change this setting anytime in the settings menu.",
         "data_collected_title": "What we collect:",
         "data_collected": {
@@ -42,6 +54,7 @@
       },
       "appreciation": {
         "title": "Thank You for Choosing CollapseLoader",
+        "subtitle": "You're all set — ready to start",
         "description": "We hope you enjoy using our loader!"
       },
       "disclaimer": {
@@ -52,7 +65,8 @@
       },
       "lets_go": "Let's go!",
       "language_changed": "Language changed successfully!",
-      "language_change_failed": "Failed to change language. Please try again."
+      "language_change_failed": "Failed to change language. Please try again.",
+      "language_here": "You can change the language here"
     },
     "block_unblock_confirm": {
       "block_message": "Are you sure you want to block {displayName}? This will remove them from your friends list and prevent future contact.",
