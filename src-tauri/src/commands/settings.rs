@@ -1,11 +1,11 @@
-#[cfg(target_os = "windows")]
-use crate::core::platform::windows::dpi;
 use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
 use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
+#[cfg(target_os = "windows")]
+use crate::core::utils::dpi;
 use crate::{log_debug, log_error, log_info};
 use sysinfo::System;
 
@@ -35,12 +35,20 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     let mut current_settings = SETTINGS.lock().unwrap();
     let config_path = current_settings.config_path.clone();
 
-    let discord_rpc_changed =
-        current_settings.discord_rpc_enabled.value != input_settings.discord_rpc_enabled.value;
+    let old_discord_rpc_enabled = current_settings.discord_rpc_enabled.value;
+    let old_dpi_bypass_enabled = current_settings.dpi_bypass.value;
+
+    let discord_rpc_changed = old_discord_rpc_enabled != input_settings.discord_rpc_enabled.value;
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
 
+    #[cfg(target_os = "windows")]
+    let dpi_bypass_changed = old_dpi_bypass_enabled != input_settings.dpi_bypass.value;
+    #[cfg(target_os = "windows")]
+    let new_dpi_bypass_value = input_settings.dpi_bypass.value;
+
     log_debug!("Applying new settings");
-    let new_settings = Settings::from_input(input_settings, config_path);
+    let input_settings_clone = input_settings.clone();
+    let new_settings = Settings::from_input(input_settings_clone, config_path);
     *current_settings = new_settings.clone();
 
     new_settings.save_to_disk();
@@ -60,10 +68,6 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
-        let dpi_bypass_changed =
-            current_settings.dpi_bypass.value != input_settings.dpi_bypass.value;
-        let new_dpi_bypass_value = input_settings.dpi_bypass.value;
-
         if dpi_bypass_changed && new_dpi_bypass_value {
             log_info!("DPI bypass enabled. Preparing to download and run package");
 

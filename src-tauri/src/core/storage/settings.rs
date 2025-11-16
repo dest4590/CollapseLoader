@@ -58,7 +58,7 @@ macro_rules! define_settings {
                 pub config_path: PathBuf,
             }
 
-            #[derive(Deserialize, Debug)]
+            #[derive(Deserialize, Clone, Debug)]
             pub struct [<Input $name>] {
                 $(pub $field: Setting<$field_type>,)*
             }
