@@ -1,15 +1,15 @@
 {
-    "tag_name": "v0.2.1",
-    "name": "v0.2.1",
+    "tag_name": "v0.2.3",
+    "name": "v0.2.3",
     "body": "#file:body.md",
-    "html_url": "https://github.com/dest4590/CollapseLoader/releases/tag/v0.2.1",
+    "html_url": "https://github.com/dest4590/CollapseLoader/releases/tag/v0.2.3",
     "assets": [
         {
-            "name": "CollapseLoader-0.2.1.msi",
-            "browser_download_url": "https://example.com/CollapseLoader-0.2.1.msi",
+            "name": "CollapseLoader-0.2.3.msi",
+            "browser_download_url": "https://example.com/CollapseLoader-0.2.3.msi",
             "size": 100
         }
     ],
-    "published_at": "2025-08-29T12:00:00Z",
+    "published_at": "2025-11-16T12:00:00Z",
     "prerelease": false
 }

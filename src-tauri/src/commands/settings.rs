@@ -36,6 +36,7 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     let config_path = current_settings.config_path.clone();
 
     let old_discord_rpc_enabled = current_settings.discord_rpc_enabled.value;
+    #[cfg(target_os = "windows")]
     let old_dpi_bypass_enabled = current_settings.dpi_bypass.value;
 
     let discord_rpc_changed = old_discord_rpc_enabled != input_settings.discord_rpc_enabled.value;

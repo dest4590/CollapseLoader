@@ -987,7 +987,10 @@
     "up_to_date": "У вас установлена последняя версия!",
     "show_more": "Показать еще {count} версий",
     "show_less": "Показать меньше",
-    "categories": {},
+    "categories": {
+      "feature": "Функционал",
+      "improvement": "Улучшение"
+    },
     "no_update": "Обновления не найдены"
   },
   "custom_clients": {

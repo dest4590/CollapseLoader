@@ -987,7 +987,10 @@
     "show_more": "Показати ще {count} версій",
     "show_less": "Показати менше",
     "release_types": {},
-    "categories": {},
+    "categories": {
+      "feature": "Функціонал",
+      "improvement": "Поліпшення"
+    },
     "no_update": "Оновлень не знайдено"
   },
   "custom_clients": {

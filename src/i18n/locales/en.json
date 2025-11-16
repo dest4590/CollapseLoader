@@ -988,7 +988,10 @@
     "show_more": "Show {count} more versions",
     "show_less": "Show less",
     "release_types": {},
-    "categories": {},
+    "categories": {
+      "feature": "Feature",
+      "improvement": "Improvement"
+    },
     "no_update": "Updates not found"
   },
   "custom_clients": {

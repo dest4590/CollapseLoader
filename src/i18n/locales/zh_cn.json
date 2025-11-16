@@ -976,7 +976,10 @@
     "show_more": "再显示 {count} 个版本",
     "show_less": "收起",
     "release_types": {},
-    "categories": {},
+    "categories": {
+      "feature": "功能",
+      "improvement": "改善"
+    },
     "no_update": "未找到更新"
   },
   "custom_clients": {
