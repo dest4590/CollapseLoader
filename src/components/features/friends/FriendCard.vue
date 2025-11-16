@@ -4,13 +4,13 @@
         <div class="card-body p-4 flex-1 flex items-center">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-4">
-                    <div @click="$emit('viewProfile', friend.id)" class="avatar-click-area">
+                    <div @click="handleViewProfile" class="avatar-click-area">
                         <UserAvatar :name="friend.nickname || friend.username" :show-status="true"
                             :is-online="friend.status.is_online" :is-clickable="true"
                             :src="(friend as any).avatar_url || null"
                             :original-src="(friend as any).avatar_url || null" />
                     </div>
-                    <div class="flex-1 min-h-[56px]">
+                    <div class="flex-1 min-h-14">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}
@@ -47,7 +47,7 @@
                         <MoreVertical class="w-4 h-4" />
                     </div>
                     <ul tabindex="0"
-                        class="dropdown-content menu p-2 bg-base-200 shadow-xl border border-base-300 rounded-box w-52 z-[9999]">
+                        class="dropdown-content menu p-2 bg-base-200 shadow-xl border border-base-300 rounded-box w-52 z-9999">
                         <li>
                             <a @click="handleRemoveFriend" class="text-error">
                                 <UserMinus class="w-4 h-4" />
@@ -144,6 +144,12 @@ const handleRemoveFriend = () => {
 
 const handleBlockFriend = () => {
     emit('blockFriend', props.friend);
+};
+
+const handleViewProfile = () => {
+    // emit both forms to be resilient to different listener naming conventions
+    emit('viewProfile', props.friend.id);
+    //emit('view-profile', props.friend.id as any);
 };
 </script>
 

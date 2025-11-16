@@ -120,7 +120,7 @@
                                                 </div>
                                             </div>
 
-                                            <p class="mt-2 text-sm break-words whitespace-pre-wrap">{{ c.text }}</p>
+                                            <p class="mt-2 text-sm wrap-break-word whitespace-pre-wrap">{{ c.text }}</p>
                                         </div>
                                     </div>
                                 </div>

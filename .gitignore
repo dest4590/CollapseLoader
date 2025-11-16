@@ -29,3 +29,5 @@ crash-reports/
 TODO.md
 .env
 **/*.bak
+
+target/

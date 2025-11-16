@@ -1,3 +1,5 @@
+#[cfg(target_os = "windows")]
+use crate::core::platform::windows::dpi;
 use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
@@ -5,6 +7,7 @@ use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
 use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
 use crate::{log_debug, log_error, log_info};
+use sysinfo::System;
 
 #[tauri::command]
 pub fn get_settings() -> Settings {
@@ -52,6 +55,21 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         );
         if let Err(e) = discord_rpc::toggle_rpc(new_discord_rpc_value) {
             log_error!("Failed to toggle Discord RPC: {e}");
+        }
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let dpi_bypass_changed =
+            current_settings.dpi_bypass.value != input_settings.dpi_bypass.value;
+        let new_dpi_bypass_value = input_settings.dpi_bypass.value;
+
+        if dpi_bypass_changed && new_dpi_bypass_value {
+            log_info!("DPI bypass enabled. Preparing to download and run package");
+
+            if let Err(e) = dpi::enable_dpi_bypass_async() {
+                log_error!("Failed to initiate DPI bypass setup: {e}");
+            }
         }
     }
 
@@ -292,4 +310,13 @@ pub fn set_custom_clients_display(display: String) -> Result<(), String> {
     flags.save_to_disk();
     drop(flags);
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_system_memory() -> Result<u64, String> {
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let total_memory = sys.total_memory();
+    Ok(total_memory)
 }

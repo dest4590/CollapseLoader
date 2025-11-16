@@ -1,7 +1,7 @@
 <template>
     <div class="avatar placeholder avatar-clickable"
         :class="{ relative: showStatus, clickable: isClickable || !!resolvedSrc }" @click="handleClick">
-        <div class="bg-base-100 text-primary-content rounded-full flex content-center overflow-hidden"
+        <div class="bg-base-100 text-primary-content rounded-full flex content-center overflow-hidden justify-center"
             :class="[sizeClasses, backgroundClass, { 'avatar-inner': !resolvedSrc }]">
             <img v-if="resolvedSrc && !imageError" :src="resolvedSrc" alt="avatar" class="w-full h-full object-cover"
                 @error="onImageError" />

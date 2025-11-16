@@ -1,14 +1,12 @@
 use serde::de::DeserializeOwned;
 use std::sync::LazyLock;
-use std::{
-    fs::{self, File},
-    io::{BufReader, BufWriter},
-};
+use std::time::Duration;
 
 use crate::core::storage::data::DATA;
 use crate::{log_debug, log_error, log_warn};
 
 use super::servers::{Server, SERVERS};
+use super::cache;
 
 pub const API_CACHE_DIR: &str = "cache/";
 
@@ -16,59 +14,19 @@ pub struct Api {
     pub api_server: Server,
 }
 
-fn sanitize_path_for_filename(path: &str) -> String {
-    path.replace(['/', '\\'], "_") + ".json"
-}
-
 impl Api {
     pub fn json<T: DeserializeOwned>(&self, path: &str) -> Result<T, Box<dyn std::error::Error>> {
         let cache_dir = DATA.root_dir.join(API_CACHE_DIR);
-        if !cache_dir.exists() {
-            if let Err(e) = fs::create_dir_all(&cache_dir) {
-                log_warn!(
-                    "Failed to create API cache directory at {:?}: {}",
-                    cache_dir,
-                    e
-                );
-            }
-        }
+        cache::ensure_cache_dir(&cache_dir);
 
-        let cache_file_name = sanitize_path_for_filename(path);
-        let cache_file_path = cache_dir.join(cache_file_name);
+        let cache_file_path = cache::cache_file_path(&cache_dir, path);
 
-        let cached_data: Option<serde_json::Value> = if cache_file_path.exists() {
-            match File::open(&cache_file_path) {
-                Ok(file) => {
-                    let reader = BufReader::new(file);
-                    match serde_json::from_reader(reader) {
-                        Ok(data) => Some(data),
-                        Err(e) => {
-                            log_warn!(
-                                "Failed to deserialize cached API response from {:?}: {}",
-                                cache_file_path,
-                                e
-                            );
-                            None
-                        }
-                    }
-                }
-                Err(e) => {
-                    log_warn!(
-                        "Failed to open cached API response file {:?}: {}",
-                        cache_file_path,
-                        e
-                    );
-                    None
-                }
-            }
-        } else {
-            None
-        };
+        let cached_data: Option<serde_json::Value> = cache::read_cached_json(&cache_file_path);
 
         let url = format!("{}{}", self.api_server.url, path);
 
         let client = reqwest::blocking::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
+            .timeout(Duration::from_secs(30))
             .build()
             .map_err(|e| {
                 log_error!("Failed to create HTTP client for API request: {}", e);
@@ -111,38 +69,7 @@ impl Api {
 
                         match serde_json::from_str::<serde_json::Value>(&body) {
                             Ok(api_data) => {
-                                let should_update_cache = cached_data
-                                    .as_ref()
-                                    .is_none_or(|cached| *cached != api_data);
-
-                                if should_update_cache && cache_dir.exists() {
-                                    match File::create(&cache_file_path) {
-                                        Ok(file) => {
-                                            let writer = BufWriter::new(file);
-                                            if let Err(e) =
-                                                serde_json::to_writer_pretty(writer, &api_data)
-                                            {
-                                                log_warn!(
-                                                        "Failed to write API response to cache at {:?}: {}",
-                                                        cache_file_path,
-                                                        e
-                                                    );
-                                            } else {
-                                                log_debug!(
-                                                    "Cache updated for API path: {} (data changed)",
-                                                    path
-                                                );
-                                            }
-                                        }
-                                        Err(e) => {
-                                            log_warn!(
-                                                "Failed to create API cache file at {:?}: {}",
-                                                cache_file_path,
-                                                e
-                                            );
-                                        }
-                                    }
-                                }
+                                cache::write_cache_if_changed(&cache_file_path, &api_data, &cached_data);
 
                                 let result: T = serde_json::from_value(api_data)?;
                                 Ok(result)

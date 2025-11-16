@@ -105,6 +105,12 @@ impl Servers {
     }
 }
 
+impl Default for Servers {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub static SERVERS: LazyLock<Servers> = LazyLock::new(|| {
     let mut servers = Servers::new();
     servers.check_servers();

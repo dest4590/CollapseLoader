@@ -3,12 +3,12 @@
         <div class="card-body p-4 flex-1 flex items-center">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
-                    <div @click="$emit('viewProfile', user.id)" class="avatar-click-area">
+                    <div @click="$emit('viewProfile', user.id)">
                         <UserAvatar :name="displayNickname" :is-clickable="true"
                             :src="(props.user as any).avatar_url || null"
                             :original-src="(props.user as any).avatar_url || null" />
                     </div>
-                    <div class="min-h-[56px]">
+                    <div class="min-h-14">
                         <p class="font-medium">{{ displayNickname }}</p>
                         <p class="text-sm text-base-content/70">
                             @{{ displayUsername }}
@@ -90,33 +90,3 @@ const confirmCancel = () => {
     );
 };
 </script>
-
-<style scoped>
-.avatar-click-area {
-    transition: all 0.2s ease;
-    border-radius: 50%;
-    padding: 2px;
-}
-
-.avatar-click-area:hover {
-    background: hsl(var(--p) / 0.1);
-}
-
-.avatar-click-area:active {
-    transform: scale(0.98);
-}
-
-.card {
-    display: flex;
-    flex-direction: column;
-}
-
-.card-body {
-    display: flex;
-    flex-direction: column;
-}
-
-.card-body>.flex {
-    flex: 1 1 auto;
-}
-</style>

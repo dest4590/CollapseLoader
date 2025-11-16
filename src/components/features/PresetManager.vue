@@ -42,7 +42,7 @@
                     {{ $t('theme.presets.pagination.page_of', { current: currentPage, total: totalPages }) }}
                 </div>
                 <div class="flex items-center gap-2">
-                    <label class="text-xs text-base-content/60 flex-shrink-0">
+                    <label class="text-xs text-base-content/60 shrink-0">
                         {{ $t('theme.presets.pagination.per_page') }}
                     </label>
                     <select v-model.number="pageSize" class="select select-bordered select-xs">

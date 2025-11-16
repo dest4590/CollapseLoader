@@ -123,6 +123,7 @@ define_settings! {
         irc_chat: Setting<bool> = (true, true),
         hash_verify: Setting<bool> = (true, true),
         sync_client_settings: Setting<bool> = (true, true),
+        dpi_bypass: Setting<bool> = (false, true),
     }
 }
 

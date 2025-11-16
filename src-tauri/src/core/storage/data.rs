@@ -44,12 +44,22 @@ impl Data {
     }
 
     pub fn unzip(&self, file: &str) -> Result<(), String> {
+        let (emit_name, local_name) = if file.starts_with("http://") || file.starts_with("https://")
+        {
+            (
+                file.to_string(),
+                file.rsplit('/').next().unwrap_or(file).to_string(),
+            )
+        } else {
+            (file.to_string(), file.to_string())
+        };
+
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "unzip-start", &file);
+            emit_to_main_window(app_handle, "unzip-start", &emit_name);
         }
 
-        let zip_path = self.get_local(file);
-        let unzip_path = self.get_local(file.trim_end_matches(".zip"));
+        let zip_path = self.get_local(&local_name);
+        let unzip_path = self.get_local(local_name.trim_end_matches(".zip"));
 
         if unzip_path.exists() {
             log_debug!(
@@ -61,9 +71,26 @@ impl Data {
             fs::create_dir_all(&unzip_path).map_err(|e| e.to_string())?;
         }
 
-        let mut archive =
-            zip::ZipArchive::new(fs::File::open(&zip_path).map_err(|e| e.to_string())?)
-                .map_err(|e| e.to_string())?;
+        if !zip_path.exists() {
+            log_error!(
+                "Zip file not found at expected path: {}",
+                zip_path.display()
+            );
+        } else {
+            match fs::metadata(&zip_path) {
+                Ok(_) => {}
+                Err(e) => log_warn!("Failed to read metadata for {}: {}", zip_path.display(), e),
+            }
+        }
+
+        let mut archive = zip::ZipArchive::new(fs::File::open(&zip_path).map_err(|e| {
+            log_error!("Failed to open zip file {}: {}", zip_path.display(), e);
+            e.to_string()
+        })?)
+        .map_err(|e| {
+            log_error!("Failed to read zip archive {}: {}", zip_path.display(), e);
+            e.to_string()
+        })?;
 
         let total_files = archive.len() as u64;
 
@@ -78,10 +105,30 @@ impl Data {
                 fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
             } else {
                 if let Some(parent) = outpath.parent() {
-                    fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+                    if !parent.exists() {
+                        log_debug!(
+                            "Creating parent dir for {} -> {}",
+                            file_entry.name(),
+                            parent.display()
+                        );
+                        fs::create_dir_all(parent).map_err(|e| {
+                            log_error!("Failed to create parent dir {}: {}", parent.display(), e);
+                            e.to_string()
+                        })?;
+                    }
                 }
-                let mut outfile = fs::File::create(&outpath).map_err(|e| e.to_string())?;
-                io::copy(&mut file_entry, &mut outfile).map_err(|e| e.to_string())?;
+                let mut outfile = fs::File::create(&outpath).map_err(|e| {
+                    log_error!("Failed to create output file {}: {}", outpath.display(), e);
+                    e.to_string()
+                })?;
+                io::copy(&mut file_entry, &mut outfile).map_err(|e| {
+                    log_error!(
+                        "Failed to write extracted file {}: {}",
+                        outpath.display(),
+                        e
+                    );
+                    e.to_string()
+                })?;
             }
 
             files_extracted += 1;
@@ -92,7 +139,7 @@ impl Data {
 
                 if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
                     let progress_data = serde_json::json!({
-                        "file": file,
+                        "file": emit_name,
                         "percentage": percentage,
                         "action": "extracting",
                         "files_extracted": files_extracted,
@@ -108,7 +155,7 @@ impl Data {
         }
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "unzip-complete", &file);
+            emit_to_main_window(app_handle, "unzip-complete", &emit_name);
         }
 
         Ok(())
@@ -130,23 +177,25 @@ impl Data {
     }
 
     pub async fn download(&self, file: &str) -> Result<(), String> {
-        let file_name = Self::get_filename(file);
-        let is_fabric_client = file.starts_with("fabric/") && file.ends_with(".jar");
+        let is_url = file.starts_with("http://") || file.starts_with("https://");
+        let local_file = if is_url {
+            file.rsplit('/').next().unwrap_or(file)
+        } else {
+            file
+        };
 
-        let is_essential_requirement = file == format!("{JDK_FOLDER}.zip")
-            || file.starts_with("assets")
-            || file.starts_with("natives")
-            || file.starts_with("libraries");
+        let file_name = Self::get_filename(local_file);
+        let is_fabric_client = local_file.starts_with("fabric/") && local_file.ends_with(".jar");
 
-        let file_exists = if Self::has_extension(file, "zip") {
-            let extract_path = self.root_dir.join(&file_name);
-            extract_path.exists()
-        } else if Self::has_extension(file, "jar") {
+        let file_exists = if Self::has_extension(local_file, "zip") {
+            let zip_path = self.root_dir.join(local_file);
+            zip_path.exists()
+        } else if Self::has_extension(local_file, "jar") {
             if is_fabric_client {
-                let jar_basename = Path::new(file)
+                let jar_basename = Path::new(local_file)
                     .file_name()
                     .and_then(|n| n.to_str())
-                    .unwrap_or(file);
+                    .unwrap_or(local_file);
                 let jar_path = self
                     .root_dir
                     .join(&file_name)
@@ -154,18 +203,15 @@ impl Data {
                     .join(jar_basename);
                 jar_path.exists()
             } else {
-                let jar_path = self.get_local(&format!("{file_name}{MAIN_SEPARATOR}{file}"));
+                let jar_path = self.get_local(&format!("{file_name}{MAIN_SEPARATOR}{local_file}"));
                 jar_path.exists()
             }
         } else {
             false
         };
 
-        if file_exists && !is_essential_requirement {
-            log_debug!(
-                "File {} already exists and is not essential, skipping download",
-                file
-            );
+        if file_exists {
+            log_debug!("File {} already exists, skipping download", file);
             return Ok(());
         }
 
@@ -175,7 +221,7 @@ impl Data {
             emit_to_main_window(app_handle, "download-start", &file);
         }
 
-        if Self::has_extension(file, "jar") {
+        if Self::has_extension(local_file, "jar") {
             if is_fabric_client {
                 let mods_dir = self.root_dir.join(&file_name).join("mods");
                 if let Err(e) = fs::create_dir_all(&mods_dir) {
@@ -188,7 +234,7 @@ impl Data {
                 }
                 log_debug!("Created fabric mods directory: {}", mods_dir.display());
             } else {
-                let local_path = self.get_as_folder(file);
+                let local_path = self.get_as_folder(local_file);
                 if let Err(e) = fs::create_dir_all(&local_path) {
                     log_error!("Failed to create directory {}: {}", local_path.display(), e);
                     return Err(format!("Failed to create directory: {e}"));
@@ -214,7 +260,11 @@ impl Data {
             |server| Ok(server.url.clone()),
         )?;
 
-        let download_url = format!("{cdn_url}{file}");
+        let download_url = if is_url {
+            file.to_string()
+        } else {
+            format!("{cdn_url}{file}")
+        };
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(600))
@@ -253,10 +303,10 @@ impl Data {
                 .join(&file_name)
                 .join("mods")
                 .join(jar_basename)
-        } else if Self::has_extension(file, "jar") {
-            self.root_dir.join(format!("{file_name}/{file}"))
+        } else if Self::has_extension(local_file, "jar") {
+            self.root_dir.join(format!("{file_name}/{local_file}"))
         } else {
-            self.root_dir.join(file)
+            self.root_dir.join(local_file)
         };
 
         let mut dest = tokio::fs::File::create(&dest_path).await.map_err(|e| {
@@ -267,6 +317,8 @@ impl Data {
             );
             format!("Failed to create file: {e}")
         })?;
+
+        log_info!("Created destination file: {}", dest_path.display());
 
         let mut downloaded: u64 = 0;
         let mut last_percentage: u8 = 0;
@@ -318,14 +370,21 @@ impl Data {
             emit_to_main_window(app_handle, "download-complete", &file);
         }
 
-        if Self::has_extension(file, "zip") {
+        if Self::has_extension(local_file, "zip") {
             self.unzip(file).map_err(|e| {
                 log_error!("Failed to extract {}: {}", file, e);
+                if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+                    let err_data = serde_json::json!({
+                        "file": file,
+                        "error": e
+                    });
+                    emit_to_main_window(app_handle, "unzip-error", err_data);
+                }
                 e
             })?;
         }
 
-        if Self::has_extension(file, "jar") {
+        if Self::has_extension(local_file, "jar") {
             log_debug!("Verifying MD5 hash for client file: {}", file);
             self.verify_client_hash(file, &dest_path).map_err(|e| {
                 log_error!("Failed to verify client hash for {}: {}", file, e);
@@ -459,6 +518,7 @@ impl Data {
             emit_to_main_window(app_handle, "download-start", &file);
         }
 
+        let is_url = file.starts_with("http://") || file.starts_with("https://");
         let cdn_url = SERVERS.selected_cdn.as_ref().map_or_else(
             || {
                 log_error!("No CDN server available for download");
@@ -467,7 +527,11 @@ impl Data {
             |server| Ok(server.url.clone()),
         )?;
 
-        let download_url = format!("{cdn_url}{file}");
+        let download_url = if is_url {
+            file.to_string()
+        } else {
+            format!("{cdn_url}{file}")
+        };
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(600))
@@ -506,10 +570,7 @@ impl Data {
             return Err(format!("Failed to create destination folder: {e}"));
         }
 
-        let dest_filename = std::path::Path::new(file)
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or(file);
+        let dest_filename = file.rsplit('/').next().unwrap_or(file);
         let dest_path = dest_dir.join(dest_filename);
 
         let mut dest = tokio::fs::File::create(&dest_path).await.map_err(|e| {
@@ -520,6 +581,11 @@ impl Data {
             );
             format!("Failed to create file: {e}")
         })?;
+
+        log_info!(
+            "Created destination file for folder download: {}",
+            dest_path.display()
+        );
 
         let total_size = response.content_length();
         let mut downloaded: u64 = 0;

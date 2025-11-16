@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col h-full max-h-[80vh]">
-        <div class="flex items-center justify-start gap-3 pb-4 border-b border-base-300/30 flex-shrink-0">
+        <div class="flex items-center justify-start gap-3 pb-4 border-b border-base-300/30 shrink-0">
             <label class="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" class="checkbox checkbox-sm" v-model="autoScroll" />
                 <span>{{ t('appLogs.autoScroll') }}</span>
@@ -8,13 +8,13 @@
         </div>
 
         <div ref="logsContainer"
-            class="flex-1 p-4 font-mono text-sm leading-6 whitespace-pre-wrap break-words text-base-content/90 bg-base-300/30 rounded mt-4 overflow-y-auto min-h-0"
+            class="flex-1 p-4 font-mono text-sm leading-6 whitespace-pre-wrap wrap-break-word text-base-content/90 bg-base-300/30 rounded mt-4 overflow-y-auto min-h-0"
             @scroll="handleScroll" style="max-height: calc(80vh - 120px);">
             <div v-if="logs.length === 0" class="text-center py-8 text-base-content/60">
                 {{ t('appLogs.noLogs') }}
             </div>
             <pre v-else
-                class="m-0 whitespace-pre-wrap break-words overflow-wrap-anywhere"><code>{{ logs.join('\n') }}</code></pre>
+                class="m-0 whitespace-pre-wrap wrap-break-word overflow-wrap-anywhere"><code>{{ logs.join('\n') }}</code></pre>
         </div>
     </div>
 </template>

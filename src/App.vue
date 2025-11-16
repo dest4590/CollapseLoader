@@ -2,6 +2,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { router } from './services/router';
 import { useI18n } from 'vue-i18n';
 import { Vue3Lottie } from 'vue3-lottie';
 import preloader from './assets/misc/preloader.json';
@@ -27,7 +28,6 @@ import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AdminView from './views/AdminView.vue';
 import AppLogs from './views/AppLogs.vue';
-import BlockedUsersView from './views/BlockedUsersView.vue';
 import FriendsView from './views/FriendsView.vue';
 import Home from './views/Home.vue';
 import LoginView from './views/LoginView.vue';
@@ -65,7 +65,7 @@ interface AppSettings {
 
 const { t, locale } = useI18n();
 
-const activeTab = ref<'home' | 'settings' | 'app_logs' | 'customization' | 'custom_clients' | 'about' | 'account' | 'login' | 'register' | 'friends' | 'user-profile' | 'blocked-users' | 'admin' | 'news' | 'marketplace'>('home');
+const activeTab = computed(() => router.currentRoute.value as any);
 const showPreloader = ref(true);
 const contentVisible = ref(false);
 const loadingState = ref(t('preloader.initializing'));
@@ -113,27 +113,23 @@ const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
 
-const setActiveTab = (tab: string) => {
+const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
-    previousTab.value = activeTab.value;
+    previousTab.value = router.currentRoute.value;
     isNavigatingToProfile.value = false;
-    activeTab.value = tab as any;
-    currentUserId.value = null;
+    if (opts && Object.prototype.hasOwnProperty.call(opts, 'userId')) {
+        currentUserId.value = opts!.userId ?? null;
+    } else {
+        currentUserId.value = null;
+    }
+    router.push(tab);
 };
 
-const showUserProfile = (userId: number | string) => {
-    previousTab.value = activeTab.value;
+const showUserProfile = (userId: number) => {
+    previousTab.value = router.currentRoute.value;
     isNavigatingToProfile.value = true;
 
-    if (userId === 'blocked-users') {
-        activeTab.value = 'blocked-users';
-        currentUserId.value = null;
-    } else {
-        currentUserId.value = userId as number;
-        activeTab.value = 'user-profile';
-    }
-
-    setTimeout(() => (isNavigatingToProfile.value = false), 600);
+    setActiveTab('user-profile', { userId });
 };
 
 
@@ -455,7 +451,7 @@ const closeDevMenu = () => {
 const handleLoggedOut = () => {
     isAuthenticated.value = false;
     localStorage.removeItem('authToken');
-    activeTab.value = 'login';
+    setActiveTab('login');
     syncService.destroy();
 
     clearUserData();
@@ -465,7 +461,7 @@ const handleLoggedOut = () => {
 
 const handleLoggedIn = async () => {
     isAuthenticated.value = true;
-    activeTab.value = 'home';
+    setActiveTab('home');
 
     await initializeUserData();
 
@@ -475,7 +471,7 @@ const handleLoggedIn = async () => {
 };
 
 const handleRegistered = () => {
-    activeTab.value = 'login';
+    setActiveTab('login');
     addToast(t('toast.auth.registration_success'), 'success');
 };
 
@@ -492,7 +488,6 @@ const views: Record<string, any> = {
     register: RegisterView,
     friends: FriendsView,
     'user-profile': UserProfileView,
-    'blocked-users': BlockedUsersView,
     admin: AdminView,
     marketplace: Marketplace,
 };
@@ -570,10 +565,6 @@ const initializeUserData = async () => {
 };
 
 const getTransitionName = () => {
-    if (isNavigatingToProfile.value) {
-        return 'profile-slide';
-    }
-
     const tabOrder = [
         'home',
         'custom_clients',
@@ -603,9 +594,11 @@ const getTransitionName = () => {
 onMounted(() => {
     initApp();
     checkAuthStatus();
+
     (async () => {
         isDev.value = await getIsDevelopment();
     })();
+
     listen('client-launched', async (event) => {
         const payload = event.payload as {
             id: number;
@@ -630,6 +623,7 @@ onMounted(() => {
             console.error('Failed to update playing status:', error);
         }
     });
+
     listen('client-exited', async (event) => {
         const payload = event.payload as {
             id: number;
@@ -663,6 +657,15 @@ onMounted(() => {
 
         console.log('Received status update event from backend:', payload);
         console.log('Backend status event ignored to prevent conflicts');
+    });
+
+    listen('toast-error', (event) => {
+        console.log(event);
+
+        let message: string;
+        message = String(event.payload);
+
+        addToast(message, 'error');
     });
 
     window.addEventListener('beforeunload', () => {
@@ -764,7 +767,7 @@ onUnmounted(() => {
             :is-online="isOnline" :is-authenticated="isAuthenticated" />
         <main class="ml-20 w-full p-6 bg-base-200 min-h-screen overflow-scroll overflow-x-hidden">
             <transition :name="getTransitionName()" mode="out-in" appear>
-                <div :class="{ 'profile-transition': isNavigatingToProfile }" :key="activeTab + (currentUserId || '')">
+                <div :key="activeTab + (currentUserId || '')">
                     <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"
                         @registered="handleRegistered" @change-view="setActiveTab" @show-user-profile="showUserProfile"
                         @back-to-friends="() => setActiveTab('friends')"
@@ -860,38 +863,16 @@ onUnmounted(() => {
     filter: blur(2px);
 }
 
-.profile-slide-enter-active,
-.profile-slide-leave-active {
-    transition: all 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.profile-slide-enter-from {
-    opacity: 0;
-    transform: translateX(80px) scale(0.9);
-}
-
-.profile-slide-leave-to {
-    opacity: 0;
-    transform: translateX(-30px);
-}
-
-.profile-transition {
-    transition:
-        transform 0.7s cubic-bezier(0.23, 1, 0.32, 1),
-        opacity 0.7s cubic-bezier(0.23, 1, 0.32, 1);
-}
 
 .slide-up-appear-active,
 .slide-down-appear-active,
-.fade-slide-appear-active,
-.profile-slide-appear-active {
+.fade-slide-appear-active {
     transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-up-appear-from,
 .slide-down-appear-from,
-.fade-slide-appear-from,
-.profile-slide-appear-from {
+.fade-slide-appear-from {
     opacity: 0;
     transform: translateY(20px) scale(0.98);
 }

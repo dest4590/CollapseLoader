@@ -30,6 +30,7 @@ import {
     BadgeCheck,
     FileText,
     FolderSync,
+    CloudCog,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -96,6 +97,21 @@ const ramOptions = [
     { mb: 32768, label: '32 GB' },
 ];
 const ramOptionIndex = ref(0);
+const systemMemory = ref<number | null>(null);
+const showRamWarning = ref(false);
+
+const selectedRamMb = computed(() => ramOptions[ramOptionIndex.value]?.mb || 0);
+
+const checkRamWarning = () => {
+    if (selectedRamMb.value > 6144) {
+        showRamWarning.value = true;
+    } else {
+        showRamWarning.value = false;
+    }
+};
+
+watch(ramOptionIndex, checkRamWarning);
+watch(systemMemory, checkRamWarning);
 
 const flags = reactive<Flags>({});
 
@@ -393,6 +409,10 @@ const getFormattedLabel = (key: string) => {
         return t('settings.telemetry');
     }
 
+    if (key === 'dpi_bypass') {
+        return "DPI Bypass (Zapret by bol-van)";
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
@@ -525,6 +545,15 @@ onMounted(async () => {
     await loadSettings();
     await loadFlags();
     await loadAccounts();
+
+    try {
+        const memoryBytes = await invoke<number>('get_system_memory');
+        systemMemory.value = Math.floor(memoryBytes / (1024 * 1024));
+        console.log('System memory detected:', systemMemory.value, 'MB');
+    } catch (error) {
+        console.error('Failed to get system memory:', error);
+        systemMemory.value = null;
+    }
 });
 
 onUnmounted(() => {
@@ -630,6 +659,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
                                 <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
                                 <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
+                                <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
 
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
@@ -652,6 +682,9 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <p class="text-xs text-base-content/70">
                                     {{ getSettingDescription(key) }}
                                 </p>
+                                <div v-if="showRamWarning" class="alert alert-warning mt-2">
+                                    <span>{{ t('settings.ram.warning', { selectedRamMb }) }}</span>
+                                </div>
                             </div>
                             <div v-else-if="key === 'language'" class="space-y-3">
                                 <select :value="currentLanguage" @change="
@@ -1120,7 +1153,6 @@ html[data-reduce-motion='true'] .animate-fadeInUp,
 html[data-reduce-motion='true'] .animate-slide-up,
 html[data-reduce-motion='true'] .animate-slide-in-right,
 html[data-reduce-motion='true'] .animate-bounce-gentle,
-html[data-reduce-motion='true'] .animate-pulse-gentle,
 html[data-reduce-motion='true'] .slide-up,
 html[data-reduce-motion='true'] .tab-switch-enter-from,
 html[data-reduce-motion='true'] .tab-switch-leave-to,

@@ -3,3 +3,4 @@ pub mod globals;
 pub mod helpers;
 pub mod logging;
 pub mod tags;
+pub mod dpi;

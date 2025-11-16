@@ -28,3 +28,7 @@ pub fn emit_to_main_window_filtered<S: Serialize + Clone>(
         );
     }
 }
+
+pub fn is_development_enabled() -> bool {
+    env!("DEVELOPMENT").to_lowercase() == "true"
+}

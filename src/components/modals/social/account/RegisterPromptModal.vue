@@ -1,5 +1,5 @@
 <template>
-    <div v-if="modelValue" class="fixed inset-0 flex items-center justify-center z-[2000] slide-up backdrop-blur-sm">
+    <div v-if="modelValue" class="fixed inset-0 flex items-center justify-center z-2000 slide-up backdrop-blur-sm">
         <div class="custom-modal-overlay" @click.self="closeModal">
             <div class="custom-modal-content">
                 <div class="custom-modal-header">

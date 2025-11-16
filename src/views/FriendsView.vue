@@ -15,7 +15,7 @@
                 </button>
 
                 <div ref="blockedDropdown"
-                    class="hidden dropdown-content card card-compact w-72 p-2 shadow bg-base-100 border border-base-300 absolute right-0 mt-2 z-[9999]"
+                    class="hidden dropdown-content card card-compact w-72 p-2 shadow bg-base-100 border border-base-300 absolute right-0 mt-2 z-9999"
                     role="dialog">
                     <div class="card-body p-2">
                         <div class="space-y-2 max-h-64 overflow-y-auto">

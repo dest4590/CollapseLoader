@@ -1,3 +1,7 @@
+#[cfg(target_os = "windows")]
+use crate::core::platform::messagebox;
+use crate::core::utils::discord_rpc;
+use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use tauri::Manager;
 
 use crate::core::{
@@ -26,18 +30,11 @@ pub fn check_webkit_warning() -> Result<(), StartupError> {
 
 #[cfg(target_os = "windows")]
 pub fn handle_startup_error(error: &StartupError) {
-    use native_dialog::DialogBuilder;
-
     if let StartupError::WebView2NotInstalled = error {
-        use native_dialog::MessageLevel;
-
-        let should_install = DialogBuilder::message()
-            .set_level(MessageLevel::Info)
-            .set_title("WebView2 Not Installed")
-            .set_text("WebView2 is not installed. Would you like to download and install it now?")
-            .confirm()
-            .show()
-            .unwrap_or(false);
+        let should_install = messagebox::show_confirm(
+            "WebView2 Not Installed",
+            "WebView2 is not installed. Would you like to download and install it now?",
+        );
 
         if should_install {
             if let Err(install_error) = crate::core::platform::windows::attempt_install_webview2() {
@@ -45,9 +42,7 @@ pub fn handle_startup_error(error: &StartupError) {
             } else {
                 let message = "WebView2 has been installed. Please restart the application.";
                 eprintln!("{message}");
-                DialogBuilder::message()
-                    .set_text(message)
-                    .set_title("Restart Required");
+                messagebox::show_message("Restart Required", message);
 
                 std::process::exit(0);
             }
@@ -130,6 +125,7 @@ pub fn run() {
             commands::settings::add_favorite_client,
             commands::settings::remove_favorite_client,
             commands::settings::is_client_favorite,
+            commands::settings::get_system_memory,
             commands::utils::get_version,
             commands::utils::is_development,
             commands::utils::get_auth_url,
@@ -147,11 +143,10 @@ pub fn run() {
         ])
         .setup(|app| {
             let app_handle = app.handle();
-            *core::storage::data::APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
+            *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
-            crate::log_debug!("Tauri setup: application handle stored");
+            log_debug!("Tauri setup: application handle stored");
 
-            // dev info
             let is_dev = env!("DEVELOPMENT") == "true";
             let git_hash = env!("GIT_HASH")
                 .to_string()
@@ -177,16 +172,28 @@ pub fn run() {
                 }
             }
 
-            crate::log_info!("Starting CollapseLoader: {}", window_title);
+            Logger::print_startup_banner(
+                "CollapseLoader",
+                version,
+                &codename,
+                is_dev,
+                &git_hash,
+                &git_branch,
+            );
+
             Analytics::send_start_analytics();
-            crate::log_debug!("Analytics start event sent");
+
+            #[cfg(target_os = "windows")]
+            {
+                use crate::core::utils::dpi;
+                dpi::start_winws_background_if_configured();
+            }
 
             Ok(())
         })
         .on_window_event(|_window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                log_info!("Window close requested. Shutting down Discord RPC.");
-                core::utils::discord_rpc::shutdown();
+                discord_rpc::shutdown();
             }
         })
         .run(tauri::generate_context!())

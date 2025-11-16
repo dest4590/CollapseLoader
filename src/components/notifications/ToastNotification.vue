@@ -215,7 +215,8 @@ const handleMouseLeave = () => {
 }
 
 .toast-error .toast-progress {
-    background-color: var(--color-error, #f44336);}
+    background-color: var(--color-error, #f44336);
+}
 
 .toast-info .toast-progress {
     background-color: var(--color-info, #2196f3);
