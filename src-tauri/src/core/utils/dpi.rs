@@ -156,12 +156,20 @@ fn start_winws_background_inner() -> Result<(), String> {
 
     let mut args: Vec<String> = Vec::new();
 
-    args.push("--wf-tcp=80,443".to_string());
-    args.push("--wf-udp=443".to_string());
+    args.push("--wf-tcp=80,443,2053,2083,2087,2096,8443".to_string());
+    args.push("--wf-udp=443,19294-19344,50000-50100".to_string());
     args.push("--filter-udp=443".to_string());
     args.push(format!(
         "--hostlist={}",
         p(lists_dir.join("list-general.txt"))
+    ));
+    args.push(format!(
+        "--hostlist-exclude={}",
+        p(lists_dir.join("list-exclude.txt"))
+    ));
+    args.push(format!(
+        "--ipset-exclude={}",
+        p(lists_dir.join("ipset-exclude.txt"))
     ));
     args.push("--dpi-desync=fake".to_string());
     args.push("--dpi-desync-repeats=6".to_string());
@@ -170,6 +178,113 @@ fn start_winws_background_inner() -> Result<(), String> {
         p(bin_dir.join("quic_initial_www_google_com.bin"))
     ));
     args.push("--new".to_string());
+
+    args.push("--filter-udp=19294-19344,50000-50100".to_string());
+    args.push("--filter-l7=discord,stun".to_string());
+    args.push("--dpi-desync=fake".to_string());
+    args.push("--dpi-desync-repeats=6".to_string());
+    args.push("--new".to_string());
+
+    args.push("--filter-tcp=2053,2083,2087,2096,8443".to_string());
+    args.push("--hostlist-domains=discord.media".to_string());
+    args.push("--dpi-desync=multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=568".to_string());
+    args.push("--dpi-desync-split-pos=1".to_string());
+    args.push(format!(
+        "--dpi-desync-split-seqovl-pattern={}",
+        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
+    ));
+    args.push("--new".to_string());
+
+    args.push("--filter-tcp=443".to_string());
+    args.push(format!(
+        "--hostlist={}",
+        p(lists_dir.join("list-google.txt"))
+    ));
+    args.push("--ip-id=zero".to_string());
+    args.push("--dpi-desync=multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=681".to_string());
+    args.push("--dpi-desync-split-pos=1".to_string());
+    args.push(format!(
+        "--dpi-desync-split-seqovl-pattern={}",
+        p(bin_dir.join("tls_clienthello_www_google_com.bin"))
+    ));
+    args.push("--new".to_string());
+
+    args.push("--filter-tcp=80,443".to_string());
+    args.push(format!(
+        "--hostlist={}",
+        p(lists_dir.join("list-general.txt"))
+    ));
+    args.push(format!(
+        "--hostlist-exclude={}",
+        p(lists_dir.join("list-exclude.txt"))
+    ));
+    args.push(format!(
+        "--ipset-exclude={}",
+        p(lists_dir.join("ipset-exclude.txt"))
+    ));
+    args.push("--dpi-desync=multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=568".to_string());
+    args.push("--dpi-desync-split-pos=1".to_string());
+    args.push(format!(
+        "--dpi-desync-split-seqovl-pattern={}",
+        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
+    ));
+    args.push("--new".to_string());
+
+    args.push("--filter-udp=443".to_string());
+    args.push(format!("--ipset={}", p(lists_dir.join("ipset-all.txt"))));
+    args.push(format!(
+        "--hostlist-exclude={}",
+        p(lists_dir.join("list-exclude.txt"))
+    ));
+    args.push(format!(
+        "--ipset-exclude={}",
+        p(lists_dir.join("ipset-exclude.txt"))
+    ));
+    args.push("--dpi-desync=fake".to_string());
+    args.push("--dpi-desync-repeats=6".to_string());
+    args.push(format!(
+        "--dpi-desync-fake-quic={}",
+        p(bin_dir.join("quic_initial_www_google_com.bin"))
+    ));
+    args.push("--new".to_string());
+
+    args.push("--filter-tcp=80,443".to_string());
+    args.push(format!("--ipset={}", p(lists_dir.join("ipset-all.txt"))));
+    args.push(format!(
+        "--hostlist-exclude={}",
+        p(lists_dir.join("list-exclude.txt"))
+    ));
+    args.push(format!(
+        "--ipset-exclude={}",
+        p(lists_dir.join("ipset-exclude.txt"))
+    ));
+    args.push("--dpi-desync=multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=568".to_string());
+    args.push("--dpi-desync-split-pos=1".to_string());
+    args.push(format!(
+        "--dpi-desync-split-seqovl-pattern={}",
+        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
+    ));
+    args.push("--new".to_string());
+
+    args.push("--filter-udp=443".to_string());
+    args.push(format!("--ipset={}", p(lists_dir.join("ipset-all.txt"))));
+    args.push(format!(
+        "--ipset-exclude={}",
+        p(lists_dir.join("ipset-exclude.txt"))
+    ));
+    args.push("--dpi-desync=fake".to_string());
+    args.push("--dpi-desync-autottl=2".to_string());
+    args.push("--dpi-desync-repeats=12".to_string());
+    args.push("--dpi-desync-any-protocol=1".to_string());
+    args.push(format!(
+        "--dpi-desync-fake-unknown-udp={}",
+        p(bin_dir.join("quic_initial_www_google_com.bin"))
+    ));
+    args.push("--dpi-desync-cutoff=n2".to_string());
 
     use std::os::windows::process::CommandExt;
     use std::process::Command;
