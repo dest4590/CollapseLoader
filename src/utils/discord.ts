@@ -4,7 +4,6 @@ export const DISCORD_STATE_KEYS: Record<string, string> = {
     news: 'discord.states.browsing_news',
     settings: 'discord.states.configuring_settings',
     friends: 'discord.states.browsing_friends',
-    'blocked-users': 'discord.states.configuring_settings',
     theme: 'discord.states.enjoying_visuals',
     app_logs: 'discord.states.watching_client_behavior',
     'user-profile': 'discord.states.in_profile',

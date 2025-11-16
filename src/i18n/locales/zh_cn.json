@@ -560,7 +560,9 @@
         "multiple_duplicated": "已成功复制 {count} 个预设",
         "multiple_exported": "已将 {count} 个预设导出到剪贴板"
       }
-    }
+    },
+    "dark": "黑暗的",
+    "light": "光"
   },
   "errors": {
     "clients_load_failed": "加载客户端列表失败：{error}",
@@ -625,7 +627,8 @@
       "cordshare": "与好友分享您的坐标，即使您不在已加载区块内，也能在游戏中显示您的位置。",
       "irc_chat": "在每个客户端中提供的 IRC 聊天中与其他 CollapseLoader 用户聊天。",
       "hash_verify": "启用哈希校验以确保下载的客户端未损坏。这有助于保持客户端最新。",
-      "sync_client_settings": "在所有客户端之间同步选项、资源包及其他设置。"
+      "sync_client_settings": "在所有客户端之间同步选项、资源包及其他设置。",
+      "dpi_bypass": "如果客户端下载卡在 0%、客户端无法启动或客户端加载失败，则启用此功能。"
     },
     "telemetry": "分析",
     "open_data": "打开数据文件夹",
@@ -671,7 +674,10 @@
       "failed": "更改数据文件夹失败：{error}",
       "restart_required": "请重启应用以使更改生效"
     },
-    "sync_client_settings": "同步客户端设置"
+    "sync_client_settings": "同步客户端设置",
+    "ram": {
+      "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
+    }
   },
   "userProfile": {
     "back_to_friends": "返回好友",

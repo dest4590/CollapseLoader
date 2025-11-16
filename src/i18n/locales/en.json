@@ -560,7 +560,9 @@
         "multiple_duplicated": "{count} presets duplicated successfully",
         "multiple_exported": "{count} presets exported to clipboard"
       }
-    }
+    },
+    "dark": "Dark",
+    "light": "Light"
   },
   "logs": {
     "copy_logs": "Copy logs",

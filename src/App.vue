@@ -28,7 +28,6 @@ import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AdminView from './views/AdminView.vue';
 import AppLogs from './views/AppLogs.vue';
-import BlockedUsersView from './views/BlockedUsersView.vue';
 import FriendsView from './views/FriendsView.vue';
 import Home from './views/Home.vue';
 import LoginView from './views/LoginView.vue';
@@ -114,24 +113,23 @@ const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
 
-const setActiveTab = (tab: string) => {
+const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
     previousTab.value = router.currentRoute.value;
+    isNavigatingToProfile.value = false;
+    if (opts && Object.prototype.hasOwnProperty.call(opts, 'userId')) {
+        currentUserId.value = opts!.userId ?? null;
+    } else {
+        currentUserId.value = null;
+    }
     router.push(tab);
-    currentUserId.value = null;
 };
 
-const showUserProfile = (userId: number | string) => {
+const showUserProfile = (userId: number) => {
     previousTab.value = router.currentRoute.value;
     isNavigatingToProfile.value = true;
 
-    if (userId === 'blocked-users') {
-        setActiveTab('blocked-users');
-        currentUserId.value = null;
-    } else {
-        currentUserId.value = userId as number;
-        setActiveTab('user-profile');
-    }
+    setActiveTab('user-profile', { userId });
 };
 
 
@@ -490,7 +488,6 @@ const views: Record<string, any> = {
     register: RegisterView,
     friends: FriendsView,
     'user-profile': UserProfileView,
-    'blocked-users': BlockedUsersView,
     admin: AdminView,
     marketplace: Marketplace,
 };

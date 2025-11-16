@@ -10,7 +10,6 @@ export const VALID_TABS = [
     'register',
     'friends',
     'user-profile',
-    'blocked-users',
     'admin',
     'news',
     'marketplace',
