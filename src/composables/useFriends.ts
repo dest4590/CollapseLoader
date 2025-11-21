@@ -22,15 +22,6 @@ interface FriendRequest {
     updated_at: string;
 }
 
-interface FriendsMetrics {
-    totalFriends: number;
-    onlineFriends: number;
-    lastBulkUpdate: number;
-    cacheHitRate: number;
-    statusUpdateCount: number;
-    avgStatusResponseTime: number;
-}
-
 interface GlobalFriendsState {
     friends: Friend[];
     sentRequests: FriendRequest[];
@@ -39,7 +30,6 @@ interface GlobalFriendsState {
     isLoaded: boolean;
     lastUpdated: string | null;
     lastStatusUpdate: number;
-    bulkUpdateCount: number;
 }
 
 const globalFriendsState = reactive<GlobalFriendsState>({
@@ -49,31 +39,12 @@ const globalFriendsState = reactive<GlobalFriendsState>({
     isLoading: false,
     isLoaded: false,
     lastUpdated: null,
-    lastStatusUpdate: 0,
-    bulkUpdateCount: 0
-});
-
-const friendsMetrics = reactive<FriendsMetrics>({
-    totalFriends: 0,
-    onlineFriends: 0,
-    lastBulkUpdate: 0,
-    cacheHitRate: 0,
-    statusUpdateCount: 0,
-    avgStatusResponseTime: 0
+    lastStatusUpdate: 0
 });
 
 const isStatusLoading = ref(false);
-const previousReceivedCount = ref(0);
 const statusUpdateInterval: { current: NodeJS.Timeout | null } = { current: null };
-
-const statusUpdateConfig = {
-    baseInterval: 45000,
-    maxInterval: 180000,
-    currentInterval: 45000,
-    backoffMultiplier: 1.3,
-    consecutiveNoChanges: 0,
-    maxNoChanges: 4
-};
+const STATUS_UPDATE_INTERVAL = 45000;
 
 const isAuthenticated = computed(() => !!localStorage.getItem('authToken'));
 
@@ -125,22 +96,11 @@ export function useFriends() {
                 optimized: batchData.performance_info?.optimized || false
             });
 
-            checkForNewRequests({
-                sent: batchData.requests?.sent || [],
-                received: batchData.requests?.received || []
-            });
-
             globalFriendsState.friends = batchData.friends || [];
             globalFriendsState.sentRequests = batchData.requests?.sent || [];
             globalFriendsState.receivedRequests = batchData.requests?.received || [];
             globalFriendsState.lastUpdated = new Date().toISOString();
             globalFriendsState.isLoaded = true;
-            globalFriendsState.bulkUpdateCount++;
-
-            friendsMetrics.totalFriends = globalFriendsState.friends.length;
-            friendsMetrics.onlineFriends = onlineFriendsCount.value;
-            friendsMetrics.lastBulkUpdate = Date.now();
-            friendsMetrics.cacheHitRate = apiClient.getCacheStats().hitRate;
 
             if (!statusUpdateInterval.current) {
                 startStatusUpdates();
@@ -172,9 +132,6 @@ export function useFriends() {
             globalFriendsState.lastUpdated = new Date().toISOString();
             globalFriendsState.isLoaded = true;
 
-            friendsMetrics.totalFriends = globalFriendsState.friends.length;
-            friendsMetrics.onlineFriends = onlineFriendsCount.value;
-
             console.log('Friends data loaded successfully via fallback method');
         } catch (fallbackError) {
             console.error('Fallback friends data loading also failed:', fallbackError);
@@ -192,7 +149,6 @@ export function useFriends() {
 
         try {
             isStatusLoading.value = true;
-            friendsMetrics.statusUpdateCount++;
 
             const statusesData = await apiClient.get('/auth/friends/status/');
 
@@ -215,8 +171,6 @@ export function useFriends() {
             });
 
             const responseTime = Date.now() - startTime;
-            friendsMetrics.avgStatusResponseTime = friendsMetrics.avgStatusResponseTime * 0.8 + responseTime * 0.2;
-            friendsMetrics.onlineFriends = onlineFriendsCount.value;
             globalFriendsState.lastStatusUpdate = Date.now();
 
             console.log(`Friend statuses updated in ${responseTime}ms (${hasChanges ? 'with changes' : 'no changes'})`);
@@ -245,13 +199,12 @@ export function useFriends() {
                 return;
             }
 
-            const hasChanges = await updateFriendStatuses();
-            adjustStatusUpdateFrequency(hasChanges);
+            await updateFriendStatuses();
         };
 
         runStatusUpdate();
 
-        statusUpdateInterval.current = setInterval(runStatusUpdate, statusUpdateConfig.currentInterval);
+        statusUpdateInterval.current = setInterval(runStatusUpdate, STATUS_UPDATE_INTERVAL);
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
@@ -259,50 +212,7 @@ export function useFriends() {
             }
         });
 
-        console.log(`Started status updates with ${statusUpdateConfig.currentInterval}ms interval`);
-    };
-
-
-    const adjustStatusUpdateFrequency = (hasChanges: boolean): void => {
-        if (hasChanges) {
-            statusUpdateConfig.currentInterval = statusUpdateConfig.baseInterval;
-            statusUpdateConfig.consecutiveNoChanges = 0;
-        } else {
-            statusUpdateConfig.consecutiveNoChanges++;
-
-            if (statusUpdateConfig.consecutiveNoChanges >= statusUpdateConfig.maxNoChanges) {
-                const newInterval = Math.min(
-                    statusUpdateConfig.currentInterval * statusUpdateConfig.backoffMultiplier,
-                    statusUpdateConfig.maxInterval
-                );
-
-                if (newInterval !== statusUpdateConfig.currentInterval) {
-                    statusUpdateConfig.currentInterval = newInterval;
-                    console.log(`Increased status update interval to ${newInterval}ms (no changes for ${statusUpdateConfig.consecutiveNoChanges} updates)`);
-                }
-            }
-        }
-
-        if (statusUpdateInterval.current) {
-            clearInterval(statusUpdateInterval.current);
-            statusUpdateInterval.current = setInterval(async () => {
-                if (isAuthenticated.value && globalFriendsState.friends.length > 0) {
-                    const changes = await updateFriendStatuses();
-                    adjustStatusUpdateFrequency(changes);
-                }
-            }, statusUpdateConfig.currentInterval);
-        }
-    };
-
-
-    const checkForNewRequests = (currentRequests: { sent: FriendRequest[]; received: FriendRequest[] }): FriendRequest[] => {
-        if (currentRequests.received.length > previousReceivedCount.value) {
-            const knownRequestIds = new Set(globalFriendsState.receivedRequests.map(req => req.id));
-            const newRequests = currentRequests.received.filter(req => !knownRequestIds.has(req.id));
-            previousReceivedCount.value = currentRequests.received.length;
-            return newRequests;
-        }
-        return [];
+        console.log(`Started status updates with ${STATUS_UPDATE_INTERVAL}ms interval`);
     };
 
     const searchUsers = async (query: string): Promise<any[]> => {
@@ -372,7 +282,6 @@ export function useFriends() {
             const index = globalFriendsState.friends.findIndex(friend => friend.id === userId);
             if (index > -1) {
                 globalFriendsState.friends.splice(index, 1);
-                friendsMetrics.totalFriends = globalFriendsState.friends.length;
             }
 
             console.log('Friend removed');
@@ -404,15 +313,11 @@ export function useFriends() {
         globalFriendsState.isLoaded = false;
         globalFriendsState.lastUpdated = null;
         globalFriendsState.lastStatusUpdate = 0;
-        previousReceivedCount.value = 0;
 
         if (statusUpdateInterval.current) {
             clearInterval(statusUpdateInterval.current);
             statusUpdateInterval.current = null;
         }
-
-        friendsMetrics.totalFriends = 0;
-        friendsMetrics.onlineFriends = 0;
     };
 
 
@@ -454,7 +359,6 @@ export function useFriends() {
         removeFriend,
 
         getOnlineFriends,
-        checkForNewRequests,
 
         startStatusUpdates,
         stopStatusUpdates,
