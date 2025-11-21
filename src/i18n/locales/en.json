@@ -408,7 +408,8 @@
     },
     "filters": {
       "installed": "Installed"
-    }
+    },
+    "clear_filters": "Clear filters"
   },
   "theme": {
     "actions": {

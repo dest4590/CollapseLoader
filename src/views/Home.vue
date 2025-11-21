@@ -75,6 +75,8 @@ const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
 
+const searchBarRef = ref<any>(null);
+
 const HOME_ANIM_KEY = 'homeAnimPlayed';
 const hasAnimatedBefore = ref<boolean>(false);
 try {
@@ -168,6 +170,16 @@ const applyFiltersAndSort = () => {
     }
 };
 
+const clearAllFilters = () => {
+    searchQuery.value = '';
+    debouncedSearchQuery.value = '';
+    activeFilters.value = {
+        fabric: false,
+        vanilla: false,
+        installed: false
+    };
+};
+
 let filtersDebounceTimer: number | null = null;
 const isFilterUpdateScheduled = ref(false);
 
@@ -182,6 +194,13 @@ const scheduleFilterUpdate = () => {
         filtersDebounceTimer = null;
         isFilterUpdateScheduled.value = false;
     }, 200);
+};
+
+const onBeforeLeave = (el: Element) => {
+    const card = el as HTMLElement;
+    card.style.left = `${card.offsetLeft}px`;
+    card.style.top = `${card.offsetTop}px`;
+    card.style.width = `${card.offsetWidth}px`;
 };
 
 watch(
@@ -1512,6 +1531,12 @@ const selectAllClients = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+        event.preventDefault();
+        searchBarRef.value?.focus();
+        return;
+    }
+
     if (event.key === 'Control' && expandedClientId.value === null) {
         if (isCtrlPressed.value) return;
 
@@ -1712,8 +1737,8 @@ onBeforeUnmount(() => {
 
 <template>
     <div :class="['flex items-center gap-2 mb-6 top-menu', viewVisible ? 'home-entered' : 'home-hidden']">
-        <SearchBar @search="handleSearch" class="flex-1 mr-2 home-search" :initial-value="searchQuery"
-            :placeholder="t('home.search_placeholder')" />
+        <SearchBar ref="searchBarRef" @search="handleSearch" class="flex-1 mr-2 home-search"
+            :initial-value="searchQuery" :placeholder="t('home.search_placeholder')" />
         <FiltersMenu v-model:activeFilters="activeFilters" v-model:clientSortKey="clientSortKey"
             v-model:clientSortOrder="clientSortOrder" />
         <div v-if="halloweenActive" class="tooltip tooltip-bottom" :data-tip="t('events.halloween.tooltip')">
@@ -1741,16 +1766,23 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <div v-if="filteredClients.length === 0 && !error" class="text-center py-10 text-base-content/70 animate-fadeIn">
+    <div v-if="filteredClients.length === 0 && !error"
+        class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
         <div class="text-lg font-semibold mb-2">{{ t('home.no_clients') }}</div>
-        <div class="text-sm">{{ t('home.adjust_search') }}</div>
+        <div class="text-sm mb-4">{{ t('home.adjust_search') }}</div>
+        <button v-if="searchQuery || activeFilters.fabric || activeFilters.vanilla || activeFilters.installed"
+            @click="clearAllFilters" class="btn btn-sm btn-primary">
+            {{ t('home.clear_filters') }}
+        </button>
     </div>
 
     <div v-if="error" class="my-4 text-red-500 animate-fadeIn flex flex-col items-center justify-center h-full">
         <span>{{ error }}</span>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <TransitionGroup name="client-list" tag="div"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
+        @before-leave="onBeforeLeave">
         <div v-for="(client, index) in filteredClients" :key="client.id"
             :class="['client-card-item', !hasStaggerPlayed ? 'stagger-animate' : '']"
             :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }" v-memo="[
@@ -1778,7 +1810,7 @@ onBeforeUnmount(() => {
                 @show-context-menu="showContextMenu" @client-click="handleClientClick"
                 @expanded-state-changed="handleExpandedStateChanged" />
         </div>
-    </div>
+    </TransitionGroup>
 
     <div v-if="contextMenu.visible" :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
         class="fixed z-40 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
@@ -2175,5 +2207,21 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(15px);
     animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.client-list-move,
+.client-list-enter-active,
+.client-list-leave-active {
+    transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1), opacity 0.2s ease;
+}
+
+.client-list-leave-active {
+    position: absolute;
+    z-index: 0;
+}
+
+.client-list-enter-from,
+.client-list-leave-to {
+    opacity: 0;
 }
 </style>

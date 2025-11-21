@@ -408,7 +408,8 @@
     },
     "filters": {
       "installed": "Встановлені"
-    }
+    },
+    "clear_filters": "Очистити фільтри"
   },
   "theme": {
     "actions": {

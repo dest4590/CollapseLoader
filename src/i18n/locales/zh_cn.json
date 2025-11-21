@@ -408,7 +408,8 @@
     },
     "filters": {
       "installed": "已安装"
-    }
+    },
+    "clear_filters": "清除筛选条件"
   },
   "theme": {
     "actions": {

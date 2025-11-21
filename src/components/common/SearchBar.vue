@@ -1,22 +1,28 @@
 <template>
-    <div class="search-container">
+    <div class="search-container group">
         <div class="relative">
-            <input type="text"
-                class="input input-bordered w-full pl-10 pr-10 transition-colors duration-300 z-10 relative"
+            <input ref="inputRef" type="text"
+                class="input input-bordered w-full pl-10 pr-12 transition-all duration-300 z-10 relative bg-base-200/50 focus:bg-base-100 focus:shadow-lg"
                 :placeholder="t('home.search_placeholder')" v-model="searchTerm" @input="onSearch" />
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-20">
-                <Search class="w-5 h-5 text-gray-400" :class="{ 'search-icon-active': searchTerm }" />
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-20 transition-colors duration-300"
+                :class="{ 'text-primary': isFocused || searchTerm }">
+                <Search class="w-5 h-5" :class="[isFocused || searchTerm ? 'text-primary' : 'text-base-content/50']" />
             </div>
-            <div v-if="searchTerm" class="absolute right-3 top-1/2 -translate-y-1/2 z-20 cursor-pointer"
-                @click="clearSearch">
-                <X class="w-4 h-4 text-gray-400 hover:text-gray-600" />
+
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex items-center gap-2">
+                <Transition name="scale">
+                    <button v-if="searchTerm" @click="clearSearch"
+                        class="btn btn-circle btn-ghost btn-xs hover:bg-base-content/10">
+                        <X class="w-4 h-4 text-base-content/70" />
+                    </button>
+                </Transition>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Search, X } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
@@ -28,6 +34,8 @@ const emit = defineEmits(['search']);
 
 const { t } = useI18n();
 const searchTerm = ref(props.initialValue || '');
+const inputRef = ref<HTMLInputElement | null>(null);
+const isFocused = ref(false);
 
 const onSearch = () => {
     emit('search', searchTerm.value);
@@ -36,7 +44,14 @@ const onSearch = () => {
 const clearSearch = () => {
     searchTerm.value = '';
     onSearch();
+    inputRef.value?.focus();
 };
+
+const focus = () => {
+    inputRef.value?.focus();
+};
+
+defineExpose({ focus });
 
 watch(
     () => props.initialValue,
@@ -46,6 +61,20 @@ watch(
         }
     }
 );
+
+const handleFocus = () => { isFocused.value = true; };
+const handleBlur = () => { isFocused.value = false; };
+
+onMounted(() => {
+    inputRef.value?.addEventListener('focus', handleFocus);
+    inputRef.value?.addEventListener('blur', handleBlur);
+});
+
+onBeforeUnmount(() => {
+    inputRef.value?.removeEventListener('focus', handleFocus);
+    inputRef.value?.removeEventListener('blur', handleBlur);
+});
+
 </script>
 
 <style scoped>
@@ -65,17 +94,14 @@ watch(
     }
 }
 
-.search-icon-active {
-    color: var(--color-primary);
+.scale-enter-active,
+.scale-leave-active {
+    transition: all 0.2s ease;
 }
 
-input {
-    background-color: transparent;
-    backdrop-filter: blur(10px);
-}
-
-input:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb), 0.2);
+.scale-enter-from,
+.scale-leave-to {
+    opacity: 0;
+    transform: scale(0.8);
 }
 </style>

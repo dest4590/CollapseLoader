@@ -110,7 +110,7 @@ const updateScrollbar = () => {
             const height = Math.max(visibleRatio * clientHeight, 30);
             thumbHeight.value = height;
 
-            const maxThumbTop = clientHeight - height;
+            const maxThumbTop = clientHeight - height - 20;
             const maxScrollTop = scrollHeight - clientHeight;
 
             if (maxScrollTop > 0) {
@@ -152,7 +152,7 @@ const onScrollbarDrag = (event: MouseEvent) => {
     const maxScrollTop = scrollHeight - clientHeight;
 
     let newThumbTop = dragStartTop.value + deltaY;
-    newThumbTop = Math.max(0, Math.min(newThumbTop, maxThumbTop));
+    newThumbTop = Math.max(0, Math.min(newThumbTop, maxThumbTop - 20));
 
     thumbTop.value = newThumbTop;
 
@@ -875,7 +875,10 @@ onBeforeUnmount(() => {
 
         <button @click="!isCollapsing && collapseCard()" :disabled="isCollapsing"
             class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
-            :class="{ 'opacity-0 pointer-events-none': !isAnimating, 'opacity-100 pointer-events-auto': isAnimating }">
+            :class="{
+                'opacity-0 pointer-events-none': (!isExpanded && !isAnimating) || isCollapsing,
+                'opacity-100 pointer-events-auto mr-2': (isExpanded || isAnimating) && !isCollapsing
+            }">
             <X class="w-5 h-5" />
         </button>
 
@@ -933,10 +936,10 @@ onBeforeUnmount(() => {
                                         <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                         <span v-if="client.working">{{
                                             t('home.download')
-                                        }}</span>
+                                            }}</span>
                                         <span v-else-if="!client.working">{{
                                             t('home.unavailable')
-                                        }}</span>
+                                            }}</span>
                                     </span>
                                     <span class="flex items-center get-text absolute inset-0 opacity-0">
                                         {{ client.meta.size || '0' }} MB
@@ -1089,10 +1092,14 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
+
         <transition name="fade">
             <div v-if="showScrollbar"
-                class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
-                :class="{ 'opacity-0': !isExpanded, 'opacity-100': isExpanded }">
+                class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 m-1 h-[95%] bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
+                :class="{
+                    'opacity-0': !isExpanded || isCollapsing,
+                    'opacity-100': isExpanded && !isCollapsing
+                }">
                 <div class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
                     ref="thumbRef" :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }"
                     @mousedown="startScrollbarDrag">
@@ -1230,11 +1237,7 @@ onBeforeUnmount(() => {
     position: relative;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    /* padding: 1rem; - Moved to inner container */
-
-    /* scrollbar-gutter: stable both-edges; - Removed */
     -webkit-overflow-scrolling: touch;
-    /* scrollbar-width: thin; - Removed */
     will-change: transform, width, height, top, left;
 }
 
@@ -1281,8 +1284,6 @@ onBeforeUnmount(() => {
     border: 3px solid transparent;
     background-clip: content-box;
 }
-
-
 
 .status-section {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
