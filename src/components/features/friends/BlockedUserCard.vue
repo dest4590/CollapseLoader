@@ -32,7 +32,7 @@
 import { UserCheck } from 'lucide-vue-next';
 import UserAvatar from '../../ui/UserAvatar.vue';
 import type { Friend } from '../../../services/userService';
-import { globalUserStatus } from '../../../composables/useUserStatus';
+import { useStreamerMode } from '../../../composables/useStreamerMode';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -44,18 +44,14 @@ const emit = defineEmits<{
     'view-profile': [userId: number];
 }>();
 
+const streamer = useStreamerMode();
+
 const displayNickname = computed(() => {
-    if (globalUserStatus.isStreamer.value) {
-        return '??????';
-    }
-    return props.blockedUser.nickname || props.blockedUser.username;
+    return streamer.getDisplayName(props.blockedUser.nickname, props.blockedUser.username);
 });
 
 const displayUsername = computed(() => {
-    if (globalUserStatus.isStreamer.value) {
-        return 'unknown';
-    }
-    return props.blockedUser.username;
+    return streamer.getDisplayUsername(props.blockedUser.username);
 });
 
 const handleUnblockUser = () => {

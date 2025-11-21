@@ -59,26 +59,9 @@ export function useUser() {
             globalUserState.lastUpdated = new Date().toISOString();
             globalUserState.isLoaded = true;
 
-            console.log('Global user data loaded successfully via combined endpoint');
+            console.log('Global user data loaded successfully');
         } catch (error) {
             console.error('Failed to load global user data:', error);
-
-            try {
-                console.log('Falling back to individual API calls...');
-                const [profileResult, infoResult] = await Promise.all([
-                    userService.loadUserProfile(),
-                    userService.loadUserInfo()
-                ]);
-
-                globalUserState.profile = profileResult.data;
-                globalUserState.info = infoResult.data;
-                globalUserState.lastUpdated = new Date().toISOString();
-                globalUserState.isLoaded = true;
-
-                console.log('Global user data loaded successfully via fallback');
-            } catch (fallbackError) {
-                console.error('Failed to load user data via fallback:', fallbackError);
-            }
         } finally {
             globalUserState.isLoading = false;
         }

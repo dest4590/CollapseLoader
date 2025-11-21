@@ -106,7 +106,6 @@ export function useFriends() {
         if (globalFriendsState.isLoaded && !forceRefresh &&
             globalFriendsState.lastUpdated &&
             Date.now() - new Date(globalFriendsState.lastUpdated).getTime() < 30000) {
-            console.log('Friends data is fresh, skipping reload');
             return;
         }
 
@@ -147,7 +146,7 @@ export function useFriends() {
                 startStatusUpdates();
             }
 
-            console.log('Friends data loaded successfully via batch endpoint');
+            console.log('Friends data loaded successfully');
         } catch (error) {
             console.error('Failed to load friends data via batch endpoint:', error);
 

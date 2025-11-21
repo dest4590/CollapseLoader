@@ -25,14 +25,12 @@
                             </span>
                         </div>
 
-                        <div v-else-if="friend.status.is_online && !globalUserStatus.isStreamer.value"
-                            class="flex items-center gap-2 mt-1">
+                        <div v-else-if="friend.status.is_online" class="flex items-center gap-2 mt-1">
                             <span class="w-2 h-2 rounded-full bg-success inline-block" aria-hidden="true"></span>
                             <span class="text-xs text-success">{{ t('userProfile.online') }}</span>
                         </div>
 
-                        <div v-else-if="friend.status.last_seen && !globalUserStatus.isStreamer.value"
-                            class="flex items-center gap-2 mt-1">
+                        <div v-else-if="friend.status.last_seen" class="flex items-center gap-2 mt-1">
                             <Clock class="w-3 h-3 text-base-content/50" />
                             <span class="text-xs text-base-content/50">
                                 {{ t('userProfile.last_seen') }}
@@ -78,7 +76,7 @@ import {
 import UserAvatar from '../../ui/UserAvatar.vue';
 import type { Friend } from '../../../services/userService';
 import { useI18n } from 'vue-i18n';
-import { globalUserStatus } from '../../../composables/useUserStatus';
+import { useStreamerMode } from '../../../composables/useStreamerMode';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -92,19 +90,14 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const streamer = useStreamerMode();
 
 const displayNickname = computed(() => {
-    if (globalUserStatus.isStreamer.value) {
-        return '??????';
-    }
-    return props.friend.nickname || props.friend.username;
+    return streamer.getDisplayName(props.friend.nickname, props.friend.username);
 });
 
 const displayUsername = computed(() => {
-    if (globalUserStatus.isStreamer.value) {
-        return 'unknown';
-    }
-    return props.friend.username;
+    return streamer.getDisplayUsername(props.friend.username);
 });
 
 const formatLastSeen = (lastSeen: string): string => {
@@ -147,9 +140,7 @@ const handleBlockFriend = () => {
 };
 
 const handleViewProfile = () => {
-    // emit both forms to be resilient to different listener naming conventions
     emit('viewProfile', props.friend.id);
-    //emit('view-profile', props.friend.id as any);
 };
 </script>
 

@@ -70,7 +70,7 @@ pub fn write_cache_if_changed(cache_file_path: &Path, api_data: &Value, prev_cac
                         e
                     );
                 } else {
-                    log_debug!("Cache updated for API path: {}","(see cache file)");
+                    log_debug!("Cache updated");
                 }
             }
             Err(e) => {

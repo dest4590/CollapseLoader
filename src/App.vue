@@ -94,17 +94,12 @@ const isDev = ref(false);
 const halloweenActive = ref(isHalloweenEvent());
 const halloweenGreeting = ref(getEventGreeting());
 
-const { loadUserData, displayName, isAuthenticated: userAuthenticated } = useUser();
+const { loadUserData } = useUser();
 const {
-    friends,
-    onlineFriendsCount,
     loadFriendsData,
-    isLoading: friendsLoading
 } = globalFriends;
 
 const {
-    isOnline: userOnline,
-    connectionStatus,
     initializeStatusSystem,
     stopStatusSync
 } = globalUserStatus;
@@ -245,7 +240,6 @@ const initApp = async () => {
             auth_online: boolean;
         }>('get_server_connectivity_status');
         isOnline.value = connectivity.cdn_online && connectivity.auth_online;
-        console.log('Server connectivity status:', connectivity);
 
         if (connectivity.cdn_online) bootLogService.cdnOnline();
         else bootLogService.cdnOffline();
@@ -335,7 +329,6 @@ const initApp = async () => {
 
     try {
         await fetchNewsAndUpdateUnreadCount();
-        console.log('News loaded successfully on startup');
     } catch (error) {
         console.error('Failed to load news on startup:', error);
     }
@@ -545,20 +538,8 @@ const initializeUserData = async () => {
 
     try {
         await loadUserData();
-        console.log(`User loaded: ${displayName.value || 'Unknown'}`);
-
         initializeStatusSystem();
-        console.log(`Status system initialized, connection: ${connectionStatus.value}`);
-
         await loadFriendsData();
-        console.log(`Friends loaded: ${friends.value.length} total, ${onlineFriendsCount.value} online`);
-
-        console.log(
-            'User data and friends system initialized successfully on startup'
-        );
-        console.log(`Loading state: ${friendsLoading.value ? 'Loading...' : 'Complete'}`);
-        console.log(`User authentication: ${userAuthenticated.value ? 'Authenticated' : 'Not authenticated'}`);
-        console.log(`User online status: ${userOnline.value ? 'Online' : 'Offline'}`);
     } catch (error) {
         console.error('Failed to initialize user data on startup:', error);
     }

@@ -21,7 +21,7 @@
 import { computed } from 'vue';
 import { Shield, ShieldOff, X as XIcon } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
-import { globalUserStatus } from '../../../../composables/useUserStatus';
+import { useStreamerMode } from '../../../../composables/useStreamerMode';
 
 interface User {
     id: number;
@@ -36,17 +36,17 @@ const props = defineProps<{
 
 const emit = defineEmits(['close', 'confirm']);
 const { t } = useI18n();
-
-const displayName = computed(() => props.user.nickname || props.user.username);
+const streamer = useStreamerMode();
 
 const confirmationMessage = computed(() => {
+    const maskedName = streamer.getDisplayName(props.user.nickname, props.user.username);
     if (props.action === 'block') {
         return t('modals.block_unblock_confirm.block_message', {
-            displayName: globalUserStatus.isStreamer.value ? '??' : displayName.value,
+            displayName: maskedName,
         });
     } else {
         return t('modals.block_unblock_confirm.unblock_message', {
-            displayName: globalUserStatus.isStreamer.value ? '??' : displayName.value,
+            displayName: maskedName,
         });
     }
 });
