@@ -149,28 +149,39 @@ const debouncedClientSortKey = ref(clientSortKey.value);
 const debouncedClientSortOrder = ref(clientSortOrder.value);
 
 const applyFiltersAndSort = () => {
-    if (JSON.stringify(debouncedActiveFilters.value) !== JSON.stringify(activeFilters.value)) {
+    const filtersChanged = JSON.stringify(debouncedActiveFilters.value) !== JSON.stringify(activeFilters.value);
+    const sortKeyChanged = debouncedClientSortKey.value !== clientSortKey.value;
+    const sortOrderChanged = debouncedClientSortOrder.value !== clientSortOrder.value;
+
+    if (!filtersChanged && !sortKeyChanged && !sortOrderChanged) {
+        return;
+    }
+
+    if (filtersChanged) {
         debouncedActiveFilters.value = { ...activeFilters.value };
     }
-    if (debouncedClientSortKey.value !== clientSortKey.value) {
+    if (sortKeyChanged) {
         debouncedClientSortKey.value = clientSortKey.value;
     }
-    if (debouncedClientSortOrder.value !== clientSortOrder.value) {
+    if (sortOrderChanged) {
         debouncedClientSortOrder.value = clientSortOrder.value;
     }
 };
 
 let filtersDebounceTimer: number | null = null;
+const isFilterUpdateScheduled = ref(false);
 
 const scheduleFilterUpdate = () => {
     if (filtersDebounceTimer !== null) {
         clearTimeout(filtersDebounceTimer);
     }
 
+    isFilterUpdateScheduled.value = true;
     filtersDebounceTimer = window.setTimeout(() => {
         applyFiltersAndSort();
         filtersDebounceTimer = null;
-    }, 100);
+        isFilterUpdateScheduled.value = false;
+    }, 200);
 };
 
 watch(
@@ -278,8 +289,8 @@ const isCtrlPressed = ref(false);
 let ctrlPressTimer: number | null = null;
 
 const blurHandler = () => {
-    if (ctrlPressTimer != null) {
-        clearTimeout(ctrlPressTimer as number);
+    if (ctrlPressTimer !== null) {
+        clearTimeout(ctrlPressTimer);
         ctrlPressTimer = null;
     }
     isCtrlPressed.value = false;
@@ -287,8 +298,8 @@ const blurHandler = () => {
 
 const visibilityHandler = () => {
     if (document.hidden) {
-        if (ctrlPressTimer != null) {
-            clearTimeout(ctrlPressTimer as number);
+        if (ctrlPressTimer !== null) {
+            clearTimeout(ctrlPressTimer);
             ctrlPressTimer = null;
         }
         isCtrlPressed.value = false;
@@ -442,11 +453,20 @@ const allClients = computed(() => {
 let filteredClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const filteredClients = computed(() => {
+    if (isFilterUpdateScheduled.value) {
+        return filteredClientsCache.result;
+    }
+
     const filters = debouncedActiveFilters.value;
     const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${filters.fabric}-${filters.vanilla}-${filters.installed}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.length}`;
 
     if (filteredClientsCache.key === cacheKey) {
         return filteredClientsCache.result;
+    }
+
+    if (allClients.value.length === 0) {
+        filteredClientsCache = { key: cacheKey, result: [] };
+        return [];
     }
 
     const query = debouncedSearchQuery.value.trim();
@@ -1078,9 +1098,9 @@ const setupEventListeners = async () => {
 };
 
 const invalidateClientCaches = () => {
-    filteredClientsCache = { key: '', result: [] };
-    selectedClientsDataCache = { key: '', result: [] };
-    downloadingClientsCache = { key: '', result: false };
+    if (filteredClientsCache.key) filteredClientsCache = { key: '', result: [] };
+    if (selectedClientsDataCache.key) selectedClientsDataCache = { key: '', result: [] };
+    if (downloadingClientsCache.key) downloadingClientsCache = { key: '', result: false };
 };
 
 const updateClientInstallStatus = (filename: string) => {
@@ -1263,7 +1283,7 @@ const handleClientClick = (client: Client, event: MouseEvent) => {
         }
         selectedClients.value = newSelection;
     } else {
-        selectedClients.value = new Set();
+        clearSelection();
     }
 };
 
@@ -1272,7 +1292,9 @@ const handleExpandedStateChanged = (clientId: number, isExpanded: boolean) => {
 };
 
 const clearSelection = () => {
-    selectedClients.value = new Set();
+    if (selectedClients.value.size > 0) {
+        selectedClients.value = new Set();
+    }
 };
 
 const isClientSelected = (clientId: number): boolean => {
@@ -1493,17 +1515,19 @@ const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Control' && expandedClientId.value === null) {
         if (isCtrlPressed.value) return;
 
-        if (ctrlPressTimer === null) {
-            ctrlPressTimer = window.setTimeout(() => {
-                isCtrlPressed.value = true;
-                ctrlPressTimer = null;
-            }, 100);
+        if (ctrlPressTimer !== null) {
+            clearTimeout(ctrlPressTimer);
         }
+
+        ctrlPressTimer = window.setTimeout(() => {
+            isCtrlPressed.value = true;
+            ctrlPressTimer = null;
+        }, 50);
         return;
     }
 
     if (event.key === 'Escape') {
-        selectedClients.value = new Set();
+        clearSelection();
     }
 
     if (
@@ -1521,8 +1545,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const handleKeyUp = (event: KeyboardEvent) => {
     if (event.key === 'Control') {
-        if (ctrlPressTimer != null) {
-            clearTimeout(ctrlPressTimer as number);
+        if (ctrlPressTimer !== null) {
+            clearTimeout(ctrlPressTimer);
             ctrlPressTimer = null;
         }
         isCtrlPressed.value = false;
@@ -1532,7 +1556,7 @@ const handleKeyUp = (event: KeyboardEvent) => {
 const handleDocumentClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (!target.closest('.client-card')) {
-        selectedClients.value = new Set();
+        clearSelection();
     }
 };
 
@@ -1729,7 +1753,20 @@ onBeforeUnmount(() => {
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div v-for="(client, index) in filteredClients" :key="client.id"
             :class="['client-card-item', !hasStaggerPlayed ? 'stagger-animate' : '']"
-            :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }">
+            :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }" v-memo="[
+                client.id,
+                isClientRunning(client.id),
+                isClientInstalling(client),
+                installationStatus.get(client.filename),
+                isRequirementsInProgress,
+                isAnyClientDownloading,
+                isClientFavorite(client.id),
+                isClientSelected(client.id),
+                isCtrlPressed,
+                expandedClientId,
+                hashVerifyingClients.has(client.id),
+                isAnyCardExpanded
+            ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                 :isClientInstalling="isClientInstalling(client)"
                 :installationStatus="installationStatus.get(client.filename)"

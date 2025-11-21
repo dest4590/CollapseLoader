@@ -6,7 +6,6 @@ function readStoredFlag(key: string): boolean {
     try {
         return localStorage.getItem(key) === 'true';
     } catch (e) {
-        // localStorage may not be available in some environments (SSR), or read can fail.
         console.warn('useStreamerMode: failed to read storage', e);
         return false;
     }
@@ -36,17 +35,13 @@ function emitChange(enabled: boolean) {
     }
 }
 
-/** Mask arbitrary string using maskChar and preserve character count (handles unicode code points) */
 function maskString(input: string | undefined | null, maskChar = '*'): string {
     if (!input) return '';
-    // Use spread to correctly handle unicode characters
     return maskChar.repeat([...input].length);
 }
 
-/** Convenient placeholders used when streamer mode is enabled */
 function maskName(name?: string): string {
     if (!name) return 'User';
-    // Keep last char and mask the rest for a friendlier look
     const chars = [...name];
     if (chars.length <= 1) return chars[0] || 'U';
     return maskString(chars.slice(0, -1).join('')) + chars[chars.length - 1];
@@ -55,14 +50,12 @@ function maskName(name?: string): string {
 function maskUsername(username?: string): string {
     if (!username) return 'user';
     const chars = [...username];
-    // Keep up to 2 leading chars for readability
     const lead = chars.slice(0, 2).join('');
     return lead + maskString(chars.slice(2).join(''));
 }
 
 function maskEmail(email?: string): string {
     if (!email) return 'unknown@*****.***';
-    // Basic email mask: keep the domain's TLD and mask the local part
     const [local, domain] = email.split('@');
     if (!domain) return maskString(email);
     const domainParts = domain.split('.');
@@ -73,7 +66,6 @@ function maskEmail(email?: string): string {
 }
 
 export function useStreamerMode() {
-    // Expose readonly computed ref to prevent direct mutation from consumers
     const isEnabled = computed(() => isStreamerModeEnabled.value);
 
     function setStreamerMode(enabled: boolean) {
@@ -114,12 +106,9 @@ export function useStreamerMode() {
         return isStreamerModeEnabled.value ? masker(value) : (value || '');
     }
 
-    // Note: the storage event listener is installed once at module init to avoid
-    // adding duplicate listeners every time the composable is used.
 
     return {
         isStreamerModeEnabled: isEnabled,
-        // alias for convenience
         enabled: isEnabled,
         toggleStreamerMode,
         setStreamerMode,
@@ -137,7 +126,6 @@ export function useStreamerMode() {
 
 export default useStreamerMode;
 
-// Install storage listener once at module initialization to keep state in sync
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
     if (!storageListenerInstalled) {
         window.addEventListener('storage', (e: StorageEvent) => {

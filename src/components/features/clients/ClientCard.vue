@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, onMounted } from 'vue';
+import { computed, ref, onBeforeUnmount, onMounted, shallowRef, nextTick, watch } from 'vue';
 import {
     StopCircle,
     Terminal,
@@ -56,9 +56,9 @@ const isExpanded = ref(false);
 const isAnimating = ref(false);
 const inTransition = ref(false);
 const isCollapsing = ref(false);
-const cardRef = ref<HTMLElement | null>(null);
-const placeholder = ref<HTMLElement | null>(null);
-const clientDetails = ref<ClientDetails | null>(null);
+const cardRef = shallowRef<HTMLElement | null>(null);
+const placeholder = shallowRef<HTMLElement | null>(null);
+const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
 const activeTab = ref<'info' | 'screenshots'>('info');
 
@@ -67,11 +67,119 @@ const slideDirection = ref<'left' | 'right'>('right');
 
 const isScreenshotViewerOpen = ref(false);
 const currentScreenshotIndex = ref(0);
-const screenshotViewerRef = ref<HTMLElement | null>(null);
+const screenshotViewerRef = shallowRef<HTMLElement | null>(null);
 const isImageLoading = ref(false);
 const imageTransitionDirection = ref<'next' | 'prev'>('next');
-const imageRef = ref<HTMLImageElement | null>(null);
-const imageContainerRef = ref<HTMLElement | null>(null);
+const imageRef = shallowRef<HTMLImageElement | null>(null);
+const imageContainerRef = shallowRef<HTMLElement | null>(null);
+const backdropRef = shallowRef<HTMLElement | null>(null);
+const actionsRef = shallowRef<HTMLElement | null>(null);
+const favoriteRef = shallowRef<HTMLElement | null>(null);
+
+const scrollContainer = shallowRef<HTMLElement | null>(null);
+const contentRef = shallowRef<HTMLElement | null>(null);
+const thumbRef = shallowRef<HTMLElement | null>(null);
+const showScrollbar = ref(false);
+const thumbHeight = ref(20);
+const thumbTop = ref(0);
+const isDraggingScrollbar = ref(false);
+const dragStartY = ref(0);
+const dragStartTop = ref(0);
+let resizeObserver: ResizeObserver | null = null;
+
+let scrollbarUpdateScheduled = false;
+
+const updateScrollbar = () => {
+    if (scrollbarUpdateScheduled) return;
+
+    scrollbarUpdateScheduled = true;
+    requestAnimationFrame(() => {
+        const el = scrollContainer.value;
+        if (!el) {
+            scrollbarUpdateScheduled = false;
+            return;
+        }
+
+        const { clientHeight, scrollHeight, scrollTop } = el;
+        const visibleRatio = clientHeight / scrollHeight;
+
+        if (visibleRatio >= 0.99) {
+            showScrollbar.value = false;
+        } else {
+            showScrollbar.value = true;
+            const height = Math.max(visibleRatio * clientHeight, 30);
+            thumbHeight.value = height;
+
+            const maxThumbTop = clientHeight - height;
+            const maxScrollTop = scrollHeight - clientHeight;
+
+            if (maxScrollTop > 0) {
+                thumbTop.value = (scrollTop / maxScrollTop) * maxThumbTop;
+            } else {
+                thumbTop.value = 0;
+            }
+        }
+
+        scrollbarUpdateScheduled = false;
+    });
+};
+
+const handleScroll = () => {
+    if (!isDraggingScrollbar.value) {
+        updateScrollbar();
+    }
+};
+
+const startScrollbarDrag = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    isDraggingScrollbar.value = true;
+    dragStartY.value = event.clientY;
+    dragStartTop.value = thumbTop.value;
+
+    document.addEventListener('mousemove', onScrollbarDrag);
+    document.addEventListener('mouseup', stopScrollbarDrag);
+    document.body.style.userSelect = 'none';
+};
+
+const onScrollbarDrag = (event: MouseEvent) => {
+    if (!isDraggingScrollbar.value || !scrollContainer.value) return;
+
+    const deltaY = event.clientY - dragStartY.value;
+    const el = scrollContainer.value;
+    const { clientHeight, scrollHeight } = el;
+    const maxThumbTop = clientHeight - thumbHeight.value;
+    const maxScrollTop = scrollHeight - clientHeight;
+
+    let newThumbTop = dragStartTop.value + deltaY;
+    newThumbTop = Math.max(0, Math.min(newThumbTop, maxThumbTop));
+
+    thumbTop.value = newThumbTop;
+
+    const scrollRatio = newThumbTop / maxThumbTop;
+    el.scrollTop = scrollRatio * maxScrollTop;
+};
+
+const stopScrollbarDrag = () => {
+    isDraggingScrollbar.value = false;
+    document.removeEventListener('mousemove', onScrollbarDrag);
+    document.removeEventListener('mouseup', stopScrollbarDrag);
+    document.body.style.userSelect = '';
+};
+
+watch(isExpanded, (newVal) => {
+    if (newVal) {
+        nextTick(() => {
+            updateScrollbar();
+        });
+    }
+});
+
+watch(clientDetails, () => {
+    nextTick(() => {
+        updateScrollbar();
+    });
+});
 
 const zoomScale = ref(1);
 const zoomPosition = ref({ x: 0, y: 0 });
@@ -107,9 +215,18 @@ const handleOpenLogViewer = () => {
 };
 
 const handleCardClick = (event: MouseEvent) => {
+    if (isAnimating.value || isCollapsing.value || inTransition.value) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+    }
+
     if (props.isMultiSelectMode) {
         emit('client-click', props.client, event);
-    } else if (!isAnimating.value && !props.isSelected && !props.client.meta.is_custom) {
+        return;
+    }
+
+    if (!props.isSelected && !props.client.meta.is_custom) {
         const target = event.target as HTMLElement;
         if (target.closest('button, a, .progress-bar-container, input, select, textarea, div[class*="tooltip"]')) {
             return;
@@ -143,7 +260,7 @@ const currentInstallStatus = computed(() => props.installationStatus);
 
 const expandCard = async () => {
     const card = cardRef.value;
-    if (!card) return;
+    if (!card || isAnimating.value) return;
     if (props.isAnyCardExpanded) return;
     if (props.client.meta.is_custom) return;
 
@@ -193,12 +310,53 @@ const expandCard = async () => {
     card.style.zIndex = '1000';
     card.style.overflow = 'hidden';
 
+    const backdrop = document.createElement('div');
+    Object.assign(backdrop.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        backdropFilter: 'blur(0px)',
+        zIndex: '999',
+        pointerEvents: 'auto',
+        transition: 'background-color 0.5s ease, backdrop-filter 0.5s ease'
+    });
+    document.body.appendChild(backdrop);
+    backdropRef.value = backdrop;
+
+    backdrop.offsetHeight;
+
+    Object.assign(backdrop.style, {
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(4px)'
+    });
+
+    backdrop.addEventListener('click', collapseCard);
+
     const tl = gsap.timeline({
         onComplete: () => {
-            if (card) card.style.overflow = 'auto';
             isExpanded.value = true;
         }
     });
+
+    if (actionsRef.value) {
+        tl.to(actionsRef.value, {
+            autoAlpha: 0,
+            height: 0,
+            marginTop: 0,
+            duration: 0.3,
+            ease: 'power2.out'
+        }, 0);
+    }
+    if (favoriteRef.value) {
+        tl.to(favoriteRef.value, {
+            autoAlpha: 0,
+            duration: 0.3,
+            ease: 'power2.out'
+        }, 0);
+    }
 
     tl.to(card, {
         duration: 0.5,
@@ -206,9 +364,10 @@ const expandCard = async () => {
         left: centerX,
         width: modalWidth,
         height: modalHeight,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
-        ease: 'expo.inOut',
-    });
+        borderRadius: '1rem',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        ease: 'back.out(0.6)',
+    }, 0);
 
     if (detailsContainer) {
         tl.to(detailsContainer, {
@@ -228,15 +387,32 @@ const expandCard = async () => {
 
 const collapseCard = () => {
     const card = cardRef.value;
-    if (!card || !placeholder.value) return;
+    if (!card || !placeholder.value || isCollapsing.value) return;
 
     inTransition.value = false;
     isCollapsing.value = true;
+    isAnimating.value = true;
 
     const placeholderRect = placeholder.value.getBoundingClientRect();
     if (card) card.style.overflow = 'hidden';
 
     const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
+
+    if (backdropRef.value) {
+        const backdrop = backdropRef.value;
+        backdrop.removeEventListener('click', collapseCard);
+        Object.assign(backdrop.style, {
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            backdropFilter: 'blur(0px)'
+        });
+
+        setTimeout(() => {
+            if (backdrop.parentNode) {
+                backdrop.parentNode.removeChild(backdrop);
+            }
+        }, 500);
+        backdropRef.value = null;
+    }
 
     const tl = gsap.timeline({
         onComplete: () => {
@@ -249,6 +425,7 @@ const collapseCard = () => {
                 card.style.zIndex = '';
                 card.style.boxShadow = '';
                 card.style.overflow = '';
+                card.style.borderRadius = '';
             }
 
             placeholder.value?.parentNode?.removeChild(placeholder.value);
@@ -297,9 +474,29 @@ const collapseCard = () => {
         left: placeholderRect.left,
         width: placeholderRect.width,
         height: placeholderRect.height,
+        borderRadius: '0.5rem',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        ease: 'expo.inOut',
+        ease: 'power3.inOut',
     }, detailsContainer ? "-=0.2" : ">");
+
+    if (actionsRef.value) {
+        tl.to(actionsRef.value, {
+            autoAlpha: 1,
+            height: 'auto',
+            marginTop: '0.5rem',
+            duration: 0.3,
+            ease: 'power2.out',
+            clearProps: 'all'
+        }, "-=0.3");
+    }
+    if (favoriteRef.value) {
+        tl.to(favoriteRef.value, {
+            autoAlpha: 1,
+            duration: 0.3,
+            ease: 'power2.out',
+            clearProps: 'all'
+        }, "-=0.3");
+    }
 };
 
 onBeforeUnmount(() => {
@@ -312,6 +509,13 @@ onBeforeUnmount(() => {
             placeholder.value = null;
         }
 
+        if (backdropRef.value) {
+            if (backdropRef.value.parentNode) {
+                backdropRef.value.parentNode.removeChild(backdropRef.value);
+            }
+            backdropRef.value = null;
+        }
+
         card.style.position = '';
         card.style.top = '';
         card.style.left = '';
@@ -320,6 +524,7 @@ onBeforeUnmount(() => {
         card.style.zIndex = '';
         card.style.boxShadow = '';
         card.style.overflow = '';
+        card.style.borderRadius = '';
 
         const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
         if (detailsContainer) {
@@ -623,10 +828,23 @@ const handleCardKeyDown = (event: KeyboardEvent) => {
 
 onMounted(() => {
     document.addEventListener('keydown', handleCardKeyDown);
+
+    if (scrollContainer.value) {
+        resizeObserver = new ResizeObserver(() => {
+            updateScrollbar();
+        });
+        resizeObserver.observe(scrollContainer.value);
+    }
+    if (contentRef.value && resizeObserver) {
+        resizeObserver.observe(contentRef.value);
+    }
 });
 
 onBeforeUnmount(() => {
     document.removeEventListener('keydown', handleCardKeyDown);
+    if (resizeObserver) {
+        resizeObserver.disconnect();
+    }
 });
 </script>
 
@@ -655,212 +873,232 @@ onBeforeUnmount(() => {
             </div>
         </transition>
 
-        <transition name="fade">
-            <button v-if="isAnimating" @click="!isCollapsing && collapseCard()"
-                class="btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-1001 text-base-content hover:bg-base-content/10"
-                :disabled="isCollapsing">
-                <X class="w-5 h-5" />
-            </button>
-        </transition>
+        <button @click="!isCollapsing && collapseCard()" :disabled="isCollapsing"
+            class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
+            :class="{ 'opacity-0 pointer-events-none': !isAnimating, 'opacity-100 pointer-events-auto': isAnimating }">
+            <X class="w-5 h-5" />
+        </button>
 
-        <div class="card-body flex flex-col p-0">
-            <div class="flex justify-between items-start">
-                <h2 class="card-title text-base">
-                    {{ client.name }}
-                    <div v-if="client.insecure">
-                        <div class="tooltip tooltip-left" :data-tip="t('client.insecure_tooltip')"
-                            @click="showInsecureWarning">
-                            <AlertTriangle class="text-warning w-4 h-4 transition-all duration-500 hover:bg-base-200" />
-                        </div>
+        <div class="scroll-container h-full w-full overflow-y-auto custom-scrollbar-hide relative" ref="scrollContainer"
+            @scroll="handleScroll">
+            <div class="p-4 min-h-full" ref="contentRef">
+                <div class="card-body flex flex-col p-0">
+                    <div class="flex justify-between items-start">
+                        <h2 class="card-title text-base">
+                            {{ client.name }}
+                            <div v-if="client.insecure">
+                                <div class="tooltip tooltip-left" :data-tip="t('client.insecure_tooltip')"
+                                    @click="showInsecureWarning">
+                                    <AlertTriangle
+                                        class="text-warning w-4 h-4 transition-all duration-500 hover:bg-base-200" />
+                                </div>
+                            </div>
+                        </h2>
+                        <transition name="fade" appear>
+                            <div ref="favoriteRef" v-if="isFavorite" class="favorite-indicator">
+                                <Star class="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            </div>
+                        </transition>
                     </div>
-                </h2>
-                <transition name="fade" appear>
-                    <div v-if="isFavorite && !isAnimating" class="favorite-indicator">
-                        <Star class="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    </div>
-                </transition>
-            </div>
 
-            <ClientInfo :client="client" :expanded="inTransition" />
+                    <ClientInfo :client="client" :expanded="inTransition" />
 
-            <div class="card-actions justify-end mt-2">
-                <button v-if="clientIsRunning && !clientIsInstalling && !isAnimating" @click.stop="handleOpenLogViewer"
-                    class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 focus:ring-info">
-                    <Terminal class="w-4 h-4" />
-                </button>
-                <transition name="fade-transform" mode="out-in">
-                    <div v-if="clientIsInstalling && !isAnimating" class="w-full">
-                        <div class="flex justify-between mb-1 text-xs text-base-content">
-                            <span class="truncate max-w-[90%]">
-                                {{ currentInstallStatus?.action }}
-                                {{ client.name }}
-                            </span>
-                            <span>
-                                {{ currentInstallStatus?.percentage }}%
-                            </span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" :style="{
-                                width: `${currentInstallStatus?.percentage}%`,
-                            }"></div>
-                        </div>
-                    </div>
-                    <div v-else-if="!isAnimating" class="flex items-center space-x-2">
-                        <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                            class="btn btn-sm btn-primary download-btn relative overflow-hidden" :disabled="isRequirementsInProgress || !client.working
-                                ">
-                            <span class="flex items-center download-text">
-                                <Download v-if="client.working" class="w-4 h-4 mr-1" />
-                                <span v-if="client.working">{{
-                                    t('home.download')
-                                    }}</span>
-                                <span v-else-if="!client.working">{{
-                                    t('home.unavailable')
-                                    }}</span>
-                            </span>
-                            <span class="flex items-center get-text absolute inset-0 opacity-0">
-                                {{ client.meta.size || '0' }} MB
-                            </span>
+                    <div ref="actionsRef" class="card-actions justify-end mt-2">
+                        <button v-if="clientIsRunning && !clientIsInstalling" @click.stop="handleOpenLogViewer"
+                            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 focus:ring-info">
+                            <Terminal class="w-4 h-4" />
                         </button>
-                        <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20 launch-btn"
-                            :disabled="isRequirementsInProgress" :class="clientIsRunning
-                                ? 'btn-error focus:ring-error'
-                                : 'btn-primary focus:ring-primary'
-                                ">
-                            <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
-                            {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
-                        </button>
+                        <transition name="fade-transform" mode="out-in">
+                            <div v-if="clientIsInstalling" class="w-full">
+                                <div class="flex justify-between mb-1 text-xs text-base-content">
+                                    <span class="truncate max-w-[90%]">
+                                        {{ currentInstallStatus?.action }}
+                                        {{ client.name }}
+                                    </span>
+                                    <span>
+                                        {{ currentInstallStatus?.percentage }}%
+                                    </span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" :style="{
+                                        width: `${currentInstallStatus?.percentage}%`,
+                                    }"></div>
+                                </div>
+                            </div>
+                            <div v-else class="flex items-center space-x-2">
+                                <button v-if="!client.meta.installed" @click="handleDownloadClick"
+                                    class="btn btn-sm btn-primary download-btn relative overflow-hidden" :disabled="isRequirementsInProgress || !client.working
+                                        ">
+                                    <span class="flex items-center download-text">
+                                        <Download v-if="client.working" class="w-4 h-4 mr-1" />
+                                        <span v-if="client.working">{{
+                                            t('home.download')
+                                        }}</span>
+                                        <span v-else-if="!client.working">{{
+                                            t('home.unavailable')
+                                        }}</span>
+                                    </span>
+                                    <span class="flex items-center get-text absolute inset-0 opacity-0">
+                                        {{ client.meta.size || '0' }} MB
+                                    </span>
+                                </button>
+                                <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20 launch-btn"
+                                    :disabled="isRequirementsInProgress" :class="clientIsRunning
+                                        ? 'btn-error focus:ring-error'
+                                        : 'btn-primary focus:ring-primary'
+                                        ">
+                                    <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
+                                    {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
+                                </button>
+                            </div>
+                        </transition>
                     </div>
-                </transition>
-            </div>
+                    <div class="client-details">
+                        <div class="space-y-4">
+                            <div v-if="isLoadingDetails" class="text-center py-4">
+                                <div class="loading loading-spinner loading-md"></div>
+                                <p class="text-sm text-base-content/60 mt-2">{{ t('client.details.loading') }}</p>
+                            </div>
 
-            <div class="client-details">
-                <div class="space-y-4">
-                    <div v-if="isLoadingDetails" class="text-center py-4">
-                        <div class="loading loading-spinner loading-md"></div>
-                        <p class="text-sm text-base-content/60 mt-2">{{ t('client.details.loading') }}</p>
-                    </div>
-
-                    <div v-else-if="clientDetails">
-                        <div class="tabs tabs-boxed mb-4">
-                            <a class="tab" :class="{ 'tab-active': activeTab === 'info' }" @click="changeTab('info')">
-                                {{ t('client.details.info_tab') }}
-                            </a>
-                            <a class="tab" :class="{ 'tab-active': activeTab === 'screenshots' }"
-                                @click="changeTab('screenshots')">
-                                {{ t('client.details.screenshots_tab') }}
-                            </a>
-                        </div>
-
-                        <div>
-                            <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
-                                <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1">
-                                    <div class="mb-6 space-y-2">
-                                        <dl class="divide-y divide-base-content/10">
-                                            <div v-if="clientDetails.source_link"
-                                                class="py-3 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-center transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
-                                                <dt class="text-sm font-medium text-base-content/70">{{
-                                                    t('client.details.source_link') }}</dt>
-                                                <dd class="text-sm text-base-content col-span-1 md:col-span-2">
-                                                    <a :href="clientDetails.source_link" target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        class="link link-primary link-hover inline-flex items-center gap-1.5 text-xs truncate">
-                                                        <span>{{ clientDetails.source_link }}</span>
-                                                        <ExternalLink class="w-3 h-3" />
-                                                    </a>
-                                                </dd>
-                                            </div>
-                                            <div v-if="clientDetails.created_at"
-                                                class="py-3 transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
-                                                <dt class="text-sm font-medium text-base-content/70">{{
-                                                    t('client.details.created') }}</dt>
-                                                <dd class="text-base-content col-span-1 md:col-span-2 text-xs">
-                                                    {{ new Date(clientDetails.created_at).toLocaleDateString('en-GB') }}
-                                                </dd>
-                                            </div>
-                                        </dl>
-                                    </div>
-
-                                    <div class="divider before:bg-base-content/10 after:bg-base-content/10 my-0">
-                                        <h4 class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
-                                            <ScrollText class="w-4 h-4" />
-                                            {{ t('client.details.changelog') }}
-                                        </h4>
-                                    </div>
-
-                                    <div v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0"
-                                        class="mt-4">
-                                        <ul
-                                            class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
-                                            <li v-for="(entry, index) in clientDetails.changelog_entries"
-                                                :key="entry.version" class="timeline-item">
-
-                                                <div class="timeline-start text-xs text-right">
-                                                    <span class="badge badge-ghost text-xs">
-                                                        {{ new Date(entry.created_at).toLocaleDateString(undefined, {
-                                                            month: 'short', day: 'numeric'
-                                                        }) }}
-                                                    </span>
-                                                </div>
-                                                <div class="timeline-middle">
-                                                    <Info class="w-4 h-4 text-base-content/50" />
-                                                </div>
-                                                <div
-                                                    class="timeline-end timeline-box shadow-sm bg-base-200/40 w-full mb-2 transition-all duration-300 border-primary/10">
-                                                    <div class="font-bold text-sm text-base-content">
-                                                        v{{ entry.version }}
-                                                    </div>
-                                                    <div
-                                                        class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
-                                                        {{ entry.content }}
-                                                    </div>
-                                                </div>
-                                                <hr v-if="index < clientDetails.changelog_entries.length - 1"
-                                                    class="bg-primary/20" style="width: 119%;" />
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div v-else
-                                        class="mt-6 flex flex-col items-center justify-center text-center p-8 bg-base-200/50 border-2 border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
-                                        <Info class="w-8 h-8 text-base-content/50 mb-2" />
-                                        <p class="text-sm font-medium text-base-content/70">{{
-                                            t('client.details.no_changelog') }}</p>
-                                        <p class="text-xs text-base-content/50 mt-1">{{
-                                            t('client.details.no_changelog_desc') }}</p>
-                                    </div>
+                            <div v-else-if="clientDetails">
+                                <div class="tabs tabs-boxed mb-4">
+                                    <a class="tab" :class="{ 'tab-active': activeTab === 'info' }"
+                                        @click="changeTab('info')">
+                                        {{ t('client.details.info_tab') }}
+                                    </a>
+                                    <a class="tab" :class="{ 'tab-active': activeTab === 'screenshots' }"
+                                        @click="changeTab('screenshots')">
+                                        {{ t('client.details.screenshots_tab') }}
+                                    </a>
                                 </div>
 
-                                <div v-else-if="activeTab === 'screenshots'" key="screenshots" class="tab-pane">
-                                    <div v-if="clientDetails.screenshot_urls && clientDetails.screenshot_urls.length > 0"
-                                        class="screenshots-section">
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            <div v-for="(screenshot, index) in clientDetails.screenshot_urls"
-                                                :key="index" class="screenshot-container group">
-                                                <div class="relative overflow-hidden rounded border border-base-content/10 cursor-pointer"
-                                                    @click.stop="handleScreenshotClick($event, index)">
-                                                    <img :src="screenshot"
-                                                        :alt="`${client.name} screenshot ${index + 1}`"
-                                                        class="w-full h-36 object-cover transition-all duration-200 group-hover:scale-105"
-                                                        @error="($event.target as HTMLImageElement).style.display = 'none'" />
-                                                    <div
-                                                        class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center pointer-events-none">
-                                                        <ZoomIn
-                                                            class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                <div>
+                                    <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
+                                        <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1">
+                                            <div class="mb-6 space-y-2">
+                                                <dl class="divide-y divide-base-content/10">
+                                                    <div v-if="clientDetails.source_link"
+                                                        class="py-3 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-center transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
+                                                        <dt class="text-sm font-medium text-base-content/70">{{
+                                                            t('client.details.source_link') }}</dt>
+                                                        <dd class="text-sm text-base-content col-span-1 md:col-span-2">
+                                                            <a :href="clientDetails.source_link" target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                class="link link-primary link-hover inline-flex items-center gap-1.5 text-xs truncate">
+                                                                <span>{{ clientDetails.source_link }}</span>
+                                                                <ExternalLink class="w-3 h-3" />
+                                                            </a>
+                                                        </dd>
                                                     </div>
-                                                </div>
+                                                    <div v-if="clientDetails.created_at"
+                                                        class="py-3 transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
+                                                        <dt class="text-sm font-medium text-base-content/70">{{
+                                                            t('client.details.created') }}</dt>
+                                                        <dd class="text-base-content col-span-1 md:col-span-2 text-xs">
+                                                            {{ new
+                                                                Date(clientDetails.created_at).toLocaleDateString('en-GB')
+                                                            }}
+                                                        </dd>
+                                                    </div>
+                                                </dl>
+                                            </div>
+
+                                            <div
+                                                class="divider before:bg-base-content/10 after:bg-base-content/10 my-0">
+                                                <h4
+                                                    class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
+                                                    <ScrollText class="w-4 h-4" />
+                                                    {{ t('client.details.changelog') }}
+                                                </h4>
+                                            </div>
+
+                                            <div v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0"
+                                                class="mt-4">
+                                                <ul
+                                                    class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
+                                                    <li v-for="(entry, index) in clientDetails.changelog_entries"
+                                                        :key="entry.version" class="timeline-item">
+
+                                                        <div class="timeline-start text-xs text-right">
+                                                            <span class="badge badge-ghost text-xs">
+                                                                {{ new
+                                                                    Date(entry.created_at).toLocaleDateString(undefined, {
+                                                                        month: 'short', day: 'numeric'
+                                                                    }) }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="timeline-middle">
+                                                            <Info class="w-4 h-4 text-base-content/50" />
+                                                        </div>
+                                                        <div
+                                                            class="timeline-end timeline-box shadow-sm bg-base-200/40 w-full mb-2 transition-all duration-300 border-primary/10">
+                                                            <div class="font-bold text-sm text-base-content">
+                                                                v{{ entry.version }}
+                                                            </div>
+                                                            <div
+                                                                class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
+                                                                {{ entry.content }}
+                                                            </div>
+                                                        </div>
+                                                        <hr v-if="index < clientDetails.changelog_entries.length - 1"
+                                                            class="bg-primary/20" style="width: 119%;" />
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div v-else
+                                                class="mt-6 flex flex-col items-center justify-center text-center p-8 bg-base-200/50 border-2 border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
+                                                <Info class="w-8 h-8 text-base-content/50 mb-2" />
+                                                <p class="text-sm font-medium text-base-content/70">{{
+                                                    t('client.details.no_changelog') }}</p>
+                                                <p class="text-xs text-base-content/50 mt-1">{{
+                                                    t('client.details.no_changelog_desc') }}</p>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div v-else class="text-center py-8 text-base-content/60">
-                                        <p>{{ t('client.details.no_screenshots') }}</p>
-                                    </div>
+
+                                        <div v-else-if="activeTab === 'screenshots'" key="screenshots" class="tab-pane">
+                                            <div v-if="clientDetails.screenshot_urls && clientDetails.screenshot_urls.length > 0"
+                                                class="screenshots-section">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <div v-for="(screenshot, index) in clientDetails.screenshot_urls"
+                                                        :key="index" class="screenshot-container group">
+                                                        <div class="relative overflow-hidden rounded border border-base-content/10 cursor-pointer"
+                                                            @click.stop="handleScreenshotClick($event, index)">
+                                                            <img :src="screenshot"
+                                                                :alt="`${client.name} screenshot ${index + 1}`"
+                                                                class="w-full h-36 object-cover transition-all duration-200 group-hover:scale-105"
+                                                                @error="($event.target as HTMLImageElement).style.display = 'none'" />
+                                                            <div
+                                                                class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center pointer-events-none">
+                                                                <ZoomIn
+                                                                    class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div v-else class="text-center py-8 text-base-content/60">
+                                                <p>{{ t('client.details.no_screenshots') }}</p>
+                                            </div>
+                                        </div>
+                                    </transition>
                                 </div>
-                            </transition>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <transition name="fade">
+            <div v-if="showScrollbar"
+                class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
+                :class="{ 'opacity-0': !isExpanded, 'opacity-100': isExpanded }">
+                <div class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
+                    ref="thumbRef" :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }"
+                    @mousedown="startScrollbarDrag">
+                </div>
+            </div>
+        </transition>
     </div>
 
     <teleport to="body">
@@ -992,11 +1230,21 @@ onBeforeUnmount(() => {
     position: relative;
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    padding: 1rem;
+    /* padding: 1rem; - Moved to inner container */
 
-    scrollbar-gutter: stable both-edges;
+    /* scrollbar-gutter: stable both-edges; - Removed */
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    /* scrollbar-width: thin; - Removed */
+    will-change: transform, width, height, top, left;
+}
+
+.custom-scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.custom-scrollbar-hide::-webkit-scrollbar {
+    display: none;
 }
 
 .card-actions {
@@ -1018,18 +1266,15 @@ onBeforeUnmount(() => {
     scrollbar-width: thin;
 }
 
-.client-card::-webkit-scrollbar,
 .timeline::-webkit-scrollbar {
     width: 10px;
     height: 10px;
 }
 
-.client-card::-webkit-scrollbar-track,
 .timeline::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.client-card::-webkit-scrollbar-thumb,
 .timeline::-webkit-scrollbar-thumb {
     background-color: rgba(100, 100, 100, 0.35);
     border-radius: 999px;
@@ -1037,9 +1282,7 @@ onBeforeUnmount(() => {
     background-clip: content-box;
 }
 
-.client-card[style*="position: fixed"] {
-    scrollbar-gutter: stable;
-}
+
 
 .status-section {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
