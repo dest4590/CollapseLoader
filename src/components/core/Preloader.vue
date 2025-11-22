@@ -23,7 +23,7 @@
       <div class="w-80 progress-container mt-4" :class="{ invert: currentTheme === 'light' }" role="progressbar"
         :aria-valuenow="animatedProgressRounded" aria-valuemin="0" aria-valuemax="100"
         :aria-valuetext="`${animatedProgressRounded}%`">
-        <div class="bg-base-100 rounded-full h-3 overflow-hidden shadow-inner progress-track" aria-hidden="true">
+        <div class="bg-base-100 rounded-full h-3 overflow-hidden progress-track" aria-hidden="true">
           <div class="bg-primary h-full rounded-full progress-fill"
             :style="{ transform: `scaleX(${(animatedProgress / 100)})` }"></div>
         </div>
@@ -68,7 +68,7 @@ const animateTo = (target: number) => {
   const step = () => {
     const current = animatedProgress.value;
     const delta = target - current;
-    const ease = 0.08;
+    const ease = 0.03;
     const snapThreshold = 0.15;
     animatedProgress.value = Math.abs(delta) < snapThreshold ? target : current + delta * ease;
     if (Math.abs(delta) >= snapThreshold) {

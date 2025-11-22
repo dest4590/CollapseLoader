@@ -232,7 +232,6 @@ const initApp = async () => {
 
     loadingState.value = loadingStates[0];
     currentProgress.value = 1;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
         bootLogService.serverConnectivityCheck();
@@ -268,7 +267,6 @@ const initApp = async () => {
 
     loadingState.value = loadingStates[1];
     currentProgress.value = 2;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
         bootLogService.apiInit();
@@ -301,7 +299,6 @@ const initApp = async () => {
     }
 
     currentProgress.value = 3;
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
         const currentFlags = await invoke<Flags>('get_flags');
@@ -319,15 +316,6 @@ const initApp = async () => {
         bootLogService.flagsLoadFailed();
     }
 
-    await new Promise<void>((resolve) => {
-        const checkInterval = setInterval(() => {
-            if (initialModalsLoaded.value) {
-                clearInterval(checkInterval);
-                resolve();
-            }
-        }, 100);
-    });
-
     try {
         await fetchNewsAndUpdateUnreadCount();
     } catch (error) {
@@ -338,8 +326,6 @@ const initApp = async () => {
 
     currentProgress.value = 4;
     loadingState.value = t('preloader.ready');
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const preloaderElement = document.querySelector(
         '#preloader'
