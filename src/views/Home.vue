@@ -155,13 +155,6 @@ const clearAllFilters = () => {
     };
 };
 
-const onBeforeLeave = (el: Element) => {
-    const card = el as HTMLElement;
-    card.style.left = `${card.offsetLeft}px`;
-    card.style.top = `${card.offsetTop}px`;
-    card.style.width = `${card.offsetWidth}px`;
-};
-
 watch(
     activeFilters,
     (val) => {
@@ -1644,25 +1637,22 @@ onBeforeUnmount(() => {
         <span>{{ error }}</span>
     </div>
 
-    <TransitionGroup name="client-list" tag="div"
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
-        @before-leave="onBeforeLeave" :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
-        <div v-for="(client, index) in filteredClients" :key="client.id"
-            :class="['client-card-item', !hasStaggerPlayed ? 'stagger-animate' : '']"
-            :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }" v-memo="[
-                client.id,
-                isClientRunning(client.id),
-                isClientInstalling(client),
-                installationStatus.get(client.filename),
-                requirementsInProgress,
-                isAnyClientDownloading,
-                isClientFavorite(client.id),
-                isClientSelected(client.id),
-                isCtrlPressed,
-                expandedClientId,
-                hashVerifyingClients.has(client.id),
-                isAnyCardExpanded
-            ]">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
+        :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
+        <div v-for="client in filteredClients" :key="client.id" class="client-card-item" v-memo="[
+            client.id,
+            isClientRunning(client.id),
+            isClientInstalling(client),
+            installationStatus.get(client.filename),
+            requirementsInProgress,
+            isAnyClientDownloading,
+            isClientFavorite(client.id),
+            isClientSelected(client.id),
+            isCtrlPressed,
+            expandedClientId,
+            hashVerifyingClients.has(client.id),
+            isAnyCardExpanded
+        ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                 :isClientInstalling="isClientInstalling(client)"
                 :installationStatus="installationStatus.get(client.filename)"
@@ -1674,7 +1664,7 @@ onBeforeUnmount(() => {
                 @show-context-menu="showContextMenu" @client-click="handleClientClick"
                 @expanded-state-changed="handleExpandedStateChanged" />
         </div>
-    </TransitionGroup>
+    </div>
 
     <div v-if="contextMenu.visible" :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
         class="fixed z-40 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
