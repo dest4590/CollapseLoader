@@ -130,11 +130,16 @@ impl Api {
 }
 
 pub static API: LazyLock<Option<Api>> = LazyLock::new(|| {
-    SERVERS.selected_auth.clone().map_or_else(
-        || {
-            log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
-            None
-        },
-        |auth_s| Some(Api { api_server: auth_s }),
-    )
+    SERVERS
+        .selected_auth
+        .read()
+        .unwrap()
+        .clone()
+        .map_or_else(
+            || {
+                log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
+                None
+            },
+            |auth_s| Some(Api { api_server: auth_s }),
+        )
 });

@@ -40,6 +40,7 @@ tauri-plugin-fs = "2.4.4"
 thiserror = "2.0.17"
 native-dialog = "0.9.3"
 sysinfo = "0.37.2"
+backoff = { version = "0.4.0", features = ["tokio"] }
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.55.0" }

@@ -67,6 +67,8 @@ impl AgentOverlayManager {
     fn get_api_base_url() -> Result<String, String> {
         SERVERS
             .selected_auth
+            .read()
+            .unwrap()
             .as_ref()
             .map(|server| server.url.clone())
             .ok_or_else(|| "No API server available".to_string())

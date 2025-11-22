@@ -252,13 +252,18 @@ impl Data {
             }
         }
 
-        let cdn_url = SERVERS.selected_cdn.as_ref().map_or_else(
-            || {
-                log_error!("No CDN server available for download");
-                Err("No CDN server available for download.".to_string())
-            },
-            |server| Ok(server.url.clone()),
-        )?;
+        let cdn_url = SERVERS
+            .selected_cdn
+            .read()
+            .unwrap()
+            .as_ref()
+            .map_or_else(
+                || {
+                    log_error!("No CDN server available for download");
+                    Err("No CDN server available for download.".to_string())
+                },
+                |server| Ok(server.url.clone()),
+            )?;
 
         let download_url = if is_url {
             file.to_string()
@@ -519,13 +524,18 @@ impl Data {
         }
 
         let is_url = file.starts_with("http://") || file.starts_with("https://");
-        let cdn_url = SERVERS.selected_cdn.as_ref().map_or_else(
-            || {
-                log_error!("No CDN server available for download");
-                Err("No CDN server available for download.".to_string())
-            },
-            |server| Ok(server.url.clone()),
-        )?;
+        let cdn_url = SERVERS
+            .selected_cdn
+            .read()
+            .unwrap()
+            .as_ref()
+            .map_or_else(
+                || {
+                    log_error!("No CDN server available for download");
+                    Err("No CDN server available for download.".to_string())
+                },
+                |server| Ok(server.url.clone()),
+            )?;
 
         let download_url = if is_url {
             file.to_string()
