@@ -145,31 +145,6 @@ try {
 }
 const clientSortOrder = ref<'asc' | 'desc'>(initialSortOrder);
 
-const debouncedActiveFilters = shallowRef<Filters>({ ...initialFilters });
-
-const debouncedClientSortKey = ref(clientSortKey.value);
-const debouncedClientSortOrder = ref(clientSortOrder.value);
-
-const applyFiltersAndSort = () => {
-    const filtersChanged = JSON.stringify(debouncedActiveFilters.value) !== JSON.stringify(activeFilters.value);
-    const sortKeyChanged = debouncedClientSortKey.value !== clientSortKey.value;
-    const sortOrderChanged = debouncedClientSortOrder.value !== clientSortOrder.value;
-
-    if (!filtersChanged && !sortKeyChanged && !sortOrderChanged) {
-        return;
-    }
-
-    if (filtersChanged) {
-        debouncedActiveFilters.value = { ...activeFilters.value };
-    }
-    if (sortKeyChanged) {
-        debouncedClientSortKey.value = clientSortKey.value;
-    }
-    if (sortOrderChanged) {
-        debouncedClientSortOrder.value = clientSortOrder.value;
-    }
-};
-
 const clearAllFilters = () => {
     searchQuery.value = '';
     debouncedSearchQuery.value = '';
@@ -178,22 +153,6 @@ const clearAllFilters = () => {
         vanilla: false,
         installed: false
     };
-};
-
-let filtersDebounceTimer: number | null = null;
-const isFilterUpdateScheduled = ref(false);
-
-const scheduleFilterUpdate = () => {
-    if (filtersDebounceTimer !== null) {
-        clearTimeout(filtersDebounceTimer);
-    }
-
-    isFilterUpdateScheduled.value = true;
-    filtersDebounceTimer = window.setTimeout(() => {
-        applyFiltersAndSort();
-        filtersDebounceTimer = null;
-        isFilterUpdateScheduled.value = false;
-    }, 200);
 };
 
 const onBeforeLeave = (el: Element) => {
@@ -211,7 +170,6 @@ watch(
         } catch (e) {
             console.error('Failed to save active filters to localStorage:', e);
         }
-        scheduleFilterUpdate();
     },
     { deep: true, flush: 'post' }
 );
@@ -222,7 +180,6 @@ watch(clientSortKey, (val) => {
     } catch (e) {
         console.error('Failed to save client sort key to localStorage:', e);
     }
-    scheduleFilterUpdate();
 });
 
 watch(clientSortOrder, (val) => {
@@ -231,7 +188,6 @@ watch(clientSortOrder, (val) => {
     } catch (e) {
         console.error('Failed to save client sort order to localStorage:', e);
     }
-    scheduleFilterUpdate();
 });
 
 const installationStatus = ref<Map<string, InstallProgress>>(new Map());
@@ -351,7 +307,7 @@ const handleLaunchClick = (client: Client) => {
 
 const handleLaunchCustomClient = async (client: Client) => {
     try {
-        if (isCustomClientRunning(client.id)) {
+        if (isClientRunning(client.id)) {
             await stopCustomClient(client.id);
             return;
         }
@@ -389,43 +345,20 @@ const handleSearch = (query: string) => {
     }, 150);
 };
 
-const isRequirementsInProgress = computed(() => {
-    return requirementsInProgress.value;
-});
-
-let downloadingClientsCache: { key: string; result: boolean } = { key: '', result: false };
-
 const isAnyClientDownloading = computed(() => {
-    const statusEntries = Array.from(installationStatus.value.entries());
-    const cacheKey = `${statusEntries.length}-${statusEntries.map(([filename, status]) => `${filename}-${status.isComplete}`).join(',')}`;
+    if (installationStatus.value.size === 0) return false;
+    const filenames = new Set(clients.value.map(c => c.filename));
 
-    if (downloadingClientsCache.key === cacheKey) {
-        return downloadingClientsCache.result;
-    }
-
-    const result = statusEntries.some(
-        ([filename, status]) => {
-            const isClientFile = clients.value.some(
-                (client) => client.filename === filename
-            );
-            return isClientFile && !status.isComplete;
+    for (const [filename, status] of installationStatus.value.entries()) {
+        if (!status.isComplete && filenames.has(filename)) {
+            return true;
         }
-    );
-
-    downloadingClientsCache = { key: cacheKey, result };
-    return result;
+    }
+    return false;
 });
-
-let customClientsAsClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const customClientsAsClients = computed(() => {
-    const cacheKey = `${customClients.value.length}-${customClients.value.map(c => `${c.id}-${c.is_installed}`).join(',')}`;
-
-    if (customClientsAsClientsCache.key === cacheKey) {
-        return customClientsAsClientsCache.result;
-    }
-
-    const result = customClients.value.map(customClient => ({
+    return customClients.value.map(customClient => ({
         id: customClient.id,
         name: customClient.name,
         version: customClient.version.replace(/^V1_/, '1.').replace(/_/g, '.'),
@@ -446,50 +379,23 @@ const customClientsAsClients = computed(() => {
             size: '0',
         },
     }));
-
-    customClientsAsClientsCache = { key: cacheKey, result };
-    return result;
 });
 
-let allClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
-
-const allClients = computed(() => {
-    const cacheKey = `${clients.value.length}-${customClientsDisplayMode.value}-${customClientsAsClients.value.length}`;
-
-    if (allClientsCache.key === cacheKey) {
-        return allClientsCache.result;
-    }
-
-    let result = clients.value;
+const allClients = computed<Client[]>(() => {
     if (customClientsDisplayMode.value === 'global') {
-        result = [...customClientsAsClients.value, ...clients.value];
+        return [...customClientsAsClients.value, ...clients.value];
     }
-
-    allClientsCache = { key: cacheKey, result };
-    return result;
+    return clients.value;
 });
-
-let filteredClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const filteredClients = computed(() => {
-    if (isFilterUpdateScheduled.value) {
-        return filteredClientsCache.result;
-    }
-
-    const filters = debouncedActiveFilters.value;
-    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${filters.fabric}-${filters.vanilla}-${filters.installed}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.length}`;
-
-    if (filteredClientsCache.key === cacheKey) {
-        return filteredClientsCache.result;
-    }
-
     if (allClients.value.length === 0) {
-        filteredClientsCache = { key: cacheKey, result: [] };
         return [];
     }
 
     const query = debouncedSearchQuery.value.trim();
     const queryLower = query ? query.toLowerCase() : '';
+    const filters = activeFilters.value;
     const hasActiveFilters = filters.fabric || filters.vanilla || filters.installed;
 
     let clientsList = allClients.value;
@@ -522,13 +428,14 @@ const filteredClients = computed(() => {
     }
 
     if (clientsList.length <= 1) {
-        filteredClientsCache = { key: cacheKey, result: clientsList };
         return clientsList;
     }
 
-    const sortKey = debouncedClientSortKey.value;
-    const sortOrder = debouncedClientSortOrder.value;
+    const sortKey = clientSortKey.value;
+    const sortOrder = clientSortOrder.value;
     const sortMultiplier = sortOrder === 'desc' ? -1 : 1;
+
+    clientsList = [...clientsList];
 
     if (sortKey === 'newest') {
         clientsList.sort((a, b) => {
@@ -548,11 +455,7 @@ const filteredClients = computed(() => {
     } else if (sortKey === 'version') {
         const parseVer = (v: string): number[] => {
             if (!v) return [];
-            const clean = v.replace(/^v/i, '').replace(/_/g, '.').replace(/[^0-9.]/g, '.');
-            return clean.split('.').map(s => {
-                const n = parseInt(s, 10);
-                return isNaN(n) ? 0 : n;
-            });
+            return v.split(/[^0-9]+/).map(s => parseInt(s, 10) || 0);
         };
 
         clientsList.sort((a, b) => {
@@ -601,7 +504,6 @@ const filteredClients = computed(() => {
         clientsList = [...favs, ...others];
     }
 
-    filteredClientsCache = { key: cacheKey, result: clientsList };
     return clientsList;
 });
 
@@ -692,19 +594,12 @@ const launchClientWithAccount = async (client: Client, accountId: string) => {
     hideContextMenu();
 };
 
-const invalidateAllCaches = () => {
-    customClientsAsClientsCache = { key: '', result: [] };
-    allClientsCache = { key: '', result: [] };
-    invalidateClientCaches();
-};
-
 const getClients = async () => {
     try {
         error.value = '';
         const response = await invoke<Client[]>('get_clients');
         if (response && response.length > 0) {
             clients.value = response;
-            invalidateAllCaches();
         } else {
             clients.value = [];
             if (response !== null && response.length === 0) {
@@ -888,10 +783,6 @@ const checkRunningStatus = async () => {
 };
 
 const isClientRunning = (id: number): boolean => {
-    return runningClients.value.includes(id);
-};
-
-const isCustomClientRunning = (id: number): boolean => {
     return runningClients.value.includes(id);
 };
 
@@ -1116,19 +1007,12 @@ const setupEventListeners = async () => {
     eventListeners.value.push(customClientLaunchedListener);
 };
 
-const invalidateClientCaches = () => {
-    if (filteredClientsCache.key) filteredClientsCache = { key: '', result: [] };
-    if (selectedClientsDataCache.key) selectedClientsDataCache = { key: '', result: [] };
-    if (downloadingClientsCache.key) downloadingClientsCache = { key: '', result: false };
-};
-
 const updateClientInstallStatus = (filename: string) => {
     const client = clients.value.find((c) => c.filename === filename);
     if (client) {
         const status = installationStatus.value.get(filename);
         if (status && status.isComplete) {
             client.meta.installed = true;
-            invalidateClientCaches();
         }
     }
 };
@@ -1137,7 +1021,6 @@ const markClientAsInstalled = async (filename: string) => {
     const client = clients.value.find((c) => c.filename === filename);
     if (client) {
         client.meta.installed = true;
-        invalidateClientCaches();
 
         try {
             await invoke('update_client_installed_status', {
@@ -1320,25 +1203,11 @@ const isClientSelected = (clientId: number): boolean => {
     return selectedClients.value.has(clientId);
 };
 
-let selectedClientsDataCache: { key: string; result: Client[] } = { key: '', result: [] };
-
-const getSelectedClientsData = (): Client[] => {
-    const selectionIds = Array.from(selectedClients.value).sort().join(',');
-    const cacheKey = `${clients.value.length}-${selectionIds}`;
-
-    if (selectedClientsDataCache.key === cacheKey) {
-        return selectedClientsDataCache.result;
-    }
-
-    const result = clients.value.filter((client) =>
+const selectedClientsData = computed(() => {
+    return clients.value.filter((client) =>
         selectedClients.value.has(client.id)
     );
-
-    selectedClientsDataCache = { key: cacheKey, result };
-    return result;
-};
-
-const selectedClientsData = computed(() => getSelectedClientsData());
+});
 
 const canDownloadSelected = computed(() => {
     return selectedClientsData.value.some(
@@ -1635,7 +1504,6 @@ const loadCustomClientsDisplayMode = async () => {
 
 onMounted(async () => {
     debouncedSearchQuery.value = searchQuery.value;
-    debouncedActiveFilters.value = { ...activeFilters.value };
 
     await getClients();
     await loadFavorites();
@@ -1710,10 +1578,6 @@ onBeforeUnmount(() => {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = null;
     }
-    if (filtersDebounceTimer !== null) {
-        clearTimeout(filtersDebounceTimer);
-        filtersDebounceTimer = null;
-    }
     if (ctrlPressTimer !== null) {
         clearTimeout(ctrlPressTimer);
         ctrlPressTimer = null;
@@ -1782,7 +1646,7 @@ onBeforeUnmount(() => {
 
     <TransitionGroup name="client-list" tag="div"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
-        @before-leave="onBeforeLeave">
+        @before-leave="onBeforeLeave" :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
         <div v-for="(client, index) in filteredClients" :key="client.id"
             :class="['client-card-item', !hasStaggerPlayed ? 'stagger-animate' : '']"
             :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }" v-memo="[
@@ -1790,7 +1654,7 @@ onBeforeUnmount(() => {
                 isClientRunning(client.id),
                 isClientInstalling(client),
                 installationStatus.get(client.filename),
-                isRequirementsInProgress,
+                requirementsInProgress,
                 isAnyClientDownloading,
                 isClientFavorite(client.id),
                 isClientSelected(client.id),
@@ -1802,7 +1666,7 @@ onBeforeUnmount(() => {
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                 :isClientInstalling="isClientInstalling(client)"
                 :installationStatus="installationStatus.get(client.filename)"
-                :isRequirementsInProgress="isRequirementsInProgress" :isAnyClientDownloading="isAnyClientDownloading"
+                :isRequirementsInProgress="requirementsInProgress" :isAnyClientDownloading="isAnyClientDownloading"
                 :isFavorite="isClientFavorite(client.id)" :isSelected="isClientSelected(client.id)"
                 :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
                 :isHashVerifying="hashVerifyingClients.has(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
@@ -2212,7 +2076,7 @@ onBeforeUnmount(() => {
 .client-list-move,
 .client-list-enter-active,
 .client-list-leave-active {
-    transition: all 0.4s cubic-bezier(0.55, 0, 0.1, 1), opacity 0.2s ease;
+    transition: transform 0.4s cubic-bezier(0.55, 0, 0.1, 1), opacity 0.2s ease;
 }
 
 .client-list-leave-active {

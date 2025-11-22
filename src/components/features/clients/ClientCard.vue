@@ -78,14 +78,12 @@ const favoriteRef = shallowRef<HTMLElement | null>(null);
 
 const scrollContainer = shallowRef<HTMLElement | null>(null);
 const contentRef = shallowRef<HTMLElement | null>(null);
-const thumbRef = shallowRef<HTMLElement | null>(null);
 const showScrollbar = ref(false);
 const thumbHeight = ref(20);
 const thumbTop = ref(0);
 const isDraggingScrollbar = ref(false);
 const dragStartY = ref(0);
 const dragStartTop = ref(0);
-let resizeObserver: ResizeObserver | null = null;
 
 let scrollbarUpdateScheduled = false;
 
@@ -170,8 +168,8 @@ const stopScrollbarDrag = () => {
 watch(isExpanded, (newVal) => {
     if (newVal) {
         nextTick(() => {
-            updateScrollbar();
         });
+    } else {
     }
 });
 
@@ -828,23 +826,56 @@ const handleCardKeyDown = (event: KeyboardEvent) => {
 
 onMounted(() => {
     document.addEventListener('keydown', handleCardKeyDown);
-
-    if (scrollContainer.value) {
-        resizeObserver = new ResizeObserver(() => {
-            updateScrollbar();
-        });
-        resizeObserver.observe(scrollContainer.value);
-    }
-    if (contentRef.value && resizeObserver) {
-        resizeObserver.observe(contentRef.value);
-    }
 });
 
 onBeforeUnmount(() => {
-    document.removeEventListener('keydown', handleCardKeyDown);
-    if (resizeObserver) {
-        resizeObserver.disconnect();
+    // Clean up expanded card state and animations
+    if (isExpanded.value && cardRef.value) {
+        const card = cardRef.value;
+        gsap.killTweensOf(card);
+
+        if (placeholder.value) {
+            placeholder.value.parentNode?.removeChild(placeholder.value);
+            placeholder.value = null;
+        }
+
+        if (backdropRef.value) {
+            if (backdropRef.value.parentNode) {
+                backdropRef.value.parentNode.removeChild(backdropRef.value);
+            }
+            backdropRef.value = null;
+        }
+
+        card.style.position = '';
+        card.style.top = '';
+        card.style.left = '';
+        card.style.width = '';
+        card.style.height = '';
+        card.style.zIndex = '';
+        card.style.boxShadow = '';
+        card.style.overflow = '';
+        card.style.borderRadius = '';
+
+        const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
+        if (detailsContainer) {
+            gsap.killTweensOf(detailsContainer);
+            gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
+            const extraInfoElements = detailsContainer.querySelectorAll('.extra-info > *');
+            gsap.killTweensOf(extraInfoElements);
+            gsap.set(extraInfoElements, { opacity: 0, y: 20 });
+        }
+        isExpanded.value = false;
+        emit('expanded-state-changed', props.client.id, false);
     }
+
+    // Screenshot viewer cleanup
+    if (isScreenshotViewerOpen.value) {
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleScreenshotKeydown);
+    }
+
+    // Keyboard and resize listeners
+    document.removeEventListener('keydown', handleCardKeyDown);
 });
 </script>
 
@@ -866,12 +897,11 @@ onBeforeUnmount(() => {
                 </svg>
             </div>
         </div>
-        <transition name="fade">
-            <div v-if="isMultiSelectMode && !isSelected && !isExpanded" class="absolute z-0"
-                style="right: 1.1rem; top: 1.1rem;">
-                <div class="w-5 h-5 border-2 border-base-content/30 rounded-full bg-base-100"></div>
-            </div>
-        </transition>
+        <div class="absolute z-0 transition-opacity duration-200"
+            :class="[(isMultiSelectMode && !isSelected && !isExpanded) ? 'opacity-100' : 'opacity-0 pointer-events-none']"
+            style="right: 1.1rem; top: 1.1rem;">
+            <div class="w-5 h-5 border-2 border-base-content/30 rounded-full bg-base-100"></div>
+        </div>
 
         <button @click="!isCollapsing && collapseCard()" :disabled="isCollapsing"
             class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
@@ -1283,54 +1313,6 @@ onBeforeUnmount(() => {
     border-radius: 999px;
     border: 3px solid transparent;
     background-clip: content-box;
-}
-
-.status-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 1rem;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border: 1px solid;
-    transition: all 0.2s ease;
-}
-
-.status-success {
-    background: rgba(34, 197, 94, 0.1);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: rgb(34, 197, 94);
-}
-
-.status-warning {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.3);
-    color: rgb(245, 158, 11);
-}
-
-.status-error {
-    background: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: rgb(239, 68, 68);
-}
-
-.status-info {
-    background: rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.3);
-    color: rgb(59, 130, 246);
-}
-
-.status-dot {
-    width: 0.375rem;
-    height: 0.375rem;
-    border-radius: 50%;
-    background: currentColor;
 }
 
 .progress-bar-container {
