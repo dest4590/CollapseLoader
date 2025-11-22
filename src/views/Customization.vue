@@ -373,8 +373,9 @@ defineEmits(['change-view']);
 import { ref, onMounted, onUnmounted, watch, type Ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ClipboardCopy, ClipboardPaste, Save, Store, SunMoon } from 'lucide-vue-next';
-import { invoke } from '@tauri-apps/api/core';
+// invoke removed in favor of settingsService
 import { useToast } from '../services/toastService';
+import { settingsService } from '../services/settingsService';
 import { themeService } from '../services/themeService';
 import PresetManager from '../components/features/PresetManager.vue';
 import {
@@ -520,26 +521,18 @@ watch(
     { deep: false }
 );
 
+// settingsService imported at top for usage
+
 const changeTheme = async (theme: string) => {
     try {
         selectedTheme.value = theme;
         document.documentElement.setAttribute('data-theme', theme);
 
-        const currentSettings = await invoke('get_settings');
-
-        const settingsObj = typeof currentSettings === 'object' && currentSettings !== null
-            ? { ...currentSettings }
-            : {};
-
-        const inputSettings = {
-            ...settingsObj,
-            theme: { value: theme, show: false }
-        };
-        if ('config_path' in inputSettings) {
-            delete inputSettings.config_path;
-        }
-
-        await invoke('save_settings', { inputSettings: inputSettings });
+        await settingsService.loadSettings();
+        const currentSettings = settingsService.getSettings();
+        const inputSettings = { ...currentSettings, theme: { value: theme, show: false } } as any;
+        if ('config_path' in inputSettings) delete inputSettings.config_path;
+        await settingsService.saveSettings(inputSettings);
 
         addToast(t('theme.change_success'), 'success');
     } catch (error) {

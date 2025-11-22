@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    ref,
-    onMounted,
-    onUnmounted,
-    reactive,
-    watch,
-    computed,
-    nextTick,
-} from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import AnimatedSlider from '../components/ui/AnimatedSlider.vue';
 import {
@@ -35,6 +27,7 @@ import {
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
 import { syncService, type SyncServiceState } from '../services/syncService';
+import { settingsService } from '../services/settingsService';
 import { globalUserStatus } from '../composables/useUserStatus';
 import SyncStatus from '../components/common/SyncStatus.vue';
 import AddAccountModal from '../components/modals/social/account/AddAccountModal.vue';
@@ -52,15 +45,6 @@ import { useI18n } from 'vue-i18n';
 import { formatDate } from '../utils/utils';
 import { useModal } from '../services/modalService';
 
-interface Setting<T> {
-    value: T;
-    show: boolean;
-}
-
-interface Settings {
-    [key: string]: Setting<any>;
-}
-
 interface Account {
     id: string;
     username: string;
@@ -70,18 +54,15 @@ interface Account {
     is_active: boolean;
 }
 
-interface Flags {
-    [key: string]: any;
-}
+// Flags are available via the settings service: settingsService.flags
 
-const settings = reactive<Settings>({});
+const settings = settingsService.settings;
 const accounts = ref<Account[]>([]);
 const activeTab = ref<'general' | 'sync' | 'accounts'>('general');
 const loading = ref(true);
-const isSaving = ref(false);
+// Saving handled in settingsService
 const isRefreshing = ref(false);
 const { addToast, setToastPosition, getToastPosition } = useToast();
-let saveTimeout: number | null = null;
 
 const editingAccount = ref<Account | null>(null);
 const accountToDelete = ref<Account | null>(null);
@@ -113,7 +94,7 @@ const checkRamWarning = () => {
 watch(ramOptionIndex, checkRamWarning);
 watch(systemMemory, checkRamWarning);
 
-const flags = reactive<Flags>({});
+// Flags are available via settingsService.flags when needed
 
 const { t } = useI18n();
 const availableLanguages = getAvailableLanguages();
@@ -165,13 +146,7 @@ watch(
 const loadSettings = async () => {
     try {
         loading.value = true;
-        const loadedSettings = await invoke<Settings>('get_settings');
-
-        Object.keys(settings).forEach((key) => delete settings[key]);
-
-        Object.entries(loadedSettings).forEach(([key, value]) => {
-            settings[key] = value;
-        });
+        await settingsService.loadSettings();
     } catch (error) {
         console.error('Failed to load settings:', error);
         addToast(t('settings.load_settings_failed', { error }), 'error');
@@ -217,47 +192,17 @@ const loadAccounts = async (skipLoading = false) => {
 
 const loadFlags = async () => {
     try {
-        const loadedFlags = await invoke<Flags>('get_flags');
-        Object.keys(flags).forEach((key) => delete flags[key]);
-        Object.entries(loadedFlags).forEach(([key, value]) => {
-            flags[key] = value;
-        });
+        await settingsService.loadFlags();
     } catch (error) {
         console.error('Failed to load flags:', error);
         addToast(t('settings.load_flags_failed', { error }), 'error');
     }
 };
 
-const saveSettings = async () => {
-    try {
-        isSaving.value = true;
-        await invoke('save_settings', { inputSettings: settings });
-    } catch (error) {
-        console.error('Failed to save settings:', error);
-        addToast(t('settings.save_settings_failed', { error }), 'error');
-    } finally {
-        isSaving.value = false;
-    }
-};
+// Explicit save is available via the settings service: settingsService.saveSettings()
 
-const debouncedSave = () => {
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
-    saveTimeout = setTimeout(() => {
-        saveSettings();
-    }, 500) as unknown as number;
-};
 
-watch(
-    settings,
-    () => {
-        if (!loading.value) {
-            debouncedSave();
-        }
-    },
-    { deep: true }
-);
+// Auto-save is handled in settingsService; explicit saveSettings remains available
 
 const showAddAccountDialog = () => {
     showModal(
@@ -1146,22 +1091,5 @@ html[data-theme='dark'] .discord-icon {
 
 html[data-theme='light'] .discord-icon {
     filter: invert(0%) sepia(15%) saturate(17%) hue-rotate(253deg) brightness(95%) contrast(103%);
-}
-
-html[data-reduce-motion='true'] .settings-card,
-html[data-reduce-motion='true'] .animate-fadeInUp,
-html[data-reduce-motion='true'] .animate-slide-up,
-html[data-reduce-motion='true'] .animate-slide-in-right,
-html[data-reduce-motion='true'] .animate-bounce-gentle,
-html[data-reduce-motion='true'] .slide-up,
-html[data-reduce-motion='true'] .tab-switch-enter-from,
-html[data-reduce-motion='true'] .tab-switch-leave-to,
-html[data-reduce-motion='true'] .expert-fade-enter-from,
-html[data-reduce-motion='true'] .expert-fade-leave-to {
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    max-height: none !important;
 }
 </style>

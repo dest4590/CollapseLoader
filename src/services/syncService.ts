@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { userService, type SyncData } from './userService';
+import { settingsService } from './settingsService';
 
 export type ToastFunction = (message: string, type: string) => void;
 export type TranslateFunction = (key: string, params?: Record<string, any>) => string;
@@ -173,8 +174,9 @@ class SyncService {
         try {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            const [settings, favorites, accounts] = await Promise.all([
-                invoke('get_settings'),
+            await settingsService.loadSettings();
+            const settings = settingsService.getSettings();
+            const [favorites, accounts] = await Promise.all([
                 invoke<number[]>('get_favorite_clients'),
                 invoke<any[]>('get_accounts')
             ]);
@@ -219,7 +221,7 @@ class SyncService {
             if (!cloudData) return false;
 
             if (cloudData.settings_data && Object.keys(cloudData.settings_data).length > 0) {
-                await invoke('save_settings', { input_settings: cloudData.settings_data });
+                await settingsService.saveSettings(cloudData.settings_data as any);
             }
 
             if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data)) {

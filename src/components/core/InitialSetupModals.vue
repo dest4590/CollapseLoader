@@ -159,15 +159,15 @@ const handleLanguageChange = async (languageCode: string) => {
 
 const handleSliderChange = () => { };
 
+import { settingsService } from '../../services/settingsService';
+
 const saveRamSettings = async () => {
     try {
-        const currentSettings = await invoke('get_settings');
+        await settingsService.loadSettings();
+        const currentSettings = settingsService.getSettings();
         const ramValue = ramOptions[ramOptionIndex.value].mb;
-        const newSettings = {
-            ...(currentSettings as any),
-            ram: { value: ramValue, show: true },
-        };
-        await invoke('save_settings', { inputSettings: newSettings });
+        const newSettings = { ...(currentSettings as any), ram: { value: ramValue, show: true } } as any;
+        await settingsService.saveSettings(newSettings);
     } catch (error) {
         console.error('Failed to save RAM settings:', error);
     }

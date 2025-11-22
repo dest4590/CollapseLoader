@@ -17,6 +17,7 @@ import { useUser } from './composables/useUser';
 import { globalUserStatus } from './composables/useUserStatus';
 import { useModal } from './services/modalService';
 import { syncService } from './services/syncService';
+import { settingsService } from './services/settingsService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
@@ -41,7 +42,7 @@ import { fetchSettings, applyLanguageOnStartup, applyThemeOnStartup } from './ut
 import { getDiscordState } from './utils/discord';
 import { VALID_TABS } from './utils/tabs';
 import { getIsDevelopment } from './utils/isDevelopment';
-import { isHalloweenEvent, getEventGreeting } from './utils/events';
+import { isHalloweenEvent, getEventGreeting, applyCursorForEvent } from './utils/events';
 import Preloader from './components/core/Preloader.vue';
 
 interface Setting<T> {
@@ -53,12 +54,6 @@ interface Flags {
     disclaimer_shown: Setting<boolean>;
     first_run: Setting<boolean>;
     optional_analytics: Setting<boolean>;
-}
-
-interface AppSettings {
-    theme: Setting<string>;
-    language: Setting<string>;
-    [key: string]: Setting<any>;
 }
 
 const { t, locale } = useI18n();
@@ -73,9 +68,6 @@ const loadingStates = [
 ];
 const currentProgress = ref(0);
 const totalSteps = ref(4);
-
-
-
 const showInitialDisclaimer = ref(false);
 const showFirstRunInfo = ref(false);
 const initialModalsLoaded = ref(false);
@@ -179,6 +171,10 @@ const initApp = async () => {
     await applyLanguageOnStartup();
 
     bootLogService.languageApplied(locale.value || getCurrentLanguage() || 'en');
+
+    await applyCursorForEvent();
+
+    bootLogService.cursorApplied();
 
     const { getToastPosition } = useToast();
     getToastPosition();
@@ -404,15 +400,14 @@ const handleDisclaimerAccepted = async () => {
     }
 };
 
+
 const handleThemeChanged = async (newTheme: string) => {
     currentTheme.value = newTheme;
     try {
-        const settings = await invoke<AppSettings>('get_settings');
-        const newSettings = {
-            ...settings,
-            theme: { ...settings.theme, value: newTheme },
-        };
-        await invoke('save_settings', { inputSettings: newSettings });
+        await settingsService.loadSettings();
+        const settings = settingsService.getSettings();
+        const newSettings = { ...settings, theme: { ...(settings as any).theme, value: newTheme } } as any;
+        await settingsService.saveSettings(newSettings);
     } catch (error) {
         console.error('Failed to save theme from initial setup:', error);
         addToast(t('toast.settings.theme_save_failed', { error }), 'error');
@@ -561,6 +556,7 @@ const getTransitionName = () => {
 
 onMounted(() => {
     initApp();
+    settingsService.loadSettings();
     checkAuthStatus();
 
     (async () => {
@@ -577,8 +573,8 @@ onMounted(() => {
 
         try {
             globalUserStatus.setPlayingClient(`${payload.name} (${payload.version || 'unknown version'})`);
-
-            const settings = await invoke<AppSettings>('get_settings');
+            await settingsService.loadSettings();
+            const settings = settingsService.getSettings() as any;
             if (settings.discord_rpc_enabled?.value) {
                 await invoke('update_presence', {
                     details: t('discord.details.in_game'),
@@ -602,8 +598,8 @@ onMounted(() => {
 
         try {
             globalUserStatus.setOnline();
-
-            const settings = await invoke<AppSettings>('get_settings');
+            await settingsService.loadSettings();
+            const settings = settingsService.getSettings() as any;
             if (settings.discord_rpc_enabled?.value) {
                 await invoke('update_presence', {
                     details: t('discord.details.in_menu'),

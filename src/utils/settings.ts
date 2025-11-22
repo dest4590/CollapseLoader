@@ -1,6 +1,6 @@
-import { invoke } from '@tauri-apps/api/core';
 import { changeLanguage } from '../i18n';
 import { themeService } from '../services/themeService';
+import { settingsService } from '../services/settingsService';
 
 export interface Setting<T> {
     description: string;
@@ -15,7 +15,8 @@ export interface AppSettings {
 
 export const fetchSettings = async (): Promise<AppSettings | null> => {
     try {
-        return await invoke<AppSettings>('get_settings');
+        await settingsService.loadSettings();
+        return settingsService.getSettings() as unknown as AppSettings;
     } catch (err) {
         console.warn('fetchSettings failed', err);
         return null;

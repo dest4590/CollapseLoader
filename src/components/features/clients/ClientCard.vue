@@ -971,10 +971,10 @@ onBeforeUnmount(() => {
                                         {{ client.meta.size || '0' }} MB
                                     </span>
                                 </button>
-                                <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20 launch-btn"
+                                <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
                                     :disabled="isRequirementsInProgress" :class="clientIsRunning
-                                        ? 'btn-error focus:ring-error'
-                                        : 'btn-primary focus:ring-primary'
+                                        ? 'btn-error'
+                                        : 'btn-primary'
                                         ">
                                     <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
                                     {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
