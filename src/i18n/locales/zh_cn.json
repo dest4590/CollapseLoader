@@ -300,7 +300,8 @@
     "details": "详情",
     "send": "发送",
     "copied_to_clipboard": "颜色 {color} 已复制到剪贴板",
-    "done": "完成"
+    "done": "完成",
+    "click": "点击"
   },
   "auth": {
     "logout": {
@@ -956,8 +957,7 @@
         }
       },
       "no_changelog_desc": "更新与改动将显示在此处。"
-    },
-    "insecure_tooltip": "此客户端被标记为不安全，点击查看详情"
+    }
   },
   "customization": {},
   "updater": {

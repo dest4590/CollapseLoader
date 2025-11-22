@@ -829,7 +829,6 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    // Clean up expanded card state and animations
     if (isExpanded.value && cardRef.value) {
         const card = cardRef.value;
         gsap.killTweensOf(card);
@@ -868,13 +867,11 @@ onBeforeUnmount(() => {
         emit('expanded-state-changed', props.client.id, false);
     }
 
-    // Screenshot viewer cleanup
     if (isScreenshotViewerOpen.value) {
         document.body.style.overflow = '';
         document.removeEventListener('keydown', handleScreenshotKeydown);
     }
 
-    // Keyboard and resize listeners
     document.removeEventListener('keydown', handleCardKeyDown);
 });
 </script>
@@ -920,10 +917,9 @@ onBeforeUnmount(() => {
                         <h2 class="card-title text-base">
                             {{ client.name }}
                             <div v-if="client.insecure">
-                                <div class="tooltip tooltip-left" :data-tip="t('client.insecure_tooltip')"
+                                <div class="tooltip tooltip-bottom" :data-tip="t('common.click')"
                                     @click="showInsecureWarning">
-                                    <AlertTriangle
-                                        class="text-warning w-4 h-4 transition-all duration-500 hover:bg-base-200" />
+                                    <AlertTriangle class="text-warning w-4 h-4" />
                                 </div>
                             </div>
                         </h2>

@@ -300,7 +300,8 @@
     "details": "Details",
     "send": "Send",
     "copied_to_clipboard": "Color {color} copied to clipboard",
-    "done": "Done"
+    "done": "Done",
+    "click": "Click"
   },
   "auth": {
     "logout": {
@@ -968,8 +969,7 @@
         }
       },
       "no_changelog_desc": "Updates and changes will appear here."
-    },
-    "insecure_tooltip": "This client is marked as insecure, tap to view details"
+    }
   },
   "customization": {},
   "updater": {
