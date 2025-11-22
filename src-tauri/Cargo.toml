@@ -44,3 +44,4 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.55.0" }
+windows = { version = "0.62.2", features = ["Win32_UI_HiDpi"] }

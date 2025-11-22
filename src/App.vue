@@ -4,8 +4,6 @@ import { listen } from '@tauri-apps/api/event';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { router } from './services/router';
 import { useI18n } from 'vue-i18n';
-import { Vue3Lottie } from 'vue3-lottie';
-import preloader from './assets/misc/preloader.json';
 import GlobalModal from './components/modals/GlobalModal.vue';
 import DevMenuModal from './components/core/DevMenuModal.vue';
 import InitialSetupModals from './components/core/InitialSetupModals.vue';
@@ -14,7 +12,6 @@ import Sidebar from './components/layout/Sidebar.vue';
 import ClientCrashModal from './components/modals/clients/ClientCrashModal.vue';
 import RegisterPromptModal from './components/modals/social/account/RegisterPromptModal.vue';
 import ToastContainer from './components/notifications/ToastContainer.vue';
-import BootLogs from './components/core/BootLogs.vue';
 import { globalFriends } from './composables/useFriends';
 import { useUser } from './composables/useUser';
 import { globalUserStatus } from './composables/useUserStatus';
@@ -45,6 +42,7 @@ import { getDiscordState } from './utils/discord';
 import { VALID_TABS } from './utils/tabs';
 import { getIsDevelopment } from './utils/isDevelopment';
 import { isHalloweenEvent, getEventGreeting } from './utils/events';
+import Preloader from './components/core/Preloader.vue';
 
 interface Setting<T> {
     description: string;
@@ -75,6 +73,9 @@ const loadingStates = [
 ];
 const currentProgress = ref(0);
 const totalSteps = ref(4);
+
+
+
 const showInitialDisclaimer = ref(false);
 const showFirstRunInfo = ref(false);
 const initialModalsLoaded = ref(false);
@@ -694,46 +695,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div id="preloader" v-if="showPreloader" role="status" aria-live="polite" :aria-label="loadingState"
-        class="fixed inset-0 bg-base-300 flex items-center justify-center">
-        <BootLogs v-if="isDev" :current-progress="currentProgress / totalSteps" :loading-state="loadingState" />
-
-        <div class="flex flex-col items-center justify-center h-full w-screen relative z-10">
-            <div v-if="!halloweenActive" class="w-48 h-48 animate-pulse-subtle">
-                <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
-            </div>
-            <div v-else class="w-48 h-48">
-                <img src="./assets/misc/ghosts.gif" alt="Loading..." />
-            </div>
-
-            <span class="sr-only">{{ loadingState }}</span>
-
-            <div class="loading-status mt-6">
-                <transition name="slide-fade" mode="out-in">
-                    <span :key="loadingState" class="text-lg font-medium"
-                        :class="{ invert: currentTheme === 'light' }">{{
-                            loadingState
-                        }}</span>
-                </transition>
-            </div>
-
-            <div class="w-80 progress-container mt-4" :class="{ invert: currentTheme === 'light' }">
-                <div class="bg-base-100 rounded-full h-3 overflow-hidden shadow-inner progress-track">
-                    <div class="bg-primary h-full rounded-full transition-all duration-500 ease-out progress-fill"
-                        :style="{
-                            width: `${(currentProgress / totalSteps) * 100}%`,
-                        }"></div>
-                </div>
-                <div class="text-center mt-3 text-sm opacity-75">
-                    {{ currentProgress }} / {{ totalSteps }}
-                </div>
-            </div>
-
-            <button v-if="isDev" @click="showPreloader = false" class="btn btn-sm btn-ghost mt-6">
-                Skip intro
-            </button>
-        </div>
-    </div>
+    <Preloader v-model:show="showPreloader" :is-dev="isDev" :loading-state="loadingState"
+        :current-progress="currentProgress" :total-steps="totalSteps" :halloween-active="halloweenActive"
+        :current-theme="currentTheme" />
 
     <InitialSetupModals :show-first-run="showFirstRunInfo" :show-disclaimer="showInitialDisclaimer"
         :current-theme="currentTheme" @first-run-accepted="handleFirstRunAccepted"
@@ -767,31 +731,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-#preloader {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    background-color: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    z-index: 1337;
-    transition:
-        opacity 0.4s ease,
-        transform 0.6s ease,
-        filter 0.6s ease,
-        background-color 0.6s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: auto;
-}
-
-#preloader.animate-out {
-    background-color: rgba(0, 0, 0, 0);
-}
-
 .loading-status {
     display: flex;
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -835,13 +774,11 @@ onUnmounted(() => {
 .fade-slide-enter-from {
     opacity: 0;
     transform: translateY(30px);
-    filter: blur(2px);
 }
 
 .fade-slide-leave-to {
     opacity: 0;
     transform: translateY(-30px);
-    filter: blur(2px);
 }
 
 

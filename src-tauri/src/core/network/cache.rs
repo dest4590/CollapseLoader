@@ -13,7 +13,11 @@ pub fn sanitize_path_for_filename(path: &str) -> String {
 pub fn ensure_cache_dir(cache_dir: &Path) {
     if !cache_dir.exists() {
         if let Err(e) = fs::create_dir_all(cache_dir) {
-            log_warn!("Failed to create API cache directory at {:?}: {}", cache_dir, e);
+            log_warn!(
+                "Failed to create API cache directory at {:?}: {}",
+                cache_dir,
+                e
+            );
         } else {
             log_debug!("Created cache directory at {:?}", cache_dir);
         }
@@ -56,10 +60,21 @@ pub fn read_cached_json(cache_file_path: &Path) -> Option<Value> {
     }
 }
 
-pub fn write_cache_if_changed(cache_file_path: &Path, api_data: &Value, prev_cached: &Option<Value>) {
-    let should_update_cache = prev_cached.as_ref().is_none_or(|cached| *cached != *api_data);
+pub fn write_cache_if_changed(
+    cache_file_path: &Path,
+    api_data: &Value,
+    prev_cached: &Option<Value>,
+) {
+    let should_update_cache = prev_cached
+        .as_ref()
+        .is_none_or(|cached| *cached != *api_data);
 
-    if should_update_cache && cache_file_path.parent().map(|p| p.exists()).unwrap_or(false) {
+    if should_update_cache
+        && cache_file_path
+            .parent()
+            .map(|p| p.exists())
+            .unwrap_or(false)
+    {
         match File::create(cache_file_path) {
             Ok(file) => {
                 let writer = BufWriter::new(file);
@@ -70,7 +85,7 @@ pub fn write_cache_if_changed(cache_file_path: &Path, api_data: &Value, prev_cac
                         e
                     );
                 } else {
-                    log_debug!("Cache updated");
+                    log_debug!("Cache refreshed");
                 }
             }
             Err(e) => {
