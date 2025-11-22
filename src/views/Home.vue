@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { onBeforeUnmount, onMounted, ref, computed, watch, shallowRef } from 'vue';
+import { onBeforeUnmount, onMounted, ref, computed, watch, shallowRef, nextTick } from 'vue';
 import {
     RefreshCcw,
     Folder,
@@ -67,6 +67,7 @@ const customClients = shallowRef<CustomClient[]>([]);
 const customClientsDisplayMode = ref<'global' | 'separate'>('separate');
 const favoriteClients = shallowRef<number[]>([]);
 const error = ref('');
+const clientsLoaded = ref(false);
 const runningClients = shallowRef<number[]>([]);
 const skipNextRunningCheck = ref<Set<number>>(new Set());
 const isLeaving = ref(false);
@@ -88,6 +89,8 @@ try {
 if (hasAnimatedBefore.value) {
     viewVisible.value = true;
 }
+
+const playClientSlideAnim = ref(!hasAnimatedBefore.value);
 
 const STAGGER_KEY = 'staggerCardsPlayed';
 const hasStaggerPlayed = ref<boolean>(false);
@@ -590,6 +593,7 @@ const launchClientWithAccount = async (client: Client, accountId: string) => {
 const getClients = async () => {
     try {
         error.value = '';
+        clientsLoaded.value = false;
         const response = await invoke<Client[]>('get_clients');
         if (response && response.length > 0) {
             clients.value = response;
@@ -605,6 +609,8 @@ const getClients = async () => {
         error.value = t('errors.clients_load_failed');
         addToast(t('errors.clients_load_failed'), 'error');
         clients.value = [];
+    } finally {
+        clientsLoaded.value = true;
     }
 };
 
@@ -1528,14 +1534,27 @@ onMounted(async () => {
     document.addEventListener('visibilitychange', visibilityHandler);
 
     if (!hasAnimatedBefore.value) {
-        setTimeout(() => {
-            viewVisible.value = true;
+        await nextTick();
+        viewVisible.value = true;
+        if (filteredClients.value.length > 0) {
+            const totalDelay = Math.min(Math.max(0, filteredClients.value.length) * 45 + 500, 2000);
+            setTimeout(() => {
+                playClientSlideAnim.value = false;
+                try {
+                    sessionStorage.setItem(HOME_ANIM_KEY, '1');
+                    hasAnimatedBefore.value = true;
+                } catch (e) {
+                    console.error('Failed to set sessionStorage item:', e);
+                }
+            }, totalDelay);
+        } else {
             try {
                 sessionStorage.setItem(HOME_ANIM_KEY, '1');
+                hasAnimatedBefore.value = true;
             } catch (e) {
                 console.error('Failed to set sessionStorage item:', e);
             }
-        }, 80);
+        }
     }
 
     try {
@@ -1623,7 +1642,7 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <div v-if="filteredClients.length === 0 && !error"
+    <div v-if="filteredClients.length === 0 && !error && clientsLoaded"
         class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
         <div class="text-lg font-semibold mb-2">{{ t('home.no_clients') }}</div>
         <div class="text-sm mb-4">{{ t('home.adjust_search') }}</div>
@@ -1639,20 +1658,23 @@ onBeforeUnmount(() => {
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
         :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
-        <div v-for="client in filteredClients" :key="client.id" class="client-card-item" v-memo="[
-            client.id,
-            isClientRunning(client.id),
-            isClientInstalling(client),
-            installationStatus.get(client.filename),
-            requirementsInProgress,
-            isAnyClientDownloading,
-            isClientFavorite(client.id),
-            isClientSelected(client.id),
-            isCtrlPressed,
-            expandedClientId,
-            hashVerifyingClients.has(client.id),
-            isAnyCardExpanded
-        ]">
+        <div v-for="(client, idx) in filteredClients" :key="client.id"
+            :class="['client-card-item', { 'slide-in-animate': playClientSlideAnim }]"
+            :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-memo="[
+                playClientSlideAnim,
+                client.id,
+                isClientRunning(client.id),
+                isClientInstalling(client),
+                installationStatus.get(client.filename),
+                requirementsInProgress,
+                isAnyClientDownloading,
+                isClientFavorite(client.id),
+                isClientSelected(client.id),
+                isCtrlPressed,
+                expandedClientId,
+                hashVerifyingClients.has(client.id),
+                isAnyCardExpanded
+            ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                 :isClientInstalling="isClientInstalling(client)"
                 :installationStatus="installationStatus.get(client.filename)"
@@ -2061,6 +2083,33 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(15px);
     animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.client-card-item.slide-in-animate {
+    opacity: 0;
+    transform: translateX(80px);
+    animation: slideInFromRight 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(80px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-card-item.slide-in-animate {
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
 }
 
 .client-list-move,
