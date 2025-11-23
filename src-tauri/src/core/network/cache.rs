@@ -84,8 +84,6 @@ pub fn write_cache_if_changed(
                         cache_file_path,
                         e
                     );
-                } else {
-                    log_debug!("Cache refreshed");
                 }
             }
             Err(e) => {

@@ -25,7 +25,6 @@ impl ClientManager {
         let api_option = API.as_ref();
 
         if let Some(api_instance) = api_option {
-            log_debug!("API instance available — fetching clients from API");
             let mut clients: Vec<Client> = match api_instance.json::<Vec<Client>>("clients") {
                 Ok(clients) => {
                     log_info!("Fetched {} clients from API", clients.len());
@@ -161,7 +160,6 @@ pub static CLIENT_MANAGER: LazyLock<Mutex<Option<ClientManager>>> =
 pub async fn initialize_client_manager() -> Result<(), String> {
     match ClientManager::new_async().await {
         Ok(manager) => {
-            log_info!("ClientManager async initialization succeeded — setting global manager");
             CLIENT_MANAGER.lock().map_or_else(
                 |_| {
                     log_error!("Failed to acquire lock on CLIENT_MANAGER during initialization");

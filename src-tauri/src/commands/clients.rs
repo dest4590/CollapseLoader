@@ -76,7 +76,6 @@ pub fn initialize_rpc() -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_server_connectivity_status() -> ServerConnectivityStatus {
-    log_debug!("Fetching server connectivity status");
     let servers = &SERVERS;
     servers.connectivity_status.lock().unwrap().clone()
 }

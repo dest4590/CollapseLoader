@@ -31,7 +31,6 @@ pub fn reset_flags() -> Result<(), String> {
 
 #[tauri::command]
 pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
-    log_info!("Saving application settings");
     let mut current_settings = SETTINGS.lock().unwrap();
     let config_path = current_settings.config_path.clone();
 
@@ -47,13 +46,11 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     let new_dpi_bypass_value = input_settings.dpi_bypass.value;
 
-    log_debug!("Applying new settings");
     let input_settings_clone = input_settings.clone();
     let new_settings = Settings::from_input(input_settings_clone, config_path);
     *current_settings = new_settings.clone();
 
     new_settings.save_to_disk();
-    log_info!("Settings saved to disk");
 
     drop(current_settings);
 
