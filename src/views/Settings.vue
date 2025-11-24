@@ -36,6 +36,8 @@ import ResetConfirmModal from '../components/modals/settings/ResetConfirmModal.v
 import TelemetryInfoModal from '../components/modals/clients/TelemetryInfoModal.vue';
 import ChangeRootFolderModal from '../components/modals/settings/ChangeRootFolderModal.vue';
 import DeleteAccountConfirmModal from '../components/modals/social/account/DeleteAccountConfirmModal.vue';
+import SettingCard from '../components/settings/SettingCard.vue';
+import AccountCard from '../components/settings/AccountCard.vue';
 import {
     changeLanguage,
     getAvailableLanguages,
@@ -54,13 +56,11 @@ interface Account {
     is_active: boolean;
 }
 
-// Flags are available via the settings service: settingsService.flags
 
 const settings = settingsService.settings;
 const accounts = ref<Account[]>([]);
 const activeTab = ref<'general' | 'sync' | 'accounts'>('general');
 const loading = ref(true);
-// Saving handled in settingsService
 const isRefreshing = ref(false);
 const { addToast, setToastPosition, getToastPosition } = useToast();
 
@@ -94,7 +94,6 @@ const checkRamWarning = () => {
 watch(ramOptionIndex, checkRamWarning);
 watch(systemMemory, checkRamWarning);
 
-// Flags are available via settingsService.flags when needed
 
 const { t } = useI18n();
 const availableLanguages = getAvailableLanguages();
@@ -199,10 +198,8 @@ const loadFlags = async () => {
     }
 };
 
-// Explicit save is available via the settings service: settingsService.saveSettings()
 
 
-// Auto-save is handled in settingsService; explicit saveSettings remains available
 
 const showAddAccountDialog = () => {
     showModal(
@@ -552,7 +549,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
     addToast(t('settings.toast_position.preview_message'), 'info', 3000);
 };
 </script>
-
 <template>
     <div class="max-w-4xl mx-auto slide-up">
         <div v-if="!loading" class="transition-opacity duration-300">
@@ -586,14 +582,11 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     {{ t('settings.accounts') }}
                 </a>
             </div>
-
             <transition name="tab-switch" mode="out-in">
                 <div v-if="activeTab === 'general'" key="general" class="space-y-6">
-                    <div v-for="([key, field], index) in filteredSettingsEntries" :key="key"
-                        class="card bg-base-200 shadow-md border border-base-300 settings-card"
-                        :style="{ 'animation-delay': index * 0.05 + 's' }">
-                        <div class="card-body p-4">
-                            <h2 class="card-title text-base font-semibold text-primary-focus mb-2">
+                    <div v-for="([key, field], index) in filteredSettingsEntries" :key="key">
+                        <SettingCard :field="field" :delay="index * 0.05">
+                            <template #title>
                                 <MemoryStick v-if="key === 'ram'" class="w-5 h-5 text-primary" />
                                 <Languages v-if="key === 'language'" class="w-5 h-5 text-primary" />
                                 <img src="@/assets/icons/discord.svg" v-if="key === 'discord_rpc_enabled'"
@@ -606,12 +599,11 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
                                 <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
-
-                                <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
-                                    ">
+                                <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top"
+                                    :data-tip="$t('settings.telemetry_info_title')">
                                     <Info class="w-5 h-5 text-primary cursor-pointer" @click="showTelemetryModal" />
                                 </div>
-                            </h2>
+                            </template>
 
                             <div v-if="key === 'ram'" class="space-y-3">
                                 <div class="flex items-center gap-2">
@@ -675,37 +667,24 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         getSettingDescription(key) }}</span>
                                 </label>
                             </div>
-                        </div>
+                        </SettingCard>
                     </div>
-                    <div class="card bg-base-200 shadow-md border border-base-300 settings-card" :style="{
-                        'animation-delay':
-                            filteredSettingsEntries.length * 0.05 + 's',
-                    }">
-                        <div class="card-body p-4">
-                            <h2 class="card-title text-base font-semibold text-primary-focus mb-2">
-                                <Info class="w-5 h-5 text-primary" />
-                                {{ $t('settings.toast_position.title') }}
-                            </h2>
-
-                            <div class="space-y-3">
-                                <select v-model="toastPosition" @change="
-                                    handleToastPositionChange(toastPosition)
-                                    " class="select select-bordered w-full bg-base-100">
-                                    <option v-for="option in toastPositionOptions" :key="option.value"
-                                        :value="option.value">
-                                        {{ option.label }}
-                                    </option>
-                                </select>
-                                <p class="text-xs text-base-content/70">
-                                    {{
-                                        $t(
-                                            'settings.toast_position.description'
-                                        )
-                                    }}
-                                </p>
-                            </div>
+                    <SettingCard :delay="filteredSettingsEntries.length * 0.05">
+                        <template #title>
+                            <Info class="w-5 h-5 text-primary" />
+                            {{ $t('settings.toast_position.title') }}
+                        </template>
+                        <div class="space-y-3">
+                            <select v-model="toastPosition" @change="handleToastPositionChange(toastPosition)"
+                                class="select select-bordered w-full bg-base-100">
+                                <option v-for="option in toastPositionOptions" :key="option.value"
+                                    :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                            <p class="text-xs text-base-content/70">{{ $t('settings.toast_position.description') }}</p>
                         </div>
-                    </div>
+                    </SettingCard>
                     <div class="card bg-base-200 shadow-md border border-base-300">
                         <div class="card-body p-4">
                             <h2
@@ -836,7 +815,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -871,65 +850,19 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     </div>
 
                     <transition-group name="account-list" tag="div" class="grid grid-cols-1 gap-4 overflow-hidden">
-                        <div v-for="account in filteredAccounts" :key="account.id"
-                            class="card bg-base-200 shadow-md border border-base-300 account-card overflow-x-hidden">
-                            <div class="card-body p-4">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1 space-y-1 min-w-0 pr-2">
-                                        <div class="flex items-center gap-2">
-                                            <h3 class="font-semibold text-lg text-primary-focus truncate">
-                                                {{ account.username }}
-                                            </h3>
-                                            <div v-if="account.is_active"
-                                                class="badge badge-success badge-sm whitespace-nowrap">
-                                                {{ t('settings.active') }}
-                                            </div>
-                                        </div>
-                                        <p class="text-sm text-base-content/70 flex items-center gap-2">
-                                            <span class="font-medium text-primary/80">{{ t('settings.tags') }}:</span>
-                                            <span class="flex flex-wrap gap-1">
-                                                <span v-for="tag in account.tags" :key="tag"
-                                                    class="badge badge-outline badge-xs">
-                                                    {{ tag }}
-                                                </span>
-                                            </span>
-                                        </p>
-                                        <p class="text-xs text-base-content/60 flex items-center gap-2">
-                                            <span>{{ t('settings.created') }}:
-                                                {{
-                                                    formatDate(
-                                                        account.created_at
-                                                    )
-                                                }}</span>
-                                            <span v-if="account.last_used" class="border-l border-base-content/30 pl-2">
-                                                {{ t('settings.last_used') }}:
-                                                {{
-                                                    formatDate(
-                                                        account.last_used
-                                                    )
-                                                }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <button @click="setActiveAccount(account)" class="btn btn-sm btn-circle" :class="account.is_active
-                                            ? 'btn-success text-success-content'
-                                            : 'btn-outline btn-success hover:text-success-content'
-                                            ">
-                                            <User class="w-4 h-4" />
-                                        </button>
-                                        <button @click="editAccount(account)"
-                                            class="btn btn-sm btn-circle btn-outline btn-warning hover:text-warning-content">
-                                            <Edit3 class="w-4 h-4" />
-                                        </button>
-                                        <button @click="deleteAccount(account)"
-                                            class="btn btn-sm btn-circle btn-outline btn-error hover:text-error-content">
-                                            <Trash2 class="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <AccountCard v-for="account in filteredAccounts" :key="account.id" :account="account"
+                            :formatDate="formatDate" @set-active="setActiveAccount" @edit-account="editAccount"
+                            @delete-account="deleteAccount">
+                            <template #user-icon>
+                                <User class="w-4 h-4" />
+                            </template>
+                            <template #edit-icon>
+                                <Edit3 class="w-4 h-4" />
+                            </template>
+                            <template #delete-icon>
+                                <Trash2 class="w-4 h-4" />
+                            </template>
+                        </AccountCard>
                     </transition-group>
 
                     <div v-if="accounts.length === 0 && !isRefreshing" class="text-center py-10 text-base-content/60">
@@ -946,7 +879,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
         </div>
     </div>
 </template>
-
 <style scoped>
 @reference "tailwindcss";
 @plugin "daisyui";
@@ -1007,14 +939,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
     transform: translateY(10px);
 }
 
-.confirm-dialog-enter-active {
-    animation: scaleIn 0.3s ease-out forwards;
-}
-
-.confirm-dialog-leave-active {
-    animation: scaleOut 0.2s ease-in forwards;
-}
-
 @keyframes scaleIn {
     0% {
         opacity: 0;
@@ -1044,13 +968,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
         opacity: 1;
         transform: translateY(0);
     }
-}
-
-.account-list-enter-active,
-.account-list-leave-active {
-    transition:
-        opacity 0.3s ease,
-        transform 0.3s ease;
 }
 
 .account-list-enter-from,
