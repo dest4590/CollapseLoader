@@ -69,7 +69,7 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         if dpi_bypass_changed && new_dpi_bypass_value {
             log_info!("DPI bypass enabled. Preparing to download and run package");
 
-            if let Err(e) = dpi::enable_dpi_bypass_async() {
+            if let Err(e) = dpi::download_dpi_bypass() {
                 log_error!("Failed to initiate DPI bypass setup: {e}");
             }
         }

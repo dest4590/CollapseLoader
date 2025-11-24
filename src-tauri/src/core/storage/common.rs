@@ -11,8 +11,9 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
 
     fn save_to_disk(&self) {
         log_debug!(
-            "Saving {}",
+            "Saving {} to {}.json",
             Self::resource_name(),
+            Self::resource_name()
         );
         match serde_json::to_string_pretty(&self) {
             Ok(data) => {

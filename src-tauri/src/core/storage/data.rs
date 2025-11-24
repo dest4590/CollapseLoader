@@ -1,16 +1,16 @@
 use crate::core::clients::client::ClientType;
 use crate::core::clients::manager::CLIENT_MANAGER;
+use crate::core::network::downloader::download_file;
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::archive::unzip;
 use crate::core::utils::globals::{JDK_FOLDER, ROOT_DIR};
+use crate::core::utils::hashing::calculate_md5_hash;
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
-use futures_util::StreamExt;
+use std::fs;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
-use std::time::Duration;
-use std::{fs, io};
-use tokio::io::AsyncWriteExt;
 
 pub struct Data {
     pub root_dir: PathBuf,
@@ -18,6 +18,12 @@ pub struct Data {
 
 pub static APP_HANDLE: std::sync::LazyLock<Mutex<Option<tauri::AppHandle>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
+
+struct FileInfo {
+    local_file: String,
+    file_name: String,
+    is_fabric_client: bool,
+}
 
 impl Data {
     pub fn new(root_dir: PathBuf) -> Self {
@@ -54,111 +60,11 @@ impl Data {
             (file.to_string(), file.to_string())
         };
 
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "unzip-start", &emit_name);
-        }
-
         let zip_path = self.get_local(&local_name);
         let unzip_path = self.get_local(local_name.trim_end_matches(".zip"));
 
-        if unzip_path.exists() {
-            log_debug!(
-                "Directory {} exists, will overwrite contents",
-                unzip_path.display()
-            );
-        } else {
-            log_debug!("Creating unzip directory: {}", unzip_path.display());
-            fs::create_dir_all(&unzip_path).map_err(|e| e.to_string())?;
-        }
-
-        if !zip_path.exists() {
-            log_error!(
-                "Zip file not found at expected path: {}",
-                zip_path.display()
-            );
-        } else {
-            match fs::metadata(&zip_path) {
-                Ok(_) => {}
-                Err(e) => log_warn!("Failed to read metadata for {}: {}", zip_path.display(), e),
-            }
-        }
-
-        let mut archive = zip::ZipArchive::new(fs::File::open(&zip_path).map_err(|e| {
-            log_error!("Failed to open zip file {}: {}", zip_path.display(), e);
-            e.to_string()
-        })?)
-        .map_err(|e| {
-            log_error!("Failed to read zip archive {}: {}", zip_path.display(), e);
-            e.to_string()
-        })?;
-
-        let total_files = archive.len() as u64;
-
-        let mut files_extracted: u64 = 0;
-        let mut last_percentage: u8 = 0;
-
-        for i in 0..archive.len() {
-            let mut file_entry = archive.by_index(i).map_err(|e| e.to_string())?;
-            let outpath = unzip_path.join(file_entry.mangled_name());
-
-            if file_entry.name().ends_with('/') {
-                fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
-            } else {
-                if let Some(parent) = outpath.parent() {
-                    if !parent.exists() {
-                        log_debug!(
-                            "Creating parent dir for {} -> {}",
-                            file_entry.name(),
-                            parent.display()
-                        );
-                        fs::create_dir_all(parent).map_err(|e| {
-                            log_error!("Failed to create parent dir {}: {}", parent.display(), e);
-                            e.to_string()
-                        })?;
-                    }
-                }
-                let mut outfile = fs::File::create(&outpath).map_err(|e| {
-                    log_error!("Failed to create output file {}: {}", outpath.display(), e);
-                    e.to_string()
-                })?;
-                io::copy(&mut file_entry, &mut outfile).map_err(|e| {
-                    log_error!(
-                        "Failed to write extracted file {}: {}",
-                        outpath.display(),
-                        e
-                    );
-                    e.to_string()
-                })?;
-            }
-
-            files_extracted += 1;
-
-            let percentage = ((files_extracted as f64 / total_files as f64) * 100.0) as u8;
-            if percentage != last_percentage {
-                last_percentage = percentage;
-
-                if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-                    let progress_data = serde_json::json!({
-                        "file": emit_name,
-                        "percentage": percentage,
-                        "action": "extracting",
-                        "files_extracted": files_extracted,
-                        "total_files": total_files
-                    });
-                    emit_to_main_window(app_handle, "unzip-progress", progress_data);
-                }
-            }
-        }
-
-        if let Err(e) = fs::remove_file(&zip_path) {
-            log_debug!("Failed to delete zip file {}: {}", zip_path.display(), e);
-        }
-
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "unzip-complete", &emit_name);
-        }
-
-        Ok(())
+        let app_handle = APP_HANDLE.lock().unwrap();
+        unzip(&zip_path, &unzip_path, &emit_name, app_handle.as_ref())
     }
 
     pub fn get_as_folder(&self, file: &str) -> PathBuf {
@@ -176,54 +82,74 @@ impl Data {
         file_name.to_string()
     }
 
-    pub async fn download(&self, file: &str) -> Result<(), String> {
+    fn resolve_local_file_info(file: &str) -> FileInfo {
         let is_url = file.starts_with("http://") || file.starts_with("https://");
         let local_file = if is_url {
-            file.rsplit('/').next().unwrap_or(file)
+            file.rsplit('/').next().unwrap_or(file).to_string()
         } else {
-            file
+            file.to_string()
         };
 
-        let file_name = Self::get_filename(local_file);
+        let file_name = Self::get_filename(&local_file);
         let is_fabric_client = local_file.starts_with("fabric/") && local_file.ends_with(".jar");
 
-        let file_exists = if Self::has_extension(local_file, "zip") {
-            let zip_path = self.root_dir.join(local_file);
+        FileInfo {
+            local_file,
+            file_name,
+            is_fabric_client,
+        }
+    }
+
+    fn get_destination_path(&self, file: &str, info: &FileInfo) -> PathBuf {
+        if info.is_fabric_client {
+            let jar_basename = Path::new(file)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(file);
+            self.root_dir
+                .join(&info.file_name)
+                .join("mods")
+                .join(jar_basename)
+        } else if Self::has_extension(&info.local_file, "jar") {
+            self.root_dir
+                .join(format!("{}/{}", info.file_name, info.local_file))
+        } else {
+            self.root_dir.join(&info.local_file)
+        }
+    }
+
+    fn should_skip_download(&self, info: &FileInfo) -> bool {
+        if Self::has_extension(&info.local_file, "zip") {
+            let zip_path = self.root_dir.join(&info.local_file);
             zip_path.exists()
-        } else if Self::has_extension(local_file, "jar") {
-            if is_fabric_client {
-                let jar_basename = Path::new(local_file)
+        } else if Self::has_extension(&info.local_file, "jar") {
+            if info.is_fabric_client {
+                let jar_basename = Path::new(&info.local_file)
                     .file_name()
                     .and_then(|n| n.to_str())
-                    .unwrap_or(local_file);
+                    .unwrap_or(&info.local_file);
                 let jar_path = self
                     .root_dir
-                    .join(&file_name)
+                    .join(&info.file_name)
                     .join("mods")
                     .join(jar_basename);
                 jar_path.exists()
             } else {
-                let jar_path = self.get_local(&format!("{file_name}{MAIN_SEPARATOR}{local_file}"));
+                let jar_path = self.get_local(&format!(
+                    "{}{MAIN_SEPARATOR}{}",
+                    info.file_name, info.local_file
+                ));
                 jar_path.exists()
             }
         } else {
             false
-        };
-
-        if file_exists {
-            log_debug!("File {} already exists, skipping download", file);
-            return Ok(());
         }
+    }
 
-        log_debug!("Starting download for file: {}", file);
-
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "download-start", &file);
-        }
-
-        if Self::has_extension(local_file, "jar") {
-            if is_fabric_client {
-                let mods_dir = self.root_dir.join(&file_name).join("mods");
+    fn prepare_download_dirs(&self, info: &FileInfo) -> Result<(), String> {
+        if Self::has_extension(&info.local_file, "jar") {
+            if info.is_fabric_client {
+                let mods_dir = self.root_dir.join(&info.file_name).join("mods");
                 if let Err(e) = fs::create_dir_all(&mods_dir) {
                     log_error!(
                         "Failed to create fabric mods directory {}: {}",
@@ -234,7 +160,7 @@ impl Data {
                 }
                 log_debug!("Created fabric mods directory: {}", mods_dir.display());
             } else {
-                let local_path = self.get_as_folder(local_file);
+                let local_path = self.get_as_folder(&info.local_file);
                 if let Err(e) = fs::create_dir_all(&local_path) {
                     log_error!("Failed to create directory {}: {}", local_path.display(), e);
                     return Err(format!("Failed to create directory: {e}"));
@@ -245,137 +171,58 @@ impl Data {
                     .map(|s| s.sync_client_settings.value)
                     .unwrap_or(false)
                 {
-                    if let Err(e) = self.ensure_client_synced(&file_name) {
-                        log_warn!("Failed to ensure client sync for {}: {}", file_name, e);
+                    if let Err(e) = self.ensure_client_synced(&info.file_name) {
+                        log_warn!("Failed to ensure client sync for {}: {}", info.file_name, e);
                     }
                 }
             }
         }
+        Ok(())
+    }
 
-        let cdn_url = SERVERS
-            .selected_cdn
-            .read()
-            .unwrap()
-            .as_ref()
-            .map_or_else(
+    fn get_download_url(file: &str) -> Result<String, String> {
+        let is_url = file.starts_with("http://") || file.starts_with("https://");
+        if is_url {
+            Ok(file.to_string())
+        } else {
+            let cdn_url = SERVERS.selected_cdn.read().unwrap().as_ref().map_or_else(
                 || {
                     log_error!("No CDN server available for download");
                     Err("No CDN server available for download.".to_string())
                 },
                 |server| Ok(server.url.clone()),
             )?;
+            Ok(format!("{cdn_url}{file}"))
+        }
+    }
 
-        let download_url = if is_url {
-            file.to_string()
-        } else {
-            format!("{cdn_url}{file}")
-        };
+    pub async fn download(&self, file: &str) -> Result<(), String> {
+        let info = Self::resolve_local_file_info(file);
 
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(600))
-            .build()
-            .map_err(|e| {
-                log_error!("Failed to create HTTP client: {}", e);
-                format!("Failed to create HTTP client: {e}")
-            })?;
-
-        let response = client.get(&download_url).send().await.map_err(|e| {
-            log_error!("Failed to make HTTP request to {}: {}", download_url, e);
-            format!("Failed to download file {file}: {e}")
-        })?;
-
-        if !response.status().is_success() {
-            let error_msg = format!(
-                "Failed to download file {}: HTTP {} - {}",
-                file,
-                response.status().as_u16(),
-                response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("Unknown error")
-            );
-            log_error!("{}", error_msg);
-            return Err(error_msg);
+        if self.should_skip_download(&info) {
+            log_debug!("File {} already exists, skipping download", file);
+            return Ok(());
         }
 
-        let total_size = response.content_length();
-        let dest_path = if is_fabric_client {
-            let jar_basename = Path::new(file)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(file);
-            self.root_dir
-                .join(&file_name)
-                .join("mods")
-                .join(jar_basename)
-        } else if Self::has_extension(local_file, "jar") {
-            self.root_dir.join(format!("{file_name}/{local_file}"))
-        } else {
-            self.root_dir.join(local_file)
-        };
-
-        let mut dest = tokio::fs::File::create(&dest_path).await.map_err(|e| {
-            log_error!(
-                "Failed to create destination file {}: {}",
-                dest_path.display(),
-                e
-            );
-            format!("Failed to create file: {e}")
-        })?;
-
-        log_info!("Created destination file: {}", dest_path.display());
-
-        let mut downloaded: u64 = 0;
-        let mut last_percentage: u8 = 0;
-        let mut stream = response.bytes_stream();
-
-        while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| {
-                log_error!("Failed to read response data for {}: {}", file, e);
-                format!("Network read error: {e}")
-            })?;
-
-            dest.write_all(&chunk).await.map_err(|e| {
-                log_error!(
-                    "Failed to write data to file {}: {}",
-                    dest_path.display(),
-                    e
-                );
-                format!("File write error: {e}")
-            })?;
-
-            downloaded += chunk.len() as u64;
-
-            let percentage = total_size.map_or_else(
-                || std::cmp::min(99, (downloaded / 1024 / 1024) as u8),
-                |total| ((downloaded as f64 / total as f64) * 100.0) as u8,
-            );
-
-            if percentage != last_percentage {
-                last_percentage = percentage;
-                if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-                    let progress_data = serde_json::json!({
-                        "file": file,
-                        "percentage": percentage,
-                        "downloaded": downloaded,
-                        "total": total_size.unwrap_or(0),
-                        "action": "downloading"
-                    });
-                    emit_to_main_window(app_handle, "download-progress", progress_data);
-                }
-            }
-        }
-
-        dest.flush().await.map_err(|e| {
-            log_error!("Failed to flush file {}: {}", dest_path.display(), e);
-            format!("File flush error: {e}")
-        })?;
+        log_debug!("Starting download for file: {}", file);
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "download-complete", &file);
+            emit_to_main_window(app_handle, "download-start", &file);
         }
 
-        if Self::has_extension(local_file, "zip") {
+        self.prepare_download_dirs(&info)?;
+
+        let download_url = Self::get_download_url(file)?;
+        let dest_path = self.get_destination_path(file, &info);
+
+        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        download_file(&download_url, &dest_path, file, app_handle.as_ref()).await?;
+
+        if let Some(handle) = app_handle.as_ref() {
+            emit_to_main_window(handle, "download-complete", &file);
+        }
+
+        if Self::has_extension(&info.local_file, "zip") {
             self.unzip(file).map_err(|e| {
                 log_error!("Failed to extract {}: {}", file, e);
                 if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
@@ -389,7 +236,7 @@ impl Data {
             })?;
         }
 
-        if Self::has_extension(local_file, "jar") {
+        if Self::has_extension(&info.local_file, "jar") {
             log_debug!("Verifying MD5 hash for client file: {}", file);
             self.verify_client_hash(file, &dest_path).map_err(|e| {
                 log_error!("Failed to verify client hash for {}: {}", file, e);
@@ -401,44 +248,53 @@ impl Data {
     }
 
     pub fn ensure_client_synced(&self, client_base: &str) -> Result<(), String> {
-        let folders_to_sync = ["resourcepacks"];
-        let files_to_sync = ["options.txt", "optionsof.txt"];
-
         let global_options_dir = self.root_dir.join("synced_options");
         if !global_options_dir.exists() {
-            if let Err(e) = fs::create_dir_all(&global_options_dir) {
-                return Err(format!("Failed to create global options dir: {e}"));
-            }
+            fs::create_dir_all(&global_options_dir)
+                .map_err(|e| format!("Failed to create global options dir: {e}"))?;
         }
 
         let client_dir = self.root_dir.join(client_base);
         if !client_dir.exists() {
-            if let Err(e) = fs::create_dir_all(&client_dir) {
-                return Err(format!("Failed to create client dir: {e}"));
-            }
+            fs::create_dir_all(&client_dir)
+                .map_err(|e| format!("Failed to create client dir: {e}"))?;
         }
 
-        for folder in &folders_to_sync {
-            let target = global_options_dir.join(folder);
+        let sync_item = |name: &str, is_dir: bool| -> Result<(), String> {
+            let target = global_options_dir.join(name);
             if !target.exists() {
-                if let Err(e) = fs::create_dir_all(&target) {
-                    log_warn!(
-                        "Failed to create global {} dir: {}: {}",
-                        folder,
-                        target.display(),
-                        e
-                    );
-                    continue;
+                if is_dir {
+                    fs::create_dir_all(&target).map_err(|e| {
+                        format!(
+                            "Failed to create global {} dir: {}: {}",
+                            name,
+                            target.display(),
+                            e
+                        )
+                    })?;
+                } else {
+                    fs::write(&target, "").map_err(|e| {
+                        format!(
+                            "Failed to create global {} file at {}: {}",
+                            name,
+                            target.display(),
+                            e
+                        )
+                    })?;
                 }
             }
 
-            let client_target = client_dir.join(folder);
-
+            let client_target = client_dir.join(name);
             if client_target.exists() {
-                if let Err(e) = fs::remove_dir_all(&client_target) {
+                let res = if client_target.is_dir() {
+                    fs::remove_dir_all(&client_target)
+                } else {
+                    fs::remove_file(&client_target)
+                };
+                if let Err(e) = res {
                     log_warn!(
                         "Failed to remove existing client {} at {}: {}",
-                        folder,
+                        name,
                         client_target.display(),
                         e
                     );
@@ -448,52 +304,22 @@ impl Data {
             if let Err(e) = Self::create_symlink(&target, &client_target) {
                 log_warn!(
                     "Failed to symlink {} for {}: {} -> {}: {}",
-                    folder,
+                    name,
                     client_base,
                     target.display(),
                     client_target.display(),
                     e
                 );
             }
+            Ok(())
+        };
+
+        for folder in &["resourcepacks"] {
+            let _ = sync_item(folder, true);
         }
 
-        for file in &files_to_sync {
-            let global_file = global_options_dir.join(file);
-            if !global_file.exists() {
-                if let Err(e) = fs::write(&global_file, "") {
-                    log_warn!(
-                        "Failed to create global {} file at {}: {}",
-                        file,
-                        global_file.display(),
-                        e
-                    );
-                    continue;
-                }
-            }
-
-            let client_file = client_dir.join(file);
-
-            if client_file.exists() {
-                if let Err(e) = fs::remove_file(&client_file) {
-                    log_warn!(
-                        "Failed to remove existing client {} at {}: {}",
-                        file,
-                        client_file.display(),
-                        e
-                    );
-                }
-            }
-
-            if let Err(e) = Self::create_symlink(&global_file, &client_file) {
-                log_warn!(
-                    "Failed to symlink {} for {}: {} -> {}: {}",
-                    file,
-                    client_base,
-                    global_file.display(),
-                    client_file.display(),
-                    e
-                );
-            }
+        for file in &["options.txt", "optionsof.txt"] {
+            let _ = sync_item(file, false);
         }
 
         Ok(())
@@ -523,52 +349,7 @@ impl Data {
             emit_to_main_window(app_handle, "download-start", &file);
         }
 
-        let is_url = file.starts_with("http://") || file.starts_with("https://");
-        let cdn_url = SERVERS
-            .selected_cdn
-            .read()
-            .unwrap()
-            .as_ref()
-            .map_or_else(
-                || {
-                    log_error!("No CDN server available for download");
-                    Err("No CDN server available for download.".to_string())
-                },
-                |server| Ok(server.url.clone()),
-            )?;
-
-        let download_url = if is_url {
-            file.to_string()
-        } else {
-            format!("{cdn_url}{file}")
-        };
-
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(600))
-            .build()
-            .map_err(|e| {
-                log_error!("Failed to create HTTP client: {}", e);
-                format!("Failed to create HTTP client: {e}")
-            })?;
-
-        let response = client.get(&download_url).send().await.map_err(|e| {
-            log_error!("Failed to make HTTP request to {}: {}", download_url, e);
-            format!("Failed to download file {file}: {e}")
-        })?;
-
-        if !response.status().is_success() {
-            let error_msg = format!(
-                "Failed to download file {}: HTTP {} - {}",
-                file,
-                response.status().as_u16(),
-                response
-                    .status()
-                    .canonical_reason()
-                    .unwrap_or("Unknown error")
-            );
-            log_error!("{}", error_msg);
-            return Err(error_msg);
-        }
+        let download_url = Self::get_download_url(file)?;
 
         let dest_dir = self.root_dir.join(dest_folder);
         if let Err(e) = std::fs::create_dir_all(&dest_dir) {
@@ -583,88 +364,39 @@ impl Data {
         let dest_filename = file.rsplit('/').next().unwrap_or(file);
         let dest_path = dest_dir.join(dest_filename);
 
-        let mut dest = tokio::fs::File::create(&dest_path).await.map_err(|e| {
-            log_error!(
-                "Failed to create destination file {}: {}",
-                dest_path.display(),
-                e
-            );
-            format!("Failed to create file: {e}")
-        })?;
+        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        download_file(&download_url, &dest_path, file, app_handle.as_ref()).await?;
 
-        log_info!(
-            "Created destination file for folder download: {}",
-            dest_path.display()
-        );
-
-        let total_size = response.content_length();
-        let mut downloaded: u64 = 0;
-        let mut last_percentage: u8 = 0;
-        let mut stream = response.bytes_stream();
-
-        while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| {
-                log_error!("Failed to read response data for {}: {}", file, e);
-                format!("Network read error: {e}")
-            })?;
-
-            dest.write_all(&chunk).await.map_err(|e| {
-                log_error!(
-                    "Failed to write data to file {}: {}",
-                    dest_path.display(),
-                    e
-                );
-                format!("File write error: {e}")
-            })?;
-
-            downloaded += chunk.len() as u64;
-
-            let percentage = total_size.map_or_else(
-                || std::cmp::min(99, (downloaded / 1024 / 1024) as u8),
-                |total| ((downloaded as f64 / total as f64) * 100.0) as u8,
-            );
-
-            if percentage != last_percentage {
-                last_percentage = percentage;
-                if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-                    let progress_data = serde_json::json!({
-                        "file": file,
-                        "percentage": percentage,
-                        "downloaded": downloaded,
-                        "total": total_size.unwrap_or(0),
-                        "action": "downloading"
-                    });
-                    emit_to_main_window(app_handle, "download-progress", progress_data);
-                }
-            }
-        }
-
-        dest.flush().await.map_err(|e| {
-            log_error!("Failed to flush file {}: {}", dest_path.display(), e);
-            format!("File flush error: {e}")
-        })?;
-
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "download-complete", &file);
+        if let Some(handle) = app_handle.as_ref() {
+            emit_to_main_window(handle, "download-complete", &file);
         }
 
         Ok(())
     }
 
     fn verify_client_hash(&self, filename: &str, file_path: &PathBuf) -> Result<(), String> {
-        let hash_verify_enabled = {
-            let settings = SETTINGS
-                .lock()
-                .map_err(|_| "Failed to access settings".to_string())?;
-            settings.hash_verify.value
-        };
+        let hash_verify_enabled = SETTINGS
+            .lock()
+            .map_err(|_| "Failed to access settings".to_string())?
+            .hash_verify
+            .value;
 
-        let (expected_hash, client_id, client_name, is_fabric) = {
-            CLIENT_MANAGER
+        if !hash_verify_enabled {
+            log_info!(
+                "Hash verification is disabled, skipping check for {}",
+                filename
+            );
+            return Ok(());
+        }
+
+        let client_info = {
+            let manager_guard = CLIENT_MANAGER
                 .lock()
-                .map_err(|_| "Failed to acquire lock on client manager".to_string())?
+                .map_err(|_| "Failed to acquire lock on client manager".to_string())?;
+            let manager = manager_guard
                 .as_ref()
-                .ok_or_else(|| "Client manager not initialized".to_string())?
+                .ok_or_else(|| "Client manager not initialized".to_string())?;
+            manager
                 .clients
                 .iter()
                 .find(|c| c.filename == filename)
@@ -676,16 +408,10 @@ impl Data {
                         c.client_type == ClientType::Fabric,
                     )
                 })
-                .ok_or_else(|| format!("Client not found for filename: {filename}"))?
         };
 
-        if !hash_verify_enabled {
-            log_info!(
-                "Hash verification is disabled, skipping check for {}",
-                filename
-            );
-            return Ok(());
-        }
+        let (expected_hash, client_id, client_name, is_fabric) =
+            client_info.ok_or_else(|| format!("Client not found for filename: {filename}"))?;
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
             emit_to_main_window(
@@ -709,9 +435,9 @@ impl Data {
                 .and_then(|n| n.to_str())
                 .ok_or_else(|| "Invalid fabric client filename".to_string())?;
             let fabric_jar_path = client_folder.join("mods").join(jar_basename);
-            Self::calculate_md5_hash(&fabric_jar_path)?
+            calculate_md5_hash(&fabric_jar_path)?
         } else {
-            Self::calculate_md5_hash(file_path)?
+            calculate_md5_hash(file_path)?
         };
 
         if calculated_hash != expected_hash {
@@ -761,35 +487,25 @@ impl Data {
         Ok(())
     }
 
-    pub fn calculate_md5_hash(path: &PathBuf) -> Result<String, String> {
-        let bytes = fs::read(path).map_err(|e| format!("Failed to read file for hashing: {e}"))?;
-
-        let digest = md5::compute(&bytes);
-        Ok(format!("{digest:x}"))
-    }
-
     pub fn reset_requirements(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let requirements: Vec<String> = vec![
-            JDK_FOLDER.to_string(),
-            format!("{JDK_FOLDER}.zip"),
-            "assets".to_string(),
-            "assets.zip".to_string(),
-            "natives".to_string(),
-            "natives.zip".to_string(),
-            "libraries".to_string(),
-            "libraries.zip".to_string(),
-            "natives-1.12".to_string(),
-            "natives-1.12.zip".to_string(),
-            "libraries-1.12".to_string(),
-            "libraries-1.12.zip".to_string(),
-            "assets_fabric".to_string(),
-            "assets_fabric.zip".to_string(),
-            "libraries_fabric".to_string(),
-            "libraries_fabric.zip".to_string(),
-            "natives_fabric".to_string(),
-            "natives_fabric.zip".to_string(),
-            "minecraft_versions".to_string(),
+        let base_requirements = [
+            JDK_FOLDER,
+            "assets",
+            "natives",
+            "libraries",
+            "natives-1.12",
+            "libraries-1.12",
+            "assets_fabric",
+            "libraries_fabric",
+            "natives_fabric",
         ];
+
+        let mut requirements = Vec::new();
+        for req in base_requirements {
+            requirements.push(req.to_string());
+            requirements.push(format!("{}.zip", req));
+        }
+        requirements.push("minecraft_versions".to_string());
 
         for requirement in &requirements {
             let path = self.root_dir.join(requirement);

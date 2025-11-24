@@ -4,3 +4,5 @@ pub mod helpers;
 pub mod logging;
 pub mod tags;
 pub mod dpi;
+pub mod archive;
+pub mod hashing;

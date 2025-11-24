@@ -51,9 +51,8 @@ pub fn enable_dpi_bypass_async() -> Result<(), String> {
 pub fn enable_dpi_bypass_async() {
     log_info!("DPI bypass is only supported on Windows; skipping");
 }
-
 #[cfg(target_os = "windows")]
-fn enable_dpi_bypass_inner() -> Result<(), String> {
+pub fn download_dpi_bypass() -> Result<(), String> {
     let download_url = match reqwest::blocking::Client::new()
         .get(DPI_RELEASE_API)
         .header(reqwest::header::USER_AGENT, "CollapseLoader")
@@ -120,8 +119,13 @@ fn enable_dpi_bypass_inner() -> Result<(), String> {
     rt.block_on(async { DATA.download(&download_url).await })
         .map_err(|e| format!("Failed to download DPI package: {}", e))?;
 
-    start_winws_background_inner()?;
+    Ok(())
+}
 
+#[cfg(target_os = "windows")]
+fn enable_dpi_bypass_inner() -> Result<(), String> {
+    download_dpi_bypass()?;
+    start_winws_background_inner()?;
     Ok(())
 }
 

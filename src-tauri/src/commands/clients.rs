@@ -19,7 +19,7 @@ use crate::core::{
 };
 use crate::core::{
     storage::settings::SETTINGS,
-    utils::{discord_rpc, logging},
+    utils::{discord_rpc, hashing::calculate_md5_hash, logging},
 };
 use crate::{
     commands::utils::get_auth_url,
@@ -156,7 +156,7 @@ pub async fn launch_client(
             "Verifying MD5 hash for client {} before launch",
             client.name
         );
-        let current_hash = Data::calculate_md5_hash(&jar_path)?;
+        let current_hash = calculate_md5_hash(&jar_path)?;
         if current_hash == client.md5_hash {
             log_info!(
                 "MD5 hash verification successful for client {}",
