@@ -2,8 +2,8 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
-use tauri::{AppHandle, State};
 use std::sync::{Arc, Mutex};
+use tauri::{AppHandle, State};
 
 use crate::core::{
     clients::custom_clients::{CustomClient, Version},
@@ -34,7 +34,6 @@ use crate::{
     core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
 };
-use std::path::MAIN_SEPARATOR;
 
 use std::path::PathBuf;
 
@@ -64,7 +63,9 @@ pub async fn initialize_api(state: State<'_, Arc<Mutex<ClientManager>>>) -> Resu
     let clients = ClientManager::fetch_clients()
         .await
         .map_err(|e| e.to_string())?;
-    let mut manager = state.lock().map_err(|_| "Failed to lock state".to_string())?;
+    let mut manager = state
+        .lock()
+        .map_err(|_| "Failed to lock state".to_string())?;
     manager.clients = clients;
     Ok(())
 }
@@ -111,6 +112,8 @@ pub async fn launch_client(
     } else {
         client.filename.clone()
     };
+
+    const MAIN_SEPARATOR: char = std::path::MAIN_SEPARATOR;
 
     let file_name = Data::get_filename(&client.filename);
     let jar_path = match client.client_type {
@@ -278,7 +281,10 @@ pub async fn get_running_client_ids(
 }
 
 #[tauri::command]
-pub async fn stop_client(id: u32, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub async fn stop_client(
+    id: u32,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     log_info!("Attempting to stop client with ID: {}", id);
     let client = get_client_by_id(id, &state)?;
     log_debug!("Found client '{}' to stop", client.name);
@@ -301,7 +307,11 @@ pub fn get_client_logs(id: u32) -> Vec<String> {
 }
 
 #[tauri::command]
-pub async fn download_client_only(id: u32, app_handle: AppHandle, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub async fn download_client_only(
+    id: u32,
+    app_handle: AppHandle,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     let client = get_client_by_id(id, &state)?;
 
     log_info!("Starting download for client: {} (ID: {})", client.name, id);
@@ -338,7 +348,11 @@ pub async fn download_client_only(id: u32, app_handle: AppHandle, state: State<'
 }
 
 #[tauri::command]
-pub async fn reinstall_client(id: u32, app_handle: AppHandle, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub async fn reinstall_client(
+    id: u32,
+    app_handle: AppHandle,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     log_info!("Starting reinstall for client ID: {}", id);
     let client = get_client_by_id(id, &state)?;
     log_debug!("Found client '{}' for reinstall", client.name);
@@ -411,7 +425,10 @@ pub async fn reinstall_client(id: u32, app_handle: AppHandle, state: State<'_, A
 }
 
 #[tauri::command]
-pub fn open_client_folder(id: u32, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub fn open_client_folder(
+    id: u32,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     log_info!("Attempting to open folder for client ID: {}", id);
     let client = get_client_by_id(id, &state)?;
     log_debug!("Found client '{}' to open folder", client.name);
@@ -461,12 +478,11 @@ pub fn get_latest_client_logs(id: u32) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn update_client_installed_status(id: u32, installed: bool, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
-    log_debug!(
-        "Updating installed status for client ID {} to {}",
-        id,
-        installed
-    );
+pub fn update_client_installed_status(
+    id: u32,
+    installed: bool,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     if let Some(client) = state
         .lock()
         .map_err(|_| "Failed to acquire lock on client manager".to_string())?
@@ -475,11 +491,6 @@ pub fn update_client_installed_status(id: u32, installed: bool, state: State<'_,
         .find(|c| c.id == id)
     {
         client.meta.installed = installed;
-        log_info!(
-            "Set installed status of client '{}' to {}",
-            client.name,
-            installed
-        );
         Ok(())
     } else {
         log_warn!(
@@ -491,7 +502,10 @@ pub fn update_client_installed_status(id: u32, installed: bool, state: State<'_,
 }
 
 #[tauri::command]
-pub async fn delete_client(id: u32, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub async fn delete_client(
+    id: u32,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     log_info!("Attempting to delete client with ID: {}", id);
     let client = get_client_by_id(id, &state)?;
     log_debug!("Found client '{}' for deletion", client.name);
@@ -548,7 +562,11 @@ pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, Str
 }
 
 #[tauri::command]
-pub fn increment_client_counter(id: u32, counter_type: String, state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub fn increment_client_counter(
+    id: u32,
+    counter_type: String,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
+) -> Result<(), String> {
     if let Some(client) = state
         .lock()
         .map_err(|_| "Failed to acquire lock on client manager".to_string())?

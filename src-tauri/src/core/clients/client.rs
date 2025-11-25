@@ -285,7 +285,6 @@ impl Client {
                 );
                 format!("Failed to remove client folder: {e}")
             })?;
-            log_info!("Removed installation folder for '{}'", self.name);
         } else {
             log_debug!(
                 "No installation folder found for '{}', skipping removal",
@@ -296,10 +295,6 @@ impl Client {
         if let Ok(mut manager) = manager.lock() {
             if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
                 client.meta.installed = false;
-                log_debug!(
-                    "Updated manager: marked '{}' not installed after removal",
-                    self.name
-                );
             }
         }
 
@@ -515,12 +510,14 @@ impl Client {
 
     async fn download_fabric_mods(&self) -> Result<(), String> {
         if self.client_type == ClientType::Fabric {
+            const MAIN_SEPARATOR: char = std::path::MAIN_SEPARATOR;
+
             if let Some(mods) = &self.requirement_mods {
                 for mod_name in mods.iter() {
                     let mod_basename = mod_name.trim_end_matches(".jar");
                     let filename_on_cdn = format!("fabric/deps/{mod_basename}.jar");
                     let client_base = Data::get_filename(&self.filename);
-                    let dest_folder = format!("{client_base}/mods");
+                    let dest_folder = format!("{client_base}{MAIN_SEPARATOR}mods");
                     let dest_path = DATA
                         .root_dir
                         .join(&client_base)
