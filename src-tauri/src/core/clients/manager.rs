@@ -1,10 +1,10 @@
-use std::{
-    fs::File,
-    io::BufReader,
-};
+use rand::Rng;
+use std::{fs::File, io::BufReader};
 use tauri::AppHandle;
 
 use super::client::Client;
+use crate::core::clients::client::Meta;
+use crate::core::utils::globals::MOCK_CLIENTS;
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{
     core::{
@@ -20,7 +20,35 @@ pub struct ClientManager {
 }
 
 impl ClientManager {
+    async fn mock_clients() -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
+        let mut clients = Vec::new();
+        let mut rng = rand::rng();
+
+        for i in 1..5 {
+            clients.push(Client {
+                id: i,
+                name: "Mock client #".to_owned() + &i.to_string(),
+                version: "1.16.5".to_string(),
+                meta: Meta {
+                    asset_index: "1.16".to_string(),
+                    is_new: false,
+                    installed: rng.random_bool(1.0 / 3.0),
+                    is_custom: false,
+                    size: rng.random_range(50..=100),
+                },
+                ..Default::default()
+            });
+        }
+
+        Ok(clients)
+    }
+
     pub async fn fetch_clients() -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
+        if *MOCK_CLIENTS {
+            log_info!("Mock clients enabled, generating client list...");
+            return Ok(Self::mock_clients().await?);
+        }
+
         log_debug!("ClientManager starting initialization");
 
         let clients_task = tokio::task::spawn_blocking(|| {
@@ -45,28 +73,32 @@ impl ClientManager {
             }
         });
 
-        let fabric_clients_task = tokio::task::spawn_blocking(|| -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-            let api_option = API.as_ref();
-            if let Some(api_instance) = api_option {
-                match api_instance.json::<Vec<Client>>("fabric-clients") {
-                    Ok(clients) => {
-                        log_info!("Fetched {} fabric clients from API", clients.len());
-                        Ok(clients)
+        let fabric_clients_task = tokio::task::spawn_blocking(
+            || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
+                let api_option = API.as_ref();
+                if let Some(api_instance) = api_option {
+                    match api_instance.json::<Vec<Client>>("fabric-clients") {
+                        Ok(clients) => {
+                            log_info!("Fetched {} fabric clients from API", clients.len());
+                            Ok(clients)
+                        }
+                        Err(e) => {
+                            log_warn!("Failed to fetch fabric clients: {}", e);
+                            Ok(Vec::new())
+                        }
                     }
-                    Err(e) => {
-                        log_warn!("Failed to fetch fabric clients: {}", e);
-                        Ok(Vec::new())
-                    }
+                } else {
+                    Ok(Vec::new())
                 }
-            } else {
-                Ok(Vec::new())
-            }
-        });
+            },
+        );
 
         let (clients_res, fabric_res) = tokio::join!(clients_task, fabric_clients_task);
 
-        let mut clients = clients_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
-        let mut fabric_clients = fabric_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
+        let mut clients =
+            clients_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
+        let mut fabric_clients =
+            fabric_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
 
         if !fabric_clients.is_empty() {
             clients.append(&mut fabric_clients);
@@ -76,9 +108,7 @@ impl ClientManager {
         }
 
         for client in &mut clients {
-            if client.meta.is_new
-                != (semver::Version::parse(&client.version).unwrap().minor > 6)
-            {
+            if client.meta.is_new != (semver::Version::parse(&client.version).unwrap().minor > 6) {
                 client.meta = super::client::Meta::new(&client.version, &client.filename);
             }
 
@@ -89,10 +119,13 @@ impl ClientManager {
         Ok(clients)
     }
 
-    fn load_from_cache(filename: &str) -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
+    fn load_from_cache(
+        filename: &str,
+    ) -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
         let cache_path = DATA.root_dir.join(API_CACHE_DIR).join(filename);
         if cache_path.exists() {
-            let file = File::open(cache_path).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
+            let file = File::open(cache_path)
+                .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
             let reader = BufReader::new(file);
             let cached_clients: Vec<Client> = serde_json::from_reader(reader).map_err(|e| {
                 log_warn!("Failed to deserialize cached clients: {}", e);
