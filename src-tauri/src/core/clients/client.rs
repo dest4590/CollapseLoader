@@ -9,13 +9,14 @@ use std::{
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
-use super::manager::CLIENT_MANAGER;
-use crate::core::storage::accounts::ACCOUNT_MANAGER;
+use super::manager::ClientManager;
 use crate::core::utils::globals::FILE_EXTENSION;
+use crate::core::utils::hashing::calculate_md5_hash;
 use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
 use crate::core::{clients::internal::agent_overlay::AgentArguments, utils::globals::JDK_FOLDER};
 use crate::core::{clients::log_checker::LogChecker, utils::globals::IS_LINUX};
 use crate::core::{network::analytics::Analytics, storage::data::Data};
+use crate::{core::storage::accounts::ACCOUNT_MANAGER, log_warn};
 use crate::{
     core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,
@@ -155,7 +156,66 @@ impl LaunchOptions {
 }
 
 impl Client {
-    pub async fn download(&self) -> Result<(), String> {
+    async fn verify_hash(&self) -> Result<(), String> {
+        let hash_verify_enabled = SETTINGS.lock().map(|s| s.hash_verify.value).unwrap_or(true);
+        if !hash_verify_enabled {
+            log_info!(
+                "Hash verification is disabled, skipping check for {}",
+                self.name
+            );
+            return Ok(());
+        }
+
+        log_info!("Verifying MD5 hash for client: {}", self.name);
+
+        let file_path = if self.client_type == ClientType::Fabric {
+            let jar_basename = std::path::Path::new(&self.filename)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
+            DATA.root_dir
+                .join(Data::get_filename(&self.filename))
+                .join("mods")
+                .join(jar_basename)
+        } else {
+            DATA.get_local(&format!(
+                "{}{}{}",
+                Data::get_filename(&self.filename),
+                std::path::MAIN_SEPARATOR,
+                self.filename
+            ))
+        };
+
+        let path_clone = file_path.clone();
+        let calculated_hash = tokio::task::spawn_blocking(move || calculate_md5_hash(&path_clone))
+            .await
+            .map_err(|e| e.to_string())??;
+
+        if calculated_hash != self.md5_hash {
+            log_warn!(
+                "Hash mismatch for {}: expected {}, got {}",
+                self.name,
+                self.md5_hash,
+                calculated_hash
+            );
+            if let Err(e) = std::fs::remove_file(&file_path) {
+                log_warn!(
+                    "Failed to remove corrupted file {}: {}",
+                    file_path.display(),
+                    e
+                );
+            }
+            return Err(format!(
+                "Hash verification failed. Expected: {}, Got: {}",
+                self.md5_hash, calculated_hash
+            ));
+        }
+
+        log_info!("MD5 hash verification successful for {}", self.name);
+        Ok(())
+    }
+
+    pub async fn download(&self, manager: &Arc<Mutex<ClientManager>>) -> Result<(), String> {
         log_debug!(
             "Starting download for client '{}' filename='{}'",
             self.name,
@@ -164,17 +224,25 @@ impl Client {
         match DATA.download(&self.filename).await {
             Ok(()) => {
                 log_info!("Successfully downloaded client '{}'", self.name);
-                if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-                    if let Some(manager) = manager.as_mut() {
+
+                if let Err(e) = self.verify_hash().await {
+                    if let Ok(mut manager) = manager.lock() {
                         if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                            client.meta.installed = true;
-                            client.meta.size = self.size;
-                            log_debug!(
-                                "Updated manager: marked '{}' installed, size={}",
-                                self.name,
-                                self.size
-                            );
+                            client.meta.installed = false;
                         }
+                    }
+                    return Err(e);
+                }
+
+                if let Ok(mut manager) = manager.lock() {
+                    if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
+                        client.meta.installed = true;
+                        client.meta.size = self.size;
+                        log_debug!(
+                            "Updated manager: marked '{}' installed, size={}",
+                            self.name,
+                            self.size
+                        );
                     }
                 }
                 Ok(())
@@ -186,15 +254,13 @@ impl Client {
                     self.filename,
                     e
                 );
-                if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-                    if let Some(manager) = manager.as_mut() {
-                        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                            client.meta.installed = false;
-                            log_debug!(
-                                "Updated manager: marked '{}' not installed after failure",
-                                self.name
-                            );
-                        }
+                if let Ok(mut manager) = manager.lock() {
+                    if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
+                        client.meta.installed = false;
+                        log_debug!(
+                            "Updated manager: marked '{}' not installed after failure",
+                            self.name
+                        );
                     }
                 }
                 Err(e)
@@ -202,7 +268,7 @@ impl Client {
         }
     }
 
-    pub fn remove_installation(&self) -> Result<(), String> {
+    pub fn remove_installation(&self, manager: &Arc<Mutex<ClientManager>>) -> Result<(), String> {
         let client_folder = DATA.get_as_folder(&self.filename);
         log_debug!(
             "Removing installation for client '{}' at {}",
@@ -227,22 +293,20 @@ impl Client {
             );
         }
 
-        if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-            if let Some(manager) = manager.as_mut() {
-                if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                    client.meta.installed = false;
-                    log_debug!(
-                        "Updated manager: marked '{}' not installed after removal",
-                        self.name
-                    );
-                }
+        if let Ok(mut manager) = manager.lock() {
+            if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
+                client.meta.installed = false;
+                log_debug!(
+                    "Updated manager: marked '{}' not installed after removal",
+                    self.name
+                );
             }
         }
 
         Ok(())
     }
 
-    pub fn get_running_clients() -> Vec<Self> {
+    pub fn get_running_clients(manager: &Arc<Mutex<ClientManager>>) -> Vec<Self> {
         let jps_path = DATA
             .root_dir
             .join(JDK_FOLDER)
@@ -263,10 +327,10 @@ impl Client {
         let binding = String::from_utf8_lossy(&output.stdout);
         let outputs: Vec<&str> = binding.lines().collect();
 
-        let clients = CLIENT_MANAGER
+        let clients = manager
             .lock()
             .ok()
-            .and_then(|guard| guard.as_ref().map(|manager| manager.clients.clone()))
+            .map(|manager| manager.clients.clone())
             .unwrap_or_default();
 
         clients
@@ -569,7 +633,11 @@ impl Client {
             .await
     }
 
-    pub async fn run(self, options: LaunchOptions) -> Result<(), String> {
+    pub async fn run(
+        self,
+        options: LaunchOptions,
+        manager: Arc<Mutex<ClientManager>>,
+    ) -> Result<(), String> {
         if !options.is_custom && SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value) {
             Analytics::send_client_analytics(self.id);
         }
@@ -627,6 +695,7 @@ impl Client {
 
         log_debug!("Spawning thread to run client '{}'", self.name);
         let self_clone = self.clone();
+        let manager_clone = manager.clone();
         let handle = std::thread::spawn(move || -> Result<(), String> {
             let (natives_path, libraries_path) = if self_clone.meta.is_new {
                 (
@@ -838,15 +907,15 @@ impl Client {
                     let log_checker = LogChecker::new(self_clone.clone());
                     log_checker.check(&app_handle_clone_for_crash_handling);
 
-                    if let Ok(client_manager) = CLIENT_MANAGER.lock() {
-                        if let Some(manager) = client_manager.as_ref() {
-                            if let Err(e) = manager
-                                .update_status_on_client_exit(&app_handle_clone_for_crash_handling)
-                            {
-                                log_error!("Failed to update user status on client exit: {}", e);
-                            } else {
-                                log_debug!("User status updated on client exit, cleared client playing status");
-                            }
+                    if let Ok(manager) = manager_clone.lock() {
+                        if let Err(e) = manager
+                            .update_status_on_client_exit(&app_handle_clone_for_crash_handling)
+                        {
+                            log_error!("Failed to update user status on client exit: {}", e);
+                        } else {
+                            log_debug!(
+                                "User status updated on client exit, cleared client playing status"
+                            );
                         }
                     }
 

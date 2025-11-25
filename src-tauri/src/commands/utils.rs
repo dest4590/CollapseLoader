@@ -3,12 +3,14 @@ use base64::{engine::general_purpose, Engine};
 use crate::commands::clients::{
     get_running_client_ids, get_running_custom_client_ids, stop_client, stop_custom_client,
 };
+use crate::core::clients::manager::ClientManager;
 use crate::core::utils::globals::CODENAME;
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::{log_debug, log_error, log_info, log_warn};
+use std::sync::{Arc, Mutex};
 use std::{fs, path::PathBuf};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::task;
 
 #[tauri::command]
@@ -44,9 +46,9 @@ pub fn open_data_folder() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn reset_requirements() -> Result<(), String> {
+pub async fn reset_requirements() -> Result<(), String> {
     log_info!("Resetting client requirements");
-    if let Err(e) = DATA.reset_requirements() {
+    if let Err(e) = DATA.reset_requirements().await {
         log_error!("Failed to reset requirements: {}", e);
         return Err(format!("Failed to reset requirements: {e}"));
     }
@@ -55,9 +57,9 @@ pub fn reset_requirements() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn reset_cache() -> Result<(), String> {
+pub async fn reset_cache() -> Result<(), String> {
     log_info!("Resetting application cache");
-    if let Err(e) = DATA.reset_cache() {
+    if let Err(e) = DATA.reset_cache().await {
         log_error!("Failed to reset cache: {}", e);
         return Err(format!("Failed to reset cache: {e}"));
     }
@@ -77,6 +79,7 @@ pub async fn change_data_folder(
     app: AppHandle,
     new_path: String,
     mode: String,
+    state: State<'_, Arc<Mutex<ClientManager>>>,
 ) -> Result<(), String> {
     log_info!(
         "Changing data folder to '{}' with mode '{}'",
@@ -101,10 +104,12 @@ pub async fn change_data_folder(
     }
 
     log_info!("Stopping all running clients before changing data folder");
-    let running: Vec<u32> = get_running_client_ids().await;
+    let running: Vec<u32> = get_running_client_ids(state.clone())
+        .await
+        .map_err(|e| e.to_string())?;
     for id in running {
         log_debug!("Stopping client with ID: {}", id);
-        let _ = stop_client(id).await;
+        let _ = stop_client(id, state.clone()).await;
     }
 
     let running_custom: Vec<u32> = get_running_custom_client_ids().await;

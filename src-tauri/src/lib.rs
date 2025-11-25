@@ -3,6 +3,8 @@ use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use tauri::Manager;
+use std::sync::{Arc, Mutex};
+use crate::core::clients::manager::ClientManager;
 
 use crate::core::{
     error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
@@ -18,7 +20,6 @@ pub mod commands;
 pub mod core;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
-    log_info!("Checking platform dependencies...");
     check_platform_dependencies()
 }
 
@@ -73,6 +74,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .manage(Arc::new(Mutex::new(ClientManager::default())))
         .invoke_handler(tauri::generate_handler![
             commands::clients::initialize_api,
             commands::clients::initialize_rpc,
@@ -144,8 +146,6 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle();
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
-
-            log_debug!("Tauri setup: application handle stored");
 
             let is_dev = env!("DEVELOPMENT") == "true";
             let git_hash = env!("GIT_HASH")

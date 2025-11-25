@@ -7,6 +7,7 @@ use crate::core::storage::settings::SETTINGS;
 use crate::log_warn;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
+use tauri::async_runtime::block_on;
 
 use super::common::JsonStorage;
 
@@ -62,7 +63,7 @@ impl CustomClientManager {
             .map(|s| s.sync_client_settings.value)
             .unwrap_or(false)
         {
-            if let Err(e) = DATA.ensure_client_synced(&custom_client.name) {
+            if let Err(e) = block_on(DATA.ensure_client_synced(&custom_client.name)) {
                 log_warn!(
                     "Failed to ensure client sync for custom client {}: {}",
                     custom_client.name,

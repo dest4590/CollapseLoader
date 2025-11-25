@@ -1,16 +1,15 @@
-use crate::core::clients::client::ClientType;
-use crate::core::clients::manager::CLIENT_MANAGER;
 use crate::core::network::downloader::download_file;
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
 use crate::core::utils::globals::{JDK_FOLDER, ROOT_DIR};
-use crate::core::utils::hashing::calculate_md5_hash;
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
 use std::fs;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
+use tokio::task;
+use tokio::fs as tokio_fs;
 
 pub struct Data {
     pub root_dir: PathBuf,
@@ -32,7 +31,10 @@ impl Data {
                 "Root data directory does not exist, creating: {}",
                 root_dir.display()
             );
-            fs::create_dir_all(&root_dir).expect("Failed to create root directory");
+            if let Err(e) = fs::create_dir_all(&root_dir) {
+                log_error!("Failed to create root directory: {}", e);
+                panic!("Failed to create root directory: {}", e);
+            }
             log_info!("Created root data directory: {}", root_dir.display());
         }
 
@@ -49,7 +51,7 @@ impl Data {
         self.root_dir.join(relative_path)
     }
 
-    pub fn unzip(&self, file: &str) -> Result<(), String> {
+    pub async fn unzip(&self, file: &str) -> Result<(), String> {
         let (emit_name, local_name) = if file.starts_with("http://") || file.starts_with("https://")
         {
             (
@@ -63,23 +65,37 @@ impl Data {
         let zip_path = self.get_local(&local_name);
         let unzip_path = self.get_local(local_name.trim_end_matches(".zip"));
 
-        let app_handle = APP_HANDLE.lock().unwrap();
-        unzip(&zip_path, &unzip_path, &emit_name, app_handle.as_ref())
+        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        
+        task::spawn_blocking(move || {
+            unzip(&zip_path, &unzip_path, &emit_name, app_handle.as_ref())
+        }).await.map_err(|e| e.to_string())??;
+
+        Ok(())
     }
 
     pub fn get_as_folder(&self, file: &str) -> PathBuf {
-        let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
+        let file_name = Path::new(file)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(file);
         self.root_dir.join(file_name)
     }
 
     pub fn get_as_folder_string(file: &str) -> String {
-        let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
+        let file_name = Path::new(file)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(file);
         format!("{file_name}{MAIN_SEPARATOR}")
     }
 
     pub fn get_filename(file: &str) -> String {
-        let file_name = Path::new(file).file_stem().unwrap().to_str().unwrap();
-        file_name.to_string()
+        Path::new(file)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(file)
+            .to_string()
     }
 
     fn resolve_local_file_info(file: &str) -> FileInfo {
@@ -146,11 +162,11 @@ impl Data {
         }
     }
 
-    fn prepare_download_dirs(&self, info: &FileInfo) -> Result<(), String> {
+    async fn prepare_download_dirs(&self, info: &FileInfo) -> Result<(), String> {
         if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
                 let mods_dir = self.root_dir.join(&info.file_name).join("mods");
-                if let Err(e) = fs::create_dir_all(&mods_dir) {
+                if let Err(e) = tokio_fs::create_dir_all(&mods_dir).await {
                     log_error!(
                         "Failed to create fabric mods directory {}: {}",
                         mods_dir.display(),
@@ -161,7 +177,7 @@ impl Data {
                 log_debug!("Created fabric mods directory: {}", mods_dir.display());
             } else {
                 let local_path = self.get_as_folder(&info.local_file);
-                if let Err(e) = fs::create_dir_all(&local_path) {
+                if let Err(e) = tokio_fs::create_dir_all(&local_path).await {
                     log_error!("Failed to create directory {}: {}", local_path.display(), e);
                     return Err(format!("Failed to create directory: {e}"));
                 }
@@ -171,7 +187,7 @@ impl Data {
                     .map(|s| s.sync_client_settings.value)
                     .unwrap_or(false)
                 {
-                    if let Err(e) = self.ensure_client_synced(&info.file_name) {
+                    if let Err(e) = self.ensure_client_synced(&info.file_name).await {
                         log_warn!("Failed to ensure client sync for {}: {}", info.file_name, e);
                     }
                 }
@@ -210,7 +226,7 @@ impl Data {
             emit_to_main_window(app_handle, "download-start", &file);
         }
 
-        self.prepare_download_dirs(&info)?;
+        self.prepare_download_dirs(&info).await?;
 
         let download_url = Self::get_download_url(file)?;
         let dest_path = self.get_destination_path(file, &info);
@@ -218,12 +234,12 @@ impl Data {
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         download_file(&download_url, &dest_path, file, app_handle.as_ref()).await?;
 
-        if let Some(handle) = app_handle.as_ref() {
+        if let Some(handle  ) = app_handle.as_ref() {
             emit_to_main_window(handle, "download-complete", &file);
         }
 
         if Self::has_extension(&info.local_file, "zip") {
-            self.unzip(file).map_err(|e| {
+            self.unzip(file).await.map_err(|e| {
                 log_error!("Failed to extract {}: {}", file, e);
                 if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
                     let err_data = serde_json::json!({
@@ -235,36 +251,36 @@ impl Data {
                 e
             })?;
         }
-
-        if Self::has_extension(&info.local_file, "jar") {
-            log_debug!("Verifying MD5 hash for client file: {}", file);
-            self.verify_client_hash(file, &dest_path).map_err(|e| {
-                log_error!("Failed to verify client hash for {}: {}", file, e);
-                e
-            })?;
-        }
-
+     
         Ok(())
     }
 
-    pub fn ensure_client_synced(&self, client_base: &str) -> Result<(), String> {
+    pub async fn ensure_client_synced(&self, client_base: &str) -> Result<(), String> {
         let global_options_dir = self.root_dir.join("synced_options");
         if !global_options_dir.exists() {
-            fs::create_dir_all(&global_options_dir)
+            tokio_fs::create_dir_all(&global_options_dir)
+                .await
                 .map_err(|e| format!("Failed to create global options dir: {e}"))?;
         }
 
         let client_dir = self.root_dir.join(client_base);
         if !client_dir.exists() {
-            fs::create_dir_all(&client_dir)
+            tokio_fs::create_dir_all(&client_dir)
+                .await
                 .map_err(|e| format!("Failed to create client dir: {e}"))?;
         }
 
-        let sync_item = |name: &str, is_dir: bool| -> Result<(), String> {
+        let items = [
+            ("resourcepacks", true),
+            ("options.txt", false),
+            ("optionsof.txt", false),
+        ];
+
+        for (name, is_dir) in items {
             let target = global_options_dir.join(name);
             if !target.exists() {
                 if is_dir {
-                    fs::create_dir_all(&target).map_err(|e| {
+                    tokio_fs::create_dir_all(&target).await.map_err(|e| {
                         format!(
                             "Failed to create global {} dir: {}: {}",
                             name,
@@ -273,7 +289,7 @@ impl Data {
                         )
                     })?;
                 } else {
-                    fs::write(&target, "").map_err(|e| {
+                    tokio_fs::write(&target, "").await.map_err(|e| {
                         format!(
                             "Failed to create global {} file at {}: {}",
                             name,
@@ -287,9 +303,9 @@ impl Data {
             let client_target = client_dir.join(name);
             if client_target.exists() {
                 let res = if client_target.is_dir() {
-                    fs::remove_dir_all(&client_target)
+                    tokio_fs::remove_dir_all(&client_target).await
                 } else {
-                    fs::remove_file(&client_target)
+                    tokio_fs::remove_file(&client_target).await
                 };
                 if let Err(e) = res {
                     log_warn!(
@@ -311,15 +327,6 @@ impl Data {
                     e
                 );
             }
-            Ok(())
-        };
-
-        for folder in &["resourcepacks"] {
-            let _ = sync_item(folder, true);
-        }
-
-        for file in &["options.txt", "optionsof.txt"] {
-            let _ = sync_item(file, false);
         }
 
         Ok(())
@@ -352,7 +359,7 @@ impl Data {
         let download_url = Self::get_download_url(file)?;
 
         let dest_dir = self.root_dir.join(dest_folder);
-        if let Err(e) = std::fs::create_dir_all(&dest_dir) {
+        if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
             log_error!(
                 "Failed to create destination folder {}: {}",
                 dest_dir.display(),
@@ -374,120 +381,9 @@ impl Data {
         Ok(())
     }
 
-    fn verify_client_hash(&self, filename: &str, file_path: &PathBuf) -> Result<(), String> {
-        let hash_verify_enabled = SETTINGS
-            .lock()
-            .map_err(|_| "Failed to access settings".to_string())?
-            .hash_verify
-            .value;
 
-        if !hash_verify_enabled {
-            log_info!(
-                "Hash verification is disabled, skipping check for {}",
-                filename
-            );
-            return Ok(());
-        }
 
-        let client_info = {
-            let manager_guard = CLIENT_MANAGER
-                .lock()
-                .map_err(|_| "Failed to acquire lock on client manager".to_string())?;
-            let manager = manager_guard
-                .as_ref()
-                .ok_or_else(|| "Client manager not initialized".to_string())?;
-            manager
-                .clients
-                .iter()
-                .find(|c| c.filename == filename)
-                .map(|c| {
-                    (
-                        c.md5_hash.clone(),
-                        c.id,
-                        c.name.clone(),
-                        c.client_type == ClientType::Fabric,
-                    )
-                })
-        };
-
-        let (expected_hash, client_id, client_name, is_fabric) =
-            client_info.ok_or_else(|| format!("Client not found for filename: {filename}"))?;
-
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(
-                app_handle,
-                "client-hash-verification-start",
-                &serde_json::json!({
-                    "id": client_id,
-                    "name": client_name
-                }),
-            );
-        }
-
-        log_info!(
-            "Verifying MD5 hash for downloaded client file: {}",
-            filename
-        );
-        let calculated_hash = if is_fabric {
-            let client_folder = self.root_dir.join(Self::get_filename(filename));
-            let jar_basename = std::path::Path::new(filename)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
-            let fabric_jar_path = client_folder.join("mods").join(jar_basename);
-            calculate_md5_hash(&fabric_jar_path)?
-        } else {
-            calculate_md5_hash(file_path)?
-        };
-
-        if calculated_hash != expected_hash {
-            if let Err(e) = fs::remove_file(file_path) {
-                log_warn!("Failed to remove corrupted file {}: {}", filename, e);
-            }
-
-            if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-                if let Some(manager) = manager.as_mut() {
-                    if let Some(client) = manager.clients.iter_mut().find(|c| c.id == client_id) {
-                        client.meta.installed = false;
-                    }
-                }
-            }
-
-            if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-                emit_to_main_window(
-                    app_handle,
-                    "client-hash-verification-failed",
-                    &serde_json::json!({
-                        "id": client_id,
-                        "name": client_name,
-                        "expected_hash": expected_hash,
-                        "actual_hash": calculated_hash
-                    }),
-                );
-            }
-
-            return Err(format!(
-                "Hash verification failed for {filename}. Expected: {expected_hash}, Got: {calculated_hash}. The file has been removed and needs to be redownloaded."
-            ));
-        }
-
-        log_info!("MD5 hash verification successful for {}", filename);
-
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(
-                app_handle,
-                "client-hash-verification-done",
-                &serde_json::json!({
-                    "id": client_id,
-                    "name": client_name
-                }),
-            );
-        }
-
-        Ok(())
-    }
-
-    pub fn reset_requirements(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn reset_requirements(&self) -> Result<(), String> {
         let base_requirements = [
             JDK_FOLDER,
             "assets",
@@ -511,9 +407,13 @@ impl Data {
             let path = self.root_dir.join(requirement);
             if path.exists() {
                 if path.is_dir() {
-                    fs::remove_dir_all(&path)?;
+                    tokio_fs::remove_dir_all(&path)
+                        .await
+                        .map_err(|e| e.to_string())?;
                 } else {
-                    fs::remove_file(&path)?;
+                    tokio_fs::remove_file(&path)
+                        .await
+                        .map_err(|e| e.to_string())?;
                 }
             }
         }
@@ -521,10 +421,12 @@ impl Data {
         Ok(())
     }
 
-    pub fn reset_cache(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn reset_cache(&self) -> Result<(), String> {
         let cache_dir = self.root_dir.join("cache");
         if cache_dir.exists() {
-            fs::remove_dir_all(&cache_dir)?;
+            tokio_fs::remove_dir_all(&cache_dir)
+                .await
+                .map_err(|e| e.to_string())?;
         }
         Ok(())
     }

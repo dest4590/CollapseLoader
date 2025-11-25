@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
-
 const props = defineProps<{
     account: {
         id: string;
@@ -38,7 +36,7 @@ const handleDelete = () => emit('delete-account', props.account);
                         <span class="font-medium text-primary/80">Tags:</span>
                         <span class="flex flex-wrap gap-1">
                             <span v-for="tag in account.tags" :key="tag" class="badge badge-outline badge-xs">{{ tag
-                                }}</span>
+                            }}</span>
                         </span>
                     </p>
                     <p class="text-xs text-base-content/60 flex items-center gap-2">
