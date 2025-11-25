@@ -277,14 +277,41 @@ impl Client {
         );
 
         if client_folder.exists() {
-            std::fs::remove_dir_all(&client_folder).map_err(|e| {
-                log_error!(
-                    "Failed to remove client folder '{}' : {}",
+            match std::fs::read_dir(&client_folder) {
+                Ok(entries) => {
+                    for entry in entries {
+                        if let Ok(entry) = entry {
+                            let path = entry.path();
+                            if path.is_dir() {
+                                if let Err(e) = std::fs::remove_dir_all(&path) {
+                                    log_warn!(
+                                        "Failed to remove directory '{}': {}",
+                                        path.display(),
+                                        e
+                                    );
+                                }
+                            } else if let Err(e) = std::fs::remove_file(&path) {
+                                log_warn!("Failed to remove file '{}': {}", path.display(), e);
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    log_error!(
+                        "Failed to read client folder '{}': {}",
+                        client_folder.display(),
+                        e
+                    );
+                }
+            }
+
+            if let Err(e) = std::fs::remove_dir(&client_folder) {
+                log_warn!(
+                    "Failed to remove client folder '{}': {}",
                     client_folder.display(),
                     e
                 );
-                format!("Failed to remove client folder: {e}")
-            })?;
+            }
         } else {
             log_debug!(
                 "No installation folder found for '{}', skipping removal",
