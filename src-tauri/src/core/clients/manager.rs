@@ -45,7 +45,7 @@ impl ClientManager {
 
     pub async fn fetch_clients() -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
         if *MOCK_CLIENTS {
-            log_info!("Mock clients enabled, generating client list...");
+            log_info!("Skipping client manager initialization, mock clients enabled, generating client list...");
             return Ok(Self::mock_clients().await?);
         }
 
