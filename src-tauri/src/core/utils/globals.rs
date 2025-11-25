@@ -33,6 +33,9 @@ pub static USE_LOCAL_SERVER: LazyLock<bool> = LazyLock::new(|| {
 pub static SKIP_AGENT_OVERLAY_VERIFICATION: LazyLock<bool> =
     LazyLock::new(|| parse_env_bool("SKIP_AGENT_OVERLAY_VERIFICATION"));
 
+pub static MOCK_CLIENTS: LazyLock<bool> =
+    LazyLock::new(|| parse_env_bool("MOCK_CLIENTS"));
+
 pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     vec![
     Server::new("https://cdn.collapseloader.org/"),

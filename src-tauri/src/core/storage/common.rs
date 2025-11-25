@@ -40,7 +40,6 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                         file_path.display(),
                         e
                     );
-                    return;
                 }
             }
             Err(e) => {
