@@ -226,25 +226,28 @@ impl Client {
                 log_info!("Successfully downloaded client '{}'", self.name);
 
                 if let Err(e) = self.verify_hash().await {
-                    if let Ok(mut manager) = manager.lock() {
-                        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                            client.meta.installed = false;
-                        }
-                    }
+                    ClientManager::get_client(manager, self.id, |c| {
+                        c.meta.installed = false;
+                    });
                     return Err(e);
                 }
 
-                if let Ok(mut manager) = manager.lock() {
-                    if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                        client.meta.installed = true;
-                        client.meta.size = self.size;
-                        log_debug!(
-                            "Updated manager: marked '{}' installed, size={}",
-                            self.name,
-                            self.size
-                        );
-                    }
+                if let Err(e) = self.download_fabric_mods().await {
+                    ClientManager::get_client(manager, self.id, |c| {
+                        c.meta.installed = false;
+                    });
+                    return Err(e);
                 }
+
+                ClientManager::get_client(manager, self.id, |c| {
+                    c.meta.installed = true;
+                    c.meta.size = self.size;
+                    log_debug!(
+                        "Updated manager: marked '{}' installed, size={}",
+                        self.name,
+                        self.size
+                    );
+                });
                 Ok(())
             }
             Err(e) => {
@@ -254,15 +257,13 @@ impl Client {
                     self.filename,
                     e
                 );
-                if let Ok(mut manager) = manager.lock() {
-                    if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                        client.meta.installed = false;
-                        log_debug!(
-                            "Updated manager: marked '{}' not installed after failure",
-                            self.name
-                        );
-                    }
-                }
+                ClientManager::get_client(manager, self.id, |c| {
+                    c.meta.installed = false;
+                    log_debug!(
+                        "Updated manager: marked '{}' not installed after failure",
+                        self.name
+                    );
+                });
                 Err(e)
             }
         }
@@ -319,11 +320,9 @@ impl Client {
             );
         }
 
-        if let Ok(mut manager) = manager.lock() {
-            if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                client.meta.installed = false;
-            }
-        }
+        ClientManager::get_client(manager, self.id, |c| {
+            c.meta.installed = false;
+        });
 
         Ok(())
     }

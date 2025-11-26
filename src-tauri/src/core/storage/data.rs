@@ -8,8 +8,8 @@ use crate::{log_debug, log_error, log_info, log_warn};
 use std::fs;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
-use tokio::task;
 use tokio::fs as tokio_fs;
+use tokio::task;
 
 pub struct Data {
     pub root_dir: PathBuf,
@@ -66,10 +66,12 @@ impl Data {
         let unzip_path = self.get_local(local_name.trim_end_matches(".zip"));
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
-        
+
         task::spawn_blocking(move || {
             unzip(&zip_path, &unzip_path, &emit_name, app_handle.as_ref())
-        }).await.map_err(|e| e.to_string())??;
+        })
+        .await
+        .map_err(|e| e.to_string())??;
 
         Ok(())
     }
@@ -234,7 +236,7 @@ impl Data {
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         download_file(&download_url, &dest_path, file, app_handle.as_ref()).await?;
 
-        if let Some(handle  ) = app_handle.as_ref() {
+        if let Some(handle) = app_handle.as_ref() {
             emit_to_main_window(handle, "download-complete", &file);
         }
 
@@ -251,7 +253,7 @@ impl Data {
                 e
             })?;
         }
-     
+
         Ok(())
     }
 
@@ -380,8 +382,6 @@ impl Data {
 
         Ok(())
     }
-
-
 
     pub async fn reset_requirements(&self) -> Result<(), String> {
         let base_requirements = [

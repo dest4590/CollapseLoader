@@ -1,4 +1,5 @@
 use rand::Rng;
+use std::sync::{Arc, Mutex};
 use std::{fs::File, io::BufReader};
 use tauri::AppHandle;
 
@@ -43,13 +44,22 @@ impl ClientManager {
         Ok(clients)
     }
 
+    pub fn get_client<F>(manager: &Arc<Mutex<ClientManager>>, client_id: u32, f: F)
+    where
+        F: FnOnce(&mut Client),
+    {
+        if let Ok(mut mgr) = manager.lock() {
+            if let Some(client) = mgr.clients.iter_mut().find(|c| c.id == client_id) {
+                f(client);
+            }
+        }
+    }
+
     pub async fn fetch_clients() -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
         if *MOCK_CLIENTS {
             log_info!("Skipping client manager initialization, mock clients enabled, generating client list...");
             return Self::mock_clients().await;
         }
-
-        log_debug!("ClientManager starting initialization");
 
         let clients_task = tokio::task::spawn_blocking(|| {
             let api_option = API.as_ref();
