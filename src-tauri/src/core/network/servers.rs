@@ -84,11 +84,26 @@ impl Server {
 
 impl Servers {
     pub fn new() -> Self {
+        let cdns = CDN_SERVERS.to_vec();
+        let auths = AUTH_SERVERS.to_vec();
+
+        let initial_cdn = if std::env::var("FORCE_CDN").is_ok() && !cdns.is_empty() {
+            Some(cdns[0].clone())
+        } else {
+            None
+        };
+
+        let initial_auth = if std::env::var("FORCE_AUTH").is_ok() && !auths.is_empty() {
+            Some(auths[0].clone())
+        } else {
+            None
+        };
+
         Self {
-            cdns: CDN_SERVERS.to_vec(),
-            auths: AUTH_SERVERS.to_vec(),
-            selected_cdn: RwLock::new(None),
-            selected_auth: RwLock::new(None),
+            cdns,
+            auths,
+            selected_cdn: RwLock::new(initial_cdn),
+            selected_auth: RwLock::new(initial_auth),
             connectivity_status: Mutex::new(ServerConnectivityStatus {
                 cdn_online: false,
                 auth_online: false,

@@ -37,16 +37,28 @@ pub static MOCK_CLIENTS: LazyLock<bool> =
     LazyLock::new(|| parse_env_bool("MOCK_CLIENTS"));
 
 pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
+    if let Ok(url) = std::env::var("FORCE_CDN") {
+        if !url.is_empty() {
+            log_info!("Using forced CDN server: {}", url);
+            return vec![Server::new(&url)];
+        }
+    }
     vec![
-    Server::new("https://cdn.collapseloader.org/"),
-    Server::new("https://collapse.ttfdk.lol/cdn/"),
-    Server::new(
-        "https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/collapse/o/",
-    ),
-]
+        Server::new("https://cdn.collapseloader.org/"),
+        Server::new("https://collapse.ttfdk.lol/cdn/"),
+        Server::new(
+            "https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/collapse/o/",
+        ),
+    ]
 });
 
 pub static AUTH_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
+    if let Ok(url) = std::env::var("FORCE_AUTH") {
+        if !url.is_empty() {
+            log_info!("Using forced Auth server: {}", url);
+            return vec![Server::new(&url)];
+        }
+    }
     if *USE_LOCAL_SERVER {
         vec![
             Server::new("http://localhost:8000/"),
