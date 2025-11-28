@@ -1,6 +1,6 @@
 use serde_json::Value;
 use std::fs::{self, File};
-use std::io::{BufReader, BufWriter};
+use std::io::{BufReader, BufWriter, ErrorKind};
 use std::path::{Path, PathBuf};
 
 use crate::log_debug;
@@ -11,16 +11,31 @@ pub fn sanitize_path_for_filename(path: &str) -> String {
 }
 
 pub fn ensure_cache_dir(cache_dir: &Path) {
-    if !cache_dir.exists() {
-        if let Err(e) = fs::create_dir_all(cache_dir) {
-            log_warn!(
-                "Failed to create API cache directory at {:?}: {}",
-                cache_dir,
-                e
-            );
-        } else {
+    match fs::create_dir(cache_dir) {
+        Ok(()) => {
             log_debug!("Created cache directory at {:?}", cache_dir);
         }
+        Err(e) => match e.kind() {
+            ErrorKind::AlreadyExists => {}
+            ErrorKind::NotFound => {
+                if let Err(e2) = fs::create_dir_all(cache_dir) {
+                    log_warn!(
+                        "Failed to create API cache directory at {:?}: {}",
+                        cache_dir,
+                        e2
+                    );
+                } else {
+                    log_debug!("Created cache directory at {:?}", cache_dir);
+                }
+            }
+            _ => {
+                log_warn!(
+                    "Failed to create API cache directory at {:?}: {}",
+                    cache_dir,
+                    e
+                );
+            }
+        },
     }
 }
 

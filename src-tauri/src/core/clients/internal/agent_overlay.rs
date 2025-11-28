@@ -1,5 +1,6 @@
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::data::DATA;
+use crate::core::utils::globals::AGENT_OVERLAY_FOLDER;
 use crate::core::utils::hashing::calculate_md5_hash;
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
@@ -80,7 +81,7 @@ impl AgentOverlayManager {
 
         let info = Self::get_agent_overlay_info().await?;
 
-        let folder = DATA.root_dir.join("agent_overlay");
+        let folder = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
         if !folder.exists() {
             log_debug!(
                 "Agent overlay folder missing, creating: {}",
@@ -210,7 +211,7 @@ impl AgentOverlayManager {
     pub async fn verify_agent_overlay_files() -> Result<bool, String> {
         log_debug!("Verifying agent and overlay files...");
 
-        let folder = DATA.root_dir.join("agent_overlay");
+        let folder = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
         if !folder.exists() {
             log_debug!(
                 "Agent overlay folder missing during verify, creating: {}",

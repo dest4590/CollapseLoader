@@ -15,7 +15,6 @@ use tokio::task;
 
 #[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
-    log_debug!("Fetching application version information");
     let result = serde_json::json!({
       "version":  env!("CARGO_PKG_VERSION").to_string(),
       "codename": CODENAME,
@@ -197,7 +196,6 @@ pub async fn change_data_folder(
 
 #[tauri::command]
 pub async fn get_auth_url() -> Result<String, String> {
-    log_debug!("Fetching authentication server URL");
     SERVERS
         .get_auth_server_url()
         .map_or_else(|| Ok("https://auth.collapseloader.org".to_string()), Ok)
@@ -205,14 +203,12 @@ pub async fn get_auth_url() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn encode_base64(input: String) -> Result<String, String> {
-    log_debug!("Encoding string to Base64");
     let encoded = general_purpose::STANDARD.encode(input);
     Ok(encoded)
 }
 
 #[tauri::command]
 pub async fn decode_base64(input: String) -> Result<String, String> {
-    log_debug!("Decoding string from Base64");
     general_purpose::STANDARD.decode(&input).ok().map_or_else(
         || {
             log_warn!("Failed to decode Base64 string");

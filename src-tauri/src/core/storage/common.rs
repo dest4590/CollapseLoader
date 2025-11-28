@@ -1,4 +1,4 @@
-use crate::{log_debug, log_error, log_warn};
+use crate::{log_debug, log_error, log_info, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{fs, path::PathBuf};
 
@@ -10,11 +10,6 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
     fn create_default() -> Self;
 
     fn save_to_disk(&self) {
-        log_debug!(
-            "Saving {} to {}.json",
-            Self::resource_name(),
-            Self::resource_name()
-        );
         match serde_json::to_string_pretty(&self) {
             Ok(data) => {
                 let file_path = self.file_path();
@@ -33,6 +28,15 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                     }
                 }
 
+                if file_path.exists() {
+                    if let Ok(existing) = fs::read_to_string(file_path) {
+                        if existing == data {
+                            return;
+                        }
+                    }
+                }
+
+                let was_created = !file_path.exists();
                 if let Err(e) = fs::write(file_path, data) {
                     log_warn!(
                         "Failed to write {} file to {}: {}",
@@ -40,6 +44,10 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                         file_path.display(),
                         e
                     );
+                } else {
+                    if !was_created {
+                        log_debug!("Saved {} to {}", Self::resource_name(), file_path.display());
+                    }
                 }
             }
             Err(e) => {
@@ -104,17 +112,20 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                     );
                 }
             }
-        } else {
-            log_debug!(
-                "No {} file found at {}, creating a new one with defaults.",
-                Self::resource_name(),
-                file_path.display()
-            );
-        }
 
-        let default = Self::create_default();
-        default.save_to_disk();
-        default
+            let default = Self::create_default();
+            default.save_to_disk();
+            log_info!(
+                "Using default {}.json due to read/parse failure",
+                Self::resource_name()
+            );
+            return default;
+        } else {
+            let default = Self::create_default();
+            default.save_to_disk();
+            log_info!("Created new {}.json with defaults", Self::resource_name());
+            return default;
+        }
     }
 
     fn merge_json_values(

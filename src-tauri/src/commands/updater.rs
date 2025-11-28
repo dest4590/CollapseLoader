@@ -139,11 +139,6 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         format!("Failed to parse release data: {e}")
     })?;
 
-    log_debug!(
-        "Successfully fetched and parsed latest release: '{}'",
-        release.name
-    );
-
     if release.prerelease {
         log_info!("Latest release is a pre-release, skipping update check.");
         return Ok(UpdateInfo {

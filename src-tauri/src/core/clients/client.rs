@@ -10,11 +10,18 @@ use std::{
 use std::os::windows::process::CommandExt;
 
 use super::manager::ClientManager;
-use crate::core::utils::globals::FILE_EXTENSION;
+use crate::core::clients::internal::agent_overlay::AgentArguments;
+use crate::core::clients::log_checker::LogChecker;
+use crate::core::utils::globals::{
+    AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
+    CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, JDK_FOLDER, LEGACY_SUFFIX,
+    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER,
+    LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+    NATIVES_FOLDER, NATIVES_LEGACY_ZIP, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
+};
 use crate::core::utils::hashing::calculate_md5_hash;
 use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
-use crate::core::{clients::internal::agent_overlay::AgentArguments, utils::globals::JDK_FOLDER};
-use crate::core::{clients::log_checker::LogChecker, utils::globals::IS_LINUX};
+use crate::core::utils::process;
 use crate::core::{network::analytics::Analytics, storage::data::Data};
 use crate::{core::storage::accounts::ACCOUNT_MANAGER, log_warn};
 use crate::{
@@ -37,6 +44,7 @@ pub static REQUIREMENTS_SEMAPHORE: std::sync::LazyLock<Arc<Semaphore>> =
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct Meta {
     pub is_new: bool,
+    pub is_fabric: bool,
     pub asset_index: String,
     pub installed: bool,
     pub is_custom: bool,
@@ -52,6 +60,7 @@ impl Meta {
 
         let asset_index = format!("{}.{}", semver.major, semver.minor);
         let is_new_version = semver.minor >= 16;
+        let is_fabric = filename.contains("fabric/");
 
         let client_base_name = Data::get_filename(filename);
         let jar_path = if filename.contains("fabric/") {
@@ -61,7 +70,7 @@ impl Meta {
                 .unwrap_or(filename);
             DATA.root_dir
                 .join(&client_base_name)
-                .join("mods")
+                .join(MODS_FOLDER)
                 .join(jar_basename)
         } else {
             DATA.get_local(&format!(
@@ -77,6 +86,7 @@ impl Meta {
             asset_index,
             installed: jar_path.exists(),
             is_custom: false,
+            is_fabric,
             size: 0,
         }
     }
@@ -128,6 +138,7 @@ pub struct Client {
 const fn default_meta() -> Meta {
     Meta {
         is_new: false,
+        is_fabric: false,
         asset_index: String::new(),
         installed: false,
         is_custom: false,
@@ -175,7 +186,7 @@ impl Client {
                 .ok_or_else(|| "Invalid fabric client filename".to_string())?;
             DATA.root_dir
                 .join(Data::get_filename(&self.filename))
-                .join("mods")
+                .join(MODS_FOLDER)
                 .join(jar_basename)
         } else {
             DATA.get_local(&format!(
@@ -223,7 +234,6 @@ impl Client {
         );
         match DATA.download(&self.filename).await {
             Ok(()) => {
-                log_info!("Successfully downloaded client '{}'", self.name);
 
                 if let Err(e) = self.verify_hash().await {
                     ClientManager::get_client(manager, self.id, |c| {
@@ -328,123 +338,40 @@ impl Client {
     }
 
     pub fn get_running_clients(manager: &Arc<Mutex<ClientManager>>) -> Vec<Self> {
-        let jps_path = DATA
-            .root_dir
-            .join(JDK_FOLDER)
-            .join("bin")
-            .join("jps".to_owned() + FILE_EXTENSION);
-        let mut command = Command::new(jps_path);
-
-        #[cfg(windows)]
-        command.creation_flags(0x0800_0000);
-
-        let output = match command.arg("-m").output() {
-            Ok(output) => output,
-            Err(_) => {
-                return Vec::new();
-            }
-        };
-
-        let binding = String::from_utf8_lossy(&output.stdout);
-        let outputs: Vec<&str> = binding.lines().collect();
-
         let clients = manager
             .lock()
             .ok()
             .map(|manager| manager.clients.clone())
             .unwrap_or_default();
 
-        clients
-            .into_iter()
-            .filter(|client| outputs.iter().any(|line| line.contains(&client.filename)))
-            .collect()
+        process::filter_running(clients, |client| &client.filename)
     }
 
     pub fn stop(&self) -> Result<(), String> {
-        let jps_path = DATA
-            .root_dir
-            .join(JDK_FOLDER)
-            .join("bin")
-            .join("jps".to_owned() + FILE_EXTENSION);
-        let mut command = Command::new(jps_path);
-
-        #[cfg(windows)]
-        command.creation_flags(0x0800_0000);
-
-        let output = command
-            .arg("-m")
-            .output()
-            .map_err(|e| format!("Failed to execute jps command: {e}"))?;
-
-        let binding = String::from_utf8_lossy(&output.stdout);
-        let outputs: Vec<&str> = binding.lines().collect();
-
-        let mut process_found = false;
-        for line in &outputs {
-            if line.contains(&self.filename) {
-                process_found = true;
-                let pid = line.split_whitespace().next().unwrap_or_default();
-                let mut kill_command = Command::new("taskkill");
-
-                #[cfg(windows)]
-                kill_command.creation_flags(0x0800_0000);
-
-                let kill_output = kill_command
-                    .arg("/PID")
-                    .arg(pid)
-                    .arg("/F")
-                    .output()
-                    .map_err(|e| {
-                        log_error!(
-                            "Failed to kill process {} for client '{}': {}",
-                            pid,
-                            self.name,
-                            e
-                        );
-                        format!("Failed to kill process: {e}")
-                    })?;
-
-                if !kill_output.status.success() {
-                    log_error!(
-                        "taskkill returned non-zero for PID {}: stdout='{}' stderr='{}'",
-                        pid,
-                        String::from_utf8_lossy(&kill_output.stdout),
-                        String::from_utf8_lossy(&kill_output.stderr)
-                    );
-                } else {
-                    log_info!("Successfully killed PID {} for client '{}'", pid, self.name);
-                }
-            }
-        }
-
-        if !process_found {
-            log_info!("No process found for client: {}", self.name);
-        }
-
-        Ok(())
+        process::stop_process_by_filename(&self.filename, &self.name)
     }
 
     fn determine_requirements_to_check(&self) -> Vec<String> {
         let mut requirements = vec![format!("{JDK_FOLDER}.zip")];
         if self.client_type == ClientType::Fabric {
-            requirements.push("assets_fabric.zip".to_string());
-            requirements.push("libraries_fabric.zip".to_string());
+            requirements.push(ASSETS_FABRIC_ZIP.to_string());
+            requirements.push(LIBRARIES_FABRIC_ZIP.to_string());
         } else {
-            requirements.push("assets.zip".to_string());
+            requirements.push(ASSETS_ZIP.to_string());
             if self.meta.is_new {
                 requirements.push(if !IS_LINUX {
-                    "natives.zip".to_string()
+                    NATIVES_ZIP.to_string()
                 } else {
-                    "natives-linux.zip".to_string()
+                    NATIVES_LINUX_ZIP.to_string()
                 });
-                requirements.push("libraries.zip".to_string());
+                requirements.push(LIBRARIES_ZIP.to_string());
             } else {
                 requirements.push(if !IS_LINUX {
-                    "natives-1.12.zip".to_string()
+                    NATIVES_LEGACY_ZIP.to_string()
                 } else {
-                    "natives-linux.zip".to_string()
+                    NATIVES_LINUX_ZIP.to_string()
                 });
-                requirements.push("libraries-1.12.zip".to_string());
+                requirements.push(LIBRARIES_LEGACY_ZIP.to_string());
             }
         }
         requirements
@@ -471,7 +398,7 @@ impl Client {
         if let Some(ref fabric_jar) = client_jar {
             if !DATA
                 .root_dir
-                .join("minecraft_versions")
+                .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(fabric_jar)
                 .exists()
             {
@@ -482,7 +409,7 @@ impl Client {
         if self.client_type == ClientType::Fabric {
             if let Some(mods) = &self.requirement_mods {
                 let client_base = Data::get_filename(&self.filename);
-                let mods_folder = DATA.root_dir.join(&client_base).join("mods");
+                let mods_folder = DATA.root_dir.join(&client_base).join(MODS_FOLDER);
                 if mods.iter().any(|mod_name| {
                     let mod_basename = mod_name.trim_end_matches(".jar");
                     !mods_folder.join(format!("{mod_basename}.jar")).exists()
@@ -543,11 +470,11 @@ impl Client {
                     let mod_basename = mod_name.trim_end_matches(".jar");
                     let filename_on_cdn = format!("fabric/deps/{mod_basename}.jar");
                     let client_base = Data::get_filename(&self.filename);
-                    let dest_folder = format!("{client_base}{MAIN_SEPARATOR}mods");
+                    let dest_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
                     let dest_path = DATA
                         .root_dir
                         .join(&client_base)
-                        .join("mods")
+                        .join(MODS_FOLDER)
                         .join(format!("{mod_basename}.jar"));
 
                     if !dest_path.exists() {
@@ -585,14 +512,17 @@ impl Client {
         }
 
         if let Some(client_jar) = client_jar {
-            let dest_path = DATA.root_dir.join("minecraft_versions").join(&client_jar);
+            let dest_path = DATA
+                .root_dir
+                .join(MINECRAFT_VERSIONS_FOLDER)
+                .join(&client_jar);
             if !dest_path.exists() {
                 log_info!(
                     "Downloading MC client jar '{}' for '{}'",
                     client_jar,
                     self.name
                 );
-                DATA.download_to_folder(&client_jar, "minecraft_versions")
+                DATA.download_to_folder(&client_jar, MINECRAFT_VERSIONS_FOLDER)
                     .await
                     .map_err(|e| {
                         log_error!("Failed to download MC client jar '{}': {}", client_jar, e);
@@ -604,7 +534,7 @@ impl Client {
 
         self.download_fabric_mods().await?;
 
-        log_info!("All requirements downloaded successfully");
+        // requirements downloaded; higher-level caller will emit a consolidated success message
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
         {
@@ -723,23 +653,32 @@ impl Client {
             let (natives_path, libraries_path) = if self_clone.meta.is_new {
                 (
                     DATA.root_dir
-                        .join("natives".to_owned() + if IS_LINUX { "-linux" } else { "" }),
+                        .join(NATIVES_FOLDER.to_owned() + if IS_LINUX { LINUX_SUFFIX } else { "" }),
                     if self_clone.client_type == ClientType::Fabric {
-                        DATA.root_dir.join("libraries_fabric")
+                        DATA.root_dir.join(LIBRARIES_FABRIC_FOLDER)
                     } else {
-                        DATA.root_dir.join("libraries")
+                        DATA.root_dir.join(LIBRARIES_FOLDER)
                     },
                 )
             } else {
                 (
-                    DATA.root_dir
-                        .join("natives".to_owned() + if IS_LINUX { "-linux" } else { "-1.12" }),
-                    DATA.root_dir.join("libraries-1.12"),
+                    DATA.root_dir.join(
+                        NATIVES_FOLDER.to_owned()
+                            + if IS_LINUX {
+                                LINUX_SUFFIX
+                            } else {
+                                LEGACY_SUFFIX
+                            },
+                    ),
+                    DATA.root_dir.join(LIBRARIES_LEGACY_FOLDER),
                 )
             };
 
             let (client_folder, client_jar_path) = if self_clone.meta.is_custom {
-                let folder = DATA.root_dir.join("custom_clients").join(&self_clone.name);
+                let folder = DATA
+                    .root_dir
+                    .join(CUSTOM_CLIENTS_FOLDER)
+                    .join(&self_clone.name);
                 let jar = folder.join(&self_clone.filename);
                 (folder, jar)
             } else if self_clone.filename.contains("fabric/") {
@@ -748,7 +687,7 @@ impl Client {
                 let jar_basename = std::path::Path::new(&self_clone.filename)
                     .file_name()
                     .unwrap();
-                let jar = folder.join("mods").join(jar_basename);
+                let jar = folder.join(MODS_FOLDER).join(jar_basename);
                 (folder, jar)
             } else {
                 let folder = DATA
@@ -758,10 +697,10 @@ impl Client {
                 (folder, jar)
             };
 
-            let agent_overlay_folder = DATA.root_dir.join("agent_overlay");
-            let minecraft_client_folder = DATA.root_dir.join("minecraft_versions");
+            let agent_overlay_folder = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
+            let minecraft_client_folder = DATA.root_dir.join(MINECRAFT_VERSIONS_FOLDER);
 
-            let sep = if IS_LINUX { ":" } else { ";" };
+            let sep = PATH_SEPARATOR;
 
             let classpath = if self_clone.client_type == ClientType::Fabric {
                 format!(
@@ -815,9 +754,9 @@ impl Client {
                 });
 
             let assets_dir = if self_clone.client_type == ClientType::Fabric {
-                DATA.root_dir.join("assets_fabric")
+                DATA.root_dir.join(ASSETS_FABRIC_FOLDER)
             } else {
-                DATA.root_dir.join("assets")
+                DATA.root_dir.join(ASSETS_FOLDER)
             };
 
             let ram_mb = SETTINGS.lock().map(|s| s.ram.value).unwrap_or(3072);

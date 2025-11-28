@@ -44,8 +44,18 @@ impl Logger {
             }
         }
 
-        let shorted_tag = tag.rsplit("collapseloader_lib.").next().unwrap_or(tag);
-        let shorted_tag = shorted_tag.replace("collapse.module.collapseloader_lib", "core.init");
+        let mut shorted_tag = {
+            let slice = if let Some(pos) = tag.rfind("collapseloader_lib.") {
+                &tag[pos + "collapseloader_lib.".len()..]
+            } else {
+                tag
+            };
+            slice.replace("collapse.module.collapseloader_lib", "core.init")
+        };
+
+        if shorted_tag.starts_with("commands.") {
+            shorted_tag.insert_str(0, "tauri.");
+        }
 
         let ts_colored = timestamp.dimmed();
         let tag_colored = shorted_tag.white();

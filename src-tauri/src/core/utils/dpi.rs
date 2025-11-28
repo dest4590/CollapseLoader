@@ -153,7 +153,6 @@ pub fn start_winws_background_if_configured() {
 fn start_winws_background_inner() -> Result<(), String> {
     let settings = SETTINGS.lock().map_err(|e| e.to_string())?.clone();
     if !settings.dpi_bypass.value {
-        log_info!("DPI bypass disabled; skipping winws start");
         return Ok(());
     }
 

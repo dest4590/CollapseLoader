@@ -33,6 +33,7 @@ impl ClientManager {
                 meta: Meta {
                     asset_index: "1.16".to_string(),
                     is_new: false,
+                    is_fabric: false,
                     installed: rng.random_bool(1.0 / 3.0),
                     is_custom: false,
                     size: rng.random_range(50..=100),
@@ -65,10 +66,7 @@ impl ClientManager {
             let api_option = API.as_ref();
             if let Some(api_instance) = api_option {
                 match api_instance.json::<Vec<Client>>("clients") {
-                    Ok(clients) => {
-                        log_info!("Fetched {} clients from API", clients.len());
-                        Ok(clients)
-                    }
+                    Ok(clients) => Ok(clients),
                     Err(e) => {
                         log_warn!(
                             "Failed to fetch clients from API: {}. Attempting to load from cache.",
@@ -88,10 +86,7 @@ impl ClientManager {
                 let api_option = API.as_ref();
                 if let Some(api_instance) = api_option {
                     match api_instance.json::<Vec<Client>>("fabric-clients") {
-                        Ok(clients) => {
-                            log_info!("Fetched {} fabric clients from API", clients.len());
-                            Ok(clients)
-                        }
+                        Ok(clients) => Ok(clients),
                         Err(e) => {
                             log_warn!("Failed to fetch fabric clients: {}", e);
                             Ok(Vec::new())
@@ -125,7 +120,12 @@ impl ClientManager {
             client.meta.size = client.size;
         }
 
-        log_debug!("ClientManager initialized with {} clients", clients.len());
+        log_debug!(
+            "Initialized ClientManager with {} clients ({} fabric, {} vanilla)",
+            clients.len(),
+            clients.iter().filter(|c| c.meta.is_fabric).count(),
+            clients.iter().filter(|c| !c.meta.is_fabric).count()
+        );
         Ok(clients)
     }
 

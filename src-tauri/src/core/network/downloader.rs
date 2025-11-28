@@ -1,5 +1,5 @@
 use crate::core::utils::helpers::emit_to_main_window;
-use crate::{log_error, log_info};
+use crate::{log_debug, log_error};
 use futures_util::StreamExt;
 use std::path::Path;
 use std::time::Duration;
@@ -49,7 +49,7 @@ pub async fn download_file(
         format!("Failed to create file: {e}")
     })?;
 
-    log_info!("Created destination file: {}", dest_path.display());
+    log_debug!("Created destination file: {}", dest_path.display());
 
     let mut downloaded: u64 = 0;
     let mut last_percentage: u8 = 0;

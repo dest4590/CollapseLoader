@@ -2,7 +2,11 @@ use crate::core::network::downloader::download_file;
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
-use crate::core::utils::globals::{JDK_FOLDER, ROOT_DIR};
+use crate::core::utils::globals::{
+    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK_FOLDER, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FOLDER,
+    LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER, NATIVES_FOLDER,
+    NATIVES_LEGACY_FOLDER, ROOT_DIR,
+};
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
 use std::fs;
@@ -48,7 +52,12 @@ impl Data {
     }
 
     pub fn get_local(&self, relative_path: &str) -> PathBuf {
-        self.root_dir.join(relative_path)
+        let parts: Vec<&str> = relative_path.split(|c| c == '/' || c == '\\').collect();
+        let mut path = self.root_dir.clone();
+        for part in parts {
+            path = path.join(part);
+        }
+        path
     }
 
     pub async fn unzip(&self, file: &str) -> Result<(), String> {
@@ -129,8 +138,7 @@ impl Data {
                 .join("mods")
                 .join(jar_basename)
         } else if Self::has_extension(&info.local_file, "jar") {
-            self.root_dir
-                .join(format!("{}/{}", info.file_name, info.local_file))
+            self.root_dir.join(&info.file_name).join(&info.local_file)
         } else {
             self.root_dir.join(&info.local_file)
         }
@@ -222,7 +230,7 @@ impl Data {
             return Ok(());
         }
 
-        log_debug!("Starting download for file: {}", file);
+        // higher-level callers (e.g. core.clients) log download starts; avoid redundant messages here
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
             emit_to_main_window(app_handle, "download-start", &file);
@@ -386,14 +394,14 @@ impl Data {
     pub async fn reset_requirements(&self) -> Result<(), String> {
         let base_requirements = [
             JDK_FOLDER,
-            "assets",
-            "natives",
-            "libraries",
-            "natives-1.12",
-            "libraries-1.12",
-            "assets_fabric",
-            "libraries_fabric",
-            "natives_fabric",
+            ASSETS_FOLDER,
+            NATIVES_FOLDER,
+            LIBRARIES_FOLDER,
+            NATIVES_LEGACY_FOLDER,
+            LIBRARIES_LEGACY_FOLDER,
+            ASSETS_FABRIC_FOLDER,
+            LIBRARIES_FABRIC_FOLDER,
+            NATIVES_FABRIC_FOLDER,
         ];
 
         let mut requirements = Vec::new();
@@ -401,7 +409,7 @@ impl Data {
             requirements.push(req.to_string());
             requirements.push(format!("{}.zip", req));
         }
-        requirements.push("minecraft_versions".to_string());
+        requirements.push(MINECRAFT_VERSIONS_FOLDER.to_string());
 
         for requirement in &requirements {
             let path = self.root_dir.join(requirement);

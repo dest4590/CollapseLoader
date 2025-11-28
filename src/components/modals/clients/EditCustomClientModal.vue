@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 const form = reactive({
     name: '',
-    version: '1.16.5',
+    version: '',
     mainClass: '',
 });
 
@@ -23,16 +23,15 @@ const loading = ref(false);
 const errors = ref<Record<string, string>>({});
 const currentClient = ref<CustomClient | null>(null);
 
-const availableVersions = [
-    '1.16.5',
-    '1.12.2'
-];
-
 const validateForm = () => {
     errors.value = {};
 
     if (!form.name.trim()) {
         errors.value.name = 'Name is required';
+    }
+
+    if (!form.version.trim()) {
+        errors.value.version = 'Version is required';
     }
 
     if (!form.mainClass.trim()) {
@@ -95,11 +94,11 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
             <label class="label">
                 <span class="label-text">{{ $t('modals.edit_custom_client_modal.minecraft_version') }} *</span>
             </label>
-            <select v-model="form.version" class="select select-bordered">
-                <option v-for="version in availableVersions" :key="version" :value="version">
-                    {{ version }}
-                </option>
-            </select>
+            <input v-model="form.version" type="text" placeholder="e.g. 1.16.5" class="input input-bordered"
+                :class="{ 'input-error': errors.version }" />
+            <label v-if="errors.version" class="label">
+                <span class="label-text-alt text-error">{{ errors.version }}</span>
+            </label>
         </div>
 
         <div class="form-control">

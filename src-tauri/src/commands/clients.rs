@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, State};
 
 use crate::core::{
-    clients::custom_clients::{CustomClient, Version},
+    clients::custom_clients::CustomClient,
     network::analytics::Analytics,
     storage::{
         custom_clients::{CustomClientUpdate, CUSTOM_CLIENT_MANAGER},
@@ -35,7 +35,10 @@ use crate::{
     log_debug, log_error, log_info, log_warn,
 };
 
+use std::fs::File;
+use std::io::Read;
 use std::path::PathBuf;
+use zip::ZipArchive;
 
 fn get_client_by_id(id: u32, manager: &Arc<Mutex<ClientManager>>) -> Result<Client, String> {
     manager
@@ -59,7 +62,6 @@ pub fn get_app_logs() -> Vec<String> {
 
 #[tauri::command]
 pub async fn initialize_api(state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
-    log_info!("Initializing client manager via API");
     let clients = ClientManager::fetch_clients()
         .await
         .map_err(|e| e.to_string())?;
@@ -339,10 +341,7 @@ pub async fn download_client_only(
 
     tokio::try_join!(client_download, requirements_download)?;
 
-    log_info!(
-        "Successfully downloaded client and requirements for '{}'",
-        client.name
-    );
+    log_info!("Client '{}' successfully installed with all requirements", client.name);
 
     Ok(())
 }
@@ -399,16 +398,8 @@ pub async fn reinstall_client(
         );
         return Err(e.clone());
     }
-    log_info!("Client '{}' downloaded successfully", client.name);
 
     let result = client.download_requirements(&app_handle).await;
-    if result.is_ok() {
-        log_info!(
-            "Client requirements for '{}' downloaded successfully",
-            client.name
-        );
-    }
-
     if result.is_ok() {
         let _ = AgentOverlayManager::download_agent_overlay_files()
             .await
@@ -419,6 +410,13 @@ pub async fn reinstall_client(
                 );
                 e
             });
+    }
+
+    if download_result.is_ok() && result.is_ok() {
+        log_info!(
+            "Client '{}' successfully installed with all requirements",
+            client.name
+        );
     }
 
     result
@@ -604,6 +602,34 @@ pub fn increment_client_counter(
 }
 
 #[tauri::command]
+pub fn detect_main_class(file_path: String) -> Result<String, String> {
+    log_info!("Attempting to detect main class from: {}", file_path);
+
+    let file = File::open(&file_path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let mut archive = ZipArchive::new(file).map_err(|e| format!("Failed to read jar: {}", e))?;
+
+    let mut manifest = archive
+        .by_name("META-INF/MANIFEST.MF")
+        .map_err(|_| "MANIFEST.MF not found in jar".to_string())?;
+
+    let mut content = String::new();
+    manifest
+        .read_to_string(&mut content)
+        .map_err(|e| format!("Failed to read manifest: {}", e))?;
+
+    for line in content.lines() {
+        if line.starts_with("Main-Class:") {
+            let main_class = line.replace("Main-Class:", "").trim().to_string();
+            log_info!("Detected main class: {}", main_class);
+            return Ok(main_class);
+        }
+    }
+
+    log_warn!("Main-Class attribute not found in manifest");
+    Err("Main-Class attribute not found in manifest".to_string())
+}
+
+#[tauri::command]
 pub fn get_custom_clients() -> Vec<CustomClient> {
     CUSTOM_CLIENT_MANAGER
         .lock()
@@ -625,10 +651,9 @@ pub fn add_custom_client(
         .lock()
         .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
-    let version_enum = Version::from_string(&version);
     let path_buf = PathBuf::from(file_path);
 
-    let custom_client = CustomClient::new(0, name, version_enum, filename, path_buf, main_class);
+    let custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
 
     log_debug!("New custom client details: {:?}", custom_client);
     manager.add_client(custom_client)
@@ -656,11 +681,9 @@ pub fn update_custom_client(
         .lock()
         .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
 
-    let version_enum = version.map(|v| Version::from_string(&v));
-
     let updates = CustomClientUpdate {
         name,
-        version: version_enum,
+        version,
         main_class,
     };
 

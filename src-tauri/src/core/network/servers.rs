@@ -210,8 +210,6 @@ impl Default for Servers {
 
 pub static SERVERS: LazyLock<Servers> = LazyLock::new(|| {
     let servers = Servers::new();
-    tauri::async_runtime::spawn(async {
-        SERVERS.check_servers().await;
-    });
+    // server checking moved to lib.rs init
     servers
 });

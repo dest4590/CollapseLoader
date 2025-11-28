@@ -1,10 +1,10 @@
+use crate::core::clients::manager::ClientManager;
 #[cfg(target_os = "windows")]
 use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
-use tauri::Manager;
 use std::sync::{Arc, Mutex};
-use crate::core::clients::manager::ClientManager;
+use tauri::Manager;
 
 use crate::core::{
     error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
@@ -14,7 +14,9 @@ use crate::core::{
 use crate::core::platform::check_webkit_environment;
 
 use self::core::network::analytics::Analytics;
+use crate::core::network::servers::SERVERS;
 pub use crate::core::utils::logging;
+use tauri::async_runtime::block_on;
 
 pub mod commands;
 pub mod core;
@@ -100,6 +102,7 @@ pub fn run() {
             commands::clients::launch_custom_client,
             commands::clients::get_running_custom_client_ids,
             commands::clients::stop_custom_client,
+            commands::clients::detect_main_class,
             commands::presets::get_all_presets,
             commands::presets::get_preset,
             commands::presets::create_preset,
@@ -181,6 +184,7 @@ pub fn run() {
                 &git_branch,
             );
 
+            let _ = block_on(async { SERVERS.check_servers().await });
             Analytics::send_start_analytics();
 
             #[cfg(target_os = "windows")]

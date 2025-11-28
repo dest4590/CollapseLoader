@@ -8,12 +8,42 @@ pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
 pub static IS_LINUX: bool = cfg!(target_os = "linux");
 pub static FILE_EXTENSION: &str = if IS_LINUX { "" } else { ".exe" };
+pub static LINUX_SUFFIX: &str = "-linux";
+pub static LEGACY_SUFFIX: &str = "-1.12";
+pub static PATH_SEPARATOR: &str = if IS_LINUX { ":" } else { ";" };
 
 pub static JDK_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2_linux"
 } else {
     "jdk-21.0.2"
 };
+
+// Asset/library file names (without .zip extension)
+pub static ASSETS_FOLDER: &str = "assets";
+pub static ASSETS_FABRIC_FOLDER: &str = "assets_fabric";
+pub static LIBRARIES_FOLDER: &str = "libraries";
+pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-1.12";
+pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries_fabric";
+pub static NATIVES_FOLDER: &str = "natives";
+pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
+pub static NATIVES_LEGACY_FOLDER: &str = "natives-1.12";
+pub static NATIVES_FABRIC_FOLDER: &str = "natives_fabric";
+
+// Zip file names
+pub static ASSETS_ZIP: &str = "assets.zip";
+pub static ASSETS_FABRIC_ZIP: &str = "assets_fabric.zip";
+pub static LIBRARIES_ZIP: &str = "libraries.zip";
+pub static LIBRARIES_LEGACY_ZIP: &str = "libraries-1.12.zip";
+pub static LIBRARIES_FABRIC_ZIP: &str = "libraries_fabric.zip";
+pub static NATIVES_ZIP: &str = "natives.zip";
+pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
+pub static NATIVES_LEGACY_ZIP: &str = "natives-1.12.zip";
+
+// Folder names
+pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";
+pub static AGENT_OVERLAY_FOLDER: &str = "agent_overlay";
+pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
+pub static MODS_FOLDER: &str = "mods";
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var).ok().is_some_and(|s| {
@@ -33,8 +63,7 @@ pub static USE_LOCAL_SERVER: LazyLock<bool> = LazyLock::new(|| {
 pub static SKIP_AGENT_OVERLAY_VERIFICATION: LazyLock<bool> =
     LazyLock::new(|| parse_env_bool("SKIP_AGENT_OVERLAY_VERIFICATION"));
 
-pub static MOCK_CLIENTS: LazyLock<bool> =
-    LazyLock::new(|| parse_env_bool("MOCK_CLIENTS"));
+pub static MOCK_CLIENTS: LazyLock<bool> = LazyLock::new(|| parse_env_bool("MOCK_CLIENTS"));
 
 pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     if let Ok(url) = std::env::var("FORCE_CDN") {
