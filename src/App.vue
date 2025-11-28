@@ -80,6 +80,24 @@ const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
 const isDev = ref(false);
 
+const sidebarPosition = ref(localStorage.getItem('sidebarPosition') as 'left' | 'right' | 'top' | 'bottom' || 'left');
+
+const updateSidebarPosition = (newPosition: 'left' | 'right' | 'top' | 'bottom') => {
+    sidebarPosition.value = newPosition;
+    localStorage.setItem('sidebarPosition', newPosition);
+};
+
+const mainClasses = computed(() => {
+    const base = 'w-full p-6 bg-base-200 min-h-screen overflow-scroll overflow-x-hidden transition-all duration-300';
+    const pos = sidebarPosition.value;
+    
+    if (pos === 'left') return `${base} ml-20`;
+    if (pos === 'right') return `${base} mr-20`;
+    if (pos === 'top') return `${base} mt-20`;
+    if (pos === 'bottom') return `${base} mb-20`;
+    return `${base} ml-20`;
+});
+
 
 const {
     stopStatusSync
@@ -441,8 +459,9 @@ onUnmounted(() => {
     <div :class="['flex h-screen', contentVisible ? 'content-entered' : 'content-hidden']"
         v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
         <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
-            :is-online="isOnline" :is-authenticated="isAuthenticated" />
-        <main class="ml-20 w-full p-6 bg-base-200 min-h-screen overflow-scroll overflow-x-hidden">
+            :is-online="isOnline" :is-authenticated="isAuthenticated"
+            :position="sidebarPosition" @update:position="updateSidebarPosition" />
+        <main :class="mainClasses">
             <transition :name="getTransitionName()" mode="out-in" appear>
                 <div :key="activeTab + (currentUserId || '')">
                     <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"
