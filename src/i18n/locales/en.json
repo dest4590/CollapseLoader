@@ -172,6 +172,23 @@
       "cancel": "Cancel",
       "close": "I understand"
     },
+    "slow_download": {
+      "modal_title": "Slow Download Detected",
+      "title": "Slow Download Speed",
+      "subtitle": "Your download speed is lower than expected",
+      "description": "Your current download speed is slower than usual. This may result in longer download times.",
+      "current_speed": "Current Speed:",
+      "tip_1": "Check your internet connection",
+      "tip_2": "Try closing other applications using bandwidth",
+      "tip_3": "Consider retrying the download later",
+      "dont_show_again": "Don't show this warning again",
+      "stalled_modal_title": "Download Stalled",
+      "stalled_title": "Download Stuck",
+      "stalled_subtitle": "No progress detected",
+      "stalled_description": "Your download appears to be stuck. No data has been received for a while.",
+      "no_progress": "No download progress detected",
+      "tip_zapret": "If you are from CIS (Russia, Belarus, Kazakhstan, except Ukraine), your provider may block our domains. Try enabling 'DPI Bypass' in settings and restart the loader as administrator."
+    },
     "add_custom_client": "Add custom client",
     "edit_custom_client": "Edit client",
     "delete_custom_client": "Delete custom client",

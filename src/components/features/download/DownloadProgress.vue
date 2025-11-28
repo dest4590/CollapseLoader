@@ -2,8 +2,10 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { listen } from '@tauri-apps/api/event';
 import { useI18n } from 'vue-i18n';
+import { useDownloadSpeedMonitor } from '../../../composables/useDownloadSpeedMonitor';
 
 const { t } = useI18n();
+const downloadMonitor = useDownloadSpeedMonitor();
 
 interface ProgressEvent {
     file: string;
@@ -38,6 +40,8 @@ onMounted(async () => {
     listeners.value.push(
         await listen('download-start', (event: any) => {
             const filename = event.payload as string;
+            downloadMonitor.startMonitoring();
+
             if (shouldShowProgress(filename)) {
                 activeDownloads.value.add(filename);
                 currentFile.value = filename;
@@ -51,6 +55,11 @@ onMounted(async () => {
     listeners.value.push(
         await listen('download-progress', (event: any) => {
             const data = event.payload as ProgressEvent;
+
+            if (data.downloaded !== undefined) {
+                downloadMonitor.onProgress(data.downloaded, data.percentage);
+            }
+
             if (
                 shouldShowProgress(data.file) &&
                 activeDownloads.value.has(data.file)
@@ -66,6 +75,8 @@ onMounted(async () => {
     listeners.value.push(
         await listen('download-complete', (event: any) => {
             const filename = event.payload as string;
+            downloadMonitor.stopMonitoring();
+
             if (shouldShowProgress(filename)) {
                 if (!filename.endsWith('.zip')) {
                     activeDownloads.value.delete(filename);
@@ -124,6 +135,7 @@ onMounted(async () => {
             if (!isDownloading) {
                 activeDownloads.value.clear();
                 isVisible.value = false;
+                downloadMonitor.stopMonitoring();
             }
         })
     );
@@ -131,6 +143,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
     listeners.value.forEach((unlisten) => unlisten());
+    downloadMonitor.reset();
 });
 </script>
 

@@ -172,6 +172,23 @@
       "cancel": "取消",
       "close": "我已了解"
     },
+    "slow_download": {
+      "modal_title": "下载速度慢",
+      "title": "下载速度过慢",
+      "subtitle": "您的下载速度低于预期",
+      "description": "当前下载速度低于正常水平。这可能导致下载时间延长。",
+      "current_speed": "当前速度：",
+      "tip_1": "检查您的网络连接",
+      "tip_2": "尝试关闭其他占用带宽的应用程序",
+      "tip_3": "考虑稍后重新下载",
+      "dont_show_again": "不再显示此警告",
+      "stalled_modal_title": "下载停滞",
+      "stalled_title": "下载卡住",
+      "stalled_subtitle": "未检测到进度",
+      "stalled_description": "您的下载似乎卡住了。已有一段时间未接收到数据。",
+      "no_progress": "未检测到下载进度",
+      "tip_zapret": "如果您位于独联体地区（俄罗斯、白俄罗斯、哈萨克斯坦，乌克兰除外），您的网络提供商可能会屏蔽我们的域名。请尝试在设置中启用“DPI 绕过”并以管理员身份重启加载器。"
+    },
     "add_custom_client": "添加自定义客户端",
     "edit_custom_client": "编辑客户端",
     "delete_custom_client": "删除自定义客户端",
