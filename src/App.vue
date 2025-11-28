@@ -88,14 +88,14 @@ const updateSidebarPosition = (newPosition: 'left' | 'right' | 'top' | 'bottom')
 };
 
 const mainClasses = computed(() => {
-    const base = 'w-full p-6 bg-base-200 min-h-screen overflow-scroll overflow-x-hidden transition-all duration-300';
+    const base = 'w-full p-6 bg-base-200 overflow-scroll overflow-x-hidden transition-all duration-300';
     const pos = sidebarPosition.value;
     
-    if (pos === 'left') return `${base} ml-20`;
-    if (pos === 'right') return `${base} mr-20`;
-    if (pos === 'top') return `${base} mt-20`;
-    if (pos === 'bottom') return `${base} mb-20`;
-    return `${base} ml-20`;
+    if (pos === 'left') return `${base} ml-20 h-screen`;
+    if (pos === 'right') return `${base} mr-20 h-screen`;
+    if (pos === 'top') return `${base} mt-20 h-[calc(100vh-5rem)]`;
+    if (pos === 'bottom') return `${base} h-[calc(100vh-5rem)]`;
+    return `${base} ml-20 h-screen`;
 });
 
 

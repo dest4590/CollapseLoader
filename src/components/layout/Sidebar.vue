@@ -146,6 +146,14 @@ const stopDrag = () => {
     dragTarget.value = null;
 };
 
+const isCentered = ref(false);
+
+const toggleCenter = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button')) return;
+    isCentered.value = !isCentered.value;
+};
+
 const currentPosition = computed(() => props.position || 'left');
 
 const sidebarClasses = computed(() => {
@@ -173,7 +181,8 @@ const containerClasses = computed(() => {
 });
 
 const footerClasses = computed(() => {
-    return [['top', 'bottom'].includes(currentPosition.value) ? 'ml-auto flex-row' : 'mt-auto flex-col', 'flex', 'gap-4'];
+    const isHorizontal = ['top', 'bottom'].includes(currentPosition.value);
+    return [isHorizontal ? 'flex-row' : 'flex-col', 'flex', 'gap-4'];
 });
 
 const animationClass = computed(() => {
@@ -229,7 +238,10 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div :class="[sidebarClasses, animationClass]" @mousedown="startDrag">
+    <div :class="[sidebarClasses, animationClass]" @mousedown="startDrag" @dblclick="toggleCenter">
+        <div class="transition-all duration-500 ease-in-out basis-0" :class="isCentered ? 'grow' : 'grow-0'">
+        </div>
+
         <div :class="containerClasses">
             <div class="tooltip" :class="[tooltipClass, halloweenActive ? 'tooltip-warning' : 'tooltip-accent']"
                 :data-tip="t('navigation.home') + (halloweenActive ? ' — ' + halloweenGreeting : '')">
@@ -298,6 +310,9 @@ onUnmounted(() => {
             </div>
         </div>
 
+        <div class="transition-all duration-500 ease-in-out basis-4" :class="isCentered ? 'grow-0' : 'grow'">
+        </div>
+
         <div :class="footerClasses">
             <div v-if="isAuthenticated && isAdmin" class="tooltip tooltip-accent" :class="tooltipClass"
                 :data-tip="t('navigation.admin')">
@@ -336,6 +351,9 @@ onUnmounted(() => {
                     <Info class="w-5 h-5" />
                 </button>
             </div>
+        </div>
+
+        <div class="transition-all duration-500 ease-in-out basis-0" :class="isCentered ? 'grow' : 'grow-0'">
         </div>
     </div>
 </template>
