@@ -3,7 +3,7 @@ use tauri::AppHandle;
 use crate::core::utils::helpers::emit_to_main_window_filtered;
 use crate::{
     core::clients::client::{Client, CLIENT_LOGS},
-    log_debug, log_info, log_warn,
+    log_debug, log_warn,
 };
 
 pub struct LogChecker {
@@ -29,11 +29,6 @@ impl LogChecker {
                 let full_log_string = client_logs.join("\\\\n");
 
                 if let Some(crash_type) = self.detect_crash_type(&full_log_string) {
-                    log_warn!(
-                        "Detected crash for client '{}': {:?}",
-                        self.client.name,
-                        crash_type
-                    );
                     self.handle_crash(crash_type, client_logs, app_handle_clone_for_crash_handling);
                 } else {
                     log_debug!(
@@ -71,17 +66,13 @@ impl LogChecker {
     }
 
     fn handle_crash(&self, crash_type: CrashType, client_logs: &[String], app_handle: &AppHandle) {
-        log_info!(
-            "Handling crash type {:?} for client '{}'",
-            crash_type,
-            self.client.name
+        log_warn!(
+            "Client {} crashed! Detected reason: {:?}",
+            self.client.name,
+            crash_type
         );
         match crash_type {
             CrashType::MissingMainClass => {
-                log_info!(
-                    "Client {} (ID: {}) crash likely due to missing main class. Triggering reinstall.",
-                    self.client.name, self.client.id
-                );
                 emit_to_main_window_filtered(
                     app_handle,
                     "client-needs-reinstall",
@@ -92,11 +83,6 @@ impl LogChecker {
                 );
             }
             CrashType::OutOfMemory => {
-                log_info!(
-                    "Client {} (ID: {}) crash likely due to OutOfMemoryError.",
-                    self.client.name,
-                    self.client.id
-                );
                 self.emit_crash_details(client_logs, app_handle);
                 emit_to_main_window_filtered(
                     app_handle,
@@ -109,10 +95,6 @@ impl LogChecker {
                 );
             }
             CrashType::GameCrashed => {
-                log_warn!(
-                    "Client '{}' crashed with a generic game error.",
-                    self.client.name
-                );
                 self.emit_crash_details(client_logs, app_handle);
                 emit_to_main_window_filtered(
                     app_handle,

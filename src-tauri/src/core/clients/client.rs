@@ -863,7 +863,7 @@ impl Client {
             match child.wait() {
                 Ok(status) => {
                     let log_line = format!("Process finished with status: {status:?}");
-                    log_debug!("{}", log_line);
+                    log_info!("{}", log_line);
                     add_log_line(client_id, log_line);
 
                     let log_checker = LogChecker::new(self_clone.clone());
@@ -875,9 +875,7 @@ impl Client {
                         {
                             log_error!("Failed to update user status on client exit: {}", e);
                         } else {
-                            log_debug!(
-                                "User status updated on client exit, cleared client playing status"
-                            );
+                            log_info!("User status updated on client exit");
                         }
                     }
 

@@ -78,12 +78,12 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         .timestamps(activity::Timestamps::new().start(start_time as i64));
 
     if let Err(e) = discord_client.set_activity(activity.clone()) {
-        log_error!("Failed to update Discord activity: {}", e);
+        log_warn!("Failed to update Discord activity: {}", e);
 
         if let Err(e) = discord_client.connect() {
             log_error!("Failed to reconnect to Discord: {}", e);
         } else if let Err(e) = discord_client.set_activity(activity) {
-            log_error!(
+            log_warn!(
                 "Failed to update Discord activity after reconnection: {}",
                 e
             );
@@ -96,7 +96,7 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
 pub fn update_activity_async(details: String, state: String) {
     std::thread::spawn(move || {
         if let Err(e) = update_activity(details, state) {
-            log_error!("Failed to update Discord activity asynchronously: {}", e);
+            log_warn!("Failed to update Discord activity asynchronously: {}", e);
         }
     });
 }

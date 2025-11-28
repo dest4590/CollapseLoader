@@ -56,17 +56,6 @@ pub async fn reset_requirements() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub async fn reset_cache() -> Result<(), String> {
-    log_info!("Resetting application cache");
-    if let Err(e) = DATA.reset_cache().await {
-        log_error!("Failed to reset cache: {}", e);
-        return Err(format!("Failed to reset cache: {e}"));
-    }
-    log_info!("Application cache reset successfully");
-    Ok(())
-}
-
-#[tauri::command]
 pub fn get_data_folder() -> Result<String, String> {
     let path = DATA.root_dir.to_string_lossy().to_string();
     log_debug!("Getting data folder path: {}", path);

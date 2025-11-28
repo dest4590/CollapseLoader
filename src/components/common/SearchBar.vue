@@ -2,7 +2,7 @@
     <div class="search-container group">
         <div class="relative">
             <input ref="inputRef" type="text"
-                class="input input-bordered w-full pl-10 pr-12 transition-all duration-300 z-10 relative bg-base-200/50 focus:bg-base-100 focus:shadow-lg"
+                class="input input-bordered w-full pl-10 pr-12 transition-all duration-300 z-10 relative bg-base-200/50"
                 :placeholder="t('home.search_placeholder')" v-model="searchTerm" @input="onSearch" />
             <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-20 transition-colors duration-300"
                 :class="{ 'text-primary': isFocused || searchTerm }">

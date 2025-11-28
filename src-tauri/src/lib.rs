@@ -136,7 +136,6 @@ pub fn run() {
             commands::utils::get_auth_url,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
-            commands::utils::reset_cache,
             commands::utils::get_data_folder,
             commands::utils::change_data_folder,
             commands::utils::decode_base64,

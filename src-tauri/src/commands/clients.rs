@@ -241,9 +241,7 @@ pub async fn launch_client(
 
     log_info!("Verifying agent and overlay files before launch");
     match AgentOverlayManager::verify_agent_overlay_files().await {
-        Ok(true) => {
-            log_debug!("Agent and overlay files verified successfully");
-        }
+        Ok(true) => {}
         Ok(false) => {
             if !*SKIP_AGENT_OVERLAY_VERIFICATION {
                 log_warn!("Agent/overlay files verification failed, attempting to download...");

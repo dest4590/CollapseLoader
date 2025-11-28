@@ -1707,7 +1707,7 @@ onBeforeUnmount(() => {
         <ul v-if="selectedClients.size <= 1">
             <li>
                 <a @click="toggleFavorite(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Star class="w-4 h-4" :class="{
                         'fill-yellow-400 text-yellow-400': isClientFavorite(
                             contextMenu.client?.id || 0
@@ -1722,7 +1722,7 @@ onBeforeUnmount(() => {
             </li>
             <li v-if="accounts.length > 1 && contextMenu.client?.meta.installed" class="relative">
                 <a @click="toggleAccountsDropdown"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20 justify-between">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30 justify-between">
                     <div class="flex items-center gap-2">
                         <Play class="w-4 h-4" />
                         {{ t('home.start_with') }}
@@ -1764,28 +1764,28 @@ onBeforeUnmount(() => {
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="reinstallClient(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <RefreshCcw class="w-4 h-4" />
                     {{ t('common.reinstall') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="deleteClient(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Trash2 class="w-4 h-4" />
                     {{ t('common.delete') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="openClientFolder(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Folder class="w-4 h-4" />
                     {{ t('theme.actions.open_folder') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="copyClientLogs(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Copy class="w-4 h-4" />
                     {{ t('logs.copy_logs') }}
                 </a>

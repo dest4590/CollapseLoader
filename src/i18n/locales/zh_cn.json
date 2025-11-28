@@ -605,9 +605,9 @@
     "min_length": "{field} 至少需要 {length} 个字符。"
   },
   "settings": {
-    "general": "通用设置",
+    "general": "设置",
     "sync": "云同步",
-    "accounts": "账户管理",
+    "accounts": "账户",
     "reset_tooltip": "重置为默认",
     "sync_status": "云同步状态",
     "sync_controls": "同步控制",
@@ -672,8 +672,6 @@
     "reset_requirements_success": "已成功移除依赖，现在可以下载任意客户端",
     "reset_requirements_failed": "无法移除依赖，请重试或重启加载器",
     "login_required": "使用此功能需要登录您的账户。",
-    "reset_cache": "重置客户端缓存",
-    "reset_cache_success": "已成功删除客户端缓存，请重启加载器",
     "reset_cache_failed": "无法删除缓存，请重试",
     "hash_verify": "哈希校验",
     "irc_chat": "IRC 聊天",
@@ -696,7 +694,13 @@
     "sync_client_settings": "同步客户端设置",
     "ram": {
       "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
-    }
+    },
+    "reset_settings": "重置设置",
+    "accounts_description": "轻松管理您的游戏账号并自由切换",
+    "accounts_management": "账户管理",
+    "no_matching_accounts": "未找到匹配的帐户",
+    "search_accounts": "搜索账户...",
+    "try_different_search": "请尝试调整您的搜索条件或筛选器"
   },
   "userProfile": {
     "back_to_friends": "返回好友",

@@ -934,7 +934,7 @@ onBeforeUnmount(() => {
 
                     <div ref="actionsRef" class="card-actions justify-end mt-2">
                         <button v-if="clientIsRunning && !clientIsInstalling" @click.stop="handleOpenLogViewer"
-                            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 focus:ring-info">
+                            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20">
                             <Terminal class="w-4 h-4" />
                         </button>
                         <transition name="fade-transform" mode="out-in">
@@ -962,10 +962,10 @@ onBeforeUnmount(() => {
                                         <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                         <span v-if="client.working">{{
                                             t('home.download')
-                                            }}</span>
+                                        }}</span>
                                         <span v-else-if="!client.working">{{
                                             t('home.unavailable')
-                                            }}</span>
+                                        }}</span>
                                     </span>
                                     <span class="flex items-center get-text absolute inset-0 opacity-0">
                                         {{ client.meta.size || '0' }} MB

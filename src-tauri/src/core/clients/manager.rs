@@ -150,7 +150,6 @@ impl ClientManager {
     }
 
     pub fn update_status_on_client_exit(&self, app_handle: &AppHandle) -> Result<(), String> {
-        log_debug!("Updating user status on client exit to 'online' and clearing currentClient");
         emit_to_main_window(
             app_handle,
             "update-user-status",

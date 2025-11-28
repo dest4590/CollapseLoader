@@ -616,9 +616,14 @@
     "min_length": "{field} must be at least {length} characters long."
   },
   "settings": {
-    "general": "General Settings",
+    "general": "Settings",
     "sync": "Cloud Sync",
-    "accounts": "Account Management",
+    "accounts": "Accounts",
+    "accounts_management": "Accounts Management",
+    "accounts_description": "Manage your game accounts and switch between them easily",
+    "search_accounts": "Search accounts...",
+    "no_matching_accounts": "No matching accounts found",
+    "try_different_search": "Try adjusting your search or filters",
     "reset_tooltip": "Reset to defaults",
     "sync_status": "Cloud Sync Status",
     "sync_controls": "Sync Controls",
@@ -687,8 +692,6 @@
     "reset_requirements_success": "Successfully removed requirements, now download any client",
     "reset_requirements_failed": "Cannot remove requirements, try again or restart loader",
     "login_required": "You will need to log into your account to use this feature.",
-    "reset_cache": "Reset client cache",
-    "reset_cache_success": "Successfully deleted client cache, restart the loader",
     "reset_cache_failed": "Cannot remove cache, try again",
     "hash_verify": "Hash verify",
     "irc_chat": "IRC Chat",
@@ -708,7 +711,8 @@
       "failed": "Failed to change data folder: {error}",
       "restart_required": "Please restart the app for changes to take effect"
     },
-    "sync_client_settings": "Sync client settings"
+    "sync_client_settings": "Sync client settings",
+    "reset_settings": "Reset settings"
   },
   "userProfile": {
     "back_to_friends": "Back to Friends",

@@ -39,10 +39,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -51,7 +51,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                        }}</button>
+                    }}</button>
                 </template>
             </div>
 
@@ -65,7 +65,7 @@
                     <div class="md:col-span-2">
                         <div v-if="displayedColors.length" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             <div v-for="c in displayedColors" :key="c" class="tooltip" :data-tip="c">
-                                <div class="h-10 rounded-box border border-base-300 cursor-pointer focus:outline-none focus:ring"
+                                <div class="h-10 rounded-box border border-base-300 cursor-pointer"
                                     :style="{ backgroundColor: pData[c] }" role="button" tabindex="0"
                                     :aria-label="`Copy ${c} color ${pData[c]}`" @click="copyColor(c)"
                                     @keydown.enter.prevent="copyColor(c)" @keydown.space.prevent="copyColor(c)"></div>
@@ -110,7 +110,7 @@
                                                 <div class="truncate">
                                                     <span class="font-medium mr-2">{{ c.author_username }}</span>
                                                     <span class="text-[11px] opacity-60">{{ formatDate(c.created_at)
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
