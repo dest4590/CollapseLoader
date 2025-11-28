@@ -98,9 +98,18 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 const isDragging = ref(false);
+const isMouseDown = ref(false);
 const dragTarget = ref<string | null>(null);
 
 const onDrag = (event: MouseEvent) => {
+    if (!isMouseDown.value) return;
+
+    if (!isDragging.value) {
+        isDragging.value = true;
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+    }
+
     const { clientX, clientY } = event;
     const { innerWidth, innerHeight } = window;
 
@@ -128,22 +137,21 @@ const startDrag = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (target.closest('button')) return;
 
-    isDragging.value = true;
-    document.body.style.cursor = 'grabbing';
-    document.body.style.userSelect = 'none';
+    isMouseDown.value = true;
     document.addEventListener('mouseup', stopDrag);
     document.addEventListener('mousemove', onDrag);
 };
 
 const stopDrag = () => {
-    if (!isDragging.value) return;
-    isDragging.value = false;
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
+    isMouseDown.value = false;
+    if (isDragging.value) {
+        isDragging.value = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        dragTarget.value = null;
+    }
     document.removeEventListener('mouseup', stopDrag);
     document.removeEventListener('mousemove', onDrag);
-
-    dragTarget.value = null;
 };
 
 const isCentered = ref(false);
