@@ -70,16 +70,7 @@ export const changeLanguage = async (locale: string) => {
     document.documentElement.setAttribute('lang', locale);
 
     try {
-        await settingsService.loadSettings();
-        const currentSettings = settingsService.getSettings();
-        const updatedSettings = {
-            ...currentSettings,
-            language: {
-                value: locale,
-                show: (currentSettings as any)?.language?.show ?? true
-            }
-        } as any;
-        await settingsService.saveSettings(updatedSettings);
+        await settingsService.editSetting('language', locale);
     } catch (error) {
         console.error('Failed to save language to settings:', error);
     }

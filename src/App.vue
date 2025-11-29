@@ -129,10 +129,6 @@ const checkAuthStatus = () => {
     isAuthenticated.value = !!token;
 };
 
-
-
-
-
 const handleFirstRunAccepted = async () => {
     try {
         await invoke('mark_first_run_shown');
@@ -172,20 +168,6 @@ const handleDisclaimerAccepted = async () => {
             t('toast.settings.disclaimer_save_failed', { error }),
             'error'
         );
-    }
-};
-
-
-const handleThemeChanged = async (newTheme: string) => {
-    currentTheme.value = newTheme;
-    try {
-        await settingsService.loadSettings();
-        const settings = settingsService.getSettings();
-        const newSettings = { ...settings, theme: { ...(settings as any).theme, value: newTheme } } as any;
-        await settingsService.saveSettings(newSettings);
-    } catch (error) {
-        console.error('Failed to save theme from initial setup:', error);
-        addToast(t('toast.settings.theme_save_failed', { error }), 'error');
     }
 };
 
@@ -448,8 +430,7 @@ onUnmounted(() => {
 
     <InitialSetupModals :show-first-run="showFirstRunInfo" :show-disclaimer="showInitialDisclaimer"
         :current-theme="currentTheme" @first-run-accepted="handleFirstRunAccepted"
-        @disclaimer-accepted="handleDisclaimerAccepted" @theme-changed="handleThemeChanged"
-        @auto-login="handleLoggedIn" />
+        @disclaimer-accepted="handleDisclaimerAccepted" @auto-login="handleLoggedIn" />
 
     <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu" />
 

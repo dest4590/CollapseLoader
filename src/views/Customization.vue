@@ -516,11 +516,7 @@ const changeTheme = async (theme: string) => {
         selectedTheme.value = theme;
         document.documentElement.setAttribute('data-theme', theme);
 
-        await settingsService.loadSettings();
-        const currentSettings = settingsService.getSettings();
-        const inputSettings = { ...currentSettings, theme: { value: theme, show: false } } as any;
-        if ('config_path' in inputSettings) delete inputSettings.config_path;
-        await settingsService.saveSettings(inputSettings);
+        await settingsService.editSetting('theme', theme, false);
 
         addToast(t('theme.change_success'), 'success');
     } catch (error) {

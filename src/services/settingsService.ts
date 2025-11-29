@@ -22,6 +22,7 @@ class SettingsService {
     flags = reactive<FlagsMap>({});
     isLoading = ref(false);
     isSaving = ref(false);
+    isEditing = ref(false);
 
     async loadSettings(): Promise<void> {
         this.isLoading.value = true;
@@ -73,6 +74,22 @@ class SettingsService {
         this.settings[key].value = value;
     }
 
+    async editSetting(key: string, value: any, show: boolean = true): Promise<void> {
+        this.isEditing.value = true;
+        try {
+            if (this.settings[key]) {
+                this.settings[key].value = value;
+                this.settings[key].show = show;
+            } else {
+                this.settings[key] = { value, show };
+            }
+
+            await this.saveSettings();
+        } finally {
+            this.isEditing.value = false;
+        }
+    }
+
     getSetting<T = any>(key: string): Setting<T> | undefined {
         return this.settings[key] as Setting<T> | undefined;
     }
@@ -90,7 +107,7 @@ class SettingsService {
         watch(
             () => this.settings,
             () => {
-                if (this.isLoading.value) return;
+                if (this.isLoading.value || this.isEditing.value) return;
 
                 if (saveTimeout) {
                     clearTimeout(saveTimeout);

@@ -5,7 +5,6 @@ import path from 'path'
 
 const host = process.env.TAURI_DEV_HOST;
 
-// https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [vue(), tailwindcss()],
 
@@ -23,11 +22,43 @@ export default defineConfig(async () => ({
     },
   },
 
-  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-  //
-  // 1. prevent vite from obscuring rust errors
+  build: {
+    rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === 'EVAL' && warning.id?.includes('lottie-web')) {
+          return;
+        }
+        if (warning.code === 'EMPTY_BUNDLE') {
+          return;
+        }
+        warn(warning);
+      },
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('monaco-editor')) {
+              return 'vendor-monaco';
+            }
+            if (id.includes('vue-i18n') || id.includes('@vue')) {
+              return 'vendor-vue';
+            }
+            if (id.includes('@tauri-apps')) {
+              return 'vendor-tauri';
+            }
+            if (id.includes('lucide-vue-next')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('lottie') || id.includes('gsap') || id.includes('axios')) {
+              return 'vendor-utils';
+            }
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1200,
+  },
+
   clearScreen: false,
-  // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
     strictPort: true,
@@ -40,7 +71,6 @@ export default defineConfig(async () => ({
       }
       : undefined,
     watch: {
-      // 3. tell vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
     },
   }

@@ -21,6 +21,7 @@ import gsap from 'gsap';
 import type { Client, InstallProgress, ClientDetails } from '../../../types/ui';
 import InsecureClientWarningModal from '../../modals/clients/InsecureClientWarningModal.vue';
 import ClientInfo from './ClientInfo.vue';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { useModal } from '../../../services/modalService';
 
@@ -824,6 +825,14 @@ const handleCardKeyDown = (event: KeyboardEvent) => {
     }
 };
 
+const handleClientSourceLink = (url: string) => {
+    try {
+        openUrl(url);
+    } catch (error) {
+        console.error('Failed to open URL:', error);
+    }
+};
+
 onMounted(() => {
     document.addEventListener('keydown', handleCardKeyDown);
 });
@@ -1011,8 +1020,8 @@ onBeforeUnmount(() => {
                                                         <dt class="text-sm font-medium text-base-content/70">{{
                                                             t('client.details.source_link') }}</dt>
                                                         <dd class="text-sm text-base-content col-span-1 md:col-span-2">
-                                                            <a :href="clientDetails.source_link" target="_blank"
-                                                                rel="noopener noreferrer"
+                                                            <a @click="handleClientSourceLink(clientDetails.source_link)"
+                                                                target="_blank" rel="noopener noreferrer"
                                                                 class="link link-primary link-hover inline-flex items-center gap-1.5 text-xs truncate">
                                                                 <span>{{ clientDetails.source_link }}</span>
                                                                 <ExternalLink class="w-3 h-3" />

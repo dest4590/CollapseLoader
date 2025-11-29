@@ -97,7 +97,6 @@ const checkRamWarning = () => {
 watch(ramOptionIndex, checkRamWarning);
 watch(systemMemory, checkRamWarning);
 
-
 const { t } = useI18n();
 const availableLanguages = getAvailableLanguages();
 const currentLanguage = ref(getCurrentLanguage());
@@ -200,9 +199,6 @@ const loadFlags = async () => {
         addToast(t('settings.load_flags_failed', { error }), 'error');
     }
 };
-
-
-
 
 const showAddAccountDialog = () => {
     showModal(
@@ -618,6 +614,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <span>{{ t('settings.ram.warning', { selectedRamMb }) }}</span>
                                 </div>
                             </div>
+
                             <div v-else-if="key === 'language'">
                                 <select :value="currentLanguage" @change="
                                     handleLanguageChange(
