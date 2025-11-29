@@ -797,7 +797,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <div class="w-4 h-4 rounded-full bg-error"></div>
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -806,7 +806,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -836,11 +836,10 @@ const handleToastPositionChange = (position: ToastPosition) => {
 
                             <div class="flex flex-col sm:flex-row gap-4 mb-6">
                                 <div class="relative flex-1">
-                                    <Search
-                                        class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-warning" />
                                     <input v-model="searchQuery" type="text"
                                         :placeholder="t('settings.search_accounts')"
                                         class="input input-bordered input-sm w-full pl-10" />
+                                    <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 z-50" />
                                 </div>
                                 <div class="flex flex-wrap gap-2" v-if="uniqueTags.length > 0">
                                     <button v-for="tag in uniqueTags" :key="tag" @click="selectTag(tag)"

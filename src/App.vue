@@ -74,7 +74,6 @@ const { addToast } = useToast();
 const isAuthenticated = ref(false);
 const showRegistrationPrompt = ref(false);
 const currentUserId = ref<number | null>(null);
-const isNavigatingToProfile = ref(false);
 const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
@@ -88,9 +87,9 @@ const updateSidebarPosition = (newPosition: 'left' | 'right' | 'top' | 'bottom')
 };
 
 const mainClasses = computed(() => {
-    const base = 'w-full p-6 bg-base-200 overflow-scroll overflow-x-hidden transition-all duration-300';
+    const base = 'w-full p-6 bg-base-200 overflow-y-auto overflow-x-hidden';
     const pos = sidebarPosition.value;
-    
+
     if (pos === 'left') return `${base} ml-20 h-screen`;
     if (pos === 'right') return `${base} mr-20 h-screen`;
     if (pos === 'top') return `${base} mt-20 h-[calc(100vh-5rem)]`;
@@ -110,7 +109,6 @@ const handleUnreadNewsCountUpdated = (count: number) => {
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
     previousTab.value = router.currentRoute.value;
-    isNavigatingToProfile.value = false;
     if (opts && Object.prototype.hasOwnProperty.call(opts, 'userId')) {
         currentUserId.value = opts!.userId ?? null;
     } else {
@@ -121,7 +119,6 @@ const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
 
 const showUserProfile = (userId: number) => {
     previousTab.value = router.currentRoute.value;
-    isNavigatingToProfile.value = true;
 
     setActiveTab('user-profile', { userId });
 };
@@ -459,8 +456,8 @@ onUnmounted(() => {
     <div :class="['flex h-screen', contentVisible ? 'content-entered' : 'content-hidden']"
         v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
         <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
-            :is-online="isOnline" :is-authenticated="isAuthenticated"
-            :position="sidebarPosition" @update:position="updateSidebarPosition" />
+            :is-online="isOnline" :is-authenticated="isAuthenticated" :position="sidebarPosition"
+            @update:position="updateSidebarPosition" />
         <main :class="mainClasses">
             <transition :name="getTransitionName()" mode="out-in" appear>
                 <div :key="activeTab + (currentUserId || '')">

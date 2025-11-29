@@ -31,10 +31,6 @@
           <span :class="['percentage-number', { bump: percentageBump }]">{{ animatedProgressRounded }}%</span>
         </div>
       </div>
-
-      <button v-if="isDev" @click="skipIntro" type="button" class="btn btn-sm btn-ghost mt-6">
-        Skip intro
-      </button>
     </div>
   </div>
 </template>
@@ -55,7 +51,7 @@ const props = defineProps({
   currentTheme: { type: String, default: 'dark' },
 });
 
-const emit = defineEmits(['update:show']);
+defineEmits(['update:show']);
 
 const progressPercent = computed(() =>
   Math.min(100, Math.max(0, (props.currentProgress / (props.totalSteps || 1)) * 100))
@@ -105,8 +101,6 @@ watch(() => props.show, (val) => {
     }, ANIMATE_OUT_MS);
   }
 });
-
-const skipIntro = () => emit('update:show', false);
 
 onBeforeUnmount(() => {
   if (_progressRaf) cancelAnimationFrame(_progressRaf);
