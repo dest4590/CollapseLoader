@@ -106,9 +106,4 @@ const positionClass = computed(() => {
 .toast-position-top-center .toast-list-leave-to {
     transform: translateY(-100%);
 }
-
-.toast-list-leave-active {
-    position: absolute;
-    width: 100%;
-}
 </style>

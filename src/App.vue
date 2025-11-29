@@ -55,7 +55,6 @@ const { t, locale } = useI18n();
 
 const {
     showPreloader,
-    contentVisible,
     loadingState,
     currentProgress,
     totalSteps,
@@ -94,7 +93,8 @@ const mainClasses = computed(() => {
     if (pos === 'right') return `${base} mr-20 h-screen`;
     if (pos === 'top') return `${base} mt-20 h-[calc(100vh-5rem)]`;
     if (pos === 'bottom') return `${base} h-[calc(100vh-5rem)]`;
-    return `${base} ml-20 h-screen`;
+
+    return base;
 });
 
 
@@ -453,8 +453,7 @@ onUnmounted(() => {
 
     <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu" />
 
-    <div :class="['flex h-screen', contentVisible ? 'content-entered' : 'content-hidden']"
-        v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
+    <div :class="['flex h-screen']" v-if="!showPreloader && !showInitialDisclaimer && !showFirstRunInfo">
         <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
             :is-online="isOnline" :is-authenticated="isAuthenticated" :position="sidebarPosition"
             @update:position="updateSidebarPosition" />
