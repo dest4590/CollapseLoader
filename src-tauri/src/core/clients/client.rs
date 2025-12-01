@@ -234,7 +234,6 @@ impl Client {
         );
         match DATA.download(&self.filename).await {
             Ok(()) => {
-
                 if let Err(e) = self.verify_hash().await {
                     ClientManager::get_client(manager, self.id, |c| {
                         c.meta.installed = false;
@@ -646,7 +645,6 @@ impl Client {
             return Err(e);
         }
 
-        log_debug!("Spawning thread to run client '{}'", self.name);
         let self_clone = self.clone();
         let manager_clone = manager.clone();
         let handle = std::thread::spawn(move || -> Result<(), String> {

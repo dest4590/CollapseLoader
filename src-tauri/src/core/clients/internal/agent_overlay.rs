@@ -236,7 +236,7 @@ impl AgentOverlayManager {
 
         let agent_hash = calculate_md5_hash(&agent_path)?;
         if agent_hash != info.agent_hash {
-            log_error!(
+            log_warn!(
                 "Agent file hash verification failed. Expected: {}, Got: {}",
                 info.agent_hash,
                 agent_hash
