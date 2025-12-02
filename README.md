@@ -2,48 +2,49 @@
   <img src="https://github.com/dest4590/CollapseLoader/assets/80628386/190926bf-cde4-4de4-a35f-476eb9d9ac7b" width="100">
   <h1>CollapseLoader</h1>
 
-  [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dest4590/CollapseLoader/build.yml?style=for-the-badge&logo=githubactions&logoColor=ffffff&color=%2382B155)](https://github.com/dest4590/CollapseLoader/actions)
-  [![GitHub Release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?display_name=tag&style=for-the-badge&logo=alwaysdata&logoColor=ffffff)](https://github.com/dest4590/CollapseLoader/releases/latest)
-  [![GitHub Pre-release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease)](https://github.com/dest4590/CollapseLoader/releases)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/dest4590/CollapseLoader/build.yml?style=for-the-badge&logo=githubactions&logoColor=ffffff&color=%2382B155)](https://github.com/dest4590/CollapseLoader/actions)
+[![GitHub Release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?display_name=tag&style=for-the-badge&logo=alwaysdata&logoColor=ffffff)](https://github.com/dest4590/CollapseLoader/releases/latest)
+[![GitHub Pre-release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease)](https://github.com/dest4590/CollapseLoader/releases)
 
-## GUI Utility to Run Secure Minecraft Hacked Clients
+## A Simple Tool to Run Safe Minecraft Cheat Clients
 
 Download the latest version from our [official website](https://collapseloader.org) or [GitHub releases](https://github.com/dest4590/CollapseLoader/releases).
+
 </div>
 
 ---
 
 ## About CollapseLoader
 
-CollapseLoader is an open-source GUI utility built with Rust and Tauri to securely launch Minecraft cheat clients on Windows and Linux. It prioritizes safety, transparency, and ease of use.
+CollapseLoader is a free, open-source tool built with Rust and Tauri. It helps you safely launch Minecraft cheat clients on Windows and Linux. We focus on safety, honesty, and making things easy to use.
 
 ### Key Features
 
-*   **Strict Client Review**: Only clients that pass thorough security checks are supported.
-*   **Open-Source Transparency**: All code is available on [GitHub](https://github.com/dest4590/CollapseLoader) for community review.
-*   **Cross-Platform Support**: Works seamlessly on Windows and Linux.
-*   **Virus-Free Guarantee**: Every client and build is scanned for malware using advanced tools and VirusTotal.
+-   **Strict Checks**: We only support clients that pass our security tests.
+-   **Open Source**: Anyone can check our code on [GitHub](https://github.com/dest4590/CollapseLoader).
+-   **Works Everywhere**: Runs great on both Windows and Linux.
+-   **No Viruses**: We scan every client and update with powerful antivirus tools to make sure they are clean.
 
-Join our [Discord community](https://collapseloader.org/discord) for support and updates!
+Join our [Discord community](https://collapseloader.org/discord) for help and news!
 
 ---
 
 ## Why CollapseLoader is Safe
 
-CollapseLoader is designed with security as a top priority:
+We built CollapseLoader with safety in mind:
 
-*   **Fully Open-Source**: All components (launcher, API, Discord bot) are available on [GitHub](https://github.com/CollapseLoader) for public auditing.
-*   **Rigorous Client Verification**: Each client is tested using virtual machines, decompilers, debuggers, and VirusTotal to ensure it’s free of malware.
-*   **No Obfuscation**: Clients with protectors like VMProtect or Themida are prohibited, and CollapseLoader’s code is free of obfuscation for full transparency.
-*   **Automated Builds**: Built via GitHub Actions, ensuring reproducible and tamper-free releases. Download builds directly from [GitHub Actions](https://github.com/dest4590/CollapseLoader/actions).
+-   **Public Code**: All parts of our project are on [GitHub](https://github.com/CollapseLoader) for anyone to check.
+-   **Tested Clients**: We test each client using special tools and virus scanners to ensure they are safe, using our own [CollapseScanner](https://github.com/CollapseLoader/CollapseScanner) tool.
+-   **No Hidden Code**: We do not allow clients with hidden or "obfuscated" code. All clients code are fully open for review.
+-   **Automatic Builds**: Our downloads are built automatically by GitHub Actions, so you know the files are safe and unchanged.
 
-> **Note**: While CollapseLoader ensures maximum safety, always exercise caution with cheat clients, as they carry inherent risks. Download only from official sources.
+> **Note**: Even though we make things as safe as possible, always be careful with cheat clients. Only download from official sources.
 
-For more details, see our [Security Overview](SECURITY.md).
+For more info, read our [Security Overview](SECURITY.md).
 
 ---
 
-## Showcase
+## Screenshots
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/ab1fee13-143c-4790-8db5-742c09f3b6eb" width="400">
@@ -56,14 +57,13 @@ For more details, see our [Security Overview](SECURITY.md).
 
 ---
 
-## Installation
+## How to Install
 
-### Prerequisites
+### What You Need
 
-*   **Windows**: Windows 10 or later.
-*   **Linux**: A modern Linux distribution (e.g., Ubuntu 20.04+).
-*   **Dependencies (for building from source)**: Rust and Tauri.
+-   **Windows**: Windows 10 or newer.
+-   **Linux**: A modern Linux system (like Ubuntu 20.04 or newer).
 
-### Download the Latest Release
+### Download
 
-Visit [GitHub Releases](https://github.com/dest4590/CollapseLoader/releases) or [collapseloader.org](https://collapseloader.org). Download the appropriate binary for your platform (Windows or Linux).
+Go to [GitHub Releases](https://github.com/dest4590/CollapseLoader/releases) or [collapseloader.org](https://collapseloader.org). Download the file for your system (Windows or Linux).
