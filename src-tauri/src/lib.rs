@@ -16,7 +16,7 @@ use crate::core::platform::check_webkit_environment;
 use self::core::network::analytics::Analytics;
 use crate::core::network::servers::SERVERS;
 pub use crate::core::utils::logging;
-use tauri::async_runtime::block_on;
+use tauri::async_runtime::spawn;
 
 pub mod commands;
 pub mod core;
@@ -176,8 +176,10 @@ pub fn run() {
 
             Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
 
-            block_on(async { SERVERS.check_servers().await });
-            Analytics::send_start_analytics();
+            spawn(async {
+                SERVERS.check_servers().await;
+                Analytics::send_start_analytics();
+            });
 
             #[cfg(target_os = "windows")]
             {

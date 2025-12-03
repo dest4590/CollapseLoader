@@ -1,5 +1,5 @@
 import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
-import { getAuthUrl } from '../config';
+import { getAuthUrl, ensureAuthUrl } from '../config';
 import { getCurrentLanguage } from '../i18n';
 
 interface CacheEntry<T = any> {
@@ -52,7 +52,8 @@ class ApiClient {
     }
 
     private setupInterceptors() {
-        this.client.interceptors.request.use((config) => {
+        this.client.interceptors.request.use(async (config) => {
+            await ensureAuthUrl();
             const baseUrl = getAuthUrl();
 
             if (config.url?.startsWith('/')) {
