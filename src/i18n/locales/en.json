@@ -118,7 +118,7 @@
     },
     "logout_confirm": {
       "message": "Are you sure you want to log out of your account?",
-      "info": "This will sign you out locally and may require you to sign in again to access some features.",
+      "info": "This will sign you out and may require you to sign in again to access some features.",
       "yes_logout": "Yes, log out"
     },
     "client_crash": {
@@ -712,7 +712,9 @@
       "restart_required": "Please restart the app for changes to take effect"
     },
     "sync_client_settings": "Sync client settings",
-    "reset_settings": "Reset settings"
+    "reset_settings": "Reset settings",
+    "sync_login_required": "Sign in to enable syncing",
+    "not_signed_in": "You are not logged in"
   },
   "userProfile": {
     "back_to_friends": "Back to Friends",
@@ -919,7 +921,8 @@
       "already_in_progress": "Sync already in progress",
       "syncing": "Syncing to cloud...",
       "success": "Sync completed successfully!",
-      "failed": "Sync failed: {error}"
+      "failed": "Sync failed: {error}",
+      "login_required": "Please sign in to sync"
     }
   },
   "discord": {

@@ -1,5 +1,5 @@
 <template>
-    <div class="sync-status-widget" :class="{ offline: !syncState.isOnline }">
+    <div class="sync-status-widget" :class="{ offline: !syncState.isOnline, unauthenticated: !isAuthenticated }">
         <div class="flex items-center gap-2 text-xs">
             <div class="flex items-center gap-1">
                 <div class="w-2 h-2 rounded-full mr-2" :class="{
@@ -7,14 +7,15 @@
                         syncState.isOnline && !syncState.isSyncing,
                     'bg-error': !syncState.isOnline,
                     'bg-warning animate-spin': syncState.isSyncing,
+                    'bg-warning': !isAuthenticated
                 }"></div>
                 <span class="font-medium">
                     {{
-                        syncState.isOnline
-                            ? syncState.isSyncing
-                                ? t('settings.syncing')
-                                : t('time.online')
-                            : t('time.offline')
+                        isAuthenticated
+                            ? (syncState.isOnline
+                                ? (syncState.isSyncing ? t('settings.syncing') : t('time.online'))
+                                : t('time.offline'))
+                            : t('settings.not_signed_in')
                     }}
                 </span>
             </div>
@@ -31,8 +32,10 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { syncService, type SyncServiceState } from '../../services/syncService';
 import { useI18n } from 'vue-i18n';
+import { globalUserStatus } from '../../composables/useUserStatus';
 
 const { t } = useI18n();
+const isAuthenticated = globalUserStatus.isAuthenticated;
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribe: (() => void) | null = null;
 

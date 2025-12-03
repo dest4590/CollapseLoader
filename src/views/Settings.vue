@@ -25,6 +25,8 @@ import {
     CloudCog,
     Search,
     UserIcon,
+    LogIn,
+    WifiOff,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -558,7 +560,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     <SettingsIcon class="w-4 h-4 mr-2" />
                     {{ t('settings.general') }}
                 </a>
-                <a v-if="isAuthenticated" @click="activeTab = 'sync'" class="tab transition-all duration-300" :class="{
+                <a @click="activeTab = 'sync'" class="tab transition-all duration-300" :class="{
                     'tab-active transform scale-105 shadow-md bg-base-300':
                         activeTab === 'sync',
                     'hover:bg-base-300': activeTab !== 'sync',
@@ -734,7 +736,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     </p>
                                     <button @click="handleUploadToCloud" class="btn btn-primary btn-sm w-full"
                                         :disabled="syncState.isSyncing ||
-                                            !syncState.isOnline
+                                            !syncState.isOnline ||
+                                            !isAuthenticated
                                             ">
                                         <Upload class="w-4 h-4 mr-2" />
                                         {{
@@ -758,7 +761,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <button @click="handleDownloadFromCloud" class="btn btn-primary btn-sm w-full"
                                         :disabled="syncState.isSyncing ||
                                             !syncState.isOnline ||
-                                            !syncState.hasCloudData
+                                            !syncState.hasCloudData ||
+                                            !isAuthenticated
                                             ">
                                         <Download class="w-4 h-4 mr-2" />
                                         {{
@@ -785,16 +789,23 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         </p>
                                     </div>
                                     <input type="checkbox" :checked="syncState.autoSyncEnabled" @change="toggleAutoSync"
-                                        class="toggle toggle-primary" />
+                                        class="toggle toggle-primary" :disabled="!isAuthenticated" />
+                                </div>
+                            </div>
+
+                            <div v-if="!isAuthenticated" class="mt-4 alert alert-warning">
+                                <div class="flex items-center gap-2">
+                                    <LogIn class="w-4 h-4" />
+                                    <span>{{ t('settings.sync_login_required') }}</span>
                                 </div>
                             </div>
 
                             <div v-if="!syncState.isOnline" class="mt-4 alert alert-warning">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded-full bg-error"></div>
+                                    <WifiOff class="w-4 h-4" />
                                     <span>{{
                                         t('settings.offline_warning')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
@@ -803,7 +814,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>

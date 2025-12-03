@@ -118,7 +118,7 @@
     },
     "logout_confirm": {
       "message": "您确定要退出您的账户吗？",
-      "info": "这将使您在本地登出，并可能需要您再次登录以访问某些功能。",
+      "info": "这将导致您退出登录，访问某些功能时可能需要重新登录。",
       "yes_logout": "是的，退出"
     },
     "client_crash": {
@@ -700,7 +700,9 @@
     "accounts_management": "账户管理",
     "no_matching_accounts": "未找到匹配的帐户",
     "search_accounts": "搜索账户...",
-    "try_different_search": "请尝试调整您的搜索条件或筛选器"
+    "try_different_search": "请尝试调整您的搜索条件或筛选器",
+    "sync_login_required": "登录以启用同步功能",
+    "not_signed_in": "您尚未登录账户"
   },
   "userProfile": {
     "back_to_friends": "返回好友",
@@ -907,7 +909,8 @@
       "already_in_progress": "同步已在进行中",
       "syncing": "正在同步到云端...",
       "success": "同步成功完成！",
-      "failed": "同步失败：{error}"
+      "failed": "同步失败：{error}",
+      "login_required": "请登录以同步"
     }
   },
   "discord": {

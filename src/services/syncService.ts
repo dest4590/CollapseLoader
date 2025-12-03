@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { userService, type SyncData } from './userService';
 import { settingsService } from './settingsService';
+import { globalUserStatus } from '../composables/useUserStatus';
 
 export type ToastFunction = (message: string, type: string) => void;
 export type TranslateFunction = (key: string, params?: Record<string, any>) => string;
@@ -29,7 +30,7 @@ class SyncService {
         window.addEventListener('online', () => {
             this.state.isOnline = true;
             this.notifyListeners();
-            if (this.state.autoSyncEnabled) {
+            if (this.state.autoSyncEnabled && this.isAuthenticated()) {
                 this.autoSync();
             }
         });
@@ -57,10 +58,19 @@ class SyncService {
         if (this.autoSyncInterval) return;
 
         this.autoSyncInterval = setInterval(() => {
-            if (this.state.isOnline && this.state.autoSyncEnabled && !this.state.isSyncing) {
+            if (this.state.isOnline && this.state.autoSyncEnabled && !this.state.isSyncing && this.isAuthenticated()) {
                 this.autoSync();
             }
         }, 5 * 60 * 1000) as unknown as number;
+    }
+
+    private isAuthenticated(): boolean {
+        try {
+            return !!globalUserStatus?.isAuthenticated?.value;
+        } catch (e) {
+            console.error('Error checking authentication status:', e);
+            return false;
+        }
     }
 
     private async autoSync() {
@@ -73,6 +83,7 @@ class SyncService {
 
     async initializeSyncStatus() {
         if (!this.state.isOnline) return;
+        if (!this.isAuthenticated()) return;
 
         try {
             const status = await userService.getSyncStatus();
@@ -89,6 +100,11 @@ class SyncService {
     async checkAndRestoreOnStartup(): Promise<void> {
         if (!this.state.isOnline) {
             console.log('Offline - skipping startup sync check');
+            return;
+        }
+
+        if (!this.isAuthenticated()) {
+            console.log('User not authenticated - skipping startup sync restore');
             return;
         }
 
@@ -167,6 +183,7 @@ class SyncService {
 
     async uploadToCloud(): Promise<boolean> {
         if (!this.state.isOnline || this.state.isSyncing) return false;
+        if (!this.isAuthenticated()) return false;
 
         this.state.isSyncing = true;
         this.notifyListeners();
@@ -209,6 +226,7 @@ class SyncService {
 
     async downloadFromCloud(): Promise<boolean> {
         if (!this.state.isOnline || this.state.isSyncing) return false;
+        if (!this.isAuthenticated()) return false;
 
         this.state.isSyncing = true;
         this.notifyListeners();
@@ -280,6 +298,11 @@ class SyncService {
 
         if (typeof t !== 'function') {
             console.error('t (translation function) is not a function:', t);
+            return;
+        }
+
+        if (!this.isAuthenticated()) {
+            addToast(t('toast.sync.login_required'), 'error');
             return;
         }
 

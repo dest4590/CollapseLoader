@@ -8,8 +8,6 @@ import {
     Copy,
     Trash2,
     Star,
-    Play,
-    ChevronDown,
     Download,
     Newspaper,
     StopCircle,
@@ -564,32 +562,6 @@ const loadAccounts = async () => {
     }
 };
 
-const launchClientWithAccount = async (client: Client, accountId: string) => {
-    try {
-        const previousActiveAccount = accounts.value.find(
-            (account) => account.is_active
-        );
-
-        await invoke('set_active_account', { id: accountId });
-
-        await launchClient(client.id);
-
-        if (previousActiveAccount && previousActiveAccount.id !== accountId) {
-            await invoke('set_active_account', {
-                id: previousActiveAccount.id,
-            });
-        }
-    } catch (err) {
-        console.error('Error launching client with account:', err);
-        addToast(
-            t('errors.launch_with_account_error', { error: err }),
-            'error'
-        );
-    }
-
-    hideContextMenu();
-};
-
 const getClients = async () => {
     try {
         error.value = '';
@@ -1104,14 +1076,6 @@ const hideContextMenu = () => {
         contextMenu.value.showAccountsDropdown = false;
         document.removeEventListener('click', hideContextMenu);
     }, 150);
-};
-
-const toggleAccountsDropdown = (event?: Event) => {
-    if (event) {
-        event.stopPropagation();
-    }
-    contextMenu.value.showAccountsDropdown =
-        !contextMenu.value.showAccountsDropdown;
 };
 
 const openClientFolder = async (client: Client) => {
@@ -1719,48 +1683,6 @@ onBeforeUnmount(() => {
                             : t('theme.actions.add_favorite')
                     }}
                 </a>
-            </li>
-            <li v-if="accounts.length > 1 && contextMenu.client?.meta.installed" class="relative">
-                <a @click="toggleAccountsDropdown"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 justify-between">
-                    <div class="flex items-center gap-2">
-                        <Play class="w-4 h-4" />
-                        {{ t('home.start_with') }}
-                    </div>
-                    <ChevronDown class="w-4 h-4 transition-transform duration-200" :class="{
-                        'rotate-180': contextMenu.showAccountsDropdown,
-                    }" />
-                </a>
-                <div v-if="contextMenu.showAccountsDropdown"
-                    class="absolute left-0 top-full mt-1 w-56 bg-base-200 rounded-box shadow-xl border border-base-300 z-50 max-h-48 overflow-y-auto">
-                    <div class="py-1">
-                        <button v-for="account in accounts" :key="account.id" @click="
-                            launchClientWithAccount(
-                                contextMenu.client!,
-                                account.id
-                            )
-                            "
-                            class="w-full hover:scale-105 text-left px-3 py-2 text-sm hover:bg-primary/10 active:bg-primary/20 flex items-center justify-between transition-all duration-200 group">
-                            <div class="flex flex-col gap-1 min-w-0 flex-1">
-                                <span
-                                    class="font-medium text-base-content truncate group-hover:text-primary transition-colors duration-200">
-                                    {{ account.username }}
-                                </span>
-                                <div v-if="
-                                    account.tags && account.tags.length > 0
-                                " class="flex flex-wrap gap-1">
-                                    <span v-for="tag in account.tags.slice(0, 2)" :key="tag"
-                                        class="text-xs px-1.5 py-0.5 bg-base-300 text-base-content/70 rounded-full">
-                                        {{ tag }}
-                                    </span>
-                                    <span v-if="account.tags.length > 2" class="text-xs text-base-content/50">
-                                        +{{ account.tags.length - 2 }}
-                                    </span>
-                                </div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="reinstallClient(contextMenu.client!)"
