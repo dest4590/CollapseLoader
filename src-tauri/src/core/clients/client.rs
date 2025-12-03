@@ -289,20 +289,14 @@ impl Client {
         if client_folder.exists() {
             match std::fs::read_dir(&client_folder) {
                 Ok(entries) => {
-                    for entry in entries {
-                        if let Ok(entry) = entry {
-                            let path = entry.path();
-                            if path.is_dir() {
-                                if let Err(e) = std::fs::remove_dir_all(&path) {
-                                    log_warn!(
-                                        "Failed to remove directory '{}': {}",
-                                        path.display(),
-                                        e
-                                    );
-                                }
-                            } else if let Err(e) = std::fs::remove_file(&path) {
-                                log_warn!("Failed to remove file '{}': {}", path.display(), e);
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            if let Err(e) = std::fs::remove_dir_all(&path) {
+                                log_warn!("Failed to remove directory '{}': {}", path.display(), e);
                             }
+                        } else if let Err(e) = std::fs::remove_file(&path) {
+                            log_warn!("Failed to remove file '{}': {}", path.display(), e);
                         }
                     }
                 }
@@ -585,6 +579,74 @@ impl Client {
             .await
     }
 
+    pub async fn ensure_java_available(
+        &self,
+        app_handle: &AppHandle,
+        app_handle_for_crash: &AppHandle,
+        client_id: u32,
+        client_name: &str,
+    ) -> Result<(), String> {
+        let java_executable = DATA
+            .root_dir
+            .join(JDK_FOLDER)
+            .join("bin")
+            .join("java".to_owned() + FILE_EXTENSION);
+
+        if java_executable.exists() {
+            return Ok(());
+        }
+
+        log_warn!(
+            "Java executable not found at {}, attempting to redownload...",
+            java_executable.display()
+        );
+
+        let jdk_folder = DATA.root_dir.join(JDK_FOLDER);
+        if jdk_folder.exists() {
+            if let Err(e) = tokio::fs::remove_dir_all(&jdk_folder).await {
+                log_error!("Failed to remove JDK folder: {}", e);
+            }
+        }
+
+        let jdk_zip = DATA.root_dir.join(format!("{}.zip", JDK_FOLDER));
+        if jdk_zip.exists() {
+            if let Err(e) = tokio::fs::remove_file(&jdk_zip).await {
+                log_error!("Failed to remove JDK zip: {}", e);
+            }
+        }
+
+        if let Err(e) = self.download_requirements(app_handle).await {
+            log_error!("Failed to redownload Java: {}", e);
+            emit_to_main_window_filtered(
+                app_handle_for_crash,
+                "client-crashed",
+                serde_json::json!({
+                    "id": client_id,
+                    "name": client_name,
+                    "error": format!("Failed to redownload Java: {}", e)
+                }),
+            );
+            return Err(e);
+        }
+
+        if !java_executable.exists() {
+            let msg = "Java executable still missing after redownload".to_string();
+            log_error!("{}", msg);
+            emit_to_main_window_filtered(
+                app_handle_for_crash,
+                "client-crashed",
+                serde_json::json!({
+                    "id": client_id,
+                    "name": client_name,
+                    "error": msg
+                }),
+            );
+            return Err(msg);
+        }
+
+        Ok(())
+    }
+
     pub async fn run(
         self,
         options: LaunchOptions,
@@ -642,6 +704,18 @@ impl Client {
                     "error": e
                 }),
             );
+            return Err(e);
+        }
+
+        if let Err(e) = self
+            .ensure_java_available(
+                &app_handle_clone_for_run,
+                &app_handle_clone_for_crash_handling,
+                client_id,
+                &client_name,
+            )
+            .await
+        {
             return Err(e);
         }
 

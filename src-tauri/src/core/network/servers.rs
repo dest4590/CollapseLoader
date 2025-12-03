@@ -209,7 +209,6 @@ impl Default for Servers {
 }
 
 pub static SERVERS: LazyLock<Servers> = LazyLock::new(|| {
-    let servers = Servers::new();
-    // server checking moved to lib.rs init
-    servers
+    // since 0.2.4 server checking moved to lib.rs init
+    Servers::new()
 });

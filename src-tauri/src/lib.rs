@@ -174,16 +174,9 @@ pub fn run() {
                 }
             }
 
-            Logger::print_startup_banner(
-                "CollapseLoader",
-                version,
-                &codename,
-                is_dev,
-                &git_hash,
-                &git_branch,
-            );
+            Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
 
-            let _ = block_on(async { SERVERS.check_servers().await });
+            block_on(async { SERVERS.check_servers().await });
             Analytics::send_start_analytics();
 
             #[cfg(target_os = "windows")]

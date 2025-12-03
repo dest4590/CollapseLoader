@@ -44,10 +44,8 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                         file_path.display(),
                         e
                     );
-                } else {
-                    if !was_created {
-                        log_debug!("Saved {} to {}", Self::resource_name(), file_path.display());
-                    }
+                } else if !was_created {
+                    log_debug!("Saved {} to {}", Self::resource_name(), file_path.display());
                 }
             }
             Err(e) => {
@@ -119,12 +117,12 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                 "Using default {}.json due to read/parse failure",
                 Self::resource_name()
             );
-            return default;
+            default
         } else {
             let default = Self::create_default();
             default.save_to_disk();
             log_info!("Created new {}.json with defaults", Self::resource_name());
-            return default;
+            default
         }
     }
 

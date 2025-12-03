@@ -339,7 +339,10 @@ pub async fn download_client_only(
 
     tokio::try_join!(client_download, requirements_download)?;
 
-    log_info!("Client '{}' successfully installed with all requirements", client.name);
+    log_info!(
+        "Client '{}' successfully installed with all requirements",
+        client.name
+    );
 
     Ok(())
 }
@@ -398,17 +401,6 @@ pub async fn reinstall_client(
     }
 
     let result = client.download_requirements(&app_handle).await;
-    if result.is_ok() {
-        let _ = AgentOverlayManager::download_agent_overlay_files()
-            .await
-            .map_err(|e| {
-                log_warn!(
-                    "Failed to download agent/overlay files during reinstall: {}",
-                    e
-                );
-                e
-            });
-    }
 
     if download_result.is_ok() && result.is_ok() {
         log_info!(

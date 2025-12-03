@@ -103,7 +103,6 @@ impl Logger {
 
 impl Logger {
     pub fn print_startup_banner(
-        app_name: &str,
         version: &str,
         codename: &str,
         is_dev: bool,
@@ -119,7 +118,7 @@ impl Logger {
 
         let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-        let header = format!("{} v{} ({})", app_name, version, codename);
+        let header = format!("CollapseLoader v{} ({})", version, codename);
         let dev_info = if is_dev {
             format!("development build - {} ({})", git_hash, git_branch)
         } else {

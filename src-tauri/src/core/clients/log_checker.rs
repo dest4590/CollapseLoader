@@ -23,7 +23,6 @@ impl LogChecker {
     }
 
     pub fn check(&self, app_handle_clone_for_crash_handling: &AppHandle) {
-        log_debug!("Checking logs for client '{}'", self.client.name);
         if let Ok(logs_guard) = CLIENT_LOGS.lock() {
             if let Some(client_logs) = logs_guard.get(&self.client.id) {
                 let full_log_string = client_logs.join("\\\\n");

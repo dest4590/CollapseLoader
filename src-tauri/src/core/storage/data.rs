@@ -52,9 +52,12 @@ impl Data {
     }
 
     pub fn get_local(&self, relative_path: &str) -> PathBuf {
-        let parts: Vec<&str> = relative_path.split(|c| c == '/' || c == '\\').collect();
+        let parts: Vec<&str> = relative_path.split(|c| ['/', '\\'].contains(&c)).collect();
         let mut path = self.root_dir.clone();
         for part in parts {
+            if part.is_empty() {
+                continue;
+            }
             path = path.join(part);
         }
         path
