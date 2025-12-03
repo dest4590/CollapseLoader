@@ -2,7 +2,7 @@ use crate::core::error::StartupError;
 
 pub fn check_platform_dependencies() -> Result<(), StartupError> {
     let result = std::process::Command::new("pkg-config")
-        .args(["--print-errors", "webkit2gtk-4.0"])
+        .args(["--print-errors", "webkit2gtk-4.1"])
         .output();
 
     match result {
