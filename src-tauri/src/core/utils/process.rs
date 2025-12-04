@@ -5,7 +5,7 @@ use std::os::windows::process::CommandExt;
 
 use crate::core::storage::data::DATA;
 use crate::core::utils::globals::{FILE_EXTENSION, JDK_FOLDER};
-use crate::{log_debug, log_error, log_info};
+use crate::{log_debug, log_error, log_info, log_warn};
 
 pub fn is_java_installed() -> bool {
     let jps_path = get_jps_path();
@@ -43,7 +43,7 @@ pub fn get_jps_output_lines() -> Vec<String> {
             binding.lines().map(|s| s.to_string()).collect()
         }
         Err(e) => {
-            log_error!("Failed to execute jps command: {}", e);
+            log_warn!("Failed to execute jps command: {}", e);
             Vec::new()
         }
     }

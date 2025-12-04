@@ -11,10 +11,10 @@ name = "collapseloader_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.5.2", features = [] }
+tauri-build = { version = "2.5.3", features = [] }
 
 [dependencies]
-tauri = { version = "2.9.3", features = ["devtools"] }
+tauri = { version = "2.9.4", features = ["devtools"] }
 tauri-plugin-opener = "2.5.2"
 tauri-plugin-notification = "2.3.3"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -26,7 +26,7 @@ semver = "1.0.27"
 zip = "6.0.0"
 tokio = { version = "1.48.0", features = ["macros"] }
 opener = "0.8.3"
-uuid = { version = "1.18.1", features = ["v4"] }
+uuid = { version = "1.19.0", features = ["v4"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 paste = "1.0.15"
 open = "5.3.3"

@@ -134,11 +134,7 @@ impl Servers {
     ) {
         for server in servers {
             if server.circuit_breaker.is_open() {
-                log_warn!(
-                    "Skipping {} Server {} (Circuit Breaker Open)",
-                    name,
-                    server.url
-                );
+                log_warn!("Skipping {} Server {}", name, server.url);
                 continue;
             }
 
