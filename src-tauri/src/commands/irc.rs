@@ -23,9 +23,12 @@ impl Default for IrcState {
 pub async fn connect_irc(
     app: AppHandle,
     state: State<'_, IrcState>,
-    token: String,
+    token: Option<String>,
 ) -> Result<(), String> {
-    log_info!("Connecting to IRC server at {}", IRC_HOST);
+    let token = token.unwrap_or_default();
+    let mode = if token.is_empty() { "guest" } else { "authenticated" };
+
+    log_info!("Connecting to IRC server at {} as {}", IRC_HOST, mode);
 
     match TcpStream::connect(IRC_HOST).await {
         Ok(stream) => {

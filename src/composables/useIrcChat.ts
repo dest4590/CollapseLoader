@@ -129,12 +129,6 @@ const registerListeners = async (): Promise<void> => {
 const scheduleReconnect = (reason?: string) => {
     if (reconnectTimer) return;
 
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        status.value = 'disconnected';
-        return;
-    }
-
     if (reason) {
         messages.value.push({ time: currentTime(), content: reason, type: 'system' });
     }
@@ -161,17 +155,12 @@ export const ensureIrcConnection = async (isReconnect = false): Promise<void> =>
     connectionPromise = (async () => {
         isConnecting.value = true;
         status.value = isReconnect ? 'reconnecting' : 'connecting';
-        const token = localStorage.getItem('authToken');
-        console.debug('IRC: attempting connect, token present=', !!token);
-        if (!token) {
-            messages.value.push({ time: currentTime(), content: 'Not logged in — IRC connection aborted.', type: 'error' });
-            connectionPromise = null;
-            status.value = 'disconnected';
-            return;
-        }
+        const token = localStorage.getItem('authToken') || '';
+        const tokenPresent = token.length > 0;
+        console.debug('IRC: attempting connect, token present=', tokenPresent);
 
         clearReconnectTimer();
-        await invoke('connect_irc', { token });
+        await invoke('connect_irc', { token: tokenPresent ? token : null });
     })()
         .catch((err) => {
             connectionPromise = null;
