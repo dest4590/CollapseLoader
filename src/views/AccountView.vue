@@ -105,7 +105,7 @@
                                 <label class="label">
                                     <span class="label-text">{{ t('account.current_password') }}</span>
                                 </label>
-                                <input v-model="currentPassword" type="password"
+                                <input v-model="currentPassword" type="password" autocomplete="current-password"
                                     :placeholder="t('account.current_password')"
                                     class="input input-bordered w-full bg-base-100" required
                                     :disabled="isLoadingFromCache" />
@@ -114,7 +114,8 @@
                                 <label class="label">
                                     <span class="label-text">{{ t('account.new_password') }}</span>
                                 </label>
-                                <input v-model="newPassword" type="password" :placeholder="t('account.new_password')"
+                                <input v-model="newPassword" type="password" autocomplete="new-password"
+                                    :placeholder="t('account.new_password')"
                                     class="input input-bordered w-full bg-base-100" required
                                     :disabled="isLoadingFromCache" />
                             </div>
@@ -122,7 +123,7 @@
                                 <label class="label">
                                     <span class="label-text">{{ t('account.confirm_password') }}</span>
                                 </label>
-                                <input v-model="confirmNewPassword" type="password"
+                                <input v-model="confirmNewPassword" type="password" autocomplete="new-password"
                                     :placeholder="t('account.confirm_password')"
                                     class="input input-bordered w-full bg-base-100" required
                                     :disabled="isLoadingFromCache" />

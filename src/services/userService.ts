@@ -11,6 +11,7 @@ interface UserProfile {
 }
 
 interface UserInfo {
+    id: number;
     username: string;
     email: string;
 }
@@ -147,28 +148,6 @@ class UserService {
             return { data: profile, fromCache: false };
         } catch (error) {
             console.error('Failed to load user profile:', error);
-            return { data: null, fromCache: false };
-        }
-    }
-
-    async loadUserInfo(useCache: boolean = true): Promise<{ data: UserInfo | null; fromCache: boolean }> {
-        if (useCache) {
-            const cached = this.getCachedData();
-            if (cached?.info) {
-                console.log('Returning cached user info');
-                return { data: cached.info, fromCache: true };
-            }
-        }
-
-        try {
-            console.log('Fetching user info from server...');
-            const info = await apiClient.get('/auth/user/');
-
-            this.setCachedData({ info });
-            console.log('User info loaded and cached');
-            return { data: info, fromCache: false };
-        } catch (error) {
-            console.error('Failed to load user info:', error);
             return { data: null, fromCache: false };
         }
     }

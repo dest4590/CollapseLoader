@@ -615,6 +615,23 @@
     "passwords_no_match": "Паролі не збігаються.",
     "min_length": "{field} повинен містити щонайменше {length} символів."
   },
+  "irc": {
+    "inline": {
+      "title": "Глобальний чат",
+      "latest_activity_connected": "Підключено та слухаємо",
+      "tap_to_connect": "Торкніться, щоб підключитись до IRC",
+      "placeholder": "Введіть повідомлення...",
+      "send_failed": "Не вдалося відправити повідомлення",
+      "connection_error": "Помилка з'єднання: {error}",
+      "status": {
+        "connected": "Підключено",
+        "reconnecting": "Перепідключення...",
+        "connecting": "Підключення...",
+        "error": "Проблеми з підключенням",
+        "disconnected": "Відключено"
+      }
+    }
+  },
   "settings": {
     "general": "Налаштування",
     "sync": "Хмарна синхронізація",

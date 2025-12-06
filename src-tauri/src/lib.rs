@@ -77,6 +77,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(Arc::new(Mutex::new(ClientManager::default())))
+        .manage(commands::irc::IrcState::default())
         .invoke_handler(tauri::generate_handler![
             commands::clients::initialize_api,
             commands::clients::initialize_rpc,
@@ -144,6 +145,9 @@ pub fn run() {
             commands::updater::check_for_updates,
             commands::updater::download_and_install_update,
             commands::updater::get_changelog,
+            commands::irc::connect_irc,
+            commands::irc::disconnect_irc,
+            commands::irc::send_irc_message,
         ])
         .setup(|app| {
             let app_handle = app.handle();

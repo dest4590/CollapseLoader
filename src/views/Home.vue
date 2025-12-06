@@ -24,6 +24,7 @@ import type { Client, InstallProgress } from '../types/ui';
 import type { CustomClient } from '../types/ui';
 import LogViewerModal from '../components/modals/clients/LogViewerModal.vue';
 import InsecureClientWarningModal from '../components/modals/clients/InsecureClientWarningModal.vue';
+import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
 import { isHalloweenEvent } from '../utils/events';
 
 interface Account {
@@ -73,7 +74,6 @@ const viewVisible = ref(false);
 const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
-
 const searchBarRef = ref<any>(null);
 
 const HOME_ANIM_KEY = 'homeAnimPlayed';
@@ -101,7 +101,6 @@ try {
 
 const accounts = ref<Account[]>([]);
 const selectedAccountId = ref<string>('');
-
 const searchQuery = ref('');
 let searchDebounceTimer: number | null = null;
 const debouncedSearchQuery = ref('');
@@ -1605,6 +1604,8 @@ onBeforeUnmount(() => {
             </button>
         </div>
     </div>
+
+    <InlineIRCChat class="mb-6" />
 
     <div v-if="filteredClients.length === 0 && !error && clientsLoaded"
         class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">

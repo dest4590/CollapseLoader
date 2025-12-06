@@ -615,6 +615,23 @@
     "passwords_no_match": "Пароли не совпадают.",
     "min_length": "{field} должно быть не менее {length} символов."
   },
+  "irc": {
+    "inline": {
+      "title": "Глобальный чат",
+      "latest_activity_connected": "Подключено и слушаем",
+      "tap_to_connect": "Нажмите, чтобы подключиться к IRC",
+      "placeholder": "Введите сообщение...",
+      "send_failed": "Не удалось отправить сообщение",
+      "connection_error": "Ошибка соединения: {error}",
+      "status": {
+        "connected": "Подключено",
+        "reconnecting": "Повторное подключение...",
+        "connecting": "Подключение...",
+        "error": "Проблема с подключением",
+        "disconnected": "Отключено"
+      }
+    }
+  },
   "settings": {
     "general": "Настройки",
     "sync": "Облачная синхронизация",

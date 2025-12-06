@@ -604,6 +604,23 @@
     "passwords_no_match": "两次输入的密码不一致。",
     "min_length": "{field} 至少需要 {length} 个字符。"
   },
+  "irc": {
+    "inline": {
+      "title": "全局聊天",
+      "latest_activity_connected": "已连接并在监听",
+      "tap_to_connect": "点击以连接到 IRC",
+      "placeholder": "输入消息...",
+      "send_failed": "发送消息失败",
+      "connection_error": "连接错误：{error}",
+      "status": {
+        "connected": "已连接",
+        "reconnecting": "正在重连...",
+        "connecting": "连接中...",
+        "error": "连接问题",
+        "disconnected": "已断开"
+      }
+    }
+  },
   "settings": {
     "general": "设置",
     "sync": "云同步",
