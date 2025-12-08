@@ -276,6 +276,23 @@ pub fn remove_favorite_client(client_id: u32) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn set_all_favorites(client_ids: Vec<u32>) -> Result<(), String> {
+    log_info!("Setting all favorites to: {:?}", client_ids);
+    FAVORITE_MANAGER.lock().map_or_else(
+        |e| {
+            log_error!("Failed to acquire lock on favorite manager: {}", e);
+            Err("Failed to acquire lock on favorite manager".to_string())
+        },
+        |mut favorite_manager| {
+            favorite_manager.favorites = client_ids;
+            favorite_manager.save_to_disk();
+            log_info!("All favorites updated and saved");
+            Ok(())
+        },
+    )
+}
+
+#[tauri::command]
 pub fn is_client_favorite(client_id: u32) -> Result<bool, String> {
     log_debug!("Checking if client ID {} is a favorite", client_id);
     FAVORITE_MANAGER.lock().map_or_else(

@@ -1,5 +1,5 @@
-import { ref, computed, reactive } from 'vue';
-import { apiClient, apiHeartbeat } from '../services/apiClient';
+import { ref, computed, reactive, nextTick } from 'vue';
+import { apiClient } from '../services/apiClient';
 import { useStreamerMode } from './useStreamerMode';
 
 interface StatusData {
@@ -30,16 +30,9 @@ const pollingConfig = {
     interval: 30000,
 };
 
-const heartbeatConfig = {
-    interval: 45000,
-    enabled: true,
-    maxConsecutiveErrors: 3,
-    consecutiveErrors: 0
-};
-
 let statusSyncInterval: ReturnType<typeof setInterval> | null = null;
-let heartbeatInterval: ReturnType<typeof setInterval> | null = null;
 let pendingStatusUpdate: Promise<any> | null = null;
+let lastRequestId = 0;
 
 export function useUserStatus() {
     const streamer = useStreamerMode();
@@ -52,27 +45,6 @@ export function useUserStatus() {
         return isAuth;
     };
 
-    const sendHeartbeat = async (): Promise<boolean> => {
-        if (!checkAuthStatus()) {
-            return false;
-        }
-
-        try {
-            await apiHeartbeat();
-            heartbeatConfig.consecutiveErrors = 0;
-            return true;
-        } catch (error) {
-            heartbeatConfig.consecutiveErrors++;
-            console.error('Heartbeat failed:', error);
-
-            if (heartbeatConfig.consecutiveErrors >= heartbeatConfig.maxConsecutiveErrors) {
-                console.warn('Too many heartbeat errors, disabling for this session');
-                heartbeatConfig.enabled = false;
-            }
-            return false;
-        }
-    };
-
     const syncStatusToServer = async (force = false): Promise<any> => {
         if (!checkAuthStatus()) {
             return null;
@@ -82,6 +54,7 @@ export function useUserStatus() {
             return pendingStatusUpdate;
         }
 
+        const currentRequestId = ++lastRequestId;
 
         try {
             const statusPayload = {
@@ -93,17 +66,22 @@ export function useUserStatus() {
             pendingStatusUpdate = apiClient.post('/auth/status/', statusPayload);
             const response = await pendingStatusUpdate;
 
-            updateLocalStatus(response);
-
-            console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
-                globalStatus.currentClient ? `playing ${globalStatus.currentClient}` : '');
+            if (currentRequestId === lastRequestId) {
+                updateLocalStatus(response);
+                console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
+                    globalStatus.currentClient ? `playing ${globalStatus.currentClient}` : '');
+            } else {
+                console.log('Ignoring stale status response');
+            }
 
             return response;
         } catch (error) {
             console.error('Failed to sync status to server:', error);
             throw error;
         } finally {
-            pendingStatusUpdate = null;
+            if (currentRequestId === lastRequestId) {
+                pendingStatusUpdate = null;
+            }
         }
     };
 
@@ -184,9 +162,6 @@ export function useUserStatus() {
         if (statusSyncInterval) {
             clearInterval(statusSyncInterval);
         }
-        if (heartbeatInterval) {
-            clearInterval(heartbeatInterval);
-        }
 
         const pollWrapper = async () => {
             if (document && document.visibilityState === 'hidden') {
@@ -199,7 +174,7 @@ export function useUserStatus() {
                 });
             } else {
                 console.log('Auth check failed in sync interval, stopping sync');
-                stopStatusSync();
+                await stopStatusSync();
             }
         };
 
@@ -210,14 +185,6 @@ export function useUserStatus() {
                 pollWrapper().catch(() => { });
             }
         });
-
-        if (heartbeatConfig.enabled) {
-            heartbeatInterval = setInterval(() => {
-                if (checkAuthStatus() && heartbeatConfig.enabled) {
-                    sendHeartbeat();
-                }
-            }, heartbeatConfig.interval);
-        }
     };
 
     const startStatusSync = () => {
@@ -234,7 +201,7 @@ export function useUserStatus() {
     };
 
 
-    const stopStatusSync = () => {
+    const stopStatusSync = async () => {
         console.log('Stopping status sync...');
 
         if (statusSyncInterval) {
@@ -242,17 +209,13 @@ export function useUserStatus() {
             statusSyncInterval = null;
         }
 
-        if (heartbeatInterval) {
-            clearInterval(heartbeatInterval);
-            heartbeatInterval = null;
-        }
-
-
         if (checkAuthStatus() && globalStatus.isOnline) {
-            setOffline();
-            syncStatusToServer(true).catch(error => {
+            setOffline(false);
+            try {
+                await syncStatusToServer(true);
+            } catch (error) {
                 console.error('Failed to mark user offline on stop:', error);
-            });
+            }
         }
         console.log('Status sync stopped');
     };
@@ -296,11 +259,10 @@ export function useUserStatus() {
     };
 
 
-    const restartStatusSystem = () => {
-        stopStatusSync();
-        setTimeout(() => {
-            initializeStatusSystem();
-        }, 1000);
+    const restartStatusSystem = async () => {
+        await stopStatusSync();
+        await nextTick();
+        initializeStatusSystem();
     };
 
     const isOnline = computed(() => globalStatus.isOnline);

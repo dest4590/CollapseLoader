@@ -130,6 +130,7 @@ pub fn run() {
             commands::settings::get_favorite_clients,
             commands::settings::add_favorite_client,
             commands::settings::remove_favorite_client,
+            commands::settings::set_all_favorites,
             commands::settings::is_client_favorite,
             commands::settings::get_system_memory,
             commands::utils::get_version,
