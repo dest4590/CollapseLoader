@@ -8,12 +8,16 @@
                 <div class="flex flex-col text-left leading-tight">
                     <span class="font-semibold text-sm">{{ $t('irc.inline.title') }}</span>
                     <span class="text-xs text-base-content/70 whitespace-nowrap"
-                        :class="{ 'w-[10%] truncate overflow-hidden': latestActivity.length > 40 }">
+                        :class="{ 'w-[70%] truncate overflow-hidden': latestActivity.length > 100 }">
                         {{ latestActivity }}
                     </span>
                 </div>
             </div>
             <div class="flex items-center gap-3">
+                <button class="p-1 rounded hover:bg-base-300/50 cursor-pointer" @click.stop="forceReconnect">
+                    <RefreshCw class="w-4 h-4" />
+                </button>
+
                 <ChevronDown class="w-4 h-4 transition-transform duration-200 m-2"
                     :class="isExpanded ? 'rotate-180' : ''" />
             </div>
@@ -22,14 +26,16 @@
         <div class="overflow-hidden transition-all duration-300 ease-out"
             :class="isExpanded ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'">
             <div class="flex flex-col h-[280px] bg-base-100/40">
-                <transition name="irc-status">
-                    <div v-if="isExpanded"
-                        class="p-4 flex items-center gap-2 text-xs font-semibold pointer-events-none select-none"
-                        :class="statusMeta.textClass">
-                        <component :is="statusMeta.icon" class="w-4 h-4" :class="statusMeta.iconClass" />
-                        <span>{{ statusMeta.label }}</span>
-                    </div>
-                </transition>
+                <div class="flex justify-between ">
+                    <transition name="irc-status">
+                        <div v-if="isExpanded"
+                            class="p-4 flex items-center gap-2 text-xs font-semibold pointer-events-none select-none"
+                            :class="statusMeta.textClass">
+                            <component :is="statusMeta.icon" class="w-4 h-4" :class="statusMeta.iconClass" />
+                            <span>{{ statusMeta.label }}</span>
+                        </div>
+                    </transition>
+                </div>
 
                 <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-2" ref="messagesContainer">
                     <div v-for="(msg, index) in messages" :key="index" class="text-sm wrap-break-word">
@@ -61,7 +67,7 @@ import { useToast } from '../../../services/toastService';
 import { useIrcChat } from '../../../composables/useIrcChat';
 import { useI18n } from 'vue-i18n';
 
-const { messages, connected, status, ensureIrcConnection, sendIrcMessage } = useIrcChat();
+const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection } = useIrcChat();
 const { t } = useI18n();
 const inputMessage = ref('');
 const isExpanded = ref(false);

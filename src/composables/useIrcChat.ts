@@ -175,6 +175,14 @@ export const ensureIrcConnection = async (isReconnect = false): Promise<void> =>
     return connectionPromise;
 };
 
+export function forceReconnect(): void {
+    console.debug('IRC: forceReconnect called');
+    connectionPromise = null;
+    ensureIrcConnection(true).catch((err) => {
+        console.error('IRC: forceReconnect failed', err);
+    });
+}
+
 export const sendIrcMessage = async (message: string): Promise<void> => {
     await invoke('send_irc_message', { message });
 };
@@ -186,6 +194,7 @@ export function useIrcChat() {
         isConnecting,
         status,
         ensureIrcConnection,
+        forceReconnect,
         sendIrcMessage
     };
 }
