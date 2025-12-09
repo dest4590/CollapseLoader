@@ -1,5 +1,6 @@
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import { userService, type UserProfile, type UserInfo } from '../services/userService';
+import { apiClient } from '../services/apiClient';
 
 interface GlobalUserState {
     profile: UserProfile | null;
@@ -21,8 +22,32 @@ const globalUserState = reactive<GlobalUserState>({
     lastUpdated: null
 });
 
+const authToken = ref(localStorage.getItem('authToken'));
+
+window.addEventListener('storage', (event) => {
+    if (event.key === 'authToken') {
+        authToken.value = event.newValue;
+    }
+});
+
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function (key: string, value: string) {
+    if (key === 'authToken') {
+        authToken.value = value;
+    }
+    originalSetItem.apply(this, [key, value]);
+};
+
+const originalRemoveItem = localStorage.removeItem;
+localStorage.removeItem = function (key: string) {
+    if (key === 'authToken') {
+        authToken.value = null;
+    }
+    originalRemoveItem.apply(this, [key]);
+};
+
 export function useUser() {
-    const isAuthenticated = computed(() => !!localStorage.getItem('authToken'));
+    const isAuthenticated = computed(() => !!authToken.value);
 
     const displayName = computed(() => {
         if (!globalUserState.info && !globalUserState.profile) return '';
@@ -97,6 +122,13 @@ export function useUser() {
         return loadUserData(true);
     };
 
+    const logout = (): void => {
+        localStorage.removeItem('authToken');
+        userService.clearCache();
+        apiClient.clearCache();
+        clearUserData();
+    };
+
     return {
         profile: computed(() => globalUserState.profile),
         info: computed(() => globalUserState.info),
@@ -115,6 +147,7 @@ export function useUser() {
         loadUserData,
         updateUserProfile,
         clearUserData,
-        refreshUserData
+        refreshUserData,
+        logout
     };
 }

@@ -629,7 +629,9 @@
         "connecting": "Подключение...",
         "error": "Проблема с подключением",
         "disconnected": "Отключено"
-      }
+      },
+      "privateMessage": "Личное сообщение",
+      "copyNickname": "Скопировать никнейм"
     }
   },
   "settings": {

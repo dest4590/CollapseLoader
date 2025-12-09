@@ -156,8 +156,8 @@ class UserService {
         try {
             const updatedProfile = await apiClient.patch('/auth/profile/', { nickname });
 
-
             this.setCachedData({ profile: updatedProfile });
+            apiClient.invalidateProfileCaches();
 
             console.log('User profile updated successfully');
             return { success: true };
@@ -173,15 +173,12 @@ class UserService {
             const form = new FormData();
             form.append('avatar', file);
 
-            const resp = await apiClient.post('/auth/profile/avatar/', form, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            const resp = await apiClient.post('/auth/profile/avatar/', form);
 
             const profile = (resp as any).profile as UserProfile;
             if (profile) {
                 this.setCachedData({ profile });
+                apiClient.invalidateProfileCaches();
             }
             return { success: true, profile };
         } catch (error: any) {
@@ -196,35 +193,12 @@ class UserService {
             const profile = (resp as any).profile as UserProfile;
             if (profile) {
                 this.setCachedData({ profile });
+                apiClient.invalidateProfileCaches();
             }
             return { success: true, profile };
         } catch (error: any) {
             const errorMessage = error.response?.data?.error || 'Failed to reset avatar';
             return { success: false, error: errorMessage };
-        }
-    }
-
-    async syncDataToCloud(data: SyncData): Promise<{ success: boolean; error?: string }> {
-        try {
-            await apiClient.post('/auth/sync/', data);
-            console.log('Data synced to cloud successfully');
-            return { success: true };
-        } catch (error: any) {
-            console.error('Failed to sync data to cloud:', error);
-            const errorMessage = error.response?.data?.error || 'Failed to sync data';
-            return { success: false, error: errorMessage };
-        }
-    }
-
-    async loadDataFromCloud(): Promise<{ data: any | null; error?: string }> {
-        try {
-            const data = await apiClient.get('/auth/sync/');
-            console.log('Data loaded from cloud successfully');
-            return { data };
-        } catch (error: any) {
-            console.error('Failed to load data from cloud:', error);
-            const errorMessage = error.response?.data?.error || 'Failed to load data';
-            return { data: null, error: errorMessage };
         }
     }
 
@@ -426,7 +400,7 @@ class UserService {
     async downloadFromCloud(): Promise<UserProfile | null> {
         try {
             const response = await apiClient.get('/auth/profile/');
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to download from cloud:', error);
             throw error;
@@ -438,10 +412,12 @@ class UserService {
         try {
             const response = await apiClient.post('/auth/sync/', data);
 
+            const profile = response.data || response;
             const cachedData = this.getCachedData();
-            this.setCachedData({ profile: response.data.data, info: cachedData?.info || null });
+            this.setCachedData({ profile: profile, info: cachedData?.info || null });
+            apiClient.invalidateProfileCaches();
 
-            return response.data.data;
+            return profile;
         } catch (error) {
             console.error('Failed to sync to cloud:', error);
             throw error;

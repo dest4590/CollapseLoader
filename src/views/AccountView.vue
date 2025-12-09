@@ -191,6 +191,7 @@ const {
     nickname: userNickname,
     isLoading: isLoadingUserData,
     updateUserProfile: updateGlobalUserProfile,
+    logout
 } = useUser();
 
 const invisibleMode = computed({
@@ -418,14 +419,12 @@ const handleLogout = async () => {
                         }
                     );
 
-                    userService.clearCache();
-                    localStorage.removeItem('authToken');
+                    logout();
                     addToast(t('auth.logout.success'), 'success');
                     emit('logged-out');
                 } catch (error) {
                     console.error('Failed to logout:', error);
-                    userService.clearCache();
-                    localStorage.removeItem('authToken');
+                    logout();
                     emit('logged-out');
                     addToast(t('auth.logout.local_only'), 'warning');
                 }

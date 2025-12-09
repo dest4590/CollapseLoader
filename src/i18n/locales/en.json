@@ -629,7 +629,9 @@
         "connecting": "Connecting...",
         "error": "Connection issue",
         "disconnected": "Disconnected"
-      }
+      },
+      "privateMessage": "Private message",
+      "copyNickname": "Copy nickname"
     }
   },
   "settings": {
