@@ -10,8 +10,13 @@ import Logo from '../assets/images/logo.svg';
 import IconGitHub from '../assets/icons/github.svg';
 import IconTelegram from '../assets/icons/telegram.svg';
 import IconDiscord from '../assets/icons/discord.svg';
+import { CircleFadingArrowUp } from 'lucide-vue-next';
 
 const { t } = useI18n();
+const LogoUrl = String(Logo);
+const IconGitHubUrl = String(IconGitHub);
+const IconTelegramUrl = String(IconTelegram);
+const IconDiscordUrl = String(IconDiscord);
 const { addToast } = useToast();
 const halloweenActive = ref(isHalloweenEvent());
 const halloweenGreeting = ref<string | undefined>(getEventGreeting() ?? undefined);
@@ -84,12 +89,13 @@ onMounted(async () => {
 <template>
     <div class="slide-up">
         <div class="flex flex-col items-center mb-4">
-            <img :src="Logo" alt="CollapseLoader Logo" class="w-36 h-36" />
+            <img :src="LogoUrl" alt="CollapseLoader Logo" class="w-36 h-36" />
 
             <div class="text-center">
                 <h1 class="text-4xl font-bold mb-2">
-                    CollapseLoader (BETA)
-                    <span v-if="halloweenActive" class="text-2xl ml-2 animate-bounce" :title="halloweenGreeting">🎃</span>
+                    CollapseLoader (GAMMA)
+                    <span v-if="halloweenActive" class="text-2xl ml-2 animate-bounce"
+                        :title="halloweenGreeting">🎃</span>
                 </h1>
                 <div class="tooltip tooltip-bottom hover:underline cursor-pointer" id="codename"
                     @click="openRepository">
@@ -110,21 +116,21 @@ onMounted(async () => {
             <button type="button" @click="openRepository"
                 class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-primary border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2"
                 aria-label="Open GitHub repository">
-                <img :src="IconGitHub" class="w-8 h-8 github-icon" alt="GitHub" />
+                <img :src="IconGitHubUrl" class="w-8 h-8 github-icon" alt="GitHub" />
                 <span class="text-sm font-medium">GitHub</span>
             </button>
 
             <button type="button" @click="openTelegram"
                 class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-info border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2"
                 aria-label="Open Telegram">
-                <img :src="IconTelegram" class="w-8 h-8 telegram-icon" alt="Telegram" />
+                <img :src="IconTelegramUrl" class="w-8 h-8 telegram-icon" alt="Telegram" />
                 <span class="text-sm font-medium">Telegram</span>
             </button>
 
             <button type="button" @click="openDiscord"
                 class="social-link-btn btn btn-outline hover:bg-base-300 hover:text-indigo-500 border-base-content/20 h-auto py-4 flex flex-col items-center justify-center gap-2"
                 aria-label="Open Discord">
-                <img :src="IconDiscord" class="w-8 h-8 discord-icon" alt="Discord" />
+                <img :src="IconDiscordUrl" class="w-8 h-8 discord-icon" alt="Discord" />
                 <span class="text-sm font-medium">Discord</span>
             </button>
         </div>
@@ -132,6 +138,7 @@ onMounted(async () => {
         <div class="flex justify-center max-w-xl mx-auto mb-5">
             <button @click="checkForUpdates" :disabled="isCheckingUpdates" class="btn btn-primary w-full">
                 <span v-if="isCheckingUpdates" class="loading loading-spinner loading-sm"></span>
+                <CircleFadingArrowUp class="w-5 h-5" v-if="!isCheckingUpdates" />
                 {{ isCheckingUpdates ? t('updater.checking_updates') : t('updater.check_for_updates') }}
             </button>
         </div>
@@ -141,7 +148,6 @@ onMounted(async () => {
                 <h2 class="text-lg font-semibold text-primary-focus mb-2">
                     {{ t('about.title') }}
                 </h2>
-
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.version')
