@@ -38,9 +38,9 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-2" ref="messagesContainer">
-                    <div v-for="(msg, index) in messages" :key="index" class="text-sm wrap-break-word">
+                    <div v-for="(msg, index) in messages" :key="index" class="text-sm wrap-break-word whitespace-pre-wrap">
                         <span class="opacity-70 mr-2">[{{ msg.time }}]</span>
-                        <span v-html="formatMessage(msg.content)"></span>
+                        <span v-for="(part, pIndex) in parseMessage(msg.content)" :key="pIndex" :style="{ color: part.color }">{{ part.text }}</span>
                     </div>
                 </div>
 
@@ -74,7 +74,7 @@ const isExpanded = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 const { addToast } = useToast();
 
-const formatMessage = (msg: string) => {
+const parseMessage = (msg: string) => {
     const colorMap: Record<string, string> = {
         '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
         '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
@@ -82,17 +82,35 @@ const formatMessage = (msg: string) => {
         'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
     };
 
-    let formatted = msg.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const parts: { text: string; color?: string }[] = [];
+    let currentColor: string | undefined = undefined;
+    
+    const regex = /§([0-9a-f|r])/g;
+    let lastIndex = 0;
+    let match;
 
-    formatted = formatted.replace(/\n/g, '<br>');
-
-    formatted = formatted.replace(/§([0-9a-f])/g, (_, code) => {
-        return `</span><span style="color: ${colorMap[code]}">`;
-    });
-
-    formatted = formatted.replace(/§r/g, '</span><span>');
-
-    return `<span>${formatted}</span>`;
+    while ((match = regex.exec(msg)) !== null) {
+        const text = msg.substring(lastIndex, match.index);
+        if (text) {
+            parts.push({ text, color: currentColor });
+        }
+        
+        const code = match[1];
+        if (code === 'r') {
+            currentColor = undefined;
+        } else {
+            currentColor = colorMap[code];
+        }
+        
+        lastIndex = regex.lastIndex;
+    }
+    
+    const remaining = msg.substring(lastIndex);
+    if (remaining) {
+        parts.push({ text: remaining, color: currentColor });
+    }
+    
+    return parts;
 };
 
 const latestActivity = computed(() => {

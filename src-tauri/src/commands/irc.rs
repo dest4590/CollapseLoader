@@ -26,7 +26,11 @@ pub async fn connect_irc(
     token: Option<String>,
 ) -> Result<(), String> {
     let token = token.unwrap_or_default();
-    let mode = if token.is_empty() { "guest" } else { "authenticated" };
+    let mode = if token.is_empty() {
+        "guest"
+    } else {
+        "authenticated"
+    };
 
     log_info!("Connecting to IRC server at {} as {}", IRC_HOST, mode);
 
@@ -121,17 +125,10 @@ pub async fn disconnect_irc(state: State<'_, IrcState>) -> Result<(), String> {
 pub async fn send_irc_message(state: State<'_, IrcState>, message: String) -> Result<(), String> {
     let mut writer_guard = state.writer.lock().await;
     if let Some(writer) = writer_guard.as_mut() {
-        let packet = if message.starts_with('/') || message.starts_with('@') {
-            json!({
-                "op": "chat",
-                "content": message
-            })
-        } else {
-            json!({
-                "op": "chat",
-                "content": message
-            })
-        };
+        let packet = json!({
+            "op": "chat",
+            "content": message
+        });
 
         let msg_str = format!("{}\n", packet.to_string());
 
