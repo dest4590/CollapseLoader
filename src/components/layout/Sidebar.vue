@@ -11,7 +11,7 @@ import {
     SlidersVertical,
     UserCog,
 } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
@@ -22,6 +22,10 @@ const { t } = useI18n();
 const { adminStatus } = useUser();
 const halloweenActive = ref(isHalloweenEvent());
 const halloweenGreeting = ref(getEventGreeting());
+
+const sidebarHelpVideo = new URL('../../assets/videos/sidebar-help.mp4', import.meta.url).href;
+const sidebarHelpKey = 'sidebar-help-shown';
+const showSidebarHelp = ref(false);
 
 const props = defineProps<{
     activeTab: string;
@@ -138,6 +142,9 @@ const startDrag = (event: MouseEvent) => {
     if (target.closest('button')) return;
 
     isMouseDown.value = true;
+    if (showSidebarHelp.value) {
+        hideSidebarHelp();
+    }
     document.addEventListener('mouseup', stopDrag);
     document.addEventListener('mousemove', onDrag);
 };
@@ -160,6 +167,9 @@ const toggleCenter = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (target.closest('button')) return;
     isCentered.value = !isCentered.value;
+    if (showSidebarHelp.value) {
+        hideSidebarHelp();
+    }
 };
 
 const currentPosition = computed(() => props.position || 'left');
@@ -203,6 +213,38 @@ const animationClass = computed(() => {
     return 'sidebar-entered';
 });
 
+const helpTooltipClasses = computed(() => {
+    const pos = currentPosition.value;
+    if (pos === 'left') return 'left-24 top-6';
+    if (pos === 'right') return 'right-24 top-6';
+    if (pos === 'top') return 'left-1/2 top-24 transform -translate-x-1/2';
+    if (pos === 'bottom') return 'left-1/2 bottom-24 transform -translate-x-1/2';
+    return 'left-24 top-6';
+});
+
+const sidebarRef = ref<HTMLElement | null>(null);
+const helpTooltipRef = ref<HTMLElement | null>(null);
+
+const hideSidebarHelp = () => {
+    try {
+        localStorage.setItem(sidebarHelpKey, 'true');
+    } catch {
+    }
+    showSidebarHelp.value = false;
+};
+
+const handleDocumentClick = (event: MouseEvent) => {
+    const target = event.target as Node;
+    if (helpTooltipRef.value?.contains(target)) return;
+    if (sidebarRef.value?.contains(target)) return;
+    hideSidebarHelp();
+};
+
+watch(showSidebarHelp, (val) => {
+    if (val) document.addEventListener('click', handleDocumentClick);
+    else document.removeEventListener('click', handleDocumentClick);
+});
+
 onMounted(async () => {
     window.addEventListener('keydown', handleKeyDown);
 
@@ -215,6 +257,14 @@ onMounted(async () => {
 
 
     isDev.value = await getIsDevelopment();
+
+    try {
+        const shown = localStorage.getItem(sidebarHelpKey);
+        if (!shown) {
+            showSidebarHelp.value = true;
+        }
+    } catch {
+    }
 });
 
 onUnmounted(() => {
@@ -227,6 +277,7 @@ onUnmounted(() => {
     if (altPressTimeout.value) {
         clearTimeout(altPressTimeout.value);
     }
+    document.removeEventListener('click', handleDocumentClick);
 });
 </script>
 
@@ -246,7 +297,23 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div :class="[sidebarClasses, animationClass]" @mousedown="startDrag" @dblclick="toggleCenter">
+    <div ref="sidebarRef" :class="[sidebarClasses, animationClass]" @mousedown="startDrag" @dblclick="toggleCenter">
+        <div v-if="showSidebarHelp" ref="helpTooltipRef"
+            :class="['sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]', helpTooltipClasses]">
+            <div class="flex flex-col gap-2">
+                <video class="w-full rounded-md mb-2" :src="sidebarHelpVideo" muted autoplay loop playsinline
+                    controls></video>
+                <div class="text-sm">
+                    <strong>{{ t('navigation.sidebar_help.title') }}</strong>&nbsp;{{ t('navigation.sidebar_help.tip')
+                    }}
+                </div>
+                <div class="flex justify-end mt-1 gap-2">
+                    <button class="btn btn-ghost btn-xs" @click.stop="hideSidebarHelp">{{
+                        t('navigation.sidebar_help.got_it')
+                        }}</button>
+                </div>
+            </div>
+        </div>
         <div class="transition-all duration-500 ease-in-out basis-0" :class="isCentered ? 'grow' : 'grow-0'">
         </div>
 
@@ -477,5 +544,9 @@ onUnmounted(() => {
 
 .sidebar-entered .mt-auto>*:nth-child(3) {
     transition-delay: 0.30s;
+}
+
+.sidebar-help-tooltip video {
+    max-height: 180px;
 }
 </style>

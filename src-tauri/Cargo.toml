@@ -46,3 +46,6 @@ socket2 = "0.6.1"
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.55.0" }
 windows = { version = "0.62.2", features = ["Win32_UI_HiDpi"] }
+
+[profile.dev]
+opt-level = 0

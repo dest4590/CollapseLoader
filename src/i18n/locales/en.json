@@ -801,7 +801,12 @@
     "admin": "Admin Panel",
     "news": "News",
     "customization": "Customization",
-    "custom_clients": "Custom Clients"
+    "custom_clients": "Custom Clients",
+    "sidebar_help": {
+      "title": "Tip:",
+      "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",
+      "got_it": "Got it"
+    }
   },
   "admin": {
     "title": "Administration Panel",

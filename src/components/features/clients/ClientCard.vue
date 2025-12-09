@@ -68,7 +68,6 @@ const slideDirection = ref<'left' | 'right'>('right');
 
 const isScreenshotViewerOpen = ref(false);
 const currentScreenshotIndex = ref(0);
-const screenshotViewerRef = shallowRef<HTMLElement | null>(null);
 const isImageLoading = ref(false);
 const imageTransitionDirection = ref<'next' | 'prev'>('next');
 const imageRef = shallowRef<HTMLImageElement | null>(null);
@@ -78,7 +77,6 @@ const actionsRef = shallowRef<HTMLElement | null>(null);
 const favoriteRef = shallowRef<HTMLElement | null>(null);
 
 const scrollContainer = shallowRef<HTMLElement | null>(null);
-const contentRef = shallowRef<HTMLElement | null>(null);
 const showScrollbar = ref(false);
 const thumbHeight = ref(20);
 const thumbTop = ref(0);
