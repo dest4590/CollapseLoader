@@ -86,7 +86,6 @@ const registerListeners = async (): Promise<void> => {
 
     try {
         await listen<string>('irc-message', (event) => {
-            console.debug('IRC: message event', event.payload);
             const msg = parseIrcPayload(event.payload);
             if (msg) {
                 messages.value.push(msg);
