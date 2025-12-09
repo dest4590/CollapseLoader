@@ -20,7 +20,7 @@ use crate::core::utils::globals::{
     NATIVES_FOLDER, NATIVES_LEGACY_ZIP, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
 use crate::core::utils::hashing::calculate_md5_hash;
-use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
+use crate::core::utils::helpers::emit_to_main_window;
 use crate::core::utils::process;
 use crate::core::{network::analytics::Analytics, storage::data::Data};
 use crate::{core::storage::accounts::ACCOUNT_MANAGER, log_warn};
@@ -527,7 +527,6 @@ impl Client {
 
         self.download_fabric_mods().await?;
 
-        // requirements downloaded; higher-level caller will emit a consolidated success message
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
         {
@@ -617,7 +616,7 @@ impl Client {
 
         if let Err(e) = self.download_requirements(app_handle).await {
             log_error!("Failed to redownload Java: {}", e);
-            emit_to_main_window_filtered(
+            emit_to_main_window(
                 app_handle_for_crash,
                 "client-crashed",
                 serde_json::json!({
@@ -632,7 +631,7 @@ impl Client {
         if !java_executable.exists() {
             let msg = "Java executable still missing after redownload".to_string();
             log_error!("{}", msg);
-            emit_to_main_window_filtered(
+            emit_to_main_window(
                 app_handle_for_crash,
                 "client-crashed",
                 serde_json::json!({
@@ -695,7 +694,7 @@ impl Client {
         );
         if let Err(e) = self.download_requirements(&app_handle_clone_for_run).await {
             log_info!("Error downloading requirements for '{}' : {}", self.name, e);
-            emit_to_main_window_filtered(
+            emit_to_main_window(
                 &app_handle_clone_for_crash_handling,
                 "client-crashed",
                 serde_json::json!({
@@ -904,7 +903,7 @@ impl Client {
                 .spawn()
                 .map_err(|e| format!("Failed to start client: {e}"))?;
 
-            emit_to_main_window_filtered(
+            emit_to_main_window(
                 &app_handle_clone_for_crash_handling,
                 "client-launched",
                 serde_json::json!({
@@ -951,7 +950,7 @@ impl Client {
                         }
                     }
 
-                    emit_to_main_window_filtered(
+                    emit_to_main_window(
                         &app_handle_clone_for_crash_handling,
                         "client-exited",
                         serde_json::json!({
@@ -966,7 +965,7 @@ impl Client {
                     let log_line = format!("Error waiting for process: {e}");
                     log_error!("{}", log_line);
                     add_log_line(client_id, log_line.clone());
-                    emit_to_main_window_filtered(
+                    emit_to_main_window(
                         &app_handle_clone_for_crash_handling,
                         "client-crashed",
                         serde_json::json!({

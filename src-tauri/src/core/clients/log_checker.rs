@@ -1,8 +1,10 @@
 use tauri::AppHandle;
 
-use crate::core::utils::helpers::emit_to_main_window_filtered;
 use crate::{
-    core::clients::client::{Client, CLIENT_LOGS},
+    core::{
+        clients::client::{Client, CLIENT_LOGS},
+        utils::helpers::emit_to_main_window,
+    },
     log_debug, log_warn,
 };
 
@@ -72,7 +74,7 @@ impl LogChecker {
         );
         match crash_type {
             CrashType::MissingMainClass => {
-                emit_to_main_window_filtered(
+                emit_to_main_window(
                     app_handle,
                     "client-needs-reinstall",
                     serde_json::json!({
@@ -83,7 +85,7 @@ impl LogChecker {
             }
             CrashType::OutOfMemory => {
                 self.emit_crash_details(client_logs, app_handle);
-                emit_to_main_window_filtered(
+                emit_to_main_window(
                     app_handle,
                     "client-crashed",
                     serde_json::json!({
@@ -95,7 +97,7 @@ impl LogChecker {
             }
             CrashType::GameCrashed => {
                 self.emit_crash_details(client_logs, app_handle);
-                emit_to_main_window_filtered(
+                emit_to_main_window(
                     app_handle,
                     "client-crashed",
                     serde_json::json!({
@@ -113,7 +115,7 @@ impl LogChecker {
             "Emitting client-crash-details for client '{}'",
             self.client.name
         );
-        emit_to_main_window_filtered(
+        emit_to_main_window(
             app_handle,
             "client-crash-details",
             serde_json::json!({

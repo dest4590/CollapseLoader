@@ -92,8 +92,7 @@ export function useFriends() {
             console.log(`Batch friends data loaded in ${responseTime}ms:`, {
                 friends: batchData.friends?.length || 0,
                 sentRequests: batchData.requests?.sent?.length || 0,
-                receivedRequests: batchData.requests?.received?.length || 0,
-                optimized: batchData.performance_info?.optimized || false
+                receivedRequests: batchData.requests?.received?.length || 0
             });
 
             globalFriendsState.friends = batchData.friends || [];

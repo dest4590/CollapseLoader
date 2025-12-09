@@ -194,7 +194,6 @@ class ApiClient {
             return this.pendingRequests.get(cacheKey) as Promise<T>;
         }
 
-        // If we have an expired cached entry with an ETag, add conditional header
         const requestConfig: AxiosRequestConfig = { ...(config || {}), method };
         if (cached && cached.etag) {
             requestConfig.headers = { ...(requestConfig.headers || {}) };
@@ -205,11 +204,9 @@ class ApiClient {
             try {
                 const response = await this.executeRequest<T>(url, requestConfig);
 
-                // axios response handled in executeRequest now returns AxiosResponse
                 const axiosResp: any = response as any;
 
                 if (axiosResp.status === 304 && cached) {
-                    // server indicates not modified
                     cached.timestamp = Date.now();
                     this.metrics.cacheHits++;
                     return cached.data as T;

@@ -233,8 +233,6 @@ impl Data {
             return Ok(());
         }
 
-        // higher-level callers (e.g. core.clients) log download starts; avoid redundant messages here
-
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
             emit_to_main_window(app_handle, "download-start", &file);
         }

@@ -448,7 +448,7 @@ const setSort = (key: typeof sortKey.value) => {
         sortKey.value = key;
         sortOrder.value = key === 'username' ? 'asc' : 'desc';
     }
-    // ask server for ordered data (reset to first page)
+    
     pagination.value.page = 1;
     void loadUsers(1);
 };
@@ -536,10 +536,9 @@ const loadDashboardStats = async () => {
 };
 
 const computeOrdering = () => {
-    // map sortKey + sortOrder to server ordering param
     if (sortKey.value === 'status') return 'status';
     if (sortKey.value === 'last_seen') return (sortOrder.value === 'desc' ? '-last_seen' : 'last_seen');
-    // username
+    
     return sortOrder.value === 'desc' ? '-username' : 'username';
 };
 
@@ -555,8 +554,7 @@ const loadUsers = async (page: number = 1) => {
         );
         users.value = response.users;
         pagination.value = response.pagination;
-        // server-side ordering applied; keep client-side sort as fallback
-        // If server returns unsorted data for some reason, keep client-side stable sort
+        
         if (!['status', 'last_seen', 'username'].includes(computeOrdering().replace('-', ''))) {
             sortUsers();
         }
@@ -569,7 +567,6 @@ const loadUsers = async (page: number = 1) => {
 };
 
 const onPageSizeChange = () => {
-    // reset to first page when page size changes
     pagination.value.page = 1;
     loadUsers(1);
 };

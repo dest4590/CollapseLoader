@@ -1,5 +1,6 @@
 use crate::{log_debug, log_error, log_info, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
+use serde_json::Value;
 use std::{fs, path::PathBuf};
 
 pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
@@ -130,8 +131,6 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
         default_value: serde_json::Value,
         partial_value: serde_json::Value,
     ) -> serde_json::Result<serde_json::Value> {
-        use serde_json::Value;
-
         match (default_value, partial_value) {
             (Value::Object(mut default_map), Value::Object(partial_map)) => {
                 for (key, value) in partial_map {
