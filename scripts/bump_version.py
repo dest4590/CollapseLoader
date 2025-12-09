@@ -17,9 +17,26 @@ SEMVER_RE = re.compile(
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 )
 
+CODENAME_RE = re.compile(
+    r'^pub\s+(?:const|static)\s+CODENAME\s*:\s*&str\s*=\s*"([^"]+)";', re.M
+)
 
-def is_valid_semver(v: str) -> bool:
+
+def is_valid_semver(v: Optional[str]) -> bool:
+    if v is None:
+        return False
     return bool(SEMVER_RE.match(v))
+
+
+def read_codename_version(path: Path) -> Optional[str]:
+    try:
+        text = path.read_text(encoding="utf-8")
+        m = CODENAME_RE.search(text)
+        if m:
+            return m.group(1)
+        return None
+    except Exception:
+        return None
 
 
 def read_package_json_version(path: Path) -> Optional[str]:
@@ -94,11 +111,30 @@ def write_cargo_toml_version(path: Path, new_version: str) -> None:
     path.write_text(new_text, encoding="utf-8")
 
 
+def write_codename_version(path: Path, new_codename: str) -> None:
+    text = path.read_text(encoding="utf-8")
+
+    def _replace(match: re.Match) -> str:
+        kind = match.group(1)
+        return f'pub {kind} CODENAME: &str = "{new_codename}";'
+
+    new_text, n = re.subn(
+        r"(?m)^pub\s+(const|static)\s+CODENAME\s*:\s*&str\s*=\s*\"([^\"]+)\";",
+        _replace,
+        text,
+        count=1,
+    )
+    if n == 0:
+        raise RuntimeError("Could not find CODENAME line in file")
+    path.write_text(new_text, encoding="utf-8")
+
+
 def gather_versions(root: Path) -> Dict[str, Optional[str]]:
     out: Dict[str, Optional[str]] = {}
     pkg = root / "package.json"
     cargo = root / "src-tauri" / "Cargo.toml"
     tauri = root / "src-tauri" / "tauri.conf.json"
+    globals_rs = root / "src-tauri" / "src" / "core" / "utils" / "globals.rs"
 
     out[str(pkg.relative_to(root))] = (
         read_package_json_version(pkg) if pkg.exists() else None
@@ -109,35 +145,44 @@ def gather_versions(root: Path) -> Dict[str, Optional[str]]:
     out[str(tauri.relative_to(root))] = (
         read_tauri_conf_version(tauri) if tauri.exists() else None
     )
+    out[str(globals_rs.relative_to(root))] = (
+        read_codename_version(globals_rs) if globals_rs.exists() else None
+    )
     return out
 
 
 def apply_version(
-    root: Path, new_version: str, apply: bool
+    root: Path, new_version: Optional[str], new_codename: Optional[str], apply: bool
 ) -> Dict[str, Dict[str, Optional[str]]]:
     results: Dict[str, Dict[str, Optional[str]]] = {}
     pkg = root / "package.json"
     cargo = root / "src-tauri" / "Cargo.toml"
     tauri = root / "src-tauri" / "tauri.conf.json"
+    globals_rs = root / "src-tauri" / "src" / "core" / "utils" / "globals.rs"
 
     files = [
-        (pkg, read_package_json_version, write_package_json_version),
-        (cargo, read_cargo_toml_version, write_cargo_toml_version),
-        (tauri, read_tauri_conf_version, write_tauri_conf_version),
+        (pkg, read_package_json_version, write_package_json_version, "version"),
+        (cargo, read_cargo_toml_version, write_cargo_toml_version, "version"),
+        (tauri, read_tauri_conf_version, write_tauri_conf_version, "version"),
+        (globals_rs, read_codename_version, write_codename_version, "codename"),
     ]
 
-    for path, reader, writer in files:
+    for path, reader, writer, ftype in files:
         key = str(path.relative_to(root))
         if not path.exists():
             results[key] = {"old": None, "new": None}
             continue
         old = reader(path)
-        results[key] = {"old": old, "new": new_version}
-        if apply:
+        if ftype == "codename":
+            new_val = new_codename
+        else:
+            new_val = new_version
+        results[key] = {"old": old, "new": new_val}
+        if apply and new_val is not None:
             backup = path.with_suffix(path.suffix + ".bak")
             if not backup.exists():
                 backup.write_bytes(path.read_bytes())
-            writer(path, new_version)
+            writer(path, new_val)
 
     return results
 
@@ -147,11 +192,13 @@ def undo_version(root: Path) -> Dict[str, Dict[str, Optional[str]]]:
     pkg = root / "package.json"
     cargo = root / "src-tauri" / "Cargo.toml"
     tauri = root / "src-tauri" / "tauri.conf.json"
+    globals_rs = root / "src-tauri" / "src" / "core" / "utils" / "globals.rs"
 
     files = [
         (pkg, read_package_json_version),
         (cargo, read_cargo_toml_version),
         (tauri, read_tauri_conf_version),
+        (globals_rs, read_codename_version),
     ]
 
     for path, reader in files:
@@ -234,11 +281,19 @@ def main(argv: list[str]) -> int:
         action="store_true",
         help="Restore files from .bak backups (revert previous --apply)",
     )
+    p.add_argument(
+        "--codename",
+        "-c",
+        help="New codename to write (if omitted, show current codename)",
+    )
     args = p.parse_args(argv)
 
-    if args.version is None:
+    if args.version is None and args.codename is None:
         if args.apply:
-            print("Error: --apply requires a version to write.", file=sys.stderr)
+            print(
+                "Error: --apply requires a version or codename to write.",
+                file=sys.stderr,
+            )
             return 2
         if args.undo:
             results = undo_version(ROOT)
@@ -248,18 +303,31 @@ def main(argv: list[str]) -> int:
         print_current_versions(versions)
         return 0
 
-    new_version = args.version.strip()
-    if not is_valid_semver(new_version):
-        print(
-            f"Error: '{new_version}' is not a valid semantic version.", file=sys.stderr
-        )
-        return 2
+    new_version: Optional[str] = None
+    if args.version is not None:
+        new_version = args.version.strip()
+        if not is_valid_semver(new_version):
+            print(
+                f"Error: '{new_version}' is not a valid semantic version.",
+                file=sys.stderr,
+            )
+            return 2
+    new_codename: Optional[str] = None
+    if args.codename is not None:
+        new_codename = args.codename.strip()
+        if new_codename == "":
+            print("Error: --codename requires a non-empty value.", file=sys.stderr)
+            return 2
 
     if args.undo:
-        print("Error: --undo cannot be used together with a version.", file=sys.stderr)
-        return 2
+        if new_version is not None or new_codename is not None:
+            print(
+                "Error: --undo cannot be used together with a version or codename.",
+                file=sys.stderr,
+            )
+            return 2
 
-    results = apply_version(ROOT, new_version, args.apply)
+    results = apply_version(ROOT, new_version, new_codename, args.apply)
     print_preview(results, args.apply)
     return 0
 
