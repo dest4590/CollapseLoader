@@ -8,7 +8,5 @@ export const apiDelete = apiClient.delete.bind(apiClient);
 
 export const apiBatchGet = apiClient.batchGet.bind(apiClient);
 export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
-export const apiMetrics = apiClient.getMetrics.bind(apiClient);
-export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
 
 export default apiClient;

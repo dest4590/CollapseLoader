@@ -58,6 +58,9 @@ export function useUser() {
     const email = computed(() => globalUserState.info?.email || '');
     const nickname = computed(() => globalUserState.profile?.nickname || '');
 
+    // race condition fix
+    let loadPromise: Promise<void> | null = null;
+
     const loadUserData = async (forceRefresh = false): Promise<void> => {
         if (!isAuthenticated.value) {
             clearUserData();
@@ -68,28 +71,33 @@ export function useUser() {
             return;
         }
 
-        if (globalUserState.isLoading) {
-            return;
+        if (loadPromise) {
+            return loadPromise;
         }
 
         globalUserState.isLoading = true;
 
-        try {
-            const initData = await userService.initializeUser();
+        loadPromise = (async () => {
+            try {
+                const initData = await userService.initializeUser();
 
-            globalUserState.profile = initData.profile;
-            globalUserState.info = initData.user_info;
-            globalUserState.adminStatus = initData.admin_status;
-            globalUserState.syncStatus = initData.sync_status;
-            globalUserState.lastUpdated = new Date().toISOString();
-            globalUserState.isLoaded = true;
+                globalUserState.profile = initData.profile;
+                globalUserState.info = initData.user_info;
+                globalUserState.adminStatus = initData.admin_status;
+                globalUserState.syncStatus = initData.sync_status;
+                globalUserState.lastUpdated = new Date().toISOString();
+                globalUserState.isLoaded = true;
 
-            console.log('Global user data loaded successfully');
-        } catch (error) {
-            console.error('Failed to load global user data:', error);
-        } finally {
-            globalUserState.isLoading = false;
-        }
+                console.log('Global user data loaded successfully');
+            } catch (error) {
+                console.error('Failed to load global user data:', error);
+            } finally {
+                globalUserState.isLoading = false;
+                loadPromise = null;
+            }
+        })();
+
+        return loadPromise;
     };
 
     const updateUserProfile = async (newNickname: string): Promise<boolean> => {

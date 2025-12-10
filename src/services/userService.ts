@@ -98,9 +98,21 @@ class UserService {
             const cached = localStorage.getItem(CACHE_KEY);
             if (!cached) return null;
 
-            const parsedData: CachedUserData = JSON.parse(cached);
+            const parsedData: any = JSON.parse(cached);
+
+            if (!parsedData || typeof parsedData !== 'object' || !parsedData.lastUpdated) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
             const now = new Date();
             const cacheTime = new Date(parsedData.lastUpdated);
+
+            if (isNaN(cacheTime.getTime())) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
             const hoursDiff = (now.getTime() - cacheTime.getTime()) / (1000 * 60 * 60);
 
             if (hoursDiff > CACHE_EXPIRY_HOURS) {
@@ -108,7 +120,7 @@ class UserService {
                 return null;
             }
 
-            return parsedData;
+            return parsedData as CachedUserData;
         } catch (error) {
             console.error('Error reading cached user data:', error);
             localStorage.removeItem(CACHE_KEY);
