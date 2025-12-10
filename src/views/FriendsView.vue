@@ -52,6 +52,8 @@
         </div>
     </div>
 
+    <InlineIRCChat class="mb-6" />
+
     <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0" class="mb-6">
         <div class="requests-grid grid gap-4 sm:grid-cols-2 items-stretch">
             <div v-if="friendRequests.received.length > 0" class="requests-panel">
@@ -112,6 +114,7 @@ import RemoveFriendConfirmModal from '../components/modals/social/friends/Remove
 import FriendCard from '../components/features/friends/FriendCard.vue';
 import FriendRequestCard from '../components/features/friends/FriendRequestCard.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
 import { UserPlus, Users, Shield, UserCheck } from 'lucide-vue-next';
 import { useStreamerMode } from '../composables/useStreamerMode';
 
