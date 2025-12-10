@@ -108,7 +108,7 @@
                         </div>
 
                         <div class="text-xs text-base-content/50">
-                            {{ $t('theme.presets.created', { date: formatDate(preset.created_at) }) }}
+                            {{ $t('theme.presets.created', { date: formatDate(preset.createdAt) }) }}
                         </div>
 
                         <div class="card-actions justify-end mt-auto">
@@ -122,7 +122,7 @@
 
             <div class="mt-4 flex items-center justify-between">
                 <button class="btn btn-sm" :disabled="currentPage === 1" @click="prevPage">{{ $t('common.previous')
-                    }}</button>
+                }}</button>
                 <div class="text-sm text-base-content/70">{{ $t('theme.presets.pagination.page_of', {
                     current:
                         currentPage, total: totalPages

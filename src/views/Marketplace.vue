@@ -1,11 +1,11 @@
 <template>
   <div class="max-w-6xl mx-auto p-2 md:p-4">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center mb-4">
       <button class="btn btn-ghost btn-sm mr-2" @click="goBack">
         <ArrowLeft class="w-5 h-5" />
       </button>
       <h1 class="text-2xl font-bold">{{ t('marketplace.title') }}</h1>
-      <div class="flex gap-2">
+      <div class="flex gap-2 ml-auto">
         <button class="btn" @click="openShareLocalModal">{{ t('marketplace.share_local') }}</button>
         <button class="btn btn-primary" @click="openShareModal">{{ t('marketplace.share_current') }}</button>
       </div>

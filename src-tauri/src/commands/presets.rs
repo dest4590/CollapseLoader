@@ -4,6 +4,7 @@ use chrono::Utc;
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreatePresetInput {
     pub name: String,
     pub description: Option<String>,
@@ -35,6 +36,7 @@ pub struct CreatePresetInput {
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdatePresetInput {
     pub id: String,
     pub name: String,

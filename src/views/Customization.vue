@@ -361,7 +361,7 @@
 
 <script setup lang="ts">
 defineEmits(['change-view']);
-import { ref, onMounted, onUnmounted, watch, type Ref } from 'vue';
+import { ref, onMounted, onUnmounted, watch, toRefs } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ClipboardCopy, ClipboardPaste, Palette, Save, Store, SunMoon } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
@@ -391,20 +391,34 @@ const selectedTheme = ref(document.documentElement.getAttribute('data-theme') ||
 const showExpertOptions = ref(false);
 const expertAnimationActive = ref(false);
 
-const customCSS = ref(themeService.presetSettings.customCSS);
-const enableCustomCSS = ref(themeService.presetSettings.enableCustomCSS);
+const {
+    customCSS,
+    enableCustomCSS,
+    primary: primaryColor,
+    base100,
+    base200,
+    base300,
+    baseContent,
+    primaryContent,
+    secondary,
+    secondaryContent,
+    accent,
+    accentContent,
+    neutral,
+    neutralContent,
+    info,
+    infoContent,
+    success,
+    successContent,
+    warning,
+    warningContent,
+    error,
+    errorContent
+} = toRefs(themeService.presetSettings);
 
-watch(customCSS, (val) => {
-    if (enableCustomCSS.value) {
-        themeService.updatePresetSettings({ customCSS: val });
-    }
-});
-
-watch(enableCustomCSS, (val) => {
-    themeService.updatePresetSettings({ enableCustomCSS: val });
-});
-
-
+watch(themeService.presetSettings, () => {
+    themeService.saveCardSettings();
+}, { deep: true });
 
 const cssExamples = [
     {
@@ -417,32 +431,7 @@ const cssExamples = [
     },
 ];
 
-
-const primaryColor = ref(themeService.presetSettings.primary || '#000000');
-
-const base100 = ref<string>(themeService.presetSettings.base100 || '');
-const base200 = ref<string>(themeService.presetSettings.base200 || '');
-const base300 = ref<string>(themeService.presetSettings.base300 || '');
-const baseContent = ref<string>(themeService.presetSettings.baseContent || '');
-
-const primaryContent = ref<string>(themeService.presetSettings.primaryContent || '');
-const secondary = ref<string>(themeService.presetSettings.secondary || '');
-const secondaryContent = ref<string>(themeService.presetSettings.secondaryContent || '');
-const accent = ref<string>(themeService.presetSettings.accent || '');
-const accentContent = ref<string>(themeService.presetSettings.accentContent || '');
-
-const neutral = ref<string>(themeService.presetSettings.neutral || '');
-const neutralContent = ref<string>(themeService.presetSettings.neutralContent || '');
-const info = ref<string>(themeService.presetSettings.info || '');
-const infoContent = ref<string>(themeService.presetSettings.infoContent || '');
-const success = ref<string>(themeService.presetSettings.success || '');
-const successContent = ref<string>(themeService.presetSettings.successContent || '');
-const warning = ref<string>(themeService.presetSettings.warning || '');
-const warningContent = ref<string>(themeService.presetSettings.warningContent || '');
-const error = ref<string>(themeService.presetSettings.error || '');
-const errorContent = ref<string>(themeService.presetSettings.errorContent || '');
-
-const _colorRefs: Record<string, Ref<string>> = {
+const _colorRefs: Record<string, any> = {
     base100,
     base200,
     base300,
@@ -468,48 +457,9 @@ const _colorRefs: Record<string, Ref<string>> = {
 const handleColorInput = (settingKey: string, color: string): void => {
     const r = _colorRefs[settingKey];
     if (r) {
-        r.value = color;
+        r.value = color && color.trim().length > 0 ? color : null;
     }
-
-    const payload: Record<string, string | null> = {};
-    payload[settingKey] = color && color.trim().length > 0 ? color : null;
-    themeService.updatePresetSettings(payload);
 };
-
-watch(
-    [
-        base100, base200, base300, baseContent,
-        primaryContent, secondary, secondaryContent, accent, accentContent,
-        neutral, neutralContent, info, infoContent, success, successContent,
-        warning, warningContent, error, errorContent
-    ],
-    () => {
-        themeService.updatePresetSettings({
-            base100: base100.value ? base100.value : null,
-            base200: base200.value ? base200.value : null,
-            base300: base300.value ? base300.value : null,
-            baseContent: baseContent.value ? baseContent.value : null,
-
-            primaryContent: primaryContent.value ? primaryContent.value : null,
-            secondary: secondary.value ? secondary.value : null,
-            secondaryContent: secondaryContent.value ? secondaryContent.value : null,
-            accent: accent.value ? accent.value : null,
-            accentContent: accentContent.value ? accentContent.value : null,
-
-            neutral: neutral.value ? neutral.value : null,
-            neutralContent: neutralContent.value ? neutralContent.value : null,
-            info: info.value ? info.value : null,
-            infoContent: infoContent.value ? infoContent.value : null,
-            success: success.value ? success.value : null,
-            successContent: successContent.value ? successContent.value : null,
-            warning: warning.value ? warning.value : null,
-            warningContent: warningContent.value ? warningContent.value : null,
-            error: error.value ? error.value : null,
-            errorContent: errorContent.value ? errorContent.value : null,
-        });
-    },
-    { deep: false }
-);
 
 const changeTheme = async (theme: string) => {
     try {
@@ -549,7 +499,6 @@ const insertExample = (code: string) => {
         ? `${customCSS.value.trim()}\n\n${code}`
         : code;
 
-    applyCustomCSS();
     addToast(t('theme.example_inserted'), 'success');
 };
 
@@ -563,53 +512,18 @@ const addExample = (className: string) => {
     customCSS.value = customCSS.value
         ? `${customCSS.value.trim()}\n\n${exampleCode}`
         : exampleCode;
-
-    applyCustomCSS();
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
-        applyCustomCSS();
+        themeService.saveCardSettings();
+        addToast(t('common.saved'), 'success');
     }
-};
-
-const applyCustomCSS = () => {
-    themeService.updatePresetSettings({
-        customCSS: customCSS.value,
-        enableCustomCSS: enableCustomCSS.value
-    });
 };
 
 const resetStyles = () => {
     themeService.resetPresetSettings();
-
-    customCSS.value = themeService.presetSettings.customCSS;
-    enableCustomCSS.value = themeService.presetSettings.enableCustomCSS;
-
-    base100.value = themeService.presetSettings.base100 || '';
-    base200.value = themeService.presetSettings.base200 || '';
-    base300.value = themeService.presetSettings.base300 || '';
-    baseContent.value = themeService.presetSettings.baseContent || '';
-
-    primaryContent.value = themeService.presetSettings.primaryContent || '';
-    secondary.value = themeService.presetSettings.secondary || '';
-    secondaryContent.value = themeService.presetSettings.secondaryContent || '';
-    accent.value = themeService.presetSettings.accent || '';
-    accentContent.value = themeService.presetSettings.accentContent || '';
-
-    neutral.value = themeService.presetSettings.neutral || '';
-    neutralContent.value = themeService.presetSettings.neutralContent || '';
-    info.value = themeService.presetSettings.info || '';
-    infoContent.value = themeService.presetSettings.infoContent || '';
-    success.value = themeService.presetSettings.success || '';
-    successContent.value = themeService.presetSettings.successContent || '';
-    warning.value = themeService.presetSettings.warning || '';
-    warningContent.value = themeService.presetSettings.warningContent || '';
-    error.value = themeService.presetSettings.error || '';
-    errorContent.value = themeService.presetSettings.errorContent || '';
-
-    primaryColor.value = themeService.presetSettings.primary || '#000000';
 };
 
 const openExportModal = async () => {
@@ -635,7 +549,6 @@ const openImportModal = () => {
                     return;
                 }
                 customCSS.value = css;
-                applyCustomCSS();
             }
         }
     );
