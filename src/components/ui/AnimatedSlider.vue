@@ -6,7 +6,7 @@
         <div class="absolute top-1/2 left-0 h-2 bg-primary rounded-full -translate-y-1/2 transition-all duration-200"
             :style="{ width: animatedValue + '%' }" />
 
-        <div class="absolute top-1/2 bg-base-100 border-2 border-primary rounded-full w-4 h-4 -translate-y-1/2 -translate-x-1/2 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 transition-all duration-200"
+        <div class="absolute top-1/2 bg-base-100 border-2 border-primary rounded-full w-4 h-4 -translate-y-1/2 -translate-x-1/2 shadow-md hover:shadow-lg transition-all duration-200"
             :style="{ left: animatedValue + '%' }" />
     </div>
 </template>

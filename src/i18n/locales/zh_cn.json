@@ -118,7 +118,7 @@
     },
     "logout_confirm": {
       "message": "您确定要退出您的账户吗？",
-      "info": "这将使您在本地登出，并可能需要您再次登录以访问某些功能。",
+      "info": "这将导致您退出登录，访问某些功能时可能需要重新登录。",
       "yes_logout": "是的，退出"
     },
     "client_crash": {
@@ -171,6 +171,23 @@
       "proceed_anyway": "仍然启动",
       "cancel": "取消",
       "close": "我已了解"
+    },
+    "slow_download": {
+      "modal_title": "下载速度慢",
+      "title": "下载速度过慢",
+      "subtitle": "您的下载速度低于预期",
+      "description": "当前下载速度低于正常水平。这可能导致下载时间延长。",
+      "current_speed": "当前速度：",
+      "tip_1": "检查您的网络连接",
+      "tip_2": "尝试关闭其他占用带宽的应用程序",
+      "tip_3": "考虑稍后重新下载",
+      "dont_show_again": "不再显示此警告",
+      "stalled_modal_title": "下载停滞",
+      "stalled_title": "下载卡住",
+      "stalled_subtitle": "未检测到进度",
+      "stalled_description": "您的下载似乎卡住了。已有一段时间未接收到数据。",
+      "no_progress": "未检测到下载进度",
+      "tip_zapret": "如果您位于独联体地区（俄罗斯、白俄罗斯、哈萨克斯坦，乌克兰除外），您的网络提供商可能会屏蔽我们的域名。请尝试在设置中启用“DPI 绕过”并以管理员身份重启加载器。"
     },
     "add_custom_client": "添加自定义客户端",
     "edit_custom_client": "编辑客户端",
@@ -300,7 +317,8 @@
     "details": "详情",
     "send": "发送",
     "copied_to_clipboard": "颜色 {color} 已复制到剪贴板",
-    "done": "完成"
+    "done": "完成",
+    "click": "点击"
   },
   "auth": {
     "logout": {
@@ -408,7 +426,8 @@
     },
     "filters": {
       "installed": "已安装"
-    }
+    },
+    "clear_filters": "清除筛选条件"
   },
   "theme": {
     "actions": {
@@ -585,10 +604,29 @@
     "passwords_no_match": "两次输入的密码不一致。",
     "min_length": "{field} 至少需要 {length} 个字符。"
   },
+  "irc": {
+    "inline": {
+      "title": "全局聊天",
+      "latest_activity_connected": "已连接并在监听",
+      "tap_to_connect": "点击以连接到 IRC",
+      "placeholder": "输入消息...",
+      "send_failed": "发送消息失败",
+      "connection_error": "连接错误：{error}",
+      "status": {
+        "connected": "已连接",
+        "reconnecting": "正在重连...",
+        "connecting": "连接中...",
+        "error": "连接问题",
+        "disconnected": "已断开"
+      },
+      "privateMessage": "私人消息",
+      "copyNickname": "复制昵称"
+    }
+  },
   "settings": {
-    "general": "通用设置",
+    "general": "设置",
     "sync": "云同步",
-    "accounts": "账户管理",
+    "accounts": "账户",
     "reset_tooltip": "重置为默认",
     "sync_status": "云同步状态",
     "sync_controls": "同步控制",
@@ -653,8 +691,6 @@
     "reset_requirements_success": "已成功移除依赖，现在可以下载任意客户端",
     "reset_requirements_failed": "无法移除依赖，请重试或重启加载器",
     "login_required": "使用此功能需要登录您的账户。",
-    "reset_cache": "重置客户端缓存",
-    "reset_cache_success": "已成功删除客户端缓存，请重启加载器",
     "reset_cache_failed": "无法删除缓存，请重试",
     "hash_verify": "哈希校验",
     "irc_chat": "IRC 聊天",
@@ -677,7 +713,15 @@
     "sync_client_settings": "同步客户端设置",
     "ram": {
       "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
-    }
+    },
+    "reset_settings": "重置设置",
+    "accounts_description": "轻松管理您的游戏账号并自由切换",
+    "accounts_management": "账户管理",
+    "no_matching_accounts": "未找到匹配的帐户",
+    "search_accounts": "搜索账户...",
+    "try_different_search": "请尝试调整您的搜索条件或筛选器",
+    "sync_login_required": "登录以启用同步功能",
+    "not_signed_in": "您尚未登录账户"
   },
   "userProfile": {
     "back_to_friends": "返回好友",
@@ -747,7 +791,12 @@
     "admin": "管理面板",
     "news": "新闻",
     "customization": "个性化",
-    "custom_clients": "自定义客户端"
+    "custom_clients": "自定义客户端",
+    "sidebar_help": {
+      "title": "提示：",
+      "tip": "您可以将侧边栏移动到屏幕的任意一侧。双击侧边栏可移除图标之间的间距。",
+      "got_it": "知道了"
+    }
   },
   "admin": {
     "title": "管理面板",
@@ -884,7 +933,8 @@
       "already_in_progress": "同步已在进行中",
       "syncing": "正在同步到云端...",
       "success": "同步成功完成！",
-      "failed": "同步失败：{error}"
+      "failed": "同步失败：{error}",
+      "login_required": "请登录以同步"
     }
   },
   "discord": {
@@ -955,8 +1005,7 @@
         }
       },
       "no_changelog_desc": "更新与改动将显示在此处。"
-    },
-    "insecure_tooltip": "此客户端被标记为不安全，点击查看详情"
+    }
   },
   "customization": {},
   "updater": {
@@ -976,7 +1025,10 @@
     "show_more": "再显示 {count} 个版本",
     "show_less": "收起",
     "release_types": {},
-    "categories": {},
+    "categories": {
+      "feature": "功能",
+      "improvement": "改善"
+    },
     "no_update": "未找到更新"
   },
   "custom_clients": {

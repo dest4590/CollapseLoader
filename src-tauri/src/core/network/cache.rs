@@ -1,6 +1,6 @@
 use serde_json::Value;
 use std::fs::{self, File};
-use std::io::{BufReader, BufWriter};
+use std::io::{BufReader, BufWriter, ErrorKind};
 use std::path::{Path, PathBuf};
 
 use crate::log_debug;
@@ -11,12 +11,31 @@ pub fn sanitize_path_for_filename(path: &str) -> String {
 }
 
 pub fn ensure_cache_dir(cache_dir: &Path) {
-    if !cache_dir.exists() {
-        if let Err(e) = fs::create_dir_all(cache_dir) {
-            log_warn!("Failed to create API cache directory at {:?}: {}", cache_dir, e);
-        } else {
+    match fs::create_dir(cache_dir) {
+        Ok(()) => {
             log_debug!("Created cache directory at {:?}", cache_dir);
         }
+        Err(e) => match e.kind() {
+            ErrorKind::AlreadyExists => {}
+            ErrorKind::NotFound => {
+                if let Err(e2) = fs::create_dir_all(cache_dir) {
+                    log_warn!(
+                        "Failed to create API cache directory at {:?}: {}",
+                        cache_dir,
+                        e2
+                    );
+                } else {
+                    log_debug!("Created cache directory at {:?}", cache_dir);
+                }
+            }
+            _ => {
+                log_warn!(
+                    "Failed to create API cache directory at {:?}: {}",
+                    cache_dir,
+                    e
+                );
+            }
+        },
     }
 }
 
@@ -56,10 +75,21 @@ pub fn read_cached_json(cache_file_path: &Path) -> Option<Value> {
     }
 }
 
-pub fn write_cache_if_changed(cache_file_path: &Path, api_data: &Value, prev_cached: &Option<Value>) {
-    let should_update_cache = prev_cached.as_ref().is_none_or(|cached| *cached != *api_data);
+pub fn write_cache_if_changed(
+    cache_file_path: &Path,
+    api_data: &Value,
+    prev_cached: &Option<Value>,
+) {
+    let should_update_cache = prev_cached
+        .as_ref()
+        .is_none_or(|cached| *cached != *api_data);
 
-    if should_update_cache && cache_file_path.parent().map(|p| p.exists()).unwrap_or(false) {
+    if should_update_cache
+        && cache_file_path
+            .parent()
+            .map(|p| p.exists())
+            .unwrap_or(false)
+    {
         match File::create(cache_file_path) {
             Ok(file) => {
                 let writer = BufWriter::new(file);
@@ -69,8 +99,6 @@ pub fn write_cache_if_changed(cache_file_path: &Path, api_data: &Value, prev_cac
                         cache_file_path,
                         e
                     );
-                } else {
-                    log_debug!("Cache updated for API path: {}","(see cache file)");
                 }
             }
             Err(e) => {

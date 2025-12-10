@@ -20,7 +20,8 @@
                         <div class="flex-1 min-w-0">
                             <div class="font-medium truncate">{{ platformLabel(link.platform) }}</div>
                             <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
-                                target="_blank" class="text-sm text-primary hover:underline truncate block wrap-break-word"
+                                target="_blank"
+                                class="text-sm text-primary hover:underline truncate block wrap-break-word"
                                 rel="noreferrer">{{ displayHref(link.platform, link.url) }}</a>
                             <div v-else class="text-sm truncate block">{{ displayHandle(link.platform, link.url) }}
                             </div>
@@ -188,7 +189,7 @@ const platformHref = (platform: string, handle: string) => {
             return `https://t.me/${h}`;
         case 'youtube':
             if (handle.startsWith('@')) return `https://www.youtube.com/${h}`;
-            return `https://www.youtube.com/${h}`;
+            return `https://www.youtube.com/@${h}`;
         default:
             return `#`;
     }

@@ -6,7 +6,6 @@ function readStoredFlag(key: string): boolean {
     try {
         return localStorage.getItem(key) === 'true';
     } catch (e) {
-
         console.warn('useStreamerMode: failed to read storage', e);
         return false;
     }
@@ -24,6 +23,7 @@ const isStreamerModeEnabled = ref<boolean>(readStoredFlag(STORAGE_KEY));
 
 type ChangeListener = (enabled: boolean) => void;
 const listeners = new Set<ChangeListener>();
+let storageListenerInstalled = false;
 
 function emitChange(enabled: boolean) {
     for (const l of Array.from(listeners)) {
@@ -37,19 +37,32 @@ function emitChange(enabled: boolean) {
 
 function maskString(input: string | undefined | null, maskChar = '*'): string {
     if (!input) return '';
-    return Array.from(input).map(() => maskChar).join('');
+    return maskChar.repeat([...input].length);
 }
 
-function maskName(): string {
-    return '??????';
+function maskName(name?: string): string {
+    if (!name) return 'User';
+    const chars = [...name];
+    if (chars.length <= 1) return chars[0] || 'U';
+    return maskString(chars.slice(0, -1).join('')) + chars[chars.length - 1];
 }
 
-function maskUsername(): string {
-    return 'unknown';
+function maskUsername(username?: string): string {
+    if (!username) return 'user';
+    const chars = [...username];
+    const lead = chars.slice(0, 2).join('');
+    return lead + maskString(chars.slice(2).join(''));
 }
 
-function maskEmail(): string {
-    return 'unknown@*****.***';
+function maskEmail(email?: string): string {
+    if (!email) return 'unknown@*****.***';
+    const [local, domain] = email.split('@');
+    if (!domain) return maskString(email);
+    const domainParts = domain.split('.');
+    const tld = domainParts.pop();
+    const maskedLocal = local ? local[0] + maskString(local.slice(1)) : '';
+    const maskedDomain = domainParts.join('.') ? domainParts.map(() => '*****').join('.') : '*****';
+    return `${maskedLocal}@${maskedDomain}.${tld}`;
 }
 
 export function useStreamerMode() {
@@ -75,26 +88,28 @@ export function useStreamerMode() {
     }
 
     function getDisplayName(nickname?: string, username?: string, fallback = 'User'): string {
-        if (isStreamerModeEnabled.value) return maskName();
-        return nickname || username || fallback;
+        const name = nickname || username || fallback;
+        return isStreamerModeEnabled.value ? maskName(name) : name;
     }
 
     function getDisplayUsername(username?: string): string {
-        if (isStreamerModeEnabled.value) return maskUsername();
-        return username || 'user';
+        const value = username || 'user';
+        return isStreamerModeEnabled.value ? maskUsername(value) : value;
     }
 
     function getDisplayEmail(email?: string): string {
-        if (isStreamerModeEnabled.value) return maskEmail();
-        return email || '';
+        const value = email || '';
+        return isStreamerModeEnabled.value ? maskEmail(value) : value;
     }
 
     function maskIfEnabled(value?: string, masker: (v?: string) => string = maskString): string {
         return isStreamerModeEnabled.value ? masker(value) : (value || '');
     }
 
+
     return {
         isStreamerModeEnabled: isEnabled,
+        enabled: isEnabled,
         toggleStreamerMode,
         setStreamerMode,
         onChange,
@@ -107,4 +122,21 @@ export function useStreamerMode() {
         maskEmail,
         maskIfEnabled
     };
+}
+
+export default useStreamerMode;
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    if (!storageListenerInstalled) {
+        window.addEventListener('storage', (e: StorageEvent) => {
+            if (e.key === STORAGE_KEY) {
+                const newVal = e.newValue === 'true';
+                if (isStreamerModeEnabled.value !== newVal) {
+                    isStreamerModeEnabled.value = newVal;
+                    emitChange(newVal);
+                }
+            }
+        });
+        storageListenerInstalled = true;
+    }
 }

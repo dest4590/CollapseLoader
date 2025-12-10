@@ -1,5 +1,6 @@
-use crate::{log_debug, log_error, log_warn};
+use crate::{log_debug, log_error, log_info, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
+use serde_json::Value;
 use std::{fs, path::PathBuf};
 
 pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
@@ -10,11 +11,6 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
     fn create_default() -> Self;
 
     fn save_to_disk(&self) {
-        log_debug!(
-            "Saving {} to {}",
-            Self::resource_name(),
-            self.file_path().display()
-        );
         match serde_json::to_string_pretty(&self) {
             Ok(data) => {
                 let file_path = self.file_path();
@@ -33,6 +29,15 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                     }
                 }
 
+                if file_path.exists() {
+                    if let Ok(existing) = fs::read_to_string(file_path) {
+                        if existing == data {
+                            return;
+                        }
+                    }
+                }
+
+                let was_created = !file_path.exists();
                 if let Err(e) = fs::write(file_path, data) {
                     log_warn!(
                         "Failed to write {} file to {}: {}",
@@ -40,13 +45,9 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                         file_path.display(),
                         e
                     );
-                    return;
+                } else if !was_created {
+                    log_debug!("Saved {} to {}", Self::resource_name(), file_path.display());
                 }
-                log_debug!(
-                    "Successfully saved {} to {}",
-                    Self::resource_name(),
-                    file_path.display()
-                );
             }
             Err(e) => {
                 log_error!(
@@ -110,25 +111,26 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                     );
                 }
             }
-        } else {
-            log_debug!(
-                "No {} file found at {}, creating a new one with defaults.",
-                Self::resource_name(),
-                file_path.display()
-            );
-        }
 
-        let default = Self::create_default();
-        default.save_to_disk();
-        default
+            let default = Self::create_default();
+            default.save_to_disk();
+            log_info!(
+                "Using default {}.json due to read/parse failure",
+                Self::resource_name()
+            );
+            default
+        } else {
+            let default = Self::create_default();
+            default.save_to_disk();
+            log_info!("Created new {}.json with defaults", Self::resource_name());
+            default
+        }
     }
 
     fn merge_json_values(
         default_value: serde_json::Value,
         partial_value: serde_json::Value,
     ) -> serde_json::Result<serde_json::Value> {
-        use serde_json::Value;
-
         match (default_value, partial_value) {
             (Value::Object(mut default_map), Value::Object(partial_map)) => {
                 for (key, value) in partial_map {

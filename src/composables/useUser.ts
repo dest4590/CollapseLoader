@@ -1,5 +1,6 @@
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import { userService, type UserProfile, type UserInfo } from '../services/userService';
+import { apiClient } from '../services/apiClient';
 
 interface GlobalUserState {
     profile: UserProfile | null;
@@ -21,8 +22,32 @@ const globalUserState = reactive<GlobalUserState>({
     lastUpdated: null
 });
 
+const authToken = ref(localStorage.getItem('authToken'));
+
+window.addEventListener('storage', (event) => {
+    if (event.key === 'authToken') {
+        authToken.value = event.newValue;
+    }
+});
+
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function (key: string, value: string) {
+    if (key === 'authToken') {
+        authToken.value = value;
+    }
+    originalSetItem.apply(this, [key, value]);
+};
+
+const originalRemoveItem = localStorage.removeItem;
+localStorage.removeItem = function (key: string) {
+    if (key === 'authToken') {
+        authToken.value = null;
+    }
+    originalRemoveItem.apply(this, [key]);
+};
+
 export function useUser() {
-    const isAuthenticated = computed(() => !!localStorage.getItem('authToken'));
+    const isAuthenticated = computed(() => !!authToken.value);
 
     const displayName = computed(() => {
         if (!globalUserState.info && !globalUserState.profile) return '';
@@ -32,6 +57,9 @@ export function useUser() {
     const username = computed(() => globalUserState.info?.username || '');
     const email = computed(() => globalUserState.info?.email || '');
     const nickname = computed(() => globalUserState.profile?.nickname || '');
+
+    // race condition fix
+    let loadPromise: Promise<void> | null = null;
 
     const loadUserData = async (forceRefresh = false): Promise<void> => {
         if (!isAuthenticated.value) {
@@ -43,45 +71,33 @@ export function useUser() {
             return;
         }
 
-        if (globalUserState.isLoading) {
-            return;
+        if (loadPromise) {
+            return loadPromise;
         }
 
         globalUserState.isLoading = true;
 
-        try {
-            const initData = await userService.initializeUser();
-
-            globalUserState.profile = initData.profile;
-            globalUserState.info = initData.user_info;
-            globalUserState.adminStatus = initData.admin_status;
-            globalUserState.syncStatus = initData.sync_status;
-            globalUserState.lastUpdated = new Date().toISOString();
-            globalUserState.isLoaded = true;
-
-            console.log('Global user data loaded successfully via combined endpoint');
-        } catch (error) {
-            console.error('Failed to load global user data:', error);
-
+        loadPromise = (async () => {
             try {
-                console.log('Falling back to individual API calls...');
-                const [profileResult, infoResult] = await Promise.all([
-                    userService.loadUserProfile(),
-                    userService.loadUserInfo()
-                ]);
+                const initData = await userService.initializeUser();
 
-                globalUserState.profile = profileResult.data;
-                globalUserState.info = infoResult.data;
+                globalUserState.profile = initData.profile;
+                globalUserState.info = initData.user_info;
+                globalUserState.adminStatus = initData.admin_status;
+                globalUserState.syncStatus = initData.sync_status;
                 globalUserState.lastUpdated = new Date().toISOString();
                 globalUserState.isLoaded = true;
 
-                console.log('Global user data loaded successfully via fallback');
-            } catch (fallbackError) {
-                console.error('Failed to load user data via fallback:', fallbackError);
+                console.log('Global user data loaded successfully');
+            } catch (error) {
+                console.error('Failed to load global user data:', error);
+            } finally {
+                globalUserState.isLoading = false;
+                loadPromise = null;
             }
-        } finally {
-            globalUserState.isLoading = false;
-        }
+        })();
+
+        return loadPromise;
     };
 
     const updateUserProfile = async (newNickname: string): Promise<boolean> => {
@@ -114,6 +130,13 @@ export function useUser() {
         return loadUserData(true);
     };
 
+    const logout = (): void => {
+        localStorage.removeItem('authToken');
+        userService.clearCache();
+        apiClient.clearCache();
+        clearUserData();
+    };
+
     return {
         profile: computed(() => globalUserState.profile),
         info: computed(() => globalUserState.info),
@@ -132,6 +155,7 @@ export function useUser() {
         loadUserData,
         updateUserProfile,
         clearUserData,
-        refreshUserData
+        refreshUserData,
+        logout
     };
 }

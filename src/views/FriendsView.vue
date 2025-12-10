@@ -52,6 +52,8 @@
         </div>
     </div>
 
+    <InlineIRCChat class="mb-6" />
+
     <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0" class="mb-6">
         <div class="requests-grid grid gap-4 sm:grid-cols-2 items-stretch">
             <div v-if="friendRequests.received.length > 0" class="requests-panel">
@@ -112,8 +114,9 @@ import RemoveFriendConfirmModal from '../components/modals/social/friends/Remove
 import FriendCard from '../components/features/friends/FriendCard.vue';
 import FriendRequestCard from '../components/features/friends/FriendRequestCard.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
 import { UserPlus, Users, Shield, UserCheck } from 'lucide-vue-next';
-import { globalUserStatus } from '../composables/useUserStatus';
+import { useStreamerMode } from '../composables/useStreamerMode';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -139,6 +142,7 @@ const { friends, friendRequests, loadFriendsData, updateFriendStatuses } =
 const currentUserStatus = ref<UserStatus | null>(null);
 const blockedUsers = ref<Friend[]>([]);
 const blockedDropdown = ref<HTMLElement | null>(null);
+const streamer = useStreamerMode();
 
 const toggleBlockedDropdown = () => {
     if (!blockedDropdown.value) return;
@@ -146,17 +150,11 @@ const toggleBlockedDropdown = () => {
 };
 
 const getDisplayNickname = (user: Friend) => {
-    if (globalUserStatus.isStreamer.value) {
-        return '??????';
-    }
-    return user.nickname || user.username;
+    return streamer.getDisplayName(user.nickname, user.username);
 };
 
 const getDisplayUsername = (user: Friend) => {
-    if (globalUserStatus.isStreamer.value) {
-        return 'unknown';
-    }
-    return user.username;
+    return streamer.getDisplayUsername(user.username);
 };
 
 const STATUS_UPDATE_INTERVAL = 3000;
@@ -286,9 +284,7 @@ const removeFriend = async (friend: Friend) => {
                     await userService.removeFriend(confirmedFriend.id);
                     addToast(
                         t('friends.remove_success', {
-                            name:
-                                confirmedFriend.nickname ||
-                                confirmedFriend.username,
+                            name: streamer.getDisplayName(confirmedFriend.nickname, confirmedFriend.username),
                         }),
                         'success'
                     );
@@ -316,7 +312,7 @@ const blockFriend = async (friend: Friend) => {
                     await userService.blockUser(user.id);
                     addToast(
                         t('friends.block_success', {
-                            name: user.nickname || user.username,
+                            name: streamer.getDisplayName(user.nickname, user.username),
                         }),
                         'success'
                     );
@@ -344,9 +340,7 @@ const unblockUser = async (user: Friend) => {
                     await userService.unblockUser(confirmedUser.id);
                     addToast(
                         t('friends.unblock_success', {
-                            name:
-                                confirmedUser.nickname ||
-                                confirmedUser.username,
+                            name: streamer.getDisplayName(confirmedUser.nickname, confirmedUser.username),
                         }),
                         'success'
                     );

@@ -52,10 +52,7 @@ const loadCustomClients = async () => {
     try {
         loading.value = true;
         const clients = await invoke<CustomClient[]>('get_custom_clients');
-        customClients.value = clients.map(client => ({
-            ...client,
-            version: client.version.replace(/^V1_/, '1.').replace(/_/g, '.')
-        }));
+        customClients.value = clients;
         error.value = '';
     } catch (err) {
         error.value = `Failed to load custom clients: ${err}`;

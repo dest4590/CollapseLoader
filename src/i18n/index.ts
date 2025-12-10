@@ -1,5 +1,5 @@
 import { createI18n } from 'vue-i18n';
-import { invoke } from '@tauri-apps/api/core';
+import { settingsService } from '../services/settingsService';
 
 import en from './locales/en.json';
 import ru from './locales/ru.json';
@@ -26,8 +26,9 @@ interface AppSettings {
 
 const getInitialLanguage = async () => {
     try {
-        const settings = await invoke<AppSettings>('get_settings');
-        if (settings?.language?.value && messages[settings.language.value as keyof typeof messages]) {
+        await settingsService.loadSettings();
+        const settings = settingsService.getSettings() as AppSettings | null;
+        if (settings && settings.language?.value && messages[settings.language.value as keyof typeof messages]) {
             return settings.language.value;
         }
     } catch (error) {
@@ -69,17 +70,7 @@ export const changeLanguage = async (locale: string) => {
     document.documentElement.setAttribute('lang', locale);
 
     try {
-        const currentSettings = await invoke<AppSettings>('get_settings');
-        if (currentSettings && typeof currentSettings === 'object') {
-            const updatedSettings = {
-                ...currentSettings,
-                language: {
-                    value: locale,
-                    show: currentSettings.language?.show ?? true
-                }
-            };
-            await invoke('save_settings', { inputSettings: updatedSettings });
-        }
+        await settingsService.editSetting('language', locale);
     } catch (error) {
         console.error('Failed to save language to settings:', error);
     }

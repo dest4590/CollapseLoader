@@ -46,6 +46,10 @@ class BootLogService {
         this.addLog('OK', 'i18n', `Language system initialized: ${language} [OK]`);
     }
 
+    cursorApplied() {
+        this.addLog('OK', 'cursor', `Event cursor applied [OK]`);
+    }
+
     eventListenersInit() {
         this.addLog('INFO', 'events', 'Registering event listeners...');
     }

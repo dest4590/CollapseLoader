@@ -5,10 +5,10 @@ use std::time::Duration;
 use crate::core::storage::data::DATA;
 use crate::{log_debug, log_error, log_warn};
 
-use super::servers::{Server, SERVERS};
 use super::cache;
+use super::servers::{Server, SERVERS};
 
-pub const API_CACHE_DIR: &str = "cache/";
+pub const API_CACHE_DIR: &str = "cache";
 
 pub struct Api {
     pub api_server: Server,
@@ -69,7 +69,11 @@ impl Api {
 
                         match serde_json::from_str::<serde_json::Value>(&body) {
                             Ok(api_data) => {
-                                cache::write_cache_if_changed(&cache_file_path, &api_data, &cached_data);
+                                cache::write_cache_if_changed(
+                                    &cache_file_path,
+                                    &api_data,
+                                    &cached_data,
+                                );
 
                                 let result: T = serde_json::from_value(api_data)?;
                                 Ok(result)
@@ -130,11 +134,10 @@ impl Api {
 }
 
 pub static API: LazyLock<Option<Api>> = LazyLock::new(|| {
-    SERVERS.selected_auth.clone().map_or_else(
-        || {
-            log_warn!("Required Auth server or CDN server is not available. API functionality will be disabled.");
-            None
-        },
-        |auth_s| Some(Api { api_server: auth_s }),
-    )
+    SERVERS
+        .selected_auth
+        .read()
+        .unwrap()
+        .clone()
+        .map_or_else(|| None, |auth_s| Some(Api { api_server: auth_s }))
 });

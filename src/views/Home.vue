@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { onBeforeUnmount, onMounted, ref, computed, watch, shallowRef } from 'vue';
+import { onBeforeUnmount, onMounted, ref, computed, watch, shallowRef, nextTick } from 'vue';
 import {
     RefreshCcw,
     Folder,
     Copy,
     Trash2,
     Star,
-    Play,
-    ChevronDown,
     Download,
     Newspaper,
     StopCircle,
@@ -26,6 +24,7 @@ import type { Client, InstallProgress } from '../types/ui';
 import type { CustomClient } from '../types/ui';
 import LogViewerModal from '../components/modals/clients/LogViewerModal.vue';
 import InsecureClientWarningModal from '../components/modals/clients/InsecureClientWarningModal.vue';
+import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
 import { isHalloweenEvent } from '../utils/events';
 
 interface Account {
@@ -67,6 +66,7 @@ const customClients = shallowRef<CustomClient[]>([]);
 const customClientsDisplayMode = ref<'global' | 'separate'>('separate');
 const favoriteClients = shallowRef<number[]>([]);
 const error = ref('');
+const clientsLoaded = ref(false);
 const runningClients = shallowRef<number[]>([]);
 const skipNextRunningCheck = ref<Set<number>>(new Set());
 const isLeaving = ref(false);
@@ -74,6 +74,7 @@ const viewVisible = ref(false);
 const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
+const searchBarRef = ref<any>(null);
 
 const HOME_ANIM_KEY = 'homeAnimPlayed';
 const hasAnimatedBefore = ref<boolean>(false);
@@ -87,6 +88,8 @@ if (hasAnimatedBefore.value) {
     viewVisible.value = true;
 }
 
+const playClientSlideAnim = ref(!hasAnimatedBefore.value);
+
 const STAGGER_KEY = 'staggerCardsPlayed';
 const hasStaggerPlayed = ref<boolean>(false);
 try {
@@ -98,7 +101,6 @@ try {
 
 const accounts = ref<Account[]>([]);
 const selectedAccountId = ref<string>('');
-
 const searchQuery = ref('');
 let searchDebounceTimer: number | null = null;
 const debouncedSearchQuery = ref('');
@@ -143,34 +145,14 @@ try {
 }
 const clientSortOrder = ref<'asc' | 'desc'>(initialSortOrder);
 
-const debouncedActiveFilters = shallowRef<Filters>({ ...initialFilters });
-
-const debouncedClientSortKey = ref(clientSortKey.value);
-const debouncedClientSortOrder = ref(clientSortOrder.value);
-
-const applyFiltersAndSort = () => {
-    if (JSON.stringify(debouncedActiveFilters.value) !== JSON.stringify(activeFilters.value)) {
-        debouncedActiveFilters.value = { ...activeFilters.value };
-    }
-    if (debouncedClientSortKey.value !== clientSortKey.value) {
-        debouncedClientSortKey.value = clientSortKey.value;
-    }
-    if (debouncedClientSortOrder.value !== clientSortOrder.value) {
-        debouncedClientSortOrder.value = clientSortOrder.value;
-    }
-};
-
-let filtersDebounceTimer: number | null = null;
-
-const scheduleFilterUpdate = () => {
-    if (filtersDebounceTimer !== null) {
-        clearTimeout(filtersDebounceTimer);
-    }
-
-    filtersDebounceTimer = window.setTimeout(() => {
-        applyFiltersAndSort();
-        filtersDebounceTimer = null;
-    }, 100);
+const clearAllFilters = () => {
+    searchQuery.value = '';
+    debouncedSearchQuery.value = '';
+    activeFilters.value = {
+        fabric: false,
+        vanilla: false,
+        installed: false
+    };
 };
 
 watch(
@@ -181,7 +163,6 @@ watch(
         } catch (e) {
             console.error('Failed to save active filters to localStorage:', e);
         }
-        scheduleFilterUpdate();
     },
     { deep: true, flush: 'post' }
 );
@@ -192,7 +173,6 @@ watch(clientSortKey, (val) => {
     } catch (e) {
         console.error('Failed to save client sort key to localStorage:', e);
     }
-    scheduleFilterUpdate();
 });
 
 watch(clientSortOrder, (val) => {
@@ -201,7 +181,6 @@ watch(clientSortOrder, (val) => {
     } catch (e) {
         console.error('Failed to save client sort order to localStorage:', e);
     }
-    scheduleFilterUpdate();
 });
 
 const installationStatus = ref<Map<string, InstallProgress>>(new Map());
@@ -278,8 +257,8 @@ const isCtrlPressed = ref(false);
 let ctrlPressTimer: number | null = null;
 
 const blurHandler = () => {
-    if (ctrlPressTimer != null) {
-        clearTimeout(ctrlPressTimer as number);
+    if (ctrlPressTimer !== null) {
+        clearTimeout(ctrlPressTimer);
         ctrlPressTimer = null;
     }
     isCtrlPressed.value = false;
@@ -287,8 +266,8 @@ const blurHandler = () => {
 
 const visibilityHandler = () => {
     if (document.hidden) {
-        if (ctrlPressTimer != null) {
-            clearTimeout(ctrlPressTimer as number);
+        if (ctrlPressTimer !== null) {
+            clearTimeout(ctrlPressTimer);
             ctrlPressTimer = null;
         }
         isCtrlPressed.value = false;
@@ -321,7 +300,7 @@ const handleLaunchClick = (client: Client) => {
 
 const handleLaunchCustomClient = async (client: Client) => {
     try {
-        if (isCustomClientRunning(client.id)) {
+        if (isClientRunning(client.id)) {
             await stopCustomClient(client.id);
             return;
         }
@@ -359,43 +338,20 @@ const handleSearch = (query: string) => {
     }, 150);
 };
 
-const isRequirementsInProgress = computed(() => {
-    return requirementsInProgress.value;
-});
-
-let downloadingClientsCache: { key: string; result: boolean } = { key: '', result: false };
-
 const isAnyClientDownloading = computed(() => {
-    const statusEntries = Array.from(installationStatus.value.entries());
-    const cacheKey = `${statusEntries.length}-${statusEntries.map(([filename, status]) => `${filename}-${status.isComplete}`).join(',')}`;
+    if (installationStatus.value.size === 0) return false;
+    const filenames = new Set(clients.value.map(c => c.filename));
 
-    if (downloadingClientsCache.key === cacheKey) {
-        return downloadingClientsCache.result;
-    }
-
-    const result = statusEntries.some(
-        ([filename, status]) => {
-            const isClientFile = clients.value.some(
-                (client) => client.filename === filename
-            );
-            return isClientFile && !status.isComplete;
+    for (const [filename, status] of installationStatus.value.entries()) {
+        if (!status.isComplete && filenames.has(filename)) {
+            return true;
         }
-    );
-
-    downloadingClientsCache = { key: cacheKey, result };
-    return result;
+    }
+    return false;
 });
-
-let customClientsAsClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const customClientsAsClients = computed(() => {
-    const cacheKey = `${customClients.value.length}-${customClients.value.map(c => `${c.id}-${c.is_installed}`).join(',')}`;
-
-    if (customClientsAsClientsCache.key === cacheKey) {
-        return customClientsAsClientsCache.result;
-    }
-
-    const result = customClients.value.map(customClient => ({
+    return customClients.value.map(customClient => ({
         id: customClient.id,
         name: customClient.name,
         version: customClient.version.replace(/^V1_/, '1.').replace(/_/g, '.'),
@@ -416,41 +372,23 @@ const customClientsAsClients = computed(() => {
             size: '0',
         },
     }));
-
-    customClientsAsClientsCache = { key: cacheKey, result };
-    return result;
 });
 
-let allClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
-
-const allClients = computed(() => {
-    const cacheKey = `${clients.value.length}-${customClientsDisplayMode.value}-${customClientsAsClients.value.length}`;
-
-    if (allClientsCache.key === cacheKey) {
-        return allClientsCache.result;
-    }
-
-    let result = clients.value;
+const allClients = computed<Client[]>(() => {
     if (customClientsDisplayMode.value === 'global') {
-        result = [...customClientsAsClients.value, ...clients.value];
+        return [...customClientsAsClients.value, ...clients.value];
     }
-
-    allClientsCache = { key: cacheKey, result };
-    return result;
+    return clients.value;
 });
-
-let filteredClientsCache: { key: string; result: Client[] } = { key: '', result: [] };
 
 const filteredClients = computed(() => {
-    const filters = debouncedActiveFilters.value;
-    const cacheKey = `${allClients.value.length}-${debouncedSearchQuery.value}-${filters.fabric}-${filters.vanilla}-${filters.installed}-${debouncedClientSortKey.value}-${debouncedClientSortOrder.value}-${favoriteClients.value.length}`;
-
-    if (filteredClientsCache.key === cacheKey) {
-        return filteredClientsCache.result;
+    if (allClients.value.length === 0) {
+        return [];
     }
 
     const query = debouncedSearchQuery.value.trim();
     const queryLower = query ? query.toLowerCase() : '';
+    const filters = activeFilters.value;
     const hasActiveFilters = filters.fabric || filters.vanilla || filters.installed;
 
     let clientsList = allClients.value;
@@ -483,13 +421,14 @@ const filteredClients = computed(() => {
     }
 
     if (clientsList.length <= 1) {
-        filteredClientsCache = { key: cacheKey, result: clientsList };
         return clientsList;
     }
 
-    const sortKey = debouncedClientSortKey.value;
-    const sortOrder = debouncedClientSortOrder.value;
+    const sortKey = clientSortKey.value;
+    const sortOrder = clientSortOrder.value;
     const sortMultiplier = sortOrder === 'desc' ? -1 : 1;
+
+    clientsList = [...clientsList];
 
     if (sortKey === 'newest') {
         clientsList.sort((a, b) => {
@@ -509,11 +448,7 @@ const filteredClients = computed(() => {
     } else if (sortKey === 'version') {
         const parseVer = (v: string): number[] => {
             if (!v) return [];
-            const clean = v.replace(/^v/i, '').replace(/_/g, '.').replace(/[^0-9.]/g, '.');
-            return clean.split('.').map(s => {
-                const n = parseInt(s, 10);
-                return isNaN(n) ? 0 : n;
-            });
+            return v.split(/[^0-9]+/).map(s => parseInt(s, 10) || 0);
         };
 
         clientsList.sort((a, b) => {
@@ -562,7 +497,6 @@ const filteredClients = computed(() => {
         clientsList = [...favs, ...others];
     }
 
-    filteredClientsCache = { key: cacheKey, result: clientsList };
     return clientsList;
 });
 
@@ -627,45 +561,13 @@ const loadAccounts = async () => {
     }
 };
 
-const launchClientWithAccount = async (client: Client, accountId: string) => {
-    try {
-        const previousActiveAccount = accounts.value.find(
-            (account) => account.is_active
-        );
-
-        await invoke('set_active_account', { id: accountId });
-
-        await launchClient(client.id);
-
-        if (previousActiveAccount && previousActiveAccount.id !== accountId) {
-            await invoke('set_active_account', {
-                id: previousActiveAccount.id,
-            });
-        }
-    } catch (err) {
-        console.error('Error launching client with account:', err);
-        addToast(
-            t('errors.launch_with_account_error', { error: err }),
-            'error'
-        );
-    }
-
-    hideContextMenu();
-};
-
-const invalidateAllCaches = () => {
-    customClientsAsClientsCache = { key: '', result: [] };
-    allClientsCache = { key: '', result: [] };
-    invalidateClientCaches();
-};
-
 const getClients = async () => {
     try {
         error.value = '';
+        clientsLoaded.value = false;
         const response = await invoke<Client[]>('get_clients');
         if (response && response.length > 0) {
             clients.value = response;
-            invalidateAllCaches();
         } else {
             clients.value = [];
             if (response !== null && response.length === 0) {
@@ -678,6 +580,8 @@ const getClients = async () => {
         error.value = t('errors.clients_load_failed');
         addToast(t('errors.clients_load_failed'), 'error');
         clients.value = [];
+    } finally {
+        clientsLoaded.value = true;
     }
 };
 
@@ -849,10 +753,6 @@ const checkRunningStatus = async () => {
 };
 
 const isClientRunning = (id: number): boolean => {
-    return runningClients.value.includes(id);
-};
-
-const isCustomClientRunning = (id: number): boolean => {
     return runningClients.value.includes(id);
 };
 
@@ -1077,19 +977,12 @@ const setupEventListeners = async () => {
     eventListeners.value.push(customClientLaunchedListener);
 };
 
-const invalidateClientCaches = () => {
-    filteredClientsCache = { key: '', result: [] };
-    selectedClientsDataCache = { key: '', result: [] };
-    downloadingClientsCache = { key: '', result: false };
-};
-
 const updateClientInstallStatus = (filename: string) => {
     const client = clients.value.find((c) => c.filename === filename);
     if (client) {
         const status = installationStatus.value.get(filename);
         if (status && status.isComplete) {
             client.meta.installed = true;
-            invalidateClientCaches();
         }
     }
 };
@@ -1098,7 +991,6 @@ const markClientAsInstalled = async (filename: string) => {
     const client = clients.value.find((c) => c.filename === filename);
     if (client) {
         client.meta.installed = true;
-        invalidateClientCaches();
 
         try {
             await invoke('update_client_installed_status', {
@@ -1185,14 +1077,6 @@ const hideContextMenu = () => {
     }, 150);
 };
 
-const toggleAccountsDropdown = (event?: Event) => {
-    if (event) {
-        event.stopPropagation();
-    }
-    contextMenu.value.showAccountsDropdown =
-        !contextMenu.value.showAccountsDropdown;
-};
-
 const openClientFolder = async (client: Client) => {
     try {
         await invoke('open_client_folder', { id: client.id });
@@ -1263,7 +1147,7 @@ const handleClientClick = (client: Client, event: MouseEvent) => {
         }
         selectedClients.value = newSelection;
     } else {
-        selectedClients.value = new Set();
+        clearSelection();
     }
 };
 
@@ -1272,32 +1156,20 @@ const handleExpandedStateChanged = (clientId: number, isExpanded: boolean) => {
 };
 
 const clearSelection = () => {
-    selectedClients.value = new Set();
+    if (selectedClients.value.size > 0) {
+        selectedClients.value = new Set();
+    }
 };
 
 const isClientSelected = (clientId: number): boolean => {
     return selectedClients.value.has(clientId);
 };
 
-let selectedClientsDataCache: { key: string; result: Client[] } = { key: '', result: [] };
-
-const getSelectedClientsData = (): Client[] => {
-    const selectionIds = Array.from(selectedClients.value).sort().join(',');
-    const cacheKey = `${clients.value.length}-${selectionIds}`;
-
-    if (selectedClientsDataCache.key === cacheKey) {
-        return selectedClientsDataCache.result;
-    }
-
-    const result = clients.value.filter((client) =>
+const selectedClientsData = computed(() => {
+    return clients.value.filter((client) =>
         selectedClients.value.has(client.id)
     );
-
-    selectedClientsDataCache = { key: cacheKey, result };
-    return result;
-};
-
-const selectedClientsData = computed(() => getSelectedClientsData());
+});
 
 const canDownloadSelected = computed(() => {
     return selectedClientsData.value.some(
@@ -1490,20 +1362,28 @@ const selectAllClients = () => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+        event.preventDefault();
+        searchBarRef.value?.focus();
+        return;
+    }
+
     if (event.key === 'Control' && expandedClientId.value === null) {
         if (isCtrlPressed.value) return;
 
-        if (ctrlPressTimer === null) {
-            ctrlPressTimer = window.setTimeout(() => {
-                isCtrlPressed.value = true;
-                ctrlPressTimer = null;
-            }, 100);
+        if (ctrlPressTimer !== null) {
+            clearTimeout(ctrlPressTimer);
         }
+
+        ctrlPressTimer = window.setTimeout(() => {
+            isCtrlPressed.value = true;
+            ctrlPressTimer = null;
+        }, 50);
         return;
     }
 
     if (event.key === 'Escape') {
-        selectedClients.value = new Set();
+        clearSelection();
     }
 
     if (
@@ -1521,8 +1401,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const handleKeyUp = (event: KeyboardEvent) => {
     if (event.key === 'Control') {
-        if (ctrlPressTimer != null) {
-            clearTimeout(ctrlPressTimer as number);
+        if (ctrlPressTimer !== null) {
+            clearTimeout(ctrlPressTimer);
             ctrlPressTimer = null;
         }
         isCtrlPressed.value = false;
@@ -1532,7 +1412,7 @@ const handleKeyUp = (event: KeyboardEvent) => {
 const handleDocumentClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (!target.closest('.client-card')) {
-        selectedClients.value = new Set();
+        clearSelection();
     }
 };
 
@@ -1586,7 +1466,6 @@ const loadCustomClientsDisplayMode = async () => {
 
 onMounted(async () => {
     debouncedSearchQuery.value = searchQuery.value;
-    debouncedActiveFilters.value = { ...activeFilters.value };
 
     await getClients();
     await loadFavorites();
@@ -1618,14 +1497,27 @@ onMounted(async () => {
     document.addEventListener('visibilitychange', visibilityHandler);
 
     if (!hasAnimatedBefore.value) {
-        setTimeout(() => {
-            viewVisible.value = true;
+        await nextTick();
+        viewVisible.value = true;
+        if (filteredClients.value.length > 0) {
+            const totalDelay = Math.min(Math.max(0, filteredClients.value.length) * 45 + 500, 2000);
+            setTimeout(() => {
+                playClientSlideAnim.value = false;
+                try {
+                    sessionStorage.setItem(HOME_ANIM_KEY, '1');
+                    hasAnimatedBefore.value = true;
+                } catch (e) {
+                    console.error('Failed to set sessionStorage item:', e);
+                }
+            }, totalDelay);
+        } else {
             try {
                 sessionStorage.setItem(HOME_ANIM_KEY, '1');
+                hasAnimatedBefore.value = true;
             } catch (e) {
                 console.error('Failed to set sessionStorage item:', e);
             }
-        }, 80);
+        }
     }
 
     try {
@@ -1661,10 +1553,6 @@ onBeforeUnmount(() => {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = null;
     }
-    if (filtersDebounceTimer !== null) {
-        clearTimeout(filtersDebounceTimer);
-        filtersDebounceTimer = null;
-    }
     if (ctrlPressTimer !== null) {
         clearTimeout(ctrlPressTimer);
         ctrlPressTimer = null;
@@ -1688,8 +1576,8 @@ onBeforeUnmount(() => {
 
 <template>
     <div :class="['flex items-center gap-2 mb-6 top-menu', viewVisible ? 'home-entered' : 'home-hidden']">
-        <SearchBar @search="handleSearch" class="flex-1 mr-2 home-search" :initial-value="searchQuery"
-            :placeholder="t('home.search_placeholder')" />
+        <SearchBar ref="searchBarRef" @search="handleSearch" class="flex-1 mr-2 home-search"
+            :initial-value="searchQuery" :placeholder="t('home.search_placeholder')" />
         <FiltersMenu v-model:activeFilters="activeFilters" v-model:clientSortKey="clientSortKey"
             v-model:clientSortOrder="clientSortOrder" />
         <div v-if="halloweenActive" class="tooltip tooltip-bottom" :data-tip="t('events.halloween.tooltip')">
@@ -1717,23 +1605,45 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <div v-if="filteredClients.length === 0 && !error" class="text-center py-10 text-base-content/70 animate-fadeIn">
+    <InlineIRCChat class="mb-6" />
+
+    <div v-if="filteredClients.length === 0 && !error && clientsLoaded"
+        class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
         <div class="text-lg font-semibold mb-2">{{ t('home.no_clients') }}</div>
-        <div class="text-sm">{{ t('home.adjust_search') }}</div>
+        <div class="text-sm mb-4">{{ t('home.adjust_search') }}</div>
+        <button v-if="searchQuery || activeFilters.fabric || activeFilters.vanilla || activeFilters.installed"
+            @click="clearAllFilters" class="btn btn-sm btn-primary">
+            {{ t('home.clear_filters') }}
+        </button>
     </div>
 
     <div v-if="error" class="my-4 text-red-500 animate-fadeIn flex flex-col items-center justify-center h-full">
         <span>{{ error }}</span>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div v-for="(client, index) in filteredClients" :key="client.id"
-            :class="['client-card-item', !hasStaggerPlayed ? 'stagger-animate' : '']"
-            :style="{ 'animation-delay': (!hasStaggerPlayed ? index * 0.07 + 's' : '0s') }">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
+        :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
+        <div v-for="(client, idx) in filteredClients" :key="client.id"
+            :class="['client-card-item', { 'slide-in-animate': playClientSlideAnim }]"
+            :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-memo="[
+                playClientSlideAnim,
+                client.id,
+                isClientRunning(client.id),
+                isClientInstalling(client),
+                installationStatus.get(client.filename),
+                requirementsInProgress,
+                isAnyClientDownloading,
+                isClientFavorite(client.id),
+                isClientSelected(client.id),
+                isCtrlPressed,
+                expandedClientId,
+                hashVerifyingClients.has(client.id),
+                isAnyCardExpanded
+            ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                 :isClientInstalling="isClientInstalling(client)"
                 :installationStatus="installationStatus.get(client.filename)"
-                :isRequirementsInProgress="isRequirementsInProgress" :isAnyClientDownloading="isAnyClientDownloading"
+                :isRequirementsInProgress="requirementsInProgress" :isAnyClientDownloading="isAnyClientDownloading"
                 :isFavorite="isClientFavorite(client.id)" :isSelected="isClientSelected(client.id)"
                 :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
                 :isHashVerifying="hashVerifyingClients.has(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
@@ -1762,7 +1672,7 @@ onBeforeUnmount(() => {
         <ul v-if="selectedClients.size <= 1">
             <li>
                 <a @click="toggleFavorite(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Star class="w-4 h-4" :class="{
                         'fill-yellow-400 text-yellow-400': isClientFavorite(
                             contextMenu.client?.id || 0
@@ -1775,72 +1685,30 @@ onBeforeUnmount(() => {
                     }}
                 </a>
             </li>
-            <li v-if="accounts.length > 1 && contextMenu.client?.meta.installed" class="relative">
-                <a @click="toggleAccountsDropdown"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20 justify-between">
-                    <div class="flex items-center gap-2">
-                        <Play class="w-4 h-4" />
-                        {{ t('home.start_with') }}
-                    </div>
-                    <ChevronDown class="w-4 h-4 transition-transform duration-200" :class="{
-                        'rotate-180': contextMenu.showAccountsDropdown,
-                    }" />
-                </a>
-                <div v-if="contextMenu.showAccountsDropdown"
-                    class="absolute left-0 top-full mt-1 w-56 bg-base-200 rounded-box shadow-xl border border-base-300 z-50 max-h-48 overflow-y-auto">
-                    <div class="py-1">
-                        <button v-for="account in accounts" :key="account.id" @click="
-                            launchClientWithAccount(
-                                contextMenu.client!,
-                                account.id
-                            )
-                            "
-                            class="w-full hover:scale-105 text-left px-3 py-2 text-sm hover:bg-primary/10 active:bg-primary/20 flex items-center justify-between transition-all duration-200 group">
-                            <div class="flex flex-col gap-1 min-w-0 flex-1">
-                                <span
-                                    class="font-medium text-base-content truncate group-hover:text-primary transition-colors duration-200">
-                                    {{ account.username }}
-                                </span>
-                                <div v-if="
-                                    account.tags && account.tags.length > 0
-                                " class="flex flex-wrap gap-1">
-                                    <span v-for="tag in account.tags.slice(0, 2)" :key="tag"
-                                        class="text-xs px-1.5 py-0.5 bg-base-300 text-base-content/70 rounded-full">
-                                        {{ tag }}
-                                    </span>
-                                    <span v-if="account.tags.length > 2" class="text-xs text-base-content/50">
-                                        +{{ account.tags.length - 2 }}
-                                    </span>
-                                </div>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="reinstallClient(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <RefreshCcw class="w-4 h-4" />
                     {{ t('common.reinstall') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="deleteClient(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Trash2 class="w-4 h-4" />
                     {{ t('common.delete') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="openClientFolder(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Folder class="w-4 h-4" />
                     {{ t('theme.actions.open_folder') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="copyClientLogs(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 focus:bg-primary/20">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Copy class="w-4 h-4" />
                     {{ t('logs.copy_logs') }}
                 </a>
@@ -2138,5 +2006,48 @@ onBeforeUnmount(() => {
     opacity: 0;
     transform: translateY(15px);
     animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.client-card-item.slide-in-animate {
+    opacity: 0;
+    transform: translateX(80px);
+    animation: slideInFromRight 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(80px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .client-card-item.slide-in-animate {
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+}
+
+.client-list-move,
+.client-list-enter-active,
+.client-list-leave-active {
+    transition: transform 0.4s cubic-bezier(0.55, 0, 0.1, 1), opacity 0.2s ease;
+}
+
+.client-list-leave-active {
+    position: absolute;
+    z-index: 0;
+}
+
+.client-list-enter-from,
+.client-list-leave-to {
+    opacity: 0;
 }
 </style>

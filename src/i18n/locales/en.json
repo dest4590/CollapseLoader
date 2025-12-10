@@ -118,7 +118,7 @@
     },
     "logout_confirm": {
       "message": "Are you sure you want to log out of your account?",
-      "info": "This will sign you out locally and may require you to sign in again to access some features.",
+      "info": "This will sign you out and may require you to sign in again to access some features.",
       "yes_logout": "Yes, log out"
     },
     "client_crash": {
@@ -171,6 +171,23 @@
       "proceed_anyway": "Launch Anyway",
       "cancel": "Cancel",
       "close": "I understand"
+    },
+    "slow_download": {
+      "modal_title": "Slow Download Detected",
+      "title": "Slow Download Speed",
+      "subtitle": "Your download speed is lower than expected",
+      "description": "Your current download speed is slower than usual. This may result in longer download times.",
+      "current_speed": "Current Speed:",
+      "tip_1": "Check your internet connection",
+      "tip_2": "Try closing other applications using bandwidth",
+      "tip_3": "Consider retrying the download later",
+      "dont_show_again": "Don't show this warning again",
+      "stalled_modal_title": "Download Stalled",
+      "stalled_title": "Download Stuck",
+      "stalled_subtitle": "No progress detected",
+      "stalled_description": "Your download appears to be stuck. No data has been received for a while.",
+      "no_progress": "No download progress detected",
+      "tip_zapret": "If you are from CIS (Russia, Belarus, Kazakhstan, except Ukraine), your provider may block our domains. Try enabling 'DPI Bypass' in settings and restart the loader as administrator."
     },
     "add_custom_client": "Add custom client",
     "edit_custom_client": "Edit client",
@@ -300,7 +317,8 @@
     "details": "Details",
     "send": "Send",
     "copied_to_clipboard": "Color {color} copied to clipboard",
-    "done": "Done"
+    "done": "Done",
+    "click": "Click"
   },
   "auth": {
     "logout": {
@@ -408,7 +426,8 @@
     },
     "filters": {
       "installed": "Installed"
-    }
+    },
+    "clear_filters": "Clear filters"
   },
   "theme": {
     "actions": {
@@ -596,10 +615,34 @@
     "passwords_no_match": "Passwords do not match.",
     "min_length": "{field} must be at least {length} characters long."
   },
+  "irc": {
+    "inline": {
+      "title": "Global Chat",
+      "latest_activity_connected": "Connected and listening",
+      "tap_to_connect": "Tap to connect to IRC",
+      "placeholder": "Type a message...",
+      "send_failed": "Failed to send message",
+      "connection_error": "Connection Error: {error}",
+      "status": {
+        "connected": "Connected",
+        "reconnecting": "Reconnecting...",
+        "connecting": "Connecting...",
+        "error": "Connection issue",
+        "disconnected": "Disconnected"
+      },
+      "privateMessage": "Private message",
+      "copyNickname": "Copy nickname"
+    }
+  },
   "settings": {
-    "general": "General Settings",
+    "general": "Settings",
     "sync": "Cloud Sync",
-    "accounts": "Account Management",
+    "accounts": "Accounts",
+    "accounts_management": "Accounts Management",
+    "accounts_description": "Manage your game accounts and switch between them easily",
+    "search_accounts": "Search accounts...",
+    "no_matching_accounts": "No matching accounts found",
+    "try_different_search": "Try adjusting your search or filters",
     "reset_tooltip": "Reset to defaults",
     "sync_status": "Cloud Sync Status",
     "sync_controls": "Sync Controls",
@@ -668,8 +711,6 @@
     "reset_requirements_success": "Successfully removed requirements, now download any client",
     "reset_requirements_failed": "Cannot remove requirements, try again or restart loader",
     "login_required": "You will need to log into your account to use this feature.",
-    "reset_cache": "Reset client cache",
-    "reset_cache_success": "Successfully deleted client cache, restart the loader",
     "reset_cache_failed": "Cannot remove cache, try again",
     "hash_verify": "Hash verify",
     "irc_chat": "IRC Chat",
@@ -689,7 +730,10 @@
       "failed": "Failed to change data folder: {error}",
       "restart_required": "Please restart the app for changes to take effect"
     },
-    "sync_client_settings": "Sync client settings"
+    "sync_client_settings": "Sync client settings",
+    "reset_settings": "Reset settings",
+    "sync_login_required": "Sign in to enable syncing",
+    "not_signed_in": "You are not logged in"
   },
   "userProfile": {
     "back_to_friends": "Back to Friends",
@@ -759,7 +803,12 @@
     "admin": "Admin Panel",
     "news": "News",
     "customization": "Customization",
-    "custom_clients": "Custom Clients"
+    "custom_clients": "Custom Clients",
+    "sidebar_help": {
+      "title": "Tip:",
+      "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",
+      "got_it": "Got it"
+    }
   },
   "admin": {
     "title": "Administration Panel",
@@ -896,7 +945,8 @@
       "already_in_progress": "Sync already in progress",
       "syncing": "Syncing to cloud...",
       "success": "Sync completed successfully!",
-      "failed": "Sync failed: {error}"
+      "failed": "Sync failed: {error}",
+      "login_required": "Please sign in to sync"
     }
   },
   "discord": {
@@ -967,8 +1017,7 @@
         }
       },
       "no_changelog_desc": "Updates and changes will appear here."
-    },
-    "insecure_tooltip": "This client is marked as insecure, tap to view details"
+    }
   },
   "customization": {},
   "updater": {
@@ -988,7 +1037,10 @@
     "show_more": "Show {count} more versions",
     "show_less": "Show less",
     "release_types": {},
-    "categories": {},
+    "categories": {
+      "feature": "Feature",
+      "improvement": "Improvement"
+    },
     "no_update": "Updates not found"
   },
   "custom_clients": {

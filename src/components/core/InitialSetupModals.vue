@@ -33,7 +33,6 @@ const props = defineProps({
 const emit = defineEmits([
     'firstRunAccepted',
     'disclaimerAccepted',
-    'themeChanged',
     'auto-login',
 ]);
 const { t } = useI18n();
@@ -159,15 +158,12 @@ const handleLanguageChange = async (languageCode: string) => {
 
 const handleSliderChange = () => { };
 
+import { settingsService } from '../../services/settingsService';
+
 const saveRamSettings = async () => {
     try {
-        const currentSettings = await invoke('get_settings');
         const ramValue = ramOptions[ramOptionIndex.value].mb;
-        const newSettings = {
-            ...(currentSettings as any),
-            ram: { value: ramValue, show: true },
-        };
-        await invoke('save_settings', { inputSettings: newSettings });
+        await settingsService.editSetting('ram', ramValue);
     } catch (error) {
         console.error('Failed to save RAM settings:', error);
     }

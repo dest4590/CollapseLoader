@@ -87,7 +87,7 @@ const save = () => {
     saving.value = true;
     setTimeout(() => {
         saving.value = false;
-    emit('save', { email: localEmail.value, nickname: localNickname.value, is_active: localIsActive.value, is_staff: localIsStaff.value, role: localRole.value });
+        emit('save', { email: localEmail.value, nickname: localNickname.value, is_active: localIsActive.value, is_staff: localIsStaff.value, role: localRole.value });
     }, 250);
 };
 </script>

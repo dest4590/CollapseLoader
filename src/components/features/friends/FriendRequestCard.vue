@@ -41,11 +41,12 @@ import { useModal } from '../../../services/modalService';
 import UserAvatar from '../../ui/UserAvatar.vue';
 import CancelFriendRequestConfirmModal from '../../modals/social/friends/CancelFriendRequestConfirmModal.vue';
 import type { Friend } from '../../../services/userService';
-import { globalUserStatus } from '../../../composables/useUserStatus';
+import { useStreamerMode } from '../../../composables/useStreamerMode';
 import { computed } from 'vue';
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
+const streamer = useStreamerMode();
 
 const props = defineProps<{
     user: Friend;
@@ -61,17 +62,11 @@ const emit = defineEmits<{
 }>();
 
 const displayNickname = computed(() => {
-    if (globalUserStatus.isStreamer.value) {
-        return '??????';
-    }
-    return props.user.nickname || props.user.username;
+    return streamer.getDisplayName(props.user.nickname, props.user.username);
 });
 
 const displayUsername = computed(() => {
-    if (globalUserStatus.isStreamer.value) {
-        return 'unknown';
-    }
-    return props.user.username;
+    return streamer.getDisplayUsername(props.user.username);
 });
 
 const confirmCancel = () => {

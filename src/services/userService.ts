@@ -11,6 +11,7 @@ interface UserProfile {
 }
 
 interface UserInfo {
+    id: number;
     username: string;
     email: string;
 }
@@ -97,9 +98,21 @@ class UserService {
             const cached = localStorage.getItem(CACHE_KEY);
             if (!cached) return null;
 
-            const parsedData: CachedUserData = JSON.parse(cached);
+            const parsedData: any = JSON.parse(cached);
+
+            if (!parsedData || typeof parsedData !== 'object' || !parsedData.lastUpdated) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
             const now = new Date();
             const cacheTime = new Date(parsedData.lastUpdated);
+
+            if (isNaN(cacheTime.getTime())) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
             const hoursDiff = (now.getTime() - cacheTime.getTime()) / (1000 * 60 * 60);
 
             if (hoursDiff > CACHE_EXPIRY_HOURS) {
@@ -107,7 +120,7 @@ class UserService {
                 return null;
             }
 
-            return parsedData;
+            return parsedData as CachedUserData;
         } catch (error) {
             console.error('Error reading cached user data:', error);
             localStorage.removeItem(CACHE_KEY);
@@ -151,34 +164,12 @@ class UserService {
         }
     }
 
-    async loadUserInfo(useCache: boolean = true): Promise<{ data: UserInfo | null; fromCache: boolean }> {
-        if (useCache) {
-            const cached = this.getCachedData();
-            if (cached?.info) {
-                console.log('Returning cached user info');
-                return { data: cached.info, fromCache: true };
-            }
-        }
-
-        try {
-            console.log('Fetching user info from server...');
-            const info = await apiClient.get('/auth/user/');
-
-            this.setCachedData({ info });
-            console.log('User info loaded and cached');
-            return { data: info, fromCache: false };
-        } catch (error) {
-            console.error('Failed to load user info:', error);
-            return { data: null, fromCache: false };
-        }
-    }
-
     async updateUserProfile(nickname: string): Promise<{ success: boolean; error?: string }> {
         try {
             const updatedProfile = await apiClient.patch('/auth/profile/', { nickname });
 
-
             this.setCachedData({ profile: updatedProfile });
+            apiClient.invalidateProfileCaches();
 
             console.log('User profile updated successfully');
             return { success: true };
@@ -194,15 +185,12 @@ class UserService {
             const form = new FormData();
             form.append('avatar', file);
 
-            const resp = await apiClient.post('/auth/profile/avatar/', form, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            const resp = await apiClient.post('/auth/profile/avatar/', form);
 
             const profile = (resp as any).profile as UserProfile;
             if (profile) {
                 this.setCachedData({ profile });
+                apiClient.invalidateProfileCaches();
             }
             return { success: true, profile };
         } catch (error: any) {
@@ -217,35 +205,12 @@ class UserService {
             const profile = (resp as any).profile as UserProfile;
             if (profile) {
                 this.setCachedData({ profile });
+                apiClient.invalidateProfileCaches();
             }
             return { success: true, profile };
         } catch (error: any) {
             const errorMessage = error.response?.data?.error || 'Failed to reset avatar';
             return { success: false, error: errorMessage };
-        }
-    }
-
-    async syncDataToCloud(data: SyncData): Promise<{ success: boolean; error?: string }> {
-        try {
-            await apiClient.post('/auth/sync/', data);
-            console.log('Data synced to cloud successfully');
-            return { success: true };
-        } catch (error: any) {
-            console.error('Failed to sync data to cloud:', error);
-            const errorMessage = error.response?.data?.error || 'Failed to sync data';
-            return { success: false, error: errorMessage };
-        }
-    }
-
-    async loadDataFromCloud(): Promise<{ data: any | null; error?: string }> {
-        try {
-            const data = await apiClient.get('/auth/sync/');
-            console.log('Data loaded from cloud successfully');
-            return { data };
-        } catch (error: any) {
-            console.error('Failed to load data from cloud:', error);
-            const errorMessage = error.response?.data?.error || 'Failed to load data';
-            return { data: null, error: errorMessage };
         }
     }
 
@@ -447,7 +412,7 @@ class UserService {
     async downloadFromCloud(): Promise<UserProfile | null> {
         try {
             const response = await apiClient.get('/auth/profile/');
-            return response.data;
+            return response;
         } catch (error) {
             console.error('Failed to download from cloud:', error);
             throw error;
@@ -459,10 +424,12 @@ class UserService {
         try {
             const response = await apiClient.post('/auth/sync/', data);
 
+            const profile = response.data || response;
             const cachedData = this.getCachedData();
-            this.setCachedData({ profile: response.data.data, info: cachedData?.info || null });
+            this.setCachedData({ profile: profile, info: cachedData?.info || null });
+            apiClient.invalidateProfileCaches();
 
-            return response.data.data;
+            return profile;
         } catch (error) {
             console.error('Failed to sync to cloud:', error);
             throw error;

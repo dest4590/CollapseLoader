@@ -2,60 +2,60 @@ export interface ThemePreset {
     id: string;
     name: string;
     description?: string;
-    created_at: string;
-    custom_css: string;
-    enable_custom_css: boolean;
+    createdAt: string;
+    customCSS: string;
+    enableCustomCSS: boolean;
     primary?: string;
 
     base100?: string;
     base200?: string;
     base300?: string;
-    base_content?: string;
+    baseContent?: string;
 
-    primary_content?: string;
+    primaryContent?: string;
     secondary?: string;
-    secondary_content?: string;
+    secondaryContent?: string;
     accent?: string;
-    accent_content?: string;
+    accentContent?: string;
     neutral?: string;
-    neutral_content?: string;
+    neutralContent?: string;
     info?: string;
-    info_content?: string;
+    infoContent?: string;
     success?: string;
-    success_content?: string;
+    successContent?: string;
     warning?: string;
-    warning_content?: string;
+    warningContent?: string;
     error?: string;
-    error_content?: string;
+    errorContent?: string;
 }
 
 export interface CreatePresetInput {
     name: string;
     description?: string;
-    custom_css: string;
-    enable_custom_css: boolean;
+    customCSS: string;
+    enableCustomCSS: boolean;
     
     base100?: string;
     base200?: string;
     base300?: string;
-    base_content?: string;
+    baseContent?: string;
     
     primary?: string;
-    primary_content?: string;
+    primaryContent?: string;
     secondary?: string;
-    secondary_content?: string;
+    secondaryContent?: string;
     accent?: string;
-    accent_content?: string;
+    accentContent?: string;
     neutral?: string;
-    neutral_content?: string;
+    neutralContent?: string;
     info?: string;
-    info_content?: string;
+    infoContent?: string;
     success?: string;
-    success_content?: string;
+    successContent?: string;
     warning?: string;
-    warning_content?: string;
+    warningContent?: string;
     error?: string;
-    error_content?: string;
+    errorContent?: string;
 }
 
 export interface UpdatePresetInput extends CreatePresetInput {

@@ -17,6 +17,9 @@ pub enum StartupError {
     #[cfg(target_os = "linux")]
     #[error("Warning: WEBKIT_DISABLE_DMABUF_RENDERER environment variable is not set to 1.\n\nIf you experience a white screen or rendering issues, please set this variable before launching the application:\n\nWEBKIT_DISABLE_DMABUF_RENDERER=1 collapseloader\n\nOr add it to your shell profile for permanent use.")]
     LinuxWebKitWarning,
+
+    #[error("Failed to set DPI awareness: {0}")]
+    DpiAwarenessFailed(String),
 }
 
 impl StartupError {

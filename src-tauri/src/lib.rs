@@ -1,7 +1,9 @@
+use crate::core::clients::manager::ClientManager;
 #[cfg(target_os = "windows")]
 use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
+use std::sync::{Arc, Mutex};
 use tauri::Manager;
 
 use crate::core::{
@@ -12,13 +14,14 @@ use crate::core::{
 use crate::core::platform::check_webkit_environment;
 
 use self::core::network::analytics::Analytics;
+use crate::core::network::servers::SERVERS;
 pub use crate::core::utils::logging;
+use tauri::async_runtime::spawn;
 
 pub mod commands;
 pub mod core;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
-    log_info!("Checking platform dependencies...");
     check_platform_dependencies()
 }
 
@@ -73,6 +76,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .manage(Arc::new(Mutex::new(ClientManager::default())))
+        .manage(commands::irc::IrcState::default())
         .invoke_handler(tauri::generate_handler![
             commands::clients::initialize_api,
             commands::clients::initialize_rpc,
@@ -98,6 +103,7 @@ pub fn run() {
             commands::clients::launch_custom_client,
             commands::clients::get_running_custom_client_ids,
             commands::clients::stop_custom_client,
+            commands::clients::detect_main_class,
             commands::presets::get_all_presets,
             commands::presets::get_preset,
             commands::presets::create_preset,
@@ -124,6 +130,7 @@ pub fn run() {
             commands::settings::get_favorite_clients,
             commands::settings::add_favorite_client,
             commands::settings::remove_favorite_client,
+            commands::settings::set_all_favorites,
             commands::settings::is_client_favorite,
             commands::settings::get_system_memory,
             commands::utils::get_version,
@@ -131,7 +138,6 @@ pub fn run() {
             commands::utils::get_auth_url,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
-            commands::utils::reset_cache,
             commands::utils::get_data_folder,
             commands::utils::change_data_folder,
             commands::utils::decode_base64,
@@ -140,12 +146,13 @@ pub fn run() {
             commands::updater::check_for_updates,
             commands::updater::download_and_install_update,
             commands::updater::get_changelog,
+            commands::irc::connect_irc,
+            commands::irc::disconnect_irc,
+            commands::irc::send_irc_message,
         ])
         .setup(|app| {
             let app_handle = app.handle();
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
-
-            log_debug!("Tauri setup: application handle stored");
 
             let is_dev = env!("DEVELOPMENT") == "true";
             let git_hash = env!("GIT_HASH")
@@ -172,16 +179,12 @@ pub fn run() {
                 }
             }
 
-            Logger::print_startup_banner(
-                "CollapseLoader",
-                version,
-                &codename,
-                is_dev,
-                &git_hash,
-                &git_branch,
-            );
+            Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
 
-            Analytics::send_start_analytics();
+            spawn(async {
+                SERVERS.check_servers().await;
+                Analytics::send_start_analytics();
+            });
 
             #[cfg(target_os = "windows")]
             {

@@ -48,7 +48,7 @@
                     </div>
                     <div v-if="previewData.description">
                         <strong>{{ $t('theme.presets.import_modal.preview_description') }}:</strong> {{
-                        previewData.description }}
+                            previewData.description }}
                     </div>
                 </div>
             </div>
@@ -86,7 +86,6 @@ const emit = defineEmits<Emits>();
 const { importPresetFromJSON } = usePresets();
 
 const importMethod = ref<'file' | 'json'>('file');
-const fileInput = ref<HTMLInputElement>();
 const jsonInput = ref('');
 const error = ref('');
 const importing = ref(false);

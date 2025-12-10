@@ -247,22 +247,18 @@ const handleDownload = async () => {
     }
 };
 
-// Resolve description: try full key, then scoped key, then literal text.
 const resolveDescription = (change: ChangeItem, entry: ChangelogEntry) => {
     const raw = change.description_key || '';
-    // If looks like a translation key, try to resolve directly
     if (raw.includes('.')) {
         const val = t(raw as any) as string;
         if (val && val !== raw) return val;
     }
 
-    // Try scoped key: updater.changelogs.<category>.v<version_underscored>.<raw>
     const versionKey = `v${entry.version.replace(/\./g, '_')}`;
     const scoped = `updater.changelogs.${change.category}.${versionKey}.${raw}`;
     const scopedVal = t(scoped as any) as string;
     if (scopedVal && scopedVal !== scoped) return scopedVal;
 
-    // Fallback: if raw contains no dots, return raw as literal text
     return raw;
 };
 </script>

@@ -4,7 +4,7 @@
             <label class="label">
                 <span class="label-text">{{
                     t('modals.add_friend.search_label')
-                }}</span>
+                    }}</span>
             </label>
             <input v-model="searchQuery" type="text" :placeholder="t('modals.add_friend.search_placeholder')"
                 class="input input-bordered w-full" @input="handleSearch" />
@@ -84,8 +84,7 @@
             </div>
         </div>
 
-        <div class="modal-action shrink-0 pt-4"
-            :class="{ 'border-t border-base-300': searchResults.length !== 0 }">
+        <div class="modal-action shrink-0 pt-4" :class="{ 'border-t border-base-300': searchResults.length !== 0 }">
             <button @click="$emit('close')" class="btn btn-outline w-full sm:w-auto">
                 {{ t('modals.add_friend.close') }}
             </button>
@@ -100,11 +99,12 @@ import { userService, type SearchUser } from '../../../../services/userService';
 import { UserPlus, Users } from 'lucide-vue-next';
 import UserAvatar from '../../../ui/UserAvatar.vue';
 import { useI18n } from 'vue-i18n';
-import { globalUserStatus } from '../../../../composables/useUserStatus';
+import { useStreamerMode } from '../../../../composables/useStreamerMode';
 
 const emit = defineEmits(['close', 'friend-added', 'view-profile']);
 const { addToast } = useToast();
 const { t } = useI18n();
+const streamer = useStreamerMode();
 
 const searchQuery = ref('');
 const searching = ref(false);
@@ -112,17 +112,11 @@ const sendingRequest = ref(false);
 const searchResults = ref<SearchUser[]>([]);
 
 const getDisplayNickname = (user: SearchUser) => {
-    if (globalUserStatus.isStreamer.value) {
-        return '??????';
-    }
-    return user.nickname || user.username;
+    return streamer.getDisplayName(user.nickname, user.username);
 };
 
 const getDisplayUsername = (user: SearchUser) => {
-    if (globalUserStatus.isStreamer.value) {
-        return 'unknown';
-    }
-    return user.username;
+    return streamer.getDisplayUsername(user.username);
 };
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;

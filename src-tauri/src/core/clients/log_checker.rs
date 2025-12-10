@@ -1,9 +1,11 @@
 use tauri::AppHandle;
 
-use crate::core::utils::helpers::emit_to_main_window_filtered;
 use crate::{
-    core::clients::client::{Client, CLIENT_LOGS},
-    log_debug, log_info, log_warn,
+    core::{
+        clients::client::{Client, CLIENT_LOGS},
+        utils::helpers::emit_to_main_window,
+    },
+    log_debug, log_warn,
 };
 
 pub struct LogChecker {
@@ -23,17 +25,11 @@ impl LogChecker {
     }
 
     pub fn check(&self, app_handle_clone_for_crash_handling: &AppHandle) {
-        log_debug!("Checking logs for client '{}'", self.client.name);
         if let Ok(logs_guard) = CLIENT_LOGS.lock() {
             if let Some(client_logs) = logs_guard.get(&self.client.id) {
                 let full_log_string = client_logs.join("\\\\n");
 
                 if let Some(crash_type) = self.detect_crash_type(&full_log_string) {
-                    log_warn!(
-                        "Detected crash for client '{}': {:?}",
-                        self.client.name,
-                        crash_type
-                    );
                     self.handle_crash(crash_type, client_logs, app_handle_clone_for_crash_handling);
                 } else {
                     log_debug!(
@@ -71,18 +67,14 @@ impl LogChecker {
     }
 
     fn handle_crash(&self, crash_type: CrashType, client_logs: &[String], app_handle: &AppHandle) {
-        log_info!(
-            "Handling crash type {:?} for client '{}'",
-            crash_type,
-            self.client.name
+        log_warn!(
+            "Client {} crashed! Detected reason: {:?}",
+            self.client.name,
+            crash_type
         );
         match crash_type {
             CrashType::MissingMainClass => {
-                log_info!(
-                    "Client {} (ID: {}) crash likely due to missing main class. Triggering reinstall.",
-                    self.client.name, self.client.id
-                );
-                emit_to_main_window_filtered(
+                emit_to_main_window(
                     app_handle,
                     "client-needs-reinstall",
                     serde_json::json!({
@@ -92,13 +84,8 @@ impl LogChecker {
                 );
             }
             CrashType::OutOfMemory => {
-                log_info!(
-                    "Client {} (ID: {}) crash likely due to OutOfMemoryError.",
-                    self.client.name,
-                    self.client.id
-                );
                 self.emit_crash_details(client_logs, app_handle);
-                emit_to_main_window_filtered(
+                emit_to_main_window(
                     app_handle,
                     "client-crashed",
                     serde_json::json!({
@@ -109,12 +96,8 @@ impl LogChecker {
                 );
             }
             CrashType::GameCrashed => {
-                log_warn!(
-                    "Client '{}' crashed with a generic game error.",
-                    self.client.name
-                );
                 self.emit_crash_details(client_logs, app_handle);
-                emit_to_main_window_filtered(
+                emit_to_main_window(
                     app_handle,
                     "client-crashed",
                     serde_json::json!({
@@ -132,7 +115,7 @@ impl LogChecker {
             "Emitting client-crash-details for client '{}'",
             self.client.name
         );
-        emit_to_main_window_filtered(
+        emit_to_main_window(
             app_handle,
             "client-crash-details",
             serde_json::json!({

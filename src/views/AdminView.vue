@@ -196,7 +196,8 @@
                             class="input input-bordered input-sm w-64" @input="debouncedSearch" />
                     </div>
                     <div class="form-control ml-4">
-                            <select class="select select-sm" v-model.number="pagination.page_size" @change="onPageSizeChange">
+                        <select class="select select-sm" v-model.number="pagination.page_size"
+                            @change="onPageSizeChange">
                             <option :value="20">20</option>
                             <option :value="50">50</option>
                             <option :value="100">100</option>
@@ -204,17 +205,19 @@
                             <option :value="500">500</option>
                         </select>
                     </div>
-                        <div class="form-control ml-4 flex items-center gap-2">
-                            <select class="select select-sm" v-model="sortKey" @change="() => { pagination.page = 1; loadUsers(1); }">
-                                <option value="status">{{ $t('admin.users.status') }}</option>
-                                <option value="last_seen">{{ $t('admin.users.lastSeen') }}</option>
-                                <option value="username">{{ $t('admin.users.username') }}</option>
-                            </select>
-                            <select class="select select-sm" v-model="sortOrder" @change="() => { pagination.page = 1; loadUsers(1); }">
-                                <option value="desc">Desc</option>
-                                <option value="asc">Asc</option>
-                            </select>
-                        </div>
+                    <div class="form-control ml-4 flex items-center gap-2">
+                        <select class="select select-sm" v-model="sortKey"
+                            @change="() => { pagination.page = 1; loadUsers(1); }">
+                            <option value="status">{{ $t('admin.users.status') }}</option>
+                            <option value="last_seen">{{ $t('admin.users.lastSeen') }}</option>
+                            <option value="username">{{ $t('admin.users.username') }}</option>
+                        </select>
+                        <select class="select select-sm" v-model="sortOrder"
+                            @change="() => { pagination.page = 1; loadUsers(1); }">
+                            <option value="desc">Desc</option>
+                            <option value="asc">Asc</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="overflow-x-auto" v-if="users.length > 0">
@@ -318,8 +321,6 @@
                                                         {{ $t('admin.actions.edit') }}
                                                     </button>
                                                 </li>
-
-
 
                                                 <li>
                                                     <button class="w-full text-left" @click="toggleUserStatus(user)"
@@ -447,7 +448,7 @@ const setSort = (key: typeof sortKey.value) => {
         sortKey.value = key;
         sortOrder.value = key === 'username' ? 'asc' : 'desc';
     }
-    // ask server for ordered data (reset to first page)
+    
     pagination.value.page = 1;
     void loadUsers(1);
 };
@@ -535,10 +536,9 @@ const loadDashboardStats = async () => {
 };
 
 const computeOrdering = () => {
-    // map sortKey + sortOrder to server ordering param
     if (sortKey.value === 'status') return 'status';
     if (sortKey.value === 'last_seen') return (sortOrder.value === 'desc' ? '-last_seen' : 'last_seen');
-    // username
+    
     return sortOrder.value === 'desc' ? '-username' : 'username';
 };
 
@@ -554,8 +554,7 @@ const loadUsers = async (page: number = 1) => {
         );
         users.value = response.users;
         pagination.value = response.pagination;
-        // server-side ordering applied; keep client-side sort as fallback
-        // If server returns unsorted data for some reason, keep client-side stable sort
+        
         if (!['status', 'last_seen', 'username'].includes(computeOrdering().replace('-', ''))) {
             sortUsers();
         }
@@ -568,7 +567,6 @@ const loadUsers = async (page: number = 1) => {
 };
 
 const onPageSizeChange = () => {
-    // reset to first page when page size changes
     pagination.value.page = 1;
     loadUsers(1);
 };

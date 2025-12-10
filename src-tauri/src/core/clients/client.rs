@@ -9,13 +9,21 @@ use std::{
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
-use super::manager::CLIENT_MANAGER;
-use crate::core::storage::accounts::ACCOUNT_MANAGER;
-use crate::core::utils::globals::FILE_EXTENSION;
-use crate::core::utils::helpers::{emit_to_main_window, emit_to_main_window_filtered};
-use crate::core::{clients::internal::agent_overlay::AgentArguments, utils::globals::JDK_FOLDER};
-use crate::core::{clients::log_checker::LogChecker, utils::globals::IS_LINUX};
+use super::manager::ClientManager;
+use crate::core::clients::internal::agent_overlay::AgentArguments;
+use crate::core::clients::log_checker::LogChecker;
+use crate::core::utils::globals::{
+    AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
+    CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, JDK_FOLDER, LEGACY_SUFFIX,
+    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER,
+    LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+    NATIVES_FOLDER, NATIVES_LEGACY_ZIP, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
+};
+use crate::core::utils::hashing::calculate_md5_hash;
+use crate::core::utils::helpers::emit_to_main_window;
+use crate::core::utils::process;
 use crate::core::{network::analytics::Analytics, storage::data::Data};
+use crate::{core::storage::accounts::ACCOUNT_MANAGER, log_warn};
 use crate::{
     core::storage::{data::DATA, settings::SETTINGS},
     log_debug, log_error, log_info,
@@ -36,6 +44,7 @@ pub static REQUIREMENTS_SEMAPHORE: std::sync::LazyLock<Arc<Semaphore>> =
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
 pub struct Meta {
     pub is_new: bool,
+    pub is_fabric: bool,
     pub asset_index: String,
     pub installed: bool,
     pub is_custom: bool,
@@ -51,6 +60,7 @@ impl Meta {
 
         let asset_index = format!("{}.{}", semver.major, semver.minor);
         let is_new_version = semver.minor >= 16;
+        let is_fabric = filename.contains("fabric/");
 
         let client_base_name = Data::get_filename(filename);
         let jar_path = if filename.contains("fabric/") {
@@ -60,7 +70,7 @@ impl Meta {
                 .unwrap_or(filename);
             DATA.root_dir
                 .join(&client_base_name)
-                .join("mods")
+                .join(MODS_FOLDER)
                 .join(jar_basename)
         } else {
             DATA.get_local(&format!(
@@ -76,6 +86,7 @@ impl Meta {
             asset_index,
             installed: jar_path.exists(),
             is_custom: false,
+            is_fabric,
             size: 0,
         }
     }
@@ -127,6 +138,7 @@ pub struct Client {
 const fn default_meta() -> Meta {
     Meta {
         is_new: false,
+        is_fabric: false,
         asset_index: String::new(),
         installed: false,
         is_custom: false,
@@ -155,7 +167,66 @@ impl LaunchOptions {
 }
 
 impl Client {
-    pub async fn download(&self) -> Result<(), String> {
+    async fn verify_hash(&self) -> Result<(), String> {
+        let hash_verify_enabled = SETTINGS.lock().map(|s| s.hash_verify.value).unwrap_or(true);
+        if !hash_verify_enabled {
+            log_info!(
+                "Hash verification is disabled, skipping check for {}",
+                self.name
+            );
+            return Ok(());
+        }
+
+        log_info!("Verifying MD5 hash for client: {}", self.name);
+
+        let file_path = if self.client_type == ClientType::Fabric {
+            let jar_basename = std::path::Path::new(&self.filename)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
+            DATA.root_dir
+                .join(Data::get_filename(&self.filename))
+                .join(MODS_FOLDER)
+                .join(jar_basename)
+        } else {
+            DATA.get_local(&format!(
+                "{}{}{}",
+                Data::get_filename(&self.filename),
+                std::path::MAIN_SEPARATOR,
+                self.filename
+            ))
+        };
+
+        let path_clone = file_path.clone();
+        let calculated_hash = tokio::task::spawn_blocking(move || calculate_md5_hash(&path_clone))
+            .await
+            .map_err(|e| e.to_string())??;
+
+        if calculated_hash != self.md5_hash {
+            log_warn!(
+                "Hash mismatch for {}: expected {}, got {}",
+                self.name,
+                self.md5_hash,
+                calculated_hash
+            );
+            if let Err(e) = std::fs::remove_file(&file_path) {
+                log_warn!(
+                    "Failed to remove corrupted file {}: {}",
+                    file_path.display(),
+                    e
+                );
+            }
+            return Err(format!(
+                "Hash verification failed. Expected: {}, Got: {}",
+                self.md5_hash, calculated_hash
+            ));
+        }
+
+        log_info!("MD5 hash verification successful for {}", self.name);
+        Ok(())
+    }
+
+    pub async fn download(&self, manager: &Arc<Mutex<ClientManager>>) -> Result<(), String> {
         log_debug!(
             "Starting download for client '{}' filename='{}'",
             self.name,
@@ -163,20 +234,29 @@ impl Client {
         );
         match DATA.download(&self.filename).await {
             Ok(()) => {
-                log_info!("Successfully downloaded client '{}'", self.name);
-                if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-                    if let Some(manager) = manager.as_mut() {
-                        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                            client.meta.installed = true;
-                            client.meta.size = self.size;
-                            log_debug!(
-                                "Updated manager: marked '{}' installed, size={}",
-                                self.name,
-                                self.size
-                            );
-                        }
-                    }
+                if let Err(e) = self.verify_hash().await {
+                    ClientManager::get_client(manager, self.id, |c| {
+                        c.meta.installed = false;
+                    });
+                    return Err(e);
                 }
+
+                if let Err(e) = self.download_fabric_mods().await {
+                    ClientManager::get_client(manager, self.id, |c| {
+                        c.meta.installed = false;
+                    });
+                    return Err(e);
+                }
+
+                ClientManager::get_client(manager, self.id, |c| {
+                    c.meta.installed = true;
+                    c.meta.size = self.size;
+                    log_debug!(
+                        "Updated manager: marked '{}' installed, size={}",
+                        self.name,
+                        self.size
+                    );
+                });
                 Ok(())
             }
             Err(e) => {
@@ -186,23 +266,19 @@ impl Client {
                     self.filename,
                     e
                 );
-                if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-                    if let Some(manager) = manager.as_mut() {
-                        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                            client.meta.installed = false;
-                            log_debug!(
-                                "Updated manager: marked '{}' not installed after failure",
-                                self.name
-                            );
-                        }
-                    }
-                }
+                ClientManager::get_client(manager, self.id, |c| {
+                    c.meta.installed = false;
+                    log_debug!(
+                        "Updated manager: marked '{}' not installed after failure",
+                        self.name
+                    );
+                });
                 Err(e)
             }
         }
     }
 
-    pub fn remove_installation(&self) -> Result<(), String> {
+    pub fn remove_installation(&self, manager: &Arc<Mutex<ClientManager>>) -> Result<(), String> {
         let client_folder = DATA.get_as_folder(&self.filename);
         log_debug!(
             "Removing installation for client '{}' at {}",
@@ -211,15 +287,35 @@ impl Client {
         );
 
         if client_folder.exists() {
-            std::fs::remove_dir_all(&client_folder).map_err(|e| {
-                log_error!(
-                    "Failed to remove client folder '{}' : {}",
+            match std::fs::read_dir(&client_folder) {
+                Ok(entries) => {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            if let Err(e) = std::fs::remove_dir_all(&path) {
+                                log_warn!("Failed to remove directory '{}': {}", path.display(), e);
+                            }
+                        } else if let Err(e) = std::fs::remove_file(&path) {
+                            log_warn!("Failed to remove file '{}': {}", path.display(), e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    log_error!(
+                        "Failed to read client folder '{}': {}",
+                        client_folder.display(),
+                        e
+                    );
+                }
+            }
+
+            if let Err(e) = std::fs::remove_dir(&client_folder) {
+                log_warn!(
+                    "Failed to remove client folder '{}': {}",
                     client_folder.display(),
                     e
                 );
-                format!("Failed to remove client folder: {e}")
-            })?;
-            log_info!("Removed installation folder for '{}'", self.name);
+            }
         } else {
             log_debug!(
                 "No installation folder found for '{}', skipping removal",
@@ -227,139 +323,48 @@ impl Client {
             );
         }
 
-        if let Ok(mut manager) = CLIENT_MANAGER.lock() {
-            if let Some(manager) = manager.as_mut() {
-                if let Some(client) = manager.clients.iter_mut().find(|c| c.id == self.id) {
-                    client.meta.installed = false;
-                    log_debug!(
-                        "Updated manager: marked '{}' not installed after removal",
-                        self.name
-                    );
-                }
-            }
-        }
+        ClientManager::get_client(manager, self.id, |c| {
+            c.meta.installed = false;
+        });
 
         Ok(())
     }
 
-    pub fn get_running_clients() -> Vec<Self> {
-        let jps_path = DATA
-            .root_dir
-            .join(JDK_FOLDER)
-            .join("bin")
-            .join("jps".to_owned() + FILE_EXTENSION);
-        let mut command = Command::new(jps_path);
-
-        #[cfg(windows)]
-        command.creation_flags(0x0800_0000);
-
-        let output = match command.arg("-m").output() {
-            Ok(output) => output,
-            Err(_) => {
-                return Vec::new();
-            }
-        };
-
-        let binding = String::from_utf8_lossy(&output.stdout);
-        let outputs: Vec<&str> = binding.lines().collect();
-
-        let clients = CLIENT_MANAGER
+    pub fn get_running_clients(manager: &Arc<Mutex<ClientManager>>) -> Vec<Self> {
+        let clients = manager
             .lock()
             .ok()
-            .and_then(|guard| guard.as_ref().map(|manager| manager.clients.clone()))
+            .map(|manager| manager.clients.clone())
             .unwrap_or_default();
 
-        clients
-            .into_iter()
-            .filter(|client| outputs.iter().any(|line| line.contains(&client.filename)))
-            .collect()
+        process::filter_running(clients, |client| &client.filename)
     }
 
     pub fn stop(&self) -> Result<(), String> {
-        let jps_path = DATA
-            .root_dir
-            .join(JDK_FOLDER)
-            .join("bin")
-            .join("jps".to_owned() + FILE_EXTENSION);
-        let mut command = Command::new(jps_path);
-
-        #[cfg(windows)]
-        command.creation_flags(0x0800_0000);
-
-        let output = command
-            .arg("-m")
-            .output()
-            .map_err(|e| format!("Failed to execute jps command: {e}"))?;
-
-        let binding = String::from_utf8_lossy(&output.stdout);
-        let outputs: Vec<&str> = binding.lines().collect();
-
-        let mut process_found = false;
-        for line in &outputs {
-            if line.contains(&self.filename) {
-                process_found = true;
-                let pid = line.split_whitespace().next().unwrap_or_default();
-                let mut kill_command = Command::new("taskkill");
-
-                #[cfg(windows)]
-                kill_command.creation_flags(0x0800_0000);
-
-                let kill_output = kill_command
-                    .arg("/PID")
-                    .arg(pid)
-                    .arg("/F")
-                    .output()
-                    .map_err(|e| {
-                        log_error!(
-                            "Failed to kill process {} for client '{}': {}",
-                            pid,
-                            self.name,
-                            e
-                        );
-                        format!("Failed to kill process: {e}")
-                    })?;
-
-                if !kill_output.status.success() {
-                    log_error!(
-                        "taskkill returned non-zero for PID {}: stdout='{}' stderr='{}'",
-                        pid,
-                        String::from_utf8_lossy(&kill_output.stdout),
-                        String::from_utf8_lossy(&kill_output.stderr)
-                    );
-                } else {
-                    log_info!("Successfully killed PID {} for client '{}'", pid, self.name);
-                }
-            }
-        }
-
-        if !process_found {
-            log_info!("No process found for client: {}", self.name);
-        }
-
-        Ok(())
+        process::stop_process_by_filename(&self.filename, &self.name)
     }
 
     fn determine_requirements_to_check(&self) -> Vec<String> {
         let mut requirements = vec![format!("{JDK_FOLDER}.zip")];
         if self.client_type == ClientType::Fabric {
-            requirements.push("assets_fabric.zip".to_string());
-            requirements.push("libraries_fabric.zip".to_string());
+            requirements.push(ASSETS_FABRIC_ZIP.to_string());
+            requirements.push(LIBRARIES_FABRIC_ZIP.to_string());
         } else {
-            requirements.push("assets.zip".to_string());
+            requirements.push(ASSETS_ZIP.to_string());
             if self.meta.is_new {
                 requirements.push(if !IS_LINUX {
-                    "natives.zip".to_string()
+                    NATIVES_ZIP.to_string()
                 } else {
-                    "natives-linux.zip".to_string()
+                    NATIVES_LINUX_ZIP.to_string()
                 });
-                requirements.push("libraries.zip".to_string());
+                requirements.push(LIBRARIES_ZIP.to_string());
             } else {
                 requirements.push(if !IS_LINUX {
-                    "natives-1.12.zip".to_string()
+                    NATIVES_LEGACY_ZIP.to_string()
                 } else {
-                    "natives-linux.zip".to_string()
+                    NATIVES_LINUX_ZIP.to_string()
                 });
-                requirements.push("libraries-1.12.zip".to_string());
+                requirements.push(LIBRARIES_LEGACY_ZIP.to_string());
             }
         }
         requirements
@@ -386,7 +391,7 @@ impl Client {
         if let Some(ref fabric_jar) = client_jar {
             if !DATA
                 .root_dir
-                .join("minecraft_versions")
+                .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(fabric_jar)
                 .exists()
             {
@@ -397,7 +402,7 @@ impl Client {
         if self.client_type == ClientType::Fabric {
             if let Some(mods) = &self.requirement_mods {
                 let client_base = Data::get_filename(&self.filename);
-                let mods_folder = DATA.root_dir.join(&client_base).join("mods");
+                let mods_folder = DATA.root_dir.join(&client_base).join(MODS_FOLDER);
                 if mods.iter().any(|mod_name| {
                     let mod_basename = mod_name.trim_end_matches(".jar");
                     !mods_folder.join(format!("{mod_basename}.jar")).exists()
@@ -451,16 +456,18 @@ impl Client {
 
     async fn download_fabric_mods(&self) -> Result<(), String> {
         if self.client_type == ClientType::Fabric {
+            const MAIN_SEPARATOR: char = std::path::MAIN_SEPARATOR;
+
             if let Some(mods) = &self.requirement_mods {
                 for mod_name in mods.iter() {
                     let mod_basename = mod_name.trim_end_matches(".jar");
                     let filename_on_cdn = format!("fabric/deps/{mod_basename}.jar");
                     let client_base = Data::get_filename(&self.filename);
-                    let dest_folder = format!("{client_base}/mods");
+                    let dest_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
                     let dest_path = DATA
                         .root_dir
                         .join(&client_base)
-                        .join("mods")
+                        .join(MODS_FOLDER)
                         .join(format!("{mod_basename}.jar"));
 
                     if !dest_path.exists() {
@@ -498,14 +505,17 @@ impl Client {
         }
 
         if let Some(client_jar) = client_jar {
-            let dest_path = DATA.root_dir.join("minecraft_versions").join(&client_jar);
+            let dest_path = DATA
+                .root_dir
+                .join(MINECRAFT_VERSIONS_FOLDER)
+                .join(&client_jar);
             if !dest_path.exists() {
                 log_info!(
                     "Downloading MC client jar '{}' for '{}'",
                     client_jar,
                     self.name
                 );
-                DATA.download_to_folder(&client_jar, "minecraft_versions")
+                DATA.download_to_folder(&client_jar, MINECRAFT_VERSIONS_FOLDER)
                     .await
                     .map_err(|e| {
                         log_error!("Failed to download MC client jar '{}': {}", client_jar, e);
@@ -517,7 +527,6 @@ impl Client {
 
         self.download_fabric_mods().await?;
 
-        log_info!("All requirements downloaded successfully");
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
         {
@@ -569,7 +578,79 @@ impl Client {
             .await
     }
 
-    pub async fn run(self, options: LaunchOptions) -> Result<(), String> {
+    pub async fn ensure_java_available(
+        &self,
+        app_handle: &AppHandle,
+        app_handle_for_crash: &AppHandle,
+        client_id: u32,
+        client_name: &str,
+    ) -> Result<(), String> {
+        let java_executable = DATA
+            .root_dir
+            .join(JDK_FOLDER)
+            .join("bin")
+            .join("java".to_owned() + FILE_EXTENSION);
+
+        if java_executable.exists() {
+            return Ok(());
+        }
+
+        log_warn!(
+            "Java executable not found at {}, attempting to redownload...",
+            java_executable.display()
+        );
+
+        let jdk_folder = DATA.root_dir.join(JDK_FOLDER);
+        if jdk_folder.exists() {
+            if let Err(e) = tokio::fs::remove_dir_all(&jdk_folder).await {
+                log_error!("Failed to remove JDK folder: {}", e);
+            }
+        }
+
+        let jdk_zip = DATA.root_dir.join(format!("{}.zip", JDK_FOLDER));
+        if jdk_zip.exists() {
+            if let Err(e) = tokio::fs::remove_file(&jdk_zip).await {
+                log_error!("Failed to remove JDK zip: {}", e);
+            }
+        }
+
+        if let Err(e) = self.download_requirements(app_handle).await {
+            log_error!("Failed to redownload Java: {}", e);
+            emit_to_main_window(
+                app_handle_for_crash,
+                "client-crashed",
+                serde_json::json!({
+                    "id": client_id,
+                    "name": client_name,
+                    "error": format!("Failed to redownload Java: {}", e)
+                }),
+            );
+            return Err(e);
+        }
+
+        if !java_executable.exists() {
+            let msg = "Java executable still missing after redownload".to_string();
+            log_error!("{}", msg);
+            emit_to_main_window(
+                app_handle_for_crash,
+                "client-crashed",
+                serde_json::json!({
+                    "id": client_id,
+                    "name": client_name,
+                    "error": msg
+                }),
+            );
+            return Err(msg);
+        }
+
+        Ok(())
+    }
+
+    pub async fn run(
+        self,
+        options: LaunchOptions,
+        manager: Arc<Mutex<ClientManager>>,
+    ) -> Result<(), String> {
         if !options.is_custom && SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value) {
             Analytics::send_client_analytics(self.id);
         }
@@ -613,7 +694,7 @@ impl Client {
         );
         if let Err(e) = self.download_requirements(&app_handle_clone_for_run).await {
             log_info!("Error downloading requirements for '{}' : {}", self.name, e);
-            emit_to_main_window_filtered(
+            emit_to_main_window(
                 &app_handle_clone_for_crash_handling,
                 "client-crashed",
                 serde_json::json!({
@@ -625,29 +706,50 @@ impl Client {
             return Err(e);
         }
 
-        log_debug!("Spawning thread to run client '{}'", self.name);
+        if let Err(e) = self
+            .ensure_java_available(
+                &app_handle_clone_for_run,
+                &app_handle_clone_for_crash_handling,
+                client_id,
+                &client_name,
+            )
+            .await
+        {
+            return Err(e);
+        }
+
         let self_clone = self.clone();
+        let manager_clone = manager.clone();
         let handle = std::thread::spawn(move || -> Result<(), String> {
             let (natives_path, libraries_path) = if self_clone.meta.is_new {
                 (
                     DATA.root_dir
-                        .join("natives".to_owned() + if IS_LINUX { "-linux" } else { "" }),
+                        .join(NATIVES_FOLDER.to_owned() + if IS_LINUX { LINUX_SUFFIX } else { "" }),
                     if self_clone.client_type == ClientType::Fabric {
-                        DATA.root_dir.join("libraries_fabric")
+                        DATA.root_dir.join(LIBRARIES_FABRIC_FOLDER)
                     } else {
-                        DATA.root_dir.join("libraries")
+                        DATA.root_dir.join(LIBRARIES_FOLDER)
                     },
                 )
             } else {
                 (
-                    DATA.root_dir
-                        .join("natives".to_owned() + if IS_LINUX { "-linux" } else { "-1.12" }),
-                    DATA.root_dir.join("libraries-1.12"),
+                    DATA.root_dir.join(
+                        NATIVES_FOLDER.to_owned()
+                            + if IS_LINUX {
+                                LINUX_SUFFIX
+                            } else {
+                                LEGACY_SUFFIX
+                            },
+                    ),
+                    DATA.root_dir.join(LIBRARIES_LEGACY_FOLDER),
                 )
             };
 
             let (client_folder, client_jar_path) = if self_clone.meta.is_custom {
-                let folder = DATA.root_dir.join("custom_clients").join(&self_clone.name);
+                let folder = DATA
+                    .root_dir
+                    .join(CUSTOM_CLIENTS_FOLDER)
+                    .join(&self_clone.name);
                 let jar = folder.join(&self_clone.filename);
                 (folder, jar)
             } else if self_clone.filename.contains("fabric/") {
@@ -656,7 +758,7 @@ impl Client {
                 let jar_basename = std::path::Path::new(&self_clone.filename)
                     .file_name()
                     .unwrap();
-                let jar = folder.join("mods").join(jar_basename);
+                let jar = folder.join(MODS_FOLDER).join(jar_basename);
                 (folder, jar)
             } else {
                 let folder = DATA
@@ -666,10 +768,10 @@ impl Client {
                 (folder, jar)
             };
 
-            let agent_overlay_folder = DATA.root_dir.join("agent_overlay");
-            let minecraft_client_folder = DATA.root_dir.join("minecraft_versions");
+            let agent_overlay_folder = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
+            let minecraft_client_folder = DATA.root_dir.join(MINECRAFT_VERSIONS_FOLDER);
 
-            let sep = if IS_LINUX { ":" } else { ";" };
+            let sep = PATH_SEPARATOR;
 
             let classpath = if self_clone.client_type == ClientType::Fabric {
                 format!(
@@ -723,9 +825,9 @@ impl Client {
                 });
 
             let assets_dir = if self_clone.client_type == ClientType::Fabric {
-                DATA.root_dir.join("assets_fabric")
+                DATA.root_dir.join(ASSETS_FABRIC_FOLDER)
             } else {
-                DATA.root_dir.join("assets")
+                DATA.root_dir.join(ASSETS_FOLDER)
             };
 
             let ram_mb = SETTINGS.lock().map(|s| s.ram.value).unwrap_or(3072);
@@ -801,7 +903,7 @@ impl Client {
                 .spawn()
                 .map_err(|e| format!("Failed to start client: {e}"))?;
 
-            emit_to_main_window_filtered(
+            emit_to_main_window(
                 &app_handle_clone_for_crash_handling,
                 "client-launched",
                 serde_json::json!({
@@ -832,25 +934,23 @@ impl Client {
             match child.wait() {
                 Ok(status) => {
                     let log_line = format!("Process finished with status: {status:?}");
-                    log_debug!("{}", log_line);
+                    log_info!("{}", log_line);
                     add_log_line(client_id, log_line);
 
                     let log_checker = LogChecker::new(self_clone.clone());
                     log_checker.check(&app_handle_clone_for_crash_handling);
 
-                    if let Ok(client_manager) = CLIENT_MANAGER.lock() {
-                        if let Some(manager) = client_manager.as_ref() {
-                            if let Err(e) = manager
-                                .update_status_on_client_exit(&app_handle_clone_for_crash_handling)
-                            {
-                                log_error!("Failed to update user status on client exit: {}", e);
-                            } else {
-                                log_debug!("User status updated on client exit, cleared client playing status");
-                            }
+                    if let Ok(manager) = manager_clone.lock() {
+                        if let Err(e) = manager
+                            .update_status_on_client_exit(&app_handle_clone_for_crash_handling)
+                        {
+                            log_error!("Failed to update user status on client exit: {}", e);
+                        } else {
+                            log_info!("User status updated on client exit");
                         }
                     }
 
-                    emit_to_main_window_filtered(
+                    emit_to_main_window(
                         &app_handle_clone_for_crash_handling,
                         "client-exited",
                         serde_json::json!({
@@ -865,7 +965,7 @@ impl Client {
                     let log_line = format!("Error waiting for process: {e}");
                     log_error!("{}", log_line);
                     add_log_line(client_id, log_line.clone());
-                    emit_to_main_window_filtered(
+                    emit_to_main_window(
                         &app_handle_clone_for_crash_handling,
                         "client-crashed",
                         serde_json::json!({

@@ -39,10 +39,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -51,7 +51,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                        }}</button>
+                    }}</button>
                 </template>
             </div>
 
@@ -65,7 +65,7 @@
                     <div class="md:col-span-2">
                         <div v-if="displayedColors.length" class="grid grid-cols-3 sm:grid-cols-6 gap-2">
                             <div v-for="c in displayedColors" :key="c" class="tooltip" :data-tip="c">
-                                <div class="h-10 rounded-box border border-base-300 cursor-pointer focus:outline-none focus:ring"
+                                <div class="h-10 rounded-box border border-base-300 cursor-pointer"
                                     :style="{ backgroundColor: pData[c] }" role="button" tabindex="0"
                                     :aria-label="`Copy ${c} color ${pData[c]}`" @click="copyColor(c)"
                                     @keydown.enter.prevent="copyColor(c)" @keydown.space.prevent="copyColor(c)"></div>
@@ -110,7 +110,7 @@
                                                 <div class="truncate">
                                                     <span class="font-medium mr-2">{{ c.author_username }}</span>
                                                     <span class="text-[11px] opacity-60">{{ formatDate(c.created_at)
-                                                        }}</span>
+                                                    }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
@@ -289,28 +289,28 @@ function applyFromDetails() {
     if (!p) return;
     const payload = p.preset_data || p;
     presetService.applyPresetToTheme({
-        custom_css: payload.custom_css,
-        enable_custom_css: payload.enable_custom_css,
+        customCSS: payload.custom_css,
+        enableCustomCSS: payload.enable_custom_css,
         base100: payload.base100,
         base200: payload.base200,
         base300: payload.base300,
-        base_content: payload.base_content,
+        baseContent: payload.base_content,
         primary: payload.primary,
-        primary_content: payload.primary_content,
+        primaryContent: payload.primary_content,
         secondary: payload.secondary,
-        secondary_content: payload.secondary_content,
+        secondaryContent: payload.secondary_content,
         accent: payload.accent,
-        accent_content: payload.accent_content,
+        accentContent: payload.accent_content,
         neutral: payload.neutral,
-        neutral_content: payload.neutral_content,
+        neutralContent: payload.neutral_content,
         info: payload.info,
-        info_content: payload.info_content,
+        infoContent: payload.info_content,
         success: payload.success,
-        success_content: payload.success_content,
+        successContent: payload.success_content,
         warning: payload.warning,
-        warning_content: payload.warning_content,
+        warningContent: payload.warning_content,
         error: payload.error,
-        error_content: payload.error_content,
+        errorContent: payload.error_content,
     } as any);
 }
 
@@ -345,28 +345,28 @@ async function downloadFromDetails() {
         const input: any = {
             name: p.title || 'Imported preset',
             description: p.description || undefined,
-            custom_css: payload.custom_css,
-            enable_custom_css: payload.enable_custom_css,
+            customCSS: payload.custom_css,
+            enableCustomCSS: payload.enable_custom_css,
             primary: payload.primary,
             base100: payload.base100,
             base200: payload.base200,
             base300: payload.base300,
-            base_content: payload.base_content,
-            primary_content: payload.primary_content,
+            baseContent: payload.base_content,
+            primaryContent: payload.primary_content,
             secondary: payload.secondary,
-            secondary_content: payload.secondary_content,
+            secondaryContent: payload.secondary_content,
             accent: payload.accent,
-            accent_content: payload.accent_content,
+            accentContent: payload.accent_content,
             neutral: payload.neutral,
-            neutral_content: payload.neutral_content,
+            neutralContent: payload.neutral_content,
             info: payload.info,
-            info_content: payload.info_content,
+            infoContent: payload.info_content,
             success: payload.success,
-            success_content: payload.success_content,
+            successContent: payload.success_content,
             warning: payload.warning,
-            warning_content: payload.warning_content,
+            warningContent: payload.warning_content,
             error: payload.error,
-            error_content: payload.error_content,
+            errorContent: payload.error_content,
         };
         await presetService.createPreset(input);
         addToast(t('theme.presets.messages.import_success'), 'success');

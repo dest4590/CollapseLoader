@@ -5,6 +5,7 @@ use std::sync::LazyLock;
 use std::{collections::HashMap, path::PathBuf, sync::Mutex as StdMutex};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ThemePreset {
     pub id: String,
     pub name: String,

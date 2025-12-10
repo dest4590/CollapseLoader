@@ -1,7 +1,3 @@
-/**
- * Event detection utilities for seasonal events
- */
-
 export interface EventInfo {
     isActive: boolean;
     name: string;
@@ -9,9 +5,7 @@ export interface EventInfo {
     theme?: string;
 }
 
-/**
- * Check if current date is within Halloween event period (Oct 25 - Nov 5)
- */
+
 export function isHalloweenEvent(): boolean {
     const now = new Date();
     const month = now.getMonth();
@@ -28,9 +22,6 @@ export function isHalloweenEvent(): boolean {
     return false;
 }
 
-/**
- * Get current active event information
- */
 export function getCurrentEvent(): EventInfo | null {
     if (isHalloweenEvent()) {
         return {
@@ -44,9 +35,6 @@ export function getCurrentEvent(): EventInfo | null {
     return null;
 }
 
-/**
- * Get event-specific greeting message
- */
 export function getEventGreeting(): string | null {
     const event = getCurrentEvent();
 
@@ -64,7 +52,7 @@ export function getEventGreeting(): string | null {
 }
 
 
-export function applyCursorForEvent(): void {
+export async function applyCursorForEvent(): Promise<void> {
     const event = getCurrentEvent();
 
     if (event?.name === 'halloween') {

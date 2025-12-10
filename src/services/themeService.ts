@@ -66,46 +66,39 @@ export const cssVarList = [
 
 const applyPreset = () => {
     const root = document.documentElement;
+    const settings = presetSettings as Record<string, any>;
 
-    if (presetSettings.primary && presetSettings.primary.trim().length > 0) {
-        root.style.setProperty('--color-primary', presetSettings.primary);
-    } else {
-        root.style.removeProperty('--color-primary');
-    }
-
-    const setOrRemove = (varName: string, value?: string | null) => {
-        if (value && value.trim().length > 0) {
-            root.style.setProperty(varName, value);
-        } else {
-            root.style.removeProperty(varName);
-        }
+    const varMap: Record<string, string> = {
+        primary: '--color-primary',
+        base100: '--color-base-100',
+        base200: '--color-base-200',
+        base300: '--color-base-300',
+        baseContent: '--color-base-content',
+        primaryContent: '--color-primary-content',
+        secondary: '--color-secondary',
+        secondaryContent: '--color-secondary-content',
+        accent: '--color-accent',
+        accentContent: '--color-accent-content',
+        neutral: '--color-neutral',
+        neutralContent: '--color-neutral-content',
+        info: '--color-info',
+        infoContent: '--color-info-content',
+        success: '--color-success',
+        successContent: '--color-success-content',
+        warning: '--color-warning',
+        warningContent: '--color-warning-content',
+        error: '--color-error',
+        errorContent: '--color-error-content'
     };
 
-    setOrRemove('--color-base-100', presetSettings.base100 ?? null);
-    setOrRemove('--color-base-200', presetSettings.base200 ?? null);
-    setOrRemove('--color-base-300', presetSettings.base300 ?? null);
-    setOrRemove('--color-base-content', presetSettings.baseContent ?? null);
-
-    setOrRemove('--color-primary-content', presetSettings.primaryContent ?? null);
-    setOrRemove('--color-secondary', presetSettings.secondary ?? null);
-    setOrRemove('--color-secondary-content', presetSettings.secondaryContent ?? null);
-    setOrRemove('--color-accent', presetSettings.accent ?? null);
-    setOrRemove('--color-accent-content', presetSettings.accentContent ?? null);
-
-    setOrRemove('--color-neutral', presetSettings.neutral ?? null);
-    setOrRemove('--color-neutral-content', presetSettings.neutralContent ?? null);
-
-    setOrRemove('--color-info', presetSettings.info ?? null);
-    setOrRemove('--color-info-content', presetSettings.infoContent ?? null);
-
-    setOrRemove('--color-success', presetSettings.success ?? null);
-    setOrRemove('--color-success-content', presetSettings.successContent ?? null);
-
-    setOrRemove('--color-warning', presetSettings.warning ?? null);
-    setOrRemove('--color-warning-content', presetSettings.warningContent ?? null);
-
-    setOrRemove('--color-error', presetSettings.error ?? null);
-    setOrRemove('--color-error-content', presetSettings.errorContent ?? null);
+    Object.entries(varMap).forEach(([key, cssVar]) => {
+        const value = settings[key];
+        if (value && typeof value === 'string' && value.trim().length > 0) {
+            root.style.setProperty(cssVar, value);
+        } else {
+            root.style.removeProperty(cssVar);
+        }
+    });
 
     let styleEl = document.getElementById('custom-theme-styles');
     if (!styleEl) {

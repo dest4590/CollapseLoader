@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    ref,
-    onMounted,
-    onUnmounted,
-    reactive,
-    watch,
-    computed,
-    nextTick,
-} from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
 import AnimatedSlider from '../components/ui/AnimatedSlider.vue';
 import {
@@ -31,10 +23,15 @@ import {
     FileText,
     FolderSync,
     CloudCog,
+    Search,
+    UserIcon,
+    LogIn,
+    WifiOff,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
 import { syncService, type SyncServiceState } from '../services/syncService';
+import { settingsService } from '../services/settingsService';
 import { globalUserStatus } from '../composables/useUserStatus';
 import SyncStatus from '../components/common/SyncStatus.vue';
 import AddAccountModal from '../components/modals/social/account/AddAccountModal.vue';
@@ -43,6 +40,8 @@ import ResetConfirmModal from '../components/modals/settings/ResetConfirmModal.v
 import TelemetryInfoModal from '../components/modals/clients/TelemetryInfoModal.vue';
 import ChangeRootFolderModal from '../components/modals/settings/ChangeRootFolderModal.vue';
 import DeleteAccountConfirmModal from '../components/modals/social/account/DeleteAccountConfirmModal.vue';
+import SettingCard from '../components/settings/SettingCard.vue';
+import AccountCard from '../components/settings/AccountCard.vue';
 import {
     changeLanguage,
     getAvailableLanguages,
@@ -51,15 +50,6 @@ import {
 import { useI18n } from 'vue-i18n';
 import { formatDate } from '../utils/utils';
 import { useModal } from '../services/modalService';
-
-interface Setting<T> {
-    value: T;
-    show: boolean;
-}
-
-interface Settings {
-    [key: string]: Setting<any>;
-}
 
 interface Account {
     id: string;
@@ -70,21 +60,17 @@ interface Account {
     is_active: boolean;
 }
 
-interface Flags {
-    [key: string]: any;
-}
 
-const settings = reactive<Settings>({});
+const settings = settingsService.settings;
 const accounts = ref<Account[]>([]);
 const activeTab = ref<'general' | 'sync' | 'accounts'>('general');
 const loading = ref(true);
-const isSaving = ref(false);
 const isRefreshing = ref(false);
 const { addToast, setToastPosition, getToastPosition } = useToast();
-let saveTimeout: number | null = null;
 
 const editingAccount = ref<Account | null>(null);
 const accountToDelete = ref<Account | null>(null);
+const searchQuery = ref('');
 
 const { showModal } = useModal();
 
@@ -112,8 +98,6 @@ const checkRamWarning = () => {
 
 watch(ramOptionIndex, checkRamWarning);
 watch(systemMemory, checkRamWarning);
-
-const flags = reactive<Flags>({});
 
 const { t } = useI18n();
 const availableLanguages = getAvailableLanguages();
@@ -165,13 +149,7 @@ watch(
 const loadSettings = async () => {
     try {
         loading.value = true;
-        const loadedSettings = await invoke<Settings>('get_settings');
-
-        Object.keys(settings).forEach((key) => delete settings[key]);
-
-        Object.entries(loadedSettings).forEach(([key, value]) => {
-            settings[key] = value;
-        });
+        await settingsService.loadSettings();
     } catch (error) {
         console.error('Failed to load settings:', error);
         addToast(t('settings.load_settings_failed', { error }), 'error');
@@ -217,47 +195,12 @@ const loadAccounts = async (skipLoading = false) => {
 
 const loadFlags = async () => {
     try {
-        const loadedFlags = await invoke<Flags>('get_flags');
-        Object.keys(flags).forEach((key) => delete flags[key]);
-        Object.entries(loadedFlags).forEach(([key, value]) => {
-            flags[key] = value;
-        });
+        await settingsService.loadFlags();
     } catch (error) {
         console.error('Failed to load flags:', error);
         addToast(t('settings.load_flags_failed', { error }), 'error');
     }
 };
-
-const saveSettings = async () => {
-    try {
-        isSaving.value = true;
-        await invoke('save_settings', { inputSettings: settings });
-    } catch (error) {
-        console.error('Failed to save settings:', error);
-        addToast(t('settings.save_settings_failed', { error }), 'error');
-    } finally {
-        isSaving.value = false;
-    }
-};
-
-const debouncedSave = () => {
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
-    saveTimeout = setTimeout(() => {
-        saveSettings();
-    }, 500) as unknown as number;
-};
-
-watch(
-    settings,
-    () => {
-        if (!loading.value) {
-            debouncedSave();
-        }
-    },
-    { deep: true }
-);
 
 const showAddAccountDialog = () => {
     showModal(
@@ -447,13 +390,22 @@ const uniqueTags = computed(() => {
 });
 
 const filteredAccounts = computed(() => {
-    if (!selectedTag.value) {
-        return accounts.value;
+    let result = accounts.value;
+
+    if (selectedTag.value) {
+        result = result.filter((account) =>
+            account.tags.includes(selectedTag.value!)
+        );
     }
 
-    return accounts.value.filter((account) =>
-        account.tags.includes(selectedTag.value!)
-    );
+    if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        result = result.filter((account) =>
+            account.username.toLowerCase().includes(query)
+        );
+    }
+
+    return result;
 });
 
 const selectTag = (tag: string) => {
@@ -525,16 +477,6 @@ const resetRequirements = async () => {
     }
 };
 
-const resetCache = async () => {
-    try {
-        await invoke('reset_cache');
-        addToast(t('settings.reset_cache_success'), 'success');
-    } catch (error) {
-        console.error('Failed to reset cache:', error);
-        addToast(t('settings.reset_cache_failed'), 'error');
-    }
-};
-
 onMounted(async () => {
     unsubscribeSyncService = syncService.subscribe((state) => {
         syncState.value = state;
@@ -549,7 +491,6 @@ onMounted(async () => {
     try {
         const memoryBytes = await invoke<number>('get_system_memory');
         systemMemory.value = Math.floor(memoryBytes / (1024 * 1024));
-        console.log('System memory detected:', systemMemory.value, 'MB');
     } catch (error) {
         console.error('Failed to get system memory:', error);
         systemMemory.value = null;
@@ -607,7 +548,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
     addToast(t('settings.toast_position.preview_message'), 'info', 3000);
 };
 </script>
-
 <template>
     <div class="max-w-4xl mx-auto slide-up">
         <div v-if="!loading" class="transition-opacity duration-300">
@@ -617,14 +557,10 @@ const handleToastPositionChange = (position: ToastPosition) => {
                         activeTab === 'general',
                     'hover:bg-base-300': activeTab !== 'general',
                 }">
-                    <div class="tooltip tooltip-bottom mr-1" :data-tip="$t('settings.reset_tooltip')">
-                        <button class="btn btn-circle btn-xs btn-ghost" @click.stop="resetSettings">
-                            <RotateCcw class="w-3.5 h-3.5 text-warning hover:text-warning transition-colors" />
-                        </button>
-                    </div>
+                    <SettingsIcon class="w-4 h-4 mr-2" />
                     {{ t('settings.general') }}
                 </a>
-                <a v-if="isAuthenticated" @click="activeTab = 'sync'" class="tab transition-all duration-300" :class="{
+                <a @click="activeTab = 'sync'" class="tab transition-all duration-300" :class="{
                     'tab-active transform scale-105 shadow-md bg-base-300':
                         activeTab === 'sync',
                     'hover:bg-base-300': activeTab !== 'sync',
@@ -641,14 +577,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     {{ t('settings.accounts') }}
                 </a>
             </div>
-
             <transition name="tab-switch" mode="out-in">
                 <div v-if="activeTab === 'general'" key="general" class="space-y-6">
-                    <div v-for="([key, field], index) in filteredSettingsEntries" :key="key"
-                        class="card bg-base-200 shadow-md border border-base-300 settings-card"
-                        :style="{ 'animation-delay': index * 0.05 + 's' }">
-                        <div class="card-body p-4">
-                            <h2 class="card-title text-base font-semibold text-primary-focus mb-2">
+                    <div v-for="([key, field], index) in filteredSettingsEntries" :key="key">
+                        <SettingCard :field="field" :delay="index * 0.05" :description="getSettingDescription(key)"
+                            :layout="(key === 'ram' || (typeof field.value !== 'boolean' && key !== 'language')) ? 'col' : 'row'">
+                            <template #title>
                                 <MemoryStick v-if="key === 'ram'" class="w-5 h-5 text-primary" />
                                 <Languages v-if="key === 'language'" class="w-5 h-5 text-primary" />
                                 <img src="@/assets/icons/discord.svg" v-if="key === 'discord_rpc_enabled'"
@@ -661,106 +595,76 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
                                 <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
-
-                                <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top" :data-tip="$t('settings.telemetry_info_title')
-                                    ">
+                                <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top"
+                                    :data-tip="$t('settings.telemetry_info_title')">
                                     <Info class="w-5 h-5 text-primary cursor-pointer" @click="showTelemetryModal" />
                                 </div>
-                            </h2>
+                            </template>
 
-                            <div v-if="key === 'ram'" class="space-y-3">
+                            <div v-if="key === 'ram'" class="space-y-3 w-full">
                                 <div class="flex items-center gap-2">
                                     <AnimatedSlider v-model="ramOptionIndex" :min="0" :max="ramOptions.length - 1"
                                         @update:modelValue="handleSliderChange" class="grow" />
-                                    <div class="flex items-center gap-2 rounded-md p-2">
+                                    <div class="flex items-center gap-2 rounded-md p-2 bg-base-200/50">
                                         <input v-if="settings.ram" v-model.number="settings.ram.value" type="number"
                                             min="512" step="512"
-                                            class="input input-bordered input-xs bg-transparent h-6"
-                                            style="width: 60px" />
+                                            class="input input-ghost input-xs text-right p-0 h-6 w-12 font-mono" />
+                                        <span class="text-xs opacity-50">MB</span>
                                     </div>
                                 </div>
-                                <p class="text-xs text-base-content/70">
-                                    {{ getSettingDescription(key) }}
-                                </p>
-                                <div v-if="showRamWarning" class="alert alert-warning mt-2">
+                                <div v-if="showRamWarning" class="alert alert-warning alert-dash mt-2 py-2 text-sm">
                                     <span>{{ t('settings.ram.warning', { selectedRamMb }) }}</span>
                                 </div>
                             </div>
-                            <div v-else-if="key === 'language'" class="space-y-3">
+
+                            <div v-else-if="key === 'language'">
                                 <select :value="currentLanguage" @change="
                                     handleLanguageChange(
                                         ($event.target as HTMLSelectElement)
                                             .value
                                     )
-                                    " class="select select-bordered w-full bg-base-100">
+                                    " class="select select-bordered select-sm w-48 bg-base-100">
                                     <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
                                         {{ lang.nativeName }} ({{ lang.name }})
                                     </option>
                                 </select>
-                                <p class="text-xs text-base-content/70">
-                                    {{ getSettingDescription(key) }}
-                                </p>
                             </div>
 
-                            <div v-else-if="typeof field.value === 'boolean'" class="space-y-3">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex-1">
-                                        <p class="text-xs text-base-content/70">
-                                            {{ getSettingDescription(key) }}
-                                        </p>
-                                    </div>
+                            <div v-else-if="typeof field.value === 'boolean'">
+                                <input type="checkbox" v-if="!isFeatureOnline(key) || isAuthenticated"
+                                    v-model="field.value" class="toggle toggle-primary toggle-sm" />
 
-                                    <input type="checkbox" v-if="!isFeatureOnline(key) || isAuthenticated"
-                                        v-model="field.value" class="toggle toggle-primary" />
-
-                                    <div v-else class="tooltip tooltip-left" :data-tip="$t('settings.login_required')">
-                                        <input type="checkbox" :checked="false"
-                                            class="toggle toggle-primary pointer-events-none" tabindex="-1" />
-                                    </div>
+                                <div v-else class="tooltip tooltip-left" :data-tip="$t('settings.login_required')">
+                                    <input type="checkbox" :checked="false"
+                                        class="toggle toggle-primary toggle-sm pointer-events-none opacity-50"
+                                        tabindex="-1" />
                                 </div>
                             </div>
 
-                            <div v-else class="form-control w-full space-y-2">
+                            <div v-else class="w-full">
                                 <input v-model="field.value" class="input input-bordered w-full bg-base-100" :type="typeof field.value === 'number'
                                     ? 'number'
                                     : 'text'
                                     " />
-                                <label class="label">
-                                    <span class="label-text-alt text-base-content/70 text-xs">{{
-                                        getSettingDescription(key) }}</span>
-                                </label>
                             </div>
-                        </div>
+                        </SettingCard>
                     </div>
-                    <div class="card bg-base-200 shadow-md border border-base-300 settings-card" :style="{
-                        'animation-delay':
-                            filteredSettingsEntries.length * 0.05 + 's',
-                    }">
-                        <div class="card-body p-4">
-                            <h2 class="card-title text-base font-semibold text-primary-focus mb-2">
-                                <Info class="w-5 h-5 text-primary" />
-                                {{ $t('settings.toast_position.title') }}
-                            </h2>
-
-                            <div class="space-y-3">
-                                <select v-model="toastPosition" @change="
-                                    handleToastPositionChange(toastPosition)
-                                    " class="select select-bordered w-full bg-base-100">
-                                    <option v-for="option in toastPositionOptions" :key="option.value"
-                                        :value="option.value">
-                                        {{ option.label }}
-                                    </option>
-                                </select>
-                                <p class="text-xs text-base-content/70">
-                                    {{
-                                        $t(
-                                            'settings.toast_position.description'
-                                        )
-                                    }}
-                                </p>
-                            </div>
+                    <SettingCard :delay="filteredSettingsEntries.length * 0.05" layout="row"
+                        :description="$t('settings.toast_position.description')">
+                        <template #title>
+                            <Info class="w-5 h-5 text-primary" />
+                            {{ $t('settings.toast_position.title') }}
+                        </template>
+                        <div>
+                            <select v-model="toastPosition" @change="handleToastPositionChange(toastPosition)"
+                                class="select select-bordered select-sm w-48 bg-base-100">
+                                <option v-for="option in toastPositionOptions" :key="option.value"
+                                    :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
                         </div>
-                    </div>
+                    </SettingCard>
                     <div class="card bg-base-200 shadow-md border border-base-300">
                         <div class="card-body p-4">
                             <h2
@@ -787,11 +691,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <RotateCcw class="w-4 h-4" />
                                     {{ $t('settings.reset_requirements') }}
                                 </button>
+
                                 <button
-                                    class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-secondary-focus transition-all duration-200"
-                                    @click="resetCache">
-                                    <RotateCcw class="w-4 h-4" />
-                                    {{ $t('settings.reset_cache') }}
+                                    class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-error-focus transition-all duration-200"
+                                    @click="resetSettings">
+                                    <RotateCcw class="w-4 h-4 text-warning" />
+                                    {{ $t('settings.reset_settings') }}
                                 </button>
                             </div>
                         </div>
@@ -831,7 +736,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     </p>
                                     <button @click="handleUploadToCloud" class="btn btn-primary btn-sm w-full"
                                         :disabled="syncState.isSyncing ||
-                                            !syncState.isOnline
+                                            !syncState.isOnline ||
+                                            !isAuthenticated
                                             ">
                                         <Upload class="w-4 h-4 mr-2" />
                                         {{
@@ -855,7 +761,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <button @click="handleDownloadFromCloud" class="btn btn-primary btn-sm w-full"
                                         :disabled="syncState.isSyncing ||
                                             !syncState.isOnline ||
-                                            !syncState.hasCloudData
+                                            !syncState.hasCloudData ||
+                                            !isAuthenticated
                                             ">
                                         <Download class="w-4 h-4 mr-2" />
                                         {{
@@ -882,13 +789,20 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         </p>
                                     </div>
                                     <input type="checkbox" :checked="syncState.autoSyncEnabled" @change="toggleAutoSync"
-                                        class="toggle toggle-primary" />
+                                        class="toggle toggle-primary" :disabled="!isAuthenticated" />
+                                </div>
+                            </div>
+
+                            <div v-if="!isAuthenticated" class="mt-4 alert alert-warning">
+                                <div class="flex items-center gap-2">
+                                    <LogIn class="w-4 h-4" />
+                                    <span>{{ t('settings.sync_login_required') }}</span>
                                 </div>
                             </div>
 
                             <div v-if="!syncState.isOnline" class="mt-4 alert alert-warning">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded-full bg-error"></div>
+                                    <WifiOff class="w-4 h-4" />
                                     <span>{{
                                         t('settings.offline_warning')
                                     }}</span>
@@ -900,7 +814,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -908,104 +822,85 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 </div>
 
                 <div v-else key="accounts" class="space-y-6 overflow-x-hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <div class="flex flex-wrap gap-2">
-                            <button v-for="tag in uniqueTags" :key="tag" @click="selectTag(tag)" class="btn btn-sm"
-                                :class="{
-                                    'btn-primary': selectedTag === tag,
-                                    'btn-outline btn-secondary':
-                                        selectedTag !== tag,
-                                }">
-                                {{ tag }}
-                            </button>
-                        </div>
-                        <button @click="showAddAccountDialog" class="btn btn-primary btn-sm">
-                            <Plus class="w-4 h-4 mr-2" />
-                            {{ t('settings.add_account') }}
-                        </button>
-                    </div>
+                    <div class="card bg-base-200 shadow-md border border-base-300">
+                        <div class="card-body p-4">
+                            <div
+                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                                <div>
+                                    <h2
+                                        class="card-title text-lg font-semibold text-primary-focus flex items-center gap-2">
+                                        <User class="w-5 h-5" />
+                                        {{ t('settings.accounts_management') }}
+                                    </h2>
+                                    <p class="text-sm text-base-content/70 mt-1">
+                                        {{ t('settings.accounts_description') }}
+                                    </p>
+                                </div>
+                                <button @click="showAddAccountDialog" class="btn btn-primary btn-sm">
+                                    <Plus class="w-4 h-4 mr-2" />
+                                    {{ t('settings.add_account') }}
+                                </button>
+                            </div>
 
-                    <transition-group name="account-list" tag="div" class="grid grid-cols-1 gap-4 overflow-hidden">
-                        <div v-for="account in filteredAccounts" :key="account.id"
-                            class="card bg-base-200 shadow-md border border-base-300 account-card overflow-x-hidden">
-                            <div class="card-body p-4">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1 space-y-1 min-w-0 pr-2">
-                                        <div class="flex items-center gap-2">
-                                            <h3 class="font-semibold text-lg text-primary-focus truncate">
-                                                {{ account.username }}
-                                            </h3>
-                                            <div v-if="account.is_active"
-                                                class="badge badge-success badge-sm whitespace-nowrap">
-                                                {{ t('settings.active') }}
-                                            </div>
-                                        </div>
-                                        <p class="text-sm text-base-content/70 flex items-center gap-2">
-                                            <span class="font-medium text-primary/80">{{ t('settings.tags') }}:</span>
-                                            <span class="flex flex-wrap gap-1">
-                                                <span v-for="tag in account.tags" :key="tag"
-                                                    class="badge badge-outline badge-xs">
-                                                    {{ tag }}
-                                                </span>
-                                            </span>
-                                        </p>
-                                        <p class="text-xs text-base-content/60 flex items-center gap-2">
-                                            <span>{{ t('settings.created') }}:
-                                                {{
-                                                    formatDate(
-                                                        account.created_at
-                                                    )
-                                                }}</span>
-                                            <span v-if="account.last_used" class="border-l border-base-content/30 pl-2">
-                                                {{ t('settings.last_used') }}:
-                                                {{
-                                                    formatDate(
-                                                        account.last_used
-                                                    )
-                                                }}
-                                            </span>
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <button @click="setActiveAccount(account)" class="btn btn-sm btn-circle" :class="account.is_active
-                                            ? 'btn-success text-success-content'
-                                            : 'btn-outline btn-success hover:text-success-content'
-                                            ">
-                                            <User class="w-4 h-4" />
-                                        </button>
-                                        <button @click="editAccount(account)"
-                                            class="btn btn-sm btn-circle btn-outline btn-warning hover:text-warning-content">
-                                            <Edit3 class="w-4 h-4" />
-                                        </button>
-                                        <button @click="deleteAccount(account)"
-                                            class="btn btn-sm btn-circle btn-outline btn-error hover:text-error-content">
-                                            <Trash2 class="w-4 h-4" />
-                                        </button>
-                                    </div>
+                            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                                <div class="relative flex-1">
+                                    <input v-model="searchQuery" type="text"
+                                        :placeholder="t('settings.search_accounts')"
+                                        class="input input-bordered input-sm w-full pl-10" />
+                                    <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 z-50" />
+                                </div>
+                                <div class="flex flex-wrap gap-2" v-if="uniqueTags.length > 0">
+                                    <button v-for="tag in uniqueTags" :key="tag" @click="selectTag(tag)"
+                                        class="btn btn-sm" :class="{
+                                            'btn-primary': selectedTag === tag,
+                                            'btn-ghost bg-base-300': selectedTag !== tag,
+                                        }">
+                                        {{ tag }}
+                                    </button>
                                 </div>
                             </div>
-                        </div>
-                    </transition-group>
 
-                    <div v-if="accounts.length === 0 && !isRefreshing" class="text-center py-10 text-base-content/60">
-                        <div class="text-5xl mb-3 opacity-30">👤</div>
-                        <h3 class="text-lg font-semibold mb-2">
-                            {{ t('settings.no_accounts_title') }}
-                        </h3>
-                        <p class="text-sm">
-                            {{ t('settings.no_accounts_description') }}
-                        </p>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden">
+                                <AccountCard v-for="account in filteredAccounts" :key="account.id" :account="account"
+                                    :formatDate="formatDate" @set-active="setActiveAccount" @edit-account="editAccount"
+                                    @delete-account="deleteAccount">
+                                    <template #user-icon>
+                                        <User class="w-4 h-4" />
+                                    </template>
+                                    <template #edit-icon>
+                                        <Edit3 class="w-4 h-4" />
+                                    </template>
+                                    <template #delete-icon>
+                                        <Trash2 class="w-4 h-4" />
+                                    </template>
+                                </AccountCard>
+                            </div>
+
+                            <div v-if="filteredAccounts.length === 0"
+                                class="text-center py-10 text-base-content/60 flex flex-col items-center">
+                                <div class="text-5xl mb-3 opacity-30">
+                                    <User v-if="accounts.length > 0" />
+                                    <div v-else>
+                                        <UserIcon class="w-4 h-4" />
+                                    </div>
+                                </div>
+                                <h3 class="text-lg font-semibold mb-2">
+                                    {{ accounts.length === 0 ? t('settings.no_accounts_title') :
+                                        t('settings.no_matching_accounts') }}
+                                </h3>
+                                <p class="text-sm">
+                                    {{ accounts.length === 0 ? t('settings.no_accounts_description') :
+                                        t('settings.try_different_search') }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </transition>
         </div>
     </div>
 </template>
-
 <style scoped>
-@reference "tailwindcss";
-@plugin "daisyui";
-
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.2s ease;
@@ -1062,14 +957,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
     transform: translateY(10px);
 }
 
-.confirm-dialog-enter-active {
-    animation: scaleIn 0.3s ease-out forwards;
-}
-
-.confirm-dialog-leave-active {
-    animation: scaleOut 0.2s ease-in forwards;
-}
-
 @keyframes scaleIn {
     0% {
         opacity: 0;
@@ -1101,67 +988,11 @@ const handleToastPositionChange = (position: ToastPosition) => {
     }
 }
 
-.account-list-enter-active,
-.account-list-leave-active {
-    transition:
-        opacity 0.3s ease,
-        transform 0.3s ease;
-}
-
-.account-list-enter-from,
-.account-list-leave-to {
-    opacity: 0;
-    transform: translateY(10px);
-}
-
-.account-list-move {
-    transition: transform 0.5s ease;
-}
-
-.account-list-enter-active {
-    position: relative;
-    z-index: 1;
-    transition: all 0.3s ease-out;
-}
-
-.account-list-enter-from {
-    opacity: 0;
-    transform: translateY(10px);
-}
-
-.account-list-leave-active {
-    position: absolute;
-    transition: all 0.3s ease-in;
-    width: 100%;
-}
-
-.account-list-leave-to {
-    opacity: 0;
-    transform: translateY(-10px);
-}
-
 html[data-theme='dark'] .discord-icon {
-    filter: invert(100%) sepia(15%) saturate(1%) hue-rotate(282deg) brightness(102%) contrast(101%);
+    filter: invert(100%);
 }
 
 html[data-theme='light'] .discord-icon {
-    filter: invert(0%) sepia(15%) saturate(17%) hue-rotate(253deg) brightness(95%) contrast(103%);
-}
-
-html[data-reduce-motion='true'] .settings-card,
-html[data-reduce-motion='true'] .animate-fadeInUp,
-html[data-reduce-motion='true'] .animate-slide-up,
-html[data-reduce-motion='true'] .animate-slide-in-right,
-html[data-reduce-motion='true'] .animate-bounce-gentle,
-html[data-reduce-motion='true'] .slide-up,
-html[data-reduce-motion='true'] .tab-switch-enter-from,
-html[data-reduce-motion='true'] .tab-switch-leave-to,
-html[data-reduce-motion='true'] .expert-fade-enter-from,
-html[data-reduce-motion='true'] .expert-fade-leave-to {
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    max-height: none !important;
+    filter: invert(0%);
 }
 </style>

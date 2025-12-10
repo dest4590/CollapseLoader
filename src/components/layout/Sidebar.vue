@@ -11,7 +11,7 @@ import {
     SlidersVertical,
     UserCog,
 } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
@@ -23,13 +23,18 @@ const { adminStatus } = useUser();
 const halloweenActive = ref(isHalloweenEvent());
 const halloweenGreeting = ref(getEventGreeting());
 
-defineProps<{
+const sidebarHelpVideo = new URL('../../assets/videos/sidebar-help.mp4', import.meta.url).href;
+const sidebarHelpKey = 'sidebar-help-shown';
+const showSidebarHelp = ref(false);
+
+const props = defineProps<{
     activeTab: string;
     isOnline: boolean;
     isAuthenticated: boolean;
+    position?: 'left' | 'right' | 'top' | 'bottom';
 }>();
 
-const emit = defineEmits(['changeTab', 'open-dev-menu']);
+const emit = defineEmits(['changeTab', 'open-dev-menu', 'update:position']);
 const visible = ref(false);
 const isAltPressed = ref(false);
 const altPressCount = ref(0);
@@ -96,6 +101,150 @@ const handleKeyDown = (event: KeyboardEvent) => {
     }
 };
 
+const isDragging = ref(false);
+const isMouseDown = ref(false);
+const dragTarget = ref<string | null>(null);
+
+const onDrag = (event: MouseEvent) => {
+    if (!isMouseDown.value) return;
+
+    if (!isDragging.value) {
+        isDragging.value = true;
+        document.body.style.cursor = 'grabbing';
+        document.body.style.userSelect = 'none';
+    }
+
+    const { clientX, clientY } = event;
+    const { innerWidth, innerHeight } = window;
+
+    const distLeft = clientX;
+    const distRight = innerWidth - clientX;
+    const distTop = clientY;
+    const distBottom = innerHeight - clientY;
+
+    const min = Math.min(distLeft, distRight, distTop, distBottom);
+    let newPos = 'left';
+
+    if (min === distLeft) newPos = 'left';
+    else if (min === distRight) newPos = 'right';
+    else if (min === distTop) newPos = 'top';
+    else if (min === distBottom) newPos = 'bottom';
+
+    dragTarget.value = newPos;
+
+    if (newPos !== props.position) {
+        emit('update:position', newPos);
+    }
+};
+
+const startDrag = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button')) return;
+
+    isMouseDown.value = true;
+    if (showSidebarHelp.value) {
+        hideSidebarHelp();
+    }
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('mousemove', onDrag);
+};
+
+const stopDrag = () => {
+    isMouseDown.value = false;
+    if (isDragging.value) {
+        isDragging.value = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        dragTarget.value = null;
+    }
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('mousemove', onDrag);
+};
+
+const isCentered = ref(false);
+
+const toggleCenter = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button')) return;
+    isCentered.value = !isCentered.value;
+    if (showSidebarHelp.value) {
+        hideSidebarHelp();
+    }
+};
+
+const currentPosition = computed(() => props.position || 'left');
+
+const sidebarClasses = computed(() => {
+    const base = 'fixed bg-base-300 flex items-center shadow-md border-base-content/10 z-50 transition-all duration-500 ease-in-out active:cursor-grabbing';
+    const pos = currentPosition.value;
+
+    if (pos === 'left') return `${base} w-20 h-screen left-0 top-0 flex-col py-6 border-r`;
+    if (pos === 'right') return `${base} w-20 h-screen right-0 top-0 flex-col py-6 border-l`;
+    if (pos === 'top') return `${base} w-screen h-20 left-0 top-0 flex-row px-6 border-b`;
+    if (pos === 'bottom') return `${base} w-screen h-20 left-0 bottom-0 flex-row px-6 border-t`;
+    return '';
+});
+
+const tooltipClass = computed(() => {
+    const pos = currentPosition.value;
+    if (pos === 'left') return 'tooltip-right';
+    if (pos === 'right') return 'tooltip-left';
+    if (pos === 'top') return 'tooltip-bottom';
+    if (pos === 'bottom') return 'tooltip-top';
+    return 'tooltip-right';
+});
+
+const containerClasses = computed(() => {
+    return ['flex', 'gap-4', ['top', 'bottom'].includes(currentPosition.value) ? 'flex-row' : 'flex-col'];
+});
+
+const footerClasses = computed(() => {
+    const isHorizontal = ['top', 'bottom'].includes(currentPosition.value);
+    return [isHorizontal ? 'flex-row' : 'flex-col', 'flex', 'gap-4'];
+});
+
+const animationClass = computed(() => {
+    if (!visible.value) {
+        if (currentPosition.value === 'left') return 'sidebar-hidden-left';
+        if (currentPosition.value === 'right') return 'sidebar-hidden-right';
+        if (currentPosition.value === 'top') return 'sidebar-hidden-top';
+        if (currentPosition.value === 'bottom') return 'sidebar-hidden-bottom';
+    }
+    return 'sidebar-entered';
+});
+
+const helpTooltipClasses = computed(() => {
+    const pos = currentPosition.value;
+    if (pos === 'left') return 'left-24 top-6';
+    if (pos === 'right') return 'right-24 top-6';
+    if (pos === 'top') return 'left-1/2 top-24 transform -translate-x-1/2';
+    if (pos === 'bottom') return 'left-1/2 bottom-24 transform -translate-x-1/2';
+    return 'left-24 top-6';
+});
+
+const sidebarRef = ref<HTMLElement | null>(null);
+const helpTooltipRef = ref<HTMLElement | null>(null);
+
+const hideSidebarHelp = () => {
+    try {
+        localStorage.setItem(sidebarHelpKey, 'true');
+    } catch {
+    }
+    showSidebarHelp.value = false;
+};
+
+const handleDocumentClick = (event: MouseEvent) => {
+    const target = event.target as Node;
+    if (helpTooltipRef.value?.contains(target)) return;
+    if (sidebarRef.value?.contains(target)) return;
+    hideSidebarHelp();
+};
+
+watch(showSidebarHelp, (val) => {
+    if (val) document.addEventListener('click', handleDocumentClick);
+    else document.removeEventListener('click', handleDocumentClick);
+});
+
 onMounted(async () => {
     window.addEventListener('keydown', handleKeyDown);
 
@@ -108,6 +257,14 @@ onMounted(async () => {
 
 
     isDev.value = await getIsDevelopment();
+
+    try {
+        const shown = localStorage.getItem(sidebarHelpKey);
+        if (!shown) {
+            showSidebarHelp.value = true;
+        }
+    } catch {
+    }
 });
 
 onUnmounted(() => {
@@ -120,14 +277,49 @@ onUnmounted(() => {
     if (altPressTimeout.value) {
         clearTimeout(altPressTimeout.value);
     }
+    document.removeEventListener('click', handleDocumentClick);
 });
 </script>
 
 <template>
-    <div
-        :class="['w-20 h-screen fixed left-0 top-0 bg-base-300 flex flex-col items-center py-6 shadow-md border-r border-base-content/10 z-50', visible ? 'sidebar-entered' : 'sidebar-hidden']">
-        <div class="flex flex-col gap-4">
-            <div class="tooltip tooltip-right" :class="halloweenActive ? 'tooltip-warning' : 'tooltip-accent'" :data-tip="t('navigation.home') + (halloweenActive ? ' — ' + halloweenGreeting : '')">
+    <div v-if="isDragging" class="fixed inset-0 z-40 pointer-events-none">
+        <div class="absolute left-0 top-0 w-20 h-full border-2 border-dashed transition-all duration-200"
+            :class="[dragTarget === 'left' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+        </div>
+        <div class="absolute right-0 top-0 w-20 h-full border-2 border-dashed transition-all duration-200"
+            :class="[dragTarget === 'right' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+        </div>
+        <div class="absolute left-0 top-0 w-full h-20 border-2 border-dashed transition-all duration-200"
+            :class="[dragTarget === 'top' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+        </div>
+        <div class="absolute left-0 bottom-0 w-full h-20 border-2 border-dashed transition-all duration-200"
+            :class="[dragTarget === 'bottom' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+        </div>
+    </div>
+
+    <div ref="sidebarRef" :class="[sidebarClasses, animationClass]" @mousedown="startDrag" @dblclick="toggleCenter">
+        <div v-if="showSidebarHelp" ref="helpTooltipRef"
+            :class="['sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]', helpTooltipClasses]">
+            <div class="flex flex-col gap-2">
+                <video class="w-full rounded-md mb-2" :src="sidebarHelpVideo" muted autoplay loop playsinline
+                    controls></video>
+                <div class="text-sm">
+                    <strong>{{ t('navigation.sidebar_help.title') }}</strong>&nbsp;{{ t('navigation.sidebar_help.tip')
+                    }}
+                </div>
+                <div class="flex justify-end mt-1 gap-2">
+                    <button class="btn btn-ghost btn-xs" @click.stop="hideSidebarHelp">{{
+                        t('navigation.sidebar_help.got_it')
+                        }}</button>
+                </div>
+            </div>
+        </div>
+        <div class="transition-all duration-500 ease-in-out basis-0" :class="isCentered ? 'grow' : 'grow-0'">
+        </div>
+
+        <div :class="containerClasses">
+            <div class="tooltip" :class="[tooltipClass, halloweenActive ? 'tooltip-warning' : 'tooltip-accent']"
+                :data-tip="t('navigation.home') + (halloweenActive ? ' — ' + halloweenGreeting : '')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'home',
@@ -140,7 +332,7 @@ onUnmounted(() => {
             </div>
 
 
-            <div v-if="isAuthenticated" class="tooltip tooltip-right tooltip-accent"
+            <div v-if="isAuthenticated" class="tooltip tooltip-accent" :class="tooltipClass"
                 :data-tip="t('navigation.friends')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
                     @click="changeTab('friends')" :class="{
@@ -160,7 +352,7 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.settings')">
+            <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="t('navigation.settings')">
                 <button class="btn btn-ghost btn-square rounded-lg sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'settings',
@@ -173,7 +365,7 @@ onUnmounted(() => {
                     }" />
                 </button>
             </div>
-            <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.customization')">
+            <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="t('navigation.customization')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'customization',
@@ -182,7 +374,8 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <div v-show="isAltPressed" class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.logs')">
+            <div v-show="isAltPressed" class="tooltip tooltip-accent" :class="tooltipClass"
+                :data-tip="t('navigation.logs')">
                 <button class="btn btn-ghost btn-square rounded-lg sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'app_logs',
@@ -192,8 +385,11 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div class="mt-auto flex flex-col gap-4">
-            <div v-if="isAuthenticated && isAdmin" class="tooltip tooltip-right tooltip-accent"
+        <div class="transition-all duration-500 ease-in-out basis-4" :class="isCentered ? 'grow-0' : 'grow'">
+        </div>
+
+        <div :class="footerClasses">
+            <div v-if="isAuthenticated && isAdmin" class="tooltip tooltip-accent" :class="tooltipClass"
                 :data-tip="t('navigation.admin')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
                     @click="changeTab('admin')" :class="{
@@ -204,7 +400,7 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <div class="tooltip tooltip-right tooltip-accent" :data-tip="isAuthenticated
+            <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="isAuthenticated
                 ? t('navigation.account')
                 : t('auth.login.title')
                 ">
@@ -221,7 +417,7 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <div class="tooltip tooltip-right tooltip-accent" :data-tip="t('navigation.about')">
+            <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="t('navigation.about')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn"
                     @click="changeTab('about')" :class="{
                         'bg-primary text-primary-content shadow-lg scale-110':
@@ -230,6 +426,9 @@ onUnmounted(() => {
                     <Info class="w-5 h-5" />
                 </button>
             </div>
+        </div>
+
+        <div class="transition-all duration-500 ease-in-out basis-0" :class="isCentered ? 'grow' : 'grow-0'">
         </div>
     </div>
 </template>
@@ -269,31 +468,56 @@ onUnmounted(() => {
 }
 
 
-.sidebar-hidden {
+.sidebar-hidden-left {
     transform: translateX(-28px);
     opacity: 0;
     pointer-events: none;
 }
 
+.sidebar-hidden-right {
+    transform: translateX(28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-hidden-top {
+    transform: translateY(-28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-hidden-bottom {
+    transform: translateY(28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
 .sidebar-entered {
-    transform: translateX(0);
+    transform: translateX(0) translateY(0);
     opacity: 1;
     transition: transform 1.6s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.5s ease;
 }
 
-.sidebar-hidden .flex>*,
-.sidebar-hidden .mt-auto>* {
+.sidebar-hidden-left .flex>*,
+.sidebar-hidden-left .mt-auto>*,
+.sidebar-hidden-right .flex>*,
+.sidebar-hidden-right .mt-auto>*,
+.sidebar-hidden-top .flex>*,
+.sidebar-hidden-top .mt-auto>*,
+.sidebar-hidden-bottom .flex>*,
+.sidebar-hidden-bottom .mt-auto>* {
     opacity: 0;
-    transform: translateY(8px) scale(0.995);
+    transform: scale(0.995);
 }
 
 .sidebar-entered .flex>*,
 .sidebar-entered .mt-auto>* {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
     transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.42s ease;
 }
 
+/* Stagger delays */
 .sidebar-entered .flex>*:nth-child(1) {
     transition-delay: 0.06s;
 }
@@ -320,5 +544,9 @@ onUnmounted(() => {
 
 .sidebar-entered .mt-auto>*:nth-child(3) {
     transition-delay: 0.30s;
+}
+
+.sidebar-help-tooltip video {
+    max-height: 180px;
 }
 </style>

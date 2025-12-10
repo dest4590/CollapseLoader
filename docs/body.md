@@ -1,98 +1,86 @@
-COLLAPSELOADER 0.2.0 (FABRIC) | BETA ERA
+CollapseLoader 0.2.3 (NullPtr)
 
-The project has moved from alpha to beta testing
+<< CHANGELOG >>
+[~] fixes for most of the interface, lag, freezes, etc.
 
-Important notice:
-There may be bugs with Fabric — please report them immediately in Discord: https://collapseloader.org/discord
+<< LINKS >>
 
-[+] added fabric support — a long-awaited feature
-[+] added profile avatars
-[+] added client filters
-[~] optimized some tabs
-[~] redesigned parts of the UI
+[VirusTotal](https://www.virustotal.com/gui/file-analysis/YWMxNjhjYmY1ZDA2YmVkNGEwODEzMWM4ZGZhYTU1M2Y6MTc2MzMxOTAzMg==/detection)
+
 
 <details>
 <summary><strong>do not read, for internal updater</strong></summary>
 
-```changelog
+```json
 {
-    "entries": [
+  "entries": [
+    {
+      "version": "v0.2.3",
+      "date": "2025-11-16",
+      "highlights": [
+        "Bug fixes & interface fixes",
+        "DPI Bypass"
+      ],
+      "changes": [
         {
-            "version": "v0.2.0",
-            "date": "2025-09-16",
-            "highlights": [
-                "Переход из альфа в бета",
-                "Добавлена поддержка Fabric"
-            ],
-            "changes": [
-                {
-                    "category": "feature",
-                    "description_key": "updater.changelogs.feature.v0_2_0.fabric_support",
-                    "icon": "✨"
-                },
-                {
-                    "category": "feature",
-                    "description_key": "updater.changelogs.feature.v0_2_0.avatars_added",
-                    "icon": "🖼️"
-                },
-                {
-                    "category": "feature",
-                    "description_key": "updater.changelogs.feature.v0_2_0.client_filters",
-                    "icon": "🔎"
-                },
-                {
-                    "category": "improvement",
-                    "description_key": "updater.changelogs.improvement.v0_2_0.optimized_tabs",
-                    "icon": "⚡"
-                },
-                {
-                    "category": "improvement",
-                    "description_key": "updater.changelogs.improvement.v0_2_0.redesigned_ui",
-                    "icon": "🎨"
-                }
-            ]
-        }
-    ],
-    "translations": {
-        "en": {
-            "updater": {
-                "changelogs": {
-                    "feature": {
-                        "v0_2_0": {
-                            "fabric_support": "Added Fabric support",
-                            "avatars_added": "Added profile avatars",
-                            "client_filters": "Added client filters"
-                        }
-                    },
-                    "improvement": {
-                        "v0_2_0": {
-                            "optimized_tabs": "Optimized some tabs",
-                            "redesigned_ui": "Redesigned parts of the UI"
-                        }
-                    }
-                }
-            }
+          "category": "improvement",
+          "description_key": "updater.changelogs.improvement.v0_2_3.bug_fixes",
+          "icon": "✨"
         },
-        "ru": {
-            "updater": {
-                "changelogs": {
-                    "feature": {
-                        "v0_2_0": {
-                            "fabric_support": "Добавлена поддержка Fabric",
-                            "avatars_added": "Добавлены аватарки для профилей",
-                            "client_filters": "Добавлены фильтры для клиентов"
-                        }
-                    },
-                    "improvement": {
-                        "v0_2_0": {
-                            "optimized_tabs": "Оптимизированы некоторые вкладки",
-                            "redesigned_ui": "Переделаны некоторые части интерфейса"
-                        }
-                    }
-                }
-            }
+        {
+          "category": "feature",
+          "description_key": "updater.changelogs.feature.v0_2_3.dpi_bypass",
+          "icon": "🛠"
         }
+      ]
     }
+  ],
+  "translations": {
+    "en": {
+      "updater": {
+        "categories": {
+          "feature": "Feature",
+          "improvement": "Improvement",
+          "bugfix": "Bugfix",
+          "other": "Other"
+        },
+        "changelogs": {
+          "feature": {
+            "v0_2_3": {
+              "dpi_bypass": "DPI Bypass, now the loader works anywhere in the world, even where it is banned, powered by Zapret"
+            }
+          },
+          "improvement": {
+            "v0_2_3": {
+              "bug_fixes": "Fixes for most of the interface, lag, freezes, etc."
+            }
+          }
+        }
+      }
+    },
+    "ru": {
+      "updater": {
+        "categories": {
+          "feature": "Фича",
+          "improvement": "Улучшение",
+          "bugfix": "Исправление ошибки",
+          "other": "Другое"
+        },
+        "changelogs": {
+          "feature": {
+            "v0_2_3": {
+              "dpi_bypass": "DPI Bypass, теперь лоадер работает с любой точки мира, даже там где он запрещён, powered by Zapret"
+            }
+          },
+          "improvement": {
+            "v0_2_3": {
+              "bug_fixes": "Исправления большей части интерфейса, лагов, фризов и т.д"
+            }
+          }
+        }
+      }
+    }
+  }
 }
 ```
 

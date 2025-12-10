@@ -66,7 +66,6 @@ class UpdaterService {
                         const merged = deepMerge(existing, translations[locale]);
                         i18n.global.setLocaleMessage(locale, merged);
                     });
-                    console.log('Merged release translations into i18n:', Object.keys(translations));
                 } catch (e) {
                     console.warn('Failed to merge release translations:', e);
                 }
@@ -147,8 +146,6 @@ class UpdaterService {
         this.checkInterval = window.setInterval(() => {
             this.checkForUpdates(false, t);
         }, this.CHECK_INTERVAL);
-
-        console.log('Started periodic update checking');
     }
 
     stopPeriodicCheck(): void {

@@ -31,11 +31,11 @@ pub fn reset_flags() -> Result<(), String> {
 
 #[tauri::command]
 pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
-    log_info!("Saving application settings");
     let mut current_settings = SETTINGS.lock().unwrap();
     let config_path = current_settings.config_path.clone();
 
     let old_discord_rpc_enabled = current_settings.discord_rpc_enabled.value;
+    #[cfg(target_os = "windows")]
     let old_dpi_bypass_enabled = current_settings.dpi_bypass.value;
 
     let discord_rpc_changed = old_discord_rpc_enabled != input_settings.discord_rpc_enabled.value;
@@ -46,13 +46,11 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     let new_dpi_bypass_value = input_settings.dpi_bypass.value;
 
-    log_debug!("Applying new settings");
     let input_settings_clone = input_settings.clone();
     let new_settings = Settings::from_input(input_settings_clone, config_path);
     *current_settings = new_settings.clone();
 
     new_settings.save_to_disk();
-    log_info!("Settings saved to disk");
 
     drop(current_settings);
 
@@ -71,7 +69,7 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
         if dpi_bypass_changed && new_dpi_bypass_value {
             log_info!("DPI bypass enabled. Preparing to download and run package");
 
-            if let Err(e) = dpi::enable_dpi_bypass_async() {
+            if let Err(e) = dpi::download_dpi_bypass() {
                 log_error!("Failed to initiate DPI bypass setup: {e}");
             }
         }
@@ -272,6 +270,23 @@ pub fn remove_favorite_client(client_id: u32) -> Result<(), String> {
             favorite_manager.remove_favorite(client_id);
             favorite_manager.save_to_disk();
             log_info!("Client ID {} removed from favorites and saved", client_id);
+            Ok(())
+        },
+    )
+}
+
+#[tauri::command]
+pub fn set_all_favorites(client_ids: Vec<u32>) -> Result<(), String> {
+    log_info!("Setting all favorites to: {:?}", client_ids);
+    FAVORITE_MANAGER.lock().map_or_else(
+        |e| {
+            log_error!("Failed to acquire lock on favorite manager: {}", e);
+            Err("Failed to acquire lock on favorite manager".to_string())
+        },
+        |mut favorite_manager| {
+            favorite_manager.favorites = client_ids;
+            favorite_manager.save_to_disk();
+            log_info!("All favorites updated and saved");
             Ok(())
         },
     )

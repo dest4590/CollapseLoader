@@ -1,12 +1,13 @@
 use std::{fs, path::PathBuf, sync::Mutex};
 
 use crate::core::clients::custom_clients::CustomClient;
-use crate::core::clients::custom_clients::Version;
 use crate::core::storage::data::DATA;
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::globals::CUSTOM_CLIENTS_FOLDER;
 use crate::log_warn;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
+use tauri::async_runtime::block_on;
 
 use super::common::JsonStorage;
 
@@ -38,7 +39,7 @@ impl CustomClientManager {
             ));
         }
 
-        let custom_clients_dir = DATA.get_local("custom_clients");
+        let custom_clients_dir = DATA.get_local(CUSTOM_CLIENTS_FOLDER);
         if !custom_clients_dir.exists() {
             fs::create_dir_all(&custom_clients_dir)
                 .map_err(|e| format!("Failed to create custom clients directory: {e}"))?;
@@ -62,7 +63,7 @@ impl CustomClientManager {
             .map(|s| s.sync_client_settings.value)
             .unwrap_or(false)
         {
-            if let Err(e) = DATA.ensure_client_synced(&custom_client.name) {
+            if let Err(e) = block_on(DATA.ensure_client_synced(&custom_client.name)) {
                 log_warn!(
                     "Failed to ensure client sync for custom client {}: {}",
                     custom_client.name,
@@ -132,7 +133,7 @@ impl CustomClientManager {
 #[derive(Debug)]
 pub struct CustomClientUpdate {
     pub name: Option<String>,
-    pub version: Option<Version>,
+    pub version: Option<String>,
     pub main_class: Option<String>,
 }
 
@@ -142,7 +143,7 @@ impl JsonStorage for CustomClientManager {
     }
 
     fn resource_name() -> &'static str {
-        "custom_clients"
+        CUSTOM_CLIENTS_FOLDER
     }
 
     fn create_default() -> Self {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDown, Funnel } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 
 interface Filters {
@@ -76,8 +76,9 @@ onBeforeUnmount(() => {
 <template>
     <div class="relative filters-container">
         <button @click.stop="toggleFiltersMenu" class="btn btn-ghost btn-sm ml-2">
+            <Funnel class="w-4 h-4 mr-1" />
             {{ t('home.filters_title') }}
-            <ChevronDown class="w-4 h-4 ml-1" />
+            <ChevronDown class="w-4 h-4 ml-1 transition-all duration-300" :class="{ 'rotate-180 ': showFiltersMenu }" />
         </button>
 
         <transition name="slide-up-filter">

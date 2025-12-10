@@ -13,7 +13,7 @@ const emit = defineEmits<{
 
 const form = reactive({
     name: '',
-    version: '1.16.5',
+    version: '',
     mainClass: 'net.minecraft.client.main.Main',
     filePath: '',
     fileName: '',
@@ -22,16 +22,15 @@ const form = reactive({
 const loading = ref(false);
 const errors = ref<Record<string, string>>({});
 
-const availableVersions = [
-    '1.16.5',
-    '1.12.2',
-];
-
 const validateForm = () => {
     errors.value = {};
 
     if (!form.name.trim()) {
         errors.value.name = 'Name is required';
+    }
+
+    if (!form.version.trim()) {
+        errors.value.version = 'Version is required';
     }
 
     if (!form.mainClass.trim()) {
@@ -59,6 +58,16 @@ const selectFile = async () => {
             form.filePath = selected;
             const pathParts = selected.split(/[/\\]/);
             form.fileName = pathParts[pathParts.length - 1];
+
+            try {
+                const mainClass = await invoke<string>('detect_main_class', { filePath: selected });
+                if (mainClass) {
+                    form.mainClass = mainClass;
+                    addToast('Main class detected successfully', 'success');
+                }
+            } catch (e) {
+                console.warn('Failed to detect main class:', e);
+            }
         }
     } catch (error) {
         console.error('File selection error:', error);
@@ -84,7 +93,7 @@ const handleSubmit = async () => {
 
         Object.assign(form, {
             name: '',
-            version: '1.16.5',
+            version: '',
             mainClass: 'net.minecraft.client.main.Main',
             filePath: '',
             fileName: '',
@@ -118,11 +127,11 @@ const handleSubmit = async () => {
                 <label class="label">
                     <span class="label-text">{{ $t('modals.add_custom_client_modal.minecraft_version') }} *</span>
                 </label>
-                <select v-model="form.version" class="select select-bordered">
-                    <option v-for="version in availableVersions" :key="version" :value="version">
-                        {{ version }}
-                    </option>
-                </select>
+                <input v-model="form.version" type="text" placeholder="e.g. 1.16.5" class="input input-bordered"
+                    :class="{ 'input-error': errors.version }" />
+                <label v-if="errors.version" class="label">
+                    <span class="label-text-alt text-error">{{ errors.version }}</span>
+                </label>
             </div>
 
             <div class="form-control">

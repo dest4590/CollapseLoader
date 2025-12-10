@@ -1,5 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { userService, type SyncData } from './userService';
+import { settingsService } from './settingsService';
+import { globalUserStatus } from '../composables/useUserStatus';
 
 export type ToastFunction = (message: string, type: string) => void;
 export type TranslateFunction = (key: string, params?: Record<string, any>) => string;
@@ -28,7 +30,7 @@ class SyncService {
         window.addEventListener('online', () => {
             this.state.isOnline = true;
             this.notifyListeners();
-            if (this.state.autoSyncEnabled) {
+            if (this.state.autoSyncEnabled && this.isAuthenticated()) {
                 this.autoSync();
             }
         });
@@ -56,14 +58,24 @@ class SyncService {
         if (this.autoSyncInterval) return;
 
         this.autoSyncInterval = setInterval(() => {
-            if (this.state.isOnline && this.state.autoSyncEnabled && !this.state.isSyncing) {
+            if (this.state.isOnline && this.state.autoSyncEnabled && !this.state.isSyncing && this.isAuthenticated()) {
                 this.autoSync();
             }
         }, 5 * 60 * 1000) as unknown as number;
     }
 
+    private isAuthenticated(): boolean {
+        try {
+            return !!globalUserStatus?.isAuthenticated?.value;
+        } catch (e) {
+            console.error('Error checking authentication status:', e);
+            return false;
+        }
+    }
+
     private async autoSync() {
         try {
+            await this.downloadFromCloud();
             await this.uploadToCloud();
         } catch (error) {
             console.warn('Auto-sync failed:', error);
@@ -72,6 +84,7 @@ class SyncService {
 
     async initializeSyncStatus() {
         if (!this.state.isOnline) return;
+        if (!this.isAuthenticated()) return;
 
         try {
             const status = await userService.getSyncStatus();
@@ -91,6 +104,11 @@ class SyncService {
             return;
         }
 
+        if (!this.isAuthenticated()) {
+            console.log('User not authenticated - skipping startup sync restore');
+            return;
+        }
+
         try {
             await this.initializeSyncStatus();
 
@@ -101,63 +119,9 @@ class SyncService {
 
             console.log('Checking for startup sync restoration...');
 
-            const cloudData = await userService.downloadFromCloud();
-            if (!cloudData) {
-                console.log('No cloud data to restore');
-                return;
-            }
+            await this.downloadFromCloud();
 
-            let restored = false;
-
-            if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data) && cloudData.favorites_data.length > 0) {
-                try {
-                    const localFavorites = await invoke<number[]>('get_favorite_clients');
-
-                    if (localFavorites.length === 0 ||
-                        cloudData.favorites_data.some(fav => !localFavorites.includes(fav))) {
-
-                        console.log('Restoring favorites from cloud sync');
-
-                        for (const clientId of localFavorites) {
-                            await invoke('remove_favorite_client', { clientId });
-                        }
-                        for (const clientId of cloudData.favorites_data) {
-                            await invoke('add_favorite_client', { clientId });
-                        }
-                        restored = true;
-                    }
-                } catch (error) {
-                    console.warn('Failed to restore favorites from cloud:', error);
-                }
-            }
-
-            if (cloudData.accounts_data && Array.isArray(cloudData.accounts_data) && cloudData.accounts_data.length > 0) {
-                try {
-                    const localAccounts = await invoke<any[]>('get_accounts');
-                    const localUsernames = new Set(localAccounts.map((acc: any) => acc.username));
-
-                    for (const cloudAccount of cloudData.accounts_data) {
-                        if (cloudAccount.username && !localUsernames.has(cloudAccount.username)) {
-                            console.log(`Restoring account ${cloudAccount.username} from cloud sync`);
-                            try {
-                                await invoke('add_account', {
-                                    username: cloudAccount.username,
-                                    tags: cloudAccount.tags || ['cloud-sync']
-                                });
-                                restored = true;
-                            } catch (error) {
-                                console.warn('Failed to restore cloud account:', cloudAccount.username, error);
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.warn('Failed to restore accounts from cloud:', error);
-                }
-            }
-
-            if (restored) {
-                console.log('Startup sync restoration completed');
-            }
+            console.log('Startup sync restoration completed');
 
         } catch (error) {
             console.warn('Failed to check/restore synced data on startup:', error);
@@ -166,15 +130,15 @@ class SyncService {
 
     async uploadToCloud(): Promise<boolean> {
         if (!this.state.isOnline || this.state.isSyncing) return false;
+        if (!this.isAuthenticated()) return false;
 
         this.state.isSyncing = true;
         this.notifyListeners();
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const [settings, favorites, accounts] = await Promise.all([
-                invoke('get_settings'),
+            await settingsService.loadSettings();
+            const settings = settingsService.getSettings();
+            const [favorites, accounts] = await Promise.all([
                 invoke<number[]>('get_favorite_clients'),
                 invoke<any[]>('get_accounts')
             ]);
@@ -207,28 +171,35 @@ class SyncService {
 
     async downloadFromCloud(): Promise<boolean> {
         if (!this.state.isOnline || this.state.isSyncing) return false;
+        if (!this.isAuthenticated()) return false;
 
         this.state.isSyncing = true;
         this.notifyListeners();
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
             const cloudData = await userService.downloadFromCloud();
 
             if (!cloudData) return false;
 
             if (cloudData.settings_data && Object.keys(cloudData.settings_data).length > 0) {
-                await invoke('save_settings', { input_settings: cloudData.settings_data });
+                await settingsService.loadSettings();
+                const currentSettings = settingsService.getSettings();
+                const mergedSettings = { ...currentSettings, ...cloudData.settings_data };
+                await settingsService.saveSettings(mergedSettings as any);
             }
 
             if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data)) {
-                const currentFavorites = await invoke<number[]>('get_favorite_clients');
-                for (const clientId of currentFavorites) {
-                    await invoke('remove_favorite_client', { clientId });
-                }
-                for (const clientId of cloudData.favorites_data) {
-                    await invoke('add_favorite_client', { clientId });
+                try {
+                    await invoke('set_all_favorites', { clientIds: cloudData.favorites_data });
+                } catch (e) {
+                    console.warn('Failed to set all favorites, falling back to loop', e);
+                    const currentFavorites = await invoke<number[]>('get_favorite_clients');
+                    for (const clientId of currentFavorites) {
+                        await invoke('remove_favorite_client', { clientId });
+                    }
+                    for (const clientId of cloudData.favorites_data) {
+                        await invoke('add_favorite_client', { clientId });
+                    }
                 }
             }
 
@@ -281,6 +252,11 @@ class SyncService {
             return;
         }
 
+        if (!this.isAuthenticated()) {
+            addToast(t('toast.sync.login_required'), 'error');
+            return;
+        }
+
         if (!this.state.isOnline) {
             addToast(t('toast.sync.offline_error'), 'error');
             return;
@@ -293,6 +269,8 @@ class SyncService {
 
         try {
             addToast(t('toast.sync.syncing'), 'info');
+
+            await this.downloadFromCloud();
             await this.uploadToCloud();
             addToast(t('toast.sync.success'), 'success');
         } catch (error) {

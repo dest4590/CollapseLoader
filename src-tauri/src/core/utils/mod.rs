@@ -1,6 +1,9 @@
+pub mod archive;
 pub mod discord_rpc;
+pub mod dpi;
 pub mod globals;
+pub mod hashing;
 pub mod helpers;
 pub mod logging;
+pub mod process;
 pub mod tags;
-pub mod dpi;

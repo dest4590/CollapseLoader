@@ -108,7 +108,7 @@
                         </div>
 
                         <div class="text-xs text-base-content/50">
-                            {{ $t('theme.presets.created', { date: formatDate(preset.created_at) }) }}
+                            {{ $t('theme.presets.created', { date: formatDate(preset.createdAt) }) }}
                         </div>
 
                         <div class="card-actions justify-end mt-auto">
@@ -220,31 +220,35 @@ const selectedPresets = ref<Set<string>>(new Set());
 const isCtrlPressed = ref(false);
 
 const pageSize = ref<number>(9);
+
 const currentPage = ref<number>(1);
+
 const totalPages = computed(() => {
     const total = Math.ceil((presets.value?.length || 0) / pageSize.value);
     return Math.max(total, 1);
 });
+
 const paginatedPresets = computed(() => {
     const start = (currentPage.value - 1) * pageSize.value;
     const end = start + pageSize.value;
     return presets.value.slice(start, end);
 });
+
 function nextPage() {
     if (currentPage.value < totalPages.value) currentPage.value += 1;
 }
+
 function prevPage() {
     if (currentPage.value > 1) currentPage.value -= 1;
 }
+
 watch(pageSize, () => {
     currentPage.value = 1;
 });
+
 watch(presets, () => {
     if (currentPage.value > totalPages.value) currentPage.value = totalPages.value;
 });
-
-
-// formatDate imported from `src/utils/utils.ts`
 
 const openCreateModal = () => {
     showModal(
