@@ -11,9 +11,10 @@ loader.config({
   },
 })
 
-initializeAuthUrl();
-
-createApp(App)
-  .use(Vue3Lottie)
-  .use(i18n)
-  .mount('#app');
+initializeAuthUrl()
+  .finally(() => {
+    createApp(App)
+      .use(Vue3Lottie)
+      .use(i18n)
+      .mount('#app');
+  });
