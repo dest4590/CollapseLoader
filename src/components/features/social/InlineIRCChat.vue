@@ -1,5 +1,6 @@
 <template>
-    <div class="irc-chat flex flex-col bg-base-200 border border-base-300 rounded-lg overflow-hidden transition-all duration-300 ease-out relative mb-6"
+    <div v-bind="attrs"
+        class="irc-chat flex flex-col bg-base-200 border border-base-300 rounded-lg overflow-hidden transition-all duration-300 ease-out relative mb-6"
         :class="isExpanded ? 'shadow-lg max-h-[380px]' : 'shadow-sm max-h-[68px] hover:shadow-md'">
         <button type="button" class="flex items-center justify-between w-full px-4 py-3 bg-base-300/40 cursor-pointer"
             @click="toggleExpanded">
@@ -80,12 +81,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch, onUnmounted } from 'vue';
+import { computed, nextTick, onMounted, ref, watch, onUnmounted, useAttrs } from 'vue';
+defineOptions({ inheritAttrs: false });
 import { CheckCircle2, ChevronDown, Loader2, MessageSquare, RefreshCw, WifiOff, AtSign, Copy } from 'lucide-vue-next';
 import { useToast } from '../../../services/toastService';
 import { useIrcChat } from '../../../composables/useIrcChat';
 import { useI18n } from 'vue-i18n';
 
+const attrs = useAttrs();
 const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection } = useIrcChat();
 const { t } = useI18n();
 const inputMessage = ref('');

@@ -156,7 +156,7 @@ export const ensureIrcConnection = async (isReconnect = false): Promise<void> =>
         status.value = isReconnect ? 'reconnecting' : 'connecting';
         const token = localStorage.getItem('authToken') || '';
         const tokenPresent = token.length > 0;
-        console.debug('IRC: attempting connect, token present=', tokenPresent);
+        console.debug('IRC: attempting connect, token present =', tokenPresent);
 
         clearReconnectTimer();
         await invoke('connect_irc', { token: tokenPresent ? token : null });

@@ -82,8 +82,9 @@ pub fn initialize_rpc() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_server_connectivity_status() -> ServerConnectivityStatus {
+pub async fn get_server_connectivity_status() -> ServerConnectivityStatus {
     let servers = &SERVERS;
+    servers.wait_for_initial_check().await;
     servers.connectivity_status.lock().unwrap().clone()
 }
 
