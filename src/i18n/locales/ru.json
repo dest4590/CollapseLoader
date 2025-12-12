@@ -618,7 +618,7 @@
   "irc": {
     "inline": {
       "title": "Глобальный чат",
-      "latest_activity_connected": "Подключено и слушаем",
+      "latest_activity_connected": "Подключено к IRC серверу.",
       "tap_to_connect": "Нажмите, чтобы подключиться к IRC",
       "placeholder": "Введите сообщение...",
       "send_failed": "Не удалось отправить сообщение",

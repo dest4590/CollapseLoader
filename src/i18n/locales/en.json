@@ -618,7 +618,7 @@
   "irc": {
     "inline": {
       "title": "Global Chat",
-      "latest_activity_connected": "Connected and listening",
+      "latest_activity_connected": "Connected to IRC chat",
       "tap_to_connect": "Tap to connect to IRC",
       "placeholder": "Type a message...",
       "send_failed": "Failed to send message",
