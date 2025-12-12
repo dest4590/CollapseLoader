@@ -39,11 +39,12 @@
                 </div>
 
                 <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-2" ref="messagesContainer">
-                    <div v-for="(msg, index) in messages" :key="index"
+                    <div v-for="(msg, index) in visibleMessages" :key="index"
                         class="text-sm wrap-break-word whitespace-pre-wrap">
                         <span class="opacity-70 mr-2">[{{ msg.time }}]</span>
-                        <span v-for="(part, pIndex) in parseMessage(msg.content)" :key="pIndex"
-                            :style="{ color: part.color }" :class="{ 'cursor-pointer underline': part.isName }"
+                        <span v-for="(part, pIndex) in parseMessage(msg.content, msg.type)" :key="pIndex"
+                            :style="{ color: part.color }"
+                            :class="[{ 'cursor-pointer underline': part.isName, 'font-bold': part.bold }]"
                             @contextmenu.prevent="part.isName && openContextMenu($event, part.text, extractDisplayName(msg.content))">{{
                                 part.text }}</span>
                     </div>
@@ -108,10 +109,11 @@ const parseMessage = (msg: string, type?: string) => {
         'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
     };
 
-    const parts: { text: string; color?: string; isName?: boolean }[] = [];
+    const parts: { text: string; color?: string; isName?: boolean; bold?: boolean }[] = [];
     let currentColor: string | undefined = undefined;
+    let currentBold = false;
 
-    const regex = /§([0-9a-f|r])/g;
+    const regex = /§([0-9a-frklmnor])/gi;
     let lastIndex = 0;
     let match;
 
@@ -119,21 +121,28 @@ const parseMessage = (msg: string, type?: string) => {
     const headerEnd = colonIndex === -1 ? -1 : colonIndex;
     const headerRaw = colonIndex === -1 ? '' : msg.substring(0, colonIndex);
     const headerStripped = stripColorCodes(headerRaw).trim();
+    const headerStrippedLower = headerStripped.toLowerCase();
+    const headerFirstToken = headerStripped.split(/\s+/)[0] || '';
+    const headerLooksLikeNick = (headerStripped.includes('(') || headerStripped.includes('[') || /^[A-Za-z0-9_\-]+$/.test(headerFirstToken))
+        && !headerStrippedLower.startsWith('@') && !headerStrippedLower.includes('profile') && !/\b(id|ip|name):?/i.test(headerStripped);
     let namePartMarked = false;
 
     while ((match = regex.exec(msg)) !== null) {
         const text = msg.substring(lastIndex, match.index);
         if (text) {
             const isInHeader = headerEnd !== -1 && match.index <= headerEnd && lastIndex < headerEnd;
-            const isName = isInHeader && !namePartMarked && text.trim().length > 0 && type !== 'system' && headerStripped.toLowerCase() !== 'system';
+            const isName = isInHeader && !namePartMarked && text.trim().length > 0 && type !== 'system' && headerStrippedLower !== 'system' && headerLooksLikeNick;
             if (isName) namePartMarked = true;
-            parts.push({ text, color: currentColor, isName: !!isName });
+            parts.push({ text, color: currentColor, isName: !!isName, bold: currentBold });
         }
 
-        const code = match[1];
+        const code = match[1].toLowerCase();
         if (code === 'r') {
             currentColor = undefined;
-        } else {
+            currentBold = false;
+        } else if (code === 'l') {
+            currentBold = true;
+        } else if (colorMap[code]) {
             currentColor = colorMap[code];
         }
 
@@ -143,8 +152,8 @@ const parseMessage = (msg: string, type?: string) => {
     const remaining = msg.substring(lastIndex);
     if (remaining) {
         const isInHeader = headerEnd !== -1 && lastIndex < headerEnd;
-        const isName = isInHeader && !namePartMarked && remaining.trim().length > 0 && type !== 'system' && headerStripped.toLowerCase() !== 'system';
-        parts.push({ text: remaining, color: currentColor, isName: !!isName });
+        const isName = isInHeader && !namePartMarked && remaining.trim().length > 0 && type !== 'system' && headerStrippedLower !== 'system' && headerLooksLikeNick;
+        parts.push({ text: remaining, color: currentColor, isName: !!isName, bold: currentBold });
     }
 
     return parts;
@@ -158,8 +167,10 @@ const extractDisplayName = (content: string) => {
     return stripColorCodes(header).trim();
 };
 
+const visibleMessages = computed(() => messages.value.filter(m => m && m.type !== 'ping'));
+
 const latestActivity = computed(() => {
-    const last = messages.value[messages.value.length - 1];
+    const last = visibleMessages.value[visibleMessages.value.length - 1];
     if (!last) {
         return connected.value ? t('irc.inline.latest_activity_connected') : t('irc.inline.tap_to_connect');
     }
@@ -268,7 +279,7 @@ onUnmounted(() => {
     if (keydownHandlerRef) window.removeEventListener('keydown', keydownHandlerRef as EventListener);
 });
 
-watch(() => messages.value.length, () => {
+watch(() => visibleMessages.value.length, () => {
     scrollToBottom();
 });
 </script>
