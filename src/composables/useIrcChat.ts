@@ -3,11 +3,23 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useToast } from '../services/toastService';
 
+interface SenderInfo {
+    username: string;
+    role: string;
+}
+
+interface RoomState {
+    online_users: number;
+    online_guests: number;
+}
+
 interface IrcMessage {
     time: string;
     content: string;
     type?: string;
     isHistory?: boolean;
+    sender?: SenderInfo;
+    roomState?: RoomState;
 }
 
 interface IncomingIrcPayload {
@@ -15,6 +27,8 @@ interface IncomingIrcPayload {
     time?: string;
     content?: string;
     history?: boolean;
+    sender?: SenderInfo;
+    room_state?: RoomState;
 }
 
 type IrcStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
@@ -25,6 +39,8 @@ const messages = ref<IrcMessage[]>([]);
 const connected = ref(false);
 const isConnecting = ref(false);
 const status = ref<IrcStatus>('disconnected');
+const onlineUsers = ref(0);
+const onlineGuests = ref(0);
 
 let connectionPromise: Promise<void> | null = null;
 let listenersRegistered = false;
@@ -61,6 +77,8 @@ const parseIrcPayload = (payload: unknown): IrcMessage | null => {
                 content: parsed.content || '',
                 type: parsed.type,
                 isHistory: Boolean(parsed.history),
+                sender: parsed.sender,
+                roomState: parsed.room_state,
             };
         } catch {
             return { time: fallbackTime, content: payload, type: 'system' };
@@ -88,7 +106,12 @@ const registerListeners = async (): Promise<void> => {
         await listen<string>('irc-message', (event) => {
             const msg = parseIrcPayload(event.payload);
             if (msg) {
-                messages.value.push(msg);
+                if (msg.type === 'room_state' && msg.roomState) {
+                    onlineUsers.value = msg.roomState.online_users;
+                    onlineGuests.value = msg.roomState.online_guests;
+                } else {
+                    messages.value.push(msg);
+                }
             }
         });
 
@@ -192,6 +215,8 @@ export function useIrcChat() {
         connected,
         isConnecting,
         status,
+        onlineUsers,
+        onlineGuests,
         ensureIrcConnection,
         forceReconnect,
         sendIrcMessage

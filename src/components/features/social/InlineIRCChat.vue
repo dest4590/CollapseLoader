@@ -27,7 +27,7 @@
         <div class="overflow-hidden transition-all duration-300 ease-out"
             :class="isExpanded ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'">
             <div class="flex flex-col h-[280px] bg-base-100/40">
-                <div class="flex justify-between ">
+                <div class="flex justify-between items-center">
                     <transition name="irc-status">
                         <div v-if="isExpanded"
                             class="p-4 flex items-center gap-2 text-xs font-semibold pointer-events-none select-none"
@@ -36,17 +36,45 @@
                             <span>{{ statusMeta.label }}</span>
                         </div>
                     </transition>
+
+                    <transition name="irc-status">
+                        <div v-if="isExpanded && connected"
+                            class="p-4 flex items-center gap-3 text-xs text-base-content/70 select-none">
+                            <div class="flex items-center gap-1" title="Online Users">
+                                <span class="w-2 h-2 rounded-full bg-success mr-1"></span>
+                                <span>{{ onlineUsers }}</span>
+                            </div>
+                            <div class="flex items-center gap-1" title="Online Guests">
+                                <span class="w-2 h-2 rounded-full bg-blue-500/30 mr-1"></span>
+                                <span>{{ onlineGuests }}</span>
+                            </div>
+                        </div>
+                    </transition>
                 </div>
 
                 <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-2" ref="messagesContainer">
                     <div v-for="(msg, index) in visibleMessages" :key="index"
                         class="text-sm wrap-break-word whitespace-pre-wrap">
                         <span class="opacity-70 mr-2">[{{ msg.time }}]</span>
-                        <span v-for="(part, pIndex) in parseMessage(msg.content, msg.type)" :key="pIndex"
-                            :style="{ color: part.color }"
-                            :class="[{ 'cursor-pointer underline': part.isName, 'font-bold': part.bold }]"
-                            @contextmenu.prevent="part.isName && openContextMenu($event, part.text, extractDisplayName(msg.content))">{{
-                                part.text }}</span>
+
+                        <template v-if="msg.sender">
+                            <span class="cursor-pointer hover:underline"
+                                :style="{ color: getRoleColor(msg.sender.role) }"
+                                @contextmenu.prevent="openContextMenu($event, msg.sender.username, msg.sender.username)">
+                                {{ msg.sender.username }}
+                            </span>
+                            <span v-for="(part, pIndex) in parseMessage(msg.content)" :key="pIndex"
+                                :style="{ color: part.color }" :class="{ 'font-bold': part.bold }">
+                                {{ part.text }}
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span v-for="(part, pIndex) in parseMessage(msg.content, msg.type)" :key="pIndex"
+                                :style="{ color: part.color }"
+                                :class="[{ 'cursor-pointer underline': part.isName, 'font-bold': part.bold }]"
+                                @contextmenu.prevent="part.isName && openContextMenu($event, part.text, extractDisplayName(msg.content))">{{
+                                    part.text }}</span>
+                        </template>
                     </div>
                 </div>
 
@@ -90,7 +118,7 @@ import { useIrcChat } from '../../../composables/useIrcChat';
 import { useI18n } from 'vue-i18n';
 
 const attrs = useAttrs();
-const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection } = useIrcChat();
+const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection, onlineUsers, onlineGuests } = useIrcChat();
 const { t } = useI18n();
 const inputMessage = ref('');
 const ircInput = ref<HTMLInputElement | null>(null);
@@ -101,6 +129,15 @@ const isExpanded = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 const { addToast } = useToast();
 
+const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+        case 'admin': return '#AA0000';
+        case 'developer': return '#AA00AA';
+        case 'moderator': return '#00AA00';
+        default: return undefined;
+    }
+};
+
 const parseMessage = (msg: string, type?: string) => {
     const colorMap: Record<string, string> = {
         '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
@@ -108,6 +145,21 @@ const parseMessage = (msg: string, type?: string) => {
         '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
         'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
     };
+
+    let contentToParse = msg;
+
+    if (type !== 'system') {
+        const nameStripRegex = /^.*?(?= §7\(| \[§)/;
+
+        if (nameStripRegex.test(msg)) {
+            contentToParse = msg.replace(nameStripRegex, '');
+        } else {
+            const colonIndex = msg.indexOf(': ');
+            if (colonIndex !== -1 && colonIndex < 50 && !msg.toLowerCase().startsWith('system')) {
+                contentToParse = msg.substring(colonIndex + 2);
+            }
+        }
+    }
 
     const parts: { text: string; color?: string; isName?: boolean; bold?: boolean }[] = [];
     let currentColor: string | undefined = undefined;
@@ -117,23 +169,10 @@ const parseMessage = (msg: string, type?: string) => {
     let lastIndex = 0;
     let match;
 
-    const colonIndex = msg.indexOf(':');
-    const headerEnd = colonIndex === -1 ? -1 : colonIndex;
-    const headerRaw = colonIndex === -1 ? '' : msg.substring(0, colonIndex);
-    const headerStripped = stripColorCodes(headerRaw).trim();
-    const headerStrippedLower = headerStripped.toLowerCase();
-    const headerFirstToken = headerStripped.split(/\s+/)[0] || '';
-    const headerLooksLikeNick = (headerStripped.includes('(') || headerStripped.includes('[') || /^[A-Za-z0-9_\-]+$/.test(headerFirstToken))
-        && !headerStrippedLower.startsWith('@') && !headerStrippedLower.includes('profile') && !/\b(id|ip|name):?/i.test(headerStripped);
-    let namePartMarked = false;
-
-    while ((match = regex.exec(msg)) !== null) {
-        const text = msg.substring(lastIndex, match.index);
+    while ((match = regex.exec(contentToParse)) !== null) {
+        const text = contentToParse.substring(lastIndex, match.index);
         if (text) {
-            const isInHeader = headerEnd !== -1 && match.index <= headerEnd && lastIndex < headerEnd;
-            const isName = isInHeader && !namePartMarked && text.trim().length > 0 && type !== 'system' && headerStrippedLower !== 'system' && headerLooksLikeNick;
-            if (isName) namePartMarked = true;
-            parts.push({ text, color: currentColor, isName: !!isName, bold: currentBold });
+            parts.push({ text, color: currentColor, isName: false, bold: currentBold });
         }
 
         const code = match[1].toLowerCase();
@@ -149,11 +188,9 @@ const parseMessage = (msg: string, type?: string) => {
         lastIndex = regex.lastIndex;
     }
 
-    const remaining = msg.substring(lastIndex);
+    const remaining = contentToParse.substring(lastIndex);
     if (remaining) {
-        const isInHeader = headerEnd !== -1 && lastIndex < headerEnd;
-        const isName = isInHeader && !namePartMarked && remaining.trim().length > 0 && type !== 'system' && headerStrippedLower !== 'system' && headerLooksLikeNick;
-        parts.push({ text: remaining, color: currentColor, isName: !!isName, bold: currentBold });
+        parts.push({ text: remaining, color: currentColor, isName: false, bold: currentBold });
     }
 
     return parts;
