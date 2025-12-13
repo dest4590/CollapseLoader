@@ -52,7 +52,7 @@
         </div>
     </div>
 
-    <InlineIRCChat class="mb-6" />
+    <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)" />
 
     <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0" class="mb-6">
         <div class="requests-grid grid gap-4 sm:grid-cols-2 items-stretch">

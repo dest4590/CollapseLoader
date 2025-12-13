@@ -60,6 +60,7 @@
                         <template v-if="msg.sender">
                             <span class="cursor-pointer hover:underline"
                                 :style="{ color: getRoleColor(msg.sender.role) }"
+                                @click="handleUsernameClick(msg.sender)"
                                 @contextmenu.prevent="openContextMenu($event, msg.sender.username, msg.sender.username)">
                                 {{ msg.sender.username }}
                             </span>
@@ -116,6 +117,9 @@ import { CheckCircle2, ChevronDown, Loader2, MessageSquare, RefreshCw, WifiOff, 
 import { useToast } from '../../../services/toastService';
 import { useIrcChat } from '../../../composables/useIrcChat';
 import { useI18n } from 'vue-i18n';
+import { userService } from '../../../services/userService';
+
+const emit = defineEmits<{ 'show-user-profile': [userId: number]; }>();
 
 const attrs = useAttrs();
 const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection, onlineUsers, onlineGuests } = useIrcChat();
@@ -128,6 +132,7 @@ let keydownHandlerRef: ((e: KeyboardEvent) => void) | null = null;
 const isExpanded = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 const { addToast } = useToast();
+const profileIdCache = new Map<string, number>();
 
 const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
@@ -148,7 +153,7 @@ const parseMessage = (msg: string, type?: string) => {
 
     let contentToParse = msg;
 
-    if (type !== 'system') {
+    if (type !== 'system' && type !== 'private') {
         const nameStripRegex = /^.*?(?= §7\(| \[§)/;
 
         if (nameStripRegex.test(msg)) {
@@ -202,6 +207,51 @@ const extractDisplayName = (content: string) => {
     const idx = content.indexOf(':');
     const header = idx === -1 ? content : content.substring(0, idx);
     return stripColorCodes(header).trim();
+};
+
+const resolveUserId = async (username: string, senderUserId?: string) => {
+    const normalized = username.trim().toLowerCase();
+    if (!normalized) throw new Error('invalid');
+
+    if (senderUserId && !senderUserId.startsWith('guest-')) {
+        const numericId = Number.parseInt(senderUserId, 10);
+        if (!Number.isNaN(numericId)) {
+            profileIdCache.set(normalized, numericId);
+            return numericId;
+        }
+    }
+
+    const cached = profileIdCache.get(normalized);
+    if (cached) return cached;
+
+    const results = await userService.searchUsers(username);
+    const match = results.find((user) => user.username.toLowerCase() === normalized);
+    if (match) {
+        profileIdCache.set(normalized, match.id);
+        return match.id;
+    }
+
+    throw new Error('not_found');
+};
+
+const handleUsernameClick = async (sender?: { username?: string; userId?: string }) => {
+    const username = sender?.username?.trim();
+    if (!username) return;
+
+    try {
+        const userId = await resolveUserId(username, sender?.userId);
+        emit('show-user-profile', userId);
+    } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 401) {
+            addToast(t('userProfile.login_required'), 'error');
+        } else if (err?.message === 'not_found') {
+            addToast(t('userProfile.user_not_found'), 'error');
+        } else {
+            addToast(t('userProfile.profile_load_failed'), 'error');
+        }
+        console.error('Failed to open user profile from IRC chat', err);
+    }
 };
 
 const visibleMessages = computed(() => messages.value.filter(m => m && m.type !== 'ping'));

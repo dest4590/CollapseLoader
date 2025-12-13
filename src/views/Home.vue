@@ -1605,7 +1605,7 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <InlineIRCChat class="mb-6" />
+    <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)" />
 
     <div v-if="filteredClients.length === 0 && !error && clientsLoaded"
         class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">

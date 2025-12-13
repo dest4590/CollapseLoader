@@ -6,6 +6,7 @@ import { useToast } from '../services/toastService';
 interface SenderInfo {
     username: string;
     role: string;
+    userId?: string;
 }
 
 interface RoomState {
@@ -27,7 +28,7 @@ interface IncomingIrcPayload {
     time?: string;
     content?: string;
     history?: boolean;
-    sender?: SenderInfo;
+    sender?: SenderInfo & { user_id?: string };
     room_state?: RoomState;
 }
 
@@ -66,6 +67,17 @@ const formatIsoToTime = (isoString?: string): string => {
 const parseIrcPayload = (payload: unknown): IrcMessage | null => {
     const fallbackTime = currentTime();
 
+    const normalizeSender = (raw?: IncomingIrcPayload['sender']): SenderInfo | undefined => {
+        if (!raw) return undefined;
+
+        const userId = raw.userId ?? raw.user_id;
+        return {
+            username: raw.username,
+            role: raw.role,
+            userId: userId || undefined,
+        };
+    };
+
     if (typeof payload === 'string') {
         try {
             const parsed = JSON.parse(payload) as IncomingIrcPayload;
@@ -77,7 +89,7 @@ const parseIrcPayload = (payload: unknown): IrcMessage | null => {
                 content: parsed.content || '',
                 type: parsed.type,
                 isHistory: Boolean(parsed.history),
-                sender: parsed.sender,
+                sender: normalizeSender(parsed.sender),
                 roomState: parsed.room_state,
             };
         } catch {
