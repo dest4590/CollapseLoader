@@ -5,6 +5,17 @@ export interface EventInfo {
     theme?: string;
 }
 
+export function isWinterEvent(): boolean {
+    const now = new Date();
+    const month = now.getMonth();
+    const day = now.getDate();
+
+    if (month === 11 && day >= 10) return true;
+    if (month === 0 && day <= 5) return true;
+
+    return false;
+}
+
 
 export function isHalloweenEvent(): boolean {
     const now = new Date();
@@ -32,28 +43,32 @@ export function getCurrentEvent(): EventInfo | null {
         };
     }
 
-    return null;
-}
-
-export function getEventGreeting(): string | null {
-    const event = getCurrentEvent();
-
-    if (event?.name === 'halloween') {
-        const greetings = [
-            'Happy Halloween!',
-            'Spooky Season!',
-            'Trick or Treat!',
-            'Boo! 👻',
-        ];
-        return greetings[Math.floor(Math.random() * greetings.length)];
+    if (isWinterEvent()) {
+        return {
+            isActive: true,
+            name: 'winter',
+            emoji: '❄️',
+            theme: 'winter',
+        };
     }
 
     return null;
 }
 
-
 export async function applyCursorForEvent(): Promise<void> {
     const event = getCurrentEvent();
+
+    try {
+        if (typeof document !== 'undefined') {
+            const root = document.documentElement;
+            root.classList.remove('winter-event');
+            root.classList.remove('halloween-cursor');
+
+            const existing = document.getElementById('halloween-cursor-style');
+            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+        }
+    } catch {
+    }
 
     if (event?.name === 'halloween') {
         try {
@@ -94,6 +109,16 @@ export async function applyCursorForEvent(): Promise<void> {
             }
         } catch (e) {
             console.error('Failed to apply halloween cursor:', e);
+        }
+    }
+
+    if (event?.name === 'winter') {
+        try {
+            if (typeof document !== 'undefined') {
+                document.documentElement.classList.add('winter-event');
+            }
+        } catch (e) {
+            console.error('Failed to apply winter UI:', e);
         }
     }
 }

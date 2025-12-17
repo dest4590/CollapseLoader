@@ -110,3 +110,23 @@ html {
 .label-text {
     display: block;
 }
+
+:root.winter-event[data-theme='dark'] {
+    --color-primary: oklch(86% 0.06 240);
+    --color-primary-content: oklch(0% 0 0);
+    --color-accent: oklch(78% 0.05 210);
+    --color-accent-content: oklch(0% 0 0);
+    --color-info: oklch(72% 0.12 230);
+}
+
+:root.winter-event[data-theme='light'] {
+    --color-primary: oklch(28% 0.06 245);
+    --color-primary-content: oklch(98% 0 0);
+    --color-accent: oklch(32% 0.05 220);
+    --color-accent-content: oklch(98% 0 0);
+    --color-info: oklch(45% 0.11 240);
+}
+
+:root.winter-event .card {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}

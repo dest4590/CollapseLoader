@@ -1,6 +1,6 @@
 [package]
 name = "collapseloader"
-version = "0.2.4"
+version = "0.2.5"
 description = "CollapseLoader"
 authors = ["dest4590"]
 edition = "2021"

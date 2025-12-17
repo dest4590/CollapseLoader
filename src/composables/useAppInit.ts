@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { bootLogService } from '../services/bootLogService';
 import { applyThemeOnStartup, applyLanguageOnStartup } from '../utils/settings';
-import { applyCursorForEvent, isHalloweenEvent, getEventGreeting } from '../utils/events';
+import { applyCursorForEvent, isHalloweenEvent } from '../utils/events';
 import { useToast } from '../services/toastService';
 import { globalUserStatus } from './useUserStatus';
 import { useUser } from './useUser';
@@ -43,7 +43,6 @@ export function useAppInit() {
     const showFirstRunInfo = ref(false);
     const showInitialDisclaimer = ref(false);
     const halloweenActive = ref(isHalloweenEvent());
-    const halloweenGreeting = ref(getEventGreeting());
     const currentTheme = ref('dark');
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
@@ -277,12 +276,6 @@ export function useAppInit() {
                     } catch (e) {
                         console.error('Failed to clear boot logs:', e);
                     }
-
-                    if (halloweenActive.value && halloweenGreeting.value) {
-                        setTimeout(() => {
-                            addToast(halloweenGreeting.value + ' 🎃', 'info', 5000);
-                        }, 4000);
-                    }
                 }, 80);
             }, 800);
         } else {
@@ -301,7 +294,6 @@ export function useAppInit() {
         showFirstRunInfo,
         showInitialDisclaimer,
         halloweenActive,
-        halloweenGreeting,
         currentTheme,
         initApp,
         initializeUserDataWrapper

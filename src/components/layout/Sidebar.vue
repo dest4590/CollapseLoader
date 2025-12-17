@@ -16,12 +16,11 @@ import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
 import { useUser } from '../../composables/useUser';
 import { getIsDevelopment } from '../../utils/isDevelopment';
-import { isHalloweenEvent, getEventGreeting } from '../../utils/events';
+import { isHalloweenEvent } from '../../utils/events';
 
 const { t } = useI18n();
 const { adminStatus } = useUser();
 const halloweenActive = ref(isHalloweenEvent());
-const halloweenGreeting = ref(getEventGreeting());
 
 const sidebarHelpVideo = new URL('../../assets/videos/sidebar-help.mp4', import.meta.url).href;
 const sidebarHelpKey = 'sidebar-help-shown';
@@ -319,7 +318,7 @@ onUnmounted(() => {
 
         <div :class="containerClasses">
             <div class="tooltip" :class="[tooltipClass, halloweenActive ? 'tooltip-warning' : 'tooltip-accent']"
-                :data-tip="t('navigation.home') + (halloweenActive ? ' — ' + halloweenGreeting : '')">
+                :data-tip="t('navigation.home')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'home',
