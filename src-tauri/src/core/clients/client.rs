@@ -1,4 +1,3 @@
-use std::io::Write;
 use std::{
     collections::HashMap,
     io::{BufRead, BufReader},
@@ -835,8 +834,6 @@ impl Client {
 
             command.arg("-Xverify:none");
 
-            let session_token = uuid::Uuid::new_v4().to_string();
-
             if !IS_LINUX {
                 command.arg(format!(
                     "-javaagent:{}={}",
@@ -901,23 +898,11 @@ impl Client {
                 }
             }
 
-            if let Some(start) = secure_command.find("-Dcollapse.session=") {
-                let end = secure_command[start..]
-                    .find('"')
-                    .map(|i| start + i)
-                    .unwrap_or_else(|| secure_command.len());
-                secure_command.replace_range(start..end, "-Dcollapse.session=[HIDDEN]");
-            }
-
             add_log_line(client_id, secure_command);
 
             let mut child = command
                 .spawn()
                 .map_err(|e| format!("Failed to start client: {e}"))?;
-
-            if let Some(mut stdin) = child.stdin.take() {
-                let _ = writeln!(stdin, "COLLAPSE_SESSION:{}", session_token);
-            }
 
             emit_to_main_window(
                 &app_handle_clone_for_crash_handling,
