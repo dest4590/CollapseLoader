@@ -45,6 +45,10 @@ pub static AGENT_OVERLAY_FOLDER: &str = "agent_overlay";
 pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
 pub static MODS_FOLDER: &str = "mods";
 
+// Agent & Overlay
+pub static AGENT_FILE: &str = "CollapseAgent.jar";
+pub static OVERLAY_FILE: &str = "CollapseOverlay.dll";
+
 // IRC Chat Host
 pub static IRC_HOST: &str = "irc.collapseloader.org:1338";
 //pub static IRC_HOST: &str = "127.0.0.1:1338";

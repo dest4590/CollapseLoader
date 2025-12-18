@@ -10,7 +10,6 @@ use std::{
 use std::os::windows::process::CommandExt;
 
 use super::manager::ClientManager;
-use crate::core::clients::internal::agent_overlay::AgentArguments;
 use crate::core::clients::log_checker::LogChecker;
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
@@ -22,6 +21,7 @@ use crate::core::utils::globals::{
 use crate::core::utils::hashing::calculate_md5_hash;
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::core::utils::process;
+use crate::core::{clients::internal::agent_overlay::AgentArguments, utils::globals::AGENT_FILE};
 use crate::core::{network::analytics::Analytics, storage::data::Data};
 use crate::{core::storage::accounts::ACCOUNT_MANAGER, log_warn};
 use crate::{
@@ -837,7 +837,7 @@ impl Client {
             if !IS_LINUX {
                 command.arg(format!(
                     "-javaagent:{}={}",
-                    agent_overlay_folder.join("CollapseAgent.jar").display(),
+                    agent_overlay_folder.join(AGENT_FILE).display(),
                     agent_arguments.encode()
                 ));
             }
