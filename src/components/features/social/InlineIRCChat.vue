@@ -1,5 +1,6 @@
 <template>
-    <div class="irc-chat flex flex-col bg-base-200 border border-base-300 rounded-lg overflow-hidden transition-all duration-300 ease-out relative mb-6"
+    <div v-bind="attrs"
+        class="irc-chat flex flex-col bg-base-200 border border-base-300 rounded-lg overflow-hidden transition-all duration-300 ease-out relative mb-6"
         :class="isExpanded ? 'shadow-lg max-h-[380px]' : 'shadow-sm max-h-[68px] hover:shadow-md'">
         <button type="button" class="flex items-center justify-between w-full px-4 py-3 bg-base-300/40 cursor-pointer"
             @click="toggleExpanded">
@@ -26,7 +27,7 @@
         <div class="overflow-hidden transition-all duration-300 ease-out"
             :class="isExpanded ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'">
             <div class="flex flex-col h-[280px] bg-base-100/40">
-                <div class="flex justify-between ">
+                <div class="flex justify-between items-center">
                     <transition name="irc-status">
                         <div v-if="isExpanded"
                             class="p-4 flex items-center gap-2 text-xs font-semibold pointer-events-none select-none"
@@ -35,16 +36,46 @@
                             <span>{{ statusMeta.label }}</span>
                         </div>
                     </transition>
+
+                    <transition name="irc-status">
+                        <div v-if="isExpanded && connected"
+                            class="p-4 flex items-center gap-3 text-xs text-base-content/70 select-none">
+                            <div class="flex items-center gap-1" title="Online Users">
+                                <span class="w-2 h-2 rounded-full bg-success mr-1"></span>
+                                <span>{{ onlineUsers }}</span>
+                            </div>
+                            <div class="flex items-center gap-1" title="Online Guests">
+                                <span class="w-2 h-2 rounded-full bg-blue-500/30 mr-1"></span>
+                                <span>{{ onlineGuests }}</span>
+                            </div>
+                        </div>
+                    </transition>
                 </div>
 
                 <div class="flex-1 overflow-y-auto px-4 pb-4 space-y-2" ref="messagesContainer">
-                    <div v-for="(msg, index) in messages" :key="index"
+                    <div v-for="(msg, index) in visibleMessages" :key="index"
                         class="text-sm wrap-break-word whitespace-pre-wrap">
                         <span class="opacity-70 mr-2">[{{ msg.time }}]</span>
-                        <span v-for="(part, pIndex) in parseMessage(msg.content)" :key="pIndex"
-                            :style="{ color: part.color }" :class="{ 'cursor-pointer underline': part.isName }"
-                            @contextmenu.prevent="part.isName && openContextMenu($event, part.text, extractDisplayName(msg.content))">{{
-                                part.text }}</span>
+
+                        <template v-if="msg.sender">
+                            <span class="cursor-pointer hover:underline"
+                                :style="{ color: getRoleColor(msg.sender.role) }"
+                                @click="handleUsernameClick(msg.sender)"
+                                @contextmenu.prevent="openContextMenu($event, msg.sender.username, msg.sender.username)">
+                                {{ msg.sender.username }}
+                            </span>
+                            <span v-for="(part, pIndex) in parseMessage(msg.content)" :key="pIndex"
+                                :style="{ color: part.color }" :class="{ 'font-bold': part.bold }">
+                                {{ part.text }}
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span v-for="(part, pIndex) in parseMessage(msg.content, msg.type)" :key="pIndex"
+                                :style="{ color: part.color }"
+                                :class="[{ 'cursor-pointer underline': part.isName, 'font-bold': part.bold }]"
+                                @contextmenu.prevent="part.isName && openContextMenu($event, part.text, extractDisplayName(msg.content))">{{
+                                    part.text }}</span>
+                        </template>
                     </div>
                 </div>
 
@@ -80,13 +111,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch, onUnmounted } from 'vue';
+import { computed, nextTick, onMounted, ref, watch, onUnmounted, useAttrs } from 'vue';
+defineOptions({ inheritAttrs: false });
 import { CheckCircle2, ChevronDown, Loader2, MessageSquare, RefreshCw, WifiOff, AtSign, Copy } from 'lucide-vue-next';
 import { useToast } from '../../../services/toastService';
 import { useIrcChat } from '../../../composables/useIrcChat';
 import { useI18n } from 'vue-i18n';
+import { userService } from '../../../services/userService';
 
-const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection } = useIrcChat();
+const emit = defineEmits<{ 'show-user-profile': [userId: number]; }>();
+
+const attrs = useAttrs();
+const { messages, connected, status, sendIrcMessage, forceReconnect, ensureIrcConnection, onlineUsers, onlineGuests } = useIrcChat();
 const { t } = useI18n();
 const inputMessage = ref('');
 const ircInput = ref<HTMLInputElement | null>(null);
@@ -96,6 +132,16 @@ let keydownHandlerRef: ((e: KeyboardEvent) => void) | null = null;
 const isExpanded = ref(false);
 const messagesContainer = ref<HTMLElement | null>(null);
 const { addToast } = useToast();
+const profileIdCache = new Map<string, number>();
+
+const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+        case 'admin': return '#AA0000';
+        case 'developer': return '#AA00AA';
+        case 'moderator': return '#00AA00';
+        default: return undefined;
+    }
+};
 
 const parseMessage = (msg: string, type?: string) => {
     const colorMap: Record<string, string> = {
@@ -105,43 +151,51 @@ const parseMessage = (msg: string, type?: string) => {
         'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
     };
 
-    const parts: { text: string; color?: string; isName?: boolean }[] = [];
-    let currentColor: string | undefined = undefined;
+    let contentToParse = msg;
 
-    const regex = /§([0-9a-f|r])/g;
+    if (type !== 'system' && type !== 'private') {
+        const nameStripRegex = /^.*?(?= §7\(| \[§)/;
+
+        if (nameStripRegex.test(msg)) {
+            contentToParse = msg.replace(nameStripRegex, '');
+        } else {
+            const colonIndex = msg.indexOf(': ');
+            if (colonIndex !== -1 && colonIndex < 50 && !msg.toLowerCase().startsWith('system')) {
+                contentToParse = msg.substring(colonIndex + 2);
+            }
+        }
+    }
+
+    const parts: { text: string; color?: string; isName?: boolean; bold?: boolean }[] = [];
+    let currentColor: string | undefined = undefined;
+    let currentBold = false;
+
+    const regex = /§([0-9a-frklmnor])/gi;
     let lastIndex = 0;
     let match;
 
-    const colonIndex = msg.indexOf(':');
-    const headerEnd = colonIndex === -1 ? -1 : colonIndex;
-    const headerRaw = colonIndex === -1 ? '' : msg.substring(0, colonIndex);
-    const headerStripped = stripColorCodes(headerRaw).trim();
-    let namePartMarked = false;
-
-    while ((match = regex.exec(msg)) !== null) {
-        const text = msg.substring(lastIndex, match.index);
+    while ((match = regex.exec(contentToParse)) !== null) {
+        const text = contentToParse.substring(lastIndex, match.index);
         if (text) {
-            const isInHeader = headerEnd !== -1 && match.index <= headerEnd && lastIndex < headerEnd;
-            const isName = isInHeader && !namePartMarked && text.trim().length > 0 && type !== 'system' && headerStripped.toLowerCase() !== 'system';
-            if (isName) namePartMarked = true;
-            parts.push({ text, color: currentColor, isName: !!isName });
+            parts.push({ text, color: currentColor, isName: false, bold: currentBold });
         }
 
-        const code = match[1];
+        const code = match[1].toLowerCase();
         if (code === 'r') {
             currentColor = undefined;
-        } else {
+            currentBold = false;
+        } else if (code === 'l') {
+            currentBold = true;
+        } else if (colorMap[code]) {
             currentColor = colorMap[code];
         }
 
         lastIndex = regex.lastIndex;
     }
 
-    const remaining = msg.substring(lastIndex);
+    const remaining = contentToParse.substring(lastIndex);
     if (remaining) {
-        const isInHeader = headerEnd !== -1 && lastIndex < headerEnd;
-        const isName = isInHeader && !namePartMarked && remaining.trim().length > 0 && type !== 'system' && headerStripped.toLowerCase() !== 'system';
-        parts.push({ text: remaining, color: currentColor, isName: !!isName });
+        parts.push({ text: remaining, color: currentColor, isName: false, bold: currentBold });
     }
 
     return parts;
@@ -155,8 +209,55 @@ const extractDisplayName = (content: string) => {
     return stripColorCodes(header).trim();
 };
 
+const resolveUserId = async (username: string, senderUserId?: string) => {
+    const normalized = username.trim().toLowerCase();
+    if (!normalized) throw new Error('invalid');
+
+    if (senderUserId && !senderUserId.startsWith('guest-')) {
+        const numericId = Number.parseInt(senderUserId, 10);
+        if (!Number.isNaN(numericId)) {
+            profileIdCache.set(normalized, numericId);
+            return numericId;
+        }
+    }
+
+    const cached = profileIdCache.get(normalized);
+    if (cached) return cached;
+
+    const results = await userService.searchUsers(username);
+    const match = results.find((user) => user.username.toLowerCase() === normalized);
+    if (match) {
+        profileIdCache.set(normalized, match.id);
+        return match.id;
+    }
+
+    throw new Error('not_found');
+};
+
+const handleUsernameClick = async (sender?: { username?: string; userId?: string }) => {
+    const username = sender?.username?.trim();
+    if (!username) return;
+
+    try {
+        const userId = await resolveUserId(username, sender?.userId);
+        emit('show-user-profile', userId);
+    } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 401) {
+            addToast(t('userProfile.login_required'), 'error');
+        } else if (err?.message === 'not_found') {
+            addToast(t('userProfile.user_not_found'), 'error');
+        } else {
+            addToast(t('userProfile.profile_load_failed'), 'error');
+        }
+        console.error('Failed to open user profile from IRC chat', err);
+    }
+};
+
+const visibleMessages = computed(() => messages.value.filter(m => m && m.type !== 'ping'));
+
 const latestActivity = computed(() => {
-    const last = messages.value[messages.value.length - 1];
+    const last = visibleMessages.value[visibleMessages.value.length - 1];
     if (!last) {
         return connected.value ? t('irc.inline.latest_activity_connected') : t('irc.inline.tap_to_connect');
     }
@@ -265,7 +366,7 @@ onUnmounted(() => {
     if (keydownHandlerRef) window.removeEventListener('keydown', keydownHandlerRef as EventListener);
 });
 
-watch(() => messages.value.length, () => {
+watch(() => visibleMessages.value.length, () => {
     scrollToBottom();
 });
 </script>

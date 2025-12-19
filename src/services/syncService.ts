@@ -190,7 +190,14 @@ class SyncService {
 
             if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data)) {
                 try {
-                    await invoke('set_all_favorites', { clientIds: cloudData.favorites_data });
+                    const currentFavorites = await invoke<number[]>('get_favorite_clients');
+                    const favoritesChanged =
+                        cloudData.favorites_data.length !== currentFavorites.length ||
+                        !cloudData.favorites_data.every((id: number) => currentFavorites.includes(id));
+
+                    if (favoritesChanged) {
+                        await invoke('set_all_favorites', { clientIds: cloudData.favorites_data });
+                    }
                 } catch (e) {
                     console.warn('Failed to set all favorites, falling back to loop', e);
                     const currentFavorites = await invoke<number[]>('get_favorite_clients');

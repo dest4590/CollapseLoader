@@ -6,6 +6,7 @@ use tauri::{AppHandle, Emitter, State};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
+use tokio::time::{self, Duration};
 
 pub struct IrcState {
     pub writer: Arc<Mutex<Option<tokio::net::tcp::OwnedWriteHalf>>>,
@@ -67,7 +68,33 @@ pub async fn connect_irc(
             *writer_handle.lock().await = Some(writer);
 
             let app_clone = app.clone();
-            let writer_for_task = writer_handle.clone();
+            let writer_for_reader = writer_handle.clone();
+
+            let writer_for_pinger = writer_handle.clone();
+
+            tokio::spawn(async move {
+                let mut interval = time::interval(Duration::from_secs(60));
+
+                interval.tick().await;
+
+                loop {
+                    interval.tick().await;
+
+                    let mut writer_guard = writer_for_pinger.lock().await;
+
+                    if let Some(writer) = writer_guard.as_mut() {
+                        let ping_packet = json!({ "op": "ping" });
+                        let ping_str = format!("{}\n", ping_packet.to_string());
+
+                        if let Err(e) = writer.write_all(ping_str.as_bytes()).await {
+                            log_error!("IRC Pinger failed to write: {}", e);
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            });
 
             tokio::spawn(async move {
                 let mut reader = BufReader::new(reader);
@@ -81,12 +108,13 @@ pub async fn connect_irc(
                         Ok(0) => {
                             log_info!("IRC connection closed by server");
                             app_clone.emit("irc-disconnected", ()).unwrap_or_default();
-                            let mut writer_guard = writer_for_task.lock().await;
+                            let mut writer_guard = writer_for_reader.lock().await;
                             *writer_guard = None;
                             break;
                         }
                         Ok(_) => {
                             let msg = line.trim().to_string();
+
                             app_clone.emit("irc-message", msg).unwrap_or_default();
                         }
                         Err(e) => {
@@ -95,7 +123,7 @@ pub async fn connect_irc(
                                 .emit("irc-error", e.to_string())
                                 .unwrap_or_default();
                             app_clone.emit("irc-disconnected", ()).unwrap_or_default();
-                            let mut writer_guard = writer_for_task.lock().await;
+                            let mut writer_guard = writer_for_reader.lock().await;
                             *writer_guard = None;
                             break;
                         }

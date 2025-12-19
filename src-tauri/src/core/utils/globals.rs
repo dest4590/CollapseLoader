@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Agent";
+pub static CODENAME: &str = "Winter";
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
@@ -44,6 +44,10 @@ pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";
 pub static AGENT_OVERLAY_FOLDER: &str = "agent_overlay";
 pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
 pub static MODS_FOLDER: &str = "mods";
+
+// Agent & Overlay
+pub static AGENT_FILE: &str = "CollapseAgent.jar";
+pub static OVERLAY_FILE: &str = "CollapseOverlay.dll";
 
 // IRC Chat Host
 pub static IRC_HOST: &str = "irc.collapseloader.org:1338";

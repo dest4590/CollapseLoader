@@ -28,6 +28,29 @@ pub fn execute_jps() -> Result<Output, std::io::Error> {
     }
 
     let jps_path = get_jps_path();
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if jps_path.exists() {
+            if let Ok(mut perms) = std::fs::metadata(&jps_path).map(|m| m.permissions()) {
+                let mode = perms.mode() & 0o777;
+                if mode != 0o755 {
+                    perms.set_mode(0o755);
+                    if let Err(e) = std::fs::set_permissions(&jps_path, perms) {
+                        log_warn!(
+                            "Failed to set exec perm on jps {}: {}",
+                            jps_path.display(),
+                            e
+                        );
+                    } else {
+                        log_debug!("Set exec perm on jps {}", jps_path.display());
+                    }
+                }
+            }
+        }
+    }
+
     let mut command = Command::new(jps_path);
 
     #[cfg(target_os = "windows")]

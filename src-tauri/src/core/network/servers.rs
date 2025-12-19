@@ -2,60 +2,16 @@ use crate::{
     core::utils::globals::{AUTH_SERVERS, CDN_SERVERS},
     log_info, log_warn,
 };
-use backoff::{future::retry, ExponentialBackoff};
 use reqwest::Client;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, RwLock};
-use std::time::{Duration, Instant};
+use std::sync::{LazyLock, Mutex, RwLock};
+use std::time::Duration;
+use tokio::sync::watch;
 
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
-const CB_MAX_FAILURES: usize = 3;
-const CB_RESET_WINDOW: Duration = Duration::from_secs(60);
-const BACKOFF_MAX_ELAPSED: Duration = Duration::from_secs(10);
-
-#[derive(Debug)]
-pub struct CircuitBreaker {
-    failures: AtomicUsize,
-    last_failure: Mutex<Option<Instant>>,
-}
-
-impl CircuitBreaker {
-    fn new() -> Self {
-        Self {
-            failures: AtomicUsize::new(0),
-            last_failure: Mutex::new(None),
-        }
-    }
-
-    fn record_failure(&self) {
-        self.failures.fetch_add(1, Ordering::SeqCst);
-        let mut last = self.last_failure.lock().unwrap();
-        *last = Some(Instant::now());
-    }
-
-    fn record_success(&self) {
-        self.failures.store(0, Ordering::SeqCst);
-    }
-
-    fn is_open(&self) -> bool {
-        if self.failures.load(Ordering::SeqCst) < CB_MAX_FAILURES {
-            return false;
-        }
-        let last = self.last_failure.lock().unwrap();
-        if let Some(time) = *last {
-            if time.elapsed() < CB_RESET_WINDOW {
-                return true;
-            }
-        }
-        false
-    }
-}
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct Server {
     pub url: String,
-    #[serde(skip)]
-    pub circuit_breaker: Arc<CircuitBreaker>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -71,13 +27,14 @@ pub struct Servers {
     pub selected_cdn: RwLock<Option<Server>>,
     pub selected_auth: RwLock<Option<Server>>,
     pub connectivity_status: Mutex<ServerConnectivityStatus>,
+    pub check_complete_tx: watch::Sender<bool>,
+    pub check_complete_rx: watch::Receiver<bool>,
 }
 
 impl Server {
     pub fn new(url: &str) -> Self {
         Self {
             url: url.to_string(),
-            circuit_breaker: Arc::new(CircuitBreaker::new()),
         }
     }
 }
@@ -99,6 +56,8 @@ impl Servers {
             None
         };
 
+        let (tx, rx) = watch::channel(false);
+
         Self {
             cdns,
             auths,
@@ -108,6 +67,8 @@ impl Servers {
                 cdn_online: false,
                 auth_online: false,
             }),
+            check_complete_tx: tx,
+            check_complete_rx: rx,
         }
     }
 
@@ -123,6 +84,15 @@ impl Servers {
             .await;
 
         self.set_status();
+        let _ = self.check_complete_tx.send(true);
+    }
+
+    pub async fn wait_for_initial_check(&self) {
+        let mut rx = self.check_complete_rx.clone();
+        if *rx.borrow_and_update() {
+            return;
+        }
+        let _ = rx.changed().await;
     }
 
     async fn check_group(
@@ -133,51 +103,33 @@ impl Servers {
         name: &str,
     ) {
         for server in servers {
-            if server.circuit_breaker.is_open() {
-                log_warn!("Skipping {} Server {}", name, server.url);
-                continue;
-            }
-
-            let op = || async {
-                let resp = client.head(&server.url).send().await.map_err(|e| {
-                    backoff::Error::<Box<dyn std::error::Error + Send + Sync>>::transient(Box::new(
-                        e,
-                    ))
-                })?;
-                if !resp.status().is_success() {
-                    return Err(
-                        backoff::Error::<Box<dyn std::error::Error + Send + Sync>>::transient(
-                            format!("Status not success: {}", resp.status()).into(),
-                        ),
-                    );
-                }
-                Ok(resp)
-            };
-
-            let backoff = ExponentialBackoff {
-                max_elapsed_time: Some(BACKOFF_MAX_ELAPSED),
-                ..Default::default()
-            };
-
-            match retry(backoff, op).await {
-                Ok(response) => {
-                    log_info!(
-                        "{} Server {} responded with: {}",
-                        name,
-                        server.url,
-                        response.status()
-                    );
-                    server.circuit_breaker.record_success();
-                    let mut lock = selected.write().unwrap();
-                    *lock = Some(server.clone());
-                    return;
+            match client.head(&server.url).send().await {
+                Ok(resp) => {
+                    if resp.status().is_success() {
+                        log_info!(
+                            "{} Server {} responded with: {}",
+                            name,
+                            server.url,
+                            resp.status()
+                        );
+                        let mut lock = selected.write().unwrap();
+                        *lock = Some(server.clone());
+                        return;
+                    } else {
+                        log_warn!(
+                            "{} Server {} returned status: {}",
+                            name,
+                            server.url,
+                            resp.status()
+                        );
+                    }
                 }
                 Err(e) => {
                     log_warn!("Failed to connect to {} Server {}: {}", name, server.url, e);
-                    server.circuit_breaker.record_failure();
                 }
             }
         }
+
         let mut lock = selected.write().unwrap();
         *lock = None;
     }

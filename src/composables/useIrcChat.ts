@@ -3,11 +3,24 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useToast } from '../services/toastService';
 
+interface SenderInfo {
+    username: string;
+    role: string;
+    userId?: string;
+}
+
+interface RoomState {
+    online_users: number;
+    online_guests: number;
+}
+
 interface IrcMessage {
     time: string;
     content: string;
     type?: string;
     isHistory?: boolean;
+    sender?: SenderInfo;
+    roomState?: RoomState;
 }
 
 interface IncomingIrcPayload {
@@ -15,6 +28,8 @@ interface IncomingIrcPayload {
     time?: string;
     content?: string;
     history?: boolean;
+    sender?: SenderInfo & { user_id?: string };
+    room_state?: RoomState;
 }
 
 type IrcStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
@@ -25,6 +40,8 @@ const messages = ref<IrcMessage[]>([]);
 const connected = ref(false);
 const isConnecting = ref(false);
 const status = ref<IrcStatus>('disconnected');
+const onlineUsers = ref(0);
+const onlineGuests = ref(0);
 
 let connectionPromise: Promise<void> | null = null;
 let listenersRegistered = false;
@@ -50,6 +67,17 @@ const formatIsoToTime = (isoString?: string): string => {
 const parseIrcPayload = (payload: unknown): IrcMessage | null => {
     const fallbackTime = currentTime();
 
+    const normalizeSender = (raw?: IncomingIrcPayload['sender']): SenderInfo | undefined => {
+        if (!raw) return undefined;
+
+        const userId = raw.userId ?? raw.user_id;
+        return {
+            username: raw.username,
+            role: raw.role,
+            userId: userId || undefined,
+        };
+    };
+
     if (typeof payload === 'string') {
         try {
             const parsed = JSON.parse(payload) as IncomingIrcPayload;
@@ -61,6 +89,8 @@ const parseIrcPayload = (payload: unknown): IrcMessage | null => {
                 content: parsed.content || '',
                 type: parsed.type,
                 isHistory: Boolean(parsed.history),
+                sender: normalizeSender(parsed.sender),
+                roomState: parsed.room_state,
             };
         } catch {
             return { time: fallbackTime, content: payload, type: 'system' };
@@ -88,7 +118,12 @@ const registerListeners = async (): Promise<void> => {
         await listen<string>('irc-message', (event) => {
             const msg = parseIrcPayload(event.payload);
             if (msg) {
-                messages.value.push(msg);
+                if (msg.type === 'room_state' && msg.roomState) {
+                    onlineUsers.value = msg.roomState.online_users;
+                    onlineGuests.value = msg.roomState.online_guests;
+                } else {
+                    messages.value.push(msg);
+                }
             }
         });
 
@@ -156,7 +191,7 @@ export const ensureIrcConnection = async (isReconnect = false): Promise<void> =>
         status.value = isReconnect ? 'reconnecting' : 'connecting';
         const token = localStorage.getItem('authToken') || '';
         const tokenPresent = token.length > 0;
-        console.debug('IRC: attempting connect, token present=', tokenPresent);
+        console.debug('IRC: attempting connect, token present =', tokenPresent);
 
         clearReconnectTimer();
         await invoke('connect_irc', { token: tokenPresent ? token : null });
@@ -192,6 +227,8 @@ export function useIrcChat() {
         connected,
         isConnecting,
         status,
+        onlineUsers,
+        onlineGuests,
         ensureIrcConnection,
         forceReconnect,
         sendIrcMessage

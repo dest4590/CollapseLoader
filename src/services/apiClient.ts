@@ -1,5 +1,5 @@
-import axios, { AxiosRequestConfig } from 'axios';
-import { getAuthUrl, ensureAuthUrl } from '../config';
+import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
+import { getAuthUrl } from '../config';
 import { getCurrentLanguage } from '../i18n';
 
 interface CacheEntry<T = any> {
@@ -7,6 +7,16 @@ interface CacheEntry<T = any> {
     timestamp: number;
     ttl: number;
     etag?: string;
+}
+
+interface RequestMetrics {
+    totalRequests: number;
+    cacheHits: number;
+    cacheMisses: number;
+    avgResponseTime: number;
+    errorRate: number;
+    requestTimes: number[];
+    errors: number;
 }
 
 interface BatchConfig {
@@ -20,6 +30,15 @@ class ApiClient {
     private cache = new Map<string, CacheEntry>();
     private pendingRequests = new Map<string, Promise<any>>();
     private requestTimings = new Map<string, number>();
+    private metrics: RequestMetrics = {
+        totalRequests: 0,
+        cacheHits: 0,
+        cacheMisses: 0,
+        avgResponseTime: 0,
+        errorRate: 0,
+        requestTimes: [],
+        errors: 0
+    };
 
     private batchConfig: BatchConfig = {
         maxBatchSize: 10,
@@ -33,8 +52,7 @@ class ApiClient {
     }
 
     private setupInterceptors() {
-        this.client.interceptors.request.use(async (config) => {
-            await ensureAuthUrl();
+        this.client.interceptors.request.use((config) => {
             const baseUrl = getAuthUrl();
 
             if (config.url?.startsWith('/')) {
@@ -61,12 +79,40 @@ class ApiClient {
 
         this.client.interceptors.response.use(
             (response) => {
+                this.updateMetrics(response);
                 return response;
             },
             (error) => {
+                this.updateErrorMetrics();
                 return Promise.reject(error);
             }
         );
+    }
+
+    private updateMetrics(response: AxiosResponse) {
+        const timingKey = (response.config as any).__timingKey;
+        if (timingKey && this.requestTimings.has(timingKey)) {
+            const startTime = this.requestTimings.get(timingKey)!;
+            const responseTime = Date.now() - startTime;
+            this.metrics.requestTimes.push(responseTime);
+
+            this.requestTimings.delete(timingKey);
+
+            if (this.metrics.requestTimes.length > 100) {
+                this.metrics.requestTimes.shift();
+            }
+
+            this.metrics.avgResponseTime =
+                this.metrics.requestTimes.reduce((a, b) => a + b, 0) / this.metrics.requestTimes.length;
+        }
+
+        this.metrics.totalRequests++;
+    }
+
+    private updateErrorMetrics() {
+        this.metrics.errors++;
+        this.metrics.totalRequests++;
+        this.metrics.errorRate = this.metrics.errors / this.metrics.totalRequests;
     }
 
     private setupCacheCleanup() {
@@ -136,6 +182,8 @@ class ApiClient {
 
         if (this.shouldCache(url, method)) {
             if (cached && Date.now() - cached.timestamp < cached.ttl) {
+                this.metrics.cacheHits++;
+                console.log(`Cache hit for ${url}`);
                 return cached.data;
             }
         }
@@ -145,6 +193,7 @@ class ApiClient {
             return this.pendingRequests.get(cacheKey) as Promise<T>;
         }
 
+        // If we have an expired cached entry with an ETag, add conditional header
         const requestConfig: AxiosRequestConfig = { ...(config || {}), method };
         if (cached && cached.etag) {
             requestConfig.headers = { ...(requestConfig.headers || {}) };
@@ -155,10 +204,13 @@ class ApiClient {
             try {
                 const response = await this.executeRequest<T>(url, requestConfig);
 
+                // axios response handled in executeRequest now returns AxiosResponse
                 const axiosResp: any = response as any;
 
                 if (axiosResp.status === 304 && cached) {
+                    // server indicates not modified
                     cached.timestamp = Date.now();
+                    this.metrics.cacheHits++;
                     return cached.data as T;
                 }
 
@@ -172,6 +224,7 @@ class ApiClient {
                         ttl: this.getCacheTTL(url),
                         etag: etag
                     });
+                    this.metrics.cacheMisses++;
                 }
 
                 return result;
@@ -294,10 +347,39 @@ class ApiClient {
         return false;
     }
 
+
+    getMetrics(): RequestMetrics {
+        return { ...this.metrics };
+    }
+
+
+    resetMetrics() {
+        this.metrics = {
+            totalRequests: 0,
+            cacheHits: 0,
+            cacheMisses: 0,
+            avgResponseTime: 0,
+            errorRate: 0,
+            requestTimes: [],
+            errors: 0
+        };
+    }
+
+
     clearCache() {
         this.cache.clear();
         console.log('API cache cleared');
     }
+
+    getCacheStats() {
+        return {
+            size: this.cache.size,
+            hitRate: this.metrics.cacheHits / (this.metrics.cacheHits + this.metrics.cacheMisses) || 0,
+            avgResponseTime: this.metrics.avgResponseTime,
+            totalRequests: this.metrics.totalRequests
+        };
+    }
+
 
     async preloadCriticalData(): Promise<void> {
         const criticalEndpoints = [
@@ -339,6 +421,8 @@ export const apiDelete = apiClient.delete.bind(apiClient);
 
 export const apiBatchGet = apiClient.batchGet.bind(apiClient);
 export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
+export const apiMetrics = apiClient.getMetrics.bind(apiClient);
+export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
 export const apiHeartbeat = apiClient.heartbeat.bind(apiClient);
 export const apiInvalidateProfile = apiClient.invalidateProfileCaches.bind(apiClient);
 

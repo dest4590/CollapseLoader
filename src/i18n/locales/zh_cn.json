@@ -607,7 +607,7 @@
   "irc": {
     "inline": {
       "title": "全局聊天",
-      "latest_activity_connected": "已连接并在监听",
+      "latest_activity_connected": "连接到IRC聊天",
       "tap_to_connect": "点击以连接到 IRC",
       "placeholder": "输入消息...",
       "send_failed": "发送消息失败",

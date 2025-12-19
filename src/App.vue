@@ -197,7 +197,8 @@ const handleLoggedIn = async () => {
 
     await initializeUserDataWrapper(isAuthenticated.value);
 
-    syncService.initializeSyncStatus();
+    await syncService.initializeSyncStatus();
+    await syncService.checkAndRestoreOnStartup();
 
     globalUserStatus.initializeStatusSystem();
 };

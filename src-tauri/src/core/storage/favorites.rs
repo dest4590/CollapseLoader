@@ -10,10 +10,17 @@ use super::common::JsonStorage;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FavoriteManager {
     pub favorites: Vec<u32>,
+    #[serde(skip)]
     pub favorites_path: PathBuf,
 }
 
 impl FavoriteManager {
+    pub fn load_from_disk(path: PathBuf) -> Self {
+        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+        loaded.favorites_path = path;
+        loaded
+    }
+
     pub fn add_favorite(&mut self, client_id: u32) {
         if !self.favorites.contains(&client_id) {
             self.favorites.push(client_id);

@@ -1,6 +1,6 @@
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::data::DATA;
-use crate::core::utils::globals::AGENT_OVERLAY_FOLDER;
+use crate::core::utils::globals::{AGENT_FILE, AGENT_OVERLAY_FOLDER, OVERLAY_FILE};
 use crate::core::utils::hashing::calculate_md5_hash;
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
@@ -91,8 +91,8 @@ impl AgentOverlayManager {
             log_info!("Created agent overlay folder: {}", folder.display());
         }
 
-        let agent_path = folder.join("CollapseAgent.jar");
-        let overlay_path = folder.join("CollapseOverlay.dll");
+        let agent_path = folder.join(AGENT_FILE);
+        let overlay_path = folder.join(OVERLAY_FILE);
 
         let base_url = Self::get_api_base_url()?;
 
@@ -220,8 +220,8 @@ impl AgentOverlayManager {
             fs::create_dir_all(&folder).map_err(|e| format!("Failed to create directory: {e}"))?;
         }
 
-        let agent_path = folder.join("CollapseAgent.jar");
-        let overlay_path = folder.join("CollapseOverlay.dll");
+        let agent_path = folder.join(AGENT_FILE);
+        let overlay_path = folder.join(OVERLAY_FILE);
 
         if !agent_path.exists() || !overlay_path.exists() {
             log_warn!(

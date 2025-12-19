@@ -4,12 +4,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { bootLogService } from '../services/bootLogService';
 import { applyThemeOnStartup, applyLanguageOnStartup } from '../utils/settings';
-import { applyCursorForEvent, isHalloweenEvent, getEventGreeting } from '../utils/events';
+import { applyCursorForEvent, isHalloweenEvent } from '../utils/events';
 import { useToast } from '../services/toastService';
 import { globalUserStatus } from './useUserStatus';
 import { useUser } from './useUser';
 import { globalFriends } from './useFriends';
 import { updaterService } from '../services/updaterService';
+import { syncService } from '../services/syncService';
 import { getCurrentLanguage } from '../i18n';
 import { useModal } from '../services/modalService';
 import ClientCrashModal from '../components/modals/clients/ClientCrashModal.vue';
@@ -43,7 +44,6 @@ export function useAppInit() {
     const showFirstRunInfo = ref(false);
     const showInitialDisclaimer = ref(false);
     const halloweenActive = ref(isHalloweenEvent());
-    const halloweenGreeting = ref(getEventGreeting());
     const currentTheme = ref('dark');
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
@@ -219,6 +219,7 @@ export function useAppInit() {
 
                 globalUserStatus.initializeStatusSystem();
                 bootLogService.syncInit();
+                await syncService.checkAndRestoreOnStartup();
                 bootLogService.syncReady();
             } catch (error) {
                 console.error('Failed to initialize user data on startup:', error);
@@ -277,12 +278,6 @@ export function useAppInit() {
                     } catch (e) {
                         console.error('Failed to clear boot logs:', e);
                     }
-
-                    if (halloweenActive.value && halloweenGreeting.value) {
-                        setTimeout(() => {
-                            addToast(halloweenGreeting.value + ' 🎃', 'info', 5000);
-                        }, 4000);
-                    }
                 }, 80);
             }, 800);
         } else {
@@ -301,7 +296,6 @@ export function useAppInit() {
         showFirstRunInfo,
         showInitialDisclaimer,
         halloweenActive,
-        halloweenGreeting,
         currentTheme,
         initApp,
         initializeUserDataWrapper

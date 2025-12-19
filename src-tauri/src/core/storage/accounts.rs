@@ -34,10 +34,17 @@ impl Account {
 pub struct AccountManager {
     pub accounts: Vec<Account>,
     pub active_account_id: Option<String>,
+    #[serde(skip)]
     pub accounts_path: PathBuf,
 }
 
 impl AccountManager {
+    pub fn load_from_disk(path: PathBuf) -> Self {
+        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+        loaded.accounts_path = path;
+        loaded
+    }
+
     pub fn add_account(&mut self, username: String, tags: Vec<String>) -> String {
         let account = Account::new(username, tags);
         let id = account.id.clone();

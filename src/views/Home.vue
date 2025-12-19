@@ -19,6 +19,7 @@ import ClientCard from '../components/features/clients/ClientCard.vue';
 import FiltersMenu from '../components/common/FiltersMenu.vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
+import { syncService } from '../services/syncService';
 import { useI18n } from 'vue-i18n';
 import type { Client, InstallProgress } from '../types/ui';
 import type { CustomClient } from '../types/ui';
@@ -525,6 +526,10 @@ const toggleFavorite = async (client: Client) => {
             favoriteClients.value = [...favoriteClients.value, client.id];
             addToast(t('home.favorite_added'), 'success');
         }
+
+        syncService.uploadToCloud().catch(err => {
+            console.warn('Failed to sync favorites to cloud:', err);
+        });
 
         hideContextMenu();
     } catch (err) {
@@ -1605,7 +1610,7 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <InlineIRCChat class="mb-6" />
+    <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)" />
 
     <div v-if="filteredClients.length === 0 && !error && clientsLoaded"
         class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
