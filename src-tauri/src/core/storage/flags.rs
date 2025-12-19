@@ -21,10 +21,17 @@ pub struct Flags {
     pub first_run: Flag<bool>,
     pub telemetry_consent_shown: Flag<bool>,
     pub custom_clients_display: Flag<String>,
+    #[serde(skip)]
     pub flags_path: PathBuf,
 }
 
 impl Flags {
+    pub fn load_from_disk(path: PathBuf) -> Self {
+        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+        loaded.flags_path = path;
+        loaded
+    }
+
     pub fn set_custom_clients_display(&mut self, display: String) {
         self.custom_clients_display.value = display;
     }

@@ -10,6 +10,7 @@ import { globalUserStatus } from './useUserStatus';
 import { useUser } from './useUser';
 import { globalFriends } from './useFriends';
 import { updaterService } from '../services/updaterService';
+import { syncService } from '../services/syncService';
 import { getCurrentLanguage } from '../i18n';
 import { useModal } from '../services/modalService';
 import ClientCrashModal from '../components/modals/clients/ClientCrashModal.vue';
@@ -218,6 +219,7 @@ export function useAppInit() {
 
                 globalUserStatus.initializeStatusSystem();
                 bootLogService.syncInit();
+                await syncService.checkAndRestoreOnStartup();
                 bootLogService.syncReady();
             } catch (error) {
                 console.error('Failed to initialize user data on startup:', error);
