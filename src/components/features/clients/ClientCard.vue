@@ -15,15 +15,21 @@ import {
     Info,
     ZoomOut,
     RefreshCw,
+    MessageSquare,
+    Trash2,
+    Send,
+    Camera,
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import gsap from 'gsap';
-import type { Client, InstallProgress, ClientDetails } from '../../../types/ui';
+import type { Client, InstallProgress, ClientDetails, ClientComment } from '../../../types/ui';
 import InsecureClientWarningModal from '../../modals/clients/InsecureClientWarningModal.vue';
 import ClientInfo from './ClientInfo.vue';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { useModal } from '../../../services/modalService';
+import { userService } from '../../../services/userService';
+import { formatDate } from '../../../utils/utils';
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
@@ -61,9 +67,15 @@ const cardRef = shallowRef<HTMLElement | null>(null);
 const placeholder = shallowRef<HTMLElement | null>(null);
 const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
-const activeTab = ref<'info' | 'screenshots'>('info');
+const activeTab = ref<'info' | 'screenshots' | 'comments'>('info');
 
-const previousTab = ref<'info' | 'screenshots'>('info');
+const comments = ref<ClientComment[]>([]);
+const isLoadingComments = ref(false);
+const newCommentText = ref('');
+const isPostingComment = ref(false);
+const currentUser = ref<any>(null);
+
+const previousTab = ref<'info' | 'screenshots' | 'comments'>('info');
 const slideDirection = ref<'left' | 'right'>('right');
 
 const isScreenshotViewerOpen = ref(false);
@@ -164,11 +176,91 @@ const stopScrollbarDrag = () => {
     document.body.style.userSelect = '';
 };
 
+const fetchComments = async () => {
+    if (isLoadingComments.value) return;
+    isLoadingComments.value = true;
+    try {
+        const response = await invoke<ClientComment[]>('get_client_comments', { clientId: props.client.id });
+        comments.value = response;
+    } catch (error) {
+        console.error('Failed to fetch comments:', error);
+    } finally {
+        isLoadingComments.value = false;
+    }
+};
+
+const postComment = async () => {
+    if (!newCommentText.value.trim() || isPostingComment.value) return;
+
+    isPostingComment.value = true;
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const newComment = await invoke<ClientComment>('add_client_comment', {
+            clientId: props.client.id,
+            content: newCommentText.value,
+            userToken: token
+        });
+
+        comments.value.unshift(newComment);
+        newCommentText.value = '';
+
+        if (clientDetails.value) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                comments_count: (clientDetails.value.comments_count || 0) + 1
+            };
+        }
+    } catch (error) {
+        console.error('Failed to post comment:', error);
+    } finally {
+        isPostingComment.value = false;
+    }
+};
+
+const deleteComment = async (commentId: number) => {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        await invoke('delete_client_comment', {
+            clientId: props.client.id,
+            commentId: commentId,
+            userToken: token
+        });
+
+        comments.value = comments.value.filter(c => c.id !== commentId);
+
+        if (clientDetails.value && clientDetails.value.comments_count) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                comments_count: Math.max(0, clientDetails.value.comments_count - 1)
+            };
+        }
+    } catch (error) {
+        console.error('Failed to delete comment:', error);
+    }
+};
+
+const loadCurrentUser = async () => {
+    try {
+        const info = await userService.getUserStatus();
+        currentUser.value = { username: info.username };
+    } catch (e) {
+        console.error("Failed to load user info", e);
+    }
+};
+
 watch(isExpanded, (newVal) => {
     if (newVal) {
+        loadCurrentUser();
+        document.body.style.overflow = 'hidden';
         nextTick(() => {
+            updateScrollbar();
         });
     } else {
+        document.body.style.overflow = '';
     }
 });
 
@@ -188,15 +280,19 @@ const maxZoom = 5;
 const minZoom = 1;
 const zoomStep = 0.5;
 
-const tabOrder = ['info', 'screenshots'] as const;
+const tabOrder = ['info', 'screenshots', 'comments'] as const;
 
-const changeTab = (newTab: 'info' | 'screenshots') => {
+const changeTab = (newTab: 'info' | 'screenshots' | 'comments') => {
     const currentIndex = tabOrder.indexOf(activeTab.value);
     const newIndex = tabOrder.indexOf(newTab);
 
     slideDirection.value = newIndex > currentIndex ? 'right' : 'left';
     previousTab.value = activeTab.value;
     activeTab.value = newTab;
+
+    if (newTab === 'comments') {
+        fetchComments();
+    }
 };
 
 const handleLaunchClick = () => {
@@ -1000,43 +1096,58 @@ onBeforeUnmount(() => {
                                 <div class="tabs tabs-boxed mb-4">
                                     <a class="tab" :class="{ 'tab-active': activeTab === 'info' }"
                                         @click="changeTab('info')">
+                                        <Info class="w-4 h-4 mr-2" />
                                         {{ t('client.details.info_tab') }}
                                     </a>
                                     <a class="tab" :class="{ 'tab-active': activeTab === 'screenshots' }"
                                         @click="changeTab('screenshots')">
+                                        <Camera class="w-4 h-4 mr-2" />
                                         {{ t('client.details.screenshots_tab') }}
+                                    </a>
+                                    <a class="tab" :class="{ 'tab-active': activeTab === 'comments' }"
+                                        @click="changeTab('comments')">
+                                        <div class="flex items-center gap-2">
+                                            <MessageSquare class="w-4 h-4" />
+                                            <span>{{ t('client.details.comments_tab') }}</span>
+                                            <span v-if="clientDetails?.comments_count"
+                                                class="badge badge-sm badge-ghost">{{ clientDetails.comments_count
+                                                }}</span>
+                                        </div>
                                     </a>
                                 </div>
 
                                 <div>
                                     <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
                                         <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1">
-                                            <div class="mb-6 space-y-2">
-                                                <dl class="divide-y divide-base-content/10">
-                                                    <div v-if="clientDetails.source_link"
-                                                        class="py-3 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-center transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
-                                                        <dt class="text-sm font-medium text-base-content/70">{{
-                                                            t('client.details.source_link') }}</dt>
-                                                        <dd class="text-sm text-base-content col-span-1 md:col-span-2">
-                                                            <a @click="handleClientSourceLink(clientDetails.source_link)"
-                                                                target="_blank" rel="noopener noreferrer"
-                                                                class="link link-primary link-hover inline-flex items-center gap-1.5 text-xs truncate">
-                                                                <span>{{ clientDetails.source_link }}</span>
-                                                                <ExternalLink class="w-3 h-3" />
-                                                            </a>
-                                                        </dd>
+                                            <div class="grid grid-cols-1 gap-3 mb-6 w-full">
+                                                <div v-if="clientDetails.source_link"
+                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 hover:bg-base-200/60 transition-colors group w-full">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                                        {{ t('client.details.source_link') }}
+                                                    </span>
+                                                    <a @click="handleClientSourceLink(clientDetails.source_link)"
+                                                        class="flex items-center gap-2 text-xs font-medium text-primary hover:text-primary-focus transition-colors truncate cursor-pointer">
+                                                        <ExternalLink class="w-3.5 h-3.5 shrink-0" />
+                                                        <span class="truncate">{{ clientDetails.source_link }}</span>
+                                                    </a>
+                                                </div>
+
+                                                <div v-if="clientDetails.created_at"
+                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 w-full">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                                        {{ t('client.details.created') }}
+                                                    </span>
+                                                    <div
+                                                        class="flex items-center gap-2 text-xs font-medium text-base-content/80">
+                                                        <Info class="w-3.5 h-3.5 text-base-content/30" />
+                                                        {{ new
+                                                            Date(clientDetails.created_at).toLocaleDateString(undefined, {
+                                                                dateStyle: 'medium'
+                                                            }) }}
                                                     </div>
-                                                    <div v-if="clientDetails.created_at"
-                                                        class="py-3 transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
-                                                        <dt class="text-sm font-medium text-base-content/70">{{
-                                                            t('client.details.created') }}</dt>
-                                                        <dd class="text-base-content col-span-1 md:col-span-2 text-xs">
-                                                            {{ new
-                                                                Date(clientDetails.created_at).toLocaleDateString('en-GB')
-                                                            }}
-                                                        </dd>
-                                                    </div>
-                                                </dl>
+                                                </div>
                                             </div>
 
                                             <div
@@ -1114,6 +1225,63 @@ onBeforeUnmount(() => {
                                             </div>
                                             <div v-else class="text-center py-8 text-base-content/60">
                                                 <p>{{ t('client.details.no_screenshots') }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div v-else-if="activeTab === 'comments'" key="comments">
+                                            <div class="flex flex-col">
+                                                <div class="flex gap-2">
+                                                    <input v-model="newCommentText" type="text"
+                                                        :placeholder="t('client.comments.placeholder')"
+                                                        class="input input-bordered w-full input-sm"
+                                                        @keyup.enter="postComment" :disabled="isPostingComment" />
+                                                    <button class="btn btn-primary btn-sm btn-square"
+                                                        @click="postComment"
+                                                        :disabled="isPostingComment || !newCommentText.trim()">
+                                                        <span v-if="isPostingComment"
+                                                            class="loading loading-spinner loading-xs"></span>
+                                                        <Send v-else class="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                <div v-if="isLoadingComments" class="flex justify-center py-8">
+                                                    <span
+                                                        class="loading loading-spinner loading-md text-primary"></span>
+                                                </div>
+                                                <div v-else-if="comments.length === 0"
+                                                    class="text-center py-8 text-base-content/50">
+                                                    <MessageSquare class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                                    <p>{{ t('client.comments.empty') }}</p>
+                                                </div>
+                                                <div v-else
+                                                    class="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                                                    <div v-for="comment in comments" :key="comment.id"
+                                                        class="chat chat-start">
+                                                        <div class="chat-image avatar">
+                                                            <div class="w-8 rounded-full">
+                                                                <img :src="comment.author_avatar || ''"
+                                                                    :alt="comment.author_username" />
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
+                                                            {{ comment.author_username }}
+                                                            <time class="text-[10px]">{{ formatDate(comment.created_at)
+                                                            }}</time>
+                                                            <button
+                                                                v-if="currentUser && currentUser.username === comment.author_username"
+                                                                class="btn btn-ghost btn-xs btn-circle text-error"
+                                                                @click="deleteComment(comment.id)"
+                                                                :title="t('client.comments.delete')">
+                                                                <Trash2 class="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            class="chat-bubble chat-bubble-secondary text-sm wrap-break-word group relative">
+                                                            {{ comment.content }}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </transition>

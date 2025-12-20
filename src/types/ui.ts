@@ -41,6 +41,17 @@ export interface ClientDetails {
     }[];
     client_type?: string;
     created_at: string;
+    comments_count?: number;
+}
+
+export interface ClientComment {
+    id: number;
+    client: number;
+    user: number;
+    author_username: string;
+    author_avatar: string | null;
+    content: string;
+    created_at: string;
 }
 
 export interface InstallProgress {

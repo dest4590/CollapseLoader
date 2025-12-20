@@ -1016,7 +1016,13 @@
           "drag_pan": "Drag - Pan | +/- - Zoom | 0 - Reset"
         }
       },
-      "no_changelog_desc": "Updates and changes will appear here."
+      "no_changelog_desc": "Updates and changes will appear here.",
+      "comments_tab": "Comments"
+    },
+    "comments": {
+      "placeholder": "Write a comment...",
+      "empty": "No comments yet. Be the first!",
+      "delete": "Delete"
     }
   },
   "customization": {},

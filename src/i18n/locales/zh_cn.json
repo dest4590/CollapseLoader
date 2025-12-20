@@ -1004,7 +1004,13 @@
           "drag_pan": "拖拽 - 平移 | +/- - 缩放 | 0 - 重置"
         }
       },
-      "no_changelog_desc": "更新与改动将显示在此处。"
+      "no_changelog_desc": "更新与改动将显示在此处。",
+      "comments_tab": "评论"
+    },
+    "comments": {
+      "delete": "删除",
+      "empty": "暂无评论。快来发表你的见解吧！",
+      "placeholder": "写一条评论..."
     }
   },
   "customization": {},

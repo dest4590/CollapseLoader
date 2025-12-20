@@ -279,46 +279,38 @@ impl Client {
     }
 
     pub fn remove_installation(&self, manager: &Arc<Mutex<ClientManager>>) -> Result<(), String> {
-        let client_folder = DATA.get_as_folder(&self.filename);
+        let file_path = if self.client_type == ClientType::Fabric {
+            let jar_basename = std::path::Path::new(&self.filename)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
+            DATA.root_dir
+                .join(Data::get_filename(&self.filename))
+                .join(MODS_FOLDER)
+                .join(jar_basename)
+        } else {
+            DATA.get_local(&format!(
+                "{}{}{}",
+                Data::get_filename(&self.filename),
+                std::path::MAIN_SEPARATOR,
+                self.filename
+            ))
+        };
+
         log_debug!(
-            "Removing installation for client '{}' at {}",
+            "Removing installation jar for client '{}' at {}",
             self.name,
-            client_folder.display()
+            file_path.display()
         );
 
-        if client_folder.exists() {
-            match std::fs::read_dir(&client_folder) {
-                Ok(entries) => {
-                    for entry in entries.flatten() {
-                        let path = entry.path();
-                        if path.is_dir() {
-                            if let Err(e) = std::fs::remove_dir_all(&path) {
-                                log_warn!("Failed to remove directory '{}': {}", path.display(), e);
-                            }
-                        } else if let Err(e) = std::fs::remove_file(&path) {
-                            log_warn!("Failed to remove file '{}': {}", path.display(), e);
-                        }
-                    }
-                }
-                Err(e) => {
-                    log_error!(
-                        "Failed to read client folder '{}': {}",
-                        client_folder.display(),
-                        e
-                    );
-                }
-            }
-
-            if let Err(e) = std::fs::remove_dir(&client_folder) {
-                log_warn!(
-                    "Failed to remove client folder '{}': {}",
-                    client_folder.display(),
-                    e
-                );
+        if file_path.exists() {
+            if let Err(e) = std::fs::remove_file(&file_path) {
+                log_warn!("Failed to remove file '{}': {}", file_path.display(), e);
+                return Err(e.to_string());
             }
         } else {
             log_debug!(
-                "No installation folder found for '{}', skipping removal",
+                "No installation jar found for '{}', skipping removal",
                 self.name
             );
         }
