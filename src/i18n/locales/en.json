@@ -351,7 +351,11 @@
   "appLogs": {
     "copyLogs": "Copy",
     "autoScroll": "Auto scroll",
-    "noLogs": "No application logs available."
+    "noLogs": "No application logs available.",
+    "searchPlaceholder": "Search logs...",
+    "download": "Download Logs",
+    "filterByLevel": "Filter by level",
+    "noMatchingLogs": "No logs match your filters."
   },
   "blockedUsers": {
     "title": "Blocked Users ({count})",
@@ -914,7 +918,9 @@
       "copied_success": "App logs copied to clipboard!",
       "copy_failed": "Failed to copy app logs: {error}",
       "client_logs_copied": "Logs copied to clipboard!",
-      "client_logs_copy_failed": "Failed to copy logs to clipboard."
+      "client_logs_copy_failed": "Failed to copy logs to clipboard.",
+      "download_success": "Logs saved successfully!",
+      "download_failed": "Failed to save logs: {error}"
     },
     "users": {
       "blocked_load_failed": "Failed to load blocked users",

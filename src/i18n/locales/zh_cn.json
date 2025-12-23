@@ -351,7 +351,11 @@
   "appLogs": {
     "copyLogs": "复制",
     "autoScroll": "自动滚动",
-    "noLogs": "暂无应用日志。"
+    "noLogs": "暂无应用日志。",
+    "searchPlaceholder": "搜索日志...",
+    "download": "下载日志",
+    "filterByLevel": "按级别过滤",
+    "noMatchingLogs": "没有符合过滤条件的日志。"
   },
   "blockedUsers": {
     "title": "已屏蔽用户（{count}）",
