@@ -44,8 +44,13 @@
             <div v-if="filteredLogs.length === 0" class="text-center py-8 text-base-content/60">
                 {{ searchQuery || selectedLevels.length < levels.length ? t('appLogs.noMatchingLogs') :
                     t('appLogs.noLogs') }} </div>
-                    <pre v-else
-                        class="m-0 whitespace-pre-wrap wrap-break-word overflow-wrap-anywhere"><code>{{ filteredLogs.join('\n') }}</code></pre>
+                    <div v-else class="space-y-1">
+                        <div v-for="(log, idx) in filteredLogs" :key="idx"
+                            class="w-full rounded px-2 py-0.5 border-l-2 border-transparent hover:bg-base-200/30 transition-colors"
+                            :class="getLogLineClass(log)">
+                            {{ log }}
+                        </div>
+                    </div>
             </div>
         </div>
 </template>
@@ -76,13 +81,14 @@ const { addToast } = useToast();
 const { t } = useI18n();
 
 const searchQuery = ref('');
-const selectedLevels = ref<string[]>(['INFO', 'WARN', 'ERROR', 'DEBUG', 'FATAL']);
+const selectedLevels = ref<string[]>(['INFO', 'WARN', 'ERROR', 'DEBUG', 'FATAL', 'COLLAPSE']);
 const levels = [
     { id: 'INFO', color: 'badge-info' },
     { id: 'WARN', color: 'badge-warning' },
     { id: 'ERROR', color: 'badge-error' },
     { id: 'DEBUG', color: 'badge-neutral' },
-    { id: 'FATAL', color: 'badge-error' }
+    { id: 'FATAL', color: 'badge-error' },
+    { id: 'COLLAPSE', color: 'badge-primary' }
 ];
 
 const toggleLevel = (level: string) => {
@@ -102,7 +108,14 @@ const filteredLogs = computed(() => {
         const logUpper = log.toUpperCase();
         const matchesSearch = !searchQuery.value || log.toLowerCase().includes(searchQuery.value.toLowerCase());
 
-        const logHasLevel = levels.find(l => logUpper.includes(l.id));
+        const logHasLevel = levels.find(l => {
+            if (l.id === 'COLLAPSE') {
+                const low = log.toLowerCase();
+                return low.includes('[collapsewarden]') || low.includes('[collapseagent]') || low.includes('[collapsenative]');
+            }
+
+            return logUpper.includes(l.id);
+        });
 
         if (logHasLevel) {
             return matchesSearch && selectedLevels.value.includes(logHasLevel.id);
@@ -111,6 +124,24 @@ const filteredLogs = computed(() => {
         return matchesSearch;
     });
 });
+
+const getLogLineClass = (log: string) => {
+    const lower = log.toLowerCase();
+
+    if (lower.includes('[collapsewarden]')) {
+        return 'bg-info/10 border-info';
+    }
+
+    if (lower.includes('[collapseagent]')) {
+        return 'bg-success/10 border-success';
+    }
+
+    if (lower.includes('[collapsenative]')) {
+        return 'bg-warning/10 border-warning';
+    }
+
+    return '';
+};
 
 const fetchLogs = async () => {
     if (props.clientId) {
