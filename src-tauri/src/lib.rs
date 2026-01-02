@@ -145,7 +145,7 @@ pub fn run() {
             commands::utils::change_data_folder,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
-            commands::discord_rpc::update_presence,
+            commands::utils::update_presence,
             commands::updater::check_for_updates,
             commands::updater::download_and_install_update,
             commands::updater::get_changelog,
