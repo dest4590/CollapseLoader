@@ -75,6 +75,9 @@ const newCommentText = ref('');
 const isPostingComment = ref(false);
 const currentUser = ref<any>(null);
 
+const MAX_COMMENT_LENGTH = 500;
+const canComment = computed(() => !!currentUser.value);
+
 const previousTab = ref<'info' | 'screenshots' | 'comments'>('info');
 const slideDirection = ref<'left' | 'right'>('right');
 
@@ -190,7 +193,13 @@ const fetchComments = async () => {
 };
 
 const postComment = async () => {
-    if (!newCommentText.value.trim() || isPostingComment.value) return;
+    const trimmed = newCommentText.value.trim();
+    if (!trimmed || isPostingComment.value) return;
+
+    if (trimmed.length > MAX_COMMENT_LENGTH) {
+        newCommentText.value = trimmed.slice(0, MAX_COMMENT_LENGTH);
+        return;
+    }
 
     isPostingComment.value = true;
     try {
@@ -199,7 +208,7 @@ const postComment = async () => {
 
         const newComment = await invoke<ClientComment>('add_client_comment', {
             clientId: props.client.id,
-            content: newCommentText.value,
+            content: trimmed,
             userToken: token
         });
 
@@ -1234,14 +1243,21 @@ onBeforeUnmount(() => {
                                                     <input v-model="newCommentText" type="text"
                                                         :placeholder="t('client.comments.placeholder')"
                                                         class="input input-bordered w-full input-sm"
-                                                        @keyup.enter="postComment" :disabled="isPostingComment" />
+                                                        :maxlength="MAX_COMMENT_LENGTH" @keyup.enter="postComment"
+                                                        :disabled="isPostingComment || !canComment" />
                                                     <button class="btn btn-primary btn-sm btn-square"
                                                         @click="postComment"
-                                                        :disabled="isPostingComment || !newCommentText.trim()">
+                                                        :disabled="isPostingComment || !newCommentText.trim() || !canComment">
                                                         <span v-if="isPostingComment"
                                                             class="loading loading-spinner loading-xs"></span>
                                                         <Send v-else class="w-4 h-4" />
                                                     </button>
+                                                </div>
+
+                                                <div class="flex justify-between text-[10px] mt-1 opacity-50">
+                                                    <span v-if="!canComment">{{ t('login') }}</span>
+                                                    <span>{{ Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
+                                                    }}/{{ MAX_COMMENT_LENGTH }}</span>
                                                 </div>
 
                                                 <div v-if="isLoadingComments" class="flex justify-center py-8">
@@ -1259,8 +1275,14 @@ onBeforeUnmount(() => {
                                                         class="chat chat-start">
                                                         <div class="chat-image avatar">
                                                             <div class="w-8 rounded-full">
-                                                                <img :src="comment.author_avatar || ''"
+                                                                <img v-if="comment.author_avatar"
+                                                                    :src="comment.author_avatar"
                                                                     :alt="comment.author_username" />
+                                                                <div v-else
+                                                                    class="bg-base-200 text-base-content/70 w-8 h-8 flex items-center justify-center text-xs font-semibold">
+                                                                    {{ (comment.author_username?.[0] ||
+                                                                        '?').toUpperCase() }}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                         <div

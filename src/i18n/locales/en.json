@@ -1115,5 +1115,6 @@
       "message": "Spooky season is here! 🎃",
       "tooltip": "Happy Halloween! (Oct 25 - Nov 5)"
     }
-  }
+  },
+  "login": "You need to log in to your account."
 }

@@ -1112,5 +1112,6 @@
     "extracting": "正在解压",
     "download_complete": "下载完成",
     "installation_complete": "安装完成"
-  }
+  },
+  "login": "您需要登录您的帐户。"
 }
