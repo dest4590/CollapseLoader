@@ -34,6 +34,113 @@ use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tokio::sync::Semaphore;
 
+fn sanitize_version_for_paths(version: &str) -> String {
+    version.trim().replace(['/', '\\'], "_").replace(' ', "_")
+}
+
+fn is_minecraft_version_dir_name(name: &str) -> bool {
+    let parts: Vec<&str> = name.split('.').collect();
+    if !(2..=3).contains(&parts.len()) {
+        return false;
+    }
+    if parts[0] != "1" {
+        return false;
+    }
+    parts
+        .iter()
+        .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+}
+
+fn is_fabric_loader_jar(path: &std::path::Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with("fabric-loader") && n.ends_with(".jar"))
+}
+
+fn dir_has_any_jars(dir: &std::path::Path, skip_root_mc_version_dirs: bool) -> bool {
+    fn walk(
+        root: &std::path::Path,
+        dir: &std::path::Path,
+        depth_left: usize,
+        skip_root_mc_version_dirs: bool,
+    ) -> bool {
+        if depth_left == 0 {
+            return false;
+        }
+        let entries = match std::fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(_) => return false,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if skip_root_mc_version_dirs && dir == root {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if is_minecraft_version_dir_name(name) {
+                            continue;
+                        }
+                    }
+                }
+                if walk(root, &path, depth_left - 1, skip_root_mc_version_dirs) {
+                    return true;
+                }
+            } else if path
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
+            {
+                return true;
+            }
+        }
+        false
+    }
+
+    walk(dir, dir, 6, skip_root_mc_version_dirs)
+}
+
+fn collect_jars_recursive(
+    dir: &std::path::Path,
+    skip_root_mc_version_dirs: bool,
+) -> Vec<std::path::PathBuf> {
+    fn walk(
+        root: &std::path::Path,
+        dir: &std::path::Path,
+        out: &mut Vec<std::path::PathBuf>,
+        depth_left: usize,
+        skip_root_mc_version_dirs: bool,
+    ) {
+        if depth_left == 0 {
+            return;
+        }
+        let entries = match std::fs::read_dir(dir) {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if skip_root_mc_version_dirs && dir == root {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if is_minecraft_version_dir_name(name) {
+                            continue;
+                        }
+                    }
+                }
+                walk(root, &path, out, depth_left - 1, skip_root_mc_version_dirs);
+            } else if path
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
+            {
+                out.push(path);
+            }
+        }
+    }
+
+    let mut jars = Vec::new();
+    walk(dir, dir, &mut jars, 8, skip_root_mc_version_dirs);
+    jars.sort();
+    jars
+}
+
 pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 pub static REQUIREMENTS_DOWNLOADING: std::sync::LazyLock<Mutex<bool>> =
@@ -167,6 +274,85 @@ impl LaunchOptions {
 }
 
 impl Client {
+    fn fabric_version_key(&self) -> String {
+        sanitize_version_for_paths(&self.version)
+    }
+
+    fn fabric_minecraft_jar_name(&self) -> String {
+        format!("fabric_{}.jar", self.fabric_version_key())
+    }
+
+    fn fabric_minecraft_jar_path(&self) -> std::path::PathBuf {
+        DATA.root_dir
+            .join(MINECRAFT_VERSIONS_FOLDER)
+            .join(self.fabric_minecraft_jar_name())
+    }
+
+    fn fabric_libraries_dir_versioned(&self) -> std::path::PathBuf {
+        DATA.root_dir
+            .join(LIBRARIES_FABRIC_FOLDER)
+            .join(self.fabric_version_key())
+    }
+
+    fn fabric_libraries_dir_global(&self) -> std::path::PathBuf {
+        DATA.root_dir.join(LIBRARIES_FABRIC_FOLDER)
+    }
+
+    fn fabric_libraries_zip_versioned(&self) -> String {
+        format!(
+            "{}/{}.zip",
+            LIBRARIES_FABRIC_FOLDER,
+            self.fabric_version_key()
+        )
+    }
+
+    async fn ensure_fabric_libraries_available(&self) -> Result<(), String> {
+        let common_dir = self.fabric_libraries_dir_global();
+        if !(common_dir.exists() && dir_has_any_jars(&common_dir, true)) {
+            log_info!(
+                "Downloading common Fabric libraries '{}' for '{}'",
+                LIBRARIES_FABRIC_ZIP,
+                self.name
+            );
+            DATA.download(LIBRARIES_FABRIC_ZIP).await?;
+        }
+
+        if !(common_dir.exists() && dir_has_any_jars(&common_dir, true)) {
+            return Err(format!(
+                "Common Fabric libraries missing for '{}' after download ('{}')",
+                self.name, LIBRARIES_FABRIC_ZIP
+            ));
+        }
+
+        let versioned_dir = self.fabric_libraries_dir_versioned();
+        if versioned_dir.exists() && dir_has_any_jars(&versioned_dir, false) {
+            return Ok(());
+        }
+
+        let versioned_zip = self.fabric_libraries_zip_versioned();
+        log_info!(
+            "Downloading versioned Fabric libraries '{}' for '{}'",
+            versioned_zip,
+            self.name
+        );
+
+        DATA.download(&versioned_zip).await.map_err(|e| {
+            format!(
+                "Failed to download versioned Fabric libraries for '{}' ({}): {}",
+                self.name, versioned_zip, e
+            )
+        })?;
+
+        if versioned_dir.exists() && dir_has_any_jars(&versioned_dir, false) {
+            Ok(())
+        } else {
+            Err(format!(
+                "Versioned Fabric libraries missing for '{}' after download ('{}')",
+                self.name, versioned_zip
+            ))
+        }
+    }
+
     async fn verify_hash(&self) -> Result<(), String> {
         let hash_verify_enabled = SETTINGS.lock().map(|s| s.hash_verify.value).unwrap_or(true);
         if !hash_verify_enabled {
@@ -542,12 +728,44 @@ impl Client {
             "Failed to acquire requirements semaphore".to_string()
         })?;
 
+        if self.client_type == ClientType::Fabric {
+            let mut files_to_download: Vec<String> = Vec::new();
+
+            let jdk_zip = format!("{JDK_FOLDER}.zip");
+            if !DATA.get_as_folder(&jdk_zip).exists() {
+                files_to_download.push(jdk_zip);
+            }
+            if !DATA.get_as_folder(ASSETS_FABRIC_ZIP).exists() {
+                files_to_download.push(ASSETS_FABRIC_ZIP.to_string());
+            }
+
+            let mc_jar_name = self.fabric_minecraft_jar_name();
+            let mc_jar_path = self.fabric_minecraft_jar_path();
+            if !mc_jar_path.exists() {
+                log_debug!(
+                    "Fabric MC jar missing for '{}' -> will download '{}'",
+                    self.name,
+                    mc_jar_name
+                );
+            }
+
+            if !files_to_download.is_empty() {
+                self.download_required_files(app_handle, files_to_download, Some(mc_jar_name))
+                    .await?;
+            } else {
+                if !mc_jar_path.exists() {
+                    self.download_required_files(app_handle, Vec::new(), Some(mc_jar_name))
+                        .await?;
+                }
+            }
+
+            self.ensure_fabric_libraries_available().await?;
+
+            return Ok(());
+        }
+
         let requirements_to_check = self.determine_requirements_to_check();
-        let client_jar = if self.client_type == ClientType::Fabric {
-            Some(format!("fabric_{}.jar", self.version.replace(' ', "_")))
-        } else {
-            None
-        };
+        let client_jar = None;
 
         let (need_download, files_to_download) =
             self.check_if_download_needed(&requirements_to_check, &client_jar);
@@ -657,7 +875,6 @@ impl Client {
         let app_handle_clone_for_run = options.app_handle.clone();
         let app_handle_clone_for_crash_handling = options.app_handle.clone();
         let optional_analytics = SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value);
-        // let cordshare = SETTINGS.lock().is_ok_and(|s| s.cordshare.value);
         let irc_chat = SETTINGS.lock().is_ok_and(|s| s.irc_chat.value);
         let lang = SETTINGS
             .lock()
@@ -673,7 +890,6 @@ impl Client {
             } else {
                 optional_analytics
             },
-            // cordshare,
             irc_chat,
             lang,
         );
@@ -766,17 +982,35 @@ impl Client {
             let sep = PATH_SEPARATOR;
 
             let classpath = if self_clone.client_type == ClientType::Fabric {
-                format!(
-                    "{}{}{}{}*{}{}",
-                    minecraft_client_folder
-                        .join(format!("fabric_{}.jar", self.version))
-                        .display(),
-                    sep,
-                    libraries_path.display(),
-                    std::path::MAIN_SEPARATOR,
-                    sep,
-                    agent_overlay_folder.display()
-                )
+                let mc_jar = minecraft_client_folder.join(format!(
+                    "fabric_{}.jar",
+                    sanitize_version_for_paths(&self_clone.version)
+                ));
+
+                let mut cp_parts: Vec<String> = Vec::new();
+                cp_parts.push(mc_jar.display().to_string());
+
+                let versioned_libs_dir = DATA
+                    .root_dir
+                    .join(LIBRARIES_FABRIC_FOLDER)
+                    .join(sanitize_version_for_paths(&self_clone.version));
+                if versioned_libs_dir.exists() {
+                    for jar in collect_jars_recursive(&versioned_libs_dir, false) {
+                        cp_parts.push(jar.display().to_string());
+                    }
+                }
+
+                if libraries_path.exists() {
+                    for jar in collect_jars_recursive(&libraries_path, true) {
+                        if !is_fabric_loader_jar(&jar) {
+                            cp_parts.push(jar.display().to_string());
+                        }
+                    }
+                }
+
+                cp_parts.push(agent_overlay_folder.display().to_string());
+
+                cp_parts.join(sep)
             } else {
                 format!(
                     "{}{}{}{}*{}{}",
