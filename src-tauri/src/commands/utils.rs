@@ -4,6 +4,7 @@ use crate::commands::clients::{
     get_running_client_ids, get_running_custom_client_ids, stop_client, stop_custom_client,
 };
 use crate::core::clients::manager::ClientManager;
+use crate::core::utils::discord_rpc;
 use crate::core::utils::globals::CODENAME;
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
@@ -210,4 +211,15 @@ pub async fn decode_base64(input: String) -> Result<String, String> {
             })
         },
     )
+}
+
+#[tauri::command]
+pub fn update_presence(details: String, state: String) -> Result<(), String> {
+    log_debug!(
+        "Updating Discord presence: details='{}', state='{}'",
+        details,
+        state
+    );
+    discord_rpc::update_activity_async(details, state);
+    Ok(())
 }

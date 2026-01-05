@@ -57,6 +57,8 @@ impl CustomClient {
             insecure: self.insecure,
             launches: self.launches,
             downloads: 0,
+            rating_avg: None,
+            rating_count: None,
             size: 0,
             requirement_mods: None,
             client_type: ClientType::Default,

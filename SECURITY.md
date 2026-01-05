@@ -28,18 +28,19 @@ We use a special tool called **CollapseScanner** to analyze files. It detects:
 
 ## 3. Warden: Our Integrity Protection
 
-You may notice some clients use a system called **Warden**. This is our custom security layer designed to prevent the theft and unauthorized redistribution of exclusive clients.
+You might see that some clients use a system called Warden. It is designed to stop the theft of client JAR files and ensure their integrity.
 
 ### Why do we use Warden?
 
-Developers spend a lot of time creating clients. Unfortunately, "client dumping" (stealing code) is common. Warden prevents this by:
+Developers spend a lot of time adding clients. Unfortunately, others can steal our client JARs and use them in their loaders. Warden prevents this by:
 
--   **Encrypted Integrity:** Critical data within specific clients is encrypted and only decrypted in the computer's memory when the valid CollapseLoader session is active.
--   **Anti-Tamper:** It ensures that the client files haven't been modified or injected with third-party viruses before you run them.
--   **Session Verification:** Warden uses a native bridge to verify that the client was launched via the official CollapseLoader, preventing unauthorized launchers from running stolen copies.
+-   **Encrypted integrity**: critical data within specific clients is encrypted and only decrypted in the computer's memory.
 
 **Is Warden safe?**
-Yes. Unlike malicious obfuscation used by virus creators, Warden is **not** designed to hide malware. It is purely an anti JAR theft measure. Since the Loader itself is open source, you can see exactly how the Warden agent is initialized.
+Yes. Warden is not designed to hide malware, its purpose is to prevent JAR theft. Since the loader is open source, you can audit how the Warden agent initializes and communicates. You can check any connections made by Warden to be sure that it is safe.
+
+> [!NOTE]
+> Warden is currently unavailable and is not being used by any clients. We will let our users know when it is turned back on.
 
 ## 4. Safe Downloads & Builds
 

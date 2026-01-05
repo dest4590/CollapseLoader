@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, onMounted, shallowRef, nextTick, watch } from 'vue';
+import { computed, ref, onBeforeUnmount, onMounted, shallowRef, nextTick, watch, triggerRef } from 'vue';
 import {
     StopCircle,
     Terminal,
@@ -15,15 +15,24 @@ import {
     Info,
     ZoomOut,
     RefreshCw,
+    MessageSquare,
+    Trash2,
+    Send,
+    Camera,
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import gsap from 'gsap';
-import type { Client, InstallProgress, ClientDetails } from '../../../types/ui';
+import type { Client, InstallProgress, ClientDetails, ClientComment } from '../../../types/ui';
 import InsecureClientWarningModal from '../../modals/clients/InsecureClientWarningModal.vue';
 import ClientInfo from './ClientInfo.vue';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { useModal } from '../../../services/modalService';
+import { userService } from '../../../services/userService';
+import { apiGet, apiPost } from '../../../services/authClient';
+import { formatDate } from '../../../utils/utils';
+import { ensureAuthUrl } from '../../../config';
+import { useUser } from '../../../composables/useUser';
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
@@ -61,9 +70,49 @@ const cardRef = shallowRef<HTMLElement | null>(null);
 const placeholder = shallowRef<HTMLElement | null>(null);
 const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
-const activeTab = ref<'info' | 'screenshots'>('info');
+const activeTab = ref<'info' | 'screenshots' | 'comments'>('info');
 
-const previousTab = ref<'info' | 'screenshots'>('info');
+const comments = ref<ClientComment[]>([]);
+const isLoadingComments = ref(false);
+const newCommentText = ref('');
+const isPostingComment = ref(false);
+const currentUser = ref<any>(null);
+const myRating = ref<number | null>(null);
+const isSubmittingRating = ref(false);
+const isLoadingMyRating = ref(false);
+
+const { isAuthenticated } = useUser();
+
+const MAX_COMMENT_LENGTH = 500;
+const canComment = computed(() => !!currentUser.value);
+const canRate = computed(() => isAuthenticated.value);
+
+const fetchMyRating = async () => {
+    if (!canRate.value) return;
+    if (isLoadingMyRating.value) return;
+    if (myRating.value !== null) return;
+
+    isLoadingMyRating.value = true;
+    try {
+        await ensureAuthUrl();
+
+        const endpoint = props.client.client_type === 'fabric'
+            ? `/api/fabric-clients/${props.client.id}/rating/`
+            : `/api/clients/${props.client.id}/rating/`;
+
+        const data = await apiGet<{ my_rating?: number | null }>(endpoint);
+        if (typeof data?.my_rating === 'number') {
+            myRating.value = data.my_rating;
+        }
+    } catch (error) {
+        // Silent: rating is optional UI
+        console.warn('Failed to fetch my rating:', error);
+    } finally {
+        isLoadingMyRating.value = false;
+    }
+};
+
+const previousTab = ref<'info' | 'screenshots' | 'comments'>('info');
 const slideDirection = ref<'left' | 'right'>('right');
 
 const isScreenshotViewerOpen = ref(false);
@@ -164,11 +213,104 @@ const stopScrollbarDrag = () => {
     document.body.style.userSelect = '';
 };
 
+const fetchComments = async () => {
+    if (isLoadingComments.value) return;
+    isLoadingComments.value = true;
+    try {
+        const response = await invoke<ClientComment[]>('get_client_comments', { clientId: props.client.id });
+        comments.value = response;
+    } catch (error) {
+        console.error('Failed to fetch comments:', error);
+    } finally {
+        isLoadingComments.value = false;
+    }
+};
+
+const postComment = async () => {
+    const trimmed = newCommentText.value.trim();
+    if (!trimmed || isPostingComment.value) return;
+
+    if (trimmed.length > MAX_COMMENT_LENGTH) {
+        newCommentText.value = trimmed.slice(0, MAX_COMMENT_LENGTH);
+        return;
+    }
+
+    isPostingComment.value = true;
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        const newComment = await invoke<ClientComment>('add_client_comment', {
+            clientId: props.client.id,
+            content: trimmed,
+            userToken: token
+        });
+
+        comments.value.unshift(newComment);
+        newCommentText.value = '';
+
+        if (clientDetails.value) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                comments_count: (clientDetails.value.comments_count || 0) + 1
+            };
+        }
+    } catch (error) {
+        console.error('Failed to post comment:', error);
+    } finally {
+        isPostingComment.value = false;
+    }
+};
+
+const deleteComment = async (commentId: number) => {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) return;
+
+        await invoke('delete_client_comment', {
+            clientId: props.client.id,
+            commentId: commentId,
+            userToken: token
+        });
+
+        comments.value = comments.value.filter(c => c.id !== commentId);
+
+        if (clientDetails.value && clientDetails.value.comments_count) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                comments_count: Math.max(0, clientDetails.value.comments_count - 1)
+            };
+        }
+    } catch (error) {
+        console.error('Failed to delete comment:', error);
+    }
+};
+
+const loadCurrentUser = async () => {
+    try {
+        const info = await userService.getUserStatus();
+        currentUser.value = { username: info.username };
+    } catch (e) {
+        console.error("Failed to load user info", e);
+    }
+};
+
 watch(isExpanded, (newVal) => {
     if (newVal) {
+        loadCurrentUser();
+        fetchMyRating();
+        document.body.style.overflow = 'hidden';
         nextTick(() => {
+            updateScrollbar();
         });
     } else {
+        document.body.style.overflow = '';
+    }
+});
+
+watch(canRate, (newVal) => {
+    if (newVal && isExpanded.value) {
+        fetchMyRating();
     }
 });
 
@@ -188,15 +330,19 @@ const maxZoom = 5;
 const minZoom = 1;
 const zoomStep = 0.5;
 
-const tabOrder = ['info', 'screenshots'] as const;
+const tabOrder = ['info', 'screenshots', 'comments'] as const;
 
-const changeTab = (newTab: 'info' | 'screenshots') => {
+const changeTab = (newTab: 'info' | 'screenshots' | 'comments') => {
     const currentIndex = tabOrder.indexOf(activeTab.value);
     const newIndex = tabOrder.indexOf(newTab);
 
     slideDirection.value = newIndex > currentIndex ? 'right' : 'left';
     previousTab.value = activeTab.value;
     activeTab.value = newTab;
+
+    if (newTab === 'comments') {
+        fetchComments();
+    }
 };
 
 const handleLaunchClick = () => {
@@ -253,6 +399,60 @@ const showInsecureWarning = () => {
 const clientIsRunning = computed(() => !!props.isClientRunning);
 const clientIsInstalling = computed(() => !!props.isClientInstalling);
 const currentInstallStatus = computed(() => props.installationStatus);
+
+const ratingAvg = computed(() => {
+    const avg = clientDetails.value?.rating_avg ?? props.client.rating_avg;
+    return typeof avg === 'number' ? avg : null;
+});
+
+const ratingCount = computed(() => {
+    const count = clientDetails.value?.rating_count ?? props.client.rating_count;
+    return typeof count === 'number' ? count : 0;
+});
+
+const ratingRounded = computed(() => {
+    if (ratingAvg.value === null) return null;
+    return Math.round(ratingAvg.value * 2) / 2;
+});
+
+const submitRating = async (value: number) => {
+    if (isSubmittingRating.value) return;
+    if (!canRate.value) return;
+
+    const previousRating = myRating.value;
+    myRating.value = value;
+
+    isSubmittingRating.value = true;
+    try {
+        await ensureAuthUrl();
+
+        const endpoint = props.client.client_type === 'fabric'
+            ? `/api/fabric-clients/${props.client.id}/rating/`
+            : `/api/clients/${props.client.id}/rating/`;
+
+        const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number }>(endpoint, { rating: value });
+
+        if (typeof data?.my_rating === 'number') {
+            myRating.value = data.my_rating;
+        } else {
+            myRating.value = value;
+        }
+
+        if (clientDetails.value) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                rating_avg: typeof data?.rating_avg === 'number' || data?.rating_avg === null ? data.rating_avg : clientDetails.value.rating_avg,
+                rating_count: typeof data?.rating_count === 'number' ? data.rating_count : clientDetails.value.rating_count,
+            };
+            triggerRef(clientDetails);
+        }
+    } catch (error) {
+        console.error('Failed to submit rating:', error);
+        myRating.value = previousRating;
+    } finally {
+        isSubmittingRating.value = false;
+    }
+};
 
 
 const expandCard = async () => {
@@ -969,10 +1169,10 @@ onBeforeUnmount(() => {
                                         <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                         <span v-if="client.working">{{
                                             t('home.download')
-                                        }}</span>
+                                            }}</span>
                                         <span v-else-if="!client.working">{{
                                             t('home.unavailable')
-                                        }}</span>
+                                            }}</span>
                                     </span>
                                     <span class="flex items-center get-text absolute inset-0 opacity-0">
                                         {{ client.meta.size || '0' }} MB
@@ -1000,43 +1200,116 @@ onBeforeUnmount(() => {
                                 <div class="tabs tabs-boxed mb-4">
                                     <a class="tab" :class="{ 'tab-active': activeTab === 'info' }"
                                         @click="changeTab('info')">
+                                        <Info class="w-4 h-4 mr-2" />
                                         {{ t('client.details.info_tab') }}
                                     </a>
                                     <a class="tab" :class="{ 'tab-active': activeTab === 'screenshots' }"
                                         @click="changeTab('screenshots')">
+                                        <Camera class="w-4 h-4 mr-2" />
                                         {{ t('client.details.screenshots_tab') }}
+                                    </a>
+                                    <a class="tab" :class="{ 'tab-active': activeTab === 'comments' }"
+                                        @click="changeTab('comments')">
+                                        <div class="flex items-center gap-2">
+                                            <MessageSquare class="w-4 h-4" />
+                                            <span>{{ t('client.details.comments_tab') }}</span>
+                                            <span v-if="clientDetails?.comments_count"
+                                                class="badge badge-sm badge-ghost">{{ clientDetails.comments_count
+                                                }}</span>
+                                        </div>
                                     </a>
                                 </div>
 
                                 <div>
                                     <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
                                         <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1">
-                                            <div class="mb-6 space-y-2">
-                                                <dl class="divide-y divide-base-content/10">
-                                                    <div v-if="clientDetails.source_link"
-                                                        class="py-3 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 items-center transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
-                                                        <dt class="text-sm font-medium text-base-content/70">{{
-                                                            t('client.details.source_link') }}</dt>
-                                                        <dd class="text-sm text-base-content col-span-1 md:col-span-2">
-                                                            <a @click="handleClientSourceLink(clientDetails.source_link)"
-                                                                target="_blank" rel="noopener noreferrer"
-                                                                class="link link-primary link-hover inline-flex items-center gap-1.5 text-xs truncate">
-                                                                <span>{{ clientDetails.source_link }}</span>
-                                                                <ExternalLink class="w-3 h-3" />
-                                                            </a>
-                                                        </dd>
+                                            <div class="grid grid-cols-1 gap-3 mb-6 w-full">
+                                                <div
+                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 w-full">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                                        {{ t('client.details.rating') }}
+                                                    </span>
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <div class="flex items-center gap-3">
+                                                            <div v-if="canRate" :key="`rating-${myRating}`"
+                                                                class="rating rating-sm">
+                                                                <input type="radio" :name="`rating-input-${client.id}`"
+                                                                    class="rating-hidden" />
+                                                                <template v-for="i in 5" :key="i">
+                                                                    <input type="radio"
+                                                                        :name="`rating-input-${client.id}`"
+                                                                        class="mask mask-star-2 bg-warning"
+                                                                        :checked="(myRating ?? 0) === i"
+                                                                        :disabled="isSubmittingRating"
+                                                                        @click="submitRating(i)" />
+                                                                </template>
+                                                            </div>
+
+                                                            <div v-else class="tooltip tooltip-bottom"
+                                                                :data-tip="t('client.details.login_to_rate')">
+                                                                <div v-if="ratingRounded !== null"
+                                                                    class="rating rating-half rating-sm pointer-events-none opacity-80">
+                                                                    <input type="radio"
+                                                                        :name="`rating-display-${client.id}`"
+                                                                        class="rating-hidden" disabled />
+                                                                    <template v-for="i in 5" :key="i">
+                                                                        <input type="radio"
+                                                                            :name="`rating-display-${client.id}`"
+                                                                            class="mask mask-star-2 mask-half-1 bg-warning"
+                                                                            :checked="ratingRounded === (i - 0.5)"
+                                                                            disabled />
+                                                                        <input type="radio"
+                                                                            :name="`rating-display-${client.id}`"
+                                                                            class="mask mask-star-2 mask-half-2 bg-warning"
+                                                                            :checked="ratingRounded === i" disabled />
+                                                                    </template>
+                                                                </div>
+                                                                <div v-else
+                                                                    class="text-xs font-medium text-base-content/60">
+                                                                    {{ t('client.details.no_rating') }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="text-xs font-semibold text-base-content/80 whitespace-nowrap">
+                                                            <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1)
+                                                                }}/5</span>
+                                                            <span v-else>—</span>
+                                                            <span class="text-base-content/50"> ({{ ratingCount
+                                                                }})</span>
+                                                        </div>
                                                     </div>
-                                                    <div v-if="clientDetails.created_at"
-                                                        class="py-3 transition-all duration-300 hover:bg-base-content/5 -mx-4 px-4 rounded-lg">
-                                                        <dt class="text-sm font-medium text-base-content/70">{{
-                                                            t('client.details.created') }}</dt>
-                                                        <dd class="text-base-content col-span-1 md:col-span-2 text-xs">
-                                                            {{ new
-                                                                Date(clientDetails.created_at).toLocaleDateString('en-GB')
-                                                            }}
-                                                        </dd>
+                                                </div>
+
+                                                <div v-if="clientDetails.source_link"
+                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 hover:bg-base-200/60 transition-colors group w-full">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                                        {{ t('client.details.source_link') }}
+                                                    </span>
+                                                    <a @click="handleClientSourceLink(clientDetails.source_link)"
+                                                        class="flex items-center gap-2 text-xs font-medium text-primary hover:text-primary-focus transition-colors truncate cursor-pointer">
+                                                        <ExternalLink class="w-3.5 h-3.5 shrink-0" />
+                                                        <span class="truncate">{{ clientDetails.source_link }}</span>
+                                                    </a>
+                                                </div>
+
+                                                <div v-if="clientDetails.created_at"
+                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 w-full">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                                        {{ t('client.details.created') }}
+                                                    </span>
+                                                    <div
+                                                        class="flex items-center gap-2 text-xs font-medium text-base-content/80">
+                                                        <Info class="w-3.5 h-3.5 text-base-content/30" />
+                                                        {{ new
+                                                            Date(clientDetails.created_at).toLocaleDateString(undefined, {
+                                                                dateStyle: 'medium'
+                                                            }) }}
                                                     </div>
-                                                </dl>
+                                                </div>
                                             </div>
 
                                             <div
@@ -1114,6 +1387,76 @@ onBeforeUnmount(() => {
                                             </div>
                                             <div v-else class="text-center py-8 text-base-content/60">
                                                 <p>{{ t('client.details.no_screenshots') }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div v-else-if="activeTab === 'comments'" key="comments">
+                                            <div class="flex flex-col">
+                                                <div class="flex gap-2">
+                                                    <input v-model="newCommentText" type="text"
+                                                        :placeholder="t('client.comments.placeholder')"
+                                                        class="input input-bordered w-full input-sm"
+                                                        :maxlength="MAX_COMMENT_LENGTH" @keyup.enter="postComment"
+                                                        :disabled="isPostingComment || !canComment" />
+                                                    <button class="btn btn-primary btn-sm btn-square"
+                                                        @click="postComment"
+                                                        :disabled="isPostingComment || !newCommentText.trim() || !canComment">
+                                                        <span v-if="isPostingComment"
+                                                            class="loading loading-spinner loading-xs"></span>
+                                                        <Send v-else class="w-4 h-4" />
+                                                    </button>
+                                                </div>
+
+                                                <div class="flex justify-between text-[10px] mt-1 opacity-50">
+                                                    <span v-if="!canComment">{{ t('login') }}</span>
+                                                    <span>{{ Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
+                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
+                                                </div>
+
+                                                <div v-if="isLoadingComments" class="flex justify-center py-8">
+                                                    <span
+                                                        class="loading loading-spinner loading-md text-primary"></span>
+                                                </div>
+                                                <div v-else-if="comments.length === 0"
+                                                    class="text-center py-8 text-base-content/50">
+                                                    <MessageSquare class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                                    <p>{{ t('client.comments.empty') }}</p>
+                                                </div>
+                                                <div v-else
+                                                    class="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                                                    <div v-for="comment in comments" :key="comment.id"
+                                                        class="chat chat-start">
+                                                        <div class="chat-image avatar">
+                                                            <div class="w-8 rounded-full">
+                                                                <img v-if="comment.author_avatar"
+                                                                    :src="comment.author_avatar"
+                                                                    :alt="comment.author_username" />
+                                                                <div v-else
+                                                                    class="bg-base-200 text-base-content/70 w-8 h-8 flex items-center justify-center text-xs font-semibold">
+                                                                    {{ (comment.author_username?.[0] ||
+                                                                        '?').toUpperCase() }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
+                                                            {{ comment.author_username }}
+                                                            <time class="text-[10px]">{{ formatDate(comment.created_at)
+                                                                }}</time>
+                                                            <button
+                                                                v-if="currentUser && currentUser.username === comment.author_username"
+                                                                class="btn btn-ghost btn-xs btn-circle text-error"
+                                                                @click="deleteComment(comment.id)"
+                                                                :title="t('client.comments.delete')">
+                                                                <Trash2 class="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                        <div
+                                                            class="chat-bubble chat-bubble-secondary text-sm wrap-break-word group relative">
+                                                            {{ comment.content }}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </transition>

@@ -10,6 +10,8 @@ export interface Client {
     insecure: boolean;
     launches: number;
     downloads: number;
+    rating_avg?: number | null;
+    rating_count?: number;
     client_type?: string; // 'default' | 'fabric'
     meta: {
         [key: string]: any;
@@ -41,6 +43,20 @@ export interface ClientDetails {
     }[];
     client_type?: string;
     created_at: string;
+    comments_count?: number;
+    rating_avg?: number | null;
+    rating_count?: number;
+}
+
+export interface ClientComment {
+    id: number;
+    client: number;
+    user: number;
+    author_username: string;
+    author_avatar: string | null;
+    content: string;
+    created_at: string;
+    updated_at?: string;
 }
 
 export interface InstallProgress {

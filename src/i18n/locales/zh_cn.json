@@ -351,7 +351,11 @@
   "appLogs": {
     "copyLogs": "复制",
     "autoScroll": "自动滚动",
-    "noLogs": "暂无应用日志。"
+    "noLogs": "暂无应用日志。",
+    "searchPlaceholder": "搜索日志...",
+    "download": "下载日志",
+    "filterByLevel": "按级别过滤",
+    "noMatchingLogs": "没有符合过滤条件的日志。"
   },
   "blockedUsers": {
     "title": "已屏蔽用户（{count}）",
@@ -422,7 +426,8 @@
       "order": {
         "asc": "升序",
         "desc": "降序"
-      }
+      },
+      "rating": "按评级"
     },
     "filters": {
       "installed": "已安装"
@@ -988,6 +993,9 @@
       "loading": "正在加载详情...",
       "info_tab": "信息",
       "screenshots_tab": "截图",
+      "rating": "评分",
+      "no_rating": "暂无评分",
+      "login_to_rate": "登录后即可评分",
       "source_link": "源链接",
       "created": "创建时间",
       "changelog": "更新日志",
@@ -1004,7 +1012,13 @@
           "drag_pan": "拖拽 - 平移 | +/- - 缩放 | 0 - 重置"
         }
       },
-      "no_changelog_desc": "更新与改动将显示在此处。"
+      "no_changelog_desc": "更新与改动将显示在此处。",
+      "comments_tab": "评论"
+    },
+    "comments": {
+      "delete": "删除",
+      "empty": "暂无评论。快来发表你的见解吧！",
+      "placeholder": "写一条评论..."
     }
   },
   "customization": {},
@@ -1102,5 +1116,6 @@
     "extracting": "正在解压",
     "download_complete": "下载完成",
     "installation_complete": "安装完成"
-  }
+  },
+  "login": "您需要登录您的帐户。"
 }

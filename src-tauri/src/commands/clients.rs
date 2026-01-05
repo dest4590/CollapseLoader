@@ -768,3 +768,81 @@ pub async fn stop_custom_client(id: u32) -> Result<(), String> {
         .await
         .map_err(|e| format!("Stop custom client task error: {e}"))?
 }
+
+#[tauri::command]
+pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, String> {
+    log_debug!("Fetching comments for client ID: {}", client_id);
+    let api_url = get_auth_url().await?;
+    let url = format!("{api_url}api/clients/{client_id}/comments/");
+
+    let client = reqwest::Client::new();
+    let response = client.get(&url).send().await.map_err(|e| {
+        log_error!("Failed to fetch client comments from {}: {}", url, e);
+        format!("Failed to fetch client comments: {e}")
+    })?;
+
+    if !response.status().is_success() {
+        return Err(format!("API returned error: {}", response.status()));
+    }
+
+    let comments: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse client comments: {e}"))?;
+
+    Ok(comments)
+}
+
+#[tauri::command]
+pub async fn add_client_comment(
+    client_id: u32,
+    content: String,
+    user_token: String,
+) -> Result<serde_json::Value, String> {
+    let api_url = get_auth_url().await?;
+    let url = format!("{api_url}api/clients/{client_id}/comments/");
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(&url)
+        .header("Authorization", format!("Token {}", user_token))
+        .json(&serde_json::json!({ "content": content }))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to add comment: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("API returned error: {}", response.status()));
+    }
+
+    let comment: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {e}"))?;
+
+    Ok(comment)
+}
+
+#[tauri::command]
+pub async fn delete_client_comment(
+    client_id: u32,
+    comment_id: u32,
+    user_token: String,
+) -> Result<(), String> {
+    let api_url = get_auth_url().await?;
+    let url = format!("{api_url}api/clients/{client_id}/comments/{comment_id}/");
+
+    let client = reqwest::Client::new();
+    let response = client
+        .delete(&url)
+        .header("Authorization", format!("Token {}", user_token))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to delete comment: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("API returned error: {}", response.status()));
+    }
+
+    Ok(())
+}

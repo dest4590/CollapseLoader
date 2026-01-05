@@ -8,7 +8,7 @@ import json
 import os
 
 PORT = 8000
-MOCK_FILE = os.path.join(os.path.dirname(__file__), "..", "docs", "mock_release.json")
+MOCK_FILE = os.path.join(os.path.dirname(__file__), "..", "docs", "versioning", "mock_release.json")
 
 
 class Handler(BaseHTTPRequestHandler):
