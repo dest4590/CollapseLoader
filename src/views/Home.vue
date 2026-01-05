@@ -126,7 +126,7 @@ try {
 
 const activeFilters = ref<Filters>(initialFilters);
 
-let initialSortKey: 'popularity' | 'name' | 'newest' | 'version' = 'popularity';
+let initialSortKey: 'popularity' | 'name' | 'newest' | 'version' | 'rating' = 'popularity';
 
 try {
     const stored = localStorage.getItem(CLIENT_SORT_KEY);
@@ -135,7 +135,7 @@ try {
     console.error('Failed to read client sort key from localStorage:', e);
 }
 
-const clientSortKey = ref<'popularity' | 'name' | 'newest' | 'version'>(initialSortKey);
+const clientSortKey = ref<'popularity' | 'name' | 'newest' | 'version' | 'rating'>(initialSortKey);
 
 let initialSortOrder: 'asc' | 'desc' = 'desc';
 try {
@@ -463,6 +463,23 @@ const filteredClients = computed(() => {
                 if (na !== nb) {
                     return (nb - na) * sortMultiplier;
                 }
+            }
+
+            return b.name.localeCompare(a.name) * sortMultiplier;
+        });
+    } else if (sortKey === 'rating') {
+        clientsList.sort((a, b) => {
+            const aAvg = (a.rating_avg ?? 0) as number;
+            const bAvg = (b.rating_avg ?? 0) as number;
+
+            if (aAvg !== bAvg) {
+                return (bAvg - aAvg) * sortMultiplier;
+            }
+
+            const aCount = (a.rating_count ?? 0) as number;
+            const bCount = (b.rating_count ?? 0) as number;
+            if (aCount !== bCount) {
+                return (bCount - aCount) * sortMultiplier;
             }
 
             return b.name.localeCompare(a.name) * sortMultiplier;

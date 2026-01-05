@@ -426,7 +426,8 @@
       "order": {
         "asc": "Ascending",
         "desc": "Descending"
-      }
+      },
+      "rating": "By rating"
     },
     "filters": {
       "installed": "Installed"
@@ -1006,6 +1007,9 @@
       "loading": "Loading details...",
       "info_tab": "Information",
       "screenshots_tab": "Screenshots",
+      "rating": "Rating",
+      "no_rating": "No ratings yet",
+      "login_to_rate": "Log in to rate",
       "source_link": "Source Link",
       "created": "Created",
       "changelog": "Changelog",

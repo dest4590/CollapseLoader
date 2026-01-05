@@ -426,7 +426,8 @@
       "order": {
         "asc": "升序",
         "desc": "降序"
-      }
+      },
+      "rating": "按评级"
     },
     "filters": {
       "installed": "已安装"
@@ -992,6 +993,9 @@
       "loading": "正在加载详情...",
       "info_tab": "信息",
       "screenshots_tab": "截图",
+      "rating": "评分",
+      "no_rating": "暂无评分",
+      "login_to_rate": "登录后即可评分",
       "source_link": "源链接",
       "created": "创建时间",
       "changelog": "更新日志",

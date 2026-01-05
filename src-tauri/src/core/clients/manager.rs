@@ -30,6 +30,8 @@ impl ClientManager {
                 id: i,
                 name: "Mock client #".to_owned() + &i.to_string(),
                 version: "1.16.5".to_string(),
+                rating_avg: Some(rng.random_range(10..=50) as f32 / 10.0),
+                rating_count: Some(rng.random_range(0..=250)),
                 meta: Meta {
                     asset_index: "1.16".to_string(),
                     is_new: false,

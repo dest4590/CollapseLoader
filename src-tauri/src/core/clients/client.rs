@@ -216,7 +216,7 @@ pub enum ClientType {
     Fabric,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
 pub struct Client {
     pub id: u32,
     pub name: String,
@@ -230,6 +230,10 @@ pub struct Client {
     pub insecure: bool,
     pub launches: u32,
     pub downloads: u32,
+    #[serde(default)]
+    pub rating_avg: Option<f32>,
+    #[serde(default)]
+    pub rating_count: Option<u32>,
     #[serde(default)]
     pub size: u64,
     #[serde(default = "default_meta")]

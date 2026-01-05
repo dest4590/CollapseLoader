@@ -9,7 +9,7 @@ interface Filters {
     installed: boolean;
 }
 
-type SortKey = 'popularity' | 'name' | 'newest' | 'version';
+type SortKey = 'popularity' | 'name' | 'newest' | 'version' | 'rating';
 type SortOrder = 'asc' | 'desc';
 
 const props = defineProps<{
@@ -88,6 +88,7 @@ onBeforeUnmount(() => {
                     <select class="select select-sm" v-model="localSortKey">
                         <option value="newest">{{ t('home.sort.newest') }}</option>
                         <option value="popularity">{{ t('home.sort.popularity') }}</option>
+                        <option value="rating">{{ t('home.sort.rating') }}</option>
                         <option value="name">{{ t('home.sort.name') }}</option>
                         <option value="version">{{ t('home.sort.version') }}</option>
                     </select>

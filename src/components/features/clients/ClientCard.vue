@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, onMounted, shallowRef, nextTick, watch } from 'vue';
+import { computed, ref, onBeforeUnmount, onMounted, shallowRef, nextTick, watch, triggerRef } from 'vue';
 import {
     StopCircle,
     Terminal,
@@ -29,7 +29,10 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { useModal } from '../../../services/modalService';
 import { userService } from '../../../services/userService';
+import { apiGet, apiPost } from '../../../services/authClient';
 import { formatDate } from '../../../utils/utils';
+import { ensureAuthUrl } from '../../../config';
+import { useUser } from '../../../composables/useUser';
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
@@ -74,9 +77,40 @@ const isLoadingComments = ref(false);
 const newCommentText = ref('');
 const isPostingComment = ref(false);
 const currentUser = ref<any>(null);
+const myRating = ref<number | null>(null);
+const isSubmittingRating = ref(false);
+const isLoadingMyRating = ref(false);
+
+const { isAuthenticated } = useUser();
 
 const MAX_COMMENT_LENGTH = 500;
 const canComment = computed(() => !!currentUser.value);
+const canRate = computed(() => isAuthenticated.value);
+
+const fetchMyRating = async () => {
+    if (!canRate.value) return;
+    if (isLoadingMyRating.value) return;
+    if (myRating.value !== null) return;
+
+    isLoadingMyRating.value = true;
+    try {
+        await ensureAuthUrl();
+
+        const endpoint = props.client.client_type === 'fabric'
+            ? `/api/fabric-clients/${props.client.id}/rating/`
+            : `/api/clients/${props.client.id}/rating/`;
+
+        const data = await apiGet<{ my_rating?: number | null }>(endpoint);
+        if (typeof data?.my_rating === 'number') {
+            myRating.value = data.my_rating;
+        }
+    } catch (error) {
+        // Silent: rating is optional UI
+        console.warn('Failed to fetch my rating:', error);
+    } finally {
+        isLoadingMyRating.value = false;
+    }
+};
 
 const previousTab = ref<'info' | 'screenshots' | 'comments'>('info');
 const slideDirection = ref<'left' | 'right'>('right');
@@ -264,12 +298,19 @@ const loadCurrentUser = async () => {
 watch(isExpanded, (newVal) => {
     if (newVal) {
         loadCurrentUser();
+        fetchMyRating();
         document.body.style.overflow = 'hidden';
         nextTick(() => {
             updateScrollbar();
         });
     } else {
         document.body.style.overflow = '';
+    }
+});
+
+watch(canRate, (newVal) => {
+    if (newVal && isExpanded.value) {
+        fetchMyRating();
     }
 });
 
@@ -358,6 +399,60 @@ const showInsecureWarning = () => {
 const clientIsRunning = computed(() => !!props.isClientRunning);
 const clientIsInstalling = computed(() => !!props.isClientInstalling);
 const currentInstallStatus = computed(() => props.installationStatus);
+
+const ratingAvg = computed(() => {
+    const avg = clientDetails.value?.rating_avg ?? props.client.rating_avg;
+    return typeof avg === 'number' ? avg : null;
+});
+
+const ratingCount = computed(() => {
+    const count = clientDetails.value?.rating_count ?? props.client.rating_count;
+    return typeof count === 'number' ? count : 0;
+});
+
+const ratingRounded = computed(() => {
+    if (ratingAvg.value === null) return null;
+    return Math.round(ratingAvg.value * 2) / 2;
+});
+
+const submitRating = async (value: number) => {
+    if (isSubmittingRating.value) return;
+    if (!canRate.value) return;
+
+    const previousRating = myRating.value;
+    myRating.value = value;
+
+    isSubmittingRating.value = true;
+    try {
+        await ensureAuthUrl();
+
+        const endpoint = props.client.client_type === 'fabric'
+            ? `/api/fabric-clients/${props.client.id}/rating/`
+            : `/api/clients/${props.client.id}/rating/`;
+
+        const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number }>(endpoint, { rating: value });
+
+        if (typeof data?.my_rating === 'number') {
+            myRating.value = data.my_rating;
+        } else {
+            myRating.value = value;
+        }
+
+        if (clientDetails.value) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                rating_avg: typeof data?.rating_avg === 'number' || data?.rating_avg === null ? data.rating_avg : clientDetails.value.rating_avg,
+                rating_count: typeof data?.rating_count === 'number' ? data.rating_count : clientDetails.value.rating_count,
+            };
+            triggerRef(clientDetails);
+        }
+    } catch (error) {
+        console.error('Failed to submit rating:', error);
+        myRating.value = previousRating;
+    } finally {
+        isSubmittingRating.value = false;
+    }
+};
 
 
 const expandCard = async () => {
@@ -1074,10 +1169,10 @@ onBeforeUnmount(() => {
                                         <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                         <span v-if="client.working">{{
                                             t('home.download')
-                                        }}</span>
+                                            }}</span>
                                         <span v-else-if="!client.working">{{
                                             t('home.unavailable')
-                                        }}</span>
+                                            }}</span>
                                     </span>
                                     <span class="flex items-center get-text absolute inset-0 opacity-0">
                                         {{ client.meta.size || '0' }} MB
@@ -1129,6 +1224,64 @@ onBeforeUnmount(() => {
                                     <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
                                         <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1">
                                             <div class="grid grid-cols-1 gap-3 mb-6 w-full">
+                                                <div
+                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 w-full">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                                        {{ t('client.details.rating') }}
+                                                    </span>
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <div class="flex items-center gap-3">
+                                                            <div v-if="canRate" :key="`rating-${myRating}`"
+                                                                class="rating rating-sm">
+                                                                <input type="radio" :name="`rating-input-${client.id}`"
+                                                                    class="rating-hidden" />
+                                                                <template v-for="i in 5" :key="i">
+                                                                    <input type="radio"
+                                                                        :name="`rating-input-${client.id}`"
+                                                                        class="mask mask-star-2 bg-warning"
+                                                                        :checked="(myRating ?? 0) === i"
+                                                                        :disabled="isSubmittingRating"
+                                                                        @click="submitRating(i)" />
+                                                                </template>
+                                                            </div>
+
+                                                            <div v-else class="tooltip tooltip-bottom"
+                                                                :data-tip="t('client.details.login_to_rate')">
+                                                                <div v-if="ratingRounded !== null"
+                                                                    class="rating rating-half rating-sm pointer-events-none opacity-80">
+                                                                    <input type="radio"
+                                                                        :name="`rating-display-${client.id}`"
+                                                                        class="rating-hidden" disabled />
+                                                                    <template v-for="i in 5" :key="i">
+                                                                        <input type="radio"
+                                                                            :name="`rating-display-${client.id}`"
+                                                                            class="mask mask-star-2 mask-half-1 bg-warning"
+                                                                            :checked="ratingRounded === (i - 0.5)"
+                                                                            disabled />
+                                                                        <input type="radio"
+                                                                            :name="`rating-display-${client.id}`"
+                                                                            class="mask mask-star-2 mask-half-2 bg-warning"
+                                                                            :checked="ratingRounded === i" disabled />
+                                                                    </template>
+                                                                </div>
+                                                                <div v-else
+                                                                    class="text-xs font-medium text-base-content/60">
+                                                                    {{ t('client.details.no_rating') }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            class="text-xs font-semibold text-base-content/80 whitespace-nowrap">
+                                                            <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1)
+                                                                }}/5</span>
+                                                            <span v-else>—</span>
+                                                            <span class="text-base-content/50"> ({{ ratingCount
+                                                                }})</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div v-if="clientDetails.source_link"
                                                     class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 hover:bg-base-200/60 transition-colors group w-full">
                                                     <span
@@ -1257,7 +1410,7 @@ onBeforeUnmount(() => {
                                                 <div class="flex justify-between text-[10px] mt-1 opacity-50">
                                                     <span v-if="!canComment">{{ t('login') }}</span>
                                                     <span>{{ Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
-                                                    }}/{{ MAX_COMMENT_LENGTH }}</span>
+                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
                                                 </div>
 
                                                 <div v-if="isLoadingComments" class="flex justify-center py-8">
@@ -1289,7 +1442,7 @@ onBeforeUnmount(() => {
                                                             class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
                                                             {{ comment.author_username }}
                                                             <time class="text-[10px]">{{ formatDate(comment.created_at)
-                                                            }}</time>
+                                                                }}</time>
                                                             <button
                                                                 v-if="currentUser && currentUser.username === comment.author_username"
                                                                 class="btn btn-ghost btn-xs btn-circle text-error"

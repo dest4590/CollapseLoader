@@ -5,6 +5,7 @@ use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use std::sync::LazyLock;
 
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::globals::CODENAME;
 use crate::{log_debug, log_error, log_warn};
 
 const DISCORD_APP_ID: &str = "1225803664204234772";
@@ -64,7 +65,11 @@ pub fn update_activity(details: String, state: String) -> Result<(), String> {
         }
     };
 
-    let large_text = format!("Version {env}", env = env!("CARGO_PKG_VERSION"));
+    let large_text = format!(
+        "Version {env} ({codename})",
+        env = env!("CARGO_PKG_VERSION"),
+        codename = CODENAME
+    );
 
     let assets = activity::Assets::new()
         .large_image("https://i.imgur.com/ZpWg110.gif")

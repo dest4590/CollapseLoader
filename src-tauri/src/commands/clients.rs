@@ -785,9 +785,10 @@ pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, St
         return Err(format!("API returned error: {}", response.status()));
     }
 
-    let comments: serde_json::Value = response.json().await.map_err(|e| {
-        format!("Failed to parse client comments: {e}")
-    })?;
+    let comments: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse client comments: {e}"))?;
 
     Ok(comments)
 }
@@ -814,9 +815,10 @@ pub async fn add_client_comment(
         return Err(format!("API returned error: {}", response.status()));
     }
 
-    let comment: serde_json::Value = response.json().await.map_err(|e| {
-        format!("Failed to parse response: {e}")
-    })?;
+    let comment: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse response: {e}"))?;
 
     Ok(comment)
 }
