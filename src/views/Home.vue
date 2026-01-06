@@ -40,6 +40,7 @@ interface Account {
 interface Filters {
     fabric: boolean;
     vanilla: boolean;
+    forge: boolean;
     installed: boolean;
 }
 
@@ -112,6 +113,7 @@ const CLIENT_SORT_ORDER_KEY = 'homeClientSortOrder';
 let initialFilters: Filters = {
     fabric: false,
     vanilla: false,
+    forge: false,
     installed: false
 };
 
@@ -152,6 +154,7 @@ const clearAllFilters = () => {
     activeFilters.value = {
         fabric: false,
         vanilla: false,
+        forge: false,
         installed: false
     };
 };
@@ -390,7 +393,8 @@ const filteredClients = computed(() => {
     const query = debouncedSearchQuery.value.trim();
     const queryLower = query ? query.toLowerCase() : '';
     const filters = activeFilters.value;
-    const hasActiveFilters = filters.fabric || filters.vanilla || filters.installed;
+
+    const hasActiveFilters = filters.fabric || filters.vanilla || filters.forge || filters.installed;
 
     let clientsList = allClients.value;
 
@@ -407,12 +411,20 @@ const filteredClients = computed(() => {
                     return false;
                 }
 
-                if (filters.fabric || filters.vanilla) {
+                if (filters.fabric || filters.vanilla || filters.forge) {
                     const clientTypeRaw = (client as any).client_type || client.meta?.client_type || '';
                     const clientType = String(clientTypeRaw).toLowerCase();
-                    const isFabric = clientType === 'fabric' || (Array.isArray(client.meta?.tags) && client.meta.tags.some((t: string) => t.toLowerCase().includes('fabric')));
+                    const tags = Array.isArray(client.meta?.tags) ? client.meta.tags : [];
 
-                    const allowedByType = (isFabric && filters.fabric) || (!isFabric && filters.vanilla);
+                    const isFabric = clientType === 'fabric' || tags.some((t: string) => t.toLowerCase().includes('fabric'));
+                    const isForge = clientType === 'forge' || tags.some((t: string) => t.toLowerCase().includes('forge'));
+                    const isVanilla = !isFabric && !isForge;
+
+                    const allowedByType =
+                        (isFabric && filters.fabric) ||
+                        (isForge && filters.forge) ||
+                        (isVanilla && filters.vanilla);
+
                     if (!allowedByType) return false;
                 }
             }
@@ -433,18 +445,7 @@ const filteredClients = computed(() => {
 
     if (sortKey === 'newest') {
         clientsList.sort((a, b) => {
-            const aNew = a.meta?.is_new ? 1 : 0;
-            const bNew = b.meta?.is_new ? 1 : 0;
-
-            if (aNew !== bNew) {
-                return (bNew - aNew) * sortMultiplier;
-            }
-
-            if (aNew === 1) {
-                return (b.id - a.id) * sortMultiplier;
-            }
-
-            return b.name.localeCompare(a.name) * sortMultiplier;
+            return (a.id - b.id) * sortMultiplier;
         });
     } else if (sortKey === 'version') {
         const parseVer = (v: string): number[] => {
@@ -1633,7 +1634,8 @@ onBeforeUnmount(() => {
         class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
         <div class="text-lg font-semibold mb-2">{{ t('home.no_clients') }}</div>
         <div class="text-sm mb-4">{{ t('home.adjust_search') }}</div>
-        <button v-if="searchQuery || activeFilters.fabric || activeFilters.vanilla || activeFilters.installed"
+        <button
+            v-if="searchQuery || activeFilters.fabric || activeFilters.vanilla || activeFilters.forge || activeFilters.installed"
             @click="clearAllFilters" class="btn btn-sm btn-primary">
             {{ t('home.clear_filters') }}
         </button>

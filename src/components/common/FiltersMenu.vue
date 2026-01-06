@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 interface Filters {
     fabric: boolean;
     vanilla: boolean;
+    forge: boolean;
     installed: boolean;
 }
 
@@ -101,6 +102,11 @@ onBeforeUnmount(() => {
                     <label class="flex items-center gap-2">
                         <input type="checkbox" class="checkbox" v-model="localFilters.fabric" />
                         <span>Fabric</span>
+                    </label>
+
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" class="checkbox" v-model="localFilters.forge" />
+                        <span>Forge</span>
                     </label>
 
                     <label class="flex items-center gap-2">
