@@ -9,7 +9,7 @@ pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 pub static IS_LINUX: bool = cfg!(target_os = "linux");
 pub static FILE_EXTENSION: &str = if IS_LINUX { "" } else { ".exe" };
 pub static LINUX_SUFFIX: &str = "-linux";
-pub static LEGACY_SUFFIX: &str = "-1.12";
+pub static LEGACY_SUFFIX: &str = "-1.8.9";
 pub static PATH_SEPARATOR: &str = if IS_LINUX { ":" } else { ";" };
 
 pub static JDK_FOLDER: &str = if IS_LINUX {
@@ -18,26 +18,30 @@ pub static JDK_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2"
 };
 
+// Java 8 for legacy LaunchWrapper / Forge 1.8.9
+pub static JDK8_FOLDER: &str = "jdk8";
+pub static JDK8_ZIP: &str = "jdk8.zip";
+
 // Asset/library file names (without .zip extension)
 pub static ASSETS_FOLDER: &str = "assets";
 pub static ASSETS_FABRIC_FOLDER: &str = "assets_fabric";
 pub static LIBRARIES_FOLDER: &str = "libraries";
-pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-1.12";
 pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries_fabric";
+pub static LIBRARIES_FORGE_1_8_9_FOLDER: &str = "libraries_1.8.9";
 pub static NATIVES_FOLDER: &str = "natives";
 pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
-pub static NATIVES_LEGACY_FOLDER: &str = "natives-1.12";
+pub static NATIVES_FORGE_1_8_9_FOLDER: &str = "natives-1.8.9";
 pub static NATIVES_FABRIC_FOLDER: &str = "natives_fabric";
 
 // Zip file names
 pub static ASSETS_ZIP: &str = "assets.zip";
 pub static ASSETS_FABRIC_ZIP: &str = "assets_fabric.zip";
 pub static LIBRARIES_ZIP: &str = "libraries.zip";
-pub static LIBRARIES_LEGACY_ZIP: &str = "libraries-1.12.zip";
 pub static LIBRARIES_FABRIC_ZIP: &str = "libraries_fabric.zip";
+pub static LIBRARIES_FORGE_1_8_9_ZIP: &str = "libraries_1.8.9.zip";
 pub static NATIVES_ZIP: &str = "natives.zip";
 pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
-pub static NATIVES_LEGACY_ZIP: &str = "natives-1.12.zip";
+pub static NATIVES_FORGE_1_8_9_ZIP: &str = "natives-1.8.9.zip";
 
 // Folder names
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";

@@ -126,6 +126,15 @@ pub async fn launch_client(
         ClientType::Fabric => DATA.get_local(&format!(
             "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{filename_for_if}"
         )),
+        ClientType::Forge => {
+            let jar_basename = std::path::Path::new(&client.filename)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(&client.filename);
+            DATA.get_local(&format!(
+                "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{jar_basename}"
+            ))
+        }
     };
 
     if !jar_path.exists() {

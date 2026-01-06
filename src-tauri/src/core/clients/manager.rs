@@ -100,24 +100,50 @@ impl ClientManager {
             },
         );
 
-        let (clients_res, fabric_res) = tokio::join!(clients_task, fabric_clients_task);
+        let forge_clients_task = tokio::task::spawn_blocking(
+            || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
+                let api_option = API.as_ref();
+                if let Some(api_instance) = api_option {
+                    match api_instance.json::<Vec<Client>>("forge-clients") {
+                        Ok(clients) => Ok(clients),
+                        Err(e) => {
+                            log_warn!("Failed to fetch forge clients: {}", e);
+                            Ok(Vec::new())
+                        }
+                    }
+                } else {
+                    Ok(Vec::new())
+                }
+            },
+        );
+
+        let (clients_res, fabric_res, forge_res) =
+            tokio::join!(clients_task, fabric_clients_task, forge_clients_task);
 
         let mut clients =
             clients_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
         let mut fabric_clients =
             fabric_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
+        let mut forge_clients =
+            forge_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
 
         if !fabric_clients.is_empty() {
             clients.append(&mut fabric_clients);
-            clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
         } else {
             log_debug!("API returned 0 fabric clients or failed to fetch");
         }
 
+        if !forge_clients.is_empty() {
+            clients.append(&mut forge_clients);
+        } else {
+            log_debug!("API returned 0 forge clients or failed to fetch");
+        }
+
+        clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+
         for client in &mut clients {
-            if client.meta.is_new != (semver::Version::parse(&client.version).unwrap().minor > 6) {
-                client.meta = super::client::Meta::new(&client.version, &client.filename);
-            }
+            client.meta =
+                super::client::Meta::new(&client.version, &client.filename, &client.client_type);
 
             client.meta.size = client.size;
         }

@@ -3,9 +3,9 @@ use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
 use crate::core::utils::globals::{
-    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK_FOLDER, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FOLDER,
-    LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER, NATIVES_FOLDER,
-    NATIVES_LEGACY_FOLDER, ROOT_DIR,
+    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK8_FOLDER, JDK_FOLDER, LIBRARIES_FABRIC_FOLDER,
+    LIBRARIES_FOLDER, LIBRARIES_FORGE_1_8_9_FOLDER, MINECRAFT_VERSIONS_FOLDER,
+    NATIVES_FABRIC_FOLDER, NATIVES_FOLDER, NATIVES_FORGE_1_8_9_FOLDER, ROOT_DIR,
 };
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -150,7 +150,8 @@ impl Data {
     fn should_skip_download(&self, info: &FileInfo) -> bool {
         if Self::has_extension(&info.local_file, "zip") {
             let zip_path = self.root_dir.join(&info.local_file);
-            zip_path.exists()
+            let unzip_path = self.root_dir.join(info.local_file.trim_end_matches(".zip"));
+            zip_path.exists() && unzip_path.exists()
         } else if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
                 let jar_basename = Path::new(&info.local_file)
@@ -395,14 +396,16 @@ impl Data {
     pub async fn reset_requirements(&self) -> Result<(), String> {
         let base_requirements = [
             JDK_FOLDER,
+            JDK8_FOLDER,
             ASSETS_FOLDER,
             NATIVES_FOLDER,
             LIBRARIES_FOLDER,
-            NATIVES_LEGACY_FOLDER,
-            LIBRARIES_LEGACY_FOLDER,
+            NATIVES_FORGE_1_8_9_FOLDER,
+            LIBRARIES_FORGE_1_8_9_FOLDER,
             ASSETS_FABRIC_FOLDER,
             LIBRARIES_FABRIC_FOLDER,
             NATIVES_FABRIC_FOLDER,
+            LIBRARIES_FORGE_1_8_9_FOLDER,
         ];
 
         let mut requirements = Vec::new();

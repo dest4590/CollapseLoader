@@ -164,9 +164,9 @@ const downloadLogs = async () => {
         const filePath = await save({
             filters: [{
                 name: 'Log Files',
-                extensions: ['log', 'txt']
+                extensions: ['txt']
             }],
-            defaultPath: `${props.clientName}_logs.log`
+            defaultPath: `${props.clientName}_logs.txt`
         });
 
         if (filePath) {
