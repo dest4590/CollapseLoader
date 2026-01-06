@@ -60,6 +60,7 @@ const emit = defineEmits([
     'show-context-menu',
     'client-click',
     'expanded-state-changed',
+    'show-user-profile',
 ]);
 
 const isExpanded = ref(false);
@@ -76,7 +77,8 @@ const comments = ref<ClientComment[]>([]);
 const isLoadingComments = ref(false);
 const newCommentText = ref('');
 const isPostingComment = ref(false);
-const currentUser = ref<any>(null);
+type CurrentUser = { username: string };
+const currentUser = ref<CurrentUser | null>(null);
 const myRating = ref<number | null>(null);
 const isSubmittingRating = ref(false);
 const isLoadingMyRating = ref(false);
@@ -105,7 +107,6 @@ const fetchMyRating = async () => {
             myRating.value = data.my_rating;
         }
     } catch (error) {
-        // Silent: rating is optional UI
         console.warn('Failed to fetch my rating:', error);
     } finally {
         isLoadingMyRating.value = false;
@@ -283,6 +284,14 @@ const deleteComment = async (commentId: number) => {
         }
     } catch (error) {
         console.error('Failed to delete comment:', error);
+    }
+};
+
+const openProfileFromComment = async (comment: ClientComment) => {
+    try {
+        emit('show-user-profile', comment.user);
+    } catch (error) {
+        console.error('Failed to open user profile from client comment:', error);
     }
 };
 
@@ -696,51 +705,6 @@ const collapseCard = () => {
     }
 };
 
-onBeforeUnmount(() => {
-    if (isExpanded.value && cardRef.value) {
-        const card = cardRef.value;
-        gsap.killTweensOf(card);
-
-        if (placeholder.value) {
-            placeholder.value.parentNode?.removeChild(placeholder.value);
-            placeholder.value = null;
-        }
-
-        if (backdropRef.value) {
-            if (backdropRef.value.parentNode) {
-                backdropRef.value.parentNode.removeChild(backdropRef.value);
-            }
-            backdropRef.value = null;
-        }
-
-        card.style.position = '';
-        card.style.top = '';
-        card.style.left = '';
-        card.style.width = '';
-        card.style.height = '';
-        card.style.zIndex = '';
-        card.style.boxShadow = '';
-        card.style.overflow = '';
-        card.style.borderRadius = '';
-
-        const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
-        if (detailsContainer) {
-            gsap.killTweensOf(detailsContainer);
-            gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
-            const extraInfoElements = detailsContainer.querySelectorAll('.extra-info > *');
-            gsap.killTweensOf(extraInfoElements);
-            gsap.set(extraInfoElements, { opacity: 0, y: 20 });
-        }
-        isExpanded.value = false;
-        emit('expanded-state-changed', props.client.id, false);
-    }
-
-    if (isScreenshotViewerOpen.value) {
-        document.body.style.overflow = '';
-        document.removeEventListener('keydown', handleScreenshotKeydown);
-    }
-});
-
 const openScreenshotViewer = (index: number) => {
     currentScreenshotIndex.value = index;
     isScreenshotViewerOpen.value = true;
@@ -1023,9 +987,9 @@ const handleCardKeyDown = (event: KeyboardEvent) => {
     }
 };
 
-const handleClientSourceLink = (url: string) => {
+const handleClientSourceLink = async (url: string) => {
     try {
-        openUrl(url);
+        await openUrl(url);
     } catch (error) {
         console.error('Failed to open URL:', error);
     }
@@ -1035,62 +999,66 @@ onMounted(() => {
     document.addEventListener('keydown', handleCardKeyDown);
 });
 
+const cleanupExpandedCard = () => {
+    if (!isExpanded.value || !cardRef.value) return;
+
+    const card = cardRef.value;
+    gsap.killTweensOf(card);
+
+    if (placeholder.value) {
+        placeholder.value.parentNode?.removeChild(placeholder.value);
+        placeholder.value = null;
+    }
+
+    if (backdropRef.value) {
+        backdropRef.value.parentNode?.removeChild(backdropRef.value);
+        backdropRef.value = null;
+    }
+
+    card.style.position = '';
+    card.style.top = '';
+    card.style.left = '';
+    card.style.width = '';
+    card.style.height = '';
+    card.style.zIndex = '';
+    card.style.boxShadow = '';
+    card.style.overflow = '';
+    card.style.borderRadius = '';
+
+    const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
+    if (detailsContainer) {
+        gsap.killTweensOf(detailsContainer);
+        gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
+        const extraInfoElements = detailsContainer.querySelectorAll('.extra-info > *');
+        gsap.killTweensOf(extraInfoElements);
+        gsap.set(extraInfoElements, { opacity: 0, y: 20 });
+    }
+
+    isExpanded.value = false;
+    emit('expanded-state-changed', props.client.id, false);
+};
+
+const cleanupScreenshotViewer = () => {
+    if (!isScreenshotViewerOpen.value) return;
+    document.body.style.overflow = '';
+    document.removeEventListener('keydown', handleScreenshotKeydown);
+};
+
 onBeforeUnmount(() => {
-    if (isExpanded.value && cardRef.value) {
-        const card = cardRef.value;
-        gsap.killTweensOf(card);
-
-        if (placeholder.value) {
-            placeholder.value.parentNode?.removeChild(placeholder.value);
-            placeholder.value = null;
-        }
-
-        if (backdropRef.value) {
-            if (backdropRef.value.parentNode) {
-                backdropRef.value.parentNode.removeChild(backdropRef.value);
-            }
-            backdropRef.value = null;
-        }
-
-        card.style.position = '';
-        card.style.top = '';
-        card.style.left = '';
-        card.style.width = '';
-        card.style.height = '';
-        card.style.zIndex = '';
-        card.style.boxShadow = '';
-        card.style.overflow = '';
-        card.style.borderRadius = '';
-
-        const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
-        if (detailsContainer) {
-            gsap.killTweensOf(detailsContainer);
-            gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
-            const extraInfoElements = detailsContainer.querySelectorAll('.extra-info > *');
-            gsap.killTweensOf(extraInfoElements);
-            gsap.set(extraInfoElements, { opacity: 0, y: 20 });
-        }
-        isExpanded.value = false;
-        emit('expanded-state-changed', props.client.id, false);
-    }
-
-    if (isScreenshotViewerOpen.value) {
-        document.body.style.overflow = '';
-        document.removeEventListener('keydown', handleScreenshotKeydown);
-    }
-
+    cleanupExpandedCard();
+    cleanupScreenshotViewer();
     document.removeEventListener('keydown', handleCardKeyDown);
 });
 </script>
 
 <template>
-    <div ref="cardRef" class="card bg-base-300 shadow-lg client-card" :class="{
+    <div ref="cardRef" class="card card-border bg-base-300 shadow-lg border-base-content/10 client-card" :class="{
         'border-primary/50 ring-2 ring-primary/30 bg-primary/5': isSelected,
         'border-neutral/10': !isSelected,
         'cursor-pointer': (isMultiSelectMode || !isAnimating),
         'hover:border-primary/30': isMultiSelectMode && !isSelected,
         'hover:bg-primary/10': isMultiSelectMode && !isSelected,
-        'transition-all duration-200 ease-out': !isExpanded
+        'transition-all duration-200 ease-out hover:shadow-xl': !isExpanded
     }" :data-client-id="client.id" @contextmenu="handleShowContextMenu" @click="handleCardClick">
         <div v-if="isSelected && !isExpanded" class="absolute z-0" style="right: 1.1rem; top: 1.1rem;">
             <div class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
@@ -1118,7 +1086,7 @@ onBeforeUnmount(() => {
 
         <div class="scroll-container h-full w-full overflow-y-auto custom-scrollbar-hide relative" ref="scrollContainer"
             @scroll="handleScroll">
-            <div class="p-4 min-h-full" ref="contentRef">
+            <div class="p-4 min-h-full">
                 <div class="card-body flex flex-col p-0">
                     <div class="flex justify-between items-start">
                         <h2 class="card-title text-base">
@@ -1163,18 +1131,20 @@ onBeforeUnmount(() => {
                             </div>
                             <div v-else class="flex items-center space-x-2">
                                 <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                                    class="btn btn-sm btn-primary download-btn relative overflow-hidden" :disabled="isRequirementsInProgress || !client.working
-                                        ">
-                                    <span class="flex items-center download-text">
+                                    class="btn btn-sm btn-primary relative overflow-hidden group"
+                                    :disabled="isRequirementsInProgress || !client.working">
+                                    <span
+                                        class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
                                         <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                         <span v-if="client.working">{{
                                             t('home.download')
-                                            }}</span>
+                                        }}</span>
                                         <span v-else-if="!client.working">{{
                                             t('home.unavailable')
-                                            }}</span>
+                                        }}</span>
                                     </span>
-                                    <span class="flex items-center get-text absolute inset-0 opacity-0">
+                                    <span
+                                        class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                                         {{ client.meta.size || '0' }} MB
                                     </span>
                                 </button>
@@ -1197,19 +1167,22 @@ onBeforeUnmount(() => {
                             </div>
 
                             <div v-else-if="clientDetails">
-                                <div class="tabs tabs-boxed mb-4">
-                                    <a class="tab" :class="{ 'tab-active': activeTab === 'info' }"
-                                        @click="changeTab('info')">
+                                <div role="tablist" class="tabs tabs-boxed mb-4 w-fit mx-auto">
+                                    <button type="button" role="tab" class="tab"
+                                        :class="{ 'tab-active': activeTab === 'info' }"
+                                        :aria-selected="activeTab === 'info'" @click="changeTab('info')">
                                         <Info class="w-4 h-4 mr-2" />
                                         {{ t('client.details.info_tab') }}
-                                    </a>
-                                    <a class="tab" :class="{ 'tab-active': activeTab === 'screenshots' }"
-                                        @click="changeTab('screenshots')">
+                                    </button>
+                                    <button type="button" role="tab" class="tab"
+                                        :class="{ 'tab-active': activeTab === 'screenshots' }"
+                                        :aria-selected="activeTab === 'screenshots'" @click="changeTab('screenshots')">
                                         <Camera class="w-4 h-4 mr-2" />
                                         {{ t('client.details.screenshots_tab') }}
-                                    </a>
-                                    <a class="tab" :class="{ 'tab-active': activeTab === 'comments' }"
-                                        @click="changeTab('comments')">
+                                    </button>
+                                    <button type="button" role="tab" class="tab"
+                                        :class="{ 'tab-active': activeTab === 'comments' }"
+                                        :aria-selected="activeTab === 'comments'" @click="changeTab('comments')">
                                         <div class="flex items-center gap-2">
                                             <MessageSquare class="w-4 h-4" />
                                             <span>{{ t('client.details.comments_tab') }}</span>
@@ -1217,150 +1190,157 @@ onBeforeUnmount(() => {
                                                 class="badge badge-sm badge-ghost">{{ clientDetails.comments_count
                                                 }}</span>
                                         </div>
-                                    </a>
+                                    </button>
                                 </div>
 
                                 <div>
                                     <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
-                                        <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1">
-                                            <div class="grid grid-cols-1 gap-3 mb-6 w-full">
-                                                <div
-                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 w-full">
-                                                    <span
-                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
+                                        <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1 space-y-4">
+                                            <div
+                                                class="stats stats-vertical sm:stats-horizontal w-full rounded-xl bg-base-200/40 border border-base-content/5">
+                                                <div class="stat">
+                                                    <div
+                                                        class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
                                                         {{ t('client.details.rating') }}
-                                                    </span>
-                                                    <div class="flex items-center justify-between gap-3">
-                                                        <div class="flex items-center gap-3">
-                                                            <div v-if="canRate" :key="`rating-${myRating}`"
-                                                                class="rating rating-sm">
+                                                    </div>
+                                                    <div class="stat-value text-base flex items-center gap-3">
+                                                        <div v-if="canRate" :key="`rating-${myRating}`"
+                                                            class="rating rating-sm">
+                                                            <input type="radio" :name="`rating-input-${client.id}`"
+                                                                class="rating-hidden" />
+                                                            <template v-for="i in 5" :key="i">
                                                                 <input type="radio" :name="`rating-input-${client.id}`"
-                                                                    class="rating-hidden" />
+                                                                    class="mask mask-star-2 bg-warning"
+                                                                    :checked="(myRating ?? 0) === i"
+                                                                    :disabled="isSubmittingRating"
+                                                                    @click="submitRating(i)" />
+                                                            </template>
+                                                        </div>
+
+                                                        <div v-else class="tooltip tooltip-bottom"
+                                                            :data-tip="t('client.details.login_to_rate')">
+                                                            <div v-if="ratingRounded !== null"
+                                                                class="rating rating-half rating-sm pointer-events-none opacity-80">
+                                                                <input type="radio"
+                                                                    :name="`rating-display-${client.id}`"
+                                                                    class="rating-hidden" disabled />
                                                                 <template v-for="i in 5" :key="i">
                                                                     <input type="radio"
-                                                                        :name="`rating-input-${client.id}`"
-                                                                        class="mask mask-star-2 bg-warning"
-                                                                        :checked="(myRating ?? 0) === i"
-                                                                        :disabled="isSubmittingRating"
-                                                                        @click="submitRating(i)" />
-                                                                </template>
-                                                            </div>
-
-                                                            <div v-else class="tooltip tooltip-bottom"
-                                                                :data-tip="t('client.details.login_to_rate')">
-                                                                <div v-if="ratingRounded !== null"
-                                                                    class="rating rating-half rating-sm pointer-events-none opacity-80">
+                                                                        :name="`rating-display-${client.id}`"
+                                                                        class="mask mask-star-2 mask-half-1 bg-warning"
+                                                                        :checked="ratingRounded === (i - 0.5)"
+                                                                        disabled />
                                                                     <input type="radio"
                                                                         :name="`rating-display-${client.id}`"
-                                                                        class="rating-hidden" disabled />
-                                                                    <template v-for="i in 5" :key="i">
-                                                                        <input type="radio"
-                                                                            :name="`rating-display-${client.id}`"
-                                                                            class="mask mask-star-2 mask-half-1 bg-warning"
-                                                                            :checked="ratingRounded === (i - 0.5)"
-                                                                            disabled />
-                                                                        <input type="radio"
-                                                                            :name="`rating-display-${client.id}`"
-                                                                            class="mask mask-star-2 mask-half-2 bg-warning"
-                                                                            :checked="ratingRounded === i" disabled />
-                                                                    </template>
-                                                                </div>
-                                                                <div v-else
-                                                                    class="text-xs font-medium text-base-content/60">
-                                                                    {{ t('client.details.no_rating') }}
-                                                                </div>
+                                                                        class="mask mask-star-2 mask-half-2 bg-warning"
+                                                                        :checked="ratingRounded === i" disabled />
+                                                                </template>
+                                                            </div>
+                                                            <div v-else
+                                                                class="text-xs font-medium text-base-content/60">
+                                                                {{ t('client.details.no_rating') }}
                                                             </div>
                                                         </div>
+
                                                         <div
-                                                            class="text-xs font-semibold text-base-content/80 whitespace-nowrap">
+                                                            class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
                                                             <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1)
-                                                                }}/5</span>
+                                                            }}/5</span>
                                                             <span v-else>—</span>
                                                             <span class="text-base-content/50"> ({{ ratingCount
-                                                                }})</span>
+                                                            }})</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                <div v-if="clientDetails.source_link"
-                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 hover:bg-base-200/60 transition-colors group w-full">
-                                                    <span
-                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
-                                                        {{ t('client.details.source_link') }}
-                                                    </span>
-                                                    <a @click="handleClientSourceLink(clientDetails.source_link)"
-                                                        class="flex items-center gap-2 text-xs font-medium text-primary hover:text-primary-focus transition-colors truncate cursor-pointer">
-                                                        <ExternalLink class="w-3.5 h-3.5 shrink-0" />
-                                                        <span class="truncate">{{ clientDetails.source_link }}</span>
-                                                    </a>
-                                                </div>
-
-                                                <div v-if="clientDetails.created_at"
-                                                    class="flex flex-col p-3 rounded-xl bg-base-200/40 border border-base-content/5 w-full">
-                                                    <span
-                                                        class="text-[10px] font-bold uppercase tracking-widest text-base-content/40 mb-1">
-                                                        {{ t('client.details.created') }}
-                                                    </span>
+                                                <div v-if="clientDetails.created_at" class="stat">
                                                     <div
-                                                        class="flex items-center gap-2 text-xs font-medium text-base-content/80">
-                                                        <Info class="w-3.5 h-3.5 text-base-content/30" />
+                                                        class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                                        {{ t('client.details.created') }}
+                                                    </div>
+                                                    <div
+                                                        class="stat-value text-sm font-semibold flex items-center gap-2">
+                                                        <Info class="w-4 h-4 text-base-content/40" />
                                                         {{ new
                                                             Date(clientDetails.created_at).toLocaleDateString(undefined, {
                                                                 dateStyle: 'medium'
                                                             }) }}
                                                     </div>
                                                 </div>
+
+                                                <div v-if="clientDetails.source_link" class="stat">
+                                                    <div
+                                                        class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                                        {{ t('client.details.source_link') }}
+                                                    </div>
+                                                    <div class="stat-value text-sm">
+                                                        <button type="button"
+                                                            class="btn btn-ghost btn-sm justify-start px-2 gap-2 min-h-0 h-8"
+                                                            @click="handleClientSourceLink(clientDetails.source_link)">
+                                                            <ExternalLink class="w-4 h-4" />
+                                                            <span class="truncate max-w-[18rem]">{{
+                                                                clientDetails.source_link }}</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
 
-                                            <div
-                                                class="divider before:bg-base-content/10 after:bg-base-content/10 my-0">
-                                                <h4
-                                                    class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
-                                                    <ScrollText class="w-4 h-4" />
-                                                    {{ t('client.details.changelog') }}
-                                                </h4>
-                                            </div>
+                                            <div class="card bg-base-200/40 border border-base-content/5">
+                                                <div class="card-body p-4 gap-3">
+                                                    <div class="flex items-center justify-between">
+                                                        <h4
+                                                            class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
+                                                            <ScrollText class="w-4 h-4" />
+                                                            {{ t('client.details.changelog') }}
+                                                        </h4>
+                                                        <span v-if="clientDetails.changelog_entries"
+                                                            class="badge badge-ghost badge-sm">
+                                                            {{ clientDetails.changelog_entries.length }}
+                                                        </span>
+                                                    </div>
 
-                                            <div v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0"
-                                                class="mt-4">
-                                                <ul
-                                                    class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
-                                                    <li v-for="(entry, index) in clientDetails.changelog_entries"
-                                                        :key="entry.version" class="timeline-item">
+                                                    <div
+                                                        v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0">
+                                                        <ul
+                                                            class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
+                                                            <li v-for="(entry, index) in clientDetails.changelog_entries"
+                                                                :key="entry.version" class="timeline-item">
+                                                                <div class="timeline-start text-xs text-right">
+                                                                    <span class="badge badge-ghost text-xs">
+                                                                        {{ new
+                                                                            Date(entry.created_at).toLocaleDateString(undefined,
+                                                                                {
+                                                                                    month: 'short', day: 'numeric'
+                                                                                }) }}
+                                                                    </span>
+                                                                </div>
+                                                                <div class="timeline-middle">
+                                                                    <Info class="w-4 h-4 text-base-content/50" />
+                                                                </div>
+                                                                <div
+                                                                    class="timeline-end timeline-box shadow-sm bg-base-100/40 w-full mb-2 border border-base-content/10">
+                                                                    <div class="font-bold text-sm text-base-content">v{{
+                                                                        entry.version }}</div>
+                                                                    <div
+                                                                        class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
+                                                                        {{
+                                                                            entry.content }}</div>
+                                                                </div>
+                                                                <hr v-if="index < clientDetails.changelog_entries.length - 1"
+                                                                    class="bg-base-content/10" />
+                                                            </li>
+                                                        </ul>
+                                                    </div>
 
-                                                        <div class="timeline-start text-xs text-right">
-                                                            <span class="badge badge-ghost text-xs">
-                                                                {{ new
-                                                                    Date(entry.created_at).toLocaleDateString(undefined, {
-                                                                        month: 'short', day: 'numeric'
-                                                                    }) }}
-                                                            </span>
-                                                        </div>
-                                                        <div class="timeline-middle">
-                                                            <Info class="w-4 h-4 text-base-content/50" />
-                                                        </div>
-                                                        <div
-                                                            class="timeline-end timeline-box shadow-sm bg-base-200/40 w-full mb-2 transition-all duration-300 border-primary/10">
-                                                            <div class="font-bold text-sm text-base-content">
-                                                                v{{ entry.version }}
-                                                            </div>
-                                                            <div
-                                                                class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
-                                                                {{ entry.content }}
-                                                            </div>
-                                                        </div>
-                                                        <hr v-if="index < clientDetails.changelog_entries.length - 1"
-                                                            class="bg-primary/20" style="width: 119%;" />
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                            <div v-else
-                                                class="mt-6 flex flex-col items-center justify-center text-center p-8 bg-base-200/50 border-2 border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
-                                                <Info class="w-8 h-8 text-base-content/50 mb-2" />
-                                                <p class="text-sm font-medium text-base-content/70">{{
-                                                    t('client.details.no_changelog') }}</p>
-                                                <p class="text-xs text-base-content/50 mt-1">{{
-                                                    t('client.details.no_changelog_desc') }}</p>
+                                                    <div v-else
+                                                        class="flex flex-col items-center justify-center text-center p-8 bg-base-100/30 border border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
+                                                        <Info class="w-8 h-8 text-base-content/50 mb-2" />
+                                                        <p class="text-sm font-medium text-base-content/70">{{
+                                                            t('client.details.no_changelog') }}</p>
+                                                        <p class="text-xs text-base-content/50 mt-1">{{
+                                                            t('client.details.no_changelog_desc') }}</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1410,7 +1390,7 @@ onBeforeUnmount(() => {
                                                 <div class="flex justify-between text-[10px] mt-1 opacity-50">
                                                     <span v-if="!canComment">{{ t('login') }}</span>
                                                     <span>{{ Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
-                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
+                                                    }}/{{ MAX_COMMENT_LENGTH }}</span>
                                                 </div>
 
                                                 <div v-if="isLoadingComments" class="flex justify-center py-8">
@@ -1427,7 +1407,11 @@ onBeforeUnmount(() => {
                                                     <div v-for="comment in comments" :key="comment.id"
                                                         class="chat chat-start">
                                                         <div class="chat-image avatar">
-                                                            <div class="w-8 rounded-full">
+                                                            <div class="w-8 rounded-full cursor-pointer select-none"
+                                                                role="button" tabindex="0"
+                                                                @click.stop="openProfileFromComment(comment)"
+                                                                @keydown.enter.stop.prevent="openProfileFromComment(comment)"
+                                                                @keydown.space.stop.prevent="openProfileFromComment(comment)">
                                                                 <img v-if="comment.author_avatar"
                                                                     :src="comment.author_avatar"
                                                                     :alt="comment.author_username" />
@@ -1440,9 +1424,12 @@ onBeforeUnmount(() => {
                                                         </div>
                                                         <div
                                                             class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
-                                                            {{ comment.author_username }}
+                                                            <span class="cursor-pointer hover:underline"
+                                                                @click.stop="openProfileFromComment(comment)">
+                                                                {{ comment.author_username }}
+                                                            </span>
                                                             <time class="text-[10px]">{{ formatDate(comment.created_at)
-                                                                }}</time>
+                                                            }}</time>
                                                             <button
                                                                 v-if="currentUser && currentUser.username === comment.author_username"
                                                                 class="btn btn-ghost btn-xs btn-circle text-error"
@@ -1477,8 +1464,7 @@ onBeforeUnmount(() => {
                     'opacity-100': isExpanded && !isCollapsing
                 }">
                 <div class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
-                    ref="thumbRef" :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }"
-                    @mousedown="startScrollbarDrag">
+                    :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }" @mousedown="startScrollbarDrag">
                 </div>
             </div>
         </transition>
@@ -1486,7 +1472,7 @@ onBeforeUnmount(() => {
 
     <teleport to="body">
         <transition name="screenshot-viewer" appear>
-            <div v-if="isScreenshotViewerOpen && clientDetails?.screenshot_urls" ref="screenshotViewerRef"
+            <div v-if="isScreenshotViewerOpen && clientDetails?.screenshot_urls"
                 class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-sm flex items-center justify-center"
                 @click="handleViewerBackgroundClick">
 
@@ -1547,9 +1533,7 @@ onBeforeUnmount(() => {
                         <transition name="fade">
                             <div v-if="isImageLoading" class="absolute inset-0 flex items-center justify-center z-20">
                                 <div class="skeleton-container">
-                                    <div
-                                        class="skeleton-image animate-pulse bg-linear-to-r from-gray-300 via-gray-200 to-gray-300 bg-size-[200%_100%] rounded-lg">
-                                    </div>
+                                    <div class="skeleton w-full h-full rounded-lg bg-base-200/20"></div>
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <div class="loading loading-spinner loading-lg text-white"></div>
                                     </div>
@@ -1692,32 +1676,6 @@ onBeforeUnmount(() => {
     opacity: 1;
 }
 
-.download-btn {
-    transition: all 0.3s ease;
-}
-
-.download-btn:hover .download-text {
-    opacity: 0;
-    transform: translateY(-20px);
-}
-
-.download-btn:hover .get-text {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.download-text,
-.get-text {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    transition: all 0.3s ease;
-}
-
-.get-text {
-    transform: translateY(20px);
-}
 
 .favorite-indicator {
     display: flex;
@@ -1896,27 +1854,6 @@ onBeforeUnmount(() => {
     min-height: 300px;
 }
 
-.skeleton-image {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            rgba(255, 255, 255, 0.1) 25%,
-            rgba(255, 255, 255, 0.2) 50%,
-            rgba(255, 255, 255, 0.1) 75%);
-    background-size: 200% 100%;
-    animation: skeleton-wave 2s infinite;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-@keyframes skeleton-wave {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
 
 .image-transition {
     transition: opacity 0.3s ease;
@@ -1965,27 +1902,6 @@ img.cursor-grabbing {
     opacity: 0;
 }
 
-.screenshot-viewer-nav,
-.btn {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    transform: translateZ(0);
-    will-change: transform, opacity;
-}
-
-.btn {
-    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.btn:not(:disabled):hover {
-    transform: scale(1.05) translateZ(0);
-}
-
-.btn:not(:disabled):active {
-    transform: scale(0.98) translateZ(0);
-}
 
 @keyframes fade-in {
     from {

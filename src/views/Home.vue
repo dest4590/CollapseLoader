@@ -1671,7 +1671,8 @@ onBeforeUnmount(() => {
                 :isHashVerifying="hashVerifyingClients.has(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
                 @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
                 @show-context-menu="showContextMenu" @client-click="handleClientClick"
-                @expanded-state-changed="handleExpandedStateChanged" />
+                @expanded-state-changed="handleExpandedStateChanged"
+                @show-user-profile="$emit('show-user-profile', $event)" />
         </div>
     </div>
 
