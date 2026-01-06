@@ -89,6 +89,12 @@ const MAX_COMMENT_LENGTH = 500;
 const canComment = computed(() => !!currentUser.value);
 const canRate = computed(() => isAuthenticated.value);
 
+const getRatingEndpoint = () => {
+    if (props.client.client_type === 'fabric') return `/api/fabric-clients/${props.client.id}/rating/`;
+    if (props.client.client_type === 'forge') return `/api/forge-clients/${props.client.id}/rating/`;
+    return `/api/clients/${props.client.id}/rating/`;
+};
+
 const fetchMyRating = async () => {
     if (!canRate.value) return;
     if (isLoadingMyRating.value) return;
@@ -98,11 +104,7 @@ const fetchMyRating = async () => {
     try {
         await ensureAuthUrl();
 
-        const endpoint = props.client.client_type === 'fabric'
-            ? `/api/fabric-clients/${props.client.id}/rating/`
-            : `/api/clients/${props.client.id}/rating/`;
-
-        const data = await apiGet<{ my_rating?: number | null }>(endpoint);
+        const data = await apiGet<{ my_rating?: number | null }>(getRatingEndpoint());
         if (typeof data?.my_rating === 'number') {
             myRating.value = data.my_rating;
         }
@@ -424,6 +426,18 @@ const ratingRounded = computed(() => {
     return Math.round(ratingAvg.value * 2) / 2;
 });
 
+const handleRatingClick = async (value: number) => {
+    if (isSubmittingRating.value) return;
+    if (!canRate.value) return;
+
+    if (myRating.value === value) {
+        await removeRating();
+        return;
+    }
+
+    await submitRating(value);
+};
+
 const submitRating = async (value: number) => {
     if (isSubmittingRating.value) return;
     if (!canRate.value) return;
@@ -435,11 +449,7 @@ const submitRating = async (value: number) => {
     try {
         await ensureAuthUrl();
 
-        const endpoint = props.client.client_type === 'fabric'
-            ? `/api/fabric-clients/${props.client.id}/rating/`
-            : `/api/clients/${props.client.id}/rating/`;
-
-        const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number }>(endpoint, { rating: value });
+        const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number | null }>(getRatingEndpoint(), { rating: value });
 
         if (typeof data?.my_rating === 'number') {
             myRating.value = data.my_rating;
@@ -457,6 +467,41 @@ const submitRating = async (value: number) => {
         }
     } catch (error) {
         console.error('Failed to submit rating:', error);
+        myRating.value = previousRating;
+    } finally {
+        isSubmittingRating.value = false;
+    }
+};
+
+const removeRating = async () => {
+    if (isSubmittingRating.value) return;
+    if (!canRate.value) return;
+    if (myRating.value === null) return;
+
+    const previousRating = myRating.value;
+    myRating.value = null;
+
+    isSubmittingRating.value = true;
+    try {
+        await ensureAuthUrl();
+
+        const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number | null }>(
+            getRatingEndpoint(),
+            { rating: null }
+        );
+
+        myRating.value = null;
+
+        if (clientDetails.value) {
+            clientDetails.value = {
+                ...clientDetails.value,
+                rating_avg: (typeof data?.rating_avg === 'number' || data?.rating_avg === null) ? data.rating_avg : clientDetails.value.rating_avg,
+                rating_count: typeof data?.rating_count === 'number' ? data.rating_count : clientDetails.value.rating_count,
+            };
+            triggerRef(clientDetails);
+        }
+    } catch (error) {
+        console.error('Failed to remove rating:', error);
         myRating.value = previousRating;
     } finally {
         isSubmittingRating.value = false;
@@ -1213,7 +1258,7 @@ onBeforeUnmount(() => {
                                                                     class="mask mask-star-2 bg-warning"
                                                                     :checked="(myRating ?? 0) === i"
                                                                     :disabled="isSubmittingRating"
-                                                                    @click="submitRating(i)" />
+                                                                    @click="handleRatingClick(i)" />
                                                             </template>
                                                         </div>
 
