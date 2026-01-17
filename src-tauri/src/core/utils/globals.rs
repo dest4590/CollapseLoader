@@ -27,10 +27,10 @@ pub static ASSETS_FOLDER: &str = "assets";
 pub static ASSETS_FABRIC_FOLDER: &str = "assets_fabric";
 pub static LIBRARIES_FOLDER: &str = "libraries";
 pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries_fabric";
-pub static LIBRARIES_FORGE_1_8_9_FOLDER: &str = "libraries_1.8.9";
+pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 pub static NATIVES_FOLDER: &str = "natives";
 pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
-pub static NATIVES_FORGE_1_8_9_FOLDER: &str = "natives-1.8.9";
+pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 pub static NATIVES_FABRIC_FOLDER: &str = "natives_fabric";
 
 // Zip file names
@@ -38,10 +38,10 @@ pub static ASSETS_ZIP: &str = "assets.zip";
 pub static ASSETS_FABRIC_ZIP: &str = "assets_fabric.zip";
 pub static LIBRARIES_ZIP: &str = "libraries.zip";
 pub static LIBRARIES_FABRIC_ZIP: &str = "libraries_fabric.zip";
-pub static LIBRARIES_1_8_9_ZIP: &str = "libraries_1.8.9.zip";
+pub static LIBRARIES_LEGACY_ZIP: &str = "libraries-legacy.zip";
 pub static NATIVES_ZIP: &str = "natives.zip";
 pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
-pub static NATIVES_1_8_9_ZIP: &str = "natives-1.8.9.zip";
+pub static NATIVES_LEGACY_ZIP: &str = "natives-legacy.zip";
 
 // Folder names
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";

@@ -4,8 +4,8 @@ use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
 use crate::core::utils::globals::{
     ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK8_FOLDER, JDK_FOLDER, LIBRARIES_FABRIC_FOLDER,
-    LIBRARIES_FOLDER, LIBRARIES_FORGE_1_8_9_FOLDER, MINECRAFT_VERSIONS_FOLDER,
-    NATIVES_FABRIC_FOLDER, NATIVES_FOLDER, NATIVES_FORGE_1_8_9_FOLDER, ROOT_DIR,
+    LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER,
+    NATIVES_FOLDER, NATIVES_LEGACY_FOLDER, ROOT_DIR,
 };
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -400,12 +400,11 @@ impl Data {
             ASSETS_FOLDER,
             NATIVES_FOLDER,
             LIBRARIES_FOLDER,
-            NATIVES_FORGE_1_8_9_FOLDER,
-            LIBRARIES_FORGE_1_8_9_FOLDER,
+            LIBRARIES_LEGACY_FOLDER,
             ASSETS_FABRIC_FOLDER,
             LIBRARIES_FABRIC_FOLDER,
             NATIVES_FABRIC_FOLDER,
-            LIBRARIES_FORGE_1_8_9_FOLDER,
+            NATIVES_LEGACY_FOLDER,
         ];
 
         let mut requirements = Vec::new();

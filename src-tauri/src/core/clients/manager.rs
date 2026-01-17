@@ -137,6 +137,10 @@ impl ClientManager {
                 super::client::Meta::new(&client.version, &client.filename, &client.client_type);
 
             client.meta.size = client.size;
+
+            if crate::core::utils::helpers::is_development_enabled() {
+                client.working = true;
+            }
         }
 
         log_debug!(

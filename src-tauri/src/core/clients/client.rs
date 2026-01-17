@@ -13,9 +13,9 @@ use super::manager::ClientManager;
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
     CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, JDK_FOLDER, LEGACY_SUFFIX,
-    LIBRARIES_1_8_9_ZIP, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER,
-    LIBRARIES_FORGE_1_8_9_FOLDER, LIBRARIES_ZIP, LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER,
-    MODS_FOLDER, NATIVES_1_8_9_ZIP, NATIVES_FOLDER, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
+    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER,
+    LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+    NATIVES_FOLDER, NATIVES_LEGACY_ZIP, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
 use crate::core::{clients::log_checker::LogChecker, utils::globals::AGENT_FILE};
 
@@ -286,6 +286,11 @@ impl LaunchOptions {
 }
 
 impl Client {
+    fn is_legacy_client(&self) -> bool {
+        let semver = Version::parse(&self.version).unwrap_or_else(|_| Version::new(1, 12, 2));
+        semver.major == 1 && semver.minor <= 12
+    }
+
     fn jdk_folder_name(&self) -> &'static str {
         if self.client_type == ClientType::Forge {
             JDK8_FOLDER
@@ -428,33 +433,6 @@ impl Client {
             Err(format!(
                 "Versioned Fabric libraries missing for '{}' after download ('{}')",
                 self.name, versioned_zip
-            ))
-        }
-    }
-
-    async fn ensure_forge_libraries_available(&self) -> Result<(), String> {
-        if self.client_type != ClientType::Forge {
-            return Ok(());
-        }
-
-        let forge_libs_dir = DATA.root_dir.join(LIBRARIES_FORGE_1_8_9_FOLDER);
-        if forge_libs_dir.exists() && dir_has_any_jars(&forge_libs_dir, false) {
-            return Ok(());
-        }
-
-        log_info!(
-            "Downloading Forge libraries '{}' for '{}'",
-            LIBRARIES_1_8_9_ZIP,
-            self.name
-        );
-        DATA.download(LIBRARIES_1_8_9_ZIP).await?;
-
-        if forge_libs_dir.exists() && dir_has_any_jars(&forge_libs_dir, false) {
-            Ok(())
-        } else {
-            Err(format!(
-                "Forge libraries missing for '{}' after download ('{}')",
-                self.name, LIBRARIES_1_8_9_ZIP
             ))
         }
     }
@@ -640,17 +618,17 @@ impl Client {
         if self.client_type == ClientType::Fabric {
             requirements.push(ASSETS_FABRIC_ZIP.to_string());
             requirements.push(LIBRARIES_FABRIC_ZIP.to_string());
-        } else if self.client_type == ClientType::Forge {
-            requirements.push(ASSETS_ZIP.to_string());
-            requirements.push(if !IS_LINUX {
-                NATIVES_1_8_9_ZIP.to_string()
-            } else {
-                NATIVES_LINUX_ZIP.to_string()
-            });
-            requirements.push(LIBRARIES_1_8_9_ZIP.to_string());
         } else {
             requirements.push(ASSETS_ZIP.to_string());
-            if self.meta.is_new {
+
+            if self.is_legacy_client() {
+                requirements.push(if !IS_LINUX {
+                    NATIVES_LEGACY_ZIP.to_string()
+                } else {
+                    NATIVES_LINUX_ZIP.to_string()
+                });
+                requirements.push(LIBRARIES_LEGACY_ZIP.to_string());
+            } else if self.meta.is_new {
                 requirements.push(if !IS_LINUX {
                     NATIVES_ZIP.to_string()
                 } else {
@@ -659,11 +637,11 @@ impl Client {
                 requirements.push(LIBRARIES_ZIP.to_string());
             } else {
                 requirements.push(if !IS_LINUX {
-                    NATIVES_1_8_9_ZIP.to_string()
+                    NATIVES_LEGACY_ZIP.to_string()
                 } else {
                     NATIVES_LINUX_ZIP.to_string()
                 });
-                requirements.push(LIBRARIES_1_8_9_ZIP.to_string());
+                requirements.push(LIBRARIES_LEGACY_ZIP.to_string());
             }
         }
         requirements
@@ -911,7 +889,7 @@ impl Client {
                 })?;
         }
 
-        self.ensure_forge_libraries_available().await
+        Ok(())
     }
 
     async fn download_requirements_default(&self, app_handle: &AppHandle) -> Result<(), String> {
@@ -1121,7 +1099,6 @@ impl Client {
     ) {
         command.arg("-Xverify:none");
 
-        // Don't use agent for Forge, or for legacy vanilla 1.8.9 clients
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
         if !IS_LINUX && self.client_type != ClientType::Forge && !is_legacy_vanilla {
             command.arg(format!(
@@ -1255,7 +1232,19 @@ impl Client {
         let self_clone = self.clone();
         let manager_clone = manager.clone();
         let handle = std::thread::spawn(move || -> Result<(), String> {
-            let (natives_path, libraries_path) = if self_clone.meta.is_new {
+            let (natives_path, libraries_path) = if self_clone.is_legacy_client() {
+                (
+                    DATA.root_dir.join(
+                        NATIVES_FOLDER.to_owned()
+                            + if IS_LINUX {
+                                LINUX_SUFFIX
+                            } else {
+                                LEGACY_SUFFIX
+                            },
+                    ),
+                    DATA.root_dir.join(LIBRARIES_LEGACY_FOLDER),
+                )
+            } else if self_clone.meta.is_new {
                 (
                     DATA.root_dir
                         .join(NATIVES_FOLDER.to_owned() + if IS_LINUX { LINUX_SUFFIX } else { "" }),
@@ -1275,7 +1264,7 @@ impl Client {
                                 LEGACY_SUFFIX
                             },
                     ),
-                    DATA.root_dir.join(LIBRARIES_FORGE_1_8_9_FOLDER),
+                    DATA.root_dir.join(LIBRARIES_LEGACY_FOLDER),
                 )
             };
 
