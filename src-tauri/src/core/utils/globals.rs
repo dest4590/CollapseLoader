@@ -38,10 +38,10 @@ pub static ASSETS_ZIP: &str = "assets.zip";
 pub static ASSETS_FABRIC_ZIP: &str = "assets_fabric.zip";
 pub static LIBRARIES_ZIP: &str = "libraries.zip";
 pub static LIBRARIES_FABRIC_ZIP: &str = "libraries_fabric.zip";
-pub static LIBRARIES_FORGE_1_8_9_ZIP: &str = "libraries_1.8.9.zip";
+pub static LIBRARIES_1_8_9_ZIP: &str = "libraries_1.8.9.zip";
 pub static NATIVES_ZIP: &str = "natives.zip";
 pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
-pub static NATIVES_FORGE_1_8_9_ZIP: &str = "natives-1.8.9.zip";
+pub static NATIVES_1_8_9_ZIP: &str = "natives-1.8.9.zip";
 
 // Folder names
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";

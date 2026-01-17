@@ -13,9 +13,9 @@ use super::manager::ClientManager;
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
     CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, JDK_FOLDER, LEGACY_SUFFIX,
-    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_FORGE_1_8_9_FOLDER,
-    LIBRARIES_FORGE_1_8_9_ZIP, LIBRARIES_ZIP, LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
-    NATIVES_FOLDER, NATIVES_FORGE_1_8_9_ZIP, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
+    LIBRARIES_1_8_9_ZIP, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER,
+    LIBRARIES_FORGE_1_8_9_FOLDER, LIBRARIES_ZIP, LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER,
+    MODS_FOLDER, NATIVES_1_8_9_ZIP, NATIVES_FOLDER, NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
 use crate::core::{clients::log_checker::LogChecker, utils::globals::AGENT_FILE};
 
@@ -172,7 +172,6 @@ impl Meta {
 
         let is_fabric = *client_type == ClientType::Fabric || filename.contains("fabric/");
 
-        let client_base_name = Data::get_filename(filename);
         let jar_path = if *client_type == ClientType::Fabric
             || *client_type == ClientType::Forge
             || filename.contains("fabric/")
@@ -183,13 +182,13 @@ impl Meta {
                 .and_then(|n| n.to_str())
                 .unwrap_or(filename);
             DATA.root_dir
-                .join(&client_base_name)
+                .join(Data::get_filename(filename))
                 .join(MODS_FOLDER)
                 .join(jar_basename)
         } else {
             DATA.get_local(&format!(
                 "{}{}{}",
-                client_base_name,
+                Data::get_filename(filename),
                 std::path::MAIN_SEPARATOR,
                 filename
             ))
@@ -310,12 +309,8 @@ impl Client {
             .join(format!("java{FILE_EXTENSION}"))
     }
 
-    fn fabric_version_key(&self) -> String {
-        sanitize_version_for_paths(&self.version)
-    }
-
     fn fabric_minecraft_jar_name(&self) -> String {
-        format!("fabric_{}.jar", self.fabric_version_key())
+        format!("fabric_{}.jar", sanitize_version_for_paths(&self.version))
     }
 
     fn fabric_minecraft_jar_path(&self) -> std::path::PathBuf {
@@ -327,7 +322,7 @@ impl Client {
     fn fabric_libraries_dir_versioned(&self) -> std::path::PathBuf {
         DATA.root_dir
             .join(LIBRARIES_FABRIC_FOLDER)
-            .join(self.fabric_version_key())
+            .join(sanitize_version_for_paths(&self.version))
     }
 
     fn fabric_libraries_dir_global(&self) -> std::path::PathBuf {
@@ -338,16 +333,12 @@ impl Client {
         format!(
             "{}/{}.zip",
             LIBRARIES_FABRIC_FOLDER,
-            self.fabric_version_key()
+            sanitize_version_for_paths(&self.version)
         )
     }
 
-    fn forge_version_key(&self) -> String {
-        sanitize_version_for_paths(&self.version)
-    }
-
     fn forge_minecraft_jar_name(&self) -> String {
-        format!("forge_{}.jar", self.forge_version_key())
+        format!("forge_{}.jar", sanitize_version_for_paths(&self.version))
     }
 
     fn forge_minecraft_jar_path(&self) -> std::path::PathBuf {
@@ -369,6 +360,29 @@ impl Client {
             .join(client_base)
             .join(MODS_FOLDER)
             .join(jar_basename))
+    }
+
+    fn get_installed_jar_path(&self) -> Result<std::path::PathBuf, String> {
+        if self.client_type == ClientType::Fabric {
+            let jar_basename = std::path::Path::new(&self.filename)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
+            Ok(DATA
+                .root_dir
+                .join(Data::get_filename(&self.filename))
+                .join(MODS_FOLDER)
+                .join(jar_basename))
+        } else if self.client_type == ClientType::Forge {
+            self.forge_mod_jar_path()
+        } else {
+            Ok(DATA.get_local(&format!(
+                "{}{}{}",
+                Data::get_filename(&self.filename),
+                std::path::MAIN_SEPARATOR,
+                self.filename
+            )))
+        }
     }
 
     async fn ensure_fabric_libraries_available(&self) -> Result<(), String> {
@@ -430,17 +444,17 @@ impl Client {
 
         log_info!(
             "Downloading Forge libraries '{}' for '{}'",
-            LIBRARIES_FORGE_1_8_9_ZIP,
+            LIBRARIES_1_8_9_ZIP,
             self.name
         );
-        DATA.download(LIBRARIES_FORGE_1_8_9_ZIP).await?;
+        DATA.download(LIBRARIES_1_8_9_ZIP).await?;
 
         if forge_libs_dir.exists() && dir_has_any_jars(&forge_libs_dir, false) {
             Ok(())
         } else {
             Err(format!(
                 "Forge libraries missing for '{}' after download ('{}')",
-                self.name, LIBRARIES_FORGE_1_8_9_ZIP
+                self.name, LIBRARIES_1_8_9_ZIP
             ))
         }
     }
@@ -457,25 +471,7 @@ impl Client {
 
         log_info!("Verifying MD5 hash for client: {}", self.name);
 
-        let file_path = if self.client_type == ClientType::Fabric {
-            let jar_basename = std::path::Path::new(&self.filename)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
-            DATA.root_dir
-                .join(Data::get_filename(&self.filename))
-                .join(MODS_FOLDER)
-                .join(jar_basename)
-        } else if self.client_type == ClientType::Forge {
-            self.forge_mod_jar_path()?
-        } else {
-            DATA.get_local(&format!(
-                "{}{}{}",
-                Data::get_filename(&self.filename),
-                std::path::MAIN_SEPARATOR,
-                self.filename
-            ))
-        };
+        let file_path = self.get_installed_jar_path()?;
 
         let path_clone = file_path.clone();
         let calculated_hash = tokio::task::spawn_blocking(move || calculate_md5_hash(&path_clone))
@@ -590,42 +586,18 @@ impl Client {
     }
 
     pub fn remove_installation(&self, manager: &Arc<Mutex<ClientManager>>) -> Result<(), String> {
-        let file_path = if self.client_type == ClientType::Fabric {
-            let jar_basename = std::path::Path::new(&self.filename)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .ok_or_else(|| "Invalid fabric client filename".to_string())?;
-            DATA.root_dir
-                .join(Data::get_filename(&self.filename))
-                .join(MODS_FOLDER)
-                .join(jar_basename)
-        } else if self.client_type == ClientType::Forge {
-            self.forge_mod_jar_path()?
-        } else {
-            DATA.get_local(&format!(
-                "{}{}{}",
-                Data::get_filename(&self.filename),
-                std::path::MAIN_SEPARATOR,
-                self.filename
-            ))
-        };
-
-        log_debug!(
-            "Removing installation jar for client '{}' at {}",
-            self.name,
-            file_path.display()
-        );
+        let file_path = self.get_installed_jar_path()?;
 
         if file_path.exists() {
+            log_debug!(
+                "Removing installation jar for client '{}' at {}",
+                self.name,
+                file_path.display()
+            );
             if let Err(e) = std::fs::remove_file(&file_path) {
                 log_warn!("Failed to remove file '{}': {}", file_path.display(), e);
                 return Err(e.to_string());
             }
-        } else {
-            log_debug!(
-                "No installation jar found for '{}', skipping removal",
-                self.name
-            );
         }
 
         if self.client_type == ClientType::Forge {
@@ -671,11 +643,11 @@ impl Client {
         } else if self.client_type == ClientType::Forge {
             requirements.push(ASSETS_ZIP.to_string());
             requirements.push(if !IS_LINUX {
-                NATIVES_FORGE_1_8_9_ZIP.to_string()
+                NATIVES_1_8_9_ZIP.to_string()
             } else {
                 NATIVES_LINUX_ZIP.to_string()
             });
-            requirements.push(LIBRARIES_FORGE_1_8_9_ZIP.to_string());
+            requirements.push(LIBRARIES_1_8_9_ZIP.to_string());
         } else {
             requirements.push(ASSETS_ZIP.to_string());
             if self.meta.is_new {
@@ -687,10 +659,11 @@ impl Client {
                 requirements.push(LIBRARIES_ZIP.to_string());
             } else {
                 requirements.push(if !IS_LINUX {
-                    NATIVES_FORGE_1_8_9_ZIP.to_string()
+                    NATIVES_1_8_9_ZIP.to_string()
                 } else {
                     NATIVES_LINUX_ZIP.to_string()
                 });
+                requirements.push(LIBRARIES_1_8_9_ZIP.to_string());
             }
         }
         requirements
@@ -708,11 +681,6 @@ impl Client {
             .collect();
 
         let mut need_download = !files_to_download.is_empty();
-        log_debug!(
-            "Files missing check for '{}': missing_count={}",
-            self.name,
-            files_to_download.len()
-        );
 
         if let Some(ref fabric_jar) = client_jar {
             if !DATA
@@ -791,7 +759,6 @@ impl Client {
             if let Some(mods) = &self.requirement_mods {
                 for mod_name in mods.iter() {
                     let mod_basename = mod_name.trim_end_matches(".jar");
-                    let filename_on_cdn = format!("fabric/deps/{mod_basename}.jar");
                     let client_base = Data::get_filename(&self.filename);
                     let dest_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
                     let dest_path = DATA
@@ -801,14 +768,15 @@ impl Client {
                         .join(format!("{mod_basename}.jar"));
 
                     if !dest_path.exists() {
-                        log_info!("Downloading Fabric requirement mod: {}", filename_on_cdn);
-                        DATA.download_to_folder(&filename_on_cdn, &dest_folder)
+                        let filename = format!("fabric/deps/{mod_basename}.jar");
+                        log_info!("Downloading Fabric requirement mod: {}", filename);
+                        DATA.download_to_folder(&filename, &dest_folder)
                             .await
                             .map_err(|e| {
-                                log_error!("Failed to download mod {filename_on_cdn}: {e}");
-                                format!("Failed to download mod {filename_on_cdn}: {e}")
+                                log_error!("Failed to download mod {}: {}", filename, e);
+                                format!("Failed to download mod {}: {}", filename, e)
                             })?;
-                        log_info!("Successfully downloaded mod {}", filename_on_cdn);
+                        log_info!("Successfully downloaded mod {}", filename);
                     }
                 }
             }
@@ -870,106 +838,86 @@ impl Client {
         Ok(())
     }
 
-    #[allow(clippy::cognitive_complexity)]
-    pub async fn download_requirements(&self, app_handle: &AppHandle) -> Result<(), String> {
-        let _permit = REQUIREMENTS_SEMAPHORE.acquire().await.map_err(|_| {
-            log_error!(
-                "Failed to acquire requirements semaphore for '{}'",
+    async fn download_requirements_fabric(&self, app_handle: &AppHandle) -> Result<(), String> {
+        let mut files_to_download: Vec<String> = Vec::new();
+
+        let jdk_zip = self.jdk_zip_name();
+        if !DATA.get_as_folder(&jdk_zip).exists() {
+            files_to_download.push(jdk_zip);
+        }
+        if !DATA.get_as_folder(ASSETS_FABRIC_ZIP).exists() {
+            files_to_download.push(ASSETS_FABRIC_ZIP.to_string());
+        }
+
+        let mc_jar_name = self.fabric_minecraft_jar_name();
+        let mc_jar_path = self.fabric_minecraft_jar_path();
+        let needs_mc_jar = !mc_jar_path.exists();
+
+        if needs_mc_jar {
+            log_debug!(
+                "Fabric MC jar missing for '{}' -> will download '{}'",
+                self.name,
+                mc_jar_name
+            );
+        }
+
+        if !files_to_download.is_empty() || needs_mc_jar {
+            self.download_required_files(app_handle, files_to_download, Some(mc_jar_name))
+                .await?;
+        }
+
+        self.ensure_fabric_libraries_available().await
+    }
+
+    async fn download_requirements_forge(&self, app_handle: &AppHandle) -> Result<(), String> {
+        let requirements_to_check = self.determine_requirements_to_check();
+        let forge_mc_path = self.forge_minecraft_jar_path();
+
+        let (mut need_download, files_to_download) =
+            self.check_if_download_needed(&requirements_to_check, &None);
+
+        if !forge_mc_path.exists() {
+            need_download = true;
+        }
+
+        if !need_download {
+            log_info!(
+                "All requirements present for '{}', skipping downloads",
                 self.name
             );
-            "Failed to acquire requirements semaphore".to_string()
-        })?;
-
-        if self.client_type == ClientType::Fabric {
-            let mut files_to_download: Vec<String> = Vec::new();
-
-            let jdk_zip = self.jdk_zip_name();
-            if !DATA.get_as_folder(&jdk_zip).exists() {
-                files_to_download.push(jdk_zip);
-            }
-            if !DATA.get_as_folder(ASSETS_FABRIC_ZIP).exists() {
-                files_to_download.push(ASSETS_FABRIC_ZIP.to_string());
-            }
-
-            let mc_jar_name = self.fabric_minecraft_jar_name();
-            let mc_jar_path = self.fabric_minecraft_jar_path();
-            if !mc_jar_path.exists() {
-                log_debug!(
-                    "Fabric MC jar missing for '{}' -> will download '{}'",
-                    self.name,
-                    mc_jar_name
-                );
-            }
-
-            if !files_to_download.is_empty() {
-                self.download_required_files(app_handle, files_to_download, Some(mc_jar_name))
-                    .await?;
-            } else {
-                if !mc_jar_path.exists() {
-                    self.download_required_files(app_handle, Vec::new(), Some(mc_jar_name))
-                        .await?;
-                }
-            }
-
-            self.ensure_fabric_libraries_available().await?;
-
             return Ok(());
         }
 
-        if self.client_type == ClientType::Forge {
-            let requirements_to_check = self.determine_requirements_to_check();
+        log_info!(
+            "Forge requirements missing for '{}' -> will download: {:?}",
+            self.name,
+            files_to_download
+        );
 
-            let forge_mc_path = self.forge_minecraft_jar_path();
+        self.download_required_files(app_handle, files_to_download, None)
+            .await?;
 
-            let (mut need_download, files_to_download) =
-                self.check_if_download_needed(&requirements_to_check, &None);
-
-            if !forge_mc_path.exists() {
-                need_download = true;
-            }
-
-            if !need_download {
-                log_info!(
-                    "All requirements present for '{}', skipping downloads",
-                    self.name
-                );
-                return Ok(());
-            }
-
-            log_info!(
-                "Forge requirements missing for '{}' -> will download: {:?}",
-                self.name,
-                files_to_download
-            );
-
-            self.download_required_files(app_handle, files_to_download, None)
-                .await?;
-
+        if !forge_mc_path.exists() {
             let client_base = Data::get_filename(&self.filename);
-
-            if !forge_mc_path.exists() {
-                DATA.download_to_folder(&self.forge_minecraft_jar_name(), &client_base)
-                    .await
-                    .map_err(|e| {
-                        format!(
-                            "Failed to download Forge minecraft jar '{}' for '{}': {}",
-                            self.forge_minecraft_jar_name(),
-                            self.name,
-                            e
-                        )
-                    })?;
-            }
-
-            self.ensure_forge_libraries_available().await?;
-
-            return Ok(());
+            DATA.download_to_folder(&self.forge_minecraft_jar_name(), &client_base)
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to download Forge minecraft jar '{}' for '{}': {}",
+                        self.forge_minecraft_jar_name(),
+                        self.name,
+                        e
+                    )
+                })?;
         }
 
-        let requirements_to_check = self.determine_requirements_to_check();
-        let client_jar = None;
+        self.ensure_forge_libraries_available().await
+    }
 
+    async fn download_requirements_default(&self, app_handle: &AppHandle) -> Result<(), String> {
+        let requirements_to_check = self.determine_requirements_to_check();
         let (need_download, files_to_download) =
-            self.check_if_download_needed(&requirements_to_check, &client_jar);
+            self.check_if_download_needed(&requirements_to_check, &None);
 
         if !need_download {
             log_info!(
@@ -984,9 +932,24 @@ impl Client {
             self.name,
             files_to_download
         );
-
-        self.download_required_files(app_handle, files_to_download, client_jar)
+        self.download_required_files(app_handle, files_to_download, None)
             .await
+    }
+
+    pub async fn download_requirements(&self, app_handle: &AppHandle) -> Result<(), String> {
+        let _permit = REQUIREMENTS_SEMAPHORE.acquire().await.map_err(|_| {
+            log_error!(
+                "Failed to acquire requirements semaphore for '{}'",
+                self.name
+            );
+            "Failed to acquire requirements semaphore".to_string()
+        })?;
+
+        match self.client_type {
+            ClientType::Fabric => self.download_requirements_fabric(app_handle).await,
+            ClientType::Forge => self.download_requirements_forge(app_handle).await,
+            ClientType::Default => self.download_requirements_default(app_handle).await,
+        }
     }
 
     pub async fn ensure_java_available(
@@ -1051,6 +1014,172 @@ impl Client {
         }
 
         Ok(())
+    }
+
+    fn build_classpath_fabric(
+        &self,
+        mc_jar: &std::path::Path,
+        libraries_path: &std::path::Path,
+        agent_overlay_folder: &std::path::Path,
+    ) -> String {
+        let mut cp_parts: Vec<String> = Vec::new();
+        cp_parts.push(mc_jar.display().to_string());
+
+        let versioned_libs_dir = DATA
+            .root_dir
+            .join(LIBRARIES_FABRIC_FOLDER)
+            .join(sanitize_version_for_paths(&self.version));
+        if versioned_libs_dir.exists() {
+            for jar in collect_jars_recursive(&versioned_libs_dir, false) {
+                cp_parts.push(jar.display().to_string());
+            }
+        }
+
+        if libraries_path.exists() {
+            for jar in collect_jars_recursive(libraries_path, true) {
+                if !is_fabric_loader_jar(&jar) {
+                    cp_parts.push(jar.display().to_string());
+                }
+            }
+        }
+
+        cp_parts.push(agent_overlay_folder.display().to_string());
+        cp_parts.join(PATH_SEPARATOR)
+    }
+
+    fn build_classpath_forge(
+        &self,
+        mc_jar: &std::path::Path,
+        libraries_path: &std::path::Path,
+        agent_overlay_folder: &std::path::Path,
+    ) -> String {
+        let mut cp_parts: Vec<String> = Vec::new();
+        cp_parts.push(mc_jar.display().to_string());
+
+        if libraries_path.exists() {
+            for jar in collect_jars_recursive(libraries_path, false) {
+                cp_parts.push(jar.display().to_string());
+            }
+        }
+
+        cp_parts.push(agent_overlay_folder.display().to_string());
+        cp_parts.join(PATH_SEPARATOR)
+    }
+
+    fn build_classpath_default(
+        &self,
+        client_jar_path: &std::path::Path,
+        libraries_path: &std::path::Path,
+        agent_overlay_folder: &std::path::Path,
+    ) -> String {
+        format!(
+            "{}{}*{}{}{}{}",
+            libraries_path.display(),
+            std::path::MAIN_SEPARATOR,
+            PATH_SEPARATOR,
+            client_jar_path.display(),
+            PATH_SEPARATOR,
+            agent_overlay_folder.display()
+        )
+    }
+
+    fn get_client_paths(&self) -> Result<(std::path::PathBuf, std::path::PathBuf), String> {
+        if self.meta.is_custom {
+            let folder = DATA.root_dir.join(CUSTOM_CLIENTS_FOLDER).join(&self.name);
+            let jar = folder.join(&self.filename);
+            Ok((folder, jar))
+        } else if self.client_type == ClientType::Forge {
+            let base_name = Data::get_filename(&self.filename);
+            let folder = DATA.root_dir.join(&base_name);
+            let jar_basename = std::path::Path::new(&self.filename)
+                .file_name()
+                .ok_or_else(|| "Invalid forge client filename".to_string())?;
+            let jar = folder.join(MODS_FOLDER).join(jar_basename);
+            Ok((folder, jar))
+        } else if self.filename.contains("fabric/") {
+            let base_name = Data::get_filename(&self.filename);
+            let folder = DATA.root_dir.join(&base_name);
+            let jar_basename = std::path::Path::new(&self.filename).file_name().unwrap();
+            let jar = folder.join(MODS_FOLDER).join(jar_basename);
+            Ok((folder, jar))
+        } else {
+            let folder = DATA
+                .root_dir
+                .join(Data::get_as_folder_string(&self.filename));
+            let jar = folder.join(&self.filename);
+            Ok((folder, jar))
+        }
+    }
+
+    fn configure_jvm_args(
+        &self,
+        command: &mut Command,
+        natives_path: &std::path::Path,
+        agent_overlay_folder: &std::path::Path,
+        agent_arguments: &AgentArguments,
+        ram_mb: u32,
+    ) {
+        command.arg("-Xverify:none");
+
+        // Don't use agent for Forge, or for legacy vanilla 1.8.9 clients
+        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+        if !IS_LINUX && self.client_type != ClientType::Forge && !is_legacy_vanilla {
+            command.arg(format!(
+                "-javaagent:{}={}",
+                agent_overlay_folder.join(AGENT_FILE).display(),
+                agent_arguments.encode()
+            ));
+        }
+
+        command.arg(format!("-Xmx{ram_mb}M"));
+
+        if self.client_type != ClientType::Fabric {
+            command.arg(format!(
+                "-Djava.library.path={}{}{}",
+                natives_path.display(),
+                PATH_SEPARATOR,
+                agent_overlay_folder.display()
+            ));
+        } else {
+            command.arg(format!(
+                "-Djava.library.path={}",
+                agent_overlay_folder.display()
+            ));
+        }
+    }
+
+    fn configure_game_args(
+        &self,
+        command: &mut Command,
+        username: &str,
+        client_folder: &std::path::Path,
+        assets_dir: &std::path::Path,
+    ) {
+        if self.client_type == ClientType::Forge {
+            command
+                .arg("--tweakClass")
+                .arg("net.minecraftforge.fml.common.launcher.FMLTweaker");
+        }
+
+        command
+            .arg("--username")
+            .arg(username)
+            .arg("--gameDir")
+            .arg(client_folder.display().to_string())
+            .arg("--assetsDir")
+            .arg(assets_dir.display().to_string())
+            .arg("--assetIndex")
+            .arg(&self.meta.asset_index)
+            .arg("--uuid")
+            .arg("N/A")
+            .arg("--accessToken")
+            .arg("0")
+            .arg("--userType")
+            .arg("legacy")
+            .arg("--version")
+            .arg(&self.version)
+            .arg("--client")
+            .arg(&self.filename);
     }
 
     pub async fn run(
@@ -1150,98 +1279,28 @@ impl Client {
                 )
             };
 
-            let (client_folder, client_jar_path) = if self_clone.meta.is_custom {
-                let folder = DATA
-                    .root_dir
-                    .join(CUSTOM_CLIENTS_FOLDER)
-                    .join(&self_clone.name);
-                let jar = folder.join(&self_clone.filename);
-                (folder, jar)
-            } else if self_clone.client_type == ClientType::Forge {
-                let base_name = Data::get_filename(&self_clone.filename);
-                let folder = DATA.root_dir.join(&base_name);
-                let jar_basename = std::path::Path::new(&self_clone.filename)
-                    .file_name()
-                    .ok_or_else(|| "Invalid forge client filename".to_string())?;
-                let jar = folder.join(MODS_FOLDER).join(jar_basename);
-                (folder, jar)
-            } else if self_clone.filename.contains("fabric/") {
-                let base_name = Data::get_filename(&self_clone.filename);
-                let folder = DATA.root_dir.join(&base_name);
-                let jar_basename = std::path::Path::new(&self_clone.filename)
-                    .file_name()
-                    .unwrap();
-                let jar = folder.join(MODS_FOLDER).join(jar_basename);
-                (folder, jar)
-            } else {
-                let folder = DATA
-                    .root_dir
-                    .join(Data::get_as_folder_string(&self_clone.filename));
-                let jar = folder.join(&self_clone.filename);
-                (folder, jar)
-            };
+            let (client_folder, client_jar_path) = self_clone.get_client_paths()?;
 
             let agent_overlay_folder = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
             let minecraft_client_folder = DATA.root_dir.join(MINECRAFT_VERSIONS_FOLDER);
-
-            let sep = PATH_SEPARATOR;
 
             let classpath = if self_clone.client_type == ClientType::Fabric {
                 let mc_jar = minecraft_client_folder.join(format!(
                     "fabric_{}.jar",
                     sanitize_version_for_paths(&self_clone.version)
                 ));
-
-                let mut cp_parts: Vec<String> = Vec::new();
-                cp_parts.push(mc_jar.display().to_string());
-
-                let versioned_libs_dir = DATA
-                    .root_dir
-                    .join(LIBRARIES_FABRIC_FOLDER)
-                    .join(sanitize_version_for_paths(&self_clone.version));
-                if versioned_libs_dir.exists() {
-                    for jar in collect_jars_recursive(&versioned_libs_dir, false) {
-                        cp_parts.push(jar.display().to_string());
-                    }
-                }
-
-                if libraries_path.exists() {
-                    for jar in collect_jars_recursive(&libraries_path, true) {
-                        if !is_fabric_loader_jar(&jar) {
-                            cp_parts.push(jar.display().to_string());
-                        }
-                    }
-                }
-
-                cp_parts.push(agent_overlay_folder.display().to_string());
-
-                cp_parts.join(sep)
+                self_clone.build_classpath_fabric(&mc_jar, &libraries_path, &agent_overlay_folder)
             } else if self_clone.client_type == ClientType::Forge {
-                let mut cp_parts: Vec<String> = Vec::new();
                 let mc_jar = client_folder.join(format!(
                     "forge_{}.jar",
                     sanitize_version_for_paths(&self_clone.version)
                 ));
-
-                cp_parts.push(mc_jar.display().to_string());
-
-                if libraries_path.exists() {
-                    for jar in collect_jars_recursive(&libraries_path, false) {
-                        cp_parts.push(jar.display().to_string());
-                    }
-                }
-
-                cp_parts.push(agent_overlay_folder.display().to_string());
-                cp_parts.join(sep)
+                self_clone.build_classpath_forge(&mc_jar, &libraries_path, &agent_overlay_folder)
             } else {
-                format!(
-                    "{}{}*{}{}{}{}",
-                    libraries_path.display(),
-                    std::path::MAIN_SEPARATOR,
-                    sep,
-                    client_jar_path.display(),
-                    sep,
-                    agent_overlay_folder.display()
+                self_clone.build_classpath_default(
+                    &client_jar_path,
+                    &libraries_path,
+                    &agent_overlay_folder,
                 )
             };
 
@@ -1280,62 +1339,22 @@ impl Client {
 
             let ram_mb = SETTINGS.lock().map(|s| s.ram.value).unwrap_or(3072);
 
-            command.arg("-Xverify:none");
-
-            if !IS_LINUX && self_clone.client_type != ClientType::Forge {
-                command.arg(format!(
-                    "-javaagent:{}={}",
-                    agent_overlay_folder.join(AGENT_FILE).display(),
-                    agent_arguments.encode()
-                ));
-            }
-
-            command.arg(format!("-Xmx{ram_mb}M"));
-
-            if self_clone.client_type != ClientType::Fabric {
-                command.arg(format!(
-                    "-Djava.library.path={}{}{}",
-                    natives_path.display(),
-                    sep,
-                    agent_overlay_folder.display()
-                ));
-            } else if self_clone.client_type == ClientType::Fabric {
-                command.arg(format!(
-                    "-Djava.library.path={}",
-                    agent_overlay_folder.display()
-                ));
-            }
+            self_clone.configure_jvm_args(
+                &mut command,
+                &natives_path,
+                &agent_overlay_folder,
+                &agent_arguments,
+                ram_mb,
+            );
 
             command
                 .arg("-cp")
                 .arg(&classpath)
                 .arg(&self_clone.main_class);
 
-            if self_clone.client_type == ClientType::Forge {
-                command
-                    .arg("--tweakClass")
-                    .arg("net.minecraftforge.fml.common.launcher.FMLTweaker");
-            }
+            self_clone.configure_game_args(&mut command, &username, &client_folder, &assets_dir);
 
             command
-                .arg("--username")
-                .arg(username)
-                .arg("--gameDir")
-                .arg(client_folder.display().to_string())
-                .arg("--assetsDir")
-                .arg(assets_dir.display().to_string())
-                .arg("--assetIndex")
-                .arg(&self_clone.meta.asset_index)
-                .arg("--uuid")
-                .arg("N/A")
-                .arg("--accessToken")
-                .arg("0")
-                .arg("--userType")
-                .arg("legacy")
-                .arg("--version")
-                .arg(&self_clone.version)
-                .arg("--client")
-                .arg(&self_clone.filename)
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped());
@@ -1365,8 +1384,8 @@ impl Client {
                 "client-launched",
                 serde_json::json!({
                     "id": client_id,
-                    "name": self_clone.name.clone(),
-                    "version": self_clone.version.clone()
+                    "name": self_clone.name,
+                    "version": self_clone.version
                 }),
             );
 
@@ -1402,8 +1421,6 @@ impl Client {
                             .update_status_on_client_exit(&app_handle_clone_for_crash_handling)
                         {
                             log_error!("Failed to update user status on client exit: {}", e);
-                        } else {
-                            log_info!("User status updated on client exit");
                         }
                     }
 
@@ -1412,7 +1429,7 @@ impl Client {
                         "client-exited",
                         serde_json::json!({
                             "id": client_id,
-                            "name": self_clone.name.clone(),
+                            "name": self_clone.name,
                             "exitCode": status.code().unwrap_or(-1)
                         }),
                     );
@@ -1427,7 +1444,7 @@ impl Client {
                         "client-crashed",
                         serde_json::json!({
                             "id": client_id,
-                            "name": self_clone.name.clone(),
+                            "name": self_clone.name,
                             "error": log_line
                         }),
                     );

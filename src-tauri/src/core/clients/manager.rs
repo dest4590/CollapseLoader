@@ -65,8 +65,7 @@ impl ClientManager {
         }
 
         let clients_task = tokio::task::spawn_blocking(|| {
-            let api_option = API.as_ref();
-            if let Some(api_instance) = api_option {
+            if let Some(api_instance) = API.as_ref() {
                 match api_instance.json::<Vec<Client>>("clients") {
                     Ok(clients) => Ok(clients),
                     Err(e) => {
@@ -85,15 +84,13 @@ impl ClientManager {
 
         let fabric_clients_task = tokio::task::spawn_blocking(
             || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-                let api_option = API.as_ref();
-                if let Some(api_instance) = api_option {
-                    match api_instance.json::<Vec<Client>>("fabric-clients") {
-                        Ok(clients) => Ok(clients),
-                        Err(e) => {
+                if let Some(api_instance) = API.as_ref() {
+                    api_instance
+                        .json::<Vec<Client>>("fabric-clients")
+                        .or_else(|e| {
                             log_warn!("Failed to fetch fabric clients: {}", e);
                             Ok(Vec::new())
-                        }
-                    }
+                        })
                 } else {
                     Ok(Vec::new())
                 }
@@ -102,15 +99,13 @@ impl ClientManager {
 
         let forge_clients_task = tokio::task::spawn_blocking(
             || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-                let api_option = API.as_ref();
-                if let Some(api_instance) = api_option {
-                    match api_instance.json::<Vec<Client>>("forge-clients") {
-                        Ok(clients) => Ok(clients),
-                        Err(e) => {
+                if let Some(api_instance) = API.as_ref() {
+                    api_instance
+                        .json::<Vec<Client>>("forge-clients")
+                        .or_else(|e| {
                             log_warn!("Failed to fetch forge clients: {}", e);
                             Ok(Vec::new())
-                        }
-                    }
+                        })
                 } else {
                     Ok(Vec::new())
                 }
@@ -129,14 +124,10 @@ impl ClientManager {
 
         if !fabric_clients.is_empty() {
             clients.append(&mut fabric_clients);
-        } else {
-            log_debug!("API returned 0 fabric clients or failed to fetch");
         }
 
         if !forge_clients.is_empty() {
             clients.append(&mut forge_clients);
-        } else {
-            log_debug!("API returned 0 forge clients or failed to fetch");
         }
 
         clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
