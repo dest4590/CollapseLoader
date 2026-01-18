@@ -78,10 +78,10 @@ impl Servers {
             .build()
             .unwrap_or_default();
 
-        self.check_group(&client, &self.cdns, &self.selected_cdn, "CDN")
-            .await;
-        self.check_group(&client, &self.auths, &self.selected_auth, "Auth")
-            .await;
+        tokio::join!(
+            self.check_group(&client, &self.cdns, &self.selected_cdn, "CDN"),
+            self.check_group(&client, &self.auths, &self.selected_auth, "Auth")
+        );
 
         self.set_status();
         let _ = self.check_complete_tx.send(true);

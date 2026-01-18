@@ -1,11 +1,8 @@
-use std::{path::PathBuf, sync::Mutex};
-
-use serde::{Deserialize, Serialize};
-use std::sync::LazyLock;
-
-use crate::core::storage::data::DATA;
-
 use super::common::JsonStorage;
+use crate::core::storage::data::DATA;
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use std::sync::{LazyLock, Mutex};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Account {
@@ -49,15 +46,17 @@ impl AccountManager {
         let account = Account::new(username, tags);
         let id = account.id.clone();
         self.accounts.push(account);
+        self.save_to_disk();
         id
     }
 
     pub fn remove_account(&mut self, id: &str) -> bool {
         if let Some(pos) = self.accounts.iter().position(|a| a.id == id) {
             self.accounts.remove(pos);
-            if self.active_account_id.as_ref() == Some(&id.to_string()) {
+            if self.active_account_id.as_deref() == Some(id) {
                 self.active_account_id = None;
             }
+            self.save_to_disk();
             true
         } else {
             false
@@ -65,21 +64,22 @@ impl AccountManager {
     }
 
     pub fn set_active_account(&mut self, id: &str) -> bool {
-        if self.accounts.iter().any(|a| a.id == id) {
-            for acc in &mut self.accounts {
-                acc.is_active = false;
-            }
-
-            if let Some(account) = self.accounts.iter_mut().find(|a| a.id == id) {
-                account.is_active = true;
-                account.last_used = Some(chrono::Utc::now().to_rfc3339());
-            }
-
-            self.active_account_id = Some(id.to_string());
-            true
-        } else {
-            false
+        if !self.accounts.iter().any(|a| a.id == id) {
+            return false;
         }
+
+        for acc in &mut self.accounts {
+            acc.is_active = false;
+        }
+
+        if let Some(account) = self.accounts.iter_mut().find(|a| a.id == id) {
+            account.is_active = true;
+            account.last_used = Some(chrono::Utc::now().to_rfc3339());
+        }
+
+        self.active_account_id = Some(id.to_string());
+        self.save_to_disk();
+        true
     }
 
     pub fn get_active_account(&self) -> Option<&Account> {
@@ -99,6 +99,7 @@ impl AccountManager {
             if let Some(new_tags) = tags {
                 account.tags = new_tags;
             }
+            self.save_to_disk();
             true
         } else {
             false
@@ -110,23 +111,21 @@ impl JsonStorage for AccountManager {
     fn file_path(&self) -> &PathBuf {
         &self.accounts_path
     }
-
     fn resource_name() -> &'static str {
         "accounts"
     }
-
     fn create_default() -> Self {
-        Self::default()
-    }
-}
-
-impl Default for AccountManager {
-    fn default() -> Self {
         Self {
             accounts: Vec::new(),
             active_account_id: None,
             accounts_path: DATA.get_local("accounts.json"),
         }
+    }
+}
+
+impl Default for AccountManager {
+    fn default() -> Self {
+        Self::create_default()
     }
 }
 
