@@ -1,17 +1,14 @@
+use crate::AppState;
 use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
-use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, State};
 
 use crate::core::{
     clients::custom_clients::CustomClient,
     network::analytics::Analytics,
-    storage::{
-        custom_clients::{CustomClientUpdate, CUSTOM_CLIENT_MANAGER},
-        data::Data,
-    },
+    storage::{custom_clients::CustomClientUpdate, data::Data},
     utils::globals::SKIP_AGENT_OVERLAY_VERIFICATION,
 };
 use crate::core::{
@@ -40,7 +37,10 @@ use std::io::Read;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-fn get_client_by_id(id: u32, manager: &Arc<Mutex<ClientManager>>) -> Result<Client, String> {
+fn get_client_by_id(
+    id: u32,
+    manager: &std::sync::Arc<std::sync::Mutex<ClientManager>>,
+) -> Result<Client, String> {
     manager
         .lock()
         .map_err(|_| "Failed to acquire lock on client manager".to_string())?
@@ -61,11 +61,13 @@ pub fn get_app_logs() -> Vec<String> {
 }
 
 #[tauri::command]
-pub async fn initialize_api(state: State<'_, Arc<Mutex<ClientManager>>>) -> Result<(), String> {
+pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
     let clients = ClientManager::fetch_clients()
         .await
         .map_err(|e| e.to_string())?;
     let mut manager = state
+        .clients
+        .manager
         .lock()
         .map_err(|_| "Failed to lock state".to_string())?;
     manager.clients = clients;
@@ -89,8 +91,10 @@ pub async fn get_server_connectivity_status() -> ServerConnectivityStatus {
 }
 
 #[tauri::command]
-pub fn get_clients(state: State<'_, Arc<Mutex<ClientManager>>>) -> Vec<Client> {
+pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
     state
+        .clients
+        .manager
         .lock()
         .ok()
         .map(|manager| manager.clients.clone())
@@ -102,10 +106,10 @@ pub async fn launch_client(
     id: u32,
     user_token: String,
     app_handle: AppHandle,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Attempting to launch client with ID: {}", id);
-    let client = get_client_by_id(id, &state)?;
+    let client = get_client_by_id(id, &state.clients.manager)?;
     log_debug!("Found client '{}' for launch", client.name);
 
     let filename_for_if = if client.filename.contains("fabric/") {
@@ -126,6 +130,15 @@ pub async fn launch_client(
         ClientType::Fabric => DATA.get_local(&format!(
             "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{filename_for_if}"
         )),
+        ClientType::Forge => {
+            let jar_basename = std::path::Path::new(&client.filename)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or(&client.filename);
+            DATA.get_local(&format!(
+                "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{jar_basename}"
+            ))
+        }
     };
 
     if !jar_path.exists() {
@@ -209,7 +222,7 @@ pub async fn launch_client(
 
             log_info!("Redownloading client: {} (ID: {})", client.name, id);
             client
-                .download(&state)
+                .download(&state.clients.manager)
                 .await
                 .map_err(|e| {
                     if e.contains("Hash verification failed") {
@@ -261,14 +274,12 @@ pub async fn launch_client(
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
 
     log_info!("Executing client run for '{}'", client.name);
-    client.run(options, (*state).clone()).await
+    client.run(options, state.clients.manager.clone()).await
 }
 
 #[tauri::command]
-pub async fn get_running_client_ids(
-    state: State<'_, Arc<Mutex<ClientManager>>>,
-) -> Result<Vec<u32>, String> {
-    let manager = (*state).clone();
+pub async fn get_running_client_ids(state: State<'_, AppState>) -> Result<Vec<u32>, String> {
+    let manager = state.clients.manager.clone();
     let handle = tokio::task::spawn_blocking(move || {
         Client::get_running_clients(&manager)
             .iter()
@@ -282,12 +293,9 @@ pub async fn get_running_client_ids(
 }
 
 #[tauri::command]
-pub async fn stop_client(
-    id: u32,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
-) -> Result<(), String> {
+pub async fn stop_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Attempting to stop client with ID: {}", id);
-    let client = get_client_by_id(id, &state)?;
+    let client = get_client_by_id(id, &state.clients.manager)?;
     log_debug!("Found client '{}' to stop", client.name);
 
     let client_clone = client.clone();
@@ -311,18 +319,15 @@ pub fn get_client_logs(id: u32) -> Vec<String> {
 pub async fn download_client_only(
     id: u32,
     app_handle: AppHandle,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let client = get_client_by_id(id, &state)?;
-
-    log_info!("Starting download for client: {} (ID: {})", client.name, id);
-
-    let state_clone = state.clone();
+    let client = get_client_by_id(id, &state.clients.manager)?;
+    let state_clone = state.clients.manager.clone();
     let client_clone = client.clone();
     let client_download = async move {
         client_clone.download(&state_clone).await.map_err(|e| {
             if e.contains("Hash verification failed") {
-                let _ = update_client_installed_status(id, false, state_clone.clone());
+                let _ = update_client_installed_status(id, false, state.clone());
                 format!(
                     "Hash verification failed for {}: The downloaded file is corrupted. Please try downloading again.",
                     client_clone.name
@@ -339,12 +344,6 @@ pub async fn download_client_only(
     log_debug!("Sent client download analytics for ID: {}", id);
 
     tokio::try_join!(client_download, requirements_download)?;
-
-    log_info!(
-        "Client '{}' successfully installed with all requirements",
-        client.name
-    );
-
     Ok(())
 }
 
@@ -352,14 +351,14 @@ pub async fn download_client_only(
 pub async fn reinstall_client(
     id: u32,
     app_handle: AppHandle,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Starting reinstall for client ID: {}", id);
-    let client = get_client_by_id(id, &state)?;
+    let client = get_client_by_id(id, &state.clients.manager)?;
     log_debug!("Found client '{}' for reinstall", client.name);
 
     let client_clone = client.clone();
-    let manager = (*state).clone();
+    let manager = state.clients.manager.clone();
     let handle = tokio::task::spawn_blocking(move || -> Result<(), String> {
         log_info!("Removing existing installation for '{}'", client_clone.name);
         client_clone.remove_installation(&manager)?;
@@ -380,17 +379,20 @@ pub async fn reinstall_client(
         client.name
     );
 
-    let download_result = client.download(&state).await.map_err(|e| {
-        if e.contains("Hash verification failed") {
-            format!(
-                "Hash verification failed for {}: The downloaded file is corrupted. Please try again.",
-                client.name
-            )
-        } else {
-            log_error!("Client download failed during reinstall: {}", e);
-            e
-        }
-    });
+    let download_result = client
+        .download(&state.clients.manager)
+        .await
+        .map_err(|e| {
+            if e.contains("Hash verification failed") {
+                format!(
+                    "Hash verification failed for {}: The downloaded file is corrupted. Please try again.",
+                    client.name
+                )
+            } else {
+                log_error!("Client download failed during reinstall: {}", e);
+                e
+            }
+        });
 
     if let Err(e) = download_result.as_ref() {
         log_error!(
@@ -414,12 +416,9 @@ pub async fn reinstall_client(
 }
 
 #[tauri::command]
-pub fn open_client_folder(
-    id: u32,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
-) -> Result<(), String> {
+pub fn open_client_folder(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Attempting to open folder for client ID: {}", id);
-    let client = get_client_by_id(id, &state)?;
+    let client = get_client_by_id(id, &state.clients.manager)?;
     log_debug!("Found client '{}' to open folder", client.name);
 
     let client_dir_relative = DATA.get_as_folder(&client.filename);
@@ -470,9 +469,11 @@ pub fn get_latest_client_logs(id: u32) -> Result<String, String> {
 pub fn update_client_installed_status(
     id: u32,
     installed: bool,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     if let Some(client) = state
+        .clients
+        .manager
         .lock()
         .map_err(|_| "Failed to acquire lock on client manager".to_string())?
         .clients
@@ -482,40 +483,24 @@ pub fn update_client_installed_status(
         client.meta.installed = installed;
         Ok(())
     } else {
-        log_warn!(
-            "Could not update installed status: Client ID {} not found",
-            id
-        );
         Err("Client not found".to_string())
     }
 }
 
 #[tauri::command]
-pub async fn delete_client(
-    id: u32,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
-) -> Result<(), String> {
-    log_info!("Attempting to delete client with ID: {}", id);
-    let client = get_client_by_id(id, &state)?;
-    log_debug!("Found client '{}' for deletion", client.name);
-
-    let manager = (*state).clone();
+pub async fn delete_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
+    let client = get_client_by_id(id, &state.clients.manager)?;
+    let manager = state.clients.manager.clone();
     let handle = tokio::task::spawn_blocking(move || client.remove_installation(&manager));
 
     match handle.await {
         Ok(result) => {
             if result.is_ok() {
-                log_info!("Successfully deleted files for client ID: {}", id);
                 update_client_installed_status(id, false, state.clone())?;
-            } else {
-                log_error!("Failed to delete files for client ID {}: {:?}", id, result);
             }
             result
         }
-        Err(e) => {
-            log_error!("Task to delete client ID {} failed: {}", id, e);
-            Err(format!("Delete task error: {e}"))
-        }
+        Err(e) => Err(format!("Delete task error: {e}")),
     }
 }
 
@@ -554,9 +539,11 @@ pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, Str
 pub fn increment_client_counter(
     id: u32,
     counter_type: String,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     if let Some(client) = state
+        .clients
+        .manager
         .lock()
         .map_err(|_| "Failed to acquire lock on client manager".to_string())?
         .clients
@@ -621,12 +608,8 @@ pub fn detect_main_class(file_path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub fn get_custom_clients() -> Vec<CustomClient> {
-    CUSTOM_CLIENT_MANAGER
-        .lock()
-        .ok()
-        .map(|manager| manager.clients.clone())
-        .unwrap_or_default()
+pub fn get_custom_clients(state: State<'_, AppState>) -> Vec<CustomClient> {
+    state.custom_clients.lock().clients.clone()
 }
 
 #[tauri::command]
@@ -636,11 +619,10 @@ pub fn add_custom_client(
     filename: String,
     file_path: String,
     main_class: String,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Adding new custom client: '{}'", name);
-    let mut manager = CUSTOM_CLIENT_MANAGER
-        .lock()
-        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+    let mut manager = state.custom_clients.lock();
 
     let path_buf = PathBuf::from(file_path);
 
@@ -651,11 +633,9 @@ pub fn add_custom_client(
 }
 
 #[tauri::command]
-pub fn remove_custom_client(id: u32) -> Result<(), String> {
+pub fn remove_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Removing custom client with ID: {}", id);
-    let mut manager = CUSTOM_CLIENT_MANAGER
-        .lock()
-        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+    let mut manager = state.custom_clients.lock();
 
     manager.remove_client(id)
 }
@@ -666,11 +646,10 @@ pub fn update_custom_client(
     name: Option<String>,
     version: Option<String>,
     main_class: Option<String>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Updating custom client with ID: {}", id);
-    let mut manager = CUSTOM_CLIENT_MANAGER
-        .lock()
-        .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+    let mut manager = state.custom_clients.lock();
 
     let updates = CustomClientUpdate {
         name,
@@ -687,13 +666,11 @@ pub async fn launch_custom_client(
     id: u32,
     user_token: String,
     app_handle: AppHandle,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Attempting to launch custom client with ID: {}", id);
     let custom_client = {
-        let mut manager = CUSTOM_CLIENT_MANAGER
-            .lock()
-            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+        let mut manager = state.custom_clients.lock();
 
         let client = manager
             .get_client_mut(id)
@@ -728,7 +705,7 @@ pub async fn launch_custom_client(
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), true);
 
-    client.run(options, (*state).clone()).await
+    client.run(options, state.clients.manager.clone()).await
 }
 
 #[tauri::command]
@@ -747,12 +724,10 @@ pub async fn get_running_custom_client_ids() -> Vec<u32> {
 }
 
 #[tauri::command]
-pub async fn stop_custom_client(id: u32) -> Result<(), String> {
+pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Attempting to stop custom client with ID: {}", id);
     let custom_client = {
-        let manager = CUSTOM_CLIENT_MANAGER
-            .lock()
-            .map_err(|_| "Failed to acquire lock on custom client manager".to_string())?;
+        let manager = state.custom_clients.lock();
 
         manager
             .get_client(id)

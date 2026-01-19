@@ -3,13 +3,12 @@ use base64::{engine::general_purpose, Engine};
 use crate::commands::clients::{
     get_running_client_ids, get_running_custom_client_ids, stop_client, stop_custom_client,
 };
-use crate::core::clients::manager::ClientManager;
 use crate::core::utils::discord_rpc;
 use crate::core::utils::globals::CODENAME;
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
+use crate::AppState;
 use crate::{log_debug, log_error, log_info, log_warn};
-use std::sync::{Arc, Mutex};
 use std::{fs, path::PathBuf};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::task;
@@ -68,7 +67,7 @@ pub async fn change_data_folder(
     app: AppHandle,
     new_path: String,
     mode: String,
-    state: State<'_, Arc<Mutex<ClientManager>>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!(
         "Changing data folder to '{}' with mode '{}'",
@@ -104,7 +103,7 @@ pub async fn change_data_folder(
     let running_custom: Vec<u32> = get_running_custom_client_ids().await;
     for id in running_custom {
         log_debug!("Stopping custom client with ID: {}", id);
-        let _ = stop_custom_client(id).await;
+        let _ = stop_custom_client(id, state.clone()).await;
     }
 
     let current_dir = DATA.root_dir.clone();

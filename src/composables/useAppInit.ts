@@ -89,24 +89,24 @@ export function useAppInit() {
         bootLogService.start();
         bootLogService.systemInit();
 
-        try {
-            await invoke('initialize_rpc');
-        } catch (error) {
+        const rpcTask = invoke('initialize_rpc').catch((error) => {
             console.error('Failed to initialize Discord RPC:', error);
             bootLogService.addCustomLog('WARN', 'rpc', `Discord RPC init failed: ${String(error)}`);
-        }
+        });
 
-        await applyThemeOnStartup();
+        const themeTask = applyThemeOnStartup().then(() => {
+            bootLogService.themeApplied(currentTheme.value);
+        });
 
-        bootLogService.themeApplied(currentTheme.value);
+        const languageTask = applyLanguageOnStartup().then(() => {
+            bootLogService.languageApplied(locale.value || getCurrentLanguage() || 'en');
+        });
 
-        await applyLanguageOnStartup();
+        const cursorTask = applyCursorForEvent().then(() => {
+            bootLogService.cursorApplied();
+        });
 
-        bootLogService.languageApplied(locale.value || getCurrentLanguage() || 'en');
-
-        await applyCursorForEvent();
-
-        bootLogService.cursorApplied();
+        await Promise.all([rpcTask, themeTask, languageTask, cursorTask]);
 
         const { getToastPosition } = useToast();
         getToastPosition();
@@ -229,27 +229,30 @@ export function useAppInit() {
 
         currentProgress.value = 3;
 
-        try {
-            const currentFlags = await invoke<Flags>('get_flags');
-            if (currentFlags.first_run.value) {
-                showFirstRunInfo.value = true;
-            } else if (!currentFlags.disclaimer_shown.value) {
-                showInitialDisclaimer.value = true;
-            }
-            initialModalsLoaded.value = true;
-            bootLogService.flagsLoaded();
-        } catch (error) {
-            console.error('Failed to load flags for initial modals:', error);
-            addToast(t('toast.settings.flags_load_failed', { error }), 'error');
-            initialModalsLoaded.value = true;
-            bootLogService.flagsLoadFailed();
-        }
+        const flagsTask = invoke<Flags>('get_flags')
+            .then((currentFlags) => {
+                if (currentFlags.first_run.value) {
+                    showFirstRunInfo.value = true;
+                } else if (!currentFlags.disclaimer_shown.value) {
+                    showInitialDisclaimer.value = true;
+                }
+                initialModalsLoaded.value = true;
+                bootLogService.flagsLoaded();
+            })
+            .catch((error) => {
+                console.error('Failed to load flags for initial modals:', error);
+                addToast(t('toast.settings.flags_load_failed', { error }), 'error');
+                initialModalsLoaded.value = true;
+                bootLogService.flagsLoadFailed();
+            });
 
-        try {
-            await fetchNewsAndUpdateUnreadCount(news, unreadNewsCount);
-        } catch (error) {
-            console.error('Failed to load news on startup:', error);
-        }
+        const newsTask = fetchNewsAndUpdateUnreadCount(news, unreadNewsCount).catch(
+            (error) => {
+                console.error('Failed to load news on startup:', error);
+            }
+        );
+
+        await Promise.allSettled([flagsTask, newsTask]);
 
         updaterService.startPeriodicCheck(t);
 

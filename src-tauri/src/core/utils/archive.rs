@@ -103,6 +103,15 @@ pub fn unzip(
         }
     }
 
+    let sentinel_path = unzip_path.join(".valid");
+    if let Err(e) = std::fs::File::create(&sentinel_path) {
+        log_warn!(
+            "Could not create sentinel in {}: {}",
+            unzip_path.display(),
+            e
+        );
+    }
+
     if let Err(e) = fs::remove_file(zip_path) {
         log_debug!("Failed to delete zip file {}: {}", zip_path.display(), e);
     }

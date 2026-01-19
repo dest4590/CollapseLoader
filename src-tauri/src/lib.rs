@@ -15,11 +15,13 @@ use crate::core::platform::check_webkit_environment;
 
 use self::core::network::analytics::Analytics;
 use crate::core::network::servers::SERVERS;
-pub use crate::core::utils::logging;
 use tauri::async_runtime::spawn;
 
 pub mod commands;
 pub mod core;
+
+pub use crate::core::state::AppState;
+pub use crate::core::utils::logging;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
     check_platform_dependencies()
@@ -76,7 +78,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(Arc::new(Mutex::new(ClientManager::default())))
+        .manage(AppState::new(Arc::new(
+            Mutex::new(ClientManager::default()),
+        )))
         .manage(commands::irc::IrcState::default())
         .invoke_handler(tauri::generate_handler![
             commands::clients::initialize_api,

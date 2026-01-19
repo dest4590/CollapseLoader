@@ -4,7 +4,7 @@ use std::process::{Command, Output};
 use std::os::windows::process::CommandExt;
 
 use crate::core::storage::data::DATA;
-use crate::core::utils::globals::{FILE_EXTENSION, JDK_FOLDER};
+use crate::core::utils::globals::{FILE_EXTENSION, JDK21_FOLDER};
 use crate::{log_debug, log_error, log_info, log_warn};
 
 pub fn is_java_installed() -> bool {
@@ -14,7 +14,7 @@ pub fn is_java_installed() -> bool {
 
 pub fn get_jps_path() -> std::path::PathBuf {
     DATA.root_dir
-        .join(JDK_FOLDER)
+        .join(JDK21_FOLDER)
         .join("bin")
         .join("jps".to_owned() + FILE_EXTENSION)
 }

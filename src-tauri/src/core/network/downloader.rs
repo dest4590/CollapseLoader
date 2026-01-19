@@ -1,11 +1,55 @@
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::log_error;
+use crate::log_warn;
 use futures_util::StreamExt;
 use std::path::Path;
 use std::time::Duration;
 use tokio::io::AsyncWriteExt;
 
+const MAX_RETRIES: u32 = 3;
+const RETRY_DELAY: Duration = Duration::from_secs(2);
+
 pub async fn download_file(
+    url: &str,
+    dest_path: &Path,
+    emit_name: &str,
+    app_handle: Option<&tauri::AppHandle>,
+) -> Result<(), String> {
+    let mut last_error = String::from("Unknown error");
+
+    for attempt in 1..=MAX_RETRIES {
+        if attempt > 1 {
+            log_warn!(
+                "Retrying download for {} (Attempt {}/{})",
+                emit_name,
+                attempt,
+                MAX_RETRIES
+            );
+            tokio::time::sleep(RETRY_DELAY).await;
+        }
+
+        match perform_download(url, dest_path, emit_name, app_handle).await {
+            Ok(_) => return Ok(()),
+            Err(e) => {
+                last_error = e;
+                log_error!(
+                    "Download failed for {} (Attempt {}/{}): {}",
+                    emit_name,
+                    attempt,
+                    MAX_RETRIES,
+                    last_error
+                );
+            }
+        }
+    }
+
+    Err(format!(
+        "Failed to download {} after {} attempts: {}",
+        emit_name, MAX_RETRIES, last_error
+    ))
+}
+
+async fn perform_download(
     url: &str,
     dest_path: &Path,
     emit_name: &str,
@@ -21,7 +65,7 @@ pub async fn download_file(
 
     let response = client.get(url).send().await.map_err(|e| {
         log_error!("Failed to make HTTP request to {}: {}", url, e);
-        format!("Failed to download file {emit_name}: {e}")
+        format!("Network request failed: {e}")
     })?;
 
     if !response.status().is_success() {
@@ -46,7 +90,7 @@ pub async fn download_file(
             dest_path.display(),
             e
         );
-        format!("Failed to create file: {e}")
+        format!("File creation error: {e}")
     })?;
 
     let mut downloaded: u64 = 0;
@@ -56,7 +100,7 @@ pub async fn download_file(
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| {
             log_error!("Failed to read response data for {}: {}", emit_name, e);
-            format!("Network read error: {e}")
+            format!("Network stream error: {e}")
         })?;
 
         dest.write_all(&chunk).await.map_err(|e| {
