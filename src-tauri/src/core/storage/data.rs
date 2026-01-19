@@ -3,7 +3,7 @@ use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
 use crate::core::utils::globals::{
-    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK8_FOLDER, JDK_FOLDER, LIBRARIES_FABRIC_FOLDER,
+    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK21_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER,
     LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER,
     NATIVES_FOLDER, NATIVES_LEGACY_FOLDER, ROOT_DIR,
 };
@@ -393,9 +393,24 @@ impl Data {
         Ok(())
     }
 
+    pub async fn verify_file_md5(
+        path: &std::path::PathBuf,
+        expected: &str,
+    ) -> Result<bool, String> {
+        let path = path.clone();
+        let expected = expected.to_lowercase();
+        let calc = tokio::task::spawn_blocking(move || {
+            crate::core::utils::hashing::calculate_md5_hash(&path)
+        })
+        .await
+        .map_err(|e| e.to_string())??;
+
+        Ok(calc.eq_ignore_ascii_case(&expected))
+    }
+
     pub async fn reset_requirements(&self) -> Result<(), String> {
         let base_requirements = [
-            JDK_FOLDER,
+            JDK21_FOLDER,
             JDK8_FOLDER,
             ASSETS_FOLDER,
             NATIVES_FOLDER,
@@ -405,6 +420,7 @@ impl Data {
             LIBRARIES_FABRIC_FOLDER,
             NATIVES_FABRIC_FOLDER,
             NATIVES_LEGACY_FOLDER,
+            MINECRAFT_VERSIONS_FOLDER,
         ];
 
         let mut requirements = Vec::new();
@@ -412,7 +428,6 @@ impl Data {
             requirements.push(req.to_string());
             requirements.push(format!("{}.zip", req));
         }
-        requirements.push(MINECRAFT_VERSIONS_FOLDER.to_string());
 
         for requirement in &requirements {
             let path = self.root_dir.join(requirement);
@@ -440,6 +455,79 @@ impl Data {
                 .map_err(|e| e.to_string())?;
         }
         Ok(())
+    }
+
+    pub fn is_folder_healthy(&self, relative_path: &str) -> bool {
+        let path = self.get_local(relative_path);
+        let sentinel = path.join(".valid");
+
+        if !path.exists() || !path.is_dir() {
+            return false;
+        }
+
+        if !sentinel.exists() {
+            log_warn!(
+                "Folder {} exists but no sentinel found. Mark as unhealthy.",
+                relative_path
+            );
+            return false;
+        }
+
+        match std::fs::read_dir(&path) {
+            Ok(mut entries) => entries.next().is_some(),
+            Err(_) => false,
+        }
+    }
+
+    pub fn verify_folder_integrity(&self, folder_name: &str) -> bool {
+        let folder_path = self.root_dir.join(folder_name);
+        let manifest_path = folder_path.join("manifest.txt");
+
+        if !manifest_path.exists() {
+            log_warn!("Manifest missing for folder: {}", folder_name);
+            return false;
+        }
+
+        let content = match std::fs::read_to_string(&manifest_path) {
+            Ok(c) => c,
+            Err(e) => {
+                log_error!("Failed to read manifest in {}: {}", folder_name, e);
+                return false;
+            }
+        };
+
+        for line in content.lines() {
+            let line = line.trim();
+            if line.is_empty() || !line.contains(':') {
+                continue;
+            }
+
+            let parts: Vec<&str> = line.splitn(2, ':').collect();
+            let rel_path = parts[0];
+            let expected_hash = parts[1];
+            let full_path = folder_path.join(rel_path);
+
+            if !full_path.exists() {
+                log_warn!(
+                    "Integrity Check Failed: File missing -> {}",
+                    full_path.display()
+                );
+                return false;
+            }
+
+            match crate::core::utils::hashing::calculate_hash(&full_path) {
+                Ok(actual_hash) => {
+                    if actual_hash != expected_hash {
+                        log_warn!("Integrity Check Failed: Hash mismatch for {}", rel_path);
+                        return false;
+                    }
+                }
+                Err(_) => return false,
+            }
+        }
+
+        log_debug!("Integrity Check Passed for folder: {}", folder_name);
+        true
     }
 }
 

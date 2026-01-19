@@ -12,7 +12,7 @@ pub static LINUX_SUFFIX: &str = "-linux";
 pub static LEGACY_SUFFIX: &str = "-1.8.9";
 pub static PATH_SEPARATOR: &str = if IS_LINUX { ":" } else { ";" };
 
-pub static JDK_FOLDER: &str = if IS_LINUX {
+pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2_linux"
 } else {
     "jdk-21.0.2"
