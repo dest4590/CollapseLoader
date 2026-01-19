@@ -73,7 +73,7 @@
                     </div>
 
                     <div class="prose prose-sm max-w-none text-base-content/80 news-content"
-                        v-html="sanitizeHtml(article.content)"></div>
+                        v-html="renderNewsContent(article.content)"></div>
 
                     <div v-if="article.updated_at !== article.created_at" class="mt-4 pt-4 border-t border-base-300/50">
                         <p class="text-xs text-base-content/50">
@@ -226,33 +226,22 @@ const filteredNews = computed(() => {
     );
 });
 
+const renderNewsContent = (raw: string): string => {
+    let safe = raw
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 
-const sanitizeHtml = (html: string): string => {
-    const allowedTags = [
-        'b',
-        'strong',
-        'i',
-        'em',
-        'u',
-        'br',
-        'p',
-        'div',
-        'span',
-        'h1',
-        'h2',
-        'h3',
-        'h4',
-        'h5',
-        'h6',
-    ];
-    const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^<>]*>/gi;
+    safe = safe.replace(/\r\n|\r|\n/g, '<br>');
 
-    return html.replace(tagRegex, (match, tagName) => {
-        if (allowedTags.includes(tagName.toLowerCase())) {
-            return match;
-        }
-        return '';
-    });
+    safe = safe.replace(
+        /(https?:\/\/[^\s<>"']+)/g,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+    return safe;
 };
 
 watch(() => getCurrentLanguage(), (newLang) => {
@@ -350,6 +339,24 @@ onMounted(() => {
 
 .news-content {
     line-height: 1.6;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.news-content :deep(a),
+.news-content :deep(span),
+.news-content :deep(div) {
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    white-space: normal;
+}
+
+.news-content :deep(pre),
+.news-content :deep(code) {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .news-content :deep(b),
