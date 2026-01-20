@@ -120,32 +120,60 @@ pub fn kill_process(pid: &str, client_name: &str) -> Result<bool, String> {
         client_name
     );
 
-    let mut kill_command = Command::new("taskkill");
-
     #[cfg(target_os = "windows")]
-    kill_command.creation_flags(0x0800_0000);
+    {
+        let mut kill_command = Command::new("taskkill");
+        kill_command.creation_flags(0x0800_0000);
 
-    let kill_output = kill_command
-        .arg("/PID")
-        .arg(pid)
-        .arg("/F")
-        .output()
-        .map_err(|e| {
-            log_error!("Failed to execute taskkill for PID {}: {}", pid, e);
-            format!("Failed to kill process: {e}")
-        })?;
+        let kill_output = kill_command
+            .arg("/PID")
+            .arg(pid)
+            .arg("/F")
+            .output()
+            .map_err(|e| {
+                log_error!("Failed to execute taskkill for PID {}: {}", pid, e);
+                format!("Failed to kill process: {e}")
+            })?;
 
-    if kill_output.status.success() {
-        log_info!("Successfully killed process {} for '{}'", pid, client_name);
-        Ok(true)
-    } else {
-        log_error!(
-            "taskkill failed for PID {}: {}",
-            pid,
-            String::from_utf8_lossy(&kill_output.stderr)
-        );
-        Ok(false)
+        if kill_output.status.success() {
+            log_info!("Successfully killed process {} for '{}'", pid, client_name);
+            return Ok(true);
+        } else {
+            log_error!(
+                "taskkill failed for PID {}: {}",
+                pid,
+                String::from_utf8_lossy(&kill_output.stderr)
+            );
+            return Ok(false);
+        }
     }
+
+    #[cfg(unix)]
+    {
+        let kill_output = Command::new("kill")
+            .arg("-9")
+            .arg(pid)
+            .output()
+            .map_err(|e| {
+                log_error!("Failed to execute kill for PID {}: {}", pid, e);
+                format!("Failed to kill process: {e}")
+            })?;
+
+        if kill_output.status.success() {
+            log_info!("Successfully killed process {} for '{}'", pid, client_name);
+            return Ok(true);
+        } else {
+            log_error!(
+                "kill failed for PID {}: {}",
+                pid,
+                String::from_utf8_lossy(&kill_output.stderr)
+            );
+            return Ok(false);
+        }
+    }
+
+    log_error!("No supported kill command for this OS");
+    Err("No supported kill command for this OS".to_string())
 }
 
 pub fn stop_process_by_filename(filename: &str, client_name: &str) -> Result<(), String> {
