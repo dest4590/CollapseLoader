@@ -385,17 +385,10 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     } else if let Some(idx) = body.find("``` changelog") {
         (idx, "``` changelog")
     } else {
-        log_debug!("No changelog JSON block marker found in release body.");
-        log_debug!("Release body (truncated): {}", truncate_str(body, 512));
         return None;
     };
 
     let start_idx = marker.0;
-    log_debug!(
-        "Found changelog marker '{}' at index {}",
-        marker.1,
-        start_idx
-    );
 
     let after_marker = &body[start_idx..];
     let first_newline = after_marker.find('\n')?;
@@ -405,18 +398,10 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     if let Some(closing_rel) = rest.find("```") {
         let closing_idx = content_start + closing_rel;
         let content = &body[content_start..closing_idx];
-        log_debug!(
-            "Extracted changelog content (len={}): {}",
-            content.len(),
-            truncate_str(content, 512)
-        );
+
         return Some(content.trim().to_string());
     }
 
-    log_warn!(
-        "Found changelog block marker but no closing '```'. Release body (truncated): {}",
-        truncate_str(body, 512)
-    );
     None
 }
 
@@ -425,16 +410,12 @@ fn parse_changelog_and_translations(
 ) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
     match serde_json::from_str::<Vec<ChangelogEntry>>(content) {
         Ok(v) => return Ok((v, None)),
-        Err(e) => {
-            log_debug!("Content is not an array of changelog entries: {}", e);
-        }
+        Err(_) => {}
     }
 
     match serde_json::from_str::<ChangelogEntry>(content) {
         Ok(entry) => return Ok((vec![entry], None)),
-        Err(e) => {
-            log_debug!("Content is not a single changelog entry: {}", e);
-        }
+        Err(_) => {}
     }
 
     let root: JsonValue = serde_json::from_str(content).map_err(|e| {

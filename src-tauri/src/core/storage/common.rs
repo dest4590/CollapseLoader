@@ -59,14 +59,18 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                 Self::resource_name(),
                 file_path.display()
             );
-            return Self::create_default();
+            let default = Self::create_default();
+            default.save_to_disk();
+            return default;
         }
 
         let file = match File::open(&file_path) {
             Ok(f) => f,
             Err(e) => {
                 log_error!("Failed to open {}: {}", Self::resource_name(), e);
-                return Self::create_default();
+                let default = Self::create_default();
+                default.save_to_disk();
+                return default;
             }
         };
 
@@ -84,7 +88,9 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                 let backup_path = file_path.with_extension("bak");
                 let _ = fs::copy(&file_path, backup_path);
 
-                Self::create_default()
+                let default = Self::create_default();
+                default.save_to_disk();
+                default
             }
         }
     }

@@ -19,8 +19,15 @@ pub static JDK21_FOLDER: &str = if IS_LINUX {
 };
 
 // Java 8 for legacy LaunchWrapper / Forge 1.8.9
-pub static JDK8_FOLDER: &str = "jdk8";
-pub static JDK8_ZIP: &str = "jdk8.zip";
+pub static JDK8_FOLDER: &str = if IS_LINUX { "jdk8-linux" } else { "jdk8" };
+pub static JDK8_ZIP: &str = if IS_LINUX {
+    "jdk8-linux.zip"
+} else {
+    "jdk8.zip"
+};
+
+// JDK search order: prefer JDK21, fall back to JDK8
+pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
 
 // Asset/library file names (without .zip extension)
 pub static ASSETS_FOLDER: &str = "assets";
@@ -31,6 +38,7 @@ pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 pub static NATIVES_FOLDER: &str = "natives";
 pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
 pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
+pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
 pub static NATIVES_FABRIC_FOLDER: &str = "natives_fabric";
 
 // Zip file names
@@ -42,6 +50,7 @@ pub static LIBRARIES_LEGACY_ZIP: &str = "libraries-legacy.zip";
 pub static NATIVES_ZIP: &str = "natives.zip";
 pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
 pub static NATIVES_LEGACY_ZIP: &str = "natives-legacy.zip";
+pub static NATIVES_LEGACY_LINUX_ZIP: &str = "natives-legacy-linux.zip";
 
 // Folder names
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";

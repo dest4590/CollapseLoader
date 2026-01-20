@@ -4,54 +4,86 @@ use std::process::{Command, Output};
 use std::os::windows::process::CommandExt;
 
 use crate::core::storage::data::DATA;
-use crate::core::utils::globals::{FILE_EXTENSION, JDK21_FOLDER};
-use crate::{log_debug, log_error, log_info, log_warn};
-
-pub fn is_java_installed() -> bool {
-    let jps_path = get_jps_path();
-    jps_path.exists()
-}
+use crate::core::utils::globals::{FILE_EXTENSION, JDK21_FOLDER, JDK_FOLDERS};
 
 pub fn get_jps_path() -> std::path::PathBuf {
+    for folder in JDK_FOLDERS.iter() {
+        let path = DATA
+            .root_dir
+            .join(folder)
+            .join("bin")
+            .join("jps".to_owned() + FILE_EXTENSION);
+        if path.exists() {
+            return path;
+        }
+    }
+
     DATA.root_dir
         .join(JDK21_FOLDER)
         .join("bin")
         .join("jps".to_owned() + FILE_EXTENSION)
 }
+use crate::{log_debug, log_error, log_info, log_warn};
 
-pub fn execute_jps() -> Result<Output, std::io::Error> {
-    if !is_java_installed() {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "Java is not installed",
-        ));
+pub fn is_java_installed() -> bool {
+    let jps_path = get_jps_path();
+    if jps_path.exists() {
+        return true;
     }
 
-    let jps_path = get_jps_path();
+    if Command::new("jps").arg("-l").output().is_ok() {
+        return true;
+    }
+
+    if Command::new("java").arg("-version").output().is_ok() {
+        return true;
+    }
+
+    false
+}
+
+pub fn execute_jps() -> Result<Output, std::io::Error> {
+    let embedded = get_jps_path();
+    if !embedded.exists() {
+        let mut command = Command::new("jps");
+        #[cfg(target_os = "windows")]
+        command.creation_flags(0x0800_0000);
+        return command.arg("-m").output();
+    }
 
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        if jps_path.exists() {
-            if let Ok(mut perms) = std::fs::metadata(&jps_path).map(|m| m.permissions()) {
-                let mode = perms.mode() & 0o777;
-                if mode != 0o755 {
-                    perms.set_mode(0o755);
-                    if let Err(e) = std::fs::set_permissions(&jps_path, perms) {
-                        log_warn!(
-                            "Failed to set exec perm on jps {}: {}",
-                            jps_path.display(),
-                            e
-                        );
-                    } else {
-                        log_debug!("Set exec perm on jps {}", jps_path.display());
+        if let Some(bin_dir) = embedded.parent() {
+            if bin_dir.exists() {
+                if let Ok(entries) = std::fs::read_dir(bin_dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_file() {
+                            if let Ok(mut perms) = std::fs::metadata(&path).map(|m| m.permissions())
+                            {
+                                let mode = perms.mode() & 0o777;
+                                if mode != 0o755 {
+                                    perms.set_mode(0o755);
+                                    if let Err(e) = std::fs::set_permissions(&path, perms) {
+                                        log_warn!(
+                                            "Failed to set exec perm on {}: {}",
+                                            path.display(),
+                                            e
+                                        );
+                                    } else {
+                                        log_debug!("Set exec perm on {}", path.display());
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
 
-    let mut command = Command::new(jps_path);
+    let mut command = Command::new(embedded);
 
     #[cfg(target_os = "windows")]
     command.creation_flags(0x0800_0000);

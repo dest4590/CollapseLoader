@@ -15,7 +15,6 @@ use tokio::{
     sync::Semaphore,
 };
 
-use crate::core::network::analytics::Analytics;
 use crate::core::storage::{
     accounts::ACCOUNT_MANAGER,
     data::{Data, DATA},
@@ -39,6 +38,10 @@ use crate::core::{
 };
 use crate::core::{clients::log_checker::LogChecker, utils::globals::NATIVES_LINUX_FOLDER};
 use crate::core::{clients::manager::ClientManager, utils::globals::LIBRARIES_FABRIC_ZIP};
+use crate::core::{
+    network::analytics::Analytics,
+    utils::globals::{NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP},
+};
 use crate::{log_debug, log_error, log_info, log_warn};
 
 pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
@@ -605,7 +608,11 @@ impl Client {
                 check_and_queue(libs_folder, libs_zip);
 
                 let (actual_natives_zip, actual_natives_folder) = if IS_LINUX {
-                    (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
+                    if self.is_legacy_client() {
+                        (NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_LINUX_FOLDER)
+                    } else {
+                        (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
+                    }
                 } else {
                     (natives_zip, natives_folder)
                 };
@@ -696,11 +703,27 @@ impl Client {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let java_path = self.java_executable_path();
-            if java_path.exists() {
-                if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
-                    perms.set_mode(0o755);
-                    let _ = std::fs::set_permissions(&java_path, perms);
+            let bin_dir = DATA.root_dir.join(self.jdk_folder_name()).join("bin");
+            if bin_dir.exists() {
+                if let Ok(entries) = std::fs::read_dir(&bin_dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_file() {
+                            if let Ok(mut perms) = std::fs::metadata(&path).map(|m| m.permissions())
+                            {
+                                perms.set_mode(0o755);
+                                if let Err(e) = std::fs::set_permissions(&path, perms) {
+                                    log_warn!(
+                                        "Failed to set exec perm on {}: {}",
+                                        path.display(),
+                                        e
+                                    );
+                                } else {
+                                    log_debug!("Set exec perm on {}", path.display());
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -837,15 +860,12 @@ impl Client {
         };
 
         let natives_path = if self.is_legacy_client() {
-            DATA.root_dir.join(format!(
-                "{}{}",
-                NATIVES_FOLDER,
-                if IS_LINUX {
-                    LINUX_SUFFIX
-                } else {
-                    LEGACY_SUFFIX
-                }
-            ))
+            if IS_LINUX {
+                DATA.root_dir.join(NATIVES_LEGACY_LINUX_FOLDER)
+            } else {
+                DATA.root_dir
+                    .join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
+            }
         } else if self.meta.is_new {
             DATA.root_dir.join(format!(
                 "{}{}",
