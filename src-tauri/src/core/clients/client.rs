@@ -661,6 +661,10 @@ impl Client {
             }
         }
 
+        if self.client_type == ClientType::Fabric {
+            self.download_fabric_mods().await?;
+        }
+
         Ok(())
     }
 
@@ -986,6 +990,21 @@ impl Client {
         let mut child = cmd
             .spawn()
             .map_err(|e| format!("Failed to spawn process: {e}"))?;
+
+        let mut secure_command = format!("{cmd:#?}");
+
+        if let Some(start) = secure_command.find("-javaagent:") {
+            if let Some(end) = secure_command[start..].find(" -") {
+                let actual_end = start + end;
+                secure_command.replace_range(start..actual_end, "-javaagent:[HIDDEN]");
+            } else if let Some(end) = secure_command[start..].find("\"") {
+                let actual_end = start + end;
+                secure_command.replace_range(start..actual_end, "-javaagent:[HIDDEN]");
+            }
+        }
+
+        add_log_line(client_id, secure_command);
+
         let self_clone = self.clone();
 
         emit_to_main_window(
