@@ -172,8 +172,11 @@ pub fn kill_process(pid: &str, client_name: &str) -> Result<bool, String> {
         }
     }
 
-    log_error!("No supported kill command for this OS");
-    Err("No supported kill command for this OS".to_string())
+    #[cfg(not(any(target_os = "windows", unix)))]
+    {
+        log_error!("No supported kill command for this OS");
+        Err("No supported kill command for this OS".to_string())
+    }
 }
 
 pub fn stop_process_by_filename(filename: &str, client_name: &str) -> Result<(), String> {

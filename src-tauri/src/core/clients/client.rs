@@ -355,6 +355,11 @@ impl Client {
         process::filter_running(clients, |client| &client.filename)
     }
 
+    pub fn get_client_folder(&self) -> Result<PathBuf, String> {
+        let (folder, _) = self.get_launch_paths()?;
+        Ok(folder)
+    }
+
     pub fn stop(&self) -> Result<(), String> {
         process::stop_process_by_filename(&self.filename, &self.name)
     }
@@ -933,7 +938,7 @@ impl Client {
         cmd.arg("-Xverify:none");
 
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
-        if !IS_LINUX && self.client_type != ClientType::Forge && !is_legacy_vanilla {
+        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(
                 "-javaagent:{}={}",
                 agent_overlay_path.join(AGENT_FILE).display(),
@@ -956,6 +961,13 @@ impl Client {
                 agent_overlay_path.display()
             ));
         }
+
+        cmd.arg("--add-opens")
+            .arg("java.base/jdk.internal.misc=ALL-UNNAMED");
+        cmd.arg("--add-opens").arg("java.base/sun.misc=ALL-UNNAMED");
+        cmd.arg("--add-opens")
+            .arg("java.base/java.lang=ALL-UNNAMED");
+        cmd.arg("--add-opens").arg("java.base/java.io=ALL-UNNAMED");
 
         cmd.arg("-cp").arg(classpath).arg(&self.main_class);
 
