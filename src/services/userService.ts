@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import {apiClient} from './apiClient';
 
 interface UserProfile {
     nickname?: string;
@@ -130,7 +130,7 @@ class UserService {
 
     private setCachedData(data: Partial<CachedUserData>): void {
         try {
-            const existing = this.getCachedData() || { profile: null, info: null, lastUpdated: new Date().toISOString() };
+            const existing = this.getCachedData() || {profile: null, info: null, lastUpdated: new Date().toISOString()};
             const updated = {
                 ...existing,
                 ...data,
@@ -142,41 +142,19 @@ class UserService {
         }
     }
 
-    async loadUserProfile(useCache: boolean = true): Promise<{ data: UserProfile | null; fromCache: boolean }> {
-        if (useCache) {
-            const cached = this.getCachedData();
-            if (cached?.profile) {
-                console.log('Returning cached user profile');
-                return { data: cached.profile, fromCache: true };
-            }
-        }
-
-        try {
-            console.log('Fetching user profile from server...');
-            const profile = await apiClient.get('/auth/profile/');
-
-            this.setCachedData({ profile });
-            console.log('User profile loaded and cached');
-            return { data: profile, fromCache: false };
-        } catch (error) {
-            console.error('Failed to load user profile:', error);
-            return { data: null, fromCache: false };
-        }
-    }
-
     async updateUserProfile(nickname: string): Promise<{ success: boolean; error?: string }> {
         try {
-            const updatedProfile = await apiClient.patch('/auth/profile/', { nickname });
+            const updatedProfile = await apiClient.patch('/auth/profile/', {nickname});
 
-            this.setCachedData({ profile: updatedProfile });
+            this.setCachedData({profile: updatedProfile});
             apiClient.invalidateProfileCaches();
 
             console.log('User profile updated successfully');
-            return { success: true };
+            return {success: true};
         } catch (error: any) {
             console.error('Failed to update user profile:', error);
             const errorMessage = error.response?.data?.error || 'Failed to update profile';
-            return { success: false, error: errorMessage };
+            return {success: false, error: errorMessage};
         }
     }
 
@@ -189,13 +167,13 @@ class UserService {
 
             const profile = (resp as any).profile as UserProfile;
             if (profile) {
-                this.setCachedData({ profile });
+                this.setCachedData({profile});
                 apiClient.invalidateProfileCaches();
             }
-            return { success: true, profile };
+            return {success: true, profile};
         } catch (error: any) {
             const errorMessage = error.response?.data?.error || 'Failed to upload avatar';
-            return { success: false, error: errorMessage };
+            return {success: false, error: errorMessage};
         }
     }
 
@@ -204,20 +182,19 @@ class UserService {
             const resp = await apiClient.post('/auth/profile/avatar/reset/');
             const profile = (resp as any).profile as UserProfile;
             if (profile) {
-                this.setCachedData({ profile });
+                this.setCachedData({profile});
                 apiClient.invalidateProfileCaches();
             }
-            return { success: true, profile };
+            return {success: true, profile};
         } catch (error: any) {
             const errorMessage = error.response?.data?.error || 'Failed to reset avatar';
-            return { success: false, error: errorMessage };
+            return {success: false, error: errorMessage};
         }
     }
 
     async getSyncStatus(): Promise<SyncStatus | null> {
         try {
-            const status = await apiClient.get('/auth/sync/status/');
-            return status;
+            return await apiClient.get('/auth/sync/status/');
         } catch (error) {
             console.error('Failed to get sync status:', error);
             return null;
@@ -226,67 +203,25 @@ class UserService {
 
     async getUserStatus(): Promise<UserStatus> {
         try {
-            const status = await apiClient.get('/auth/status/');
-            return status;
+            return await apiClient.get('/auth/status/');
         } catch (error) {
             console.error('Failed to get user status:', error);
             throw error;
         }
     }
 
-    async updateUserStatus(isOnline: boolean, currentClient?: string, invisibleMode?: boolean): Promise<UserStatus> {
-        try {
-            const payload: any = {
-                is_online: isOnline,
-                invisible_mode: invisibleMode || false
-            };
-
-            if (currentClient) {
-                payload.current_client = currentClient;
-            }
-
-            const status = await apiClient.post('/auth/status/', payload);
-            return status;
-        } catch (error) {
-            console.error('Failed to update user status:', error);
-            throw error;
-        }
-    }
-
-    async getFriends(): Promise<Friend[]> {
-        try {
-            const friends = await apiClient.get('/auth/friends/');
-            return friends;
-        } catch (error) {
-            console.error('Failed to get friends:', error);
-            throw error;
-        }
-    }
-
     async getFriendRequests(): Promise<{ sent: FriendRequest[]; received: FriendRequest[] }> {
         try {
-            const requests = await apiClient.get('/auth/friends/requests/');
-            return requests;
+            return await apiClient.get('/auth/friends/requests/');
         } catch (error) {
             console.error('Failed to get friend requests:', error);
             throw error;
         }
     }
 
-    async getFriendsStatuses(): Promise<UserStatus[]> {
-        try {
-            const statuses = await apiClient.get('/auth/friends/status/');
-            return statuses;
-        } catch (error) {
-            console.error('Failed to get friends statuses:', error);
-            throw error;
-        }
-    }
-
     async sendFriendRequest(username: string): Promise<any> {
         try {
-            const response = await apiClient.post('/auth/friends/send/', { username });
-            return response;
+            return await apiClient.post('/auth/friends/send/', {username});
         } catch (error) {
             console.error('Failed to send friend request:', error);
             throw error;
@@ -295,8 +230,7 @@ class UserService {
 
     async respondToFriendRequest(requestId: number, action: 'accept' | 'reject'): Promise<any> {
         try {
-            const response = await apiClient.post(`/auth/friends/respond/${requestId}/`, { action });
-            return response;
+            return await apiClient.post(`/auth/friends/respond/${requestId}/`, {action});
         } catch (error) {
             console.error('Failed to respond to friend request:', error);
             throw error;
@@ -305,8 +239,7 @@ class UserService {
 
     async cancelFriendRequest(requestId: number): Promise<any> {
         try {
-            const response = await apiClient.delete(`/auth/friends/cancel/${requestId}/`);
-            return response;
+            return await apiClient.delete(`/auth/friends/cancel/${requestId}/`);
         } catch (error) {
             console.error('Failed to cancel friend request:', error);
             throw error;
@@ -315,8 +248,7 @@ class UserService {
 
     async removeFriend(userId: number): Promise<any> {
         try {
-            const response = await apiClient.delete(`/auth/friends/remove/${userId}/`);
-            return response;
+            return await apiClient.delete(`/auth/friends/remove/${userId}/`);
         } catch (error) {
             console.error('Failed to remove friend:', error);
             throw error;
@@ -325,8 +257,7 @@ class UserService {
 
     async blockUser(userId: number): Promise<any> {
         try {
-            const response = await apiClient.post(`/auth/users/block/${userId}/`, {});
-            return response;
+            return await apiClient.post(`/auth/users/block/${userId}/`, {});
         } catch (error) {
             console.error('Failed to block user:', error);
             throw error;
@@ -335,8 +266,7 @@ class UserService {
 
     async unblockUser(userId: number): Promise<any> {
         try {
-            const response = await apiClient.delete(`/auth/users/unblock/${userId}/`);
-            return response;
+            return await apiClient.delete(`/auth/users/unblock/${userId}/`);
         } catch (error) {
             console.error('Failed to unblock user:', error);
             throw error;
@@ -345,8 +275,7 @@ class UserService {
 
     async getBlockedUsers(): Promise<Friend[]> {
         try {
-            const blockedUsers = await apiClient.get('/auth/users/blocked/');
-            return blockedUsers;
+            return await apiClient.get('/auth/users/blocked/');
         } catch (error) {
             console.error('Failed to get blocked users:', error);
             throw error;
@@ -355,10 +284,9 @@ class UserService {
 
     async searchUsers(query: string): Promise<SearchUser[]> {
         try {
-            const users = await apiClient.get('/auth/users/search/', {
-                params: { q: query }
+            return await apiClient.get('/auth/users/search/', {
+                params: {q: query}
             });
-            return users;
         } catch (error) {
             console.error('Failed to search users:', error);
             throw error;
@@ -367,8 +295,7 @@ class UserService {
 
     async getUserProfile(userId: number): Promise<PublicUserProfile> {
         try {
-            const profile = await apiClient.get(`/auth/users/${userId}/profile/`);
-            return profile;
+            return await apiClient.get(`/auth/users/${userId}/profile/`);
         } catch (error) {
             console.error('Failed to get user profile:', error);
             throw error;
@@ -381,7 +308,7 @@ class UserService {
                 new_password: newPassword,
                 current_password: currentPassword,
             });
-            return { success: true };
+            return {success: true};
         } catch (error) {
             console.error('Failed to change password:', error);
             throw error;
@@ -399,10 +326,12 @@ class UserService {
         }
     }
 
-    async getBatchFriendsData(): Promise<{ friends: Friend[]; requests: { sent: FriendRequest[]; received: FriendRequest[] } }> {
+    async getBatchFriendsData(): Promise<{
+        friends: Friend[];
+        requests: { sent: FriendRequest[]; received: FriendRequest[] }
+    }> {
         try {
-            const response = await apiClient.get('/auth/friends/batch/');
-            return response;
+            return await apiClient.get('/auth/friends/batch/');
         } catch (error) {
             console.error('Failed to get batch friends data:', error);
             throw error;
@@ -411,14 +340,12 @@ class UserService {
 
     async downloadFromCloud(): Promise<UserProfile | null> {
         try {
-            const response = await apiClient.get('/auth/profile/');
-            return response;
+            return await apiClient.get('/auth/profile/');
         } catch (error) {
             console.error('Failed to download from cloud:', error);
             throw error;
         }
     }
-
 
     async syncToCloud(data: SyncData): Promise<UserProfile> {
         try {
@@ -426,7 +353,7 @@ class UserService {
 
             const profile = response.data || response;
             const cachedData = this.getCachedData();
-            this.setCachedData({ profile: profile, info: cachedData?.info || null });
+            this.setCachedData({profile: profile, info: cachedData?.info || null});
             apiClient.invalidateProfileCaches();
 
             return profile;
@@ -443,4 +370,14 @@ class UserService {
 }
 
 export const userService = new UserService();
-export type { UserProfile, UserInfo, SyncStatus, SyncData, UserStatus, Friend, FriendRequest, SearchUser, PublicUserProfile };
+export type {
+    UserProfile,
+    UserInfo,
+    SyncStatus,
+    SyncData,
+    UserStatus,
+    Friend,
+    FriendRequest,
+    SearchUser,
+    PublicUserProfile
+};

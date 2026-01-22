@@ -123,12 +123,25 @@ pub static AUTH_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
 });
 
 pub static ROOT_DIR: LazyLock<String> = LazyLock::new(|| {
-    let roaming_dir = std::env::var("APPDATA").unwrap_or_else(|_| {
-        // fallback for non-windows systems (aka linux/mac)
-        std::env::var("HOME").unwrap_or_else(|_| ".".to_string())
-    });
+    let base_dir = if IS_LINUX {
+        std::env::var("XDG_DATA_HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                std::env::var("HOME")
+                    .map(|h| PathBuf::from(h).join(".local").join("share"))
+                    .unwrap_or_else(|_| PathBuf::from("."))
+            })
+    } else {
+        std::env::var("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                std::env::var("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|_| PathBuf::from("."))
+            })
+    };
 
-    let override_file = PathBuf::from(&roaming_dir).join("CollapseLoaderRoot.txt");
+    let override_file = base_dir.join("CollapseLoaderRoot.txt");
     if let Ok(contents) = fs::read_to_string(&override_file) {
         let override_path = contents.trim_matches(['\n', '\r', '"', '\'']).trim();
         if !override_path.is_empty() {
@@ -140,6 +153,20 @@ pub static ROOT_DIR: LazyLock<String> = LazyLock::new(|| {
         }
     }
 
-    let collapse_dir = PathBuf::from(roaming_dir).join("CollapseLoader");
+    // Fallback migration check for Linux: if ~/.local/share/CollapseLoader doesn't exist
+    // but ~/CollapseLoader does, use ~/CollapseLoader to avoid breaking existing setups.
+    if IS_LINUX {
+        let legacy_dir = std::env::var("HOME")
+            .map(|h| PathBuf::from(h).join("CollapseLoader"))
+            .unwrap_or_else(|_| PathBuf::from("CollapseLoader"));
+
+        let xdg_dir = base_dir.join("CollapseLoader");
+
+        if !xdg_dir.exists() && legacy_dir.exists() {
+            return legacy_dir.to_string_lossy().to_string();
+        }
+    }
+
+    let collapse_dir = base_dir.join("CollapseLoader");
     collapse_dir.to_string_lossy().to_string()
 });

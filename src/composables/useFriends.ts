@@ -201,7 +201,10 @@ export function useFriends() {
             await updateFriendStatuses();
         };
 
-        runStatusUpdate();
+        runStatusUpdate().then(
+            () => console.log('Status updates started successfully'),
+            error => console.error('Failed to start status updates:', error)
+        );
 
         statusUpdateInterval.current = setInterval(runStatusUpdate, STATUS_UPDATE_INTERVAL);
 

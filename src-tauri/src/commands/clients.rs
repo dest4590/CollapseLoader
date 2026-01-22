@@ -62,15 +62,29 @@ pub fn get_app_logs() -> Vec<String> {
 
 #[tauri::command]
 pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
-    let clients = ClientManager::fetch_clients()
-        .await
-        .map_err(|e| e.to_string())?;
+    log_info!("Starting initialize_api");
+    let clients = ClientManager::fetch_clients().await.map_err(|e| {
+        log_error!("Failed to fetch clients: {}", e);
+        e.to_string()
+    })?;
+
+    log_info!("Fetched {} clients", clients.len());
+
+    if clients.is_empty() {
+        log_warn!("Fetched client list is empty - this may indicate an API or network issue");
+        return Err("Fetched client list is empty".to_string());
+    }
+
     let mut manager = state
         .clients
         .manager
         .lock()
         .map_err(|_| "Failed to lock state".to_string())?;
     manager.clients = clients;
+    log_info!(
+        "Successfully initialized ClientManager with {} clients",
+        manager.clients.len()
+    );
     Ok(())
 }
 

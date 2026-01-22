@@ -93,13 +93,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useToast } from '../../../../services/toastService';
-import { userService, type SearchUser } from '../../../../services/userService';
-import { UserPlus, Users } from 'lucide-vue-next';
+import {ref} from 'vue';
+import {useToast} from '../../../../services/toastService';
+import {type SearchUser, userService} from '../../../../services/userService';
+import {UserPlus, Users} from 'lucide-vue-next';
 import UserAvatar from '../../../ui/UserAvatar.vue';
-import { useI18n } from 'vue-i18n';
-import { useStreamerMode } from '../../../../composables/useStreamerMode';
+import {useI18n} from 'vue-i18n';
+import {useStreamerMode} from '../../../../composables/useStreamerMode';
 
 const emit = defineEmits(['close', 'friend-added', 'view-profile']);
 const { addToast } = useToast();
@@ -141,8 +141,7 @@ const performSearch = async () => {
 
     searching.value = true;
     try {
-        const results = await userService.searchUsers(searchQuery.value);
-        searchResults.value = results;
+      searchResults.value = await userService.searchUsers(searchQuery.value);
     } catch (error) {
         console.error('Failed to search users:', error);
         addToast(t('toast.friends.search_failed'), 'error');

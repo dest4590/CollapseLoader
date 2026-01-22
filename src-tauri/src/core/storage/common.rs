@@ -1,4 +1,4 @@
-use crate::{log_debug, log_error, log_warn};
+use crate::{log_error, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     fs::{self, File},
@@ -47,8 +47,6 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                 e
             );
             let _ = fs::remove_file(tmp_path);
-        } else {
-            log_debug!("Saved {} successfully", Self::resource_name());
         }
     }
 

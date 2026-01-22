@@ -31,7 +31,9 @@ class SyncService {
             this.state.isOnline = true;
             this.notifyListeners();
             if (this.state.autoSyncEnabled && this.isAuthenticated()) {
-                this.autoSync();
+                this.autoSync().then(r => {
+                    console.log('Auto-sync completed:', r);
+                });
             }
         });
 
@@ -59,7 +61,9 @@ class SyncService {
 
         this.autoSyncInterval = setInterval(() => {
             if (this.state.isOnline && this.state.autoSyncEnabled && !this.state.isSyncing && this.isAuthenticated()) {
-                this.autoSync();
+                this.autoSync().then(r => {
+                    console.log('Auto-sync completed:', r);
+                });
             }
         }, 5 * 60 * 1000) as unknown as number;
     }

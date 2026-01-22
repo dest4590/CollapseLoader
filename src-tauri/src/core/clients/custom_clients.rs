@@ -66,6 +66,7 @@ impl CustomClient {
             meta: Meta {
                 is_new: false,
                 is_fabric: false,
+                is_forge: false,
                 asset_index: String::new(),
                 installed: self.is_installed,
                 is_custom: true,

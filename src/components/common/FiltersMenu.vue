@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { ChevronDown, Funnel } from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
+import {computed, ref, watch} from 'vue';
+import {ChevronDown, Funnel} from 'lucide-vue-next';
+import {useI18n} from 'vue-i18n';
 
 interface Filters {
     fabric: boolean;
@@ -44,6 +44,13 @@ const localSortOrder = computed({
     set: (value) => emit('update:clientSortOrder', value),
 });
 
+const hasModifiedFilters = computed(() => {
+    return props.activeFilters.fabric ||
+      props.activeFilters.forge ||
+      props.activeFilters.vanilla ||
+      props.activeFilters.installed
+});
+
 const toggleFiltersMenu = (event?: Event) => {
     if (event) event.stopPropagation();
     showFiltersMenu.value = !showFiltersMenu.value;
@@ -68,7 +75,8 @@ watch(showFiltersMenu, (isOpen) => {
     }
 });
 
-import { onBeforeUnmount } from 'vue';
+import {onBeforeUnmount} from 'vue';
+
 onBeforeUnmount(() => {
     document.removeEventListener('click', onDocumentClick);
 });
@@ -76,15 +84,16 @@ onBeforeUnmount(() => {
 
 <template>
     <div class="relative filters-container">
-        <button @click.stop="toggleFiltersMenu" class="btn btn-ghost btn-sm ml-2">
-            <Funnel class="w-4 h-4 mr-1" />
+        <button @click.stop="toggleFiltersMenu" class="btn btn-ghost btn-sm ml-2 relative">
+            <Funnel class="w-4 h-4 mr-1"/>
             {{ t('home.filters_title') }}
-            <ChevronDown class="w-4 h-4 ml-1 transition-all duration-300" :class="{ 'rotate-180 ': showFiltersMenu }" />
+            <ChevronDown class="w-4 h-4 ml-1 transition-all duration-300" :class="{ 'rotate-180 ': showFiltersMenu }"/>
+            <span v-if="hasModifiedFilters" class="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
         </button>
 
         <transition name="slide-up-filter">
             <div v-if="showFiltersMenu"
-                class="absolute right-0 mt-2 w-56 bg-base-200 rounded-box shadow-xl border border-base-300 z-50 p-3">
+                 class="absolute right-0 mt-2 w-56 bg-base-200 rounded-box shadow-xl border border-base-300 z-50 p-3">
                 <div class="flex flex-col gap-2 text-sm">
                     <select class="select select-sm" v-model="localSortKey">
                         <option value="newest">{{ t('home.sort.newest') }}</option>
@@ -100,22 +109,22 @@ onBeforeUnmount(() => {
                     </select>
 
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" class="checkbox" v-model="localFilters.fabric" />
+                        <input type="checkbox" class="checkbox" v-model="localFilters.fabric"/>
                         <span>Fabric</span>
                     </label>
 
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" class="checkbox" v-model="localFilters.forge" />
+                        <input type="checkbox" class="checkbox" v-model="localFilters.forge"/>
                         <span>Forge</span>
                     </label>
 
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" class="checkbox" v-model="localFilters.vanilla" />
+                        <input type="checkbox" class="checkbox" v-model="localFilters.vanilla"/>
                         <span>Vanilla</span>
                     </label>
 
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" class="checkbox" v-model="localFilters.installed" />
+                        <input type="checkbox" class="checkbox" v-model="localFilters.installed"/>
                         <span>{{ t('home.filters.installed') }}</span>
                     </label>
                 </div>

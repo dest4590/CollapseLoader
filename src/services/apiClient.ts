@@ -1,6 +1,6 @@
-import axios, { AxiosResponse, AxiosRequestConfig } from 'axios';
-import { getAuthUrl } from '../config';
-import { getCurrentLanguage } from '../i18n';
+import axios, {AxiosRequestConfig, AxiosResponse} from 'axios';
+import {getAuthUrl} from '../config';
+import {getCurrentLanguage} from '../i18n';
 
 interface CacheEntry<T = any> {
     data: T;
@@ -193,9 +193,9 @@ class ApiClient {
             return this.pendingRequests.get(cacheKey) as Promise<T>;
         }
 
-        const requestConfig: AxiosRequestConfig = { ...(config || {}), method };
+        const requestConfig: AxiosRequestConfig = {...(config || {}), method};
         if (cached && cached.etag) {
-            requestConfig.headers = { ...(requestConfig.headers || {}) };
+            requestConfig.headers = {...(requestConfig.headers || {})};
             requestConfig.headers['If-None-Match'] = cached.etag;
         }
 
@@ -280,34 +280,33 @@ class ApiClient {
     async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
 
-        const resp = await this.executeRequest<T>(url, { ...config, method: 'POST', data });
+        const resp = await this.executeRequest<T>(url, {...config, method: 'POST', data});
         return resp.data as T;
     }
 
 
     async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
-        const resp = await this.executeRequest<T>(url, { ...config, method: 'PUT', data });
+        const resp = await this.executeRequest<T>(url, {...config, method: 'PUT', data});
         return resp.data as T;
     }
 
 
     async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
-        const resp = await this.executeRequest<T>(url, { ...config, method: 'PATCH', data });
+        const resp = await this.executeRequest<T>(url, {...config, method: 'PATCH', data});
         return resp.data as T;
     }
 
 
     async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
         this.invalidateCache(url);
-        const resp = await this.executeRequest<T>(url, { ...config, method: 'DELETE' });
+        const resp = await this.executeRequest<T>(url, {...config, method: 'DELETE'});
         return resp.data as T;
     }
 
     private async executeRequest<T>(url: string, config: AxiosRequestConfig): Promise<import('axios').AxiosResponse<T>> {
-        const response = await this.client.request<T>({ url, ...config });
-        return response;
+        return await this.client.request<T>({url, ...config});
     }
 
     private invalidateCache(url: string) {
@@ -346,7 +345,7 @@ class ApiClient {
 
 
     getMetrics(): RequestMetrics {
-        return { ...this.metrics };
+        return {...this.metrics};
     }
 
 
@@ -397,11 +396,6 @@ class ApiClient {
             console.error('Failed to preload critical data:', error);
         }
     }
-
-    async heartbeat(): Promise<{ success: boolean; timestamp: string }> {
-        return this.post('/auth/heartbeat/', {});
-    }
-
     public invalidateProfileCaches() {
         this.invalidateCache('/auth/profile/');
         this.invalidateCache('/auth/init/');
@@ -412,15 +406,6 @@ export const apiClient = new ApiClient();
 
 export const apiGet = apiClient.get.bind(apiClient);
 export const apiPost = apiClient.post.bind(apiClient);
-export const apiPut = apiClient.put.bind(apiClient);
 export const apiPatch = apiClient.patch.bind(apiClient);
 export const apiDelete = apiClient.delete.bind(apiClient);
-
-export const apiBatchGet = apiClient.batchGet.bind(apiClient);
-export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
-export const apiMetrics = apiClient.getMetrics.bind(apiClient);
-export const apiCacheStats = apiClient.getCacheStats.bind(apiClient);
-export const apiHeartbeat = apiClient.heartbeat.bind(apiClient);
 export const apiInvalidateProfile = apiClient.invalidateProfileCaches.bind(apiClient);
-
-export default apiClient;

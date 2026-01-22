@@ -526,7 +526,6 @@ impl Data {
             }
         }
 
-        log_debug!("Integrity Check Passed for folder: {}", folder_name);
         true
     }
 }

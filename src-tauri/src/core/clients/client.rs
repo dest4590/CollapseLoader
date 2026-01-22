@@ -133,6 +133,7 @@ fn add_log_line(client_id: u32, line: String) {
 pub struct Meta {
     pub is_new: bool,
     pub is_fabric: bool,
+    pub is_forge: bool,
     pub asset_index: String,
     pub installed: bool,
     pub is_custom: bool,
@@ -149,7 +150,8 @@ impl Meta {
         let asset_index = format!("{}.{}", semver.major, semver.minor);
         let is_new_version = semver.minor >= 16;
         let is_fabric = *client_type == ClientType::Fabric || filename.contains("fabric/");
-
+        let is_forge = *client_type == ClientType::Forge || filename.contains("forge/");
+        
         let jar_path = match client_type {
             ClientType::Fabric | ClientType::Forge => {
                 let jar_basename = Path::new(filename)
@@ -188,6 +190,7 @@ impl Meta {
             installed: jar_path.exists(),
             is_custom: false,
             is_fabric,
+            is_forge,
             size: 0,
         }
     }
@@ -245,6 +248,7 @@ const fn default_meta() -> Meta {
     Meta {
         is_new: false,
         is_fabric: false,
+        is_forge: false,
         asset_index: String::new(),
         installed: false,
         is_custom: false,
@@ -570,8 +574,6 @@ impl Client {
                 if !path.exists() {
                     log_info!("Folder '{}' missing. Queuing {} for download.", folder, zip);
                     files_to_download.push(zip.to_string());
-                } else {
-                    log_debug!("Skipping integrity verification for '{}'.", folder);
                 }
                 return;
             }

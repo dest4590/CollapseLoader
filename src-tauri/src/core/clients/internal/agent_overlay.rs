@@ -168,11 +168,6 @@ impl AgentOverlayManager {
             format!("Failed to parse agent/overlay info: {e}")
         })?;
 
-        log_debug!(
-            "Fetched agent overlay info: agent_hash={}, overlay_hash={}",
-            info.agent_hash,
-            info.overlay_hash
-        );
         Ok(info)
     }
 

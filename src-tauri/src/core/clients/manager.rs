@@ -36,6 +36,7 @@ impl ClientManager {
                     asset_index: "1.16".to_string(),
                     is_new: false,
                     is_fabric: false,
+                    is_forge: false,
                     installed: rng.random_bool(1.0 / 3.0),
                     is_custom: false,
                     size: rng.random_range(50..=100),
@@ -133,8 +134,7 @@ impl ClientManager {
         clients.sort_by(|a, b| b.created_at.cmp(&a.created_at));
 
         for client in &mut clients {
-            client.meta =
-                super::client::Meta::new(&client.version, &client.filename, &client.client_type);
+            client.meta = Meta::new(&client.version, &client.filename, &client.client_type);
 
             client.meta.size = client.size;
 
@@ -144,9 +144,10 @@ impl ClientManager {
         }
 
         log_debug!(
-            "Initialized ClientManager with {} clients ({} fabric, {} vanilla)",
+            "Initialized ClientManager with {} clients ({} fabric, {} forge, {} vanilla)",
             clients.len(),
             clients.iter().filter(|c| c.meta.is_fabric).count(),
+            clients.iter().filter(|c| c.meta.is_forge).count(),
             clients.iter().filter(|c| !c.meta.is_fabric).count()
         );
         Ok(clients)

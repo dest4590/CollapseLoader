@@ -8,6 +8,8 @@ pub mod messagebox;
 
 #[cfg(target_os = "linux")]
 mod linux;
+pub mod error;
+
 #[cfg(target_os = "linux")]
 pub use self::linux::{check_platform_dependencies, check_webkit_environment};
 

@@ -761,7 +761,7 @@
     "login_required": "需要登录后才能查看资料",
     "profile_load_failed": "加载用户资料失败",
     "friend_request_sent_success": "已向 {name} 发送好友请求",
-    "friend_request_failed": "发送好友请求失败",
+    "friend_request_failed": "发送好友请求失败: {error}",
     "copy_username": "复制用户名",
     "copied_username": "{name} 已复制到剪贴板",
     "copy_failed": "复制用户名失败",

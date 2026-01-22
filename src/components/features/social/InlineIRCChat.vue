@@ -347,7 +347,7 @@ const copyToClipboard = async (text: string) => {
 onMounted(async () => {
     try {
         await ensureIrcConnection();
-        scrollToBottom();
+        await scrollToBottom();
     } catch (err) {
         console.error('Failed to connect to IRC:', err);
         addToast(

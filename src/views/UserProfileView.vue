@@ -399,7 +399,7 @@ const handleSendFriendRequest = async () => {
         userProfile.value.friendship_status = 'request_sent';
     } catch (error) {
         console.error('Failed to send friend request:', error);
-        addToast(t('userProfile.friend_request_failed'), 'error');
+        addToast(t('userProfile.friend_request_failed', {error: error}), 'error');
     } finally {
         sendingRequest.value = false;
     }

@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import {invoke} from '@tauri-apps/api/core';
 
 let currentAuthUrl = "";
 let isInitialized = false;
@@ -16,7 +16,7 @@ export const initializeAuthUrl = (): Promise<string> => {
     initPromise = (async () => {
         try {
             const result = await invoke<string>('get_auth_url');
-            if (typeof result === 'string' && result.length > 0) {
+            if (result.length > 0) {
                 currentAuthUrl = result.endsWith('/') ? result.slice(0, -1) : result;
                 console.log('Auth URL from backend:', currentAuthUrl);
             } else {

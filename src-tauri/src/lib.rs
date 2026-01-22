@@ -4,11 +4,9 @@ use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use std::sync::{Arc, Mutex};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
-use crate::core::{
-    error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
-};
+use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
 
 #[cfg(target_os = "linux")]
 use crate::core::platform::check_webkit_environment;
@@ -20,6 +18,7 @@ use tauri::async_runtime::spawn;
 pub mod commands;
 pub mod core;
 
+use self::core::platform::error::StartupError;
 pub use crate::core::state::AppState;
 pub use crate::core::utils::logging;
 
@@ -62,12 +61,23 @@ pub fn handle_startup_error(error: &StartupError) {
 #[cfg(not(target_os = "windows"))]
 pub fn handle_startup_error(error: &StartupError) {
     #[cfg(target_os = "linux")]
-    if let StartupError::LinuxWebKitWarning = error {
+    if matches!(
+        error,
+        StartupError::LinuxWebKitWarning | StartupError::LinuxWebKitWaylandWarning
+    ) {
         error.show_warning();
         return;
     }
 
     error.show_and_exit();
+}
+
+fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
+    let _ = app.emit("deep-link-launch", url);
+
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_focus();
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -78,6 +88,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if args.len() > 1 {
+                handle_deep_link_url(app, args[1].clone());
+            }
+        }))
         .manage(AppState::new(Arc::new(
             Mutex::new(ClientManager::default()),
         )))
@@ -158,6 +174,26 @@ pub fn run() {
             commands::irc::send_irc_message,
         ])
         .setup(|app| {
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let handle = app.handle().clone();
+                app.deep_link().on_open_url(move |event| {
+                    handle_deep_link_url(&handle, event.urls()[0].to_string());
+                });
+                app.deep_link().register_all()?;
+            }
+
+            let args: Vec<String> = std::env::args().collect();
+            if let Some(url) = args.iter().find(|a| a.starts_with("collapseloader://")) {
+                let handle = app.handle().clone();
+                let url_clone = url.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+                    handle_deep_link_url(&handle, url_clone);
+                });
+            }
+
             let app_handle = app.handle();
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 

@@ -1,38 +1,38 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount, onMounted, shallowRef, nextTick, watch, triggerRef } from 'vue';
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch} from 'vue';
 import {
-    StopCircle,
-    Terminal,
-    Download,
-    Star,
     AlertTriangle,
-    X,
+    Camera,
     ChevronLeft,
     ChevronRight,
-    ZoomIn,
+    Download,
     ExternalLink,
-    ScrollText,
     Info,
-    ZoomOut,
-    RefreshCw,
     MessageSquare,
-    Trash2,
+    RefreshCw,
+    ScrollText,
     Send,
-    Camera,
+    Star,
+    StopCircle,
+    Terminal,
+    Trash2,
+    X,
+    ZoomIn,
+    ZoomOut,
 } from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
+import {useI18n} from 'vue-i18n';
 import gsap from 'gsap';
-import type { Client, InstallProgress, ClientDetails, ClientComment } from '../../../types/ui';
+import type {Client, ClientComment, ClientDetails, InstallProgress} from '../../../types/ui';
 import InsecureClientWarningModal from '../../modals/clients/InsecureClientWarningModal.vue';
 import ClientInfo from './ClientInfo.vue';
-import { openUrl } from '@tauri-apps/plugin-opener';
-import { invoke } from '@tauri-apps/api/core';
-import { useModal } from '../../../services/modalService';
-import { userService } from '../../../services/userService';
-import { apiGet, apiPost } from '../../../services/authClient';
-import { formatDate } from '../../../utils/utils';
-import { ensureAuthUrl } from '../../../config';
-import { useUser } from '../../../composables/useUser';
+import {openUrl} from '@tauri-apps/plugin-opener';
+import {invoke} from '@tauri-apps/api/core';
+import {useModal} from '../../../services/modalService';
+import {userService} from '../../../services/userService';
+import {apiGet, apiPost} from '../../../services/authClient';
+import {formatDate} from '../../../utils/utils';
+import {ensureAuthUrl} from '../../../config';
+import {useUser} from '../../../composables/useUser';
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
@@ -73,12 +73,12 @@ const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
 const activeTab = ref<'info' | 'screenshots' | 'comments'>('info');
 
-const comments = ref<ClientComment[]>([]);
+const comments = shallowRef<ClientComment[]>([]);
 const isLoadingComments = ref(false);
 const newCommentText = ref('');
 const isPostingComment = ref(false);
 type CurrentUser = { username: string };
-const currentUser = ref<CurrentUser | null>(null);
+const currentUser = shallowRef<CurrentUser | null>(null);
 const myRating = ref<number | null>(null);
 const isSubmittingRating = ref(false);
 const isLoadingMyRating = ref(false);
@@ -137,9 +137,15 @@ const dragStartY = ref(0);
 const dragStartTop = ref(0);
 
 let scrollbarUpdateScheduled = false;
+let lastScrollUpdate = 0;
+const SCROLL_THROTTLE = 16; // ~60fps
 
 const updateScrollbar = () => {
     if (scrollbarUpdateScheduled) return;
+
+    const now = performance.now();
+    if (now - lastScrollUpdate < SCROLL_THROTTLE) return;
+    lastScrollUpdate = now;
 
     scrollbarUpdateScheduled = true;
     requestAnimationFrame(() => {
@@ -220,8 +226,7 @@ const fetchComments = async () => {
     if (isLoadingComments.value) return;
     isLoadingComments.value = true;
     try {
-        const response = await invoke<ClientComment[]>('get_client_comments', { clientId: props.client.id });
-        comments.value = response;
+        comments.value = await invoke<ClientComment[]>('get_client_comments', { clientId: props.client.id });
     } catch (error) {
         console.error('Failed to fetch comments:', error);
     } finally {
@@ -317,19 +322,21 @@ watch(isExpanded, (newVal) => {
     } else {
         document.body.style.overflow = '';
     }
-});
+}, { flush: 'post' });
 
 watch(canRate, (newVal) => {
     if (newVal && isExpanded.value) {
         fetchMyRating();
     }
-});
+}, { flush: 'post' });
 
 watch(clientDetails, () => {
-    nextTick(() => {
-        updateScrollbar();
-    });
-});
+    if (isExpanded.value) {
+        nextTick(() => {
+            updateScrollbar();
+        });
+    }
+}, { flush: 'post' });
 
 const zoomScale = ref(1);
 const zoomPosition = ref({ x: 0, y: 0 });
@@ -395,15 +402,15 @@ const handleShowContextMenu = (event: MouseEvent) => {
 
 const showInsecureWarning = () => {
     showModal(
-        `insecure-warning-${props.client.id}`,
-        InsecureClientWarningModal,
-        {
-            title: t('modals.insecure_client_warning.modal_title'),
-        },
-        { client: props.client, infoVariant: true },
-        {
-            close: () => hideModal(`insecure-warning-${props.client.id}`),
-        }
+      `insecure-warning-${props.client.id}`,
+      InsecureClientWarningModal,
+      {
+          title: t('modals.insecure_client_warning.modal_title'),
+      },
+      { client: props.client, infoVariant: true },
+      {
+          close: () => hideModal(`insecure-warning-${props.client.id}`),
+      }
     );
 };
 
@@ -412,18 +419,27 @@ const clientIsInstalling = computed(() => !!props.isClientInstalling);
 const currentInstallStatus = computed(() => props.installationStatus);
 
 const ratingAvg = computed(() => {
+    if (!isExpanded.value) {
+        const avg = props.client.rating_avg;
+        return typeof avg === 'number' ? avg : null;
+    }
     const avg = clientDetails.value?.rating_avg ?? props.client.rating_avg;
     return typeof avg === 'number' ? avg : null;
 });
 
 const ratingCount = computed(() => {
+    if (!isExpanded.value) {
+        const count = props.client.rating_count;
+        return typeof count === 'number' ? count : 0;
+    }
     const count = clientDetails.value?.rating_count ?? props.client.rating_count;
     return typeof count === 'number' ? count : 0;
 });
 
 const ratingRounded = computed(() => {
-    if (ratingAvg.value === null) return null;
-    return Math.round(ratingAvg.value * 2) / 2;
+    const avg = ratingAvg.value;
+    if (avg === null) return null;
+    return Math.round(avg * 2) / 2;
 });
 
 const handleRatingClick = async (value: number) => {
@@ -449,7 +465,11 @@ const submitRating = async (value: number) => {
     try {
         await ensureAuthUrl();
 
-        const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number | null }>(getRatingEndpoint(), { rating: value });
+        const data = await apiPost<{
+            rating_avg: number | null;
+            rating_count: number;
+            my_rating?: number | null
+        }>(getRatingEndpoint(), { rating: value });
 
         if (typeof data?.my_rating === 'number') {
             myRating.value = data.my_rating;
@@ -486,8 +506,8 @@ const removeRating = async () => {
         await ensureAuthUrl();
 
         const data = await apiPost<{ rating_avg: number | null; rating_count: number; my_rating?: number | null }>(
-            getRatingEndpoint(),
-            { rating: null }
+          getRatingEndpoint(),
+          { rating: null }
         );
 
         myRating.value = null;
@@ -518,8 +538,7 @@ const expandCard = async () => {
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
         try {
-            const response = await invoke<ClientDetails>('get_client_details', { clientId: props.client.id });
-            clientDetails.value = response;
+            clientDetails.value = await invoke<ClientDetails>('get_client_details', { clientId: props.client.id });
         } catch (error) {
             console.error('Failed to fetch client details:', error);
         } finally {
@@ -1109,28 +1128,28 @@ onBeforeUnmount(() => {
             <div class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                 <svg class="w-3 h-3 text-primary-content" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd" />
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clip-rule="evenodd"/>
                 </svg>
             </div>
         </div>
         <div class="absolute z-0 transition-opacity duration-200"
-            :class="[(isMultiSelectMode && !isSelected && !isExpanded) ? 'opacity-100' : 'opacity-0 pointer-events-none']"
-            style="right: 1.1rem; top: 1.1rem;">
+             :class="[(isMultiSelectMode && !isSelected && !isExpanded) ? 'opacity-100' : 'opacity-0 pointer-events-none']"
+             style="right: 1.1rem; top: 1.1rem;">
             <div class="w-5 h-5 border-2 border-base-content/30 rounded-full bg-base-100"></div>
         </div>
 
         <button @click="!isCollapsing && collapseCard()" :disabled="isCollapsing"
-            class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
-            :class="{
+                class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
+                :class="{
                 'opacity-0 pointer-events-none': (!isExpanded && !isAnimating) || isCollapsing,
                 'opacity-100 pointer-events-auto mr-2': (isExpanded || isAnimating) && !isCollapsing
             }">
-            <X class="w-5 h-5" />
+            <X class="w-5 h-5"/>
         </button>
 
         <div class="scroll-container h-full w-full overflow-y-auto custom-scrollbar-hide relative" ref="scrollContainer"
-            @scroll="handleScroll">
+             @scroll="handleScroll">
             <div class="p-4 min-h-full">
                 <div class="card-body flex flex-col p-0">
                     <div class="flex justify-between items-start">
@@ -1138,24 +1157,24 @@ onBeforeUnmount(() => {
                             {{ client.name }}
                             <div v-if="client.insecure">
                                 <div class="tooltip tooltip-bottom" :data-tip="t('common.click')"
-                                    @click="showInsecureWarning">
-                                    <AlertTriangle class="text-warning w-4 h-4" />
+                                     @click="showInsecureWarning">
+                                    <AlertTriangle class="text-warning w-4 h-4"/>
                                 </div>
                             </div>
                         </h2>
                         <transition name="fade" appear>
                             <div ref="favoriteRef" v-if="isFavorite" class="favorite-indicator">
-                                <Star class="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                <Star class="w-4 h-4 fill-yellow-400 text-yellow-400"/>
                             </div>
                         </transition>
                     </div>
 
-                    <ClientInfo :client="client" :expanded="inTransition" />
+                    <ClientInfo :client="client" :expanded="inTransition"/>
 
                     <div ref="actionsRef" class="card-actions justify-end mt-2">
                         <button v-if="clientIsRunning && !clientIsInstalling" @click.stop="handleOpenLogViewer"
-                            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20">
-                            <Terminal class="w-4 h-4" />
+                                class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20">
+                            <Terminal class="w-4 h-4"/>
                         </button>
                         <transition name="fade-transform" mode="out-in">
                             <div v-if="clientIsInstalling" class="w-full">
@@ -1176,29 +1195,29 @@ onBeforeUnmount(() => {
                             </div>
                             <div v-else class="flex items-center space-x-2">
                                 <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                                    class="btn btn-sm btn-primary relative overflow-hidden group"
-                                    :disabled="isRequirementsInProgress || !client.working">
+                                        class="btn btn-sm btn-primary relative overflow-hidden group"
+                                        :disabled="isRequirementsInProgress || !client.working">
                                     <span
-                                        class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
-                                        <Download v-if="client.working" class="w-4 h-4 mr-1" />
+                                      class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
+                                        <Download v-if="client.working" class="w-4 h-4 mr-1"/>
                                         <span v-if="client.working">{{
-                                            t('home.download')
-                                        }}</span>
+                                                t('home.download')
+                                            }}</span>
                                         <span v-else-if="!client.working">{{
-                                            t('home.unavailable')
-                                        }}</span>
+                                                t('home.unavailable')
+                                            }}</span>
                                     </span>
                                     <span
-                                        class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                                      class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                                         {{ client.meta.size || '0' }} MB
                                     </span>
                                 </button>
                                 <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
-                                    :disabled="isRequirementsInProgress" :class="clientIsRunning
+                                        :disabled="isRequirementsInProgress" :class="clientIsRunning
                                         ? 'btn-error'
                                         : 'btn-primary'
                                         ">
-                                    <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
+                                    <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning"/>
                                     {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
                                 </button>
                             </div>
@@ -1214,25 +1233,27 @@ onBeforeUnmount(() => {
                             <div v-else-if="clientDetails">
                                 <div role="tablist" class="tabs tabs-boxed mb-4 w-fit mx-auto">
                                     <button type="button" role="tab" class="tab"
-                                        :class="{ 'tab-active': activeTab === 'info' }"
-                                        :aria-selected="activeTab === 'info'" @click="changeTab('info')">
-                                        <Info class="w-4 h-4 mr-2" />
+                                            :class="{ 'tab-active': activeTab === 'info' }"
+                                            :aria-selected="activeTab === 'info'" @click="changeTab('info')">
+                                        <Info class="w-4 h-4 mr-2"/>
                                         {{ t('client.details.info_tab') }}
                                     </button>
                                     <button type="button" role="tab" class="tab"
-                                        :class="{ 'tab-active': activeTab === 'screenshots' }"
-                                        :aria-selected="activeTab === 'screenshots'" @click="changeTab('screenshots')">
-                                        <Camera class="w-4 h-4 mr-2" />
+                                            :class="{ 'tab-active': activeTab === 'screenshots' }"
+                                            :aria-selected="activeTab === 'screenshots'"
+                                            @click="changeTab('screenshots')">
+                                        <Camera class="w-4 h-4 mr-2"/>
                                         {{ t('client.details.screenshots_tab') }}
                                     </button>
                                     <button type="button" role="tab" class="tab"
-                                        :class="{ 'tab-active': activeTab === 'comments' }"
-                                        :aria-selected="activeTab === 'comments'" @click="changeTab('comments')">
+                                            :class="{ 'tab-active': activeTab === 'comments' }"
+                                            :aria-selected="activeTab === 'comments'" @click="changeTab('comments')">
                                         <div class="flex items-center gap-2">
-                                            <MessageSquare class="w-4 h-4" />
+                                            <MessageSquare class="w-4 h-4"/>
                                             <span>{{ t('client.details.comments_tab') }}</span>
                                             <span v-if="clientDetails?.comments_count"
-                                                class="badge badge-sm badge-ghost">{{ clientDetails.comments_count
+                                                  class="badge badge-sm badge-ghost">{{
+                                                    clientDetails.comments_count
                                                 }}</span>
                                         </div>
                                     </button>
@@ -1242,89 +1263,94 @@ onBeforeUnmount(() => {
                                     <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
                                         <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1 space-y-4">
                                             <div
-                                                class="stats stats-vertical sm:stats-horizontal w-full rounded-xl bg-base-200/40 border border-base-content/5">
+                                              class="stats stats-vertical sm:stats-horizontal w-full rounded-xl bg-base-200/40 border border-base-content/5">
                                                 <div class="stat">
                                                     <div
-                                                        class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                                      class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
                                                         {{ t('client.details.rating') }}
                                                     </div>
                                                     <div class="stat-value text-base flex items-center gap-3">
                                                         <div v-if="canRate" :key="`rating-${myRating}`"
-                                                            class="rating rating-sm">
+                                                             class="rating rating-sm">
                                                             <input type="radio" :name="`rating-input-${client.id}`"
-                                                                class="rating-hidden" />
+                                                                   class="rating-hidden"/>
                                                             <template v-for="i in 5" :key="i">
                                                                 <input type="radio" :name="`rating-input-${client.id}`"
-                                                                    class="mask mask-star-2 bg-warning"
-                                                                    :checked="(myRating ?? 0) === i"
-                                                                    :disabled="isSubmittingRating"
-                                                                    @click="handleRatingClick(i)" />
+                                                                       class="mask mask-star-2 bg-warning"
+                                                                       :checked="(myRating ?? 0) === i"
+                                                                       :disabled="isSubmittingRating"
+                                                                       @click="handleRatingClick(i)"/>
                                                             </template>
                                                         </div>
 
                                                         <div v-else class="tooltip tooltip-bottom"
-                                                            :data-tip="t('client.details.login_to_rate')">
+                                                             :data-tip="t('client.details.login_to_rate')">
                                                             <div v-if="ratingRounded !== null"
-                                                                class="rating rating-half rating-sm pointer-events-none opacity-80">
+                                                                 class="rating rating-half rating-sm pointer-events-none opacity-80">
                                                                 <input type="radio"
-                                                                    :name="`rating-display-${client.id}`"
-                                                                    class="rating-hidden" disabled />
+                                                                       :name="`rating-display-${client.id}`"
+                                                                       class="rating-hidden" disabled/>
                                                                 <template v-for="i in 5" :key="i">
                                                                     <input type="radio"
-                                                                        :name="`rating-display-${client.id}`"
-                                                                        class="mask mask-star-2 mask-half-1 bg-warning"
-                                                                        :checked="ratingRounded === (i - 0.5)"
-                                                                        disabled />
+                                                                           :name="`rating-display-${client.id}`"
+                                                                           class="mask mask-star-2 mask-half-1 bg-warning"
+                                                                           :checked="ratingRounded === (i - 0.5)"
+                                                                           disabled/>
                                                                     <input type="radio"
-                                                                        :name="`rating-display-${client.id}`"
-                                                                        class="mask mask-star-2 mask-half-2 bg-warning"
-                                                                        :checked="ratingRounded === i" disabled />
+                                                                           :name="`rating-display-${client.id}`"
+                                                                           class="mask mask-star-2 mask-half-2 bg-warning"
+                                                                           :checked="ratingRounded === i" disabled/>
                                                                 </template>
                                                             </div>
                                                             <div v-else
-                                                                class="text-xs font-medium text-base-content/60">
+                                                                 class="text-xs font-medium text-base-content/60">
                                                                 {{ t('client.details.no_rating') }}
                                                             </div>
                                                         </div>
 
                                                         <div
-                                                            class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
-                                                            <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1)
-                                                            }}/5</span>
+                                                          class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
+                                                            <span v-if="ratingAvg !== null">{{
+                                                                    ratingAvg.toFixed(1)
+                                                                }}/5</span>
                                                             <span v-else>—</span>
-                                                            <span class="text-base-content/50"> ({{ ratingCount
-                                                            }})</span>
+                                                            <span class="text-base-content/50"> ({{
+                                                                    ratingCount
+                                                                }})</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div v-if="clientDetails.created_at" class="stat">
                                                     <div
-                                                        class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                                      class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
                                                         {{ t('client.details.created') }}
                                                     </div>
                                                     <div
-                                                        class="stat-value text-sm font-semibold flex items-center gap-2">
-                                                        <Info class="w-4 h-4 text-base-content/40" />
-                                                        {{ new
+                                                      class="stat-value text-sm font-semibold flex items-center gap-2">
+                                                        <Info class="w-4 h-4 text-base-content/40"/>
+                                                        {{
+                                                            new
                                                             Date(clientDetails.created_at).toLocaleDateString(undefined, {
                                                                 dateStyle: 'medium'
-                                                            }) }}
+                                                            })
+                                                        }}
                                                     </div>
                                                 </div>
 
                                                 <div v-if="clientDetails.source_link" class="stat">
                                                     <div
-                                                        class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
+                                                      class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
                                                         {{ t('client.details.source_link') }}
                                                     </div>
                                                     <div class="stat-value text-sm">
                                                         <button type="button"
-                                                            class="btn btn-ghost btn-sm justify-start px-2 gap-2 min-h-0 h-8"
-                                                            @click="handleClientSourceLink(clientDetails.source_link)">
-                                                            <ExternalLink class="w-4 h-4" />
+                                                                class="btn btn-ghost btn-sm justify-start px-2 gap-2 min-h-0 h-8"
+                                                                @click="handleClientSourceLink(clientDetails.source_link)">
+                                                            <ExternalLink class="w-4 h-4"/>
                                                             <span class="truncate max-w-[18rem]">{{
-                                                                clientDetails.source_link }}</span>
+                                                                    clientDetails.source_link
+                                                                }}</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1334,77 +1360,89 @@ onBeforeUnmount(() => {
                                                 <div class="card-body p-4 gap-3">
                                                     <div class="flex items-center justify-between">
                                                         <h4
-                                                            class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
-                                                            <ScrollText class="w-4 h-4" />
+                                                          class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
+                                                            <ScrollText class="w-4 h-4"/>
                                                             {{ t('client.details.changelog') }}
                                                         </h4>
                                                         <span v-if="clientDetails.changelog_entries"
-                                                            class="badge badge-ghost badge-sm">
+                                                              class="badge badge-ghost badge-sm">
                                                             {{ clientDetails.changelog_entries.length }}
                                                         </span>
                                                     </div>
 
                                                     <div
-                                                        v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0">
+                                                      v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0">
                                                         <ul
-                                                            class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
-                                                            <li v-for="(entry, index) in clientDetails.changelog_entries"
-                                                                :key="entry.version" class="timeline-item">
+                                                          class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
+                                                            <li
+                                                              v-for="(entry, index) in clientDetails.changelog_entries"
+                                                              :key="entry.version" class="timeline-item">
                                                                 <div class="timeline-start text-xs text-right">
                                                                     <span class="badge badge-ghost text-xs">
-                                                                        {{ new
+                                                                        {{
+                                                                            new
                                                                             Date(entry.created_at).toLocaleDateString(undefined,
-                                                                                {
-                                                                                    month: 'short', day: 'numeric'
-                                                                                }) }}
+                                                                              {
+                                                                                  month: 'short', day: 'numeric'
+                                                                              })
+                                                                        }}
                                                                     </span>
                                                                 </div>
                                                                 <div class="timeline-middle">
-                                                                    <Info class="w-4 h-4 text-base-content/50" />
+                                                                    <Info class="w-4 h-4 text-base-content/50"/>
                                                                 </div>
                                                                 <div
-                                                                    class="timeline-end timeline-box shadow-sm bg-base-100/40 w-full mb-2 border border-base-content/10">
+                                                                  class="timeline-end timeline-box shadow-sm bg-base-100/40 w-full mb-2 border border-base-content/10">
                                                                     <div class="font-bold text-sm text-base-content">v{{
-                                                                        entry.version }}</div>
+                                                                            entry.version
+                                                                        }}
+                                                                    </div>
                                                                     <div
-                                                                        class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
+                                                                      class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
                                                                         {{
-                                                                            entry.content }}</div>
+                                                                            entry.content
+                                                                        }}
+                                                                    </div>
                                                                 </div>
-                                                                <hr v-if="index < clientDetails.changelog_entries.length - 1"
-                                                                    class="bg-base-content/10" />
+                                                                <hr
+                                                                  v-if="index < clientDetails.changelog_entries.length - 1"
+                                                                  class="bg-base-content/10"/>
                                                             </li>
                                                         </ul>
                                                     </div>
 
                                                     <div v-else
-                                                        class="flex flex-col items-center justify-center text-center p-8 bg-base-100/30 border border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
-                                                        <Info class="w-8 h-8 text-base-content/50 mb-2" />
+                                                         class="flex flex-col items-center justify-center text-center p-8 bg-base-100/30 border border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
+                                                        <Info class="w-8 h-8 text-base-content/50 mb-2"/>
                                                         <p class="text-sm font-medium text-base-content/70">{{
-                                                            t('client.details.no_changelog') }}</p>
+                                                                t('client.details.no_changelog')
+                                                            }}</p>
                                                         <p class="text-xs text-base-content/50 mt-1">{{
-                                                            t('client.details.no_changelog_desc') }}</p>
+                                                                t('client.details.no_changelog_desc')
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div v-else-if="activeTab === 'screenshots'" key="screenshots" class="tab-pane">
-                                            <div v-if="clientDetails.screenshot_urls && clientDetails.screenshot_urls.length > 0"
-                                                class="screenshots-section">
+                                            <div
+                                              v-if="clientDetails.screenshot_urls && clientDetails.screenshot_urls.length > 0"
+                                              class="screenshots-section">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                     <div v-for="(screenshot, index) in clientDetails.screenshot_urls"
-                                                        :key="index" class="screenshot-container group">
-                                                        <div class="relative overflow-hidden rounded border border-base-content/10 cursor-pointer"
-                                                            @click.stop="handleScreenshotClick($event, index)">
+                                                         :key="index" class="screenshot-container group">
+                                                        <div
+                                                          class="relative overflow-hidden rounded border border-base-content/10 cursor-pointer"
+                                                          @click.stop="handleScreenshotClick($event, index)">
                                                             <img :src="screenshot"
-                                                                :alt="`${client.name} screenshot ${index + 1}`"
-                                                                class="w-full h-36 object-cover transition-all duration-200 group-hover:scale-105"
-                                                                @error="($event.target as HTMLImageElement).style.display = 'none'" />
+                                                                 :alt="`${client.name} screenshot ${index + 1}`"
+                                                                 class="w-full h-36 object-cover transition-all duration-200 group-hover:scale-105"
+                                                                 @error="($event.target as HTMLImageElement).style.display = 'none'"/>
                                                             <div
-                                                                class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center pointer-events-none">
+                                                              class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center pointer-events-none">
                                                                 <ZoomIn
-                                                                    class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                                                  class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"/>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1419,72 +1457,77 @@ onBeforeUnmount(() => {
                                             <div class="flex flex-col">
                                                 <div class="flex gap-2">
                                                     <input v-model="newCommentText" type="text"
-                                                        :placeholder="t('client.comments.placeholder')"
-                                                        class="input input-bordered w-full input-sm"
-                                                        :maxlength="MAX_COMMENT_LENGTH" @keyup.enter="postComment"
-                                                        :disabled="isPostingComment || !canComment" />
+                                                           :placeholder="t('client.comments.placeholder')"
+                                                           class="input input-bordered w-full input-sm"
+                                                           :maxlength="MAX_COMMENT_LENGTH" @keyup.enter="postComment"
+                                                           :disabled="isPostingComment || !canComment"/>
                                                     <button class="btn btn-primary btn-sm btn-square"
-                                                        @click="postComment"
-                                                        :disabled="isPostingComment || !newCommentText.trim() || !canComment">
+                                                            @click="postComment"
+                                                            :disabled="isPostingComment || !newCommentText.trim() || !canComment">
                                                         <span v-if="isPostingComment"
-                                                            class="loading loading-spinner loading-xs"></span>
-                                                        <Send v-else class="w-4 h-4" />
+                                                              class="loading loading-spinner loading-xs"></span>
+                                                        <Send v-else class="w-4 h-4"/>
                                                     </button>
                                                 </div>
 
                                                 <div class="flex justify-between text-[10px] mt-1 opacity-50">
                                                     <span v-if="!canComment">{{ t('login') }}</span>
-                                                    <span>{{ Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
-                                                    }}/{{ MAX_COMMENT_LENGTH }}</span>
+                                                    <span>{{
+                                                            Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
+                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
                                                 </div>
 
                                                 <div v-if="isLoadingComments" class="flex justify-center py-8">
                                                     <span
-                                                        class="loading loading-spinner loading-md text-primary"></span>
+                                                      class="loading loading-spinner loading-md text-primary"></span>
                                                 </div>
                                                 <div v-else-if="comments.length === 0"
-                                                    class="text-center py-8 text-base-content/50">
-                                                    <MessageSquare class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                                     class="text-center py-8 text-base-content/50">
+                                                    <MessageSquare class="w-8 h-8 mx-auto mb-2 opacity-50"/>
                                                     <p>{{ t('client.comments.empty') }}</p>
                                                 </div>
                                                 <div v-else
-                                                    class="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                                                     class="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
                                                     <div v-for="comment in comments" :key="comment.id"
-                                                        class="chat chat-start">
+                                                         class="chat chat-start">
                                                         <div class="chat-image avatar">
                                                             <div class="w-8 rounded-full cursor-pointer select-none"
-                                                                role="button" tabindex="0"
-                                                                @click.stop="openProfileFromComment(comment)"
-                                                                @keydown.enter.stop.prevent="openProfileFromComment(comment)"
-                                                                @keydown.space.stop.prevent="openProfileFromComment(comment)">
+                                                                 role="button" tabindex="0"
+                                                                 @click.stop="openProfileFromComment(comment)"
+                                                                 @keydown.enter.stop.prevent="openProfileFromComment(comment)"
+                                                                 @keydown.space.stop.prevent="openProfileFromComment(comment)">
                                                                 <img v-if="comment.author_avatar"
-                                                                    :src="comment.author_avatar"
-                                                                    :alt="comment.author_username" />
+                                                                     :src="comment.author_avatar"
+                                                                     :alt="comment.author_username"/>
                                                                 <div v-else
-                                                                    class="bg-base-200 text-base-content/70 w-8 h-8 flex items-center justify-center text-xs font-semibold">
-                                                                    {{ (comment.author_username?.[0] ||
-                                                                        '?').toUpperCase() }}
+                                                                     class="bg-base-200 text-base-content/70 w-8 h-8 flex items-center justify-center text-xs font-semibold">
+                                                                    {{
+                                                                        (comment.author_username?.[0] ||
+                                                                          '?').toUpperCase()
+                                                                    }}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         <div
-                                                            class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
+                                                          class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
                                                             <span class="cursor-pointer hover:underline"
-                                                                @click.stop="openProfileFromComment(comment)">
+                                                                  @click.stop="openProfileFromComment(comment)">
                                                                 {{ comment.author_username }}
                                                             </span>
-                                                            <time class="text-[10px]">{{ formatDate(comment.created_at)
-                                                            }}</time>
+                                                            <time class="text-[10px]">{{
+                                                                    formatDate(comment.created_at)
+                                                                }}
+                                                            </time>
                                                             <button
-                                                                v-if="currentUser && currentUser.username === comment.author_username"
-                                                                class="btn btn-ghost btn-xs btn-circle text-error"
-                                                                @click="deleteComment(comment.id)"
-                                                                :title="t('client.comments.delete')">
-                                                                <Trash2 class="w-3 h-3" />
+                                                              v-if="currentUser && currentUser.username === comment.author_username"
+                                                              class="btn btn-ghost btn-xs btn-circle text-error"
+                                                              @click="deleteComment(comment.id)"
+                                                              :title="t('client.comments.delete')">
+                                                                <Trash2 class="w-3 h-3"/>
                                                             </button>
                                                         </div>
                                                         <div
-                                                            class="chat-bubble chat-bubble-secondary text-sm wrap-break-word group relative">
+                                                          class="chat-bubble chat-bubble-secondary text-sm wrap-break-word group relative">
                                                             {{ comment.content }}
                                                         </div>
                                                     </div>
@@ -1503,13 +1546,14 @@ onBeforeUnmount(() => {
 
         <transition name="fade">
             <div v-if="showScrollbar"
-                class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 m-1 h-[95%] bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
-                :class="{
+                 class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 m-1 h-[95%] bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
+                 :class="{
                     'opacity-0': !isExpanded || isCollapsing,
                     'opacity-100': isExpanded && !isCollapsing
                 }">
-                <div class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
-                    :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }" @mousedown="startScrollbarDrag">
+                <div
+                  class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
+                  :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }" @mousedown="startScrollbarDrag">
                 </div>
             </div>
         </transition>
@@ -1518,61 +1562,62 @@ onBeforeUnmount(() => {
     <teleport to="body">
         <transition name="screenshot-viewer" appear>
             <div v-if="isScreenshotViewerOpen && clientDetails?.screenshot_urls"
-                class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-sm flex items-center justify-center"
-                @click="handleViewerBackgroundClick">
+                 class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-sm flex items-center justify-center"
+                 @click="handleViewerBackgroundClick">
 
                 <button @click="handleScreenshotViewerClose"
-                    class="absolute top-4 right-4 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200">
-                    <X class="w-6 h-6" />
+                        class="absolute top-4 right-4 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200">
+                    <X class="w-6 h-6"/>
                 </button>
 
                 <button v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed" @click.stop="prevScreenshot"
-                    class="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
-                    :disabled="isImageLoading">
-                    <ChevronLeft class="w-6 h-6" />
+                        class="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
+                        :disabled="isImageLoading">
+                    <ChevronLeft class="w-6 h-6"/>
                 </button>
 
                 <button v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed" @click.stop="nextScreenshot"
-                    class="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
-                    :disabled="isImageLoading">
-                    <ChevronRight class="w-6 h-6" />
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
+                        :disabled="isImageLoading">
+                    <ChevronRight class="w-6 h-6"/>
                 </button>
 
                 <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
                     <button @click.stop="zoomIn()"
-                        class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
-                        :disabled="zoomScale >= maxZoom" :class="{
+                            class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
+                            :disabled="zoomScale >= maxZoom" :class="{
                             'cursor-not-allowed opacity-50': zoomScale >= maxZoom
                         }">
-                        <ZoomIn class="w-5 h-5" />
+                        <ZoomIn class="w-5 h-5"/>
                     </button>
                     <button @click.stop="zoomOut"
-                        class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
-                        :disabled="zoomScale <= minZoom" :class="{
+                            class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
+                            :disabled="zoomScale <= minZoom" :class="{
                             'cursor-not-allowed opacity-50': zoomScale <= minZoom
                         }">
-                        <ZoomOut class="w-5 h-5" />
+                        <ZoomOut class="w-5 h-5"/>
                     </button>
                     <button @click.stop="resetZoom"
-                        class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
-                        :disabled="!isZoomed" :class="{
+                            class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
+                            :disabled="!isZoomed" :class="{
                             'cursor-not-allowed opacity-50': !isZoomed
                         }">
-                        <RefreshCw class="w-5 h-5" />
+                        <RefreshCw class="w-5 h-5"/>
                     </button>
                 </div>
 
                 <transition name="fade" appear>
                     <div v-if="isZoomed"
-                        class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm border border-white/10">
-                        {{ t('client.details.screenshot_viewer.zoom_percent', { percent: Math.round(zoomScale * 100) })
+                         class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm border border-white/10">
+                        {{
+                            t('client.details.screenshot_viewer.zoom_percent', { percent: Math.round(zoomScale * 100) })
                         }}
                     </div>
                 </transition>
 
 
                 <div class="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center p-12"
-                    @wheel="handleWheel" @click="handleViewerBackgroundClick">
+                     @wheel="handleWheel" @click="handleViewerBackgroundClick">
                     <div class="relative w-full h-full flex items-center justify-center">
 
                         <transition name="fade">
@@ -1587,14 +1632,14 @@ onBeforeUnmount(() => {
                         </transition>
 
                         <div ref="imageContainerRef"
-                            class="relative w-full h-full flex items-center justify-center overflow-hidden"
-                            @click="handleViewerBackgroundClick">
+                             class="relative w-full h-full flex items-center justify-center overflow-hidden"
+                             @click="handleViewerBackgroundClick">
                             <transition :name="`image-slide-${imageTransitionDirection}`" mode="out-in" appear>
                                 <img ref="imageRef" :key="currentScreenshotIndex"
-                                    :src="clientDetails.screenshot_urls[currentScreenshotIndex]"
-                                    :alt="`${client.name} screenshot ${currentScreenshotIndex + 1}`"
-                                    class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none image-transition"
-                                    :class="{
+                                     :src="clientDetails.screenshot_urls[currentScreenshotIndex]"
+                                     :alt="`${client.name} screenshot ${currentScreenshotIndex + 1}`"
+                                     class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none image-transition"
+                                     :class="{
                                         'opacity-0': isImageLoading,
                                         'opacity-100': !isImageLoading,
                                         'cursor-zoom-in': !isZoomed,
@@ -1605,7 +1650,7 @@ onBeforeUnmount(() => {
                                         transform: `scale(${zoomScale}) translate(${zoomPosition.x / zoomScale}px, ${zoomPosition.y / zoomScale}px)`,
                                         transformOrigin: 'center center'
                                     }" @click="handleImageClick" @mousedown="startDrag" @dragstart.prevent
-                                    @contextmenu.prevent @load="handleImageLoad" @error="handleImageError" />
+                                     @contextmenu.prevent @load="handleImageLoad" @error="handleImageError"/>
                             </transition>
                         </div>
                     </div>
@@ -1613,21 +1658,28 @@ onBeforeUnmount(() => {
 
                 <transition name="fade-slide-up" appear>
                     <div v-if="clientDetails.screenshot_urls.length > 1"
-                        class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm border border-white/10 backdrop-blur-md">
-                        {{ t('client.details.screenshot_viewer.image_counter', {
-                            current: currentScreenshotIndex + 1,
-                            total: clientDetails.screenshot_urls.length
-                        }) }}
+                         class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm border border-white/10 backdrop-blur-md">
+                        {{
+                            t('client.details.screenshot_viewer.image_counter', {
+                                current: currentScreenshotIndex + 1,
+                                total: clientDetails.screenshot_urls.length
+                            })
+                        }}
                     </div>
                 </transition>
 
                 <transition name="fade-slide-up" appear>
                     <div
-                        class="absolute bottom-4 right-4 text-white/70 text-xs space-y-1 text-right bg-black/40 p-2 rounded border border-white/10 backdrop-blur-md">
-                        <div>{{ isZoomed ? t('client.details.screenshot_viewer.controls.esc_reset') :
-                            t('client.details.screenshot_viewer.controls.esc_close') }}</div>
+                      class="absolute bottom-4 right-4 text-white/70 text-xs space-y-1 text-right bg-black/40 p-2 rounded border border-white/10 backdrop-blur-md">
+                        <div>{{
+                                isZoomed ? t('client.details.screenshot_viewer.controls.esc_reset') :
+                                  t('client.details.screenshot_viewer.controls.esc_close')
+                            }}
+                        </div>
                         <div v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed">{{
-                            t('client.details.screenshot_viewer.controls.navigate') }}</div>
+                                t('client.details.screenshot_viewer.controls.navigate')
+                            }}
+                        </div>
                         <div>{{ t('client.details.screenshot_viewer.controls.click_zoom') }}</div>
                         <div v-if="isZoomed">{{ t('client.details.screenshot_viewer.controls.drag_pan') }}</div>
                     </div>
@@ -1706,9 +1758,8 @@ onBeforeUnmount(() => {
 
 .fade-transform-enter-active,
 .fade-transform-leave-active {
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
+    transition: opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .fade-transform-enter-from,

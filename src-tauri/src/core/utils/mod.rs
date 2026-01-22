@@ -1,4 +1,5 @@
 pub mod archive;
+pub mod args;
 pub mod discord_rpc;
 pub mod dpi;
 pub mod globals;

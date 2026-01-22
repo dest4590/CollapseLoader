@@ -773,7 +773,7 @@
     "login_required": "You need to be logged in to view profiles",
     "profile_load_failed": "Failed to load user profile",
     "friend_request_sent_success": "Friend request sent to {name}",
-    "friend_request_failed": "Failed to send friend request",
+    "friend_request_failed": "Failed to send friend request: {error}",
     "copy_username": "Copy username",
     "copied_username": "{name} copied to clipboard",
     "copy_failed": "Failed to copy username",

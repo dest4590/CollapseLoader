@@ -98,16 +98,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useToast } from '../services/toastService';
-import { useModal } from '../services/modalService';
-import { useI18n } from 'vue-i18n';
-import {
-    userService,
-    type Friend,
-    type UserStatus,
-} from '../services/userService';
-import { useFriends } from '../composables/useFriends';
+import {onMounted, onUnmounted, ref} from 'vue';
+import {useToast} from '../services/toastService';
+import {useModal} from '../services/modalService';
+import {useI18n} from 'vue-i18n';
+import {type Friend, userService, type UserStatus,} from '../services/userService';
+import {useFriends} from '../composables/useFriends';
 import AddFriendModal from '../components/modals/social/friends/AddFriendModal.vue';
 import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
 import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
@@ -115,8 +111,8 @@ import FriendCard from '../components/features/friends/FriendCard.vue';
 import FriendRequestCard from '../components/features/friends/FriendRequestCard.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
 import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
-import { UserPlus, Users, Shield, UserCheck } from 'lucide-vue-next';
-import { useStreamerMode } from '../composables/useStreamerMode';
+import {Shield, UserCheck, UserPlus, Users} from 'lucide-vue-next';
+import {useStreamerMode} from '../composables/useStreamerMode';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -195,8 +191,7 @@ const loadFriendsAndStatus = async (forceReload = false) => {
 
         await loadBlockedUsers();
 
-        const userStatusData = await userService.getUserStatus();
-        currentUserStatus.value = userStatusData;
+        currentUserStatus.value = await userService.getUserStatus();
     } catch (error) {
         console.error('Failed to load friends data:', error);
         addToast(t('friends.load_failed'), 'error');
@@ -207,8 +202,7 @@ const updateStatuses = async () => {
     try {
         await updateFriendStatuses();
 
-        const userStatusData = await userService.getUserStatus();
-        currentUserStatus.value = userStatusData;
+        currentUserStatus.value = await userService.getUserStatus();
     } catch (error) {
         console.error('Failed to update friend statuses:', error);
     }
