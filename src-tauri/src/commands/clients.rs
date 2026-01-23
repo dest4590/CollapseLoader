@@ -62,13 +62,10 @@ pub fn get_app_logs() -> Vec<String> {
 
 #[tauri::command]
 pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
-    log_info!("Starting initialize_api");
     let clients = ClientManager::fetch_clients().await.map_err(|e| {
         log_error!("Failed to fetch clients: {}", e);
         e.to_string()
     })?;
-
-    log_info!("Fetched {} clients", clients.len());
 
     if clients.is_empty() {
         log_warn!("Fetched client list is empty - this may indicate an API or network issue");
@@ -80,11 +77,9 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         .manager
         .lock()
         .map_err(|_| "Failed to lock state".to_string())?;
+
     manager.clients = clients;
-    log_info!(
-        "Successfully initialized ClientManager with {} clients",
-        manager.clients.len()
-    );
+
     Ok(())
 }
 
@@ -122,9 +117,7 @@ pub async fn launch_client(
     app_handle: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    log_info!("Attempting to launch client with ID: {}", id);
     let client = get_client_by_id(id, &state.clients.manager)?;
-    log_debug!("Found client '{}' for launch", client.name);
 
     let filename_for_if = if client.filename.contains("fabric/") {
         client.filename.replace("fabric/", "")
@@ -166,18 +159,27 @@ pub async fn launch_client(
             client.name
         ));
     }
-    log_debug!(
-        "Client '{}' found at path: {}",
-        client.name,
-        jar_path.display()
-    );
-
+    
     let hash_verify_enabled = {
         let settings = SETTINGS
             .lock()
             .map_err(|_| "Failed to access settings".to_string())?;
         settings.hash_verify.value
     };
+
+    log_info!(
+        "Launching '{}' (ID: {}, Play Count: {})...",
+        client.name,
+        id,
+        client.launches
+    );
+
+    log_debug!(
+        "Resolution: Path='{}', HashCheck={}, OverlayCheck={}",
+        jar_path.display(),
+        if hash_verify_enabled { "Enabled" } else { "Disabled" },
+        if *SKIP_AGENT_OVERLAY_VERIFICATION { "Skip" } else { "Run" }
+    );
 
     if hash_verify_enabled {
         log_info!("Hash verification is enabled for client '{}'", client.name);
@@ -277,7 +279,7 @@ pub async fn launch_client(
                     .await
                     .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
             } else {
-                log_warn!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
+                log_debug!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
             }
         }
         Err(e) => {
@@ -287,7 +289,6 @@ pub async fn launch_client(
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
 
-    log_info!("Executing client run for '{}'", client.name);
     client.run(options, state.clients.manager.clone()).await
 }
 

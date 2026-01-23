@@ -7,6 +7,7 @@ use super::client::Client;
 use crate::core::clients::client::Meta;
 use crate::core::utils::globals::MOCK_CLIENTS;
 use crate::core::utils::helpers::emit_to_main_window;
+use crate::log_error;
 use crate::{
     core::{
         network::api::{API, API_CACHE_DIR},
@@ -116,12 +117,34 @@ impl ClientManager {
         let (clients_res, fabric_res, forge_res) =
             tokio::join!(clients_task, fabric_clients_task, forge_clients_task);
 
-        let mut clients =
-            clients_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
-        let mut fabric_clients =
-            fabric_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
-        let mut forge_clients =
-            forge_res.map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)??;
+        if clients_res.is_err() {
+            log_error!("clients task join error: {:?}", clients_res.as_ref().err());
+        }
+        if fabric_res.is_err() {
+            log_error!(
+                "fabric clients task join error: {:?}",
+                fabric_res.as_ref().err()
+            );
+        }
+        if forge_res.is_err() {
+            log_error!(
+                "forge clients task join error: {:?}",
+                forge_res.as_ref().err()
+            );
+        }
+
+        let mut clients = clients_res.map_err(|e| {
+            log_error!("clients task failed to join: {}", e);
+            Box::new(e) as Box<dyn std::error::Error + Send + Sync>
+        })??;
+        let mut fabric_clients = fabric_res.map_err(|e| {
+            log_error!("fabric clients task failed to join: {}", e);
+            Box::new(e) as Box<dyn std::error::Error + Send + Sync>
+        })??;
+        let mut forge_clients = forge_res.map_err(|e| {
+            log_error!("forge clients task failed to join: {}", e);
+            Box::new(e) as Box<dyn std::error::Error + Send + Sync>
+        })??;
 
         if !fabric_clients.is_empty() {
             clients.append(&mut fabric_clients);
@@ -158,11 +181,20 @@ impl ClientManager {
     ) -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
         let cache_path = DATA.root_dir.join(API_CACHE_DIR).join(filename);
         if cache_path.exists() {
-            let file = File::open(cache_path)
+            let file = File::open(&cache_path)
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
             let reader = BufReader::new(file);
             let cached_clients: Vec<Client> = serde_json::from_reader(reader).map_err(|e| {
-                log_warn!("Failed to deserialize cached clients: {}", e);
+                log_warn!(
+                    "Failed to deserialize cached clients from {}: {}",
+                    cache_path.display(),
+                    e
+                );
+                log_error!(
+                    "Cache deserialize error for {}: {}",
+                    cache_path.display(),
+                    e
+                );
                 Box::new(e) as Box<dyn std::error::Error + Send + Sync>
             })?;
             log_debug!("Loaded {} clients from cache", cached_clients.len());

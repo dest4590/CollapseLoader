@@ -83,6 +83,20 @@ impl Servers {
             self.check_group(&client, &self.auths, &self.selected_auth, "Auth")
         );
 
+        log_info!(
+            "Services: Auth [{}], CDN [{}]",
+            if self.selected_auth.read().unwrap().is_some() {
+                "OK"
+            } else {
+                "OFFLINE"
+            },
+            if self.selected_cdn.read().unwrap().is_some() {
+                "OK"
+            } else {
+                "OFFLINE"
+            }
+        );
+
         self.set_status();
         let _ = self.check_complete_tx.send(true);
     }
@@ -106,12 +120,6 @@ impl Servers {
             match client.head(&server.url).send().await {
                 Ok(resp) => {
                     if resp.status().is_success() {
-                        log_info!(
-                            "{} Server {} responded with: {}",
-                            name,
-                            server.url,
-                            resp.status()
-                        );
                         let mut lock = selected.write().unwrap();
                         *lock = Some(server.clone());
                         return;

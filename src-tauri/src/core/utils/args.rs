@@ -1,4 +1,3 @@
-use crate::log_info;
 use std::env;
 
 pub struct Args {

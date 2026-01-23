@@ -32,19 +32,7 @@ impl Analytics {
             let url = format!("{server_url}{endpoint}");
 
             match client.post(&url).send() {
-                Ok(response) => {
-                    log_debug!(
-                        "{} sent successfully. Status: {}",
-                        analytics_type
-                            .chars()
-                            .next()
-                            .unwrap()
-                            .to_uppercase()
-                            .collect::<String>()
-                            + &analytics_type[1..],
-                        response.status()
-                    );
-                }
+                Ok(_) => {}
                 Err(e) => {
                     log_debug!("Failed to send {}: {}", analytics_type, e);
                 }

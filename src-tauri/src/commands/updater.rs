@@ -163,7 +163,6 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     }
 
     let latest_version = release.tag_name.trim_start_matches('v');
-    log_info!("Latest stable version found: {}", latest_version);
 
     let is_newer = match compare_versions(current_version, latest_version) {
         Ok(Ordering::Less) => true,
@@ -175,9 +174,9 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     };
 
     if is_newer {
-        log_info!("A new version is available: {}", latest_version);
+        log_info!("A new version is available: {}", release.tag_name);
     } else {
-        log_info!("Application is up to date.");
+        log_info!("Update check complete: Up to date ({})", release.tag_name);
     }
 
     let download_url = if cfg!(target_os = "windows") {
