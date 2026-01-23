@@ -103,7 +103,7 @@ onMounted(() => {
               :class="[
                 'w-12 h-full flex items-center justify-center border-none bg-transparent cursor-pointer',
                 'text-base-content/70 transition-all duration-200',
-                'hover:bg-error hover:text-error-content hover:scale-110 hover:rotate-90 active:scale-95'
+                'hover:bg-base-300/80 hover:text-base-content hover:scale-110 active:scale-95'
               ]"
               @click="close"
               title="Close"

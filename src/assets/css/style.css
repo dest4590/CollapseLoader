@@ -11,13 +11,13 @@
     color-scheme: 'dark';
     --color-base-100: oklch(14% 0 0);
     --color-base-200: oklch(20% 0 0);
-    --color-base-300: oklch(26% 0 0);
-    --color-base-content: oklch(97% 0 0);
-    --color-primary: oklch(98% 0.003 247.858);
+    --color-base-300: oklch(0.244 0 89.876);
+    --color-base-content: oklch(1 0 89.876);
+    --color-primary: oklch(1 0 89.876);
     --color-primary-content: oklch(0% 0 0);
-    --color-secondary: oklch(43% 0 0);
+    --color-secondary: oklch(0.364 0 89.876);
     --color-secondary-content: oklch(98% 0.003 247.858);
-    --color-accent: oklch(43% 0 0);
+    --color-accent: oklch(0.293 0 89.876);
     --color-accent-content: oklch(100% 0 0);
     --color-neutral: oklch(27% 0.006 286.033);
     --color-neutral-content: oklch(98% 0 0);

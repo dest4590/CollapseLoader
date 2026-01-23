@@ -3,8 +3,9 @@ use crate::core::clients::manager::ClientManager;
 use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
+use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
-use tauri::{Emitter, Manager};
+use tauri::Manager;
 
 use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
 
@@ -20,6 +21,7 @@ pub mod core;
 
 use self::core::platform::error::StartupError;
 pub use crate::core::state::AppState;
+use crate::core::utils::helpers::emit_to_main_window;
 pub use crate::core::utils::logging;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
@@ -73,11 +75,36 @@ pub fn handle_startup_error(error: &StartupError) {
 }
 
 fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
-    let _ = app.emit("deep-link-launch", url);
-
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_focus();
     }
+
+    log_debug!("Handling deep link URL: {}", url);
+
+    if !should_handle_deep_link(&url) {
+        log_debug!("Deep link already handled, skipping: {}", url);
+        return;
+    }
+
+    if let Some(client_name) = url.split("client=").nth(1) {
+        let client_name = client_name.split('&').next().unwrap_or("");
+        log_debug!("Launching client from deep link: {}", client_name);
+        emit_to_main_window(app, "launch-client", client_name);
+    }
+}
+
+fn should_handle_deep_link(url: &str) -> bool {
+    static LAST_HANDLED_URL: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+    let last_url = LAST_HANDLED_URL.get_or_init(|| Mutex::new(None));
+    let mut guard = last_url.lock().unwrap();
+    let normalized = url.trim().to_string();
+
+    if guard.as_ref() == Some(&normalized) {
+        return false;
+    }
+
+    *guard = Some(normalized);
+    true
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -188,7 +215,7 @@ pub fn run() {
             if let Some(url) = args.iter().find(|a| a.starts_with("collapseloader://")) {
                 let handle = app.handle().clone();
                 let url_clone = url.clone();
-                tauri::async_runtime::spawn(async move {
+                spawn(async move {
                     tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
                     handle_deep_link_url(&handle, url_clone);
                 });

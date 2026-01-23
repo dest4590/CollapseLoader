@@ -309,25 +309,27 @@ onMounted(() => {
         isDev.value = await getIsDevelopment();
     })();
 
-    listen('deep-link-launch', async (event) => {
-        const url = new URL(event.payload as string)
-        const clientName = url.searchParams.get('client')
+    listen('launch-client', async (event) => {
+        const clientId = Number(event.payload);
 
-        if (clientName) {
+        if (clientId) {
             const clients = await invoke<Client[]>('get_clients')
-            const target = clients.find(c => c.name.toLowerCase() === clientName.toLowerCase())
+            const target = clients.find(c => c.id === clientId)
+
+            addToast(
+              t('home.launching', { client: target?.name || 'Client' }),
+              'info',
+              2000
+            );
 
             if (target) {
                 try {
-                    const token = localStorage.getItem('authToken');
-                    if (token) {
-                        await invoke('launch_client', {
-                            id: target.id,
-                            user_token: token
-                        })
-                    } else {
-                        addToast(t('toast.client.auth_required_for_launch'), 'warning');
-                    }
+                    const userToken = localStorage.getItem('authToken') || 'null';
+
+                    await invoke('launch_client', {
+                        id: target.id,
+                        userToken
+                    })
                 } catch (e) {
                     console.error('Cannot start client from deeplink', e)
                 }
