@@ -34,6 +34,8 @@ impl Args {
                 env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
             }
 
+            use crate::log_info;
+
             if self.backend_fix && env::var_os("GDK_BACKEND").is_none() {
                 log_info!("Applying backend fix: setting GDK_BACKEND=x11");
                 env::set_var("GDK_BACKEND", "x11");
