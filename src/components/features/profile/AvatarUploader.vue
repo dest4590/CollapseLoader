@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { userService } from '../../../services/userService';
 import { useToast } from '../../../services/toastService';
 import { useI18n } from 'vue-i18n';
-import { apiInvalidateProfile } from '../../../services/apiClient';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { basename } from '@tauri-apps/api/path';
@@ -49,10 +48,10 @@ async function handleFile(file: File) {
   try {
     const { success, profile, error } = await userService.uploadAvatar(file);
     if (!success) throw new Error(error || 'Upload failed');
-  const url = profile?.avatar_url || null;
-  previewUrl.value = url;
-  apiInvalidateProfile();
-  emit('uploaded', url);
+    const url = profile?.avatar_url || null;
+    previewUrl.value = url;
+
+    emit('uploaded', url);
     addToast(t('account.avatar_uploaded'), 'success');
   } catch (err: any) {
     addToast(err.message || t('account.avatar_upload_failed'), 'error');

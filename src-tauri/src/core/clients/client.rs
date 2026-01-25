@@ -151,7 +151,7 @@ impl Meta {
         let is_new_version = semver.minor >= 16;
         let is_fabric = *client_type == ClientType::Fabric || filename.contains("fabric/");
         let is_forge = *client_type == ClientType::Forge || filename.contains("forge/");
-        
+
         let jar_path = match client_type {
             ClientType::Fabric | ClientType::Forge => {
                 let jar_basename = Path::new(filename)
@@ -663,8 +663,6 @@ impl Client {
                 );
                 DATA.download_to_folder(&remote, MINECRAFT_VERSIONS_FOLDER)
                     .await?;
-            } else {
-                log_debug!("MC jar already present: {}", local_path.display());
             }
         }
 

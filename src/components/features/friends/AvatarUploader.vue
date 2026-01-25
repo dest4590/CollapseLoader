@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted} from 'vue';
-import {userService} from '../../../services/userService';
-import {useToast} from '../../../services/toastService';
-import {useI18n} from 'vue-i18n';
-import {apiInvalidateProfile} from '../../../services/apiClient';
-import {getCurrentWebview} from '@tauri-apps/api/webview';
-import {readFile} from '@tauri-apps/plugin-fs';
-import {basename} from '@tauri-apps/api/path';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { userService } from '../../../services/userService';
+import { useToast } from '../../../services/toastService';
+import { useI18n } from 'vue-i18n';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
+import { readFile } from '@tauri-apps/plugin-fs';
+import { basename } from '@tauri-apps/api/path';
 
 const props = defineProps<{ currentUrl?: string | null }>();
 const emit = defineEmits<{ (e: 'uploaded', url: string | null): void }>();
 
-const {addToast} = useToast();
-const {t} = useI18n();
+const { addToast } = useToast();
+const { t } = useI18n();
 
 const hovering = ref(false);
 const previewUrl = ref<string | null>(props.currentUrl || null);
@@ -47,11 +46,11 @@ async function handleFile(file: File) {
 
     uploading.value = true;
     try {
-        const {success, profile, error} = await userService.uploadAvatar(file);
+        const { success, profile, error } = await userService.uploadAvatar(file);
         if (!success) throw new Error(error || 'Upload failed');
         const url = profile?.avatar_url || null;
         previewUrl.value = url;
-        apiInvalidateProfile();
+
         emit('uploaded', url);
         addToast(t('account.avatar_uploaded'), 'success');
     } catch (err: any) {
@@ -82,7 +81,7 @@ onMounted(async () => {
                         addToast(t('account.avatar_size_error'), 'error');
                         return;
                     }
-                    const file = new File([data], fileName, {type: mimeType});
+                    const file = new File([data], fileName, { type: mimeType });
                     await handleFile(file);
                 } catch (e) {
                     console.log("Failed to read dropped file:", e);
@@ -121,10 +120,10 @@ function getMimeType(fileName: string): string {
 <template>
     <div class="flex items-center space-x-3">
         <div @click="onBrowse" :class="[
-      'rounded-xl p-4 flex items-center gap-3 cursor-pointer border-2 border-dashed',
-      hovering ? 'border-primary bg-base-200' : 'border-base-300 bg-transparent'
-    ]">
-            <img v-if="previewUrl" :src="previewUrl" alt="avatar" class="w-8 h-8 rounded-full object-cover"/>
+            'rounded-xl p-4 flex items-center gap-3 cursor-pointer border-2 border-dashed',
+            hovering ? 'border-primary bg-base-200' : 'border-base-300 bg-transparent'
+        ]">
+            <img v-if="previewUrl" :src="previewUrl" alt="avatar" class="w-8 h-8 rounded-full object-cover" />
             <div class="text-left">
                 <div class="text-sm">{{ t('account.avatar_drop') }}</div>
                 <div class="text-xs opacity-70">{{ helpText }}</div>
@@ -132,6 +131,6 @@ function getMimeType(fileName: string): string {
         </div>
 
         <input ref="fileRef" type="file" class="hidden" accept="image/png,image/jpeg,image/gif,image/webp"
-               @change="onFileChange"/>
+            @change="onFileChange" />
     </div>
 </template>

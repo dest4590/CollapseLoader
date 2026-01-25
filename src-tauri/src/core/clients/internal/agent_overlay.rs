@@ -1,6 +1,6 @@
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::data::DATA;
-use crate::core::utils::globals::{AGENT_FILE, AGENT_OVERLAY_FOLDER, OVERLAY_FILE};
+use crate::core::utils::globals::{AGENT_FILE, AGENT_OVERLAY_FOLDER, OVERLAY_FILE, API_VERSION};
 use crate::core::utils::hashing::calculate_md5_hash;
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
@@ -68,7 +68,7 @@ pub struct AgentOverlayManager;
 impl AgentOverlayManager {
     fn get_api_base_url() -> Result<String, String> {
         SERVERS
-            .selected_auth
+            .selected_api
             .read()
             .unwrap()
             .as_ref()
@@ -95,12 +95,13 @@ impl AgentOverlayManager {
         let overlay_path = folder.join(OVERLAY_FILE);
 
         let base_url = Self::get_api_base_url()?;
+        let base = base_url.trim_end_matches('/').to_string();
 
         log_info!(
-            "Downloading agent file from {}api/agent/download/",
-            base_url
+            "Downloading agent file from {}/api/{API_VERSION}/agent/download/",
+            base
         );
-        Self::download_file(&format!("{base_url}api/agent/download/"), &agent_path)
+        Self::download_file(&format!("{base}/api/{API_VERSION}/agent/download/"), &agent_path)
             .await
             .map_err(|e| {
                 log_error!("Failed to download agent file: {}", e);
@@ -121,10 +122,10 @@ impl AgentOverlayManager {
         }
 
         log_info!(
-            "Downloading overlay file from {}api/overlay/download/",
-            base_url
+            "Downloading overlay file from {}/api/{API_VERSION}/overlay/download/",
+            base
         );
-        Self::download_file(&format!("{base_url}api/overlay/download/"), &overlay_path)
+        Self::download_file(&format!("{base}/api/{API_VERSION}/overlay/download/"), &overlay_path)
             .await
             .map_err(|e| {
                 log_error!("Failed to download overlay file: {}", e);
@@ -150,7 +151,8 @@ impl AgentOverlayManager {
 
     async fn get_agent_overlay_info() -> Result<AgentOverlayInfo, String> {
         let base_url = Self::get_api_base_url()?;
-        let url = format!("{base_url}api/agent-overlay/");
+        let base = base_url.trim_end_matches('/').to_string();
+        let url = format!("{base}/api/{API_VERSION}/agent-overlay/");
 
         let client = reqwest::Client::new();
         let response = client

@@ -7,19 +7,16 @@ import {
     LogIn,
     User,
     Users,
-    ShieldAlert,
     SlidersVertical,
     UserCog,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
-import { useUser } from '../../composables/useUser';
 import { getIsDevelopment } from '../../utils/isDevelopment';
 import { isHalloweenEvent } from '../../utils/events';
 
 const { t } = useI18n();
-const { adminStatus } = useUser();
 const halloweenActive = ref(isHalloweenEvent());
 
 const sidebarHelpVideo = new URL('../../assets/videos/sidebar-help.mp4', import.meta.url).href;
@@ -40,7 +37,6 @@ const altPressCount = ref(0);
 const altPressTimeout = ref<number | null>(null);
 
 const isDev = ref(false);
-const isAdmin = computed(() => adminStatus.value?.is_admin || false);
 
 const { onlineFriendsCount, friendRequests } = useFriends();
 const incomingRequestsCount = computed(() => (friendRequests.value?.received?.length) || 0);
@@ -284,34 +280,34 @@ onUnmounted(() => {
 <template>
     <div v-if="isDragging" class="fixed inset-0 z-40 pointer-events-none">
         <div class="absolute left-0 top-10 w-20 border-2 border-dashed transition-all duration-200"
-             style="height: calc(100vh - 2.5rem)"
-             :class="[dragTarget === 'left' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+            style="height: calc(100vh - 2.5rem)"
+            :class="[dragTarget === 'left' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
         <div class="absolute right-0 top-10 w-20 border-2 border-dashed transition-all duration-200"
-             style="height: calc(100vh - 2.5rem)"
-             :class="[dragTarget === 'right' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+            style="height: calc(100vh - 2.5rem)"
+            :class="[dragTarget === 'right' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
         <div class="absolute left-0 top-10 w-full h-20 border-2 border-dashed transition-all duration-200"
-             :class="[dragTarget === 'top' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+            :class="[dragTarget === 'top' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
         <div class="absolute left-0 bottom-0 w-full h-20 border-2 border-dashed transition-all duration-200"
-             :class="[dragTarget === 'bottom' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
+            :class="[dragTarget === 'bottom' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
     </div>
 
     <div ref="sidebarRef" :class="[sidebarClasses, animationClass]" @mousedown="startDrag" @dblclick="toggleCenter">
         <div v-if="showSidebarHelp" ref="helpTooltipRef"
-             :class="['sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]', helpTooltipClasses]">
+            :class="['sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]', helpTooltipClasses]">
             <div class="flex flex-col gap-2">
                 <video class="w-full rounded-md mb-2" :src="sidebarHelpVideo" muted autoplay loop playsinline
-                       controls></video>
+                    controls></video>
                 <div class="text-sm">
                     <strong>{{ t('navigation.sidebar_help.title') }}</strong>&nbsp;{{ t('navigation.sidebar_help.tip')
                     }}
                 </div>
                 <div class="flex justify-end mt-1 gap-2">
                     <button class="btn btn-ghost btn-xs" @click.stop="hideSidebarHelp">{{
-                            t('navigation.sidebar_help.got_it')
+                        t('navigation.sidebar_help.got_it')
                         }}
                     </button>
                 </div>
@@ -322,34 +318,34 @@ onUnmounted(() => {
 
         <div :class="containerClasses">
             <div class="tooltip" :class="[tooltipClass, halloweenActive ? 'tooltip-warning' : 'tooltip-accent']"
-                 :data-tip="t('navigation.home')">
+                :data-tip="t('navigation.home')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'home',
                 }" @click="changeTab('home')">
-                    <Home class="w-5 h-5"/>
+                    <Home class="w-5 h-5" />
                     <span v-if="halloweenActive" class="absolute -top-1 -right-1 text-xl">🎃</span>
                     <span v-if="!isOnline"
-                          class="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-base-300"></span>
+                        class="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-base-300"></span>
                 </button>
             </div>
 
 
             <div v-if="isAuthenticated" class="tooltip tooltip-accent" :class="tooltipClass"
-                 :data-tip="t('navigation.friends')">
+                :data-tip="t('navigation.friends')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
-                        @click="changeTab('friends')" :class="{
+                    @click="changeTab('friends')" :class="{
                         'bg-primary text-primary-content shadow-lg scale-110':
                             activeTab === 'friends',
                     }">
-                    <Users class="w-5 h-5"/>
+                    <Users class="w-5 h-5" />
                     <span v-if="onlineFriendsCount > 0"
-                          class="absolute -top-1 -right-1 bg-success text-success-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
+                        class="absolute -top-1 -right-1 bg-success text-success-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
                         {{ onlineFriendsCount }}
                     </span>
 
                     <span v-if="incomingRequestsCount > 0"
-                          class="absolute -bottom-1 -right-1 bg-info text-info-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
+                        class="absolute -bottom-1 -right-1 bg-info text-info-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300">
                         {{ incomingRequestsCount }}
                     </span>
                 </button>
@@ -365,7 +361,7 @@ onUnmounted(() => {
                             activeTab === 'settings'
                                 ? 'rotate(180deg)'
                                 : 'rotate(0deg)',
-                    }"/>
+                    }" />
                 </button>
             </div>
             <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="t('navigation.customization')">
@@ -373,17 +369,17 @@ onUnmounted(() => {
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'customization',
                 }" @click="changeTab('customization')">
-                    <SlidersVertical class="w-5 h-5"/>
+                    <SlidersVertical class="w-5 h-5" />
                 </button>
             </div>
 
             <div v-show="isAltPressed" class="tooltip tooltip-accent" :class="tooltipClass"
-                 :data-tip="t('navigation.logs')">
+                :data-tip="t('navigation.logs')">
                 <button class="btn btn-ghost btn-square rounded-lg sidebar-btn" :class="{
                     'bg-primary text-primary-content shadow-lg scale-110':
                         activeTab === 'app_logs',
                 }" @click="changeTab('app_logs')">
-                    <Terminal class="w-5 h-5"/>
+                    <Terminal class="w-5 h-5" />
                 </button>
             </div>
         </div>
@@ -392,17 +388,6 @@ onUnmounted(() => {
         </div>
 
         <div :class="footerClasses">
-            <div v-if="isAuthenticated && isAdmin" class="tooltip tooltip-accent" :class="tooltipClass"
-                 :data-tip="t('navigation.admin')">
-                <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
-                        @click="changeTab('admin')" :class="{
-                        'bg-primary text-primary-content shadow-lg scale-110':
-                            activeTab === 'admin',
-                    }">
-                    <ShieldAlert class="w-5 h-5"/>
-                </button>
-            </div>
-
             <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="isAuthenticated
                 ? t('navigation.account')
                 : t('auth.login.title')
@@ -414,19 +399,19 @@ onUnmounted(() => {
                         'account',
                     ].includes(activeTab),
                 }" @click="changeTab(isAuthenticated ? 'account' : 'login')">
-                    <LogIn v-if="!isAuthenticated" class="w-5 h-5"/>
-                    <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5"/>
-                    <User v-if="isAuthenticated && !isDev" class="w-5 h-5"/>
+                    <LogIn v-if="!isAuthenticated" class="w-5 h-5" />
+                    <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5" />
+                    <User v-if="isAuthenticated && !isDev" class="w-5 h-5" />
                 </button>
             </div>
 
             <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="t('navigation.about')">
                 <button class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn"
-                        @click="changeTab('about')" :class="{
+                    @click="changeTab('about')" :class="{
                         'bg-primary text-primary-content shadow-lg scale-110':
                             activeTab === 'about',
                     }">
-                    <Info class="w-5 h-5"/>
+                    <Info class="w-5 h-5" />
                 </button>
             </div>
         </div>
@@ -439,7 +424,7 @@ onUnmounted(() => {
 <style scoped>
 .btn-square {
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.15s ease-out;
+        transform 0.15s ease-out;
     outline: none;
 }
 
@@ -461,7 +446,7 @@ onUnmounted(() => {
 
 .sidebar-btn,
 .btn-square.sidebar-btn,
-.btn-square.sidebar-btn > * {
+.btn-square.sidebar-btn>* {
     border-radius: var(--radius-box, 0.5rem) !important;
 }
 
@@ -500,50 +485,50 @@ onUnmounted(() => {
     transition: transform 1.6s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.5s ease;
 }
 
-.sidebar-hidden-left .flex > *,
-.sidebar-hidden-left .mt-auto > *,
-.sidebar-hidden-right .flex > *,
-.sidebar-hidden-right .mt-auto > *,
-.sidebar-hidden-top .flex > *,
-.sidebar-hidden-top .mt-auto > *,
-.sidebar-hidden-bottom .flex > *,
-.sidebar-hidden-bottom .mt-auto > * {
+.sidebar-hidden-left .flex>*,
+.sidebar-hidden-left .mt-auto>*,
+.sidebar-hidden-right .flex>*,
+.sidebar-hidden-right .mt-auto>*,
+.sidebar-hidden-top .flex>*,
+.sidebar-hidden-top .mt-auto>*,
+.sidebar-hidden-bottom .flex>*,
+.sidebar-hidden-bottom .mt-auto>* {
     opacity: 0;
     transform: scale(0.995);
 }
 
-.sidebar-entered .flex > *,
-.sidebar-entered .mt-auto > * {
+.sidebar-entered .flex>*,
+.sidebar-entered .mt-auto>* {
     opacity: 1;
     transform: scale(1);
     transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.42s ease;
 }
 
-.sidebar-entered .flex > *:nth-child(1) {
+.sidebar-entered .flex>*:nth-child(1) {
     transition-delay: 0.06s;
 }
 
-.sidebar-entered .flex > *:nth-child(2) {
+.sidebar-entered .flex>*:nth-child(2) {
     transition-delay: 0.10s;
 }
 
-.sidebar-entered .flex > *:nth-child(3) {
+.sidebar-entered .flex>*:nth-child(3) {
     transition-delay: 0.14s;
 }
 
-.sidebar-entered .flex > *:nth-child(4) {
+.sidebar-entered .flex>*:nth-child(4) {
     transition-delay: 0.18s;
 }
 
-.sidebar-entered .mt-auto > *:nth-child(1) {
+.sidebar-entered .mt-auto>*:nth-child(1) {
     transition-delay: 0.22s;
 }
 
-.sidebar-entered .mt-auto > *:nth-child(2) {
+.sidebar-entered .mt-auto>*:nth-child(2) {
     transition-delay: 0.26s;
 }
 
-.sidebar-entered .mt-auto > *:nth-child(3) {
+.sidebar-entered .mt-auto>*:nth-child(3) {
     transition-delay: 0.30s;
 }
 

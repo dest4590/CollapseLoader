@@ -9,7 +9,7 @@ use crate::core::{
     clients::custom_clients::CustomClient,
     network::analytics::Analytics,
     storage::{custom_clients::CustomClientUpdate, data::Data},
-    utils::globals::SKIP_AGENT_OVERLAY_VERIFICATION,
+    utils::globals::{SKIP_AGENT_OVERLAY_VERIFICATION, API_VERSION},
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
@@ -20,7 +20,7 @@ use crate::core::{
     utils::{discord_rpc, hashing::calculate_md5_hash, logging},
 };
 use crate::{
-    commands::utils::get_auth_url,
+    commands::utils::get_api_url,
     core::{
         clients::client::ClientType,
         network::servers::{ServerConnectivityStatus, SERVERS},
@@ -159,7 +159,7 @@ pub async fn launch_client(
             client.name
         ));
     }
-    
+
     let hash_verify_enabled = {
         let settings = SETTINGS
             .lock()
@@ -177,8 +177,16 @@ pub async fn launch_client(
     log_debug!(
         "Resolution: Path='{}', HashCheck={}, OverlayCheck={}",
         jar_path.display(),
-        if hash_verify_enabled { "Enabled" } else { "Disabled" },
-        if *SKIP_AGENT_OVERLAY_VERIFICATION { "Skip" } else { "Run" }
+        if hash_verify_enabled {
+            "Enabled"
+        } else {
+            "Disabled"
+        },
+        if *SKIP_AGENT_OVERLAY_VERIFICATION {
+            "Skip"
+        } else {
+            "Run"
+        }
     );
 
     if hash_verify_enabled {
@@ -269,7 +277,6 @@ pub async fn launch_client(
         );
     }
 
-    log_info!("Verifying agent and overlay files before launch");
     match AgentOverlayManager::verify_agent_overlay_files().await {
         Ok(true) => {}
         Ok(false) => {
@@ -522,8 +529,9 @@ pub async fn delete_client(id: u32, state: State<'_, AppState>) -> Result<(), St
 #[tauri::command]
 pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
     log_debug!("Fetching details for client ID: {}", client_id);
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/client/{client_id}/detailed");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/detailed");
     log_debug!("Requesting client details from URL: {}", url);
 
     let client = reqwest::Client::new();
@@ -568,21 +576,9 @@ pub fn increment_client_counter(
         match counter_type.as_str() {
             "download" => {
                 client.downloads += 1;
-                log_info!(
-                    "Incremented download counter for client {} (ID: {}). New count: {}",
-                    client.name,
-                    id,
-                    client.downloads
-                );
             }
             "launch" => {
                 client.launches += 1;
-                log_info!(
-                    "Incremented launch counter for client {} (ID: {}). New count: {}",
-                    client.name,
-                    id,
-                    client.launches
-                );
             }
             _ => {
                 return Err(format!("Invalid counter type: {counter_type}"));
@@ -762,8 +758,9 @@ pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(
 #[tauri::command]
 pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, String> {
     log_debug!("Fetching comments for client ID: {}", client_id);
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/clients/{client_id}/comments/");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/");
 
     let client = reqwest::Client::new();
     let response = client.get(&url).send().await.map_err(|e| {
@@ -789,8 +786,9 @@ pub async fn add_client_comment(
     content: String,
     user_token: String,
 ) -> Result<serde_json::Value, String> {
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/clients/{client_id}/comments/");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/");
 
     let client = reqwest::Client::new();
     let response = client
@@ -819,8 +817,9 @@ pub async fn delete_client_comment(
     comment_id: u32,
     user_token: String,
 ) -> Result<(), String> {
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/clients/{client_id}/comments/{comment_id}/");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/{comment_id}/");
 
     let client = reqwest::Client::new();
     let response = client

@@ -32,7 +32,7 @@
 import { ref } from 'vue';
 import { useToast } from '../../../../services/toastService';
 import { Check as CheckIcon, X as XIcon } from 'lucide-vue-next';
-import { apiPatch } from '../../../../services/authClient';
+import { apiPatch } from '../../../../services/apiClient';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
@@ -48,13 +48,13 @@ const nicknameInput = ref(props.currentNickname);
 const updateNickname = async () => {
     try {
         await apiPatch(
-            '/auth/profile/',
+            '/users/me/profile',
             {
                 nickname: nicknameInput.value,
             },
             {
                 headers: {
-                    Authorization: `Token ${localStorage.getItem('authToken')}`,
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                 },
             }
         );

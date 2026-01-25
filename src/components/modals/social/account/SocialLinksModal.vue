@@ -15,11 +15,11 @@
                 </div>
 
                 <div class="space-y-2 p-2">
-                    <div v-for="link in links" :key="link.id"
+                    <div v-for="link in links" :key="link.platform"
                         class="social-link-row flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 rounded-md bg-base-100">
                         <div class="flex-1 min-w-0">
                             <div class="font-medium truncate">{{ platformLabel(link.platform) }}</div>
-                            <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
+                            <a v-if="link.platform !== 'DISCORD'" :href="platformHref(link.platform, link.url)"
                                 target="_blank"
                                 class="text-sm text-primary hover:underline truncate block wrap-break-word"
                                 rel="noreferrer">{{ displayHref(link.platform, link.url) }}</a>
@@ -77,7 +77,7 @@ import { ref, onMounted, computed } from 'vue';
 import { globalUserStatus } from '../../../../composables/useUserStatus';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../../../../services/toastService';
-import { apiGet, apiPost, apiPatch, apiDelete } from '../../../../services/authClient';
+import { apiGet, apiPut } from '../../../../services/apiClient';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -88,10 +88,10 @@ const loading = ref(true);
 const isStreamerMode = computed(() => globalUserStatus.isStreamer.value);
 
 const platformOptions: Record<string, string> = {
-    discord: 'Discord',
-    telegram: 'Telegram',
-    github: 'GitHub',
-    youtube: 'YouTube',
+    DISCORD: 'Discord',
+    TELEGRAM: 'Telegram',
+    GITHUB: 'GitHub',
+    YOUTUBE: 'YouTube',
 };
 
 const newPlatform = ref('');
@@ -102,8 +102,8 @@ const editing = ref<any | null>(null);
 const loadLinks = async () => {
     loading.value = true;
     try {
-        const resp = await apiGet('/auth/profile/social-links/');
-        links.value = resp || [];
+        const resp = await apiGet<any>('/users/me/social-links');
+        links.value = resp.data || [];
     } catch (error) {
         console.error('Failed to load social links', error);
         addToast(t('modals.social_links.load_failed'), 'error');
@@ -114,6 +114,17 @@ const loadLinks = async () => {
 
 const platformLabel = (key: string) => platformOptions[key] || key;
 
+const updateSocialLinks = async (updatedLinks: any[]) => {
+    const payload = {
+        links: updatedLinks.map(l => ({
+            platform: l.platform,
+            url: l.url
+        }))
+    };
+    const resp = await apiPut<any>('/users/me/social-links', payload);
+    links.value = resp.data || [];
+};
+
 const addLink = async () => {
     if (isStreamerMode.value) return;
     if (!newPlatform.value || !newUrl.value.trim()) {
@@ -121,10 +132,15 @@ const addLink = async () => {
         return;
     }
 
+    // Prevent adding duplicate platforms
+    if (links.value.some(l => l.platform === newPlatform.value)) {
+        addToast(t('modals.social_links.platform_exists') || t('modals.social_links.add_failed'), 'error');
+        return;
+    }
+
     try {
-        const payload = { platform: newPlatform.value, url: newUrl.value.trim() };
-        const created = await apiPost('/auth/profile/social-links/', payload);
-        links.value.push(created);
+        const newLinks = [...links.value, { platform: newPlatform.value, url: newUrl.value.trim() }];
+        await updateSocialLinks(newLinks);
         newPlatform.value = '';
         newUrl.value = '';
         addToast(t('modals.social_links.added'), 'success');
@@ -142,8 +158,8 @@ const confirmDelete = (link: any) => {
 const deleteLink = async (link: any) => {
     if (isStreamerMode.value) return;
     try {
-        await apiDelete(`/auth/profile/social-links/${link.id}/`);
-        links.value = links.value.filter((l) => l.id !== link.id);
+        const newLinks = links.value.filter((l) => l.platform !== link.platform);
+        await updateSocialLinks(newLinks);
         addToast(t('modals.social_links.deleted'), 'success');
     } catch (error) {
         console.error('Delete social link failed', error);
@@ -153,7 +169,7 @@ const deleteLink = async (link: any) => {
 
 const startEdit = (link: any) => {
     if (isStreamerMode.value) return;
-    editing.value = { ...link };
+    editing.value = { ...link, originalPlatform: link.platform };
 };
 
 const cancelEdit = () => {
@@ -165,11 +181,21 @@ const saveEdit = async () => {
         addToast(t('modals.social_links.fill_fields'), 'error');
         return;
     }
+    // Prevent changing platform to one that already exists on another link
+    if (
+        editing.value.platform !== editing.value.originalPlatform &&
+        links.value.some(l => l.platform === editing.value.platform)
+    ) {
+        addToast(t('modals.social_links.platform_exists') || t('modals.social_links.update_failed'), 'error');
+        return;
+    }
     try {
-        const payload = { platform: editing.value.platform, url: editing.value.url };
-        const updated = await apiPatch(`/auth/profile/social-links/${editing.value.id}/`, payload);
-        const idx = links.value.findIndex((l) => l.id === editing.value.id);
-        if (idx !== -1) links.value[idx] = updated;
+        const updatedLinks = links.value.map(l =>
+            l.platform === editing.value.originalPlatform
+                ? { platform: editing.value.platform, url: editing.value.url }
+                : l
+        );
+        await updateSocialLinks(updatedLinks);
         editing.value = null;
         addToast(t('modals.social_links.updated'), 'success');
     } catch (error: any) {
@@ -183,11 +209,11 @@ const platformHref = (platform: string, handle: string) => {
     if (!handle) return '#';
     const h = handle.startsWith('@') ? handle.substring(1) : handle;
     switch (platform) {
-        case 'github':
+        case 'GITHUB':
             return `https://github.com/${h}`;
-        case 'telegram':
+        case 'TELEGRAM':
             return `https://t.me/${h}`;
-        case 'youtube':
+        case 'YOUTUBE':
             if (handle.startsWith('@')) return `https://www.youtube.com/${h}`;
             return `https://www.youtube.com/@${h}`;
         default:
@@ -198,11 +224,11 @@ const platformHref = (platform: string, handle: string) => {
 const displayHref = (platform: string, handle: string) => {
     if (!handle) return '';
     switch (platform) {
-        case 'github':
+        case 'GITHUB':
             return `github.com/${handle.startsWith('@') ? handle.substring(1) : handle}`;
-        case 'telegram':
+        case 'TELEGRAM':
             return `t.me/${handle.startsWith('@') ? handle.substring(1) : handle}`;
-        case 'youtube':
+        case 'YOUTUBE':
             return handle;
         default:
             return handle;

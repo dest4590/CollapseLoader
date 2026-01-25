@@ -37,8 +37,9 @@ import { ref } from 'vue';
 import { useToast } from '../../../services/toastService';
 import { userService } from '../../../services/userService';
 import { useI18n } from 'vue-i18n';
-import { apiPost } from '../../../services/authClient';
+import { apiPost } from '../../../services/apiClient';
 import { getCurrentLanguage } from '../../../i18n';
+import { getApiBaseWithVersion } from '../../../config';
 
 interface Props {
     showCancelButton?: boolean;
@@ -79,7 +80,7 @@ const handleRegister = async () => {
         isRegistering.value = true;
 
         await apiPost(
-            '/auth/users/',
+            `${getApiBaseWithVersion()}/auth/register`,
             {
                 username: username.value,
                 email: email.value,
@@ -95,7 +96,7 @@ const handleRegister = async () => {
 
         try {
             const loginResponse = await apiPost(
-                '/auth/token/login/',
+                `${getApiBaseWithVersion()}/auth/login`,
                 {
                     username: username.value,
                     password: password.value,

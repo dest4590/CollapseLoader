@@ -8,10 +8,10 @@ export interface Client {
     show: boolean;
     working: boolean;
     insecure: boolean;
-    launches: number;
-    downloads: number;
     rating_avg?: number | null;
     rating_count?: number;
+    launches: number;
+    downloads: number;
     client_type?: string; // 'default' | 'fabric'
     meta: {
         [key: string]: any;
@@ -36,16 +36,16 @@ export interface CustomClient {
 export interface ClientDetails {
     source_link: string;
     screenshot_urls: string[];
-    changelog_entries: {
-        version: string;
-        content: string;
-        created_at: string;
-    }[];
-    client_type?: string;
     created_at: string;
     comments_count?: number;
     rating_avg?: number | null;
     rating_count?: number;
+    changelog_entries?: Array<{
+        version: string;
+        created_at: string;
+        content: string;
+    }>;
+
 }
 
 export interface ClientComment {

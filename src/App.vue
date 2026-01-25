@@ -21,7 +21,6 @@ import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
-import AdminView from './views/AdminView.vue';
 import AppLogs from './views/AppLogs.vue';
 import FriendsView from './views/FriendsView.vue';
 import Home from './views/Home.vue';
@@ -223,7 +222,6 @@ const views: Record<string, any> = {
     register: RegisterView,
     friends: FriendsView,
     'user-profile': UserProfileView,
-    admin: AdminView,
     marketplace: Marketplace,
 };
 
@@ -284,7 +282,6 @@ const getTransitionName = () => {
         'settings',
         'customization',
         'app_logs',
-        'admin',
         'account',
         'login',
         'register',

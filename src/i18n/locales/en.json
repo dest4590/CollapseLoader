@@ -805,7 +805,6 @@
     "logs": "Application Logs",
     "account": "Account",
     "about": "About",
-    "admin": "Admin Panel",
     "news": "News",
     "customization": "Customization",
     "custom_clients": "Custom Clients",
@@ -813,66 +812,6 @@
       "title": "Tip:",
       "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",
       "got_it": "Got it"
-    }
-  },
-  "admin": {
-    "title": "Administration Panel",
-    "role": "ADMIN",
-    "stats": {
-      "totalUsers": "Total Users",
-      "onlineUsers": "Online Users",
-      "newToday": "New Today",
-      "friendships": "Active Friendships"
-    },
-    "users": {
-      "title": "Users Management",
-      "searchPlaceholder": "Search by username, email or nickname...",
-      "username": "Username",
-      "email": "Email",
-      "status": "Status",
-      "lastSeen": "Last Seen",
-      "actions": "Actions",
-      "noUsers": "No users found.",
-      "adjustSearch": "Try adjusting your search query."
-    },
-    "status": {
-      "online": "Online",
-      "offline": "Offline",
-      "inactive": "Inactive",
-      "never": "Never"
-    },
-    "actions": {
-      "activate": "Activate",
-      "deactivate": "Deactivate",
-      "forceLogout": "Force Logout",
-      "edit": "Edit",
-      "ban": "Ban",
-      "unban": "Unban",
-      "delete": "Delete"
-    },
-    "pagination": {
-      "pageOf": "Page {current} of {total}"
-    },
-    "errors": {
-      "accessDenied": "Access denied. Admin privileges required.",
-      "accessCheckFailed": "Failed to check admin access.",
-      "statsLoadFailed": "Failed to load dashboard statistics.",
-      "usersLoadFailed": "Failed to load users data.",
-      "actionFailed": "Action failed. Please try again."
-    },
-    "success": {
-      "userStatusChanged": "User {username} status changed successfully.",
-      "userLoggedOut": "User {username} has been logged out.",
-      "userBanned": "User {username} has been banned.",
-      "userUnbanned": "User {username} has been unbanned.",
-      "userUpdated": "User {username} updated successfully.",
-      "userDeleted": "User {username} deleted."
-    },
-    "health": {
-      "title": "Status System Health",
-      "responseTime": "Response (ms):",
-      "refresh": "Health",
-      "detailed": "Detailed"
     }
   },
   "toast": {

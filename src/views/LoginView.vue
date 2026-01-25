@@ -37,7 +37,8 @@ import { ref } from 'vue';
 import { useToast } from '../services/toastService';
 import { userService } from '../services/userService';
 import { useI18n } from 'vue-i18n';
-import { apiPost } from '../services/authClient';
+import { apiPost } from '../services/apiClient';
+import { getApiBaseWithVersion } from '../config';
 import { getCurrentLanguage } from '../i18n';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -51,7 +52,7 @@ const password = ref('');
 const handleLogin = async () => {
     try {
         const response = await apiPost(
-            '/auth/token/login/',
+            `${getApiBaseWithVersion()}/auth/login`,
             {
                 username: username.value,
                 password: password.value,
@@ -66,7 +67,7 @@ const handleLogin = async () => {
 
         console.log('Login response:', response);
 
-        const authToken = response.data?.auth_token || response.data?.token || response.auth_token || response.token;
+        const authToken = response?.data?.token;
 
         if (authToken) {
             localStorage.setItem('authToken', authToken);
@@ -109,7 +110,3 @@ const handleLogin = async () => {
     }
 };
 </script>
-
-<style scoped>
-/* Убраны локальные анимации для избежания конфликтов с системой переходов Vue */
-</style>

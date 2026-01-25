@@ -3,6 +3,9 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 use crate::{core::network::servers::Server, log_debug, log_info};
 
 pub static CODENAME: &str = "Abyss";
+
+pub static API_VERSION: &str = "v1";
+
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
@@ -73,14 +76,6 @@ fn parse_env_bool(var: &str) -> bool {
     })
 }
 
-pub static USE_LOCAL_SERVER: LazyLock<bool> = LazyLock::new(|| {
-    let val = parse_env_bool("USE_LOCAL_SERVER");
-    if val {
-        log_info!("Using local server: {}", val);
-    }
-    val
-});
-
 pub static SKIP_AGENT_OVERLAY_VERIFICATION: LazyLock<bool> =
     LazyLock::new(|| parse_env_bool("SKIP_AGENT_OVERLAY_VERIFICATION"));
 
@@ -102,24 +97,18 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     ]
 });
 
-pub static AUTH_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
-    if let Ok(url) = std::env::var("FORCE_AUTH") {
+pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
+    if let Ok(url) = std::env::var("FORCE_API") {
         if !url.is_empty() {
-            log_info!("Using forced Auth server: {}", url);
+            log_info!("Using forced API server: {}", url);
             return vec![Server::new(&url)];
         }
     }
-    if *USE_LOCAL_SERVER {
-        vec![
-            Server::new("http://localhost:8000/"),
-            Server::new("https://collapse.ttfdk.lol/auth/"),
-        ]
-    } else {
-        vec![
-            Server::new("https://auth.collapseloader.org/"),
-            Server::new("https://collapse.ttfdk.lol/auth/"),
-        ]
-    }
+
+    vec![
+        Server::new("https://atlas.collapseloader.org/"),
+        Server::new("https://collapse.ttfdk.lol/auth/"),
+    ]
 });
 
 pub static ROOT_DIR: LazyLock<String> = LazyLock::new(|| {
