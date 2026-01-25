@@ -281,11 +281,11 @@
     "avatar_reset_failed": "重置头像失败：{error}"
   },
   "roles": {
-    "user": "用户",
-    "tester": "测试员",
-    "admin": "管理员",
-    "developer": "开发者",
-    "owner": "所有者"
+    "USER": "用户",
+    "TESTER": "测试员",
+    "ADMIN": "管理员",
+    "DEVELOPER": "开发者",
+    "OWNER": "所有者"
   },
   "time": {
     "offline": "离线",
@@ -821,9 +821,9 @@
     "server": {
       "offline": "无法确定服务器状态。将视为离线。",
       "offline_base": "您当前处于离线状态。",
-      "cdn_and_api_offline": "无法连接到 CDN 和 Web API。",
+      "cdn_and_api_offline": "无法连接到 CDN 和 API。",
       "cdn_offline": "无法连接到 CDN。",
-      "api_offline": "无法连接到 Web API。",
+      "api_offline": "无法连接到 API。",
       "api_init_failed": "初始化 API 失败：{error}"
     },
     "settings": {

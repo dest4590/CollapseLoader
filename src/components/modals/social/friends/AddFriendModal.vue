@@ -3,11 +3,11 @@
         <div class="form-control shrink-0">
             <label class="label">
                 <span class="label-text">{{
-                    t('modals.add_friend.search_label')
+                        t('modals.add_friend.search_label')
                     }}</span>
             </label>
             <input v-model="searchQuery" type="text" :placeholder="t('modals.add_friend.search_placeholder')"
-                class="input input-bordered w-full" @input="handleSearch" />
+                   class="input input-bordered w-full" @input="handleSearch"/>
         </div>
 
         <div class="flex-1 min-h-0 overflow-y-auto">
@@ -17,14 +17,14 @@
 
             <div v-else-if="searchResults.length > 0" class="space-y-3">
                 <div v-for="user in searchResults" :key="user.id"
-                    class="card bg-base-100 shadow-sm border border-base-300">
+                     class="card bg-base-100 shadow-sm border border-base-300">
                     <div class="card-body p-3">
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3 min-w-0 flex-1">
                                 <div @click="$emit('view-profile', user.id)" class="avatar-click-area shrink-0">
                                     <UserAvatar :name="getDisplayNickname(user)" :is-clickable="true"
-                                        :src="(user as any).avatar_url || null"
-                                        :original-src="(user as any).avatar_url || null" />
+                                                :src="(user as any).avatar_url || null"
+                                                :original-src="(user as any).avatar_url || null"/>
                                 </div>
                                 <div class="min-w-0 flex-1">
                                     <p class="font-medium truncate">
@@ -37,9 +37,10 @@
                             </div>
 
                             <div class="shrink-0">
-                                <button v-if="user.friendship_status === null" @click="sendFriendRequest(user.username)"
-                                    class="btn btn-primary btn-sm" :disabled="sendingRequest">
-                                    <UserPlus class="w-4 h-4 mr-1" />
+                                <button v-if="user.friendship_status === null"
+                                        @click="sendFriendRequest(user.username, user.id)"
+                                        class="btn btn-primary btn-sm" :disabled="sendingRequest">
+                                    <UserPlus class="w-4 h-4 mr-1"/>
                                     <span class="hidden sm:inline">{{ t('modals.add_friend.add_friend') }}</span>
                                 </button>
 
@@ -74,12 +75,12 @@
             </div>
 
             <div v-else-if="searchQuery.length >= 2 && !searching" class="text-center py-4 mt-4 text-base-content/70">
-                <Users class="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <Users class="w-8 h-8 mx-auto mb-2 opacity-50"/>
                 <p>{{ t('modals.add_friend.no_users_found') }}</p>
             </div>
 
             <div v-else-if="searchQuery.length > 0 && searchQuery.length < 2"
-                class="text-center py-4 mt-4 text-base-content/70">
+                 class="text-center py-4 mt-4 text-base-content/70">
                 <p class="text-sm">{{ t('modals.add_friend.search_hint') }}</p>
             </div>
         </div>
@@ -93,13 +94,13 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue';
-import {useToast} from '../../../../services/toastService';
-import {type SearchUser, userService} from '../../../../services/userService';
-import {UserPlus, Users} from 'lucide-vue-next';
+import { ref } from 'vue';
+import { useToast } from '../../../../services/toastService';
+import { type SearchUser, userService } from '../../../../services/userService';
+import { UserPlus, Users } from 'lucide-vue-next';
 import UserAvatar from '../../../ui/UserAvatar.vue';
-import {useI18n} from 'vue-i18n';
-import {useStreamerMode} from '../../../../composables/useStreamerMode';
+import { useI18n } from 'vue-i18n';
+import { useStreamerMode } from '../../../../composables/useStreamerMode';
 
 const emit = defineEmits(['close', 'friend-added', 'view-profile']);
 const { addToast } = useToast();
@@ -141,7 +142,7 @@ const performSearch = async () => {
 
     searching.value = true;
     try {
-      searchResults.value = await userService.searchUsers(searchQuery.value);
+        searchResults.value = await userService.searchUsers(searchQuery.value);
     } catch (error) {
         console.error('Failed to search users:', error);
         addToast(t('toast.friends.search_failed'), 'error');
@@ -151,17 +152,17 @@ const performSearch = async () => {
     }
 };
 
-const sendFriendRequest = async (username: string) => {
+const sendFriendRequest = async (username: string, userId: number) => {
     sendingRequest.value = true;
     try {
-        await userService.sendFriendRequest(username);
+        await userService.sendFriendRequest(userId);
         addToast(
-            t('toast.friends.request_sent', { name: username }),
-            'success'
+          t('toast.friends.request_sent', { name: username }),
+          'success'
         );
 
         const userIndex = searchResults.value.findIndex(
-            (u) => u.username === username
+          (u) => u.username === username
         );
         if (userIndex !== -1) {
             searchResults.value[userIndex].friendship_status = 'request_sent';

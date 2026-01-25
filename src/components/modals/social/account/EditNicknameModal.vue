@@ -8,8 +8,8 @@
             </label>
             <input v-model="nicknameInput" type="text" :placeholder="$t('modals.edit_nickname.placeholder')"
                 class="input input-bordered w-full bg-base-100" maxlength="100" @keyup.enter="updateNickname" />
-            <label class="label">
-                <span class="label-text-alt text-base-content/70 mt-2">{{
+            <label class="label mt-2">
+                <span class="label-text-alt text-base-content/70">{{
                     $t('modals.edit_nickname.description')
                     }}</span>
             </label>

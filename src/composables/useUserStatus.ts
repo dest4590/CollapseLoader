@@ -4,7 +4,6 @@ import { useStreamerMode } from './useStreamerMode';
 
 interface StatusData {
     isOnline: boolean;
-    currentClientId: number | null;
     currentClientName?: string | null;
     invisibleMode: boolean;
     lastSeen: string | null;
@@ -16,7 +15,6 @@ interface StatusData {
 
 const globalStatus = reactive<StatusData>({
     isOnline: false,
-    currentClientId: null,
     currentClientName: null,
     invisibleMode: false,
     lastSeen: null,
@@ -63,7 +61,7 @@ export function useUserStatus() {
         try {
             const statusPayload = {
                 status: globalStatus.isOnline && !globalStatus.invisibleMode ? 'ONLINE' : 'OFFLINE',
-                clientId: globalStatus.currentClientId ?? null
+                client_name: globalStatus.currentClientName ?? null
             };
 
             pendingStatusUpdate = apiClient.put('/users/me/status', statusPayload);
@@ -73,7 +71,7 @@ export function useUserStatus() {
             if (currentRequestId === lastRequestId) {
                 updateLocalStatus(response);
                 console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
-                    globalStatus.currentClientId ? `clientId ${globalStatus.currentClientId}` : '');
+                    globalStatus.currentClientName ? `on client: ${globalStatus.currentClientName}` : '');
             } else {
                 console.log('Ignoring stale status response');
             }
@@ -94,16 +92,21 @@ export function useUserStatus() {
 
         if (!serverResponse) return false;
 
-        if (serverResponse.status !== undefined) globalStatus.isOnline = serverResponse.status === 'ONLINE';
-        if ('client_id' in serverResponse) globalStatus.currentClientId = serverResponse.client_id ?? null;
-        if (serverResponse.username) globalStatus.username = serverResponse.username;
-        if (serverResponse.nickname !== undefined) globalStatus.nickname = serverResponse.nickname;
-        if (serverResponse.last_seen) globalStatus.lastSeen = serverResponse.last_seen;
-        if (serverResponse.updated_at) globalStatus.lastStatusUpdate = serverResponse.updated_at;
+        if (serverResponse.status !== undefined) {
+            const normalized = String(serverResponse.status || '').toUpperCase();
+            globalStatus.isOnline = normalized.length > 0 && normalized !== 'OFFLINE' && normalized !== 'INVISIBLE';
+        }
+        if (serverResponse.client_name !== undefined) {
+            globalStatus.currentClientName = serverResponse.client_name ?? null;
+        }
+        if (serverResponse.updated_at) {
+            globalStatus.lastStatusUpdate = serverResponse.updated_at;
+            globalStatus.lastSeen = globalStatus.isOnline ? null : serverResponse.updated_at;
+        }
 
         const hasChanges = (
             oldStatus.isOnline !== globalStatus.isOnline ||
-            oldStatus.currentClientId !== globalStatus.currentClientId ||
+            oldStatus.currentClientName !== globalStatus.currentClientName ||
             oldStatus.invisibleMode !== globalStatus.invisibleMode
         );
 
@@ -117,7 +120,6 @@ export function useUserStatus() {
     const setOnline = (shouldQueue: boolean = true) => {
         console.log('Setting user online (no client)');
         globalStatus.isOnline = true;
-        globalStatus.currentClientId = null;
         globalStatus.currentClientName = null;
         if (shouldQueue) syncStatusToServer(true).catch(error => {
             console.error('Immediate status update (online) failed:', error);
@@ -127,17 +129,15 @@ export function useUserStatus() {
     const setOffline = (shouldQueue: boolean = true) => {
         console.log('Setting user offline');
         globalStatus.isOnline = false;
-        globalStatus.currentClientId = null;
         globalStatus.currentClientName = null;
         if (shouldQueue) syncStatusToServer(true).catch(error => {
             console.error('Immediate status update (offline) failed:', error);
         });
     };
 
-    const setPlayingClient = (clientId: number, clientName?: string | null, shouldQueue: boolean = true) => {
-        console.log(`Setting user playing client id: ${clientId}`);
+    const setPlayingClient = (clientName?: string | null, shouldQueue: boolean = true) => {
+        console.log(`Setting user playing client name: ${clientName}`);
         globalStatus.isOnline = true;
-        globalStatus.currentClientId = clientId;
         if (clientName !== undefined) globalStatus.currentClientName = clientName ?? null;
         if (shouldQueue) syncStatusToServer(true).catch(error => {
             console.error('Immediate status update (client_change) failed:', error);
@@ -150,7 +150,6 @@ export function useUserStatus() {
 
         if (enable) {
             globalStatus.isOnline = false;
-            globalStatus.currentClientId = null;
             globalStatus.currentClientName = null;
         } else {
             globalStatus.isOnline = true;
@@ -189,7 +188,8 @@ export function useUserStatus() {
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
-                pollWrapper().catch(() => { });
+                pollWrapper().catch(() => {
+                });
             }
         });
     };
@@ -237,14 +237,9 @@ export function useUserStatus() {
         if (!checkAuthStatus()) return null;
 
         try {
-            const status = await apiClient.get('/auth/status/');
-
-            globalStatus.isOnline = status.is_online;
-            globalStatus.invisibleMode = status.invisible_mode || false;
-            globalStatus.lastSeen = status.last_seen;
-            globalStatus.username = status.username;
-            globalStatus.nickname = status.nickname || null;
-
+            const statusRaw = await apiClient.get('/users/me/status');
+            const status = extractApiData(statusRaw);
+            updateLocalStatus(status);
             return status;
         } catch (error) {
             console.error('Failed to fetch current status:', error);

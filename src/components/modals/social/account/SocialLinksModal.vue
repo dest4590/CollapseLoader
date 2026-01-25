@@ -102,8 +102,8 @@ const editing = ref<any | null>(null);
 const loadLinks = async () => {
     loading.value = true;
     try {
-        const resp = await apiGet<any>('/users/me/social-links');
-        links.value = resp.data || [];
+        const resp = await apiGet<any[]>('/users/me/social-links');
+        links.value = resp || [];
     } catch (error) {
         console.error('Failed to load social links', error);
         addToast(t('modals.social_links.load_failed'), 'error');
@@ -121,8 +121,8 @@ const updateSocialLinks = async (updatedLinks: any[]) => {
             url: l.url
         }))
     };
-    const resp = await apiPut<any>('/users/me/social-links', payload);
-    links.value = resp.data || [];
+    const resp = await apiPut<any[]>('/users/me/social-links', payload);
+    links.value = resp || [];
 };
 
 const addLink = async () => {

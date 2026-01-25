@@ -6,6 +6,7 @@ import { useI18n } from 'vue-i18n';
 import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { readFile } from '@tauri-apps/plugin-fs';
 import { basename } from '@tauri-apps/api/path';
+import { resolveApiAssetUrl } from '../../../utils/url';
 
 const props = defineProps<{ currentUrl?: string | null }>();
 const emit = defineEmits<{ (e: 'uploaded', url: string | null): void }>();
@@ -15,6 +16,7 @@ const { t } = useI18n();
 
 const hovering = ref(false);
 const previewUrl = ref<string | null>(props.currentUrl || null);
+const resolvedPreviewUrl = computed(() => resolveApiAssetUrl(previewUrl.value));
 const fileRef = ref<HTMLInputElement | null>(null);
 const uploading = ref(false);
 let unlisten: (() => void) | null = null;
@@ -118,7 +120,8 @@ function getMimeType(fileName: string): string {
       'rounded-xl p-4 flex items-center gap-3 cursor-pointer border-2 border-dashed',
       hovering ? 'border-primary bg-base-200' : 'border-base-300 bg-transparent'
     ]">
-      <img v-if="previewUrl" :src="previewUrl" alt="avatar" class="w-8 h-8 rounded-full object-cover" />
+      <img v-if="resolvedPreviewUrl" :src="resolvedPreviewUrl" alt="avatar"
+        class="w-8 h-8 rounded-full object-cover" />
       <div class="text-left">
         <div class="text-sm">{{ t('account.avatar_drop') }}</div>
         <div class="text-xs opacity-70">{{ helpText }}</div>

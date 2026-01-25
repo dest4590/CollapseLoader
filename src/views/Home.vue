@@ -1673,7 +1673,7 @@ onBeforeUnmount(() => {
          :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
         <div v-for="(client, idx) in filteredClients" :key="client.id"
              :class="['client-card-item', { 'slide-in-animate': playClientSlideAnim }]"
-             :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-memo="[
+            :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-memo="[
                 client.id,
                 isClientRunning(client.id),
                 isClientInstalling(client),
@@ -1681,7 +1681,8 @@ onBeforeUnmount(() => {
                 isClientFavorite(client.id),
                 isClientSelected(client.id),
                 isCtrlPressed,
-                hashVerifyingClients.has(client.id)
+                hashVerifyingClients.has(client.id),
+                requirementsInProgress
             ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                         :isClientInstalling="isClientInstalling(client)"

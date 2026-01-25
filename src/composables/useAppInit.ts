@@ -164,22 +164,25 @@ export function useAppInit() {
         try {
             bootLogService.serverConnectivityCheck();
             const connectivity = await invoke<{
-                cdn_online: boolean;
-                auth_online: boolean;
+                cdn_online?: boolean;
+                api_online?: boolean;
+                auth_online?: boolean;
             }>('get_server_connectivity_status');
-            isOnline.value = connectivity.cdn_online && connectivity.auth_online;
+            const cdnOnline = connectivity.cdn_online ?? false;
+            const apiOnline = connectivity.api_online ?? connectivity.auth_online ?? false;
+            isOnline.value = Boolean(cdnOnline && apiOnline);
 
-            if (connectivity.cdn_online) bootLogService.cdnOnline();
+            if (cdnOnline) bootLogService.cdnOnline();
             else bootLogService.cdnOffline();
 
-            if (connectivity.auth_online) bootLogService.webApiOnline();
+            if (apiOnline) bootLogService.webApiOnline();
             else bootLogService.webApiOffline();
 
             if (!isOnline.value) {
                 let offlineMessage = t('toast.server.offline_base');
-                if (!connectivity.cdn_online && !connectivity.auth_online) {
+                if (!cdnOnline && !apiOnline) {
                     offlineMessage += t('toast.server.cdn_and_api_offline');
-                } else if (!connectivity.cdn_online) {
+                } else if (!cdnOnline) {
                     offlineMessage += t('toast.server.cdn_offline');
                 } else {
                     offlineMessage += t('toast.server.api_offline');

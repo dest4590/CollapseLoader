@@ -68,15 +68,15 @@
 
                             <div v-if="!globalUserStatus.isStreamer.value && userProfile.social_links && userProfile.social_links.length > 0"
                                 class="mt-2 flex items-center gap-3 flex-wrap">
-                                <template v-for="link in userProfile.social_links" :key="link.id">
-                                    <a v-if="link.platform !== 'discord'" :href="platformHref(link.platform, link.url)"
+                                <template v-for="link in userProfile.social_links" :key="`${link.platform}:${link.url}`">
+                                    <a v-if="link.platform.toLowerCase() !== 'discord'" :href="platformHref(link.platform, link.url)"
                                         target="_blank" rel="noreferrer" class="group inline-flex items-center">
                                         <TelegramIcon :size="20" class="w-5 h-5 text-primary"
-                                            v-if="link.platform === 'telegram'" />
+                                            v-if="link.platform.toLowerCase() === 'telegram'" />
                                         <YoutubeIcon :size="20" class="w-5 h-5 text-primary"
-                                            v-else-if="link.platform === 'youtube'" />
+                                            v-else-if="link.platform.toLowerCase() === 'youtube'" />
                                         <GithubIcon :size="20" class="w-5 h-5 text-primary"
-                                            v-else-if="link.platform === 'github'" />
+                                            v-else-if="link.platform.toLowerCase() === 'github'" />
                                         <span
                                             class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap">
                                             {{ platformLabel(link.platform) }} — {{ displayHref(link.platform, link.url)
@@ -289,6 +289,7 @@ import { globalUserStatus } from '../composables/useUserStatus';
 import { useStreamerMode } from '../composables/useStreamerMode';
 import getRoleBadge from '../utils/roleBadge';
 import { formatDate } from '../utils/utils';
+import { resolveApiAssetUrl } from '../utils/url';
 import { marketplaceService } from '../services/marketplaceService';
 import { useUser } from '../composables/useUser';
 
@@ -389,7 +390,7 @@ const handleSendFriendRequest = async () => {
 
     sendingRequest.value = true;
     try {
-        await userService.sendFriendRequest(userProfile.value.username);
+        await userService.sendFriendRequest(userProfile.value.id);
         addToast(
             t('userProfile.friend_request_sent_success', {
                 name: userProfile.value.nickname || userProfile.value.username,
@@ -567,13 +568,14 @@ const platformLabel = (key: string) => {
         github: 'GitHub',
         youtube: 'YouTube',
     };
-    return map[key] || key;
+    const normalized = (key || '').toLowerCase();
+    return map[normalized] || key;
 };
 
 const platformHref = (platform: string, handle: string) => {
     if (!handle) return '#';
     const h = handle.startsWith('@') ? handle.substring(1) : handle;
-    switch (platform) {
+    switch ((platform || '').toLowerCase()) {
         case 'github':
             return `https://github.com/${h}`;
         case 'telegram':
@@ -588,7 +590,7 @@ const platformHref = (platform: string, handle: string) => {
 const displayHref = (platform: string, handle: string) => {
     if (!handle) return '';
     const h = handle.startsWith('@') ? handle.substring(1) : handle;
-    switch (platform) {
+    switch ((platform || '').toLowerCase()) {
         case 'github':
             return `github.com/${h}`;
         case 'telegram':
@@ -641,12 +643,13 @@ const copyUsername = async () => {
 };
 
 const onAvatarClick = () => {
-    if (!userProfile.value || !userProfile.value.avatar_url) return;
+    const resolvedAvatarUrl = resolveApiAssetUrl(userProfile.value?.avatar_url || null);
+    if (!resolvedAvatarUrl) return;
     showModal(
         'avatar-fullscreen',
         FullscreenAvatarModal,
         { contentClass: 'full' },
-        { src: userProfile.value.avatar_url, alt: displayNickname.value },
+        { src: resolvedAvatarUrl, alt: displayNickname.value },
         {
             close: () => hideModal('avatar-fullscreen'),
         }

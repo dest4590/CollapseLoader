@@ -4,7 +4,6 @@ import { userService, type UserProfile, type UserInfo } from '../services/userSe
 interface GlobalUserState {
     profile: UserProfile | null;
     info: UserInfo | null;
-    syncStatus: { last_sync_timestamp: string | null; has_cloud_data: boolean } | null;
     isLoading: boolean;
     isLoaded: boolean;
     lastUpdated: string | null;
@@ -13,7 +12,6 @@ interface GlobalUserState {
 const globalUserState = reactive<GlobalUserState>({
     profile: null,
     info: null,
-    syncStatus: null,
     isLoading: false,
     isLoaded: false,
     lastUpdated: null
@@ -76,7 +74,6 @@ export function useUser() {
 
             globalUserState.profile = initData.profile;
             globalUserState.info = initData.user_info;
-            globalUserState.syncStatus = initData.sync_status;
             globalUserState.lastUpdated = new Date().toISOString();
             globalUserState.isLoaded = true;
 
@@ -107,7 +104,6 @@ export function useUser() {
     const clearUserData = (): void => {
         globalUserState.profile = null;
         globalUserState.info = null;
-        globalUserState.syncStatus = null;
         globalUserState.isLoading = false;
         globalUserState.isLoaded = false;
         globalUserState.lastUpdated = null;
@@ -125,7 +121,6 @@ export function useUser() {
     return {
         profile: computed(() => globalUserState.profile),
         info: computed(() => globalUserState.info),
-        syncStatus: computed(() => globalUserState.syncStatus),
         isLoading: computed(() => globalUserState.isLoading),
         isLoaded: computed(() => globalUserState.isLoaded),
         lastUpdated: computed(() => globalUserState.lastUpdated),

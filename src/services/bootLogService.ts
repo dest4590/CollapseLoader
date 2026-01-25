@@ -71,11 +71,11 @@ class BootLogService {
     }
 
     webApiOnline() {
-        this.addLog('OK', 'webapi', 'Web API connection verified [OK]');
+        this.addLog('OK', 'webapi', 'API connection verified [OK]');
     }
 
     webApiOffline() {
-        this.addLog('ERROR', 'webapi', 'Web API connection failed [ERROR]');
+        this.addLog('ERROR', 'webapi', 'API connection failed [ERROR]');
     }
 
     apiInit() {

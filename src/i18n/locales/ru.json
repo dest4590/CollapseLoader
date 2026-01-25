@@ -281,11 +281,11 @@
     "avatar_reset_failed": "Не удалось сбросить аватар: {error}"
   },
   "roles": {
-    "user": "Пользователь",
-    "tester": "Тестер",
-    "admin": "Админ",
-    "developer": "Разработчик",
-    "owner": "Владелец"
+    "USER": "Пользователь",
+    "TESTER": "Тестер",
+    "ADMIN": "Админ",
+    "DEVELOPER": "Разработчик",
+    "OWNER": "Владелец"
   },
   "appLogs": {
     "autoScroll": "Автоматическая прокрутка",
@@ -833,9 +833,9 @@
     "server": {
       "offline": "Не удалось определить статус сервера. Предполагается офлайн.",
       "offline_base": "Вы сейчас не в сети. ",
-      "cdn_and_api_offline": "Не удается подключиться к CDN и Web API.",
+      "cdn_and_api_offline": "Не удается подключиться к CDN и API.",
       "cdn_offline": "Не удается подключиться к CDN.",
-      "api_offline": "Не удается подключиться к Web API.",
+      "api_offline": "Не удается подключиться к API.",
       "api_init_failed": "Не удалось инициализировать API: {error}"
     },
     "settings": {

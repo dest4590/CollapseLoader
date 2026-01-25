@@ -281,11 +281,11 @@
     "avatar_reset_failed": "Failed to reset avatar: {error}"
   },
   "roles": {
-    "user": "User",
-    "tester": "Tester",
-    "admin": "Admin",
-    "developer": "Developer",
-    "owner": "Owner"
+    "USER": "User",
+    "TESTER": "Tester",
+    "ADMIN": "Admin",
+    "DEVELOPER": "Developer",
+    "OWNER": "Owner"
   },
   "time": {
     "offline": "Offline",
@@ -833,9 +833,9 @@
     "server": {
       "offline": "Could not determine server status. Assuming offline.",
       "offline_base": "You are currently offline. ",
-      "cdn_and_api_offline": "Cannot connect to CDN and Web API.",
+      "cdn_and_api_offline": "Cannot connect to CDN and API.",
       "cdn_offline": "Cannot connect to CDN.",
-      "api_offline": "Cannot connect to Web API.",
+      "api_offline": "Cannot connect to API.",
       "api_init_failed": "Failed to initialize API: {error}"
     },
     "settings": {

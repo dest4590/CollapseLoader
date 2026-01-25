@@ -68,6 +68,7 @@ const {
     initApp,
     initializeUserDataWrapper
 } = useAppInit();
+const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
 const showDevMenu = ref(false);
@@ -468,7 +469,7 @@ onUnmounted(() => {
               :activeTab="activeTab"
               @changeTab="setActiveTab"
               @open-dev-menu="handleOpenDevMenu"
-              :is-online="isOnline"
+              :is-online="appOnline"
               :is-authenticated="isAuthenticated"
               :position="sidebarPosition"
               @update:position="updateSidebarPosition"
@@ -482,7 +483,7 @@ onUnmounted(() => {
                                    @show-user-profile="showUserProfile"
                                    @back-to-friends="() => setActiveTab('friends')"
                                    @unread-count-updated="handleUnreadNewsCountUpdated" :key="activeTab"
-                                   :is-online="isOnline"
+                                   :is-online="appOnline"
                                    :user-id="currentUserId"
                                    v-bind="activeTab === 'home' ? { unreadNewsCount, apiInitialized } : {}"/>
                     </div>

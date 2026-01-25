@@ -21,7 +21,6 @@ pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2"
 };
 
-// Java 8 for legacy LaunchWrapper / Forge 1.8.9
 pub static JDK8_FOLDER: &str = if IS_LINUX { "jdk8-linux" } else { "jdk8" };
 pub static JDK8_ZIP: &str = if IS_LINUX {
     "jdk8-linux.zip"
@@ -29,10 +28,8 @@ pub static JDK8_ZIP: &str = if IS_LINUX {
     "jdk8.zip"
 };
 
-// JDK search order: prefer JDK21, fall back to JDK8
 pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
 
-// Asset/library file names (without .zip extension)
 pub static ASSETS_FOLDER: &str = "assets";
 pub static ASSETS_FABRIC_FOLDER: &str = "assets_fabric";
 pub static LIBRARIES_FOLDER: &str = "libraries";
@@ -44,7 +41,6 @@ pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
 pub static NATIVES_FABRIC_FOLDER: &str = "natives_fabric";
 
-// Zip file names
 pub static ASSETS_ZIP: &str = "assets.zip";
 pub static ASSETS_FABRIC_ZIP: &str = "assets_fabric.zip";
 pub static LIBRARIES_ZIP: &str = "libraries.zip";
@@ -55,19 +51,15 @@ pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
 pub static NATIVES_LEGACY_ZIP: &str = "natives-legacy.zip";
 pub static NATIVES_LEGACY_LINUX_ZIP: &str = "natives-legacy-linux.zip";
 
-// Folder names
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";
 pub static AGENT_OVERLAY_FOLDER: &str = "agent_overlay";
 pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
 pub static MODS_FOLDER: &str = "mods";
 
-// Agent & Overlay
 pub static AGENT_FILE: &str = "CollapseAgent.jar";
 pub static OVERLAY_FILE: &str = "CollapseOverlay.dll";
 
-// IRC Chat Host
 pub static IRC_HOST: &str = "irc.collapseloader.org:1338";
-//pub static IRC_HOST: &str = "127.0.0.1:1338";
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var).ok().is_some_and(|s| {
@@ -142,8 +134,6 @@ pub static ROOT_DIR: LazyLock<String> = LazyLock::new(|| {
         }
     }
 
-    // Fallback migration check for Linux: if ~/.local/share/CollapseLoader doesn't exist
-    // but ~/CollapseLoader does, use ~/CollapseLoader to avoid breaking existing setups.
     if IS_LINUX {
         let legacy_dir = std::env::var("HOME")
             .map(|h| PathBuf::from(h).join("CollapseLoader"))

@@ -1,6 +1,6 @@
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::data::DATA;
-use crate::core::utils::globals::{AGENT_FILE, AGENT_OVERLAY_FOLDER, OVERLAY_FILE, API_VERSION};
+use crate::core::utils::globals::{AGENT_FILE, AGENT_OVERLAY_FOLDER, API_VERSION, OVERLAY_FILE};
 use crate::core::utils::hashing::calculate_md5_hash;
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
@@ -21,7 +21,7 @@ pub struct AgentArguments {
     analytics: bool,
     // cordshare: bool,
     ircchat: bool,
-    lang: String, // short code e.g "en", "ru"
+    lang: String, // short code e.g. "en", "ru"
 }
 
 impl AgentArguments {
@@ -97,16 +97,25 @@ impl AgentOverlayManager {
         let base_url = Self::get_api_base_url()?;
         let base = base_url.trim_end_matches('/').to_string();
 
-        log_info!(
-            "Downloading agent file from {}/api/{API_VERSION}/agent/download/",
-            base
-        );
-        Self::download_file(&format!("{base}/api/{API_VERSION}/agent/download/"), &agent_path)
-            .await
-            .map_err(|e| {
-                log_error!("Failed to download agent file: {}", e);
-                e
-            })?;
+        let system_name = if cfg!(target_os = "windows") {
+            "windows"
+        } else if cfg!(target_os = "linux") {
+            "linux"
+        } else {
+            "linux"
+        };
+
+        log_info!("Downloading agent file for {system_name}");
+
+        Self::download_file(
+            &format!("{base}/api/{API_VERSION}/agent/download/{system_name}"),
+            &agent_path,
+        )
+        .await
+        .map_err(|e| {
+            log_error!("Failed to download agent file: {}", e);
+            e
+        })?;
 
         let downloaded_hash = calculate_md5_hash(&agent_path)?;
         if downloaded_hash != info.agent_hash {
@@ -121,16 +130,17 @@ impl AgentOverlayManager {
             ));
         }
 
-        log_info!(
-            "Downloading overlay file from {}/api/{API_VERSION}/overlay/download/",
-            base
-        );
-        Self::download_file(&format!("{base}/api/{API_VERSION}/overlay/download/"), &overlay_path)
-            .await
-            .map_err(|e| {
-                log_error!("Failed to download overlay file: {}", e);
-                e
-            })?;
+        log_info!("Downloading overlay file for {system_name}");
+
+        Self::download_file(
+            &format!("{base}/api/{API_VERSION}/overlay/download/{system_name}"),
+            &overlay_path,
+        )
+        .await
+        .map_err(|e| {
+            log_error!("Failed to download overlay file: {}", e);
+            e
+        })?;
 
         let downloaded_overlay_hash = calculate_md5_hash(&overlay_path)?;
         if downloaded_overlay_hash != info.overlay_hash {
@@ -152,7 +162,7 @@ impl AgentOverlayManager {
     async fn get_agent_overlay_info() -> Result<AgentOverlayInfo, String> {
         let base_url = Self::get_api_base_url()?;
         let base = base_url.trim_end_matches('/').to_string();
-        let url = format!("{base}/api/{API_VERSION}/agent-overlay/");
+        let url = format!("{base}/api/{API_VERSION}/agent-overlay/checksums");
 
         let client = reqwest::Client::new();
         let response = client

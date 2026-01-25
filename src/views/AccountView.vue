@@ -107,7 +107,7 @@
                         </h2>
                         <form @submit.prevent="handleChangePassword">
                             <div class="form-control mb-4">
-                                <label class="label">
+                                <label class="label mb-2">
                                     <span class="label-text">{{ t('account.current_password') }}</span>
                                 </label>
                                 <input v-model="currentPassword" type="password" autocomplete="current-password"
@@ -116,7 +116,7 @@
                                     :disabled="isLoadingFromCache" />
                             </div>
                             <div class="form-control mb-4">
-                                <label class="label">
+                                <label class="label mb-2">
                                     <span class="label-text">{{ t('account.new_password') }}</span>
                                 </label>
                                 <input v-model="newPassword" type="password" autocomplete="new-password"
@@ -124,8 +124,8 @@
                                     class="input input-bordered w-full bg-base-100" required
                                     :disabled="isLoadingFromCache" />
                             </div>
-                            <div class="form-control mb-6">
-                                <label class="label">
+                            <div class="form-control mb-4">
+                                <label class="label mb-2">
                                     <span class="label-text">{{ t('account.confirm_password') }}</span>
                                 </label>
                                 <input v-model="confirmNewPassword" type="password" autocomplete="new-password"
@@ -255,7 +255,7 @@ const toggleShowEmail = () => {
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
 
-const emit = defineEmits(['logged-out']);
+defineEmits(['logged-out']);
 
 onMounted(async () => {
     unsubscribeSyncService = syncService.subscribe((state) => {
@@ -373,6 +373,7 @@ const handleChangePassword = async () => {
                     newPassword.value = '';
                     confirmNewPassword.value = '';
                 } catch (e) {
+                    console.log("Failed to change password:", e);
                     addToast(t('account.password_change_failed'), 'error');
                 }
                 hideModal('change-password-confirm');

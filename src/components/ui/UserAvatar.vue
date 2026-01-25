@@ -24,8 +24,9 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { globalUserStatus } from '../../composables/useUserStatus';
 import { ImageOff } from 'lucide-vue-next';
+import { globalUserStatus } from '../../composables/useUserStatus';
+import { resolveApiAssetUrl } from '../../utils/url';
 
 interface Props {
     name: string;
@@ -86,9 +87,9 @@ const displayName = computed(() => {
     return globalUserStatus.isStreamer.value ? 'Streamer' : props.name;
 });
 
-const resolvedSrc = computed(() => {
-    if (globalUserStatus.isStreamer.value) return null;
-    return props.src || props.originalSrc || null;
+const resolvedSrc = computed<string | undefined>(() => {
+    if (globalUserStatus.isStreamer.value) return undefined;
+    return resolveApiAssetUrl(props.src || props.originalSrc || null) ?? undefined;
 });
 
 const imageError = ref(false);
