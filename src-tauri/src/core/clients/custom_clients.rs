@@ -60,7 +60,7 @@ impl CustomClient {
             rating_avg: None,
             rating_count: None,
             size: 0,
-            requirement_mods: None,
+            dependencies: None,
             client_type: ClientType::Default,
             created_at: chrono::Utc::now(),
             meta: Meta {

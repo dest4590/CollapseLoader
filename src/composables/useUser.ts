@@ -1,4 +1,4 @@
-import { reactive, computed, ref } from 'vue';
+import { reactive, computed, ref, watch } from 'vue';
 import { userService, type UserProfile, type UserInfo } from '../services/userService';
 
 interface GlobalUserState {
@@ -18,6 +18,9 @@ const globalUserState = reactive<GlobalUserState>({
 });
 
 const authToken = ref(localStorage.getItem('authToken'));
+const isAuthenticated = computed(() => !!authToken.value);
+
+let authWatcherAttached = false;
 
 window.addEventListener('storage', (event) => {
     if (event.key === 'authToken') {
@@ -41,82 +44,98 @@ localStorage.removeItem = function (key: string) {
     originalRemoveItem.apply(this, [key]);
 };
 
-export function useUser() {
-    const isAuthenticated = computed(() => !!authToken.value);
+const displayName = computed(() => {
+    if (!globalUserState.info && !globalUserState.profile) return '';
+    return globalUserState.profile?.nickname || globalUserState.info?.username || '';
+});
 
-    const displayName = computed(() => {
-        if (!globalUserState.info && !globalUserState.profile) return '';
-        return globalUserState.profile?.nickname || globalUserState.info?.username || '';
-    });
+const username = computed(() => globalUserState.info?.username || '');
+const email = computed(() => globalUserState.info?.email || '');
+const nickname = computed(() => globalUserState.profile?.nickname || '');
 
-    const username = computed(() => globalUserState.info?.username || '');
-    const email = computed(() => globalUserState.info?.email || '');
-    const nickname = computed(() => globalUserState.profile?.nickname || '');
-
-    const loadUserData = async (forceRefresh = false): Promise<void> => {
-        if (!isAuthenticated.value) {
-            clearUserData();
-            return;
-        }
-
-        if (globalUserState.isLoaded && !forceRefresh) {
-            return;
-        }
-
-        if (globalUserState.isLoading) {
-            return;
-        }
-
-        globalUserState.isLoading = true;
-
-        try {
-            const initData = await userService.initializeUser();
-
-            globalUserState.profile = initData.profile;
-            globalUserState.info = initData.user_info;
-            globalUserState.lastUpdated = new Date().toISOString();
-            globalUserState.isLoaded = true;
-
-            console.log('Global user data loaded successfully');
-        } catch (error) {
-            console.error('Failed to load global user data:', error);
-        } finally {
-            globalUserState.isLoading = false;
-        }
-    };
-
-    const updateUserProfile = async (newNickname: string): Promise<boolean> => {
-        try {
-            const result = await userService.updateUserProfile(newNickname);
-
-            if (result.success && globalUserState.profile) {
-                globalUserState.profile.nickname = newNickname;
-                globalUserState.lastUpdated = new Date().toISOString();
-            }
-
-            return result.success;
-        } catch (error) {
-            console.error('Failed to update user profile:', error);
-            return false;
-        }
-    };
-
-    const clearUserData = (): void => {
-        globalUserState.profile = null;
-        globalUserState.info = null;
-        globalUserState.isLoading = false;
-        globalUserState.isLoaded = false;
-        globalUserState.lastUpdated = null;
-    };
-
-    const refreshUserData = (): Promise<void> => {
-        return loadUserData(true);
-    };
-
-    const logout = (): void => {
-        localStorage.removeItem('authToken');
+const loadUserData = async (forceRefresh = false): Promise<void> => {
+    if (!isAuthenticated.value) {
         clearUserData();
-    };
+        return;
+    }
+
+    if (globalUserState.isLoaded && !forceRefresh) {
+        return;
+    }
+
+    if (globalUserState.isLoading) {
+        return;
+    }
+
+    globalUserState.isLoading = true;
+
+    try {
+        const initData = await userService.initializeUser();
+
+        globalUserState.profile = initData.profile;
+        globalUserState.info = initData.user_info;
+        globalUserState.lastUpdated = new Date().toISOString();
+        globalUserState.isLoaded = true;
+
+        console.log('Global user data loaded successfully');
+    } catch (error) {
+        console.error('Failed to load global user data:', error);
+    } finally {
+        globalUserState.isLoading = false;
+    }
+};
+
+const updateUserProfile = async (newNickname: string): Promise<boolean> => {
+    try {
+        const result = await userService.updateUserProfile(newNickname);
+
+        if (result.success && globalUserState.profile) {
+            globalUserState.profile.nickname = newNickname;
+            globalUserState.lastUpdated = new Date().toISOString();
+        }
+
+        return result.success;
+    } catch (error) {
+        console.error('Failed to update user profile:', error);
+        return false;
+    }
+};
+
+const clearUserData = (): void => {
+    globalUserState.profile = null;
+    globalUserState.info = null;
+    globalUserState.isLoading = false;
+    globalUserState.isLoaded = false;
+    globalUserState.lastUpdated = null;
+};
+
+const refreshUserData = (): Promise<void> => {
+    return loadUserData(true);
+};
+
+const logout = (): void => {
+    localStorage.removeItem('authToken');
+    userService.clearCache();
+    clearUserData();
+};
+
+const attachAuthWatcher = () => {
+    if (authWatcherAttached) return;
+    authWatcherAttached = true;
+    watch(authToken, async (newToken, oldToken) => {
+        if (newToken && newToken !== oldToken) {
+            userService.clearCache();
+            await loadUserData(true);
+            return;
+        }
+        if (!newToken && oldToken) {
+            clearUserData();
+        }
+    });
+};
+
+export function useUser() {
+    attachAuthWatcher();
 
     return {
         profile: computed(() => globalUserState.profile),

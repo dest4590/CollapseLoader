@@ -161,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
@@ -193,6 +193,8 @@ const {
     email,
     nickname: userNickname,
     isLoading: isLoadingFromCache,
+    isAuthenticated,
+    refreshUserData,
     updateUserProfile: updateGlobalUserProfile,
     logout
 } = useUser();
@@ -255,7 +257,7 @@ const toggleShowEmail = () => {
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
 
-defineEmits(['logged-out']);
+const emit = defineEmits(['logged-out']);
 
 onMounted(async () => {
     unsubscribeSyncService = syncService.subscribe((state) => {
@@ -263,11 +265,29 @@ onMounted(async () => {
     });
 
     await syncService.initializeSyncStatus();
-
-    nickname.value = userNickname.value || '';
-
-    await globalUserStatus.fetchCurrentStatus();
 });
+
+watch(
+    isAuthenticated,
+    async (isAuthed, wasAuthed) => {
+        if (isAuthed && !wasAuthed) {
+            try {
+                await refreshUserData();
+                nickname.value = userNickname.value || '';
+                await globalUserStatus.fetchCurrentStatus();
+            } catch (error) {
+                console.error('Failed to refresh account data after auth change:', error);
+            }
+            return;
+        }
+
+        if (!isAuthed && wasAuthed) {
+            nickname.value = '';
+            showEmail.value = false;
+        }
+    },
+    { immediate: true }
+);
 
 onUnmounted(() => {
     if (unsubscribeSyncService) {
@@ -392,6 +412,7 @@ const handleLogout = () => {
         {
             confirm: () => {
                 logout();
+                emit('logged-out');
                 addToast(t('auth.logout.success'), 'success');
                 hideModal('logout-confirm');
             },

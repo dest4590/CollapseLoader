@@ -230,7 +230,7 @@ pub struct Client {
     #[serde(default = "default_meta")]
     pub meta: Meta,
     #[serde(default)]
-    pub requirement_mods: Option<Vec<Requirement>>,
+    pub dependencies: Option<Vec<Requirement>>,
     #[serde(default)]
     pub client_type: ClientType,
     #[serde(default = "default_created_at")]
@@ -477,7 +477,7 @@ impl Client {
             return Ok(());
         }
 
-        if let Some(mods) = &self.requirement_mods {
+        if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
             let mods_folder_abs = DATA.root_dir.join(&client_base).join(MODS_FOLDER);
