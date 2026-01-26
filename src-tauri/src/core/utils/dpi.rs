@@ -177,10 +177,29 @@ fn start_winws_background_inner() -> Result<(), String> {
         path.as_ref().display().to_string()
     }
 
+    fn extend_with_game_filter(base: &str, game_filter: &Option<String>) -> String {
+        if let Some(filter) = game_filter {
+            format!("{},{}", base, filter)
+        } else {
+            base.to_string()
+        }
+    }
+
+    let game_filter = std::env::var("GameFilter")
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty());
+
     let mut args: Vec<String> = Vec::new();
 
-    args.push("--wf-tcp=80,443,2053,2083,2087,2096,8443".to_string());
-    args.push("--wf-udp=443,19294-19344,50000-50100".to_string());
+    args.push(format!(
+        "--wf-tcp={}",
+        extend_with_game_filter("80,443,2053,2083,2087,2096,8443", &game_filter)
+    ));
+    args.push(format!(
+        "--wf-udp={}",
+        extend_with_game_filter("443,19294-19344,50000-50100", &game_filter)
+    ));
     args.push("--filter-udp=443".to_string());
     args.push(format!(
         "--hostlist={}",
@@ -195,7 +214,7 @@ fn start_winws_background_inner() -> Result<(), String> {
         p(lists_dir.join("ipset-exclude.txt"))
     ));
     args.push("--dpi-desync=fake".to_string());
-    args.push("--dpi-desync-repeats=6".to_string());
+    args.push("--dpi-desync-repeats=11".to_string());
     args.push(format!(
         "--dpi-desync-fake-quic={}",
         p(bin_dir.join("quic_initial_www_google_com.bin"))
@@ -210,12 +229,18 @@ fn start_winws_background_inner() -> Result<(), String> {
 
     args.push("--filter-tcp=2053,2083,2087,2096,8443".to_string());
     args.push("--hostlist-domains=discord.media".to_string());
-    args.push("--dpi-desync=multisplit".to_string());
-    args.push("--dpi-desync-split-seqovl=568".to_string());
+    args.push("--dpi-desync=fake,multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=681".to_string());
     args.push("--dpi-desync-split-pos=1".to_string());
+    args.push("--dpi-desync-fooling=ts".to_string());
+    args.push("--dpi-desync-repeats=8".to_string());
     args.push(format!(
         "--dpi-desync-split-seqovl-pattern={}",
-        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
+        p(bin_dir.join("tls_clienthello_www_google_com.bin"))
+    ));
+    args.push(format!(
+        "--dpi-desync-fake-tls={}",
+        p(bin_dir.join("tls_clienthello_www_google_com.bin"))
     ));
     args.push("--new".to_string());
 
@@ -225,11 +250,17 @@ fn start_winws_background_inner() -> Result<(), String> {
         p(lists_dir.join("list-google.txt"))
     ));
     args.push("--ip-id=zero".to_string());
-    args.push("--dpi-desync=multisplit".to_string());
+    args.push("--dpi-desync=fake,multisplit".to_string());
     args.push("--dpi-desync-split-seqovl=681".to_string());
     args.push("--dpi-desync-split-pos=1".to_string());
+    args.push("--dpi-desync-fooling=ts".to_string());
+    args.push("--dpi-desync-repeats=8".to_string());
     args.push(format!(
         "--dpi-desync-split-seqovl-pattern={}",
+        p(bin_dir.join("tls_clienthello_www_google_com.bin"))
+    ));
+    args.push(format!(
+        "--dpi-desync-fake-tls={}",
         p(bin_dir.join("tls_clienthello_www_google_com.bin"))
     ));
     args.push("--new".to_string());
@@ -247,12 +278,18 @@ fn start_winws_background_inner() -> Result<(), String> {
         "--ipset-exclude={}",
         p(lists_dir.join("ipset-exclude.txt"))
     ));
-    args.push("--dpi-desync=multisplit".to_string());
-    args.push("--dpi-desync-split-seqovl=568".to_string());
+    args.push("--dpi-desync=fake,multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=654".to_string());
     args.push("--dpi-desync-split-pos=1".to_string());
+    args.push("--dpi-desync-fooling=ts".to_string());
+    args.push("--dpi-desync-repeats=8".to_string());
     args.push(format!(
         "--dpi-desync-split-seqovl-pattern={}",
-        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
+        p(bin_dir.join("tls_clienthello_max_ru.bin"))
+    ));
+    args.push(format!(
+        "--dpi-desync-fake-tls={}",
+        p(bin_dir.join("tls_clienthello_max_ru.bin"))
     ));
     args.push("--new".to_string());
 
@@ -267,14 +304,17 @@ fn start_winws_background_inner() -> Result<(), String> {
         p(lists_dir.join("ipset-exclude.txt"))
     ));
     args.push("--dpi-desync=fake".to_string());
-    args.push("--dpi-desync-repeats=6".to_string());
+    args.push("--dpi-desync-repeats=11".to_string());
     args.push(format!(
         "--dpi-desync-fake-quic={}",
         p(bin_dir.join("quic_initial_www_google_com.bin"))
     ));
     args.push("--new".to_string());
 
-    args.push("--filter-tcp=80,443".to_string());
+    args.push(format!(
+        "--filter-tcp={}",
+        extend_with_game_filter("80,443", &game_filter)
+    ));
     args.push(format!("--ipset={}", p(lists_dir.join("ipset-all.txt"))));
     args.push(format!(
         "--hostlist-exclude={}",
@@ -284,30 +324,38 @@ fn start_winws_background_inner() -> Result<(), String> {
         "--ipset-exclude={}",
         p(lists_dir.join("ipset-exclude.txt"))
     ));
-    args.push("--dpi-desync=multisplit".to_string());
-    args.push("--dpi-desync-split-seqovl=568".to_string());
+    args.push("--dpi-desync=fake,multisplit".to_string());
+    args.push("--dpi-desync-split-seqovl=654".to_string());
     args.push("--dpi-desync-split-pos=1".to_string());
+    args.push("--dpi-desync-fooling=ts".to_string());
+    args.push("--dpi-desync-repeats=8".to_string());
     args.push(format!(
         "--dpi-desync-split-seqovl-pattern={}",
-        p(bin_dir.join("tls_clienthello_4pda_to.bin"))
+        p(bin_dir.join("tls_clienthello_max_ru.bin"))
+    ));
+    args.push(format!(
+        "--dpi-desync-fake-tls={}",
+        p(bin_dir.join("tls_clienthello_max_ru.bin"))
     ));
     args.push("--new".to_string());
 
-    args.push("--filter-udp=443".to_string());
-    args.push(format!("--ipset={}", p(lists_dir.join("ipset-all.txt"))));
-    args.push(format!(
-        "--ipset-exclude={}",
-        p(lists_dir.join("ipset-exclude.txt"))
-    ));
-    args.push("--dpi-desync=fake".to_string());
-    args.push("--dpi-desync-autottl=2".to_string());
-    args.push("--dpi-desync-repeats=12".to_string());
-    args.push("--dpi-desync-any-protocol=1".to_string());
-    args.push(format!(
-        "--dpi-desync-fake-unknown-udp={}",
-        p(bin_dir.join("quic_initial_www_google_com.bin"))
-    ));
-    args.push("--dpi-desync-cutoff=n2".to_string());
+    if let Some(filter) = &game_filter {
+        args.push(format!("--filter-udp={}", filter));
+        args.push(format!("--ipset={}", p(lists_dir.join("ipset-all.txt"))));
+        args.push(format!(
+            "--ipset-exclude={}",
+            p(lists_dir.join("ipset-exclude.txt"))
+        ));
+        args.push("--dpi-desync=fake".to_string());
+        args.push("--dpi-desync-autottl=2".to_string());
+        args.push("--dpi-desync-repeats=10".to_string());
+        args.push("--dpi-desync-any-protocol=1".to_string());
+        args.push(format!(
+            "--dpi-desync-fake-unknown-udp={}",
+            p(bin_dir.join("quic_initial_www_google_com.bin"))
+        ));
+        args.push("--dpi-desync-cutoff=n2".to_string());
+    }
 
     use std::os::windows::process::CommandExt;
     use std::process::Command;

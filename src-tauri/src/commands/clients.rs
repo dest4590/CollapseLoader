@@ -11,7 +11,7 @@ use crate::core::{
     clients::custom_clients::CustomClient,
     network::analytics::Analytics,
     storage::{custom_clients::CustomClientUpdate, data::Data},
-    utils::globals::{SKIP_AGENT_OVERLAY_VERIFICATION, API_VERSION},
+    utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},

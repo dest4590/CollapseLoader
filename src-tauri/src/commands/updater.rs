@@ -407,9 +407,13 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
 fn parse_changelog_and_translations(
     content: &str,
 ) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
-    if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) { return Ok((v, None)) }
+    if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) {
+        return Ok((v, None));
+    }
 
-    if let Ok(entry) = serde_json::from_str::<ChangelogEntry>(content) { return Ok((vec![entry], None)) }
+    if let Ok(entry) = serde_json::from_str::<ChangelogEntry>(content) {
+        return Ok((vec![entry], None));
+    }
 
     let root: JsonValue = serde_json::from_str(content).map_err(|e| {
         log_warn!(
