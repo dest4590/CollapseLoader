@@ -75,37 +75,35 @@ onMounted(() => {
 
 async function share() {
     if (!selectedPreset.value) return;
-    try {
-        const s = selectedPreset.value;
-        const payload = {
-            title: title.value.trim(),
-            description: description.value.trim(),
-            preset_data: {
-                custom_css: s.customCSS,
-                enable_custom_css: s.enableCustomCSS,
-                primary: s.primary,
+        try {
+            const s = selectedPreset.value;
+            const payload = {
+                name: title.value.trim(),
+                description: description.value.trim(),
+                customCSS: s.customCSS,
+                enableCustomCSS: s.enableCustomCSS,
                 base100: s.base100,
                 base200: s.base200,
                 base300: s.base300,
-                base_content: s.baseContent,
-                primary_content: s.primaryContent,
+                baseContent: s.baseContent,
+                primary: s.primary,
+                primaryContent: s.primaryContent,
                 secondary: s.secondary,
-                secondary_content: s.secondaryContent,
+                secondaryContent: s.secondaryContent,
                 accent: s.accent,
-                accent_content: s.accentContent,
+                accentContent: s.accentContent,
                 neutral: s.neutral,
-                neutral_content: s.neutralContent,
+                neutralContent: s.neutralContent,
                 info: s.info,
-                info_content: s.infoContent,
+                infoContent: s.infoContent,
                 success: s.success,
-                success_content: s.successContent,
+                successContent: s.successContent,
                 warning: s.warning,
-                warning_content: s.warningContent,
+                warningContent: s.warningContent,
                 error: s.error,
-                error_content: s.errorContent,
-            },
-            is_public: isPublic.value,
-        };
+                errorContent: s.errorContent,
+                is_public: isPublic.value,
+            };
 
         submitting.value = true;
         await marketplaceService.createPreset(payload);

@@ -371,18 +371,15 @@ const loadUserPresets = async () => {
         return;
     }
 
-    presetsLoading.value = true;
-    try {
-        const data = await marketplaceService.listPresets({ owner: props.userId });
-        if (Array.isArray(data)) presets.value = data;
-        else if (data && Array.isArray((data as any).results)) presets.value = (data as any).results;
-        else presets.value = [];
-    } catch (e) {
-        console.error('Failed to load user presets count:', e);
-        presets.value = [];
-    } finally {
-        presetsLoading.value = false;
-    }
+        presetsLoading.value = true;
+        try {
+            presets.value = await marketplaceService.listPresets({ owner: props.userId });
+        } catch (e) {
+            console.error('Failed to load user presets count:', e);
+            presets.value = [];
+        } finally {
+            presetsLoading.value = false;
+        }
 };
 
 const handleSendFriendRequest = async () => {
