@@ -1,4 +1,5 @@
 use crate::core::network::servers::SERVERS;
+use crate::core::utils::globals::API_VERSION;
 use crate::log_debug;
 use std::thread;
 
@@ -6,16 +7,19 @@ pub struct Analytics;
 
 impl Analytics {
     pub fn send_start_analytics() {
-        Self::send_analytics("api/loader/launch", "start analytics");
+        Self::send_analytics(
+            &format!("api/{API_VERSION}/loader/launch"),
+            "start analytics",
+        );
     }
 
     pub fn send_client_analytics(client_id: u32) {
-        let endpoint = format!("api/client/{client_id}/launch");
+        let endpoint = format!("api/{API_VERSION}/clients/launch/{client_id}");
         Self::send_analytics(&endpoint, "client analytics");
     }
 
     pub fn send_client_download_analytics(client_id: u32) {
-        let endpoint = format!("api/client/{client_id}/download");
+        let endpoint = format!("api/{API_VERSION}/clients/download/{client_id}");
         Self::send_analytics(&endpoint, "client download analytics");
     }
 
@@ -30,6 +34,8 @@ impl Analytics {
 
             let client = Self::create_client();
             let url = format!("{server_url}{endpoint}");
+
+            log_debug!("Sending {} to {}", analytics_type, url);
 
             match client.post(&url).send() {
                 Ok(_) => {}

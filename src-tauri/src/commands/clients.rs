@@ -3,6 +3,8 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use tauri::{AppHandle, State};
 
 use crate::core::{
@@ -108,6 +110,38 @@ pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
         .ok()
         .map(|manager| manager.clients.clone())
         .unwrap_or_default()
+}
+
+#[derive(Deserialize)]
+struct ApiResponse<T> {
+    success: bool,
+    data: T,
+    #[serde(default)]
+    error: Option<String>,
+    #[serde(default)]
+    timestamp: Option<i64>,
+}
+
+async fn extract_api_data<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, String> {
+    if !response.status().is_success() {
+        return Err(format!("API returned error: {}", response.status()));
+    }
+
+    let ApiResponse {
+        success,
+        data,
+        error,
+        ..
+    } = response
+        .json::<ApiResponse<T>>()
+        .await
+        .map_err(|e| format!("Failed to parse API response: {e}"))?;
+
+    if !success {
+        return Err(error.unwrap_or_else(|| "API returned unsuccessful response".to_string()));
+    }
+
+    Ok(data)
 }
 
 #[tauri::command]
@@ -760,7 +794,7 @@ pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, St
     log_debug!("Fetching comments for client ID: {}", client_id);
     let api_url = get_api_url().await?;
     let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/");
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
 
     let client = reqwest::Client::new();
     let response = client.get(&url).send().await.map_err(|e| {
@@ -768,16 +802,7 @@ pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, St
         format!("Failed to fetch client comments: {e}")
     })?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let comments: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse client comments: {e}"))?;
-
-    Ok(comments)
+    extract_api_data(response).await
 }
 
 #[tauri::command]
@@ -788,27 +813,18 @@ pub async fn add_client_comment(
 ) -> Result<serde_json::Value, String> {
     let api_url = get_api_url().await?;
     let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/");
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
 
     let client = reqwest::Client::new();
     let response = client
         .post(&url)
-        .header("Authorization", format!("Token {}", user_token))
+        .header("Authorization", format!("Bearer {}", user_token))
         .json(&serde_json::json!({ "content": content }))
         .send()
         .await
         .map_err(|e| format!("Failed to add comment: {e}"))?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let comment: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
-
-    Ok(comment)
+    extract_api_data(response).await
 }
 
 #[tauri::command]
@@ -819,19 +835,17 @@ pub async fn delete_client_comment(
 ) -> Result<(), String> {
     let api_url = get_api_url().await?;
     let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/{comment_id}/");
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/{comment_id}");
 
     let client = reqwest::Client::new();
     let response = client
         .delete(&url)
-        .header("Authorization", format!("Token {}", user_token))
+        .header("Authorization", format!("Bearer {}", user_token))
         .send()
         .await
         .map_err(|e| format!("Failed to delete comment: {e}"))?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    Ok(())
+    extract_api_data::<serde_json::Value>(response)
+        .await
+        .map(|_| ())
 }
