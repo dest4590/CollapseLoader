@@ -137,14 +137,14 @@ pub fn kill_process(pid: &str, client_name: &str) -> Result<bool, String> {
 
         if kill_output.status.success() {
             log_info!("Successfully killed process {} for '{}'", pid, client_name);
-            return Ok(true);
+            Ok(true)
         } else {
             log_error!(
                 "taskkill failed for PID {}: {}",
                 pid,
                 String::from_utf8_lossy(&kill_output.stderr)
             );
-            return Ok(false);
+            Ok(false)
         }
     }
 

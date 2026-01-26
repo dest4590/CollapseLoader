@@ -13,6 +13,12 @@ impl ClientState {
 
 pub struct CustomClientsState;
 
+impl Default for CustomClientsState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CustomClientsState {
     pub fn new() -> Self {
         Self

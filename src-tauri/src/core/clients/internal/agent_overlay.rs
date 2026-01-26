@@ -99,8 +99,6 @@ impl AgentOverlayManager {
 
         let system_name = if cfg!(target_os = "windows") {
             "windows"
-        } else if cfg!(target_os = "linux") {
-            "linux"
         } else {
             "linux"
         };

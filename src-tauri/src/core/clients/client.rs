@@ -750,7 +750,7 @@ impl Client {
             LIBRARIES_FABRIC_FOLDER,
             sanitize_version_for_paths(&self.version)
         );
-        let versioned_dir = DATA.root_dir.join(&versioned_zip.replace(".zip", ""));
+        let versioned_dir = DATA.root_dir.join(versioned_zip.replace(".zip", ""));
 
         if !dir_has_any_jars(&versioned_dir, false) {
             log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);

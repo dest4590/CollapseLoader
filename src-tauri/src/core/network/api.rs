@@ -55,12 +55,11 @@ impl Api {
                             attempt + 1,
                             API_MAX_RETRIES
                         );
-                        if status.is_server_error() || status.as_u16() == 429 {
-                            if attempt + 1 < API_MAX_RETRIES {
+                        if (status.is_server_error() || status.as_u16() == 429)
+                            && attempt + 1 < API_MAX_RETRIES {
                                 std::thread::sleep(Duration::from_secs((attempt + 1) as u64));
                                 continue;
                             }
-                        }
                         if let Some(cached) = &cached_data {
                             log_debug!(
                                 "Using cached data due to API error status for path: {}",

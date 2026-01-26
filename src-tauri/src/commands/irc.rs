@@ -37,13 +37,13 @@ pub async fn connect_irc(
 
     match TcpStream::connect(IRC_HOST).await {
         Ok(stream) => {
-            if let Err(e) = (|| -> std::io::Result<()> {
+            if let Err(e) = {
                 let sock_ref = socket2::SockRef::from(&stream);
                 let mut ka = socket2::TcpKeepalive::new();
                 ka = ka.with_time(std::time::Duration::from_secs(20));
                 ka = ka.with_interval(std::time::Duration::from_secs(20));
                 sock_ref.set_tcp_keepalive(&ka)
-            })() {
+            } {
                 log_error!("Failed to set TCP keepalive: {}", e);
                 return Err(format!("Failed to set TCP keepalive: {}", e));
             }
@@ -58,7 +58,7 @@ pub async fn connect_irc(
                 "client": "CollapseLoader"
             });
 
-            let auth_str = format!("{}\n", auth_packet.to_string());
+            let auth_str = format!("{}\n", auth_packet);
 
             if let Err(e) = writer.write_all(auth_str.as_bytes()).await {
                 log_error!("Failed to send auth to IRC: {}", e);
@@ -84,7 +84,7 @@ pub async fn connect_irc(
 
                     if let Some(writer) = writer_guard.as_mut() {
                         let ping_packet = json!({ "op": "ping" });
-                        let ping_str = format!("{}\n", ping_packet.to_string());
+                        let ping_str = format!("{}\n", ping_packet);
 
                         if let Err(e) = writer.write_all(ping_str.as_bytes()).await {
                             log_error!("IRC Pinger failed to write: {}", e);
@@ -158,7 +158,7 @@ pub async fn send_irc_message(state: State<'_, IrcState>, message: String) -> Re
             "content": message
         });
 
-        let msg_str = format!("{}\n", packet.to_string());
+        let msg_str = format!("{}\n", packet);
 
         if let Err(e) = writer.write_all(msg_str.as_bytes()).await {
             log_error!("Failed to send IRC message: {}", e);

@@ -119,6 +119,7 @@ struct ApiResponse<T> {
     #[serde(default)]
     error: Option<String>,
     #[serde(default)]
+    #[allow(dead_code)]
     timestamp: Option<i64>,
 }
 
