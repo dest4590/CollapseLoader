@@ -281,11 +281,11 @@
     "avatar_reset_failed": "重置头像失败：{error}"
   },
   "roles": {
-    "USER": "用户",
-    "TESTER": "测试员",
-    "ADMIN": "管理员",
-    "DEVELOPER": "开发者",
-    "OWNER": "所有者"
+    "user": "用户",
+    "tester": "测试员",
+    "admin": "管理员",
+    "developer": "开发者",
+    "owner": "所有者"
   },
   "time": {
     "offline": "离线",

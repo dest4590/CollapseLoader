@@ -1274,8 +1274,7 @@ onBeforeUnmount(() => {
                                                             </template>
                                                         </div>
 
-                                                        <div v-else class="tooltip tooltip-bottom"
-                                                             :data-tip="t('client.details.login_to_rate')">
+                                                        <div>
                                                             <div v-if="ratingRounded !== null"
                                                                  class="rating rating-half rating-sm pointer-events-none opacity-80">
                                                                 <input type="radio"
@@ -1295,7 +1294,7 @@ onBeforeUnmount(() => {
                                                             </div>
                                                             <div v-else
                                                                  class="text-xs font-medium text-base-content/60">
-                                                                {{ t('client.details.no_rating') }}
+                                                                {{ t('client.details.login_to_rate') }}
                                                             </div>
                                                         </div>
 

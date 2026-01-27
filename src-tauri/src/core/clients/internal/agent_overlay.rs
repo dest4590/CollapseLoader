@@ -8,6 +8,13 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApiResponse<T> {
+    pub success: bool,
+    pub data: Option<T>,
+    pub message: Option<String>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AgentOverlayInfo {
     pub agent_hash: String,
@@ -180,12 +187,12 @@ impl AgentOverlayManager {
             return Err(format!("Backend returned error: {}", response.status()));
         }
 
-        let info: AgentOverlayInfo = response.json().await.map_err(|e| {
+        let info: ApiResponse<AgentOverlayInfo> = response.json().await.map_err(|e| {
             log_error!("Failed to parse agent/overlay info response: {}", e);
             format!("Failed to parse agent/overlay info: {e}")
         })?;
 
-        Ok(info)
+        Ok(info.data.ok_or_else(|| "No agent/overlay info found".to_string())?)
     }
 
     async fn download_file(url: &str, path: &PathBuf) -> Result<(), String> {

@@ -281,11 +281,11 @@
     "avatar_reset_failed": "Failed to reset avatar: {error}"
   },
   "roles": {
-    "USER": "User",
-    "TESTER": "Tester",
-    "ADMIN": "Admin",
-    "DEVELOPER": "Developer",
-    "OWNER": "Owner"
+    "user": "User",
+    "tester": "Tester",
+    "admin": "Admin",
+    "developer": "Developer",
+    "owner": "Owner"
   },
   "time": {
     "offline": "Offline",
