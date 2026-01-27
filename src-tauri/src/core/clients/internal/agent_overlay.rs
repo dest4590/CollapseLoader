@@ -103,10 +103,10 @@ impl AgentOverlayManager {
             "linux"
         };
 
-        log_info!("Downloading agent file for {system_name}");
+        log_info!("Downloading agent file...");
 
         Self::download_file(
-            &format!("{base}/api/{API_VERSION}/agent/download/{system_name}"),
+            &format!("{base}/api/{API_VERSION}/agent/download"),
             &agent_path,
         )
         .await
@@ -160,7 +160,14 @@ impl AgentOverlayManager {
     async fn get_agent_overlay_info() -> Result<AgentOverlayInfo, String> {
         let base_url = Self::get_api_base_url()?;
         let base = base_url.trim_end_matches('/').to_string();
-        let url = format!("{base}/api/{API_VERSION}/agent-overlay/checksums");
+
+        let system_name = if cfg!(target_os = "windows") {
+            "windows"
+        } else {
+            "linux"
+        };
+
+        let url = format!("{base}/api/{API_VERSION}/agent-overlay/checksums?os={system_name}");
 
         let client = reqwest::Client::new();
         let response = client
