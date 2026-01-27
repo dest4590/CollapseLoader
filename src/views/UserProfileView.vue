@@ -37,10 +37,12 @@
                                             userProfile.status.current_client
 
                                         }}</span>
+
                                     <span v-if="userProfile.status.client_version" class="text-base-content/50 text-sm">
-                                        ({{
-                                            userProfile.status.client_version
-                                        }})
+                                        ({{ userProfile.status.client_version }})
+                                    </span>
+                                    <span v-if="playtimeDuration" class="badge badge-sm badge-ghost ml-2">
+                                        {{ playtimeDuration }}
                                     </span>
                                 </div>
                                 <div v-else-if="userProfile.status.is_online" class="flex items-center gap-2">
@@ -68,9 +70,11 @@
 
                             <div v-if="!globalUserStatus.isStreamer.value && userProfile.social_links && userProfile.social_links.length > 0"
                                 class="mt-2 flex items-center gap-3 flex-wrap">
-                                <template v-for="link in userProfile.social_links" :key="`${link.platform}:${link.url}`">
-                                    <a v-if="link.platform.toLowerCase() !== 'discord'" :href="platformHref(link.platform, link.url)"
-                                        target="_blank" rel="noreferrer" class="group inline-flex items-center">
+                                <template v-for="link in userProfile.social_links"
+                                    :key="`${link.platform}:${link.url}`">
+                                    <a v-if="link.platform.toLowerCase() !== 'discord'"
+                                        :href="platformHref(link.platform, link.url)" target="_blank" rel="noreferrer"
+                                        class="group inline-flex items-center">
                                         <TelegramIcon :size="20" class="w-5 h-5 text-primary"
                                             v-if="link.platform.toLowerCase() === 'telegram'" />
                                         <YoutubeIcon :size="20" class="w-5 h-5 text-primary"
@@ -131,7 +135,8 @@
                                 <span class="font-medium">{{ displayNickname }}</span>
                             </div>
 
-                            <div v-if="userProfile.member_since && !globalUserStatus.isStreamer.value" class="flex justify-between items-center">
+                            <div v-if="userProfile.member_since && !globalUserStatus.isStreamer.value"
+                                class="flex justify-between items-center">
                                 <span class="text-base-content/70">{{ t('userProfile.member_since') }}:</span>
                                 <span class="font-medium">{{ formatDate(userProfile.member_since) }}</span>
                             </div>
@@ -221,6 +226,25 @@
                     {{ t('userProfile.back_to_friends') }}
                 </button>
             </div>
+
+            <div class="mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-primary-focus">{{ t('achievements.title') }}</h2>
+                    <span v-if="achievements.length > 0" class="text-sm text-base-content/60">
+                        {{ unlockedCount }} / {{ achievements.length }}
+                    </span>
+                </div>
+
+                <div v-if="loadingAchievements" class="flex justify-center py-4">
+                    <span class="loading loading-spinner loading-md"></span>
+                </div>
+
+                <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <AchievementCard v-for="ach in sortedAchievements" :key="ach.key" :achievement-key="ach.key"
+                        :icon-name="ach.icon" :locked="!isUnlocked(ach.id)" :unlocked-at="getUnlockedAt(ach.id)"
+                        :hidden="ach.hidden" />
+                </div>
+            </div>
             <div class="mt-6" v-if="!globalUserStatus.isStreamer.value">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-primary-focus">{{ t('userProfile.presets_title') }}</h2>
@@ -258,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { userService, type PublicUserProfile } from '../services/userService';
@@ -268,6 +292,7 @@ import RemoveFriendConfirmModal from '../components/modals/social/friends/Remove
 import UserAvatar from '../components/ui/UserAvatar.vue';
 import FullscreenAvatarModal from '../components/modals/common/FullscreenAvatarModal.vue';
 import PresetGallery from '../components/presets/PresetGallery.vue';
+import AchievementCard from '../components/features/profile/AchievementCard.vue';
 import DiscordIcon from '../components/ui/icons/DiscordIcon.vue';
 import TelegramIcon from '../components/ui/icons/TelegramIcon.vue';
 import YoutubeIcon from '../components/ui/icons/YoutubeIcon.vue';
@@ -292,6 +317,7 @@ import { formatDate } from '../utils/utils';
 import { resolveApiAssetUrl } from '../utils/url';
 import { marketplaceService } from '../services/marketplaceService';
 import { useUser } from '../composables/useUser';
+import { achievementService, type Achievement, type UserAchievement } from '../services/achievementService';
 
 interface Props {
     userId?: number;
@@ -312,11 +338,55 @@ const sendingRequest = ref(false);
 
 const presets = ref<any[] | null>(null);
 const presetsLoading = ref(false);
+const achievements = ref<Achievement[]>([]);
+const userAchievements = ref<UserAchievement[]>([]);
+const loadingAchievements = ref(false);
 
 const { username } = useUser();
 
 const isOwnProfile = computed(() => {
     return !!userProfile.value && username.value && userProfile.value.username === username.value;
+});
+
+const playtimeDuration = ref('');
+let playtimeInterval: any = null;
+
+const updatePlaytime = () => {
+    if (!userProfile.value?.status?.started_at) {
+        playtimeDuration.value = '';
+        return;
+    }
+    const start = new Date(userProfile.value.status.started_at).getTime();
+    const now = new Date().getTime();
+    const diff = Math.max(0, now - start);
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+        playtimeDuration.value = `${hours}h ${minutes}m`;
+    } else {
+        playtimeDuration.value = `${minutes}m`;
+    }
+};
+
+watch(() => userProfile.value?.status?.started_at, (newVal) => {
+    if (newVal) {
+        updatePlaytime();
+        if (!playtimeInterval) {
+            playtimeInterval = setInterval(updatePlaytime, 60000);
+        }
+    } else {
+        if (playtimeInterval) {
+            clearInterval(playtimeInterval);
+            playtimeInterval = null;
+        }
+        playtimeDuration.value = '';
+    }
+}, { immediate: true });
+
+onUnmounted(() => {
+    if (playtimeInterval) clearInterval(playtimeInterval);
 });
 
 const presetsCountLabel = computed(() => {
@@ -339,6 +409,44 @@ const roleBadge = computed(() => {
     if (!userProfile.value) return null;
     return getRoleBadge((userProfile.value as any).role, (k: string) => t(k));
 });
+
+const unlockedCount = computed(() => userAchievements.value.length);
+
+const sortedAchievements = computed(() => {
+    return [...achievements.value].sort((a, b) => {
+        const aUnlocked = isUnlocked(a.id);
+        const bUnlocked = isUnlocked(b.id);
+        if (aUnlocked && !bUnlocked) return -1;
+        if (!aUnlocked && bUnlocked) return 1;
+        return 0;
+    });
+});
+
+const isUnlocked = (achievementId: number) => {
+    return userAchievements.value.some(ua => ua.achievement.id === achievementId);
+};
+
+const getUnlockedAt = (achievementId: number) => {
+    const ua = userAchievements.value.find(ua => ua.achievement.id === achievementId);
+    return ua ? ua.unlockedAt : null;
+};
+
+const loadAchievements = async () => {
+    if (!props.userId) return;
+    loadingAchievements.value = true;
+    try {
+        const [all, user] = await Promise.all([
+            achievementService.getAllAchievements(),
+            achievementService.getUserAchievements(props.userId)
+        ]);
+        achievements.value = all || [];
+        userAchievements.value = user || [];
+    } catch (e) {
+        console.error("Failed to load achievements", e);
+    } finally {
+        loadingAchievements.value = false;
+    }
+};
 
 const loadUserProfile = async () => {
     if (!props.userId) {
@@ -371,15 +479,15 @@ const loadUserPresets = async () => {
         return;
     }
 
-        presetsLoading.value = true;
-        try {
-            presets.value = await marketplaceService.listPresets({ owner: props.userId });
-        } catch (e) {
-            console.error('Failed to load user presets count:', e);
-            presets.value = [];
-        } finally {
-            presetsLoading.value = false;
-        }
+    presetsLoading.value = true;
+    try {
+        presets.value = await marketplaceService.listPresets({ owner: props.userId });
+    } catch (e) {
+        console.error('Failed to load user presets count:', e);
+        presets.value = [];
+    } finally {
+        presetsLoading.value = false;
+    }
 };
 
 const handleSendFriendRequest = async () => {
@@ -397,7 +505,7 @@ const handleSendFriendRequest = async () => {
         userProfile.value.friendship_status = 'request_sent';
     } catch (error) {
         console.error('Failed to send friend request:', error);
-        addToast(t('userProfile.friend_request_failed', {error: error}), 'error');
+        addToast(t('userProfile.friend_request_failed', { error: error }), 'error');
     } finally {
         sendingRequest.value = false;
     }
@@ -656,5 +764,6 @@ const onAvatarClick = () => {
 onMounted(async () => {
     await loadUserProfile();
     await loadUserPresets();
+    await loadAchievements();
 });
 </script>

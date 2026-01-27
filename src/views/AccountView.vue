@@ -52,6 +52,24 @@
                 </div>
             </div>
 
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
+                            {{ t('achievements.title') }}
+                        </h2>
+                        <div v-if="loadingAchievements" class="flex justify-center py-4">
+                            <span class="loading loading-spinner loading-md"></span>
+                        </div>
+                        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <AchievementCard v-for="ach in sortedAchievements" :key="ach.key" :achievement-key="ach.key"
+                                :icon-name="ach.icon" :locked="!isUnlocked(ach.id)" :unlocked-at="getUnlockedAt(ach.id)"
+                                :hidden="ach.hidden" :receive-percentage="ach.receivePercentage" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <div class="card bg-base-200 shadow-md border border-base-300 h-full">
                     <div class="card-body">
@@ -171,8 +189,10 @@ import ChangePasswordConfirmModal from '../components/modals/social/account/Chan
 import LogoutConfirmModal from '../components/modals/social/account/LogoutConfirmModal.vue';
 import AvatarUploadModal from '../components/modals/social/account/AvatarUploadModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import AchievementCard from '../components/features/profile/AchievementCard.vue';
 import { useUser } from '../composables/useUser';
 import { userService } from '../services/userService';
+import { achievementService, type Achievement, type UserAchievement } from '../services/achievementService';
 import { EditIcon, EyeIcon, EyeOffIcon } from 'lucide-vue-next';
 import getRoleBadge from '../utils/roleBadge';
 import { globalUserStatus } from '../composables/useUserStatus';
@@ -187,6 +207,10 @@ const newPassword = ref('');
 const confirmNewPassword = ref('');
 const nickname = ref('');
 const showEmail = ref(false);
+
+const achievements = ref<Achievement[]>([]);
+const userAchievements = ref<UserAchievement[]>([]);
+const loadingAchievements = ref(false);
 
 const {
     username,
@@ -250,6 +274,44 @@ const maskedEmail = computed(() => {
     return `${maskedLocal}@${maskedDomain}`;
 });
 
+const sortedAchievements = computed(() => {
+    return [...achievements.value].sort((a, b) => {
+        const aUnlocked = isUnlocked(a.id);
+        const bUnlocked = isUnlocked(b.id);
+        if (aUnlocked && !bUnlocked) return -1;
+        if (!aUnlocked && bUnlocked) return 1;
+        return 0;
+    });
+});
+
+const isUnlocked = (achievementId: number) => {
+    return userAchievements.value.some(ua => ua.achievement.id === achievementId);
+};
+
+const getUnlockedAt = (achievementId: number) => {
+    const ua = userAchievements.value.find(ua => ua.achievement.id === achievementId);
+    return ua ? ua.unlockedAt : null;
+};
+
+const loadAchievements = async () => {
+    const userId = (useUser().profile.value as any)?.id;
+    if (!userId) return;
+
+    loadingAchievements.value = true;
+    try {
+        const [all, user] = await Promise.all([
+            achievementService.getAllAchievements(),
+            achievementService.getUserAchievements(userId)
+        ]);
+        achievements.value = all || [];
+        userAchievements.value = user || [];
+    } catch (e) {
+        console.error("Failed to load achievements", e);
+    } finally {
+        loadingAchievements.value = false;
+    }
+};
+
 const toggleShowEmail = () => {
     showEmail.value = !showEmail.value;
 };
@@ -265,6 +327,7 @@ onMounted(async () => {
     });
 
     await syncService.initializeSyncStatus();
+    await loadAchievements();
 });
 
 watch(
@@ -284,10 +347,18 @@ watch(
         if (!isAuthed && wasAuthed) {
             nickname.value = '';
             showEmail.value = false;
+            achievements.value = [];
+            userAchievements.value = [];
         }
     },
     { immediate: true }
 );
+
+watch(() => (useUser().profile.value as any)?.id, (newId) => {
+    if (newId) {
+        loadAchievements();
+    }
+});
 
 onUnmounted(() => {
     if (unsubscribeSyncService) {

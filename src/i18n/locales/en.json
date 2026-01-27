@@ -962,6 +962,7 @@
       "rating": "Rating",
       "no_rating": "No ratings yet",
       "login_to_rate": "Log in to rate",
+      "your_rating": "Your Rating",
       "source_link": "Source Link",
       "created": "Created",
       "changelog": "Changelog",
@@ -1072,5 +1073,55 @@
       "tooltip": "Happy Halloween! (Oct 25 - Nov 5)"
     }
   },
-  "login": "You need to log in to your account."
+  "login": "You need to log in to your account.",
+  "achievements": {
+    "title": "Achievements",
+    "locked": "Locked",
+    "unlocked_at": "Unlocked {date}",
+    "login_to_unlock": "You need to be logged in to unlock this achievement.",
+    "secret_title": "Hidden Achievement",
+    "secret_description": "Keep playing to unlock this secret!",
+    "list": {
+      "WELCOME": {
+        "title": "Welcome!",
+        "description": "Download and update CollapseLoader."
+      },
+      "PLAYED_1Hour": {
+        "title": "Getting Started",
+        "description": "Play for 1 hour."
+      },
+      "PLAYED_10Hours": {
+        "title": "Dedicated",
+        "description": "Play for 10 hours."
+      },
+      "FIRST_GAME": {
+        "title": "First Steps",
+        "description": "Launch your first client."
+      },
+      "SECRET_FINDER": {
+        "title": "Secret Finder",
+        "description": "You found a secret!"
+      },
+      "SOCIAL_BUTTERFLY": {
+        "title": "Social Butterfly",
+        "description": "Add a social link to your profile."
+      },
+      "FREQUENT_FLYER": {
+        "title": "Frequent Flyer",
+        "description": "Launch clients 50 times."
+      },
+      "PRESET_MAX": {
+        "title": "Fashionista",
+        "description": "Create and share a customization preset."
+      },
+      "BETA_TESTER": {
+        "title": "Beta Tester",
+        "description": "Join the testing program."
+      },
+      "COLLECTOR": {
+        "title": "Collector",
+        "description": "Install 5 different clients."
+      }
+    }
+  }
 }

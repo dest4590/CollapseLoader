@@ -965,7 +965,8 @@
         }
       },
       "no_changelog_desc": "更新与改动将显示在此处。",
-      "comments_tab": "评论"
+      "comments_tab": "评论",
+      "your_rating": "您的评价"
     },
     "comments": {
       "delete": "删除",
@@ -1069,5 +1070,55 @@
     "download_complete": "下载完成",
     "installation_complete": "安装完成"
   },
-  "login": "您需要登录您的帐户。"
+  "login": "您需要登录您的帐户。",
+  "achievements": {
+    "title": "成就",
+    "locked": "未解锁",
+    "unlocked_at": "解锁于 {date}",
+    "login_to_unlock": "您需要登录才能解锁此成就。",
+    "secret_title": "隐藏成就",
+    "secret_description": "继续玩下去以揭开这个秘密！",
+    "list": {
+      "WELCOME": {
+        "title": "欢迎！",
+        "description": "下载并更新 CollapseLoader。"
+      },
+      "PLAYED_1Hour": {
+        "title": "小试牛刀",
+        "description": "累计游玩 1 小时。"
+      },
+      "PLAYED_10Hours": {
+        "title": "持之以恒",
+        "description": "累计游玩 10 小时。"
+      },
+      "FIRST_GAME": {
+        "title": "迈出第一步",
+        "description": "启动您的第一个客户端。"
+      },
+      "SECRET_FINDER": {
+        "title": "秘密发现者",
+        "description": "你发现了一个秘密！"
+      },
+      "SOCIAL_BUTTERFLY": {
+        "title": "社交高手",
+        "description": "在个人资料中添加社交链接。"
+      },
+      "FREQUENT_FLYER": {
+        "title": "常客",
+        "description": "启动客户端 50 次。"
+      },
+      "PRESET_MAX": {
+        "title": "时尚达人",
+        "description": "创建并分享一个自定义预设。"
+      },
+      "BETA_TESTER": {
+        "title": "内测玩家",
+        "description": "加入测试计划。"
+      },
+      "COLLECTOR": {
+        "title": "收藏家",
+        "description": "安装 5 个不同的客户端。"
+      }
+    }
+  }
 }

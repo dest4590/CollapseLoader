@@ -962,13 +962,6 @@ impl Client {
             ));
         }
 
-        cmd.arg("--add-opens")
-            .arg("java.base/jdk.internal.misc=ALL-UNNAMED");
-        cmd.arg("--add-opens").arg("java.base/sun.misc=ALL-UNNAMED");
-        cmd.arg("--add-opens")
-            .arg("java.base/java.lang=ALL-UNNAMED");
-        cmd.arg("--add-opens").arg("java.base/java.io=ALL-UNNAMED");
-
         cmd.arg("-cp").arg(classpath).arg(&self.main_class);
 
         if self.client_type == ClientType::Forge {

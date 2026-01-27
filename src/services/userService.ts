@@ -39,6 +39,7 @@ export interface UserStatus {
     status: string;
     client_name: string | null;
     updated_at: string | null;
+    started_at?: string | null;
 }
 
 export interface ClientUserStatus {
@@ -47,6 +48,7 @@ export interface ClientUserStatus {
     current_client: string | null;
     client_version?: string | null;
     updated_at: string | null;
+    started_at: string | null;
     raw_status: string | null;
 }
 
@@ -69,6 +71,7 @@ export interface FriendRequest {
 export interface FriendRequestsBatch {
     sent: FriendRequest[];
     received: FriendRequest[];
+    blocked: FriendRequest[];
 }
 
 export interface SearchUser {
@@ -183,6 +186,7 @@ class UserService {
             current_client: status?.client_name ?? null,
             last_seen: isOnline ? null : updatedAt,
             updated_at: updatedAt,
+            started_at: status?.started_at ?? null,
             raw_status: raw,
         };
     }
@@ -377,6 +381,7 @@ class UserService {
         const requests: FriendRequestsBatch = {
             sent: (resp.requests?.sent || []).map((r: any) => this.mapFriendRequest(r)),
             received: (resp.requests?.received || []).map((r: any) => this.mapFriendRequest(r)),
+            blocked: (resp.requests?.blocked || []).map((r: any) => this.mapFriendRequest(r)),
         };
 
         return { friends, requests };
@@ -435,7 +440,6 @@ class UserService {
         };
 
         const consider = (r: FriendRequest) => {
-            if (r.status !== 'blocked') return;
             if (meId && r.requester.id === meId) add(r.addressee);
             else if (meId && r.addressee.id === meId) add(r.requester);
             else {
@@ -444,8 +448,7 @@ class UserService {
             }
         };
 
-        batch.requests.sent.forEach(consider);
-        batch.requests.received.forEach(consider);
+        batch.requests.blocked.forEach(consider);
 
         return blocked;
     }

@@ -1260,53 +1260,34 @@ onBeforeUnmount(() => {
                                                       class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
                                                         {{ t('client.details.rating') }}
                                                     </div>
-                                                    <div class="stat-value text-base flex items-center gap-3">
-                                                        <div v-if="canRate" :key="`rating-${myRating}`"
-                                                             class="rating rating-sm">
-                                                            <input type="radio" :name="`rating-input-${client.id}`"
-                                                                   class="rating-hidden"/>
-                                                            <template v-for="i in 5" :key="i">
-                                                                <input type="radio" :name="`rating-input-${client.id}`"
-                                                                       class="mask mask-star-2 bg-warning"
-                                                                       :checked="(myRating ?? 0) === i"
-                                                                       :disabled="isSubmittingRating"
-                                                                       @click="handleRatingClick(i)"/>
-                                                            </template>
-                                                        </div>
-
-                                                        <div>
-                                                            <div v-if="ratingRounded !== null"
-                                                                 class="rating rating-half rating-sm pointer-events-none opacity-80">
-                                                                <input type="radio"
-                                                                       :name="`rating-display-${client.id}`"
-                                                                       class="rating-hidden" disabled/>
+                                                    <div class="stat-value text-base flex flex-col gap-2">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="rating rating-half rating-sm pointer-events-none opacity-80">
+                                                                <input type="radio" :name="`rating-avg-display-${client.id}`" class="rating-hidden" :checked="ratingRounded === null" disabled/>
                                                                 <template v-for="i in 5" :key="i">
-                                                                    <input type="radio"
-                                                                           :name="`rating-display-${client.id}`"
-                                                                           class="mask mask-star-2 mask-half-1 bg-warning"
-                                                                           :checked="ratingRounded === (i - 0.5)"
-                                                                           disabled/>
-                                                                    <input type="radio"
-                                                                           :name="`rating-display-${client.id}`"
-                                                                           class="mask mask-star-2 mask-half-2 bg-warning"
-                                                                           :checked="ratingRounded === i" disabled/>
+                                                                    <input type="radio" :name="`rating-avg-display-${client.id}`" class="mask mask-star-2 mask-half-1 bg-warning" :checked="ratingRounded === (i - 0.5)" disabled/>
+                                                                    <input type="radio" :name="`rating-avg-display-${client.id}`" class="mask mask-star-2 mask-half-2 bg-warning" :checked="ratingRounded === i" disabled/>
                                                                 </template>
                                                             </div>
-                                                            <div v-else
-                                                                 class="text-xs font-medium text-base-content/60">
-                                                                {{ t('client.details.login_to_rate') }}
+                                                            <div class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
+                                                                <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1) }}/5</span>
+                                                                <span v-else>—</span>
+                                                                <span class="text-base-content/50"> ({{ ratingCount }})</span>
                                                             </div>
                                                         </div>
 
-                                                        <div
-                                                          class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
-                                                            <span v-if="ratingAvg !== null">{{
-                                                                    ratingAvg.toFixed(1)
-                                                                }}/5</span>
-                                                            <span v-else>—</span>
-                                                            <span class="text-base-content/50"> ({{
-                                                                    ratingCount
-                                                                }})</span>
+                                                        <div v-if="isAuthenticated" class="flex items-center gap-3">
+                                                            <span class="text-[10px] font-bold uppercase tracking-widest opacity-40">{{ t('client.details.your_rating') }}:</span>
+                                                            <div :key="`my-rating-${myRating}`" class="rating rating-half rating-sm">
+                                                                <input type="radio" :name="`my-rating-input-${client.id}`" class="rating-hidden" :checked="myRating === null" @click="removeRating"/>
+                                                                <template v-for="i in 5" :key="i">
+                                                                    <input type="radio" :name="`my-rating-input-${client.id}`" class="mask mask-star-2 mask-half-1 bg-warning" :checked="myRating === (i - 0.5)" :disabled="isSubmittingRating" @click="handleRatingClick(i - 0.5)"/>
+                                                                    <input type="radio" :name="`my-rating-input-${client.id}`" class="mask mask-star-2 mask-half-2 bg-warning" :checked="myRating === i" :disabled="isSubmittingRating" @click="handleRatingClick(i)"/>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                        <div v-else class="text-xs font-medium text-base-content/60 italic">
+                                                            {{ t('client.details.login_to_rate') }}
                                                         </div>
                                                     </div>
                                                 </div>

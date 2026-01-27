@@ -4,12 +4,13 @@ import { useStreamerMode } from './useStreamerMode';
 
 interface StatusData {
     isOnline: boolean;
-    currentClientName?: string | null;
+    currentClientName: string | null;
     invisibleMode: boolean;
     lastSeen: string | null;
     username: string;
     nickname: string | null;
     lastStatusUpdate: string | null;
+    startedAt: string | null;
 }
 
 
@@ -20,7 +21,8 @@ const globalStatus = reactive<StatusData>({
     lastSeen: null,
     username: '',
     nickname: null,
-    lastStatusUpdate: null
+    lastStatusUpdate: null,
+    startedAt: null
 });
 
 
@@ -70,8 +72,8 @@ export function useUserStatus() {
 
             if (currentRequestId === lastRequestId) {
                 updateLocalStatus(response);
-                console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
-                    globalStatus.currentClientName ? `on client: ${globalStatus.currentClientName}` : '');
+                console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''} `,
+                    globalStatus.currentClientName ? `on client: ${globalStatus.currentClientName} ` : '');
             } else {
                 console.log('Ignoring stale status response');
             }
@@ -103,11 +105,15 @@ export function useUserStatus() {
             globalStatus.lastStatusUpdate = serverResponse.updated_at;
             globalStatus.lastSeen = globalStatus.isOnline ? null : serverResponse.updated_at;
         }
+        if (serverResponse.started_at) {
+            globalStatus.startedAt = serverResponse.started_at;
+        }
 
         const hasChanges = (
             oldStatus.isOnline !== globalStatus.isOnline ||
             oldStatus.currentClientName !== globalStatus.currentClientName ||
-            oldStatus.invisibleMode !== globalStatus.invisibleMode
+            oldStatus.invisibleMode !== globalStatus.invisibleMode ||
+            oldStatus.startedAt !== globalStatus.startedAt
         );
 
         if (hasChanges) {
@@ -136,7 +142,7 @@ export function useUserStatus() {
     };
 
     const setPlayingClient = (clientName?: string | null, shouldQueue: boolean = true) => {
-        console.log(`Setting user playing client name: ${clientName}`);
+        console.log(`Setting user playing client name: ${clientName} `);
         globalStatus.isOnline = true;
         if (clientName !== undefined) globalStatus.currentClientName = clientName ?? null;
         if (shouldQueue) syncStatusToServer(true).catch(error => {
@@ -145,7 +151,7 @@ export function useUserStatus() {
     };
 
     const setInvisibleMode = (enable: boolean, shouldQueue: boolean = true) => {
-        console.log(`Setting invisible mode: ${enable ? 'enabled' : 'disabled'}`);
+        console.log(`Setting invisible mode: ${enable ? 'enabled' : 'disabled'} `);
         globalStatus.invisibleMode = enable;
 
         if (enable) {
@@ -160,7 +166,7 @@ export function useUserStatus() {
     };
 
     const setStreamerMode = (enable: boolean) => {
-        console.log(`Setting streamer mode: ${enable ? 'enabled' : 'disabled'}`);
+        console.log(`Setting streamer mode: ${enable ? 'enabled' : 'disabled'} `);
         streamer.setStreamerMode(enable);
     };
 
