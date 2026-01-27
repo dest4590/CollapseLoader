@@ -281,11 +281,11 @@
     "avatar_reset_failed": "重置头像失败：{error}"
   },
   "roles": {
-    "user": "用户",
-    "tester": "测试员",
-    "admin": "管理员",
-    "developer": "开发者",
-    "owner": "所有者"
+    "USER": "用户",
+    "TESTER": "测试员",
+    "ADMIN": "管理员",
+    "DEVELOPER": "开发者",
+    "OWNER": "所有者"
   },
   "time": {
     "offline": "离线",
@@ -657,6 +657,11 @@
     "account_set_active_failed": "设置活动账户失败：{error}",
     "download_success": "已成功从云端下载！",
     "download_failed": "从云端下载失败：{error}",
+    "sync_accounts_to_cloud_success": "本地账户已成功同步到 Atlas！",
+    "sync_accounts_to_cloud_failed": "本地账户同步到 Atlas 失败：{error}",
+    "sync_accounts_from_cloud_success": "已成功从 Atlas 导入账户！",
+    "sync_accounts_from_cloud_failed": "从 Atlas 导入账户失败：{error}",
+    "load_remote_accounts_failed": "无法加载 Atlas 账户：{error}",
     "load_settings_failed": "加载设置失败：{error}",
     "save_settings_failed": "保存设置失败：{error}",
     "load_accounts_failed": "加载账户失败：{error}",
@@ -725,6 +730,14 @@
     "no_matching_accounts": "未找到匹配的帐户",
     "search_accounts": "搜索账户...",
     "try_different_search": "请尝试调整您的搜索条件或筛选器",
+    "local_account_sync": "本地账户同步",
+    "local_account_sync_description": "将 CollapseLoader 的本地账户与 Atlas 保持同步，以便在其他设备恢复使用。",
+    "sync_accounts_from_cloud_button": "从 Atlas 导入账户",
+    "sync_accounts_to_cloud_button": "上传本地账户",
+    "remote_accounts_loading": "正在检查 Atlas 上的同步账户...",
+    "remote_accounts_present": "Atlas 上有 {count} 个同步账户。",
+    "remote_accounts_more": "还有 {count} 个账户",
+    "remote_accounts_empty": "Atlas 上尚无同步账户。",
     "sync_login_required": "登录以启用同步功能",
     "not_signed_in": "您尚未登录账户"
   },
@@ -761,7 +774,7 @@
     "login_required": "需要登录后才能查看资料",
     "profile_load_failed": "加载用户资料失败",
     "friend_request_sent_success": "已向 {name} 发送好友请求",
-    "friend_request_failed": "发送好友请求失败",
+    "friend_request_failed": "发送好友请求失败: {error}",
     "copy_username": "复制用户名",
     "copied_username": "{name} 已复制到剪贴板",
     "copy_failed": "复制用户名失败",
@@ -793,7 +806,6 @@
     "logs": "应用日志",
     "account": "账户",
     "about": "关于",
-    "admin": "管理面板",
     "news": "新闻",
     "customization": "个性化",
     "custom_clients": "自定义客户端",
@@ -801,66 +813,6 @@
       "title": "提示：",
       "tip": "您可以将侧边栏移动到屏幕的任意一侧。双击侧边栏可移除图标之间的间距。",
       "got_it": "知道了"
-    }
-  },
-  "admin": {
-    "title": "管理面板",
-    "role": "管理员",
-    "stats": {
-      "totalUsers": "用户总数",
-      "onlineUsers": "在线用户",
-      "newToday": "今日新增",
-      "friendships": "活跃好友关系"
-    },
-    "users": {
-      "title": "用户管理",
-      "searchPlaceholder": "按用户名、邮箱或昵称搜索...",
-      "username": "用户名",
-      "email": "邮箱",
-      "status": "状态",
-      "lastSeen": "上次在线",
-      "actions": "操作",
-      "noUsers": "未找到用户。",
-      "adjustSearch": "尝试调整搜索条件。"
-    },
-    "status": {
-      "online": "在线",
-      "offline": "离线",
-      "inactive": "不活跃",
-      "never": "从未"
-    },
-    "actions": {
-      "activate": "激活",
-      "deactivate": "停用",
-      "forceLogout": "强制登出",
-      "edit": "编辑",
-      "ban": "封禁",
-      "unban": "解封",
-      "delete": "删除"
-    },
-    "pagination": {
-      "pageOf": "第 {current} 页，共 {total} 页"
-    },
-    "errors": {
-      "accessDenied": "拒绝访问。需要管理员权限。",
-      "accessCheckFailed": "检查管理员访问权限失败。",
-      "statsLoadFailed": "加载仪表盘统计数据失败。",
-      "usersLoadFailed": "加载用户数据失败。",
-      "actionFailed": "操作失败。请重试。"
-    },
-    "success": {
-      "userStatusChanged": "用户 {username} 的状态已成功更改。",
-      "userLoggedOut": "用户 {username} 已被登出。",
-      "userBanned": "用户 {username} 已被封禁。",
-      "userUnbanned": "用户 {username} 已被解封。",
-      "userUpdated": "用户 {username} 更新成功。",
-      "userDeleted": "用户 {username} 已删除。"
-    },
-    "health": {
-      "title": "状态系统健康",
-      "responseTime": "响应（毫秒）：",
-      "refresh": "健康",
-      "detailed": "详细"
     }
   },
   "toast": {
@@ -882,9 +834,9 @@
     "server": {
       "offline": "无法确定服务器状态。将视为离线。",
       "offline_base": "您当前处于离线状态。",
-      "cdn_and_api_offline": "无法连接到 CDN 和 Web API。",
+      "cdn_and_api_offline": "无法连接到 CDN 和 API。",
       "cdn_offline": "无法连接到 CDN。",
-      "api_offline": "无法连接到 Web API。",
+      "api_offline": "无法连接到 API。",
       "api_init_failed": "初始化 API 失败：{error}"
     },
     "settings": {

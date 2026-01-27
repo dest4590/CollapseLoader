@@ -281,11 +281,11 @@
     "avatar_reset_failed": "Не удалось сбросить аватар: {error}"
   },
   "roles": {
-    "user": "Пользователь",
-    "tester": "Тестер",
-    "admin": "Админ",
-    "developer": "Разработчик",
-    "owner": "Владелец"
+    "USER": "Пользователь",
+    "TESTER": "Тестер",
+    "ADMIN": "Админ",
+    "DEVELOPER": "Разработчик",
+    "OWNER": "Владелец"
   },
   "appLogs": {
     "autoScroll": "Автоматическая прокрутка",
@@ -668,6 +668,11 @@
     "account_set_active_failed": "Не удалось установить активный аккаунт: {error}",
     "download_success": "Успешно скачано из облака!",
     "download_failed": "Скачивание из облака не удалось: {error}",
+    "sync_accounts_to_cloud_success": "Локальные аккаунты успешно синхронизированы с Atlas!",
+    "sync_accounts_to_cloud_failed": "Не удалось синхронизировать локальные аккаунты с Atlas: {error}",
+    "sync_accounts_from_cloud_success": "Аккаунты успешно импортированы из Atlas!",
+    "sync_accounts_from_cloud_failed": "Не удалось импортировать аккаунты из Atlas: {error}",
+    "load_remote_accounts_failed": "Не удалось загрузить аккаунты Atlas: {error}",
     "load_settings_failed": "Не удалось загрузить настройки: {error}",
     "save_settings_failed": "Не удалось сохранить настройки: {error}",
     "load_accounts_failed": "Не удалось загрузить аккаунты: {error}",
@@ -737,6 +742,14 @@
     "no_matching_accounts": "Не найдены соответствующие учетные записи",
     "search_accounts": "Поиск учетных записей...",
     "try_different_search": "Попробуйте изменить параметры поиска или фильтры",
+    "local_account_sync": "Синхронизация локальных аккаунтов",
+    "local_account_sync_description": "Держите локальные аккаунты CollapseLoader синхронизированными с Atlas, чтобы восстановить их на других устройствах.",
+    "sync_accounts_from_cloud_button": "Импортировать аккаунты Atlas",
+    "sync_accounts_to_cloud_button": "Загрузить локальные аккаунты",
+    "remote_accounts_loading": "Проверка аккаунтов на Atlas...",
+    "remote_accounts_present": "На Atlas синхронизировано {count} аккаунтов.",
+    "remote_accounts_more": "и еще {count} аккаунтов",
+    "remote_accounts_empty": "На Atlas еще нет синхронизированных аккаунтов.",
     "sync_login_required": "Войдите, чтобы включить синхронизацию",
     "not_signed_in": "Вы не зашли в аккаунт"
   },
@@ -773,7 +786,7 @@
     "login_required": "Необходимо войти в систему для просмотра профилей",
     "profile_load_failed": "Не удалось загрузить профиль пользователя",
     "friend_request_sent_success": "Запрос в друзья отправлен {name}",
-    "friend_request_failed": "Не удалось отправить запрос в друзья",
+    "friend_request_failed": "Не удалось отправить запрос в друзья: {error}",
     "copy_username": "Копировать имя пользователя",
     "copied_username": "{name} скопировано в буфер обмена",
     "copy_failed": "Не удалось скопировать имя пользователя",
@@ -805,7 +818,6 @@
     "logs": "Логи приложения",
     "account": "Аккаунт",
     "about": "О программе",
-    "admin": "Панель админа",
     "news": "Новости",
     "customization": "Кастомизация",
     "custom_clients": "Свои клиенты",
@@ -834,9 +846,9 @@
     "server": {
       "offline": "Не удалось определить статус сервера. Предполагается офлайн.",
       "offline_base": "Вы сейчас не в сети. ",
-      "cdn_and_api_offline": "Не удается подключиться к CDN и Web API.",
+      "cdn_and_api_offline": "Не удается подключиться к CDN и API.",
       "cdn_offline": "Не удается подключиться к CDN.",
-      "api_offline": "Не удается подключиться к Web API.",
+      "api_offline": "Не удается подключиться к API.",
       "api_init_failed": "Не удалось инициализировать API: {error}"
     },
     "settings": {
@@ -894,66 +906,6 @@
       "analytics_disabled": "Аналитика отключена.",
       "analytics_enable_failed": "Не удалось включить аналитику: {error}",
       "analytics_disable_failed": "Не удалось отключить аналитику: {error}"
-    }
-  },
-  "admin": {
-    "title": "Панель администратора",
-    "role": "АДМИН",
-    "stats": {
-      "totalUsers": "Всего пользователей",
-      "onlineUsers": "Онлайн пользователей",
-      "newToday": "Новых сегодня",
-      "friendships": "Активных дружеских связей"
-    },
-    "users": {
-      "title": "Управление пользователями",
-      "searchPlaceholder": "Поиск по имени, email или никнейку...",
-      "username": "Имя пользователя",
-      "email": "Email",
-      "status": "Статус",
-      "lastSeen": "Последняя активность",
-      "actions": "Действия",
-      "noUsers": "Пользователей не найдено.",
-      "adjustSearch": "Попробуйте настроить поисковый запрос."
-    },
-    "status": {
-      "online": "Онлайн",
-      "offline": "Офлайн",
-      "inactive": "Неактивен",
-      "never": "Никогда"
-    },
-    "actions": {
-      "activate": "Активировать",
-      "deactivate": "Деактивировать",
-      "forceLogout": "Принудительный выход",
-      "edit": "Редактировать",
-      "ban": "Заблокировать",
-      "unban": "Разблокировать",
-      "delete": "Удалить"
-    },
-    "pagination": {
-      "pageOf": "Страница {current} из {total}"
-    },
-    "errors": {
-      "accessDenied": "Доступ запрещен. Требуются права администратора.",
-      "accessCheckFailed": "Не удалось проверить права администратора.",
-      "statsLoadFailed": "Не удалось загрузить статистику.",
-      "usersLoadFailed": "Не удалось загрузить данные пользователей.",
-      "actionFailed": "Действие не выполнено. Пожалуйста, попробуйте еще раз."
-    },
-    "success": {
-      "userStatusChanged": "Статус пользователя {username} успешно изменен.",
-      "userLoggedOut": "Пользователь {username} принудительно выведен из системы.",
-      "userBanned": "Пользователь {username} заблокирован.",
-      "userUnbanned": "Пользователь {username} разблокирован.",
-      "userUpdated": "Пользователь {username} успешно обновлен.",
-      "userDeleted": "Пользователь {username} удален."
-    },
-    "health": {
-      "title": "Статус системы",
-      "responseTime": "Ответ (мс):",
-      "detailed": "Детально",
-      "refresh": "Перезагрузить"
     }
   },
   "discord": {

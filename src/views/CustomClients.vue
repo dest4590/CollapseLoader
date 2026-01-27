@@ -1,23 +1,13 @@
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core';
-import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
-import {
-    Plus,
-    Edit3,
-    Trash2,
-    Play,
-    StopCircle,
-    AlertTriangle,
-    FileText,
-    Calendar,
-    Settings,
-} from 'lucide-vue-next';
+import {invoke} from '@tauri-apps/api/core';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {AlertTriangle, Calendar, Edit3, FileText, Play, Plus, Settings, StopCircle, Trash2,} from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
-import { useToast } from '../services/toastService';
-import { useModal } from '../services/modalService';
-import { useI18n } from 'vue-i18n';
-import { formatDate } from '../utils/utils';
-import type { CustomClient } from '../types/ui';
+import {useToast} from '../services/toastService';
+import {useModal} from '../services/modalService';
+import {useI18n} from 'vue-i18n';
+import {formatDate} from '../utils/utils';
+import type {CustomClient} from '../types/ui';
 import AddCustomClientModal from '../components/modals/clients/AddCustomClientModal.vue';
 import EditCustomClientModal from '../components/modals/clients/EditCustomClientModal.vue';
 import DeleteCustomClientConfirmModal from '../components/modals/clients/DeleteCustomClientConfirmModal.vue';
@@ -51,8 +41,7 @@ const { showModal } = useModal();
 const loadCustomClients = async () => {
     try {
         loading.value = true;
-        const clients = await invoke<CustomClient[]>('get_custom_clients');
-        customClients.value = clients;
+        customClients.value = await invoke<CustomClient[]>('get_custom_clients');
         error.value = '';
     } catch (err) {
         error.value = `Failed to load custom clients: ${err}`;
@@ -64,8 +53,7 @@ const loadCustomClients = async () => {
 
 const checkCustomClientRunningStatus = async () => {
     try {
-        const response = await invoke<number[]>('get_running_custom_client_ids');
-        runningCustomClients.value = response;
+        runningCustomClients.value = await invoke<number[]>('get_running_custom_client_ids');
     } catch (err) {
         console.error('Error checking custom client running status:', err);
     }

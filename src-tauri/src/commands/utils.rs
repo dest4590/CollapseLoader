@@ -4,7 +4,7 @@ use crate::commands::clients::{
     get_running_client_ids, get_running_custom_client_ids, stop_client, stop_custom_client,
 };
 use crate::core::utils::discord_rpc;
-use crate::core::utils::globals::CODENAME;
+use crate::core::utils::globals::{API_VERSION, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
@@ -184,10 +184,15 @@ pub async fn change_data_folder(
 }
 
 #[tauri::command]
-pub async fn get_auth_url() -> Result<String, String> {
+pub async fn get_api_url() -> Result<String, String> {
     SERVERS
-        .get_auth_server_url()
-        .map_or_else(|| Ok("https://auth.collapseloader.org".to_string()), Ok)
+        .get_api_server_url()
+        .map_or_else(|| Ok("https://atlas.collapseloader.org".to_string()), Ok)
+}
+
+#[tauri::command]
+pub fn get_api_version() -> Result<String, String> {
+    Ok(API_VERSION.to_string())
 }
 
 #[tauri::command]

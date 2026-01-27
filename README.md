@@ -64,6 +64,8 @@ For more info, read our [Security Overview](SECURITY.md).
 -   **Windows**: Windows 10 or newer.
 -   **Linux**: A modern Linux system (like Ubuntu 20.04 or newer).
 
+We also have full table of client support [(click here)](https://docs.google.com/spreadsheets/d/1TcMOdRKTSeGfns5WijZjvZBz6HBdwXZlClN0pcPd14k/edit?usp=sharing)
+
 ### Download
 
 Go to [GitHub Releases](https://github.com/dest4590/CollapseLoader/releases) or [collapseloader.org](https://collapseloader.org). Download the file for your system (Windows or Linux).

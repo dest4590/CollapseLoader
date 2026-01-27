@@ -16,10 +16,10 @@
                         <div class="cursor-pointer rounded-box hover:bg-base-300/20 transition-colors p-1 -m-1"
                             @click="openDetails(p)">
                             <h4 class="card-title text-lg">
-                                {{ p.title }}
+                                {{ p.title ?? p.name }}
                             </h4>
                             <p class="text-xs text-base-content/70">
-                                {{ t('marketplace.by_user', { name: p.owner_username }) }}
+                                {{ t('marketplace.by_user', { name: getOwnerName(p) || '' }) }}
                             </p>
                             <p class="text-sm text-base-content/80 line-clamp-3 mt-2" v-if="p.description">{{ p.description }}</p>
                             <div class="mt-2 flex items-center gap-3 text-xs text-base-content/60">
@@ -69,6 +69,7 @@
 import { defineComponent, ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { marketplaceService } from '../../services/marketplaceService';
+import type { MarketplacePreset, MarketplaceTheme } from '../../types/presets';
 import { presetService } from '../../services/presetService';
 import { useUser } from '../../composables/useUser';
 import { useToast } from '../../services/toastService';
@@ -77,6 +78,15 @@ import MarketplaceEditPresetModal from '../modals/social/presets/MarketplaceEdit
 import PresetDetailsModal from '../modals/social/presets/PresetDetailsModal.vue';
 import MarketplaceDeleteConfirmModal from '../modals/social/presets/MarketplaceDeleteConfirmModal.vue';
 import { Download, ThumbsUp } from 'lucide-vue-next';
+import { buildPresetCreatePayload } from '../../utils/presetPayload';
+
+type MarketplacePresetView = MarketplacePreset & {
+    liking?: boolean;
+};
+
+function getThemeValues(preset: MarketplacePreset): MarketplaceTheme {
+    return preset.theme || {};
+}
 
 export default defineComponent({
     name: 'PresetGallery',
@@ -85,7 +95,7 @@ export default defineComponent({
         ownerId: { type: Number, required: false }
     },
     setup(props) {
-        const presets = ref<any[]>([]);
+        const presets = ref<MarketplacePresetView[]>([]);
         const loading = ref(true);
         const search = ref('');
         const { t } = useI18n();
@@ -100,11 +110,7 @@ export default defineComponent({
                 const params: any = {};
                 if (props.ownerId) params.owner = props.ownerId;
                 const data = await marketplaceService.listPresets(params);
-                presets.value = (data || []).map((it: any) => ({
-                    liked_by_user: it.liked_by_user ?? false,
-                    liking: false,
-                    ...it,
-                }));
+                presets.value = data.map((preset) => ({ ...preset, liking: false }));
             } finally {
                 loading.value = false;
             }
@@ -113,110 +119,90 @@ export default defineComponent({
         const filteredPresets = computed(() => {
             const q = search.value.trim().toLowerCase();
             if (!q) return presets.value;
-            return presets.value.filter((p: any) => {
-                const parts = [p.title, p.description, p.owner_username]
+            return presets.value.filter((p) => {
+                const parts = [p.title ?? p.name, p.description, getOwnerName(p)]
                     .filter(Boolean)
-                    .map((v: string) => String(v).toLowerCase());
-                return parts.some((text: string) => text.includes(q));
+                    .map((v) => String(v).toLowerCase());
+                return parts.some((text) => text.includes(q));
             });
         });
 
-        function apply(p: any) {
-            const payload = p.preset_data || p;
+        function getOwnerName(p: MarketplacePreset): string {
+            return p.author?.displayName ?? p.author?.username ?? p.owner_username ?? '';
+        }
+
+        function apply(p: MarketplacePreset) {
+            const theme = getThemeValues(p);
             presetService.applyPresetToTheme({
-                customCSS: payload.custom_css,
-                enableCustomCSS: payload.enable_custom_css,
-                base100: payload.base100,
-                base200: payload.base200,
-                base300: payload.base300,
-                baseContent: payload.base_content,
-                primary: payload.primary,
-                primaryContent: payload.primary_content,
-                secondary: payload.secondary,
-                secondaryContent: payload.secondary_content,
-                accent: payload.accent,
-                accentContent: payload.accent_content,
-                neutral: payload.neutral,
-                neutralContent: payload.neutral_content,
-                info: payload.info,
-                infoContent: payload.info_content,
-                success: payload.success,
-                successContent: payload.success_content,
-                warning: payload.warning,
-                warningContent: payload.warning_content,
-                error: payload.error,
-                errorContent: payload.error_content,
+                customCSS: theme.customCSS ?? '',
+                enableCustomCSS: theme.enableCustomCSS ?? false,
+                base100: theme.base100,
+                base200: theme.base200,
+                base300: theme.base300,
+                baseContent: theme.baseContent,
+                primary: theme.primary,
+                primaryContent: theme.primaryContent,
+                secondary: theme.secondary,
+                secondaryContent: theme.secondaryContent,
+                accent: theme.accent,
+                accentContent: theme.accentContent,
+                neutral: theme.neutral,
+                neutralContent: theme.neutralContent,
+                info: theme.info,
+                infoContent: theme.infoContent,
+                success: theme.success,
+                successContent: theme.successContent,
+                warning: theme.warning,
+                warningContent: theme.warningContent,
+                error: theme.error,
+                errorContent: theme.errorContent,
             } as any);
         }
 
-        async function like(p: any) {
+        async function like(p: MarketplacePresetView) {
             if (!p || p.liking) return;
             p.liking = true;
             try {
-                if (p.liked_by_user) {
+                if (p.liked) {
                     await marketplaceService.unlikePreset(p.id);
                     p.likes_count = Math.max(0, (p.likes_count || 0) - 1);
-                    p.liked_by_user = false;
+                    p.liked = false;
                 } else {
                     await marketplaceService.likePreset(p.id);
                     p.likes_count = (p.likes_count || 0) + 1;
-                    p.liked_by_user = true;
+                    p.liked = true;
                 }
             } catch (e) {
-                console.error("Failed to toggle like preset:", e);
+                console.error('Failed to toggle like preset:', e);
             } finally {
                 p.liking = false;
             }
         }
 
-        async function download(p: any) {
+        async function download(p: MarketplacePreset) {
             try {
-                const payload = p.preset_data || p;
-                const input = {
-                    name: p.title || 'Imported preset',
-                    description: p.description || undefined,
-                    customCSS: payload.custom_css,
-                    enableCustomCSS: payload.enable_custom_css,
-                    base100: payload.base100,
-                    base200: payload.base200,
-                    base300: payload.base300,
-                    baseContent: payload.base_content,
-                    primary: payload.primary,
-                    primaryContent: payload.primary_content,
-                    secondary: payload.secondary,
-                    secondaryContent: payload.secondary_content,
-                    accent: payload.accent,
-                    accentContent: payload.accent_content,
-                    neutral: payload.neutral,
-                    neutralContent: payload.neutral_content,
-                    info: payload.info,
-                    infoContent: payload.info_content,
-                    success: payload.success,
-                    successContent: payload.success_content,
-                    warning: payload.warning,
-                    warningContent: payload.warning_content,
-                    error: payload.error,
-                    errorContent: payload.error_content,
-                } as any;
+                const name = p.title ?? p.name ?? 'Imported preset';
+                const input = buildPresetCreatePayload(name, p.description, getThemeValues(p));
                 await presetService.createPreset(input);
                 addToast(t('theme.presets.messages.import_success'), 'success');
                 try {
                     await marketplaceService.downloadPreset(p.id);
                     p.downloads_count = (p.downloads_count || 0) + 1;
                 } catch (e) {
-                    console.error("Failed to record preset download:", e);
+                    console.error('Failed to record preset download:', e);
                 }
             } catch (e) {
-                console.error("Failed to import preset:", e);
+                console.error('Failed to import preset:', e);
                 addToast(t('theme.presets.messages.import_error'), 'error');
             }
         }
 
-        function isOwner(p: any): boolean {
-            return !!username.value && p.owner_username === username.value;
+        function isOwner(p: MarketplacePreset): boolean {
+            const owner = p.author?.username ?? p.owner_username ?? '';
+            return !!username.value && owner === username.value;
         }
 
-        function openEdit(p: any) {
+        function openEdit(p: MarketplacePreset) {
             const id = `edit-preset-${p.id}`;
             showModal(
                 id,
@@ -232,21 +218,21 @@ export default defineComponent({
             );
         }
 
-        function openDetails(p: any) {
+        function openDetails(p: MarketplacePreset) {
             const id = `preset-details-${p.id}`;
             showModal(
                 id,
                 PresetDetailsModal,
-                { title: t('marketplace.preset_details_title'), contentClass: "wide" },
+                { title: t('marketplace.preset_details_title'), contentClass: 'wide' },
                 { id: p.id, onNavigate: (dir: 'prev' | 'next') => navigateFrom(p.id, dir) },
                 {}
             );
         }
 
-        function navigateFrom(currentId: number, dir: 'prev' | 'next') {
+        function navigateFrom(currentId: number | string, dir: 'prev' | 'next') {
             const list = filteredPresets.value;
-            const idx = list.findIndex((x: any) => x.id === currentId);
-            if (idx === -1) return;
+            const idx = list.findIndex((x) => x.id === currentId);
+            if (idx === -1 || !list.length) return;
             const nextIdx = dir === 'next' ? (idx + 1) % list.length : (idx - 1 + list.length) % list.length;
             const next = list[nextIdx];
             const oldId = `preset-details-${currentId}`;
@@ -255,13 +241,13 @@ export default defineComponent({
             showModal(
                 newId,
                 PresetDetailsModal,
-                { title: t('marketplace.preset_details_title'), contentClass: "wide" },
+                { title: t('marketplace.preset_details_title'), contentClass: 'wide' },
                 { id: next.id, onNavigate: (d: 'prev' | 'next') => navigateFrom(next.id, d) },
                 {}
             );
         }
 
-        async function toggleVisibility(p: any) {
+        async function toggleVisibility(p: MarketplacePreset) {
             const prev = p.is_public;
             p.is_public = !p.is_public;
             try {
@@ -269,11 +255,11 @@ export default defineComponent({
             } catch (e) {
                 p.is_public = prev;
                 addToast(t('marketplace.updated_failed'), 'error');
-                console.error("Failed to update preset visibility:", e);
+                console.error('Failed to update preset visibility:', e);
             }
         }
 
-        function askDelete(p: any) {
+        function askDelete(p: MarketplacePreset) {
             const id = `delete-preset-${p.id}`;
             showModal(
                 id,
@@ -283,7 +269,7 @@ export default defineComponent({
                 {
                     deleted: async () => {
                         const list = presets.value;
-                        presets.value = list.filter(x => x.id !== p.id);
+                        presets.value = list.filter((x) => x.id !== p.id);
                         hideModal(id);
                     },
                 }
@@ -307,7 +293,7 @@ export default defineComponent({
             toggleVisibility,
             askDelete,
             t,
-
+            getOwnerName,
         };
     }
 });

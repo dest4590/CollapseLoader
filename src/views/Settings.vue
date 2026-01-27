@@ -33,6 +33,7 @@ import type { ToastPosition } from '../types/toast';
 import { syncService, type SyncServiceState } from '../services/syncService';
 import { settingsService } from '../services/settingsService';
 import { globalUserStatus } from '../composables/useUserStatus';
+import { userService, type UserExternalAccount } from '../services/userService';
 import SyncStatus from '../components/common/SyncStatus.vue';
 import AddAccountModal from '../components/modals/social/account/AddAccountModal.vue';
 import EditAccountModal from '../components/modals/social/account/EditAccountModal.vue';
@@ -63,6 +64,10 @@ interface Account {
 
 const settings = settingsService.settings;
 const accounts = ref<Account[]>([]);
+const remoteAccounts = ref<UserExternalAccount[]>([]);
+const remoteAccountsLoading = ref(false);
+const isAccountSyncing = ref(false);
+const ACCOUNT_SYNC_PROVIDER = 'collapseloader';
 const activeTab = ref<'general' | 'sync' | 'accounts'>('general');
 const loading = ref(true);
 const isRefreshing = ref(false);
@@ -146,6 +151,7 @@ watch(
     { immediate: true }
 );
 
+
 const loadSettings = async () => {
     try {
         loading.value = true;
@@ -192,6 +198,132 @@ const loadAccounts = async (skipLoading = false) => {
         }
     }
 };
+
+const loadRemoteAccounts = async () => {
+    if (!isAuthenticated.value) {
+        remoteAccounts.value = [];
+        return;
+    }
+
+    remoteAccountsLoading.value = true;
+    try {
+        const fetchedAccounts = await userService.getExternalAccounts();
+        remoteAccounts.value = fetchedAccounts.filter(
+            (account) => account.provider === ACCOUNT_SYNC_PROVIDER
+        );
+    } catch (error) {
+        console.error('Failed to load remote accounts:', error);
+        addToast(t('settings.load_remote_accounts_failed', { error }), 'error');
+    } finally {
+        remoteAccountsLoading.value = false;
+    }
+};
+
+const syncLocalAccountsToCloud = async () => {
+    if (!isAuthenticated.value) {
+        addToast(t('settings.sync_login_required'), 'error');
+        return;
+    }
+
+    isAccountSyncing.value = true;
+    try {
+        const [localAccounts, externalAccounts] = await Promise.all([
+            invoke<Account[]>('get_accounts'),
+            userService.getExternalAccounts(),
+        ]);
+
+        const cloudAccounts = externalAccounts.filter(
+            (account) => account.provider === ACCOUNT_SYNC_PROVIDER
+        );
+        const localUsernames = new Set(localAccounts.map((account) => account.username));
+        const cloudUsernameMap = new Map(
+            cloudAccounts.map((account) => [account.external_id, account])
+        );
+
+        await Promise.allSettled(
+            cloudAccounts
+                .filter((account) => !localUsernames.has(account.external_id))
+                .map((account) => userService.deleteExternalAccount(account.id))
+        );
+
+        for (const localAccount of localAccounts) {
+            if (!cloudUsernameMap.has(localAccount.username)) {
+                try {
+                    await userService.addExternalAccount({
+                        provider: ACCOUNT_SYNC_PROVIDER,
+                        external_id: localAccount.username,
+                        display_name: localAccount.username,
+                        metadata: { tags: localAccount.tags || [] },
+                    });
+                } catch (error) {
+                    console.warn(
+                        'Failed to sync local account to Atlas:',
+                        localAccount.username,
+                        error
+                    );
+                }
+            }
+        }
+
+        addToast(t('settings.sync_accounts_to_cloud_success'), 'success');
+        await loadRemoteAccounts();
+    } catch (error) {
+        console.error('Failed to sync accounts to cloud:', error);
+        addToast(t('settings.sync_accounts_to_cloud_failed', { error }), 'error');
+    } finally {
+        isAccountSyncing.value = false;
+    }
+};
+
+const syncLocalAccountsFromCloud = async () => {
+    if (!isAuthenticated.value) {
+        addToast(t('settings.sync_login_required'), 'error');
+        return;
+    }
+
+    isAccountSyncing.value = true;
+    try {
+        const externalAccounts = await userService.getExternalAccounts();
+        const cloudAccounts = externalAccounts.filter(
+            (account) => account.provider === ACCOUNT_SYNC_PROVIDER
+        );
+
+        if (cloudAccounts.length === 0) {
+            addToast(t('settings.remote_accounts_empty'), 'info');
+            return;
+        }
+
+        const localAccountsData = await invoke<Account[]>('get_accounts');
+        const localUsernames = new Set(localAccountsData.map((account) => account.username));
+
+        for (const cloudAccount of cloudAccounts) {
+            if (!localUsernames.has(cloudAccount.external_id)) {
+                await invoke('add_account', {
+                    username: cloudAccount.external_id,
+                    tags: Array.isArray((cloudAccount.metadata as any)?.tags)
+                        ? (cloudAccount.metadata as any).tags
+                        : ['cloud-sync'],
+                });
+            }
+        }
+
+        addToast(t('settings.sync_accounts_from_cloud_success'), 'success');
+        await loadAccounts();
+    } catch (error) {
+        console.error('Failed to import accounts from cloud:', error);
+        addToast(t('settings.sync_accounts_from_cloud_failed', { error }), 'error');
+    } finally {
+        isAccountSyncing.value = false;
+    }
+};
+
+watch(isAuthenticated, (authenticated) => {
+    if (authenticated) {
+        loadRemoteAccounts();
+    } else {
+        remoteAccounts.value = [];
+    }
+});
 
 const loadFlags = async () => {
     try {
@@ -487,6 +619,9 @@ onMounted(async () => {
     await loadSettings();
     await loadFlags();
     await loadAccounts();
+    if (isAuthenticated.value) {
+        await loadRemoteAccounts();
+    }
 
     try {
         const memoryBytes = await invoke<number>('get_system_memory');
@@ -824,27 +959,104 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 <div v-else key="accounts" class="space-y-6 overflow-x-hidden">
                     <div class="card bg-base-200 shadow-md border border-base-300">
                         <div class="card-body p-4">
-                            <div
-                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h2
+                                class="card-title text-lg font-semibold text-primary-focus flex items-center gap-2">
+                                <User class="w-5 h-5" />
+                                {{ t('settings.accounts_management') }}
+                            </h2>
+                            <p class="text-sm text-base-content/70 mt-1">
+                                {{ t('settings.accounts_description') }}
+                            </p>
+                        </div>
+                        <button @click="showAddAccountDialog" class="btn btn-primary btn-sm">
+                            <Plus class="w-4 h-4 mr-2" />
+                            {{ t('settings.add_account') }}
+                        </button>
+                    </div>
+
+                    <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
+                        <div class="card-body p-4 space-y-4">
+                            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                 <div>
-                                    <h2
-                                        class="card-title text-lg font-semibold text-primary-focus flex items-center gap-2">
-                                        <User class="w-5 h-5" />
-                                        {{ t('settings.accounts_management') }}
-                                    </h2>
+                                    <h3 class="font-semibold text-lg flex items-center gap-2">
+                                        <FolderSync class="w-5 h-5 text-primary" />
+                                        {{ t('settings.local_account_sync') }}
+                                    </h3>
                                     <p class="text-sm text-base-content/70 mt-1">
-                                        {{ t('settings.accounts_description') }}
+                                        {{ t('settings.local_account_sync_description') }}
                                     </p>
                                 </div>
-                                <button @click="showAddAccountDialog" class="btn btn-primary btn-sm">
-                                    <Plus class="w-4 h-4 mr-2" />
-                                    {{ t('settings.add_account') }}
-                                </button>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        class="btn btn-outline btn-sm flex items-center gap-2"
+                                        @click="syncLocalAccountsFromCloud"
+                                        :disabled="isAccountSyncing || !isAuthenticated || remoteAccountsLoading"
+                                    >
+                                        <Download class="w-4 h-4" />
+                                        {{ t('settings.sync_accounts_from_cloud_button') }}
+                                    </button>
+                                    <button
+                                        class="btn btn-primary btn-sm flex items-center gap-2"
+                                        @click="syncLocalAccountsToCloud"
+                                        :disabled="isAccountSyncing || !isAuthenticated || remoteAccountsLoading"
+                                    >
+                                        <Upload class="w-4 h-4" />
+                                        {{ t('settings.sync_accounts_to_cloud_button') }}
+                                    </button>
+                                </div>
                             </div>
+                            <div class="text-sm text-base-content/70 flex items-center gap-2">
+                                <Cloud class="w-4 h-4 text-primary" />
+                                <span>
+                                    <span v-if="isAccountSyncing">{{ t('settings.syncing') }}</span>
+                                    <span v-else-if="remoteAccountsLoading">
+                                        {{ t('settings.remote_accounts_loading') }}
+                                    </span>
+                                    <span v-else-if="remoteAccounts.length > 0">
+                                        {{
+                                            t('settings.remote_accounts_present', {
+                                                count: remoteAccounts.length,
+                                            })
+                                        }}
+                                    </span>
+                                    <span v-else>
+                                        {{ t('settings.remote_accounts_empty') }}
+                                    </span>
+                                </span>
+                            </div>
+                            <ul
+                                v-if="remoteAccounts.length > 0 && !remoteAccountsLoading"
+                                class="text-sm text-base-content/70 space-y-1 pl-3 list-disc"
+                            >
+                                <li
+                                    v-for="account in remoteAccounts.slice(0, 3)"
+                                    :key="account.id"
+                                >
+                                    <span class="font-semibold">{{ account.display_name || account.external_id }}</span>
+                                    <span class="text-xs text-base-content/50 ml-1">
+                                        ({{ account.external_id }})
+                                    </span>
+                                </li>
+                                <li v-if="remoteAccounts.length > 3" class="text-xs text-base-content/50">
+                                    {{ t('settings.remote_accounts_more', { count: remoteAccounts.length - 3 }) }}
+                                </li>
+                            </ul>
+                            <div
+                                v-if="!isAuthenticated"
+                                class="alert alert-warning alert-sm rounded-md border border-base-300 p-3 text-sm flex items-center gap-2"
+                            >
+                                <LogIn class="w-4 h-4" />
+                                {{ t('settings.sync_login_required') }}
+                            </div>
+                        </div>
+                    </div>
 
-                            <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                                <div class="relative flex-1">
-                                    <input v-model="searchQuery" type="text"
+                    <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                        <div class="relative flex-1">
+                            <input v-model="searchQuery" type="text"
                                         :placeholder="t('settings.search_accounts')"
                                         class="input input-bordered input-sm w-full pl-10" />
                                     <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 z-50" />

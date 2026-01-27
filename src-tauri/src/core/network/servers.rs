@@ -1,5 +1,5 @@
 use crate::{
-    core::utils::globals::{AUTH_SERVERS, CDN_SERVERS},
+    core::utils::globals::{API_SERVERS, CDN_SERVERS},
     log_info, log_warn,
 };
 use reqwest::Client;
@@ -17,15 +17,15 @@ pub struct Server {
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ServerConnectivityStatus {
     pub cdn_online: bool,
-    pub auth_online: bool,
+    pub api_online: bool,
 }
 
 #[derive(Debug)]
 pub struct Servers {
     pub cdns: Vec<Server>,
-    pub auths: Vec<Server>,
+    pub apis: Vec<Server>,
     pub selected_cdn: RwLock<Option<Server>>,
-    pub selected_auth: RwLock<Option<Server>>,
+    pub selected_api: RwLock<Option<Server>>,
     pub connectivity_status: Mutex<ServerConnectivityStatus>,
     pub check_complete_tx: watch::Sender<bool>,
     pub check_complete_rx: watch::Receiver<bool>,
@@ -42,7 +42,7 @@ impl Server {
 impl Servers {
     pub fn new() -> Self {
         let cdns = CDN_SERVERS.to_vec();
-        let auths = AUTH_SERVERS.to_vec();
+        let apis = API_SERVERS.to_vec();
 
         let initial_cdn = if std::env::var("FORCE_CDN").is_ok() && !cdns.is_empty() {
             Some(cdns[0].clone())
@@ -50,8 +50,8 @@ impl Servers {
             None
         };
 
-        let initial_auth = if std::env::var("FORCE_AUTH").is_ok() && !auths.is_empty() {
-            Some(auths[0].clone())
+        let initial_api = if std::env::var("FORCE_API").is_ok() && !apis.is_empty() {
+            Some(apis[0].clone())
         } else {
             None
         };
@@ -60,12 +60,12 @@ impl Servers {
 
         Self {
             cdns,
-            auths,
+            apis,
             selected_cdn: RwLock::new(initial_cdn),
-            selected_auth: RwLock::new(initial_auth),
+            selected_api: RwLock::new(initial_api),
             connectivity_status: Mutex::new(ServerConnectivityStatus {
                 cdn_online: false,
-                auth_online: false,
+                api_online: false,
             }),
             check_complete_tx: tx,
             check_complete_rx: rx,
@@ -80,7 +80,21 @@ impl Servers {
 
         tokio::join!(
             self.check_group(&client, &self.cdns, &self.selected_cdn, "CDN"),
-            self.check_group(&client, &self.auths, &self.selected_auth, "Auth")
+            self.check_group(&client, &self.apis, &self.selected_api, "API")
+        );
+
+        log_info!(
+            "Services: API [{}], CDN [{}]",
+            if self.selected_api.read().unwrap().is_some() {
+                "OK"
+            } else {
+                "OFFLINE"
+            },
+            if self.selected_cdn.read().unwrap().is_some() {
+                "OK"
+            } else {
+                "OFFLINE"
+            }
         );
 
         self.set_status();
@@ -106,12 +120,6 @@ impl Servers {
             match client.head(&server.url).send().await {
                 Ok(resp) => {
                     if resp.status().is_success() {
-                        log_info!(
-                            "{} Server {} responded with: {}",
-                            name,
-                            server.url,
-                            resp.status()
-                        );
                         let mut lock = selected.write().unwrap();
                         *lock = Some(server.clone());
                         return;
@@ -137,12 +145,12 @@ impl Servers {
     pub fn set_status(&self) -> ServerConnectivityStatus {
         let mut status = self.connectivity_status.lock().unwrap();
         status.cdn_online = self.selected_cdn.read().unwrap().is_some();
-        status.auth_online = self.selected_auth.read().unwrap().is_some();
+        status.api_online = self.selected_api.read().unwrap().is_some();
         status.clone()
     }
 
-    pub fn get_auth_server_url(&self) -> Option<String> {
-        self.selected_auth
+    pub fn get_api_server_url(&self) -> Option<String> {
+        self.selected_api
             .read()
             .unwrap()
             .as_ref()

@@ -7,19 +7,16 @@ import {
     LogIn,
     User,
     Users,
-    ShieldAlert,
     SlidersVertical,
     UserCog,
 } from 'lucide-vue-next';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useFriends } from '../../composables/useFriends';
-import { useUser } from '../../composables/useUser';
 import { getIsDevelopment } from '../../utils/isDevelopment';
 import { isHalloweenEvent } from '../../utils/events';
 
 const { t } = useI18n();
-const { adminStatus } = useUser();
 const halloweenActive = ref(isHalloweenEvent());
 
 const sidebarHelpVideo = new URL('../../assets/videos/sidebar-help.mp4', import.meta.url).href;
@@ -40,7 +37,6 @@ const altPressCount = ref(0);
 const altPressTimeout = ref<number | null>(null);
 
 const isDev = ref(false);
-const isAdmin = computed(() => adminStatus.value?.is_admin || false);
 
 const { onlineFriendsCount, friendRequests } = useFriends();
 const incomingRequestsCount = computed(() => (friendRequests.value?.received?.length) || 0);
@@ -115,10 +111,11 @@ const onDrag = (event: MouseEvent) => {
 
     const { clientX, clientY } = event;
     const { innerWidth, innerHeight } = window;
+    const titlebarHeight = 40;
 
     const distLeft = clientX;
     const distRight = innerWidth - clientX;
-    const distTop = clientY;
+    const distTop = clientY - titlebarHeight;
     const distBottom = innerHeight - clientY;
 
     const min = Math.min(distLeft, distRight, distTop, distBottom);
@@ -174,13 +171,13 @@ const toggleCenter = (event: MouseEvent) => {
 const currentPosition = computed(() => props.position || 'left');
 
 const sidebarClasses = computed(() => {
-    const base = 'fixed bg-base-300 flex items-center shadow-md border-base-content/10 z-50 transition-all duration-500 ease-in-out active:cursor-grabbing';
+    const base = 'fixed bg-base-300 flex items-center shadow-md border-base-content/10 z-[90] transition-all duration-500 ease-in-out active:cursor-grabbing';
     const pos = currentPosition.value;
 
-    if (pos === 'left') return `${base} w-20 h-screen left-0 top-0 flex-col py-6 border-r`;
-    if (pos === 'right') return `${base} w-20 h-screen right-0 top-0 flex-col py-6 border-l`;
-    if (pos === 'top') return `${base} w-screen h-20 left-0 top-0 flex-row px-6 border-b`;
-    if (pos === 'bottom') return `${base} w-screen h-20 left-0 bottom-0 flex-row px-6 border-t`;
+    if (pos === 'left') return `${base} w-20 left-0 top-10 flex-col py-6 border-r` + ' h-[calc(100vh-2.5rem)]';
+    if (pos === 'right') return `${base} w-20 right-0 top-10 flex-col py-6 border-l` + ' h-[calc(100vh-2.5rem)]';
+    if (pos === 'top') return `${base} w-full h-20 left-0 top-10 flex-row px-6 border-b`;
+    if (pos === 'bottom') return `${base} w-full h-20 left-0 bottom-0 flex-row px-6 border-t`;
     return '';
 });
 
@@ -214,11 +211,11 @@ const animationClass = computed(() => {
 
 const helpTooltipClasses = computed(() => {
     const pos = currentPosition.value;
-    if (pos === 'left') return 'left-24 top-6';
-    if (pos === 'right') return 'right-24 top-6';
-    if (pos === 'top') return 'left-1/2 top-24 transform -translate-x-1/2';
+    if (pos === 'left') return 'left-24 top-16';
+    if (pos === 'right') return 'right-24 top-16';
+    if (pos === 'top') return 'left-1/2 top-32 transform -translate-x-1/2';
     if (pos === 'bottom') return 'left-1/2 bottom-24 transform -translate-x-1/2';
-    return 'left-24 top-6';
+    return 'left-24 top-16';
 });
 
 const sidebarRef = ref<HTMLElement | null>(null);
@@ -282,13 +279,15 @@ onUnmounted(() => {
 
 <template>
     <div v-if="isDragging" class="fixed inset-0 z-40 pointer-events-none">
-        <div class="absolute left-0 top-0 w-20 h-full border-2 border-dashed transition-all duration-200"
+        <div class="absolute left-0 top-10 w-20 border-2 border-dashed transition-all duration-200"
+            style="height: calc(100vh - 2.5rem)"
             :class="[dragTarget === 'left' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
-        <div class="absolute right-0 top-0 w-20 h-full border-2 border-dashed transition-all duration-200"
+        <div class="absolute right-0 top-10 w-20 border-2 border-dashed transition-all duration-200"
+            style="height: calc(100vh - 2.5rem)"
             :class="[dragTarget === 'right' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
-        <div class="absolute left-0 top-0 w-full h-20 border-2 border-dashed transition-all duration-200"
+        <div class="absolute left-0 top-10 w-full h-20 border-2 border-dashed transition-all duration-200"
             :class="[dragTarget === 'top' ? 'border-primary  scale-105 opacity-100' : 'border-base-content/10 scale-100 opacity-50']">
         </div>
         <div class="absolute left-0 bottom-0 w-full h-20 border-2 border-dashed transition-all duration-200"
@@ -309,7 +308,8 @@ onUnmounted(() => {
                 <div class="flex justify-end mt-1 gap-2">
                     <button class="btn btn-ghost btn-xs" @click.stop="hideSidebarHelp">{{
                         t('navigation.sidebar_help.got_it')
-                        }}</button>
+                        }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -388,17 +388,6 @@ onUnmounted(() => {
         </div>
 
         <div :class="footerClasses">
-            <div v-if="isAuthenticated && isAdmin" class="tooltip tooltip-accent" :class="tooltipClass"
-                :data-tip="t('navigation.admin')">
-                <button class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
-                    @click="changeTab('admin')" :class="{
-                        'bg-primary text-primary-content shadow-lg scale-110':
-                            activeTab === 'admin',
-                    }">
-                    <ShieldAlert class="w-5 h-5" />
-                </button>
-            </div>
-
             <div class="tooltip tooltip-accent" :class="tooltipClass" :data-tip="isAuthenticated
                 ? t('navigation.account')
                 : t('auth.login.title')
@@ -434,8 +423,7 @@ onUnmounted(() => {
 
 <style scoped>
 .btn-square {
-    transition:
-        all 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1),
         transform 0.15s ease-out;
     outline: none;
 }
@@ -516,7 +504,6 @@ onUnmounted(() => {
     transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.42s ease;
 }
 
-/* Stagger delays */
 .sidebar-entered .flex>*:nth-child(1) {
     transition-delay: 0.06s;
 }

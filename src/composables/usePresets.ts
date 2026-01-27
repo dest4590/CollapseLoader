@@ -32,6 +32,7 @@ export function usePresets() {
             addToast(t('theme.presets.messages.create_success', { name: preset.name }), 'success');
             return preset;
         } catch (err) {
+            console.log("Failed to create preset:", err);
             const message = err instanceof Error ? err.message : t('theme.presets.messages.create_error');
             error.value = message;
             addToast(message, 'error');

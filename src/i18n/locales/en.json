@@ -281,11 +281,11 @@
     "avatar_reset_failed": "Failed to reset avatar: {error}"
   },
   "roles": {
-    "user": "User",
-    "tester": "Tester",
-    "admin": "Admin",
-    "developer": "Developer",
-    "owner": "Owner"
+    "USER": "User",
+    "TESTER": "Tester",
+    "ADMIN": "Admin",
+    "DEVELOPER": "Developer",
+    "OWNER": "Owner"
   },
   "time": {
     "offline": "Offline",
@@ -649,6 +649,14 @@
     "no_matching_accounts": "No matching accounts found",
     "try_different_search": "Try adjusting your search or filters",
     "reset_tooltip": "Reset to defaults",
+    "local_account_sync": "Local account sync",
+    "local_account_sync_description": "Keep your CollapseLoader accounts synced with Atlas so you can restore them on other devices.",
+    "sync_accounts_from_cloud_button": "Import Atlas accounts",
+    "sync_accounts_to_cloud_button": "Upload local accounts",
+    "remote_accounts_loading": "Checking Atlas for synced accounts...",
+    "remote_accounts_present": "{count} accounts are synced with Atlas.",
+    "remote_accounts_more": "and {count} more saved on Atlas",
+    "remote_accounts_empty": "No accounts synced to Atlas yet.",
     "sync_status": "Cloud Sync Status",
     "sync_controls": "Sync Controls",
     "upload_title": "Upload to Cloud",
@@ -673,6 +681,11 @@
     "account_set_active_failed": "Failed to set active account: {error}",
     "download_success": "Downloaded from cloud successfully!",
     "download_failed": "Download from cloud failed: {error}",
+    "sync_accounts_to_cloud_success": "Local accounts synced to Atlas successfully!",
+    "sync_accounts_to_cloud_failed": "Failed to sync local accounts to Atlas: {error}",
+    "sync_accounts_from_cloud_success": "Imported accounts from Atlas successfully!",
+    "sync_accounts_from_cloud_failed": "Failed to import accounts from Atlas: {error}",
+    "load_remote_accounts_failed": "Failed to load Atlas accounts: {error}",
     "load_settings_failed": "Failed to load settings: {error}",
     "save_settings_failed": "Failed to save settings: {error}",
     "load_accounts_failed": "Failed to load accounts: {error}",
@@ -773,7 +786,7 @@
     "login_required": "You need to be logged in to view profiles",
     "profile_load_failed": "Failed to load user profile",
     "friend_request_sent_success": "Friend request sent to {name}",
-    "friend_request_failed": "Failed to send friend request",
+    "friend_request_failed": "Failed to send friend request: {error}",
     "copy_username": "Copy username",
     "copied_username": "{name} copied to clipboard",
     "copy_failed": "Failed to copy username",
@@ -805,7 +818,6 @@
     "logs": "Application Logs",
     "account": "Account",
     "about": "About",
-    "admin": "Admin Panel",
     "news": "News",
     "customization": "Customization",
     "custom_clients": "Custom Clients",
@@ -813,66 +825,6 @@
       "title": "Tip:",
       "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",
       "got_it": "Got it"
-    }
-  },
-  "admin": {
-    "title": "Administration Panel",
-    "role": "ADMIN",
-    "stats": {
-      "totalUsers": "Total Users",
-      "onlineUsers": "Online Users",
-      "newToday": "New Today",
-      "friendships": "Active Friendships"
-    },
-    "users": {
-      "title": "Users Management",
-      "searchPlaceholder": "Search by username, email or nickname...",
-      "username": "Username",
-      "email": "Email",
-      "status": "Status",
-      "lastSeen": "Last Seen",
-      "actions": "Actions",
-      "noUsers": "No users found.",
-      "adjustSearch": "Try adjusting your search query."
-    },
-    "status": {
-      "online": "Online",
-      "offline": "Offline",
-      "inactive": "Inactive",
-      "never": "Never"
-    },
-    "actions": {
-      "activate": "Activate",
-      "deactivate": "Deactivate",
-      "forceLogout": "Force Logout",
-      "edit": "Edit",
-      "ban": "Ban",
-      "unban": "Unban",
-      "delete": "Delete"
-    },
-    "pagination": {
-      "pageOf": "Page {current} of {total}"
-    },
-    "errors": {
-      "accessDenied": "Access denied. Admin privileges required.",
-      "accessCheckFailed": "Failed to check admin access.",
-      "statsLoadFailed": "Failed to load dashboard statistics.",
-      "usersLoadFailed": "Failed to load users data.",
-      "actionFailed": "Action failed. Please try again."
-    },
-    "success": {
-      "userStatusChanged": "User {username} status changed successfully.",
-      "userLoggedOut": "User {username} has been logged out.",
-      "userBanned": "User {username} has been banned.",
-      "userUnbanned": "User {username} has been unbanned.",
-      "userUpdated": "User {username} updated successfully.",
-      "userDeleted": "User {username} deleted."
-    },
-    "health": {
-      "title": "Status System Health",
-      "responseTime": "Response (ms):",
-      "refresh": "Health",
-      "detailed": "Detailed"
     }
   },
   "toast": {
@@ -894,9 +846,9 @@
     "server": {
       "offline": "Could not determine server status. Assuming offline.",
       "offline_base": "You are currently offline. ",
-      "cdn_and_api_offline": "Cannot connect to CDN and Web API.",
+      "cdn_and_api_offline": "Cannot connect to CDN and API.",
       "cdn_offline": "Cannot connect to CDN.",
-      "api_offline": "Cannot connect to Web API.",
+      "api_offline": "Cannot connect to API.",
       "api_init_failed": "Failed to initialize API: {error}"
     },
     "settings": {

@@ -1,4 +1,4 @@
-use crate::core::error::StartupError;
+use crate::core::platform::error::StartupError;
 use winreg::{enums::HKEY_CURRENT_USER, enums::HKEY_LOCAL_MACHINE, RegKey};
 
 fn is_webview2_installed() -> bool {

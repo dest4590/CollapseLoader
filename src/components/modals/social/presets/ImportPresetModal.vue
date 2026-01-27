@@ -69,10 +69,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { Upload, FileText } from 'lucide-vue-next';
-import { usePresets } from '../../../../composables/usePresets';
+import {computed, ref, watch} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {FileText, Upload} from 'lucide-vue-next';
+import {usePresets} from '../../../../composables/usePresets';
 
 const { t } = useI18n();
 
@@ -109,8 +109,7 @@ const handleFileChange = async (event: Event) => {
 
     try {
         const text = await file.text();
-        const data = JSON.parse(text);
-        previewData.value = data;
+        previewData.value = JSON.parse(text);
         error.value = '';
     } catch (e) {
         console.error('Failed to parse preset file:', e);
@@ -139,7 +138,8 @@ const importPreset = async () => {
     try {
         importing.value = true;
 
-        let jsonData = '';
+        let jsonData;
+
         if (importMethod.value === 'file' && previewData.value) {
             jsonData = JSON.stringify(previewData.value);
         } else {

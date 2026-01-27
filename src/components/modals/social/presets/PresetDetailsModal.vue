@@ -7,10 +7,9 @@
         <div v-else-if="preset" class="space-y-4">
             <div class="flex items-start justify-between gap-4 sticky top-0 bg-base-200 z-10 py-2 -mt-2">
                 <div class="flex-1 min-w-0">
-                    <h2 class="text-xl font-semibold truncate">{{ preset.title }}</h2>
+                    <h2 class="text-xl font-semibold truncate">{{ preset.title ?? preset.name }}</h2>
                     <p class="text-xs text-base-content/60 truncate">{{ t('marketplace.by_user', {
-                        name:
-                            preset.owner_username
+                        name: ownerDisplayName
                     }) }}</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -167,6 +166,8 @@ import { useToast } from '../../../../services/toastService';
 import { useModal } from '../../../../services/modalService';
 import MarketplaceEditPresetModal from '../presets/MarketplaceEditPresetModal.vue';
 import MarketplaceDeleteConfirmModal from '../presets/MarketplaceDeleteConfirmModal.vue';
+import { buildPresetCreatePayload } from '../../../../utils/presetPayload';
+import type { MarketplacePreset, MarketplaceTheme } from '../../../../types/presets';
 
 const props = defineProps<{ id: number; onNavigate?: (dir: 'prev' | 'next') => void }>();
 const emit = defineEmits(['close']);
@@ -177,7 +178,7 @@ const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 
 const loading = ref(false);
-const preset = ref<any | null>(null);
+const preset = ref<MarketplacePreset | null>(null);
 const comments = ref<any[]>([]);
 const commentsLoading = ref(false);
 const newComment = ref('');
@@ -185,42 +186,52 @@ const creating = ref(false);
 const downloading = ref(false);
 const toggling = ref(false);
 
-const isOwner = computed(() => !!username.value && preset.value && preset.value.owner_username === username.value);
+const ownerDisplayName = computed(() => {
+    const author = preset.value?.author;
+    return author?.displayName ?? author?.username ?? preset.value?.owner_username ?? '';
+});
 
-const pData = computed(() => ({
-    base100: preset.value?.preset_data?.base100 ?? preset.value?.base100,
-    base200: preset.value?.preset_data?.base200 ?? preset.value?.base200,
-    base300: preset.value?.preset_data?.base300 ?? preset.value?.base300,
-    base_content: preset.value?.preset_data?.base_content ?? preset.value?.base_content,
-    primary: preset.value?.preset_data?.primary ?? preset.value?.primary,
-    primary_content: preset.value?.preset_data?.primary_content ?? preset.value?.primary_content,
-    secondary: preset.value?.preset_data?.secondary ?? preset.value?.secondary,
-    secondary_content: preset.value?.preset_data?.secondary_content ?? preset.value?.secondary_content,
-    accent: preset.value?.preset_data?.accent ?? preset.value?.accent,
-    accent_content: preset.value?.preset_data?.accent_content ?? preset.value?.accent_content,
-    neutral: preset.value?.preset_data?.neutral ?? preset.value?.neutral,
-    neutral_content: preset.value?.preset_data?.neutral_content ?? preset.value?.neutral_content,
-    info: preset.value?.preset_data?.info ?? preset.value?.info,
-    info_content: preset.value?.preset_data?.info_content ?? preset.value?.info_content,
-    success: preset.value?.preset_data?.success ?? preset.value?.success,
-    success_content: preset.value?.preset_data?.success_content ?? preset.value?.success_content,
-    warning: preset.value?.preset_data?.warning ?? preset.value?.warning,
-    warning_content: preset.value?.preset_data?.warning_content ?? preset.value?.warning_content,
-    error: preset.value?.preset_data?.error ?? preset.value?.error,
-    error_content: preset.value?.preset_data?.error_content ?? preset.value?.error_content,
-} as Record<string, any>));
+const isOwner = computed(() => {
+    if (!username.value || !preset.value) return false;
+    const owner = preset.value.author?.username ?? preset.value.owner_username ?? '';
+    return owner === username.value;
+});
+
+const themeSource = computed<MarketplaceTheme>(() => {
+    return (preset.value?.theme ?? preset.value?.preset_data ?? {}) as MarketplaceTheme;
+});
+
+const pData = computed(() => themeSource.value as Record<string, any>);
 
 const displayedColors = computed(() => {
-    const pd = preset.value?.preset_data ?? {};
-    const keys = [
-        'base100', 'base200', 'base300', 'base_content',
-        'primary_content', 'secondary', 'secondary_content', 'accent', 'accent_content',
-        'neutral', 'neutral_content', 'info', 'info_content',
-        'success', 'success_content', 'warning', 'warning_content', 'error', 'error_content'
+    const pd = themeSource.value;
+    const keys: Array<keyof MarketplaceTheme> = [
+        'base100',
+        'base200',
+        'base300',
+        'baseContent',
+        'primary',
+        'primaryContent',
+        'secondary',
+        'secondaryContent',
+        'accent',
+        'accentContent',
+        'neutral',
+        'neutralContent',
+        'info',
+        'infoContent',
+        'success',
+        'successContent',
+        'warning',
+        'warningContent',
+        'error',
+        'errorContent',
     ];
-    console.log(pd);
 
-    return keys.filter(k => pd[k] !== undefined && pd[k] !== null && pd[k] !== '');
+    return keys.filter((k) => {
+        const value = pd[k];
+        return value !== undefined && value !== null && value !== '';
+    });
 });
 
 async function copyColor(key: string) {
@@ -240,14 +251,15 @@ async function copyColor(key: string) {
 }
 
 function canDelete(c: any): boolean {
-    return !!username.value && (c.author_username === username.value || (preset.value && preset.value.owner_username === username.value));
+    const owner = preset.value?.author?.username ?? preset.value?.owner_username;
+    return !!username.value && (c.author_username === username.value || owner === username.value);
 }
 
 async function loadPreset() {
     loading.value = true;
     try {
         const data = await marketplaceService.getPreset(props.id);
-        preset.value = { liking: false, liked_by_user: data?.liked_by_user ?? false, ...data };
+        preset.value = data ? { ...data, liking: false } : null;
     } finally {
         loading.value = false;
     }
@@ -285,32 +297,32 @@ async function onDeleteComment(c: any) {
 }
 
 function applyFromDetails() {
-    const p: any = preset.value;
+    const p = preset.value;
     if (!p) return;
-    const payload = p.preset_data || p;
+    const theme = themeSource.value;
     presetService.applyPresetToTheme({
-        customCSS: payload.custom_css,
-        enableCustomCSS: payload.enable_custom_css,
-        base100: payload.base100,
-        base200: payload.base200,
-        base300: payload.base300,
-        baseContent: payload.base_content,
-        primary: payload.primary,
-        primaryContent: payload.primary_content,
-        secondary: payload.secondary,
-        secondaryContent: payload.secondary_content,
-        accent: payload.accent,
-        accentContent: payload.accent_content,
-        neutral: payload.neutral,
-        neutralContent: payload.neutral_content,
-        info: payload.info,
-        infoContent: payload.info_content,
-        success: payload.success,
-        successContent: payload.success_content,
-        warning: payload.warning,
-        warningContent: payload.warning_content,
-        error: payload.error,
-        errorContent: payload.error_content,
+        customCSS: theme.customCSS ?? '',
+        enableCustomCSS: theme.enableCustomCSS ?? false,
+        base100: theme.base100,
+        base200: theme.base200,
+        base300: theme.base300,
+        baseContent: theme.baseContent,
+        primary: theme.primary,
+        primaryContent: theme.primaryContent,
+        secondary: theme.secondary,
+        secondaryContent: theme.secondaryContent,
+        accent: theme.accent,
+        accentContent: theme.accentContent,
+        neutral: theme.neutral,
+        neutralContent: theme.neutralContent,
+        info: theme.info,
+        infoContent: theme.infoContent,
+        success: theme.success,
+        successContent: theme.successContent,
+        warning: theme.warning,
+        warningContent: theme.warningContent,
+        error: theme.error,
+        errorContent: theme.errorContent,
     } as any);
 }
 
@@ -319,14 +331,14 @@ async function likeFromDetails() {
     if (preset.value.liking) return;
     preset.value.liking = true;
     try {
-        if (preset.value.liked_by_user) {
+        if (preset.value.liked) {
             await marketplaceService.unlikePreset(preset.value.id);
             preset.value.likes_count = Math.max(0, (preset.value.likes_count || 0) - 1);
-            preset.value.liked_by_user = false;
+            preset.value.liked = false;
         } else {
             await marketplaceService.likePreset(preset.value.id);
             preset.value.likes_count = (preset.value.likes_count || 0) + 1;
-            preset.value.liked_by_user = true;
+            preset.value.liked = true;
         }
     } catch (e) {
         console.error('Failed to toggle like preset:', e);
@@ -341,38 +353,15 @@ async function downloadFromDetails() {
         downloading.value = true;
         const p: any = preset.value;
         if (!p) return;
-        const payload = p.preset_data || p;
-        const input: any = {
-            name: p.title || 'Imported preset',
-            description: p.description || undefined,
-            customCSS: payload.custom_css,
-            enableCustomCSS: payload.enable_custom_css,
-            primary: payload.primary,
-            base100: payload.base100,
-            base200: payload.base200,
-            base300: payload.base300,
-            baseContent: payload.base_content,
-            primaryContent: payload.primary_content,
-            secondary: payload.secondary,
-            secondaryContent: payload.secondary_content,
-            accent: payload.accent,
-            accentContent: payload.accent_content,
-            neutral: payload.neutral,
-            neutralContent: payload.neutral_content,
-            info: payload.info,
-            infoContent: payload.info_content,
-            success: payload.success,
-            successContent: payload.success_content,
-            warning: payload.warning,
-            warningContent: payload.warning_content,
-            error: payload.error,
-            errorContent: payload.error_content,
-        };
+        const name = p.title ?? p.name ?? 'Imported preset';
+        const input = buildPresetCreatePayload(name, p.description || undefined, themeSource.value);
         await presetService.createPreset(input);
         addToast(t('theme.presets.messages.import_success'), 'success');
         try {
             await marketplaceService.downloadPreset(p.id);
-            preset.value.downloads_count = (preset.value.downloads_count || 0) + 1;
+            if (preset.value) {
+                preset.value.downloads_count = (preset.value.downloads_count || 0) + 1;
+            }
         } catch (e) {
             console.error('Failed to record download:', e);
         }

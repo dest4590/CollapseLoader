@@ -16,7 +16,8 @@
                 "width": 900,
                 "height": 500,
                 "minHeight": 400,
-                "minWidth": 750
+                "minWidth": 750,
+                "decorations": false
             }
         ],
         "security": {
@@ -34,5 +35,14 @@
             "icons/icon.icns",
             "icons/icon.ico"
         ]
+    },
+    "plugins": {
+        "deep-link": {
+            "desktop": {
+                "schemes": [
+                    "collapseloader"
+                ]
+            }
+        }
     }
 }

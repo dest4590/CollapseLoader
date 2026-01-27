@@ -98,6 +98,14 @@ fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
     }
 }
 
+fn truncate_str(s: &str, max: usize) -> String {
+    if s.len() <= max {
+        s.to_string()
+    } else {
+        format!("{}...<truncated {} chars>", &s[..max], s.len() - max)
+    }
+}
+
 #[tauri::command]
 pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     let current_version = env!("CARGO_PKG_VERSION");
@@ -155,7 +163,6 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     }
 
     let latest_version = release.tag_name.trim_start_matches('v');
-    log_info!("Latest stable version found: {}", latest_version);
 
     let is_newer = match compare_versions(current_version, latest_version) {
         Ok(Ordering::Less) => true,
@@ -167,9 +174,9 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     };
 
     if is_newer {
-        log_info!("A new version is available: {}", latest_version);
+        log_info!("A new version is available: {}", release.tag_name);
     } else {
-        log_info!("Application is up to date.");
+        log_info!("Update check complete: Up to date ({})", release.tag_name);
     }
 
     let download_url = if cfg!(target_os = "windows") {
@@ -193,12 +200,25 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         String::new()
     };
 
-    let (parsed_changelog, parsed_translations) = extract_changelog_json_block(&release.body)
-        .and_then(|content| parse_changelog_and_translations(&content).ok())
-        .unwrap_or_else(|| {
-            log_warn!("No valid changelog JSON block found in release notes");
+    let (parsed_changelog, parsed_translations) = match extract_changelog_json_block(&release.body)
+    {
+        None => {
+            log_warn!(
+                "No changelog JSON block found in release notes. Release body (truncated): {}",
+                truncate_str(&release.body, 512)
+            );
             Default::default()
-        });
+        }
+        Some(content) => {
+            match parse_changelog_and_translations(&content) {
+                Ok((changelog, translations)) => (changelog, translations),
+                Err(e) => {
+                    log_warn!("Changelog block found but failed to parse: {}. Block content (truncated): {}", e, truncate_str(&content, 512));
+                    Default::default()
+                }
+            }
+        }
+    };
 
     let is_critical = release.body.to_lowercase().contains("security")
         || release.body.to_lowercase().contains("critical");
@@ -364,7 +384,6 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     } else if let Some(idx) = body.find("``` changelog") {
         (idx, "``` changelog")
     } else {
-        log_debug!("No changelog JSON block marker found in release body.");
         return None;
     };
 
@@ -378,10 +397,10 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     if let Some(closing_rel) = rest.find("```") {
         let closing_idx = content_start + closing_rel;
         let content = &body[content_start..closing_idx];
+
         return Some(content.trim().to_string());
     }
 
-    log_warn!("Found changelog block marker but no closing '```'.");
     None
 }
 
@@ -396,22 +415,54 @@ fn parse_changelog_and_translations(
         return Ok((vec![entry], None));
     }
 
-    let root: JsonValue = serde_json::from_str(content)
-        .map_err(|e| format!("Failed to parse changelog JSON root: {e}"))?;
+    let root: JsonValue = serde_json::from_str(content).map_err(|e| {
+        log_warn!(
+            "Failed to parse changelog JSON root: {}. Content (truncated): {}",
+            e,
+            truncate_str(content, 512)
+        );
+        format!("Failed to parse changelog JSON root: {e}")
+    })?;
 
     if root.is_object() {
         let entries_val = root.get("entries");
         let translations_val = root.get("translations").cloned();
 
         if let Some(ev) = entries_val {
-            let entries_json = serde_json::to_string(ev)
-                .map_err(|e| format!("Failed to serialize entries node: {e}"))?;
-            let entries: Vec<ChangelogEntry> = serde_json::from_str(&entries_json)
-                .map_err(|e| format!("Failed to parse entries array: {e}"))?;
+            let entries_json = serde_json::to_string(ev).map_err(|e| {
+                log_warn!(
+                    "Failed to serialize entries node: {}. entries node (truncated): {}",
+                    e,
+                    truncate_str(&ev.to_string(), 512)
+                );
+                format!("Failed to serialize entries node: {e}")
+            })?;
+            let entries: Vec<ChangelogEntry> =
+                serde_json::from_str(&entries_json).map_err(|e| {
+                    log_warn!(
+                        "Failed to parse entries array: {}. entries json (truncated): {}",
+                        e,
+                        truncate_str(&entries_json, 512)
+                    );
+                    format!("Failed to parse entries array: {e}")
+                })?;
             return Ok((entries, translations_val));
+        } else {
+            log_warn!(
+                "Changelog JSON root object does not contain 'entries' key. Root (truncated): {}",
+                truncate_str(&root.to_string(), 512)
+            );
         }
+    } else {
+        log_warn!(
+            "Changelog JSON root is not an object. Root (truncated): {}",
+            truncate_str(&root.to_string(), 512)
+        );
     }
 
-    log_warn!("Changelog JSON is not in a recognized format.");
+    log_warn!(
+        "Changelog JSON is not in a recognized format. Content (truncated): {}",
+        truncate_str(content, 512)
+    );
     Err("Changelog JSON is not in a recognized format".to_string())
 }

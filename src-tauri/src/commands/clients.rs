@@ -3,13 +3,15 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use tauri::{AppHandle, State};
 
 use crate::core::{
     clients::custom_clients::CustomClient,
     network::analytics::Analytics,
     storage::{custom_clients::CustomClientUpdate, data::Data},
-    utils::globals::SKIP_AGENT_OVERLAY_VERIFICATION,
+    utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
@@ -20,7 +22,7 @@ use crate::core::{
     utils::{discord_rpc, hashing::calculate_md5_hash, logging},
 };
 use crate::{
-    commands::utils::get_auth_url,
+    commands::utils::get_api_url,
     core::{
         clients::client::ClientType,
         network::servers::{ServerConnectivityStatus, SERVERS},
@@ -62,15 +64,24 @@ pub fn get_app_logs() -> Vec<String> {
 
 #[tauri::command]
 pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
-    let clients = ClientManager::fetch_clients()
-        .await
-        .map_err(|e| e.to_string())?;
+    let clients = ClientManager::fetch_clients().await.map_err(|e| {
+        log_error!("Failed to fetch clients: {}", e);
+        e.to_string()
+    })?;
+
+    if clients.is_empty() {
+        log_warn!("Fetched client list is empty - this may indicate an API or network issue");
+        return Err("Fetched client list is empty".to_string());
+    }
+
     let mut manager = state
         .clients
         .manager
         .lock()
         .map_err(|_| "Failed to lock state".to_string())?;
+
     manager.clients = clients;
+
     Ok(())
 }
 
@@ -101,6 +112,39 @@ pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
         .unwrap_or_default()
 }
 
+#[derive(Deserialize)]
+struct ApiResponse<T> {
+    success: bool,
+    data: T,
+    #[serde(default)]
+    error: Option<String>,
+    #[serde(default)]
+    #[allow(dead_code)]
+    timestamp: Option<i64>,
+}
+
+async fn extract_api_data<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, String> {
+    if !response.status().is_success() {
+        return Err(format!("API returned error: {}", response.status()));
+    }
+
+    let ApiResponse {
+        success,
+        data,
+        error,
+        ..
+    } = response
+        .json::<ApiResponse<T>>()
+        .await
+        .map_err(|e| format!("Failed to parse API response: {e}"))?;
+
+    if !success {
+        return Err(error.unwrap_or_else(|| "API returned unsuccessful response".to_string()));
+    }
+
+    Ok(data)
+}
+
 #[tauri::command]
 pub async fn launch_client(
     id: u32,
@@ -108,9 +152,7 @@ pub async fn launch_client(
     app_handle: AppHandle,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    log_info!("Attempting to launch client with ID: {}", id);
     let client = get_client_by_id(id, &state.clients.manager)?;
-    log_debug!("Found client '{}' for launch", client.name);
 
     let filename_for_if = if client.filename.contains("fabric/") {
         client.filename.replace("fabric/", "")
@@ -152,11 +194,6 @@ pub async fn launch_client(
             client.name
         ));
     }
-    log_debug!(
-        "Client '{}' found at path: {}",
-        client.name,
-        jar_path.display()
-    );
 
     let hash_verify_enabled = {
         let settings = SETTINGS
@@ -164,6 +201,28 @@ pub async fn launch_client(
             .map_err(|_| "Failed to access settings".to_string())?;
         settings.hash_verify.value
     };
+
+    log_info!(
+        "Launching '{}' (ID: {}, Play Count: {})...",
+        client.name,
+        id,
+        client.launches
+    );
+
+    log_debug!(
+        "Resolution: Path='{}', HashCheck={}, OverlayCheck={}",
+        jar_path.display(),
+        if hash_verify_enabled {
+            "Enabled"
+        } else {
+            "Disabled"
+        },
+        if *SKIP_AGENT_OVERLAY_VERIFICATION {
+            "Skip"
+        } else {
+            "Run"
+        }
+    );
 
     if hash_verify_enabled {
         log_info!("Hash verification is enabled for client '{}'", client.name);
@@ -253,7 +312,6 @@ pub async fn launch_client(
         );
     }
 
-    log_info!("Verifying agent and overlay files before launch");
     match AgentOverlayManager::verify_agent_overlay_files().await {
         Ok(true) => {}
         Ok(false) => {
@@ -263,7 +321,7 @@ pub async fn launch_client(
                     .await
                     .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
             } else {
-                log_warn!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
+                log_debug!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
             }
         }
         Err(e) => {
@@ -273,7 +331,6 @@ pub async fn launch_client(
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
 
-    log_info!("Executing client run for '{}'", client.name);
     client.run(options, state.clients.manager.clone()).await
 }
 
@@ -507,8 +564,9 @@ pub async fn delete_client(id: u32, state: State<'_, AppState>) -> Result<(), St
 #[tauri::command]
 pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
     log_debug!("Fetching details for client ID: {}", client_id);
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/client/{client_id}/detailed");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/detailed");
     log_debug!("Requesting client details from URL: {}", url);
 
     let client = reqwest::Client::new();
@@ -553,21 +611,9 @@ pub fn increment_client_counter(
         match counter_type.as_str() {
             "download" => {
                 client.downloads += 1;
-                log_info!(
-                    "Incremented download counter for client {} (ID: {}). New count: {}",
-                    client.name,
-                    id,
-                    client.downloads
-                );
             }
             "launch" => {
                 client.launches += 1;
-                log_info!(
-                    "Incremented launch counter for client {} (ID: {}). New count: {}",
-                    client.name,
-                    id,
-                    client.launches
-                );
             }
             _ => {
                 return Err(format!("Invalid counter type: {counter_type}"));
@@ -747,8 +793,9 @@ pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(
 #[tauri::command]
 pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, String> {
     log_debug!("Fetching comments for client ID: {}", client_id);
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/clients/{client_id}/comments/");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
 
     let client = reqwest::Client::new();
     let response = client.get(&url).send().await.map_err(|e| {
@@ -756,16 +803,7 @@ pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, St
         format!("Failed to fetch client comments: {e}")
     })?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let comments: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse client comments: {e}"))?;
-
-    Ok(comments)
+    extract_api_data(response).await
 }
 
 #[tauri::command]
@@ -774,28 +812,20 @@ pub async fn add_client_comment(
     content: String,
     user_token: String,
 ) -> Result<serde_json::Value, String> {
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/clients/{client_id}/comments/");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
 
     let client = reqwest::Client::new();
     let response = client
         .post(&url)
-        .header("Authorization", format!("Token {}", user_token))
+        .header("Authorization", format!("Bearer {}", user_token))
         .json(&serde_json::json!({ "content": content }))
         .send()
         .await
         .map_err(|e| format!("Failed to add comment: {e}"))?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let comment: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
-
-    Ok(comment)
+    extract_api_data(response).await
 }
 
 #[tauri::command]
@@ -804,20 +834,19 @@ pub async fn delete_client_comment(
     comment_id: u32,
     user_token: String,
 ) -> Result<(), String> {
-    let api_url = get_auth_url().await?;
-    let url = format!("{api_url}api/clients/{client_id}/comments/{comment_id}/");
+    let api_url = get_api_url().await?;
+    let base = api_url.trim_end_matches('/').to_string();
+    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/{comment_id}");
 
     let client = reqwest::Client::new();
     let response = client
         .delete(&url)
-        .header("Authorization", format!("Token {}", user_token))
+        .header("Authorization", format!("Bearer {}", user_token))
         .send()
         .await
         .map_err(|e| format!("Failed to delete comment: {e}"))?;
 
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    Ok(())
+    extract_api_data::<serde_json::Value>(response)
+        .await
+        .map(|_| ())
 }

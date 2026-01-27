@@ -87,22 +87,22 @@ export function useStreamerMode() {
         return () => listeners.delete(cb);
     }
 
-    function getDisplayName(nickname?: string, username?: string, fallback = 'User'): string {
+    function getDisplayName(nickname?: string | null, username?: string | null, fallback = 'User'): string {
         const name = nickname || username || fallback;
         return isStreamerModeEnabled.value ? maskName(name) : name;
     }
 
-    function getDisplayUsername(username?: string): string {
+    function getDisplayUsername(username?: string | null): string {
         const value = username || 'user';
         return isStreamerModeEnabled.value ? maskUsername(value) : value;
     }
 
-    function getDisplayEmail(email?: string): string {
+    function getDisplayEmail(email?: string | null): string {
         const value = email || '';
         return isStreamerModeEnabled.value ? maskEmail(value) : value;
     }
 
-    function maskIfEnabled(value?: string, masker: (v?: string) => string = maskString): string {
+    function maskIfEnabled(value?: string | null, masker: (v?: string | null) => string = maskString): string {
         return isStreamerModeEnabled.value ? masker(value) : (value || '');
     }
 

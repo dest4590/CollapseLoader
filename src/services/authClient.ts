@@ -6,7 +6,4 @@ export const apiPut = apiClient.put.bind(apiClient);
 export const apiPatch = apiClient.patch.bind(apiClient);
 export const apiDelete = apiClient.delete.bind(apiClient);
 
-export const apiBatchGet = apiClient.batchGet.bind(apiClient);
-export const apiPreload = apiClient.preloadCriticalData.bind(apiClient);
-
 export default apiClient;

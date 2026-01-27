@@ -37,8 +37,9 @@ import { ref } from 'vue';
 import { useToast } from '../../../services/toastService';
 import { userService } from '../../../services/userService';
 import { useI18n } from 'vue-i18n';
-import { apiPost } from '../../../services/authClient';
+import { apiPost } from '../../../services/apiClient';
 import { getCurrentLanguage } from '../../../i18n';
+import { getApiBaseWithVersion } from '../../../config';
 
 interface Props {
     showCancelButton?: boolean;
@@ -60,6 +61,23 @@ const password = ref('');
 const confirmPassword = ref('');
 const isRegistering = ref(false);
 
+const extractAuthToken = (payload: any): string | null => {
+    if (!payload) return null;
+    const candidate =
+        payload.token ||
+        payload.auth_token ||
+        payload.access_token ||
+        payload.accessToken ||
+        payload?.tokens?.token ||
+        payload?.tokens?.access_token ||
+        payload?.tokens?.accessToken ||
+        payload?.data?.token ||
+        payload?.data?.auth_token ||
+        payload?.data?.access_token ||
+        payload?.data?.accessToken;
+    return typeof candidate === 'string' && candidate.length > 0 ? candidate : null;
+};
+
 const handleRegister = async () => {
     if (password.value !== confirmPassword.value) {
         addToast(t('validation.passwords_no_match'), 'error');
@@ -79,10 +97,9 @@ const handleRegister = async () => {
         isRegistering.value = true;
 
         await apiPost(
-            '/auth/users/',
+            `${getApiBaseWithVersion()}/auth/register`,
             {
                 username: username.value,
-                email: email.value,
                 password: password.value,
             },
             {
@@ -95,7 +112,7 @@ const handleRegister = async () => {
 
         try {
             const loginResponse = await apiPost(
-                '/auth/token/login/',
+                `${getApiBaseWithVersion()}/auth/login`,
                 {
                     username: username.value,
                     password: password.value,
@@ -108,7 +125,7 @@ const handleRegister = async () => {
                 }
             );
 
-            const authToken = loginResponse.data?.auth_token || loginResponse.data?.token || loginResponse.auth_token || loginResponse.token;
+            const authToken = extractAuthToken(loginResponse);
 
             if (authToken) {
                 localStorage.setItem('authToken', authToken);
@@ -142,6 +159,8 @@ const handleRegister = async () => {
                 errorMessage = errors.join(' ');
             } else if (typeof errors === 'string') {
                 errorMessage = errors;
+            } else if (errors.error) {
+                errorMessage = errors.error;
             } else if (errors.detail) {
                 errorMessage = errors.detail;
             }

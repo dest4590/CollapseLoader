@@ -1,20 +1,20 @@
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { bootLogService } from '../services/bootLogService';
-import { applyThemeOnStartup, applyLanguageOnStartup } from '../utils/settings';
-import { applyCursorForEvent, isHalloweenEvent } from '../utils/events';
-import { useToast } from '../services/toastService';
-import { globalUserStatus } from './useUserStatus';
-import { useUser } from './useUser';
-import { globalFriends } from './useFriends';
-import { updaterService } from '../services/updaterService';
-import { syncService } from '../services/syncService';
-import { getCurrentLanguage } from '../i18n';
-import { useModal } from '../services/modalService';
+import {ref} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {invoke} from '@tauri-apps/api/core';
+import {listen} from '@tauri-apps/api/event';
+import {bootLogService} from '../services/bootLogService';
+import {applyLanguageOnStartup, applyThemeOnStartup} from '../utils/settings';
+import {applyCursorForEvent, isHalloweenEvent} from '../utils/events';
+import {useToast} from '../services/toastService';
+import {globalUserStatus} from './useUserStatus';
+import {useUser} from './useUser';
+import {globalFriends} from './useFriends';
+import {updaterService} from '../services/updaterService';
+import {syncService} from '../services/syncService';
+import {getCurrentLanguage} from '../i18n';
+import {useModal} from '../services/modalService';
 import ClientCrashModal from '../components/modals/clients/ClientCrashModal.vue';
-import { apiGet } from '../services/apiClient';
+import {apiGet} from '../services/apiClient';
 
 interface Flags {
     disclaimer_shown: { value: boolean };
@@ -45,6 +45,7 @@ export function useAppInit() {
     const showInitialDisclaimer = ref(false);
     const halloweenActive = ref(isHalloweenEvent());
     const currentTheme = ref('dark');
+    const apiInitialized = ref(false);
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
         if (!isAuthenticated || !isOnline.value) return;
@@ -68,10 +69,9 @@ export function useAppInit() {
                 },
             });
             const allNews = response as any[];
-            let filteredNews = allNews.filter(
+            news.value = allNews.filter(
                 (article: any) => article.language === currentLanguage
             );
-            news.value = filteredNews;
 
             const getNewsUniqueId = (article: any) =>
                 `news_${article.language}_${article.id}`;
@@ -118,7 +118,7 @@ export function useAppInit() {
 
         bootLogService.eventListenersInit();
 
-        listen('client-crashed', (event) => {
+        await listen('client-crashed', (event) => {
             const payload = event.payload as {
                 id: number;
                 name: string;
@@ -133,7 +133,7 @@ export function useAppInit() {
             );
         });
 
-        listen('client-crash-details', (event) => {
+        await listen('client-crash-details', (event) => {
             const payload = event.payload as {
                 id: number;
                 name: string;
@@ -164,22 +164,25 @@ export function useAppInit() {
         try {
             bootLogService.serverConnectivityCheck();
             const connectivity = await invoke<{
-                cdn_online: boolean;
-                auth_online: boolean;
+                cdn_online?: boolean;
+                api_online?: boolean;
+                auth_online?: boolean;
             }>('get_server_connectivity_status');
-            isOnline.value = connectivity.cdn_online && connectivity.auth_online;
+            const cdnOnline = connectivity.cdn_online ?? false;
+            const apiOnline = connectivity.api_online ?? connectivity.auth_online ?? false;
+            isOnline.value = Boolean(cdnOnline && apiOnline);
 
-            if (connectivity.cdn_online) bootLogService.cdnOnline();
+            if (cdnOnline) bootLogService.cdnOnline();
             else bootLogService.cdnOffline();
 
-            if (connectivity.auth_online) bootLogService.webApiOnline();
+            if (apiOnline) bootLogService.webApiOnline();
             else bootLogService.webApiOffline();
 
             if (!isOnline.value) {
                 let offlineMessage = t('toast.server.offline_base');
-                if (!connectivity.cdn_online && !connectivity.auth_online) {
+                if (!cdnOnline && !apiOnline) {
                     offlineMessage += t('toast.server.cdn_and_api_offline');
-                } else if (!connectivity.cdn_online) {
+                } else if (!cdnOnline) {
                     offlineMessage += t('toast.server.cdn_offline');
                 } else {
                     offlineMessage += t('toast.server.api_offline');
@@ -199,6 +202,7 @@ export function useAppInit() {
         try {
             bootLogService.apiInit();
             await invoke('initialize_api');
+            apiInitialized.value = true;
             bootLogService.apiInitSuccess();
         } catch (error) {
             console.error('Failed to initialize API:', error);
@@ -246,13 +250,10 @@ export function useAppInit() {
                 bootLogService.flagsLoadFailed();
             });
 
-        const newsTask = fetchNewsAndUpdateUnreadCount(news, unreadNewsCount).catch(
-            (error) => {
-                console.error('Failed to load news on startup:', error);
-            }
-        );
 
-        await Promise.allSettled([flagsTask, newsTask]);
+        fetchNewsAndUpdateUnreadCount(news, unreadNewsCount).catch(console.error);
+
+        await flagsTask;
 
         updaterService.startPeriodicCheck(t);
 
@@ -300,6 +301,7 @@ export function useAppInit() {
         showInitialDisclaimer,
         halloweenActive,
         currentTheme,
+        apiInitialized,
         initApp,
         initializeUserDataWrapper
     };

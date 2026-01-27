@@ -15,7 +15,6 @@ use tokio::{
     sync::Semaphore,
 };
 
-use crate::core::network::analytics::Analytics;
 use crate::core::storage::{
     accounts::ACCOUNT_MANAGER,
     data::{Data, DATA},
@@ -39,6 +38,10 @@ use crate::core::{
 };
 use crate::core::{clients::log_checker::LogChecker, utils::globals::NATIVES_LINUX_FOLDER};
 use crate::core::{clients::manager::ClientManager, utils::globals::LIBRARIES_FABRIC_ZIP};
+use crate::core::{
+    network::analytics::Analytics,
+    utils::globals::{NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP},
+};
 use crate::{log_debug, log_error, log_info, log_warn};
 
 pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
@@ -130,6 +133,7 @@ fn add_log_line(client_id: u32, line: String) {
 pub struct Meta {
     pub is_new: bool,
     pub is_fabric: bool,
+    pub is_forge: bool,
     pub asset_index: String,
     pub installed: bool,
     pub is_custom: bool,
@@ -146,6 +150,7 @@ impl Meta {
         let asset_index = format!("{}.{}", semver.major, semver.minor);
         let is_new_version = semver.minor >= 16;
         let is_fabric = *client_type == ClientType::Fabric || filename.contains("fabric/");
+        let is_forge = *client_type == ClientType::Forge || filename.contains("forge/");
 
         let jar_path = match client_type {
             ClientType::Fabric | ClientType::Forge => {
@@ -185,6 +190,7 @@ impl Meta {
             installed: jar_path.exists(),
             is_custom: false,
             is_fabric,
+            is_forge,
             size: 0,
         }
     }
@@ -224,7 +230,7 @@ pub struct Client {
     #[serde(default = "default_meta")]
     pub meta: Meta,
     #[serde(default)]
-    pub requirement_mods: Option<Vec<Requirement>>,
+    pub dependencies: Option<Vec<Requirement>>,
     #[serde(default)]
     pub client_type: ClientType,
     #[serde(default = "default_created_at")]
@@ -242,6 +248,7 @@ const fn default_meta() -> Meta {
     Meta {
         is_new: false,
         is_fabric: false,
+        is_forge: false,
         asset_index: String::new(),
         installed: false,
         is_custom: false,
@@ -350,6 +357,11 @@ impl Client {
             .unwrap_or_default();
 
         process::filter_running(clients, |client| &client.filename)
+    }
+
+    pub fn get_client_folder(&self) -> Result<PathBuf, String> {
+        let (folder, _) = self.get_launch_paths()?;
+        Ok(folder)
     }
 
     pub fn stop(&self) -> Result<(), String> {
@@ -465,7 +477,7 @@ impl Client {
             return Ok(());
         }
 
-        if let Some(mods) = &self.requirement_mods {
+        if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
             let mods_folder_abs = DATA.root_dir.join(&client_base).join(MODS_FOLDER);
@@ -562,8 +574,6 @@ impl Client {
                 if !path.exists() {
                     log_info!("Folder '{}' missing. Queuing {} for download.", folder, zip);
                     files_to_download.push(zip.to_string());
-                } else {
-                    log_debug!("Skipping integrity verification for '{}'.", folder);
                 }
                 return;
             }
@@ -605,7 +615,11 @@ impl Client {
                 check_and_queue(libs_folder, libs_zip);
 
                 let (actual_natives_zip, actual_natives_folder) = if IS_LINUX {
-                    (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
+                    if self.is_legacy_client() {
+                        (NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_LINUX_FOLDER)
+                    } else {
+                        (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
+                    }
                 } else {
                     (natives_zip, natives_folder)
                 };
@@ -649,9 +663,11 @@ impl Client {
                 );
                 DATA.download_to_folder(&remote, MINECRAFT_VERSIONS_FOLDER)
                     .await?;
-            } else {
-                log_debug!("MC jar already present: {}", local_path.display());
             }
+        }
+
+        if self.client_type == ClientType::Fabric {
+            self.download_fabric_mods().await?;
         }
 
         Ok(())
@@ -696,11 +712,27 @@ impl Client {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let java_path = self.java_executable_path();
-            if java_path.exists() {
-                if let Ok(mut perms) = std::fs::metadata(&java_path).map(|m| m.permissions()) {
-                    perms.set_mode(0o755);
-                    let _ = std::fs::set_permissions(&java_path, perms);
+            let bin_dir = DATA.root_dir.join(self.jdk_folder_name()).join("bin");
+            if bin_dir.exists() {
+                if let Ok(entries) = std::fs::read_dir(&bin_dir) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_file() {
+                            if let Ok(mut perms) = std::fs::metadata(&path).map(|m| m.permissions())
+                            {
+                                perms.set_mode(0o755);
+                                if let Err(e) = std::fs::set_permissions(&path, perms) {
+                                    log_warn!(
+                                        "Failed to set exec perm on {}: {}",
+                                        path.display(),
+                                        e
+                                    );
+                                } else {
+                                    log_debug!("Set exec perm on {}", path.display());
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -718,7 +750,7 @@ impl Client {
             LIBRARIES_FABRIC_FOLDER,
             sanitize_version_for_paths(&self.version)
         );
-        let versioned_dir = DATA.root_dir.join(&versioned_zip.replace(".zip", ""));
+        let versioned_dir = DATA.root_dir.join(versioned_zip.replace(".zip", ""));
 
         if !dir_has_any_jars(&versioned_dir, false) {
             log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);
@@ -837,15 +869,12 @@ impl Client {
         };
 
         let natives_path = if self.is_legacy_client() {
-            DATA.root_dir.join(format!(
-                "{}{}",
-                NATIVES_FOLDER,
-                if IS_LINUX {
-                    LINUX_SUFFIX
-                } else {
-                    LEGACY_SUFFIX
-                }
-            ))
+            if IS_LINUX {
+                DATA.root_dir.join(NATIVES_LEGACY_LINUX_FOLDER)
+            } else {
+                DATA.root_dir
+                    .join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
+            }
         } else if self.meta.is_new {
             DATA.root_dir.join(format!(
                 "{}{}",
@@ -909,7 +938,7 @@ impl Client {
         cmd.arg("-Xverify:none");
 
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
-        if !IS_LINUX && self.client_type != ClientType::Forge && !is_legacy_vanilla {
+        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(
                 "-javaagent:{}={}",
                 agent_overlay_path.join(AGENT_FILE).display(),
@@ -932,6 +961,13 @@ impl Client {
                 agent_overlay_path.display()
             ));
         }
+
+        cmd.arg("--add-opens")
+            .arg("java.base/jdk.internal.misc=ALL-UNNAMED");
+        cmd.arg("--add-opens").arg("java.base/sun.misc=ALL-UNNAMED");
+        cmd.arg("--add-opens")
+            .arg("java.base/java.lang=ALL-UNNAMED");
+        cmd.arg("--add-opens").arg("java.base/java.io=ALL-UNNAMED");
 
         cmd.arg("-cp").arg(classpath).arg(&self.main_class);
 
@@ -966,6 +1002,21 @@ impl Client {
         let mut child = cmd
             .spawn()
             .map_err(|e| format!("Failed to spawn process: {e}"))?;
+
+        let mut secure_command = format!("{cmd:#?}");
+
+        if let Some(start) = secure_command.find("-javaagent:") {
+            if let Some(end) = secure_command[start..].find(" -") {
+                let actual_end = start + end;
+                secure_command.replace_range(start..actual_end, "-javaagent:[HIDDEN]");
+            } else if let Some(end) = secure_command[start..].find("\"") {
+                let actual_end = start + end;
+                secure_command.replace_range(start..actual_end, "-javaagent:[HIDDEN]");
+            }
+        }
+
+        add_log_line(client_id, secure_command);
+
         let self_clone = self.clone();
 
         emit_to_main_window(

@@ -8,8 +8,8 @@
             </label>
             <input v-model="nicknameInput" type="text" :placeholder="$t('modals.edit_nickname.placeholder')"
                 class="input input-bordered w-full bg-base-100" maxlength="100" @keyup.enter="updateNickname" />
-            <label class="label">
-                <span class="label-text-alt text-base-content/70 mt-2">{{
+            <label class="label mt-2">
+                <span class="label-text-alt text-base-content/70">{{
                     $t('modals.edit_nickname.description')
                     }}</span>
             </label>
@@ -32,7 +32,7 @@
 import { ref } from 'vue';
 import { useToast } from '../../../../services/toastService';
 import { Check as CheckIcon, X as XIcon } from 'lucide-vue-next';
-import { apiPatch } from '../../../../services/authClient';
+import { apiPatch } from '../../../../services/apiClient';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
@@ -48,13 +48,13 @@ const nicknameInput = ref(props.currentNickname);
 const updateNickname = async () => {
     try {
         await apiPatch(
-            '/auth/profile/',
+            '/users/me/profile',
             {
                 nickname: nicknameInput.value,
             },
             {
                 headers: {
-                    Authorization: `Token ${localStorage.getItem('authToken')}`,
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
                 },
             }
         );

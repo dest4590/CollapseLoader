@@ -54,7 +54,7 @@ const selectFile = async () => {
             }]
         });
 
-        if (selected && typeof selected === 'string') {
+        if (selected) {
             form.filePath = selected;
             const pathParts = selected.split(/[/\\]/);
             form.fileName = pathParts[pathParts.length - 1];
@@ -169,7 +169,7 @@ const handleSubmit = async () => {
                 {{ $t('common.cancel') }}
             </button>
             <button type="submit" class="btn btn-primary" :disabled="loading">
-                <div v-if="loading" class="loading loading-spinner loading-sm"></div>
+                <span v-if="loading" class="loading loading-spinner loading-sm"></span>
                 {{ loading ? $t('modals.add_custom_client_modal.adding') : $t('modals.add_custom_client_modal.add_client') }}
             </button>
         </div>

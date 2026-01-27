@@ -3,12 +3,11 @@ use crate::core::clients::manager::ClientManager;
 use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
+use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
 
-use crate::core::{
-    error::StartupError, platform::check_platform_dependencies, utils::globals::CODENAME,
-};
+use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
 
 #[cfg(target_os = "linux")]
 use crate::core::platform::check_webkit_environment;
@@ -20,7 +19,9 @@ use tauri::async_runtime::spawn;
 pub mod commands;
 pub mod core;
 
+use self::core::platform::error::StartupError;
 pub use crate::core::state::AppState;
+use crate::core::utils::helpers::emit_to_main_window;
 pub use crate::core::utils::logging;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
@@ -62,12 +63,48 @@ pub fn handle_startup_error(error: &StartupError) {
 #[cfg(not(target_os = "windows"))]
 pub fn handle_startup_error(error: &StartupError) {
     #[cfg(target_os = "linux")]
-    if let StartupError::LinuxWebKitWarning = error {
+    if matches!(
+        error,
+        StartupError::LinuxWebKitWarning | StartupError::LinuxWebKitWaylandWarning
+    ) {
         error.show_warning();
         return;
     }
 
     error.show_and_exit();
+}
+
+fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.set_focus();
+    }
+
+    log_debug!("Handling deep link URL: {}", url);
+
+    if !should_handle_deep_link(&url) {
+        log_debug!("Deep link already handled, skipping: {}", url);
+        return;
+    }
+
+    if let Some(client_name) = url.split("client=").nth(1) {
+        let client_name = client_name.split('&').next().unwrap_or("");
+        log_debug!("Launching client from deep link: {}", client_name);
+        emit_to_main_window(app, "launch-client", client_name);
+    }
+}
+
+fn should_handle_deep_link(url: &str) -> bool {
+    static LAST_HANDLED_URL: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+    let last_url = LAST_HANDLED_URL.get_or_init(|| Mutex::new(None));
+    let mut guard = last_url.lock().unwrap();
+    let normalized = url.trim().to_string();
+
+    if guard.as_ref() == Some(&normalized) {
+        return false;
+    }
+
+    *guard = Some(normalized);
+    true
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -78,6 +115,12 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if args.len() > 1 {
+                handle_deep_link_url(app, args[1].clone());
+            }
+        }))
         .manage(AppState::new(Arc::new(
             Mutex::new(ClientManager::default()),
         )))
@@ -101,7 +144,90 @@ pub fn run() {
             commands::clients::delete_client,
             commands::clients::increment_client_counter,
             commands::clients::get_custom_clients,
-            commands::clients::add_custom_client,
+            commands::clients::add_custom_client,package org.collapseloader.atlas.domain.presets.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.collapseloader.atlas.domain.users.entity.User;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(
+        name = "presets",
+        indexes = {
+                @Index(name = "presets_owner_idx", columnList = "owner_id"),
+                @Index(name = "presets_public_idx", columnList = "is_public"),
+                @Index(name = "presets_created_idx", columnList = "created_at")
+        }
+)
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Preset {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "owner_id", nullable = false)
+    @ToString.Exclude
+    private User owner;
+
+    @Column(name = "name", nullable = false, length = 120)
+    private String name;
+
+    @Column(length = 2048)
+    private String description;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic = true;
+
+    @Embedded
+    private PresetTheme theme;
+
+    @Column(name = "likes_count", nullable = false)
+    private long likesCount;
+
+    @Column(name = "downloads_count", nullable = false)
+    private long downloadsCount;
+
+    @Column(name = "comments_count", nullable = false)
+    private long commentsCount;
+
+    @OneToMany(mappedBy = "preset", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @Builder.Default
+    private List<PresetLike> likes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "preset", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @Builder.Default
+    private List<PresetComment> comments = new ArrayList<>();
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @PrePersist
+    private void ensureTheme() {
+        if (theme == null) {
+            theme = new PresetTheme();
+        }
+    }
+}
+
             commands::clients::remove_custom_client,
             commands::clients::update_custom_client,
             commands::clients::launch_custom_client,
@@ -142,7 +268,8 @@ pub fn run() {
             commands::settings::get_system_memory,
             commands::utils::get_version,
             commands::utils::is_development,
-            commands::utils::get_auth_url,
+            commands::utils::get_api_url,
+            commands::utils::get_api_version,
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::get_data_folder,
@@ -158,6 +285,26 @@ pub fn run() {
             commands::irc::send_irc_message,
         ])
         .setup(|app| {
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let handle = app.handle().clone();
+                app.deep_link().on_open_url(move |event| {
+                    handle_deep_link_url(&handle, event.urls()[0].to_string());
+                });
+                app.deep_link().register_all()?;
+            }
+
+            let args: Vec<String> = std::env::args().collect();
+            if let Some(url) = args.iter().find(|a| a.starts_with("collapseloader://")) {
+                let handle = app.handle().clone();
+                let url_clone = url.clone();
+                spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+                    handle_deep_link_url(&handle, url_clone);
+                });
+            }
+
             let app_handle = app.handle();
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 

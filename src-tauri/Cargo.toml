@@ -17,13 +17,15 @@ tauri-build = { version = "2.5.3", features = [] }
 tauri = { version = "2.9.5", features = ["devtools"] }
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-notification = "2.3.3"
+tauri-plugin-deep-link = "2.4.6"
+tauri-plugin-single-instance = { version = "2.3.7", features = ["deep-link"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 colored = "3.1.1"
 rand = "0.9.2"
 reqwest = { version = "0.13.1", features = ["blocking", "json", "stream"] }
 semver = "1.0.27"
-zip = "7.1.0"
+zip = "7.2.0"
 tokio = { version = "1.49.0", features = ["macros", "process"] }
 opener = "0.8.3"
 uuid = { version = "1.19.0", features = ["v4"] }
@@ -41,11 +43,18 @@ thiserror = "2.0.18"
 native-dialog = "0.9.4"
 sysinfo = "0.37.2"
 socket2 = "0.6.1"
-sha2 = "0.10.9"
+sha2 = "0.11.0-rc.3"
 
 [target.'cfg(windows)'.dependencies]
 winreg = { version = "0.55.0" }
 windows = { version = "0.62.2", features = ["Win32_UI_HiDpi"] }
 
 [profile.dev]
+incremental = true
 opt-level = 0
+debug = 1
+split-debuginfo = "unpacked"
+codegen-units = 256
+
+[profile.dev.package."*"]
+opt-level = 2

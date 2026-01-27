@@ -21,25 +21,30 @@
                                         </button>
                                     </h2>
                                 </div>
+
                                 <p class="text-base-content/70 text-sm mt-1">
-                                    @{{ userInfo.username || 'username' }}
+                                    @{{ username }}
                                 </p>
-                                <p class="text-base-content/60 text-xs mt-1">
-                                    <button class="btn btn-ghost btn-sm p-0" @click="toggleShowEmail"
-                                        :disabled="isLoadingFromCache">
-                                        {{ showEmail ? (userInfo.email || t('account.no_email')) : (maskedEmail ||
+
+                                <p class="text-base-content/60 text-xs mt-1 flex items-center gap-2">
+                                    <button class="btn btn-ghost btn-sm p-0 h-auto min-h-0 font-normal"
+                                        @click="toggleShowEmail">
+                                        {{ showEmail ? (email || t('account.no_email')) : (maskedEmail ||
                                             t('account.no_email')) }}
                                     </button>
+                                    <component :is="showEmail ? EyeOffIcon : EyeIcon"
+                                        class="w-3 h-3 cursor-pointer opacity-50" @click="toggleShowEmail" />
                                 </p>
+
                                 <div class="flex items-center mt-3 text-sm">
                                     <div class="badge" :class="invisibleMode ? 'badge-secondary' : 'badge-success'">
                                         {{ invisibleMode ? t('time.offline') : t('time.online') }}
                                     </div>
+
                                     <span>
                                         <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
                                             t('account.social_links') }}</button>
                                     </span>
-
                                 </div>
                             </div>
                         </div>
@@ -102,7 +107,7 @@
                         </h2>
                         <form @submit.prevent="handleChangePassword">
                             <div class="form-control mb-4">
-                                <label class="label">
+                                <label class="label mb-2">
                                     <span class="label-text">{{ t('account.current_password') }}</span>
                                 </label>
                                 <input v-model="currentPassword" type="password" autocomplete="current-password"
@@ -111,7 +116,7 @@
                                     :disabled="isLoadingFromCache" />
                             </div>
                             <div class="form-control mb-4">
-                                <label class="label">
+                                <label class="label mb-2">
                                     <span class="label-text">{{ t('account.new_password') }}</span>
                                 </label>
                                 <input v-model="newPassword" type="password" autocomplete="new-password"
@@ -119,8 +124,8 @@
                                     class="input input-bordered w-full bg-base-100" required
                                     :disabled="isLoadingFromCache" />
                             </div>
-                            <div class="form-control mb-6">
-                                <label class="label">
+                            <div class="form-control mb-4">
+                                <label class="label mb-2">
                                     <span class="label-text">{{ t('account.confirm_password') }}</span>
                                 </label>
                                 <input v-model="confirmNewPassword" type="password" autocomplete="new-password"
@@ -156,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { useI18n } from 'vue-i18n';
@@ -164,16 +169,14 @@ import EditNicknameModal from '../components/modals/social/account/EditNicknameM
 import SocialLinksModal from '../components/modals/social/account/SocialLinksModal.vue';
 import ChangePasswordConfirmModal from '../components/modals/social/account/ChangePasswordConfirmModal.vue';
 import LogoutConfirmModal from '../components/modals/social/account/LogoutConfirmModal.vue';
-import UserAvatar from '../components/ui/UserAvatar.vue';
 import AvatarUploadModal from '../components/modals/social/account/AvatarUploadModal.vue';
-import { userService } from '../services/userService';
-import { syncService, type SyncServiceState } from '../services/syncService';
-import { EditIcon } from 'lucide-vue-next';
-import { apiPost } from '../services/authClient';
-import { getCurrentLanguage } from '../i18n';
-import { globalUserStatus } from '../composables/useUserStatus';
+import UserAvatar from '../components/ui/UserAvatar.vue';
 import { useUser } from '../composables/useUser';
+import { userService } from '../services/userService';
+import { EditIcon, EyeIcon, EyeOffIcon } from 'lucide-vue-next';
 import getRoleBadge from '../utils/roleBadge';
+import { globalUserStatus } from '../composables/useUserStatus';
+import { syncService, SyncServiceState } from '../services/syncService';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -189,7 +192,9 @@ const {
     username,
     email,
     nickname: userNickname,
-    isLoading: isLoadingUserData,
+    isLoading: isLoadingFromCache,
+    isAuthenticated,
+    refreshUserData,
     updateUserProfile: updateGlobalUserProfile,
     logout
 } = useUser();
@@ -231,8 +236,6 @@ const roleBadge = computed(() => {
     return getRoleBadge(userInfo.value.role, (k: string) => t(k));
 });
 
-const isLoadingFromCache = computed(() => isLoadingUserData.value);
-
 const maskedEmail = computed(() => {
     const email = userInfo.value.email || '';
     if (!email) return '';
@@ -240,12 +243,10 @@ const maskedEmail = computed(() => {
     if (parts.length !== 2) return '*****';
     const local = parts[0];
     const domain = parts[1];
-
     const maskedLocal = local.length > 2 ? `${local[0]}***${local.slice(-1)}` : '*'.repeat(Math.max(1, local.length - 1));
 
     const lastDot = domain.lastIndexOf('.');
     const maskedDomain = lastDot > 0 ? `*****${domain.slice(lastDot)}` : '*****';
-
     return `${maskedLocal}@${maskedDomain}`;
 });
 
@@ -264,11 +265,29 @@ onMounted(async () => {
     });
 
     await syncService.initializeSyncStatus();
-
-    nickname.value = userNickname.value || '';
-
-    await globalUserStatus.fetchCurrentStatus();
 });
+
+watch(
+    isAuthenticated,
+    async (isAuthed, wasAuthed) => {
+        if (isAuthed && !wasAuthed) {
+            try {
+                await refreshUserData();
+                nickname.value = userNickname.value || '';
+                await globalUserStatus.fetchCurrentStatus();
+            } catch (error) {
+                console.error('Failed to refresh account data after auth change:', error);
+            }
+            return;
+        }
+
+        if (!isAuthed && wasAuthed) {
+            nickname.value = '';
+            showEmail.value = false;
+        }
+    },
+    { immediate: true }
+);
 
 onUnmounted(() => {
     if (unsubscribeSyncService) {
@@ -345,6 +364,7 @@ const handleChangePassword = async () => {
         addToast(t('account.password_mismatch'), 'error');
         return;
     }
+
     if (newPassword.value.length < 8) {
         addToast(t('account.password_too_short'), 'error');
         return;
@@ -372,24 +392,9 @@ const handleChangePassword = async () => {
                     currentPassword.value = '';
                     newPassword.value = '';
                     confirmNewPassword.value = '';
-                } catch (error: any) {
-                    console.error('Failed to change password:', error);
-                    if (error.response && error.response.data) {
-                        let errorMessage = t('account.password_change_failed');
-                        const errors = error.response.data;
-                        if (errors.new_password) {
-                            errorMessage = errors.new_password.join(' ');
-                        } else if (errors.current_password) {
-                            errorMessage = errors.current_password.join(' ');
-                        } else if (typeof errors === 'string') {
-                            errorMessage = errors;
-                        } else if (errors.detail) {
-                            errorMessage = errors.detail;
-                        }
-                        addToast(errorMessage, 'error');
-                    } else {
-                        addToast(t('account.password_change_failed'), 'error');
-                    }
+                } catch (e) {
+                    console.log("Failed to change password:", e);
+                    addToast(t('account.password_change_failed'), 'error');
                 }
                 hideModal('change-password-confirm');
             },
@@ -398,36 +403,17 @@ const handleChangePassword = async () => {
     );
 };
 
-const handleLogout = async () => {
+const handleLogout = () => {
     showModal(
         'logout-confirm',
         LogoutConfirmModal,
         { title: t('account.logout_confirm_title') },
         {},
         {
-            confirm: async () => {
-                try {
-                    await apiPost(
-                        '/auth/token/logout/',
-                        {},
-                        {
-                            headers: {
-                                Authorization: `Token ${localStorage.getItem('authToken')}`,
-                                'Content-Type': 'application/json',
-                                'Accept-Language': getCurrentLanguage() || 'en',
-                            },
-                        }
-                    );
-
-                    logout();
-                    addToast(t('auth.logout.success'), 'success');
-                    emit('logged-out');
-                } catch (error) {
-                    console.error('Failed to logout:', error);
-                    logout();
-                    emit('logged-out');
-                    addToast(t('auth.logout.local_only'), 'warning');
-                }
+            confirm: () => {
+                logout();
+                emit('logged-out');
+                addToast(t('auth.logout.success'), 'success');
                 hideModal('logout-confirm');
             },
             close: () => hideModal('logout-confirm'),

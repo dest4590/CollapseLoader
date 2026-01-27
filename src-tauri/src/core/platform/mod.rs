@@ -6,8 +6,10 @@ pub use self::windows::check_platform_dependencies;
 #[cfg(target_os = "windows")]
 pub mod messagebox;
 
+pub mod error;
 #[cfg(target_os = "linux")]
 mod linux;
+
 #[cfg(target_os = "linux")]
 pub use self::linux::{check_platform_dependencies, check_webkit_environment};
 

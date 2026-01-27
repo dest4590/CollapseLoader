@@ -1,7 +1,7 @@
 <template>
     <div v-bind="attrs"
         class="irc-chat flex flex-col bg-base-200 border border-base-300 rounded-lg overflow-hidden transition-all duration-300 ease-out relative mb-6"
-        :class="isExpanded ? 'shadow-lg max-h-[380px]' : 'shadow-sm max-h-[68px] hover:shadow-md'">
+        :class="isExpanded ? 'shadow-lg max-h-95' : 'shadow-sm max-h-17 hover:shadow-md'">
         <button type="button" class="flex items-center justify-between w-full px-4 py-3 bg-base-300/40 cursor-pointer"
             @click="toggleExpanded">
             <div class="flex items-center gap-3">
@@ -26,7 +26,7 @@
 
         <div class="overflow-hidden transition-all duration-300 ease-out"
             :class="isExpanded ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'">
-            <div class="flex flex-col h-[280px] bg-base-100/40">
+            <div class="flex flex-col h-70 bg-base-100/40">
                 <div class="flex justify-between items-center">
                     <transition name="irc-status">
                         <div v-if="isExpanded"
@@ -347,7 +347,7 @@ const copyToClipboard = async (text: string) => {
 onMounted(async () => {
     try {
         await ensureIrcConnection();
-        scrollToBottom();
+        await scrollToBottom();
     } catch (err) {
         console.error('Failed to connect to IRC:', err);
         addToast(

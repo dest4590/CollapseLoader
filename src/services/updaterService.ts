@@ -140,11 +140,15 @@ class UpdaterService {
         }
 
         setTimeout(() => {
-            this.checkForUpdates(false, t);
+            this.checkForUpdates(false, t).then(r => {
+                console.log('Initial update check completed:', r);
+            });
         }, 10000);
 
         this.checkInterval = window.setInterval(() => {
-            this.checkForUpdates(false, t);
+            this.checkForUpdates(false, t).then(r => {
+                console.log('Periodic update check completed:', r);
+            });
         }, this.CHECK_INTERVAL);
     }
 

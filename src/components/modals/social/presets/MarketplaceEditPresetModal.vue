@@ -35,7 +35,7 @@ const emit = defineEmits(['updated', 'close']);
 
 const { t } = useI18n();
 const { addToast } = useToast();
-const title = ref(props.preset?.title || '');
+const title = ref(props.preset?.title ?? props.preset?.name ?? '');
 const description = ref(props.preset?.description || '');
 const isPublic = ref(!!props.preset?.is_public);
 const saving = ref(false);
@@ -44,7 +44,7 @@ async function save() {
     try {
         saving.value = true;
         await marketplaceService.updatePreset(props.preset.id, {
-            title: title.value,
+            name: title.value,
             description: description.value,
             is_public: isPublic.value,
         });
