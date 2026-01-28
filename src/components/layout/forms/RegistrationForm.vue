@@ -139,35 +139,11 @@ const handleRegister = async () => {
             }
         } catch (loginError) {
             console.error('Auto-login failed:', loginError);
-            addToast(t('auth.register.auto_login_failed'), 'warning');
             emit('registered');
         }
     } catch (error: any) {
         console.error('Registration failed:', error);
         console.error('Registration error response:', error.response);
-
-        if (error.response && error.response.data) {
-            let errorMessage = t('auth.register.registration_failed');
-            const errors = error.response.data;
-            if (errors.username) {
-                errorMessage = `Username: ${errors.username.join(' ')}`;
-            } else if (errors.email) {
-                errorMessage = `Email: ${errors.email.join(' ')}`;
-            } else if (errors.password) {
-                errorMessage = `Password: ${errors.password.join(' ')}`;
-            } else if (Array.isArray(errors) && errors.length > 0) {
-                errorMessage = errors.join(' ');
-            } else if (typeof errors === 'string') {
-                errorMessage = errors;
-            } else if (errors.error) {
-                errorMessage = errors.error;
-            } else if (errors.detail) {
-                errorMessage = errors.detail;
-            }
-            addToast(errorMessage, 'error');
-        } else {
-            addToast(t('auth.register.registration_failed'), 'error');
-        }
     } finally {
         isRegistering.value = false;
     }
