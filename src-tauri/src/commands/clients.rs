@@ -9,7 +9,6 @@ use tauri::{AppHandle, Manager, State};
 
 use crate::core::{
     clients::custom_clients::CustomClient,
-    network::analytics::Analytics,
     storage::{custom_clients::CustomClientUpdate, data::Data},
     utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
 };
@@ -408,7 +407,6 @@ pub async fn download_client_only(
 
     let requirements_download = client.download_requirements(&app_handle);
 
-    Analytics::send_client_download_analytics(id);
     log_debug!("Sent client download analytics for ID: {}", id);
 
     tokio::try_join!(client_download, requirements_download)?;

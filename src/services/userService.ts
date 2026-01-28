@@ -407,8 +407,8 @@ class UserService {
             avatar_url: profile?.avatar_url ?? null,
             social_links: profile?.social_links ?? [],
             role: profile?.role ?? null,
-            achievements: publicUser.achievements || [],
-            presets: publicUser.presets || []
+            achievements: publicUser.achievements,
+            presets: publicUser.presets
         };
 
         if (publicUser.friendship_status) {

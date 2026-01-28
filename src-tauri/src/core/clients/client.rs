@@ -839,7 +839,7 @@ impl Client {
         manager: Arc<Mutex<ClientManager>>,
     ) -> Result<(), String> {
         if !options.is_custom && SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value) {
-            Analytics::send_client_analytics(self.id);
+            Analytics::send_client_analytics(self.id, &options.user_token);
         }
 
         {

@@ -21,7 +21,8 @@
                         <Download class="w-4 h-4" />
                         {{ preset.downloads_count }}
                     </span>
-                    <span class="badge badge-ghost hover:bg-base-300 transition-colors cursor-pointer" @click="scrollToComments">
+                    <span class="badge badge-ghost hover:bg-base-300 transition-colors cursor-pointer"
+                        @click="scrollToComments">
                         <MessageSquare class="w-4 h-4" />
                         {{ preset.comments_count || 0 }}
                     </span>
@@ -43,10 +44,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -55,7 +56,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                    }}</button>
+                        }}</button>
                 </template>
             </div>
 
@@ -104,8 +105,7 @@
                                 <div v-for="c in comments" :key="c.id"
                                     class="p-3 rounded-xl border border-white/5 bg-white/5 mt-2">
                                     <div class="flex gap-3">
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/80 shrink-0 cursor-pointer hover:bg-white/20 transition-colors"
+                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/80 shrink-0 cursor-pointer hover:bg-white/20 transition-colors"
                                             @click="emit('show-user-profile', c.authorId)">
                                             {{ (c.authorNickname || c.authorUsername || '?').charAt(0).toUpperCase() }}
                                         </div>
@@ -113,11 +113,14 @@
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center justify-between gap-2 text-xs opacity-70">
                                                 <div class="truncate">
-                                                    <span class="font-bold text-white/80 mr-2 cursor-pointer hover:text-white transition-colors"
+                                                    <span
+                                                        class="font-bold text-white/80 mr-2 cursor-pointer hover:text-white transition-colors"
                                                         @click="emit('show-user-profile', c.authorId)">
                                                         {{ c.authorNickname || c.authorUsername }}
                                                     </span>
-                                                    <span class="text-[10px] text-white/40 font-medium">{{ formatDate(c.createdAt || c.created_at) }}</span>
+                                                    <span class="text-[10px] text-white/40 font-medium">{{
+                                                        formatDate(c.createdAt ||
+                                                        c.created_at) }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
@@ -364,7 +367,7 @@ async function downloadFromDetails() {
         const name = p.title ?? p.name ?? 'Imported preset';
         const input = buildPresetCreatePayload(name, p.description || undefined, themeSource.value);
         await presetService.createPreset(input);
-        addToast(t('theme.presets.messages.import_success'), 'success');
+        addToast(t('theme.presets.messages.import_success', { name }), 'success');
         try {
             await marketplaceService.downloadPreset(p.id);
             if (preset.value) {

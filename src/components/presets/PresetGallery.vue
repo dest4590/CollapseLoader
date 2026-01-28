@@ -21,7 +21,7 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div class="card bg-[#141414] border border-white/5 shadow-xl hover:bg-[#1a1a1a] transition-all duration-300 rounded-xl overflow-hidden group" 
+                <div class="card bg-[#141414] border border-white/5 shadow-xl hover:bg-[#1a1a1a] transition-all duration-300 rounded-xl group" 
                      v-for="p in filteredPresets" :key="p.id">
                     <div class="card-body p-3.5">
                         <div class="cursor-pointer" @click="openDetails(p)">
@@ -33,7 +33,7 @@
                                 {{ t('marketplace.by_author', { name: getOwnerName(p).toUpperCase() || '' }) }}
                             </p>
 
-                            <PresetColorPreview :preset="p" class="!mt-2" />
+                            <PresetColorPreview :preset="p" class="mt-2!" />
 
                             <p class="text-xs text-white/50 line-clamp-2 mt-3 leading-snug min-h-8" v-if="p.description">
                                 {{ p.description }}
@@ -234,7 +234,7 @@ export default defineComponent({
                 const name = p.title ?? p.name ?? 'Imported preset';
                 const input = buildPresetCreatePayload(name, p.description, getThemeValues(p));
                 await presetService.createPreset(input);
-                addToast(t('theme.presets.messages.import_success'), 'success');
+                addToast(t('theme.presets.messages.import_success', { name }), 'success');
                 try {
                     await marketplaceService.downloadPreset(p.id);
                     p.downloads_count = (p.downloads_count || 0) + 1;

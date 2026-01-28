@@ -9,9 +9,7 @@ use crate::core::utils::helpers::is_development_enabled;
 #[cfg(target_os = "windows")]
 use crate::messagebox;
 #[cfg(target_os = "windows")]
-use crate::{log_error, log_warn};
-
-use crate::log_info;
+use crate::{log_debug, log_error, log_info, log_warn};
 
 #[cfg(target_os = "windows")]
 const DPI_RELEASE_API: &str =
@@ -22,6 +20,39 @@ const DPI_ZIP_FALLBACK_URL: &str = "https://github.com/dest4590/ZapretCollapseLo
 const DPI_ZIP_NAME: &str = "ZapretCollapseLoader.zip";
 #[cfg(target_os = "windows")]
 const DPI_FOLDER_NAME: &str = "ZapretCollapseLoader";
+
+#[cfg(target_os = "windows")]
+pub fn kill_winws() {
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
+
+    log_info!("Attempting to kill any existing winws.exe processes");
+
+    let mut cmd = Command::new("taskkill");
+    cmd.args(&["/F", "/IM", "winws.exe", "/T"]);
+
+    if !is_development_enabled() {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+
+    match cmd.output() {
+        Ok(output) => {
+            if output.status.success() {
+                log_info!("Successfully killed existing winws.exe processes");
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if stderr.contains("not found") || stderr.contains("не найден") {
+                    log_debug!("No winws.exe processes were found to kill");
+                } else {
+                    log_warn!("taskkill returned non-zero status: {}", stderr);
+                }
+            }
+        }
+        Err(e) => {
+            log_error!("Failed to execute taskkill: {}", e);
+        }
+    }
+}
 
 #[cfg(target_os = "windows")]
 pub fn enable_dpi_bypass_async() -> Result<(), String> {
@@ -40,8 +71,20 @@ pub fn enable_dpi_bypass_async() -> Result<(), String> {
                         "toast-error",
                         "Failed to enable DPI bypass due to insufficient privileges. Please run the application as administrator and try again.",
                     );
+                } else {
+                    emit_to_main_window(
+                        app_handle,
+                        "toast-error",
+                        format!("Failed to enable DPI bypass: {}", e),
+                    );
                 }
             }
+        } else if let Some(app_handle) = app_handle_clone.as_ref() {
+            emit_to_main_window(
+                app_handle,
+                "toast-success",
+                "DPI bypass enabled successfully",
+            );
         }
     });
     Ok(())
@@ -155,6 +198,8 @@ fn start_winws_background_inner() -> Result<(), String> {
     if !settings.dpi_bypass.value {
         return Ok(());
     }
+
+    kill_winws();
 
     use std::path::PathBuf;
     let base_dir: PathBuf = DATA.root_dir.join(DPI_FOLDER_NAME);
@@ -381,6 +426,15 @@ fn start_winws_background_inner() -> Result<(), String> {
                 winws_path.display(),
                 e
             );
+
+            if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+                emit_to_main_window(
+                    app_handle,
+                    "toast-error",
+                    format!("Failed to start DPI bypass process: {}", e),
+                );
+            }
+
             return Err(format!("Failed to start winws.exe: {}", e));
         }
     }

@@ -66,11 +66,15 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
-        if dpi_bypass_changed && new_dpi_bypass_value {
-            log_info!("DPI bypass enabled. Preparing to download and run package");
-
-            if let Err(e) = dpi::download_dpi_bypass() {
-                log_error!("Failed to initiate DPI bypass setup: {e}");
+        if dpi_bypass_changed {
+            if new_dpi_bypass_value {
+                log_info!("DPI bypass enabled. Preparing to download and run package");
+                if let Err(e) = dpi::enable_dpi_bypass_async() {
+                    log_error!("Failed to initiate DPI bypass setup: {e}");
+                }
+            } else {
+                log_info!("DPI bypass disabled. Killing existing processes");
+                dpi::kill_winws();
             }
         }
     }

@@ -41,7 +41,8 @@
                                     <span v-if="userProfile.status.client_version" class="text-base-content/50 text-sm">
                                         ({{ userProfile.status.client_version }})
                                     </span>
-                                    <span v-if="playtimeDuration" class="badge badge-sm badge-ghost ml-2">
+                                    <span v-if="playtimeDuration" class="badge badge-sm bg-base-300/50 border-none text-base-content/70 ml-2 py-0 px-2 text-[10px] h-4 flex items-center gap-1">
+                                        <Clock class="w-2.5 h-2.5" />
                                         {{ playtimeDuration }}
                                     </span>
                                 </div>
@@ -458,7 +459,7 @@ const loadUserProfile = async () => {
     try {
         loading.value = true;
         error.value = null;
-        userProfile.value = await userService.getUserProfile(props.userId);
+        userProfile.value = await userService.getUserProfile(props.userId, ['presets', 'achievements']);
         
         if (userProfile.value.presets) {
             presets.value = userProfile.value.presets;
