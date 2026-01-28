@@ -27,6 +27,8 @@ import {
     UserIcon,
     LogIn,
     WifiOff,
+    Minimize2,
+    MousePointer2,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -488,6 +490,14 @@ const getFormattedLabel = (key: string) => {
         return "DPI Bypass (Zapret by bol-van)";
     }
 
+    if (key === 'minimize_to_tray_on_launch') {
+        return t('settings.minimize_to_tray_on_launch');
+    }
+
+    if (key === 'close_to_tray') {
+        return t('settings.close_to_tray');
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
@@ -729,6 +739,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
                                 <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
                                 <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
+                                <Minimize2 v-if="key === 'minimize_to_tray_on_launch'" class="w-5 h-5 text-primary" />
+                                <MousePointer2 v-if="key === 'close_to_tray'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top"
                                     :data-tip="$t('settings.telemetry_info_title')">

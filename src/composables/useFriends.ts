@@ -222,12 +222,15 @@ export function useFriends() {
             const request = globalFriendsState.receivedRequests.find(req => req.id === requestId);
             if (request) {
                 if (action === 'accept') {
-                    globalFriendsState.friends.push({
-                        id: request.requester.id,
-                        username: request.requester.username,
-                        nickname: request.requester.nickname,
-                        status: request.requester.status
-                    });
+                    if (!globalFriendsState.friends.some(f => f.id === request.requester.id)) {
+                        globalFriendsState.friends.push({
+                            id: request.requester.id,
+                            username: request.requester.username,
+                            nickname: request.requester.nickname,
+                            avatar_url: request.requester.avatar_url,
+                            status: request.requester.status
+                        });
+                    }
                 }
 
                 const index = globalFriendsState.receivedRequests.indexOf(request);
@@ -288,6 +291,19 @@ export function useFriends() {
         }
     };
 
+    const hydrateFriends = (data: { friends: any[]; requests: { sent: any[]; received: any[]; blocked: any[] } }) => {
+        globalFriendsState.friends = (data.friends || []).map((f: any) => userService.mapFriend(f));
+        globalFriendsState.sentRequests = (data.requests?.sent || []).map((r: any) => userService.mapFriendRequest(r));
+        globalFriendsState.receivedRequests = (data.requests?.received || []).map((r: any) => userService.mapFriendRequest(r));
+        globalFriendsState.isLoading = false;
+        globalFriendsState.isLoaded = true;
+        globalFriendsState.lastUpdated = new Date().toISOString();
+
+        if (!statusUpdateInterval.current) {
+            startStatusUpdates();
+        }
+    };
+
 
     const stopStatusUpdates = (): void => {
         if (statusUpdateInterval.current) {
@@ -320,6 +336,8 @@ export function useFriends() {
         updateFriendStatuses,
         refreshFriendsData,
         clearFriendsData,
+
+        hydrateFriends,
 
         searchUsers,
         sendFriendRequest,

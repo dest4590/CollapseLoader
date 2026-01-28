@@ -6,6 +6,8 @@ use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
 use tauri::Manager;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
 use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
 
@@ -257,6 +259,53 @@ pub fn run() {
                 Analytics::send_start_analytics();
             });
 
+            let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+            let hide = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show, &hide, &quit])?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "hide" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.hide();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let is_visible = window.is_visible().unwrap_or(true);
+                            if is_visible {
+                                let _ = window.hide();
+                            } else {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                })
+                .build(app)?;
+
             #[cfg(target_os = "windows")]
             {
                 use crate::core::utils::dpi;
@@ -265,9 +314,15 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(|_window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                discord_rpc::shutdown();
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let settings = crate::core::storage::settings::SETTINGS.lock().unwrap();
+                if settings.close_to_tray.value {
+                    api.prevent_close();
+                    let _ = window.hide();
+                } else {
+                    discord_rpc::shutdown();
+                }
             }
         })
         .run(tauri::generate_context!())

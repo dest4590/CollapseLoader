@@ -215,6 +215,26 @@ impl ClientManager {
             }),
         );
 
+        let minimize_to_tray_on_launch = {
+            let settings = crate::core::storage::settings::SETTINGS.lock().unwrap();
+            settings.minimize_to_tray_on_launch.value
+        };
+
+        if minimize_to_tray_on_launch {
+            let running_clients = Client::get_running_clients(&Arc::new(Mutex::new(ClientManager {
+                clients: self.clients.clone(),
+            })));
+
+            let running_custom_clients = crate::core::clients::custom_clients::CustomClient::get_running_custom_clients();
+
+            if running_clients.is_empty() && running_custom_clients.is_empty() {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        }
+
         Ok(())
     }
 }

@@ -5,7 +5,7 @@ use core::clients::{
 };
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 use crate::core::{
     clients::custom_clients::CustomClient,
@@ -330,6 +330,17 @@ pub async fn launch_client(
     }
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
+
+    let minimize_on_launch = {
+        let settings = SETTINGS.lock().unwrap();
+        settings.minimize_to_tray_on_launch.value
+    };
+
+    if minimize_on_launch {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
+    }
 
     client.run(options, state.clients.manager.clone()).await
 }
@@ -750,6 +761,17 @@ pub async fn launch_custom_client(
     );
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), true);
+
+    let minimize_on_launch = {
+        let settings = SETTINGS.lock().unwrap();
+        settings.minimize_to_tray_on_launch.value
+    };
+
+    if minimize_on_launch {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
+    }
 
     client.run(options, state.clients.manager.clone()).await
 }

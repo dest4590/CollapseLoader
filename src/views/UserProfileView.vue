@@ -261,7 +261,7 @@
                         </template>
                         <template v-else>
                             <div v-if="presets && presets.length">
-                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" />
+                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" :initial-presets="presets" />
                             </div>
                             <div v-else class="text-center py-8 text-base-content/70">
                                 <p class="mb-3">{{ t('userProfile.no_presets') }}</p>
@@ -459,6 +459,17 @@ const loadUserProfile = async () => {
         loading.value = true;
         error.value = null;
         userProfile.value = await userService.getUserProfile(props.userId);
+        
+        if (userProfile.value.presets) {
+            presets.value = userProfile.value.presets;
+        }
+        
+        if (userProfile.value.achievements) {
+            userAchievements.value = userProfile.value.achievements;
+            if (achievements.value.length === 0) {
+                 achievements.value = await achievementService.getAllAchievements();
+            }
+        }
     } catch (err: any) {
         console.error('Failed to load user profile:', err);
         if (err.response?.status === 404) {
@@ -763,7 +774,7 @@ const onAvatarClick = () => {
 
 onMounted(async () => {
     await loadUserProfile();
-    await loadUserPresets();
-    await loadAchievements();
+    if (!userProfile.value?.presets) await loadUserPresets();
+    if (!userProfile.value?.achievements) await loadAchievements();
 });
 </script>

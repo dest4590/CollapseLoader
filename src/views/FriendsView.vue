@@ -147,7 +147,7 @@ let statusRefreshInterval: number | null = null;
 let fullDataRefreshInterval: number | null = null;
 
 onMounted(async () => {
-    await loadFriendsAndStatus(true);
+    await loadFriendsAndStatus(false);
 
     statusRefreshInterval = window.setInterval(
         updateStatuses,

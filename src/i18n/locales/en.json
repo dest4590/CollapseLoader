@@ -703,7 +703,9 @@
       "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
       "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
       "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
-      "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients."
+      "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients.",
+      "minimize_to_tray_on_launch": "Minimize the app to system tray when a client is launched.",
+      "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked."
     },
     "ram_warning": {},
     "telemetry": "Analytics",
@@ -749,6 +751,8 @@
       "restart_required": "Please restart the app for changes to take effect"
     },
     "sync_client_settings": "Sync client settings",
+    "minimize_to_tray_on_launch": "Minimize to tray on launch",
+    "close_to_tray": "Close to tray",
     "reset_settings": "Reset settings",
     "sync_login_required": "Sign in to enable syncing",
     "not_signed_in": "You are not logged in"

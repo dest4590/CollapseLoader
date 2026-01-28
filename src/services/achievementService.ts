@@ -14,8 +14,15 @@ export interface UserAchievement {
 }
 
 class AchievementService {
+    private achievementsCache: Achievement[] | null = null;
+
     async getAllAchievements(): Promise<Achievement[]> {
-        return await apiClient.get<Achievement[]>('/achievements');
+        if (this.achievementsCache) {
+            return this.achievementsCache;
+        }
+        const achievements = await apiClient.get<Achievement[]>('/achievements');
+        this.achievementsCache = achievements;
+        return achievements;
     }
 
     async getUserAchievements(userId: number): Promise<UserAchievement[]> {

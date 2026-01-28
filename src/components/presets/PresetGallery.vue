@@ -131,7 +131,8 @@ export default defineComponent({
     name: 'PresetGallery',
     components: { Download, ThumbsUp, MessageSquare, Search, Play, MoreVertical, Edit, Trash2, Eye, EyeOff, PresetColorPreview },
     props: {
-        ownerId: { type: Number, required: false }
+        ownerId: { type: Number, required: false },
+        initialPresets: { type: Array as () => MarketplacePresetView[], required: false }
     },
     emits: ['show-user-profile'],
     setup(props, { emit }) {
@@ -149,6 +150,12 @@ export default defineComponent({
         async function load() {
             loading.value = true;
             try {
+                if (props.initialPresets && !search.value.trim() && sortBy.value === 'newest' && presets.value.length === 0) {
+                     presets.value = props.initialPresets.map((preset) => ({ ...preset, liking: false }));
+                     loading.value = false;
+                     return;
+                }
+
                 const params: any = {};
                 if (props.ownerId) params.owner = props.ownerId;
                 if (search.value.trim()) params.q = search.value.trim();

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { userService, type SyncData } from './userService';
+import { userService, type SyncData, type UserInitData } from './userService';
 import { settingsService } from './settingsService';
 import { globalUserStatus } from '../composables/useUserStatus';
 
@@ -102,6 +102,41 @@ class SyncService {
         }
     }
 
+    hydrateSyncStatus(data: UserInitData) {
+        if (!this.state.isOnline) return;
+
+        try {
+            const settingsPref = data.preferences.find((p) => p.key === 'collapseloader.settings') || null;
+            
+            const maxIsoTimestamp = (timestamps: Array<string | null | undefined>): string | null => {
+                let max: number | null = null;
+                let maxIso: string | null = null;
+                for (const ts of timestamps) {
+                    if (!ts) continue;
+                    const time = new Date(ts).getTime();
+                    if (Number.isNaN(time)) continue;
+                    if (max === null || time > max) {
+                        max = time;
+                        maxIso = ts;
+                    }
+                }
+                return maxIso;
+            };
+
+            const lastSync = maxIsoTimestamp([
+                settingsPref?.updated_at ?? null,
+                ...data.favorites.map((f) => f.created_at ?? null),
+                ...data.accounts.map((a) => a.updated_at ?? null),
+            ]);
+
+            this.state.lastSyncTime = lastSync;
+            this.state.hasCloudData = !!settingsPref || data.favorites.length > 0 || data.accounts.length > 0;
+            this.notifyListeners();
+        } catch (error) {
+            console.error('Failed to hydrate sync status:', error);
+        }
+    }
+
     async checkAndRestoreOnStartup(): Promise<void> {
         if (!this.state.isOnline) {
             console.log('Offline - skipping startup sync check');
@@ -173,17 +208,23 @@ class SyncService {
         }
     }
 
-    async downloadFromCloud(): Promise<boolean> {
-        if (!this.state.isOnline || this.state.isSyncing) return false;
-        if (!this.isAuthenticated()) return false;
-
-        this.state.isSyncing = true;
-        this.notifyListeners();
+    async restoreFromInitData(data: UserInitData): Promise<void> {
+        if (!this.state.isOnline) return;
+        
+        this.hydrateSyncStatus(data);
+        
+        if (!this.state.hasCloudData) return;
 
         try {
-            const cloudData = await userService.downloadFromCloud();
+            const syncData = userService.formatSyncData(data.preferences, data.favorites, data.accounts);
+            await this.restoreData(syncData);
+        } catch (error) {
+            console.error('Failed to restore from init data:', error);
+        }
+    }
 
-            if (!cloudData) return false;
+    private async restoreData(cloudData: SyncData): Promise<boolean> {
+         if (!cloudData) return false;
 
             if (cloudData.settings_data && Object.keys(cloudData.settings_data).length > 0) {
                 await settingsService.loadSettings();
@@ -240,6 +281,21 @@ class SyncService {
             this.state.hasCloudData = true;
 
             return true;
+    }
+
+    async downloadFromCloud(): Promise<boolean> {
+        if (!this.state.isOnline || this.state.isSyncing) return false;
+        if (!this.isAuthenticated()) return false;
+
+        this.state.isSyncing = true;
+        this.notifyListeners();
+
+        try {
+            const cloudData = await userService.downloadFromCloud();
+
+            if (!cloudData) return false;
+
+            return await this.restoreData(cloudData);
         } catch (error) {
             console.error('Failed to download from cloud:', error);
             throw error;
