@@ -8,7 +8,9 @@ use uuid::Uuid;
 pub struct CreatePresetInput {
     pub name: String,
     pub description: Option<String>,
+    #[serde(rename = "customCSS", alias = "customCss")]
     pub custom_css: String,
+    #[serde(rename = "enableCustomCSS", alias = "enableCustomCss")]
     pub enable_custom_css: bool,
 
     // daisyui
@@ -41,7 +43,9 @@ pub struct UpdatePresetInput {
     pub id: String,
     pub name: String,
     pub description: Option<String>,
+    #[serde(rename = "customCSS", alias = "customCss")]
     pub custom_css: String,
+    #[serde(rename = "enableCustomCSS", alias = "enableCustomCss")]
     pub enable_custom_css: bool,
 
     // daisyui

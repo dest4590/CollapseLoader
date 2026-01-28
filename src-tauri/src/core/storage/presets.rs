@@ -11,7 +11,9 @@ pub struct ThemePreset {
     pub name: String,
     pub description: Option<String>,
     pub created_at: String,
+    #[serde(rename = "customCSS", alias = "customCss")]
     pub custom_css: String,
+    #[serde(rename = "enableCustomCSS", alias = "enableCustomCss")]
     pub enable_custom_css: bool,
 
     pub base100: Option<String>,

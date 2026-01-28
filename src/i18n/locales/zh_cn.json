@@ -1079,10 +1079,6 @@
     "secret_title": "隐藏成就",
     "secret_description": "继续玩下去以揭开这个秘密！",
     "list": {
-      "WELCOME": {
-        "title": "欢迎！",
-        "description": "下载并更新 CollapseLoader。"
-      },
       "PLAYED_1Hour": {
         "title": "小试牛刀",
         "description": "累计游玩 1 小时。"

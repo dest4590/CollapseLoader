@@ -1041,6 +1041,10 @@
     "private_label": "Приватний",
     "make_private": "Зробити приватним",
     "make_public": "Зробити публічним",
+    "sort_newest": "Нові",
+    "sort_popular": "Популярні",
+    "sort_downloads": "Багато завантажень",
+    "sort_comments": "Багато коментарів",
     "edit_modal_title": "Редагувати пресет",
     "delete_confirm": "Ви впевнені, що хочете видалити цей пресет? Цю дію не можна скасувати.",
     "share": "Поділитися",
@@ -1054,6 +1058,7 @@
     "apply": "Застосувати",
     "like": "Вподобати",
     "by_user": "від {name}",
+    "by_author": "ВІД {name}",
     "no_items": "Пресетів ще немає",
     "preset_details_title": "Деталі пресету",
     "preset_details": "Деталі пресету",
@@ -1081,10 +1086,6 @@
     "secret_title": "Приховане досягнення",
     "secret_description": "Продовжуйте грати, щоб відкрити цей секрет!",
     "list": {
-      "WELCOME": {
-        "title": "Ласкаво просимо!",
-        "description": "Завантажте та оновіть CollapseLoader."
-      },
       "PLAYED_1Hour": {
         "title": "Початок шляху",
         "description": "Грайте протягом 1 години."

@@ -1042,6 +1042,10 @@
     "private_label": "Private",
     "make_private": "Make private",
     "make_public": "Make public",
+    "sort_newest": "Newest",
+    "sort_popular": "Popular",
+    "sort_downloads": "Most Downloaded",
+    "sort_comments": "Most Commented",
     "edit_modal_title": "Edit Preset",
     "delete_confirm": "Are you sure you want to delete this preset? This action cannot be undone.",
     "share": "Share",
@@ -1055,6 +1059,7 @@
     "apply": "Apply",
     "like": "Like",
     "by_user": "by {name}",
+    "by_author": "OT {name}",
     "no_items": "No presets yet",
     "preset_details_title": "Preset Details",
     "preset_details": "Preset details",
@@ -1082,10 +1087,6 @@
     "secret_title": "Hidden Achievement",
     "secret_description": "Keep playing to unlock this secret!",
     "list": {
-      "WELCOME": {
-        "title": "Welcome!",
-        "description": "Download and update CollapseLoader."
-      },
       "PLAYED_1Hour": {
         "title": "Getting Started",
         "description": "Play for 1 hour."

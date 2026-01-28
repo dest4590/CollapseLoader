@@ -1041,6 +1041,10 @@
     "private_label": "Приватный",
     "make_private": "Сделать приватным",
     "make_public": "Сделать публичным",
+    "sort_newest": "Новые",
+    "sort_popular": "Популярные",
+    "sort_downloads": "Много загрузок",
+    "sort_comments": "Много комментариев",
     "edit_modal_title": "Редактировать пресет",
     "delete_confirm": "Вы уверены, что хотите удалить этот пресет? Это действие нельзя отменить.",
     "share": "Поделиться",
@@ -1054,7 +1058,8 @@
     "apply": "Применить",
     "like": "Лайк",
     "by_user": "от {name}",
-    "no_items": "Пока нет пресетов",
+    "by_author": "ОТ {name}",
+    "no_items": "Пресеты еще не созданы",
     "preset_details_title": "Подробности пресета",
     "preset_details": "Детали пресета",
     "comments": "Комментарии",
@@ -1080,10 +1085,6 @@
     "secret_title": "Скрытое достижение",
     "secret_description": "Продолжайте играть, чтобы открыть этот секрет!",
     "list": {
-      "WELCOME": {
-        "title": "Добро пожаловать!",
-        "description": "Скачайте и обновите CollapseLoader."
-      },
       "PLAYED_1Hour": {
         "title": "Начало пути",
         "description": "Играйте в течение 1 часа."
