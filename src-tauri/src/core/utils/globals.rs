@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Abyss";
+pub static CODENAME: &str = "Atlas";
 
 pub static API_VERSION: &str = "v1";
 
