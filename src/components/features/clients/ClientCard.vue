@@ -522,9 +522,11 @@ const removeRating = async () => {
 
 const expandCard = async () => {
     const card = cardRef.value;
-    if (!card || isAnimating.value) return;
+    if (!card || isAnimating.value || isCollapsing.value || inTransition.value) return;
     if (props.isAnyCardExpanded) return;
     if (props.client.meta.is_custom) return;
+
+    isAnimating.value = true;
 
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
@@ -532,6 +534,8 @@ const expandCard = async () => {
             clientDetails.value = await invoke<ClientDetails>('get_client_details', { clientId: props.client.id });
         } catch (error) {
             console.error('Failed to fetch client details:', error);
+            isAnimating.value = false;
+            return;
         } finally {
             isLoadingDetails.value = false;
         }
@@ -547,7 +551,6 @@ const expandCard = async () => {
     const centerX = (viewportWidth - modalWidth) / 2;
     const centerY = (viewportHeight - modalHeight) / 2;
 
-    isAnimating.value = true;
     emit('expanded-state-changed', props.client.id, true);
 
     placeholder.value = document.createElement('div');
@@ -610,6 +613,7 @@ const expandCard = async () => {
     const tl = gsap.timeline({
         onComplete: () => {
             isExpanded.value = true;
+            isAnimating.value = false;
         }
     });
 
