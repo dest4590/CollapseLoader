@@ -55,16 +55,32 @@
             <div class="col-span-1 md:col-span-2">
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body">
-                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                            {{ t('achievements.title') }}
-                        </h2>
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-medium text-primary-focus">
+                                {{ t('achievements.title') }}
+                            </h2>
+                            <span v-if="achievements.length > 0" class="text-sm text-base-content/60">
+                                {{ unlockedCount }} / {{ achievements.length }}
+                            </span>
+                        </div>
                         <div v-if="loadingAchievements" class="flex justify-center py-4">
                             <span class="loading loading-spinner loading-md"></span>
                         </div>
-                        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <AchievementCard v-for="ach in sortedAchievements" :key="ach.key" :achievement-key="ach.key"
-                                :icon-name="ach.icon" :locked="!isUnlocked(ach.id)" :unlocked-at="getUnlockedAt(ach.id)"
-                                :hidden="ach.hidden" :receive-percentage="ach.receivePercentage" />
+                        <div v-else>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <AchievementCard v-for="ach in displayedAchievements" :key="ach.key"
+                                    :achievement-key="ach.key" :icon-name="ach.icon" :locked="!isUnlocked(ach.id)"
+                                    :unlocked-at="getUnlockedAt(ach.id)" :hidden="ach.hidden"
+                                    :receive-percentage="ach.receivePercentage" />
+                            </div>
+
+                            <div v-if="achievements.length > initialDisplayCount" class="flex justify-center mt-4">
+                                <button @click="toggleAchievementsExpand" class="btn btn-ghost btn-sm">
+                                    {{ isAchievementsExpanded ? t('common.show_less') : t('common.show_more') }}
+                                    <component :is="isAchievementsExpanded ? ChevronUp : ChevronDown"
+                                        class="w-4 h-4 ml-1" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -193,7 +209,7 @@ import AchievementCard from '../components/features/profile/AchievementCard.vue'
 import { useUser } from '../composables/useUser';
 import { userService } from '../services/userService';
 import { achievementService, type Achievement, type UserAchievement } from '../services/achievementService';
-import { EditIcon, EyeIcon, EyeOffIcon } from 'lucide-vue-next';
+import { EditIcon, EyeIcon, EyeOffIcon, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import getRoleBadge from '../utils/roleBadge';
 import { globalUserStatus } from '../composables/useUserStatus';
 import { syncService, SyncServiceState } from '../services/syncService';
@@ -211,6 +227,8 @@ const showEmail = ref(false);
 const achievements = ref<Achievement[]>([]);
 const userAchievements = ref<UserAchievement[]>([]);
 const loadingAchievements = ref(false);
+const isAchievementsExpanded = ref(false);
+const initialDisplayCount = 4;
 
 const {
     username,
@@ -274,6 +292,8 @@ const maskedEmail = computed(() => {
     return `${maskedLocal}@${maskedDomain}`;
 });
 
+const unlockedCount = computed(() => userAchievements.value.length);
+
 const sortedAchievements = computed(() => {
     return [...achievements.value].sort((a, b) => {
         const aUnlocked = isUnlocked(a.id);
@@ -283,6 +303,16 @@ const sortedAchievements = computed(() => {
         return 0;
     });
 });
+
+const displayedAchievements = computed(() => {
+    const sorted = sortedAchievements.value;
+    if (isAchievementsExpanded.value) return sorted;
+    return sorted.slice(0, initialDisplayCount);
+});
+
+const toggleAchievementsExpand = () => {
+    isAchievementsExpanded.value = !isAchievementsExpanded.value;
+};
 
 const isUnlocked = (achievementId: number) => {
     return userAchievements.value.some(ua => ua.achievement.id === achievementId);

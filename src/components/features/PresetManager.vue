@@ -54,7 +54,8 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                :style="{ paddingBottom: selectedPresets.size > 0 ? '80px' : '0px' }">
                 <div v-for="preset in paginatedPresets" :key="preset.id"
                     class="preset-card card bg-base-200 shadow-md border border-base-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
                     :class="{ 'ring ring-primary ring-offset-1 ring-offset-base-100 border-primary/60': isPresetSelected(preset.id) }"
@@ -122,7 +123,7 @@
 
             <div class="mt-4 flex items-center justify-between">
                 <button class="btn btn-sm" :disabled="currentPage === 1" @click="prevPage">{{ $t('common.previous')
-                }}</button>
+                    }}</button>
                 <div class="text-sm text-base-content/70">{{ $t('theme.presets.pagination.page_of', {
                     current:
                         currentPage, total: totalPages
@@ -134,7 +135,8 @@
 
         <transition name="slide-up-bottom">
             <div v-if="selectedPresets.size > 0"
-                class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-auto max-w-[calc(100%-2rem)] bg-neutral text-neutral-content px-4 py-3 rounded-lg shadow-xl z-30 flex items-center gap-3 sm:gap-4">
+                class="fixed left-1/2 transform -translate-x-1/2 w-auto max-w-[calc(100%-2rem)] bg-neutral text-neutral-content px-4 py-3 rounded-lg shadow-xl z-30 flex items-center gap-3 sm:gap-4"
+                :style="{ bottom: `calc(1rem + var(--sidebar-bottom-height, 0px))` }">
                 <span class="font-medium text-xs sm:text-sm whitespace-nowrap">
                     {{ $t('theme.presets.selected_count', { count: selectedPresets.size }) }}
                 </span>

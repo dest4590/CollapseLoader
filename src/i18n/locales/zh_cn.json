@@ -318,7 +318,9 @@
     "send": "发送",
     "copied_to_clipboard": "颜色 {color} 已复制到剪贴板",
     "done": "完成",
-    "click": "点击"
+    "click": "点击",
+    "show_more": "显示更多",
+    "show_less": "收起"
   },
   "auth": {
     "logout": {
@@ -1077,47 +1079,61 @@
   "login": "您需要登录您的帐户。",
   "achievements": {
     "title": "成就",
+    "unlocked_title": "成就已解锁: {name}",
     "locked": "未解锁",
     "unlocked_at": "解锁于 {date}",
+    "owned_percentage": "{percent}% 的玩家拥有此成就",
     "login_to_unlock": "您需要登录才能解锁此成就。",
     "secret_title": "隐藏成就",
     "secret_description": "继续玩下去以揭开这个秘密！",
     "list": {
       "PLAYED_1Hour": {
-        "title": "小试牛刀",
+        "name": "小试牛刀",
         "description": "累计游玩 1 小时。"
       },
       "PLAYED_10Hours": {
-        "title": "持之以恒",
+        "name": "持之以恒",
         "description": "累计游玩 10 小时。"
       },
       "FIRST_GAME": {
-        "title": "迈出第一步",
+        "name": "迈出第一步",
         "description": "启动您的第一个客户端。"
       },
       "SECRET_FINDER": {
-        "title": "秘密发现者",
+        "name": "秘密发现者",
         "description": "你发现了一个秘密！"
       },
       "SOCIAL_BUTTERFLY": {
-        "title": "社交高手",
+        "name": "社交高手",
         "description": "在个人资料中添加社交链接。"
       },
       "FREQUENT_FLYER": {
-        "title": "常客",
+        "name": "常客",
         "description": "启动客户端 50 次。"
       },
       "PRESET_MAX": {
-        "title": "时尚达人",
+        "name": "时尚达人",
         "description": "创建并分享一个自定义预设。"
       },
       "BETA_TESTER": {
-        "title": "内测玩家",
+        "name": "内测玩家",
         "description": "加入测试计划。"
       },
       "COLLECTOR": {
-        "title": "收藏家",
+        "name": "收藏家",
         "description": "收藏 5 个不同的客户端。"
+      },
+      "NIGHT_OWL": {
+        "name": "熬夜冠军",
+        "description": "在凌晨 2 点到 5 点之间游玩。"
+      },
+      "EARLY_BIRD": {
+        "name": "早起鸟儿",
+        "description": "在凌晨 5 点到 8 点之间游玩。"
+      },
+      "WEEKEND_WARRIOR": {
+        "name": "周末勇士",
+        "description": "在周末游玩。"
       }
     }
   }

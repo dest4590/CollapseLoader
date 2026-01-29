@@ -1,21 +1,22 @@
-import {ref} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {invoke} from '@tauri-apps/api/core';
-import {listen} from '@tauri-apps/api/event';
-import {bootLogService} from '../services/bootLogService';
-import {applyLanguageOnStartup, applyThemeOnStartup} from '../utils/settings';
-import {applyCursorForEvent, isHalloweenEvent} from '../utils/events';
-import {useToast} from '../services/toastService';
-import {globalUserStatus} from './useUserStatus';
-import {useUser} from './useUser';
-import {userService} from '../services/userService';
-import {globalFriends} from './useFriends';
-import {updaterService} from '../services/updaterService';
-import {syncService} from '../services/syncService';
-import {getCurrentLanguage} from '../i18n';
-import {useModal} from '../services/modalService';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { bootLogService } from '../services/bootLogService';
+import { applyLanguageOnStartup, applyThemeOnStartup } from '../utils/settings';
+import { applyCursorForEvent, isHalloweenEvent } from '../utils/events';
+import { useToast } from '../services/toastService';
+import { globalUserStatus } from './useUserStatus';
+import { useUser } from './useUser';
+import { userService } from '../services/userService';
+import { globalFriends } from './useFriends';
+import { updaterService } from '../services/updaterService';
+import { syncService } from '../services/syncService';
+import { getCurrentLanguage } from '../i18n';
+import { useModal } from '../services/modalService';
 import ClientCrashModal from '../components/modals/clients/ClientCrashModal.vue';
-import {apiGet} from '../services/apiClient';
+import { apiGet } from '../services/apiClient';
+import { webSocketService } from '../services/webSocketService';
 
 interface Flags {
     disclaimer_shown: { value: boolean };
@@ -249,6 +250,7 @@ export function useAppInit() {
                 bootLogService.syncInit();
                 bootLogService.syncReady();
 
+                webSocketService.connect();
             } catch (error) {
                 console.error('Failed to initialize user data on startup:', error);
                 bootLogService.userDataFailed();

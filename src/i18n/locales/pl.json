@@ -355,7 +355,9 @@
     "send": "Wyślij",
     "copied_to_clipboard": "Kolor {color} skopiowany do schowka",
     "done": "Gotowe",
-    "click": "Kliknij"
+    "click": "Kliknij",
+    "show_more": "Pokaż więcej",
+    "show_less": "Ukryj"
   },
   "friends": {
     "addFriend": "Dodaj znajomego",
@@ -1071,5 +1073,65 @@
       "tooltip": "Dobrego Halloween! (25 paź - 5 lis)"
     }
   },
-  "login": "Musisz zalogować się na swoje konto."
+  "login": "Musisz zalogować się na swoje konto.",
+  "achievements": {
+    "title": "Osiągnięcia",
+    "unlocked_title": "Osiągnięcie odblokowane: {name}",
+    "locked": "Zablokowane",
+    "unlocked_at": "Odblokowano {date}",
+    "owned_percentage": "posiada {percent}% graczy",
+    "login_to_unlock": "Musisz być zalogowany, aby odblokować to osiągnięcie.",
+    "secret_title": "Ukryte osiągnięcie",
+    "secret_description": "Graj dalej, aby odkryć ten sekret!",
+    "list": {
+      "PLAYED_1Hour": {
+        "name": "Pierwsze kroki",
+        "description": "Graj przez 1 godzinę."
+      },
+      "PLAYED_10Hours": {
+        "name": "Dedykowany",
+        "description": "Graj przez 10 godzin."
+      },
+      "FIRST_GAME": {
+        "name": "Pierwsze uruchomienie",
+        "description": "Uruchom swojego pierwszego klienta."
+      },
+      "SECRET_FINDER": {
+        "name": "Poszukiwacz sekretów",
+        "description": "Znalazłeś sekret!"
+      },
+      "SOCIAL_BUTTERFLY": {
+        "name": "Społeczny motyl",
+        "description": "Dodaj link społecznościowy do swojego profilu."
+      },
+      "FREQUENT_FLYER": {
+        "name": "Częsty gość",
+        "description": "Uruchom klienty 50 razy."
+      },
+      "PRESET_MAX": {
+        "name": "Modniś",
+        "description": "Stwórz i udostępnij preset kastomizacji."
+      },
+      "BETA_TESTER": {
+        "name": "Beta tester",
+        "description": "Dołącz do programu testowego."
+      },
+      "COLLECTOR": {
+        "name": "Kolekcjoner",
+        "description": "Dodaj do ulubionych 5 różnych klientów."
+      },
+      "NIGHT_OWL": {
+        "name": "Nocny marek",
+        "description": "Graj między 2:00 a 5:00 rano."
+      },
+      "EARLY_BIRD": {
+        "name": "Ranny ptaszek",
+        "description": "Graj między 5:00 a 8:00 rano."
+      },
+      "WEEKEND_WARRIOR": {
+        "name": "Weekendowy wojownik",
+        "description": "Graj w weekend."
+      }
+    }
+  }
 }

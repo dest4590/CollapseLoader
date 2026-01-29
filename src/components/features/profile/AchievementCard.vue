@@ -17,7 +17,7 @@
                     {{ t('achievements.unlocked_at', { date: formatDate(unlockedAt) }) }}
                 </p>
                 <p v-if="receivePercentage !== undefined" class="text-[10px] text-base-content/40 mt-0.5">
-                    {{ receivePercentage }}% of players have this
+                    {{ t('achievements.owned_percentage', { percent: Number(receivePercentage).toFixed(1) }) }}
                 </p>
             </div>
             <div v-if="locked" class="text-xs font-semibold px-2 py-1 bg-base-300 rounded text-base-content/60">
@@ -51,7 +51,7 @@ const iconComponent = computed(() => {
 
 const title = computed(() => {
     if (props.locked && props.hidden) return t('achievements.secret_title');
-    return t(`achievements.list.${props.achievementKey}.title`);
+    return t(`achievements.list.${props.achievementKey}.name`);
 });
 
 const description = computed(() => {

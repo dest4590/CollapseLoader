@@ -40,7 +40,7 @@ const handleLogoClick = async () => {
 
         try {
             await achievementService.unlockAchievement('SECRET_FINDER');
-            addToast(t('achievements.list.SECRET_FINDER.title') + ': ' + t('achievements.list.SECRET_FINDER.description'), 'success');
+            addToast(t('achievements.list.SECRET_FINDER.name') + ': ' + t('achievements.list.SECRET_FINDER.description'), 'success');
         } catch (error) {
             console.error('Failed to unlock secret achievement:', error);
         }
@@ -109,7 +109,9 @@ onMounted(async () => {
 <template>
     <div class="slide-up">
         <div class="flex flex-col items-center mb-4">
-            <img :src="LogoUrl" alt="CollapseLoader Logo" class="w-36 h-36 cursor-pointer select-none active:scale-95 transition-transform" @click="handleLogoClick" />
+            <img :src="LogoUrl" alt="CollapseLoader Logo"
+                class="w-36 h-36 cursor-pointer select-none active:scale-95 transition-transform"
+                @click="handleLogoClick" />
 
             <div class="text-center">
                 <h1 class="text-4xl font-bold mb-2">
@@ -120,10 +122,10 @@ onMounted(async () => {
                     <div class="tooltip-content flex flex-col">
                         <span class="text-sm font-semibold text-base-content">{{
                             codename
-                            }}</span>
+                        }}</span>
                         <span class="text-xs text-base-content/50">{{
                             commitHash
-                            }}</span>
+                        }}</span>
                     </div>
                     <p class="text-base-content/70">{{ version ? `v${version}` : '-' }}</p>
                 </div>
@@ -169,21 +171,21 @@ onMounted(async () => {
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.version')
-                        }}</span>
+                    }}</span>
                     <span class="font-medium">{{ version }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.codename')
-                        }}</span>
+                    }}</span>
                     <span class="font-medium">{{ codename }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.commit')
-                        }}</span>
+                    }}</span>
                     <code class="bg-base-300 px-2 py-1 rounded text-xs">{{
                         commitHash
                     }}</code>

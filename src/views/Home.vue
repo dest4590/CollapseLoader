@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import {invoke} from '@tauri-apps/api/core';
-import {listen} from '@tauri-apps/api/event';
-import {computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch} from 'vue';
-import {Copy, Download, FileText, Folder, Newspaper, RefreshCcw, Star, StopCircle, Trash2, X} from 'lucide-vue-next';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { Copy, Download, FileText, Folder, Newspaper, RefreshCcw, Star, StopCircle, Trash2, X } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
 import FiltersMenu from '../components/common/FiltersMenu.vue';
-import {useToast} from '../services/toastService';
-import {useModal} from '../services/modalService';
-import {syncService} from '../services/syncService';
-import {useI18n} from 'vue-i18n';
-import type {Client, CustomClient, InstallProgress} from '../types/ui';
+import { useToast } from '../services/toastService';
+import { useModal } from '../services/modalService';
+import { syncService } from '../services/syncService';
+import { useI18n } from 'vue-i18n';
+import type { Client, CustomClient, InstallProgress } from '../types/ui';
 import LogViewerModal from '../components/modals/clients/LogViewerModal.vue';
 import InsecureClientWarningModal from '../components/modals/clients/InsecureClientWarningModal.vue';
 import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
-import {isHalloweenEvent} from '../utils/events';
+import { isHalloweenEvent } from '../utils/events';
 
 interface Account {
     id: string;
@@ -153,25 +153,25 @@ const clearAllFilters = () => {
 };
 
 watch(
-  activeFilters,
-  (val) => {
-      try {
-          localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(val));
-      } catch (e) {
-          console.error('Failed to save active filters to localStorage:', e);
-      }
+    activeFilters,
+    (val) => {
+        try {
+            localStorage.setItem(ACTIVE_FILTERS_KEY, JSON.stringify(val));
+        } catch (e) {
+            console.error('Failed to save active filters to localStorage:', e);
+        }
 
-      // Debounce filter updates for performance
-      if (filterDebounceTimer !== null) {
-          clearTimeout(filterDebounceTimer);
-      }
+        // Debounce filter updates for performance
+        if (filterDebounceTimer !== null) {
+            clearTimeout(filterDebounceTimer);
+        }
 
-      filterDebounceTimer = window.setTimeout(() => {
-          debouncedActiveFilters.value = { ...val };
-          filterDebounceTimer = null;
-      }, 200);
-  },
-  { deep: true, flush: 'post' }
+        filterDebounceTimer = window.setTimeout(() => {
+            debouncedActiveFilters.value = { ...val };
+            filterDebounceTimer = null;
+        }, 200);
+    },
+    { deep: true, flush: 'post' }
 );
 
 watch(clientSortKey, (val) => {
@@ -441,9 +441,9 @@ const baseFilteredClients = computed(() => {
                 const isVanilla = !isFabric && !isForge;
 
                 const allowedByType =
-                  (isFabric && filters.fabric) ||
-                  (isForge && filters.forge) ||
-                  (isVanilla && filters.vanilla);
+                    (isFabric && filters.fabric) ||
+                    (isForge && filters.forge) ||
+                    (isVanilla && filters.vanilla);
 
                 if (!allowedByType) return false;
             }
@@ -512,7 +512,7 @@ const sortedClients = computed(() => {
         });
     } else {
         sorted.sort((a, b) =>
-          b.name.localeCompare(a.name) * sortMultiplier
+            b.name.localeCompare(a.name) * sortMultiplier
         );
     }
 
@@ -557,7 +557,7 @@ const toggleFavorite = async (client: Client) => {
         if (isFavorite) {
             await invoke('remove_favorite_client', { clientId: client.id });
             favoriteClients.value = favoriteClients.value.filter(
-              (id) => id !== client.id
+                (id) => id !== client.id
             );
             addToast(t('home.favorite_removed'), 'info');
         } else {
@@ -591,7 +591,7 @@ const loadAccounts = async () => {
         accounts.value = await invoke<Account[]>('get_accounts');
 
         const activeAccount = accounts.value.find(
-          (account) => account.is_active
+            (account) => account.is_active
         );
         if (activeAccount) {
             selectedAccountId.value = activeAccount.id;
@@ -635,8 +635,8 @@ const downloadClient = async (id: number) => {
         if (client) {
             if (props.isOnline) {
                 addToast(
-                  t('home.starting_download', { name: client.name }),
-                  'info'
+                    t('home.starting_download', { name: client.name }),
+                    'info'
                 );
                 await invoke('increment_client_counter', { id, counterType: 'download' });
                 await getClients();
@@ -662,15 +662,15 @@ const downloadClient = async (id: number) => {
         let errorMessage = String(err);
 
         if (
-          errorMessage.includes('Hash verification failed') ||
-          errorMessage.includes('corrupted')
+            errorMessage.includes('Hash verification failed') ||
+            errorMessage.includes('corrupted')
         ) {
             errorMessage = t('errors.hash_verification_failed', {
                 name: clients.value.find((c) => c.id === id)?.name || 'Client'
             });
         } else if (
-          errorMessage.includes('Network read error') ||
-          errorMessage.includes('error decoding response body')
+            errorMessage.includes('Network read error') ||
+            errorMessage.includes('error decoding response body')
         ) {
             errorMessage = t('errors.download_network_error', { error: err });
         } else if (errorMessage.includes('timeout')) {
@@ -695,9 +695,9 @@ const launchClient = async (id: number) => {
         }
 
         addToast(
-          t('home.launching', { client: client?.name || 'Client' }),
-          'info',
-          2000
+            t('home.launching', { client: client?.name || 'Client' }),
+            'info',
+            2000
         );
 
         const userToken = localStorage.getItem('authToken') || 'null';
@@ -802,162 +802,162 @@ const isClientRunning = (id: number): boolean => {
 
 const openLogViewer = (client: Client) => {
     showModal(
-      `log-viewer-${client.id}`,
-      LogViewerModal,
-      {
-          title: t('logs.title', { client: client.name }),
-          contentClass: 'wide',
-      },
-      {
-          clientId: client.id,
-          clientName: client.name,
-      },
-      {
-          close: () => hideModal(`log-viewer-${client.id}`),
-      }
+        `log-viewer-${client.id}`,
+        LogViewerModal,
+        {
+            title: t('logs.title', { client: client.name }),
+            contentClass: 'wide',
+        },
+        {
+            clientId: client.id,
+            clientName: client.name,
+        },
+        {
+            close: () => hideModal(`log-viewer-${client.id}`),
+        }
     );
 };
 
 const showInsecureClientWarning = (client: Client) => {
     showModal(
-      `insecure-warning-${client.id}`,
-      InsecureClientWarningModal,
-      {
-          title: t('modals.insecure_client_warning.modal_title'),
-      },
-      { client },
-      {
-          proceed: (data: { client: Client; dontShowAgain: boolean }) => {
-              if (data.dontShowAgain) {
-                  warnedInsecureClients.value.add(data.client.id);
-                  saveWarnedInsecureClients();
-              }
-              hideModal(`insecure-warning-${data.client.id}`);
-              launchClient(data.client.id);
-          },
-          cancel: () => {
-              hideModal(`insecure-warning-${client.id}`);
-          },
-          close: () => hideModal(`insecure-warning-${client.id}`),
-      }
+        `insecure-warning-${client.id}`,
+        InsecureClientWarningModal,
+        {
+            title: t('modals.insecure_client_warning.modal_title'),
+        },
+        { client },
+        {
+            proceed: (data: { client: Client; dontShowAgain: boolean }) => {
+                if (data.dontShowAgain) {
+                    warnedInsecureClients.value.add(data.client.id);
+                    saveWarnedInsecureClients();
+                }
+                hideModal(`insecure-warning-${data.client.id}`);
+                launchClient(data.client.id);
+            },
+            cancel: () => {
+                hideModal(`insecure-warning-${client.id}`);
+            },
+            close: () => hideModal(`insecure-warning-${client.id}`),
+        }
     );
 };
 
 const setupEventListeners = async () => {
     eventListeners.value.push(
-      await listen('download-start', (event: any) => {
-          const filename = event.payload as string;
-          installationStatus.value.set(filename, {
-              percentage: 0,
-              action: t('installation.downloading'),
-              isComplete: false,
-          });
-      })
+        await listen('download-start', (event: any) => {
+            const filename = event.payload as string;
+            installationStatus.value.set(filename, {
+                percentage: 0,
+                action: t('installation.downloading'),
+                isComplete: false,
+            });
+        })
     );
 
     eventListeners.value.push(
-      await listen('download-progress', (event: any) => {
-          const data = event.payload as { file: string; percentage: number };
-          smoothUpdateProgress(data.file, data.percentage, t('installation.downloading'));
-          updateClientInstallStatus(data.file);
-      })
+        await listen('download-progress', (event: any) => {
+            const data = event.payload as { file: string; percentage: number };
+            smoothUpdateProgress(data.file, data.percentage, t('installation.downloading'));
+            updateClientInstallStatus(data.file);
+        })
     );
 
     eventListeners.value.push(
-      await listen('download-complete', (event: any) => {
-          const filename = event.payload as string;
-          const handle = progressAnimHandles.value.get(filename);
-          if (handle != null) {
-              window.cancelAnimationFrame(handle);
-              progressAnimHandles.value.delete(filename);
-          }
-          progressTargets.value.delete(filename);
-          installationStatus.value.set(filename, {
-              percentage: 100,
-              action: t('installation.download_complete'),
-              isComplete: true,
-          });
+        await listen('download-complete', (event: any) => {
+            const filename = event.payload as string;
+            const handle = progressAnimHandles.value.get(filename);
+            if (handle != null) {
+                window.cancelAnimationFrame(handle);
+                progressAnimHandles.value.delete(filename);
+            }
+            progressTargets.value.delete(filename);
+            installationStatus.value.set(filename, {
+                percentage: 100,
+                action: t('installation.download_complete'),
+                isComplete: true,
+            });
 
-          if (!filename.endsWith('.zip')) {
-              markClientAsInstalled(filename);
-          }
-      })
+            if (!filename.endsWith('.zip')) {
+                markClientAsInstalled(filename);
+            }
+        })
     );
 
     eventListeners.value.push(
-      await listen('unzip-start', (event: any) => {
-          const filename = event.payload as string;
-          installationStatus.value.set(filename, {
-              percentage: 0,
-              action: t('installation.extracting'),
-              isComplete: false,
-          });
-      })
+        await listen('unzip-start', (event: any) => {
+            const filename = event.payload as string;
+            installationStatus.value.set(filename, {
+                percentage: 0,
+                action: t('installation.extracting'),
+                isComplete: false,
+            });
+        })
     );
 
     eventListeners.value.push(
-      await listen('unzip-progress', (event: any) => {
-          const data = event.payload as {
-              file: string;
-              percentage: number;
-              action: string;
-          };
-          smoothUpdateProgress(data.file, data.percentage, t('installation.extracting'));
-          updateClientInstallStatus(data.file);
-      })
+        await listen('unzip-progress', (event: any) => {
+            const data = event.payload as {
+                file: string;
+                percentage: number;
+                action: string;
+            };
+            smoothUpdateProgress(data.file, data.percentage, t('installation.extracting'));
+            updateClientInstallStatus(data.file);
+        })
     );
 
     eventListeners.value.push(
-      await listen('unzip-complete', (event: any) => {
-          const filename = event.payload as string;
-          const handle = progressAnimHandles.value.get(filename);
-          if (handle != null) {
-              window.cancelAnimationFrame(handle);
-              progressAnimHandles.value.delete(filename);
-          }
-          progressTargets.value.delete(filename);
-          installationStatus.value.set(filename, {
-              percentage: 100,
-              action: t('installation.installation_complete'),
-              isComplete: true,
-          });
+        await listen('unzip-complete', (event: any) => {
+            const filename = event.payload as string;
+            const handle = progressAnimHandles.value.get(filename);
+            if (handle != null) {
+                window.cancelAnimationFrame(handle);
+                progressAnimHandles.value.delete(filename);
+            }
+            progressTargets.value.delete(filename);
+            installationStatus.value.set(filename, {
+                percentage: 100,
+                action: t('installation.installation_complete'),
+                isComplete: true,
+            });
 
-          markClientAsInstalled(filename);
-      })
+            markClientAsInstalled(filename);
+        })
     );
 
     eventListeners.value.push(
-      await listen('requirements-status', (event: any) => {
-          requirementsInProgress.value = event.payload as boolean;
-      })
+        await listen('requirements-status', (event: any) => {
+            requirementsInProgress.value = event.payload as boolean;
+        })
     );
 
     eventListeners.value.push(
-      await listen('client-needs-reinstall', async (event: any) => {
-          const payload = event.payload as { id: number; name: string };
-          addToast(
-            t('toast.client.crashed_incomplete', { name: payload.name }),
-            'warning',
-            7000
-          );
+        await listen('client-needs-reinstall', async (event: any) => {
+            const payload = event.payload as { id: number; name: string };
+            addToast(
+                t('toast.client.crashed_incomplete', { name: payload.name }),
+                'warning',
+                7000
+            );
 
-          try {
-              await invoke('reinstall_client', { id: payload.id });
-              addToast(
-                t('toast.client.reinstall_success', { name: payload.name }),
-                'success'
-              );
-              await getClients();
-          } catch (reinstallError) {
-              addToast(
-                t('toast.client.reinstall_failed', {
-                    name: payload.name,
-                    error: reinstallError,
-                }),
-                'error'
-              );
-          }
-      })
+            try {
+                await invoke('reinstall_client', { id: payload.id });
+                addToast(
+                    t('toast.client.reinstall_success', { name: payload.name }),
+                    'success'
+                );
+                await getClients();
+            } catch (reinstallError) {
+                addToast(
+                    t('toast.client.reinstall_failed', {
+                        name: payload.name,
+                        error: reinstallError,
+                    }),
+                    'error'
+                );
+            }
+        })
     );
 
     const hashVerificationStartListener = await listen('client-hash-verification-start', (event: any) => {
@@ -985,8 +985,8 @@ const setupEventListeners = async () => {
         const { id, name } = event.payload;
         hashVerifyingClients.value.delete(id);
         addToast(
-          t('toast.client.redownload_success', { name }),
-          'success'
+            t('toast.client.redownload_success', { name }),
+            'success'
         );
 
         await getClients();
@@ -1211,13 +1211,13 @@ const isClientSelected = (clientId: number): boolean => {
 
 const selectedClientsData = computed(() => {
     return clients.value.filter((client) =>
-      selectedClients.value.has(client.id)
+        selectedClients.value.has(client.id)
     );
 });
 
 const canDownloadSelected = computed(() => {
     return selectedClientsData.value.some(
-      (client) => !client.meta.installed && client.working
+        (client) => !client.meta.installed && client.working
     );
 });
 
@@ -1236,7 +1236,7 @@ const canStopSelected = computed(() => {
 const downloadMultipleClients = async () => {
     const selectedData = selectedClientsData.value;
     const validClients = selectedData.filter(
-      (client) => !client.meta.installed && client.working
+        (client) => !client.meta.installed && client.working
     );
 
     if (validClients.length === 0) {
@@ -1252,8 +1252,8 @@ const downloadMultipleClients = async () => {
     }
 
     addToast(
-      t('home.downloading_multiple', { count: validClients.length }),
-      'info'
+        t('home.downloading_multiple', { count: validClients.length }),
+        'info'
     );
 
     const downloadPromises = validClients.map(async (client) => {
@@ -1263,8 +1263,8 @@ const downloadMultipleClients = async () => {
         } catch (err) {
             console.error(`Error downloading client ${client.name}:`, err);
             addToast(
-              t('errors.download_error', { error: `${client.name}: ${err}` }),
-              'error'
+                t('errors.download_error', { error: `${client.name}: ${err}` }),
+                'error'
             );
         }
     });
@@ -1278,7 +1278,7 @@ const downloadMultipleClients = async () => {
 const stopMultipleClients = async () => {
     const selectedData = selectedClientsData.value;
     const runningClients = selectedData.filter(
-      (client) => isClientRunning(client.id)
+        (client) => isClientRunning(client.id)
     );
 
     if (runningClients.length === 0) {
@@ -1287,8 +1287,8 @@ const stopMultipleClients = async () => {
     }
 
     addToast(
-      t('home.stopping_multiple', { count: runningClients.length }),
-      'info'
+        t('home.stopping_multiple', { count: runningClients.length }),
+        'info'
     );
 
     for (const client of runningClients) {
@@ -1298,16 +1298,16 @@ const stopMultipleClients = async () => {
         } catch (err) {
             console.error(`Error stopping client ${client.name}:`, err);
             addToast(
-              t('errors.stop_error', { error: `${client.name}: ${err}` }),
-              'error'
+                t('errors.stop_error', { error: `${client.name}: ${err}` }),
+                'error'
             );
         }
     }
 
     await checkRunningStatus();
     addToast(
-      t('home.multiple_clients_stopped', { count: runningClients.length }),
-      'success'
+        t('home.multiple_clients_stopped', { count: runningClients.length }),
+        'success'
     );
     hideContextMenu();
     clearSelection();
@@ -1316,7 +1316,7 @@ const stopMultipleClients = async () => {
 const deleteMultipleClients = async () => {
     const selectedData = selectedClientsData.value;
     const installedClients = selectedData.filter(
-      (client) => client.meta.installed
+        (client) => client.meta.installed
     );
 
     if (installedClients.length === 0) {
@@ -1326,8 +1326,8 @@ const deleteMultipleClients = async () => {
     }
 
     addToast(
-      t('home.deleting_multiple', { count: installedClients.length }),
-      'info'
+        t('home.deleting_multiple', { count: installedClients.length }),
+        'info'
     );
 
     for (const client of installedClients) {
@@ -1337,16 +1337,16 @@ const deleteMultipleClients = async () => {
         } catch (err) {
             console.error(`Error deleting client ${client.name}:`, err);
             addToast(
-              t('errors.delete_error', { error: `${client.name}: ${err}` }),
-              'error'
+                t('errors.delete_error', { error: `${client.name}: ${err}` }),
+                'error'
             );
         }
     }
 
     await getClients();
     addToast(
-      t('home.multiple_clients_deleted', { count: installedClients.length }),
-      'success'
+        t('home.multiple_clients_deleted', { count: installedClients.length }),
+        'success'
     );
     hideContextMenu();
     clearSelection();
@@ -1355,7 +1355,7 @@ const deleteMultipleClients = async () => {
 const reinstallMultipleClients = async () => {
     const selectedData = selectedClientsData.value;
     const installedClients = selectedData.filter(
-      (client) => client.meta.installed
+        (client) => client.meta.installed
     );
 
     if (installedClients.length === 0) {
@@ -1371,8 +1371,8 @@ const reinstallMultipleClients = async () => {
     }
 
     addToast(
-      t('home.reinstalling_multiple', { count: installedClients.length }),
-      'info'
+        t('home.reinstalling_multiple', { count: installedClients.length }),
+        'info'
     );
 
     for (const client of installedClients) {
@@ -1382,20 +1382,20 @@ const reinstallMultipleClients = async () => {
         } catch (err) {
             console.error(`Error reinstalling client ${client.name}:`, err);
             addToast(
-              t('errors.reinstall_error', {
-                  error: `${client.name}: ${err}`,
-              }),
-              'error'
+                t('errors.reinstall_error', {
+                    error: `${client.name}: ${err}`,
+                }),
+                'error'
             );
         }
     }
 
     await getClients();
     addToast(
-      t('home.multiple_clients_reinstalled', {
-          count: installedClients.length,
-      }),
-      'success'
+        t('home.multiple_clients_reinstalled', {
+            count: installedClients.length,
+        }),
+        'success'
     );
     hideContextMenu();
     clearSelection();
@@ -1431,10 +1431,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
     }
 
     if (
-      event.ctrlKey &&
-      (event.key === 'a' || event.key === 'ф') &&
-      !(event.target as HTMLElement).matches('input, textarea, [contenteditable]') &&
-      expandedClientId.value === null
+        event.ctrlKey &&
+        (event.key === 'a' || event.key === 'ф') &&
+        !(event.target as HTMLElement).matches('input, textarea, [contenteditable]') &&
+        expandedClientId.value === null
     ) {
         if (!event.repeat) {
             event.preventDefault();
@@ -1477,8 +1477,8 @@ const saveWarnedInsecureClients = () => {
     try {
         const clientIds = Array.from(warnedInsecureClients.value);
         localStorage.setItem(
-          'warnedInsecureClients',
-          JSON.stringify(clientIds)
+            'warnedInsecureClients',
+            JSON.stringify(clientIds)
         );
     } catch (error) {
         console.error('Failed to save warned insecure clients:', error);
@@ -1527,8 +1527,8 @@ onMounted(async () => {
     setTimeout(() => {
         if (statusInterval.value === null && !isLeaving.value) {
             statusInterval.value = setInterval(
-              checkRunningStatus,
-              5000
+                checkRunningStatus,
+                5000
             ) as unknown as number;
         }
     }, 500);
@@ -1624,9 +1624,9 @@ onBeforeUnmount(() => {
 <template>
     <div :class="['flex items-center gap-2 mb-6 top-menu', viewVisible ? 'home-entered' : 'home-hidden']">
         <SearchBar ref="searchBarRef" @search="handleSearch" class="flex-1 mr-2 home-search"
-                   :initial-value="searchQuery" :placeholder="t('home.search_placeholder')"/>
+            :initial-value="searchQuery" :placeholder="t('home.search_placeholder')" />
         <FiltersMenu v-model:activeFilters="activeFilters" v-model:clientSortKey="clientSortKey"
-                     v-model:clientSortOrder="clientSortOrder"/>
+            v-model:clientSortOrder="clientSortOrder" />
         <div v-if="halloweenActive" class="tooltip tooltip-bottom" :data-tip="t('events.halloween.tooltip')">
             <div class="px-3 py-2 bg-warning/10 border border-warning/30 rounded-lg text-warning">
                 <span class="text-xl">🎃</span>
@@ -1634,33 +1634,33 @@ onBeforeUnmount(() => {
         </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.custom_clients')">
             <button @click="$emit('change-view', 'custom_clients')"
-                    class="btn btn-ghost border-base-300 btn-primary gap-2 home-action-btn"
-                    :style="{ border: 'var(--border) solid #0000', transitionDelay: '0.5s' }">
-                <FileText class="w-4 h-4"/>
+                class="btn btn-ghost border-base-300 btn-primary gap-2 home-action-btn"
+                :style="{ border: 'var(--border) solid #0000', transitionDelay: '0.5s' }">
+                <FileText class="w-4 h-4" />
             </button>
         </div>
         <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
             <button @click="$emit('change-view', 'news')"
-                    class="btn btn-ghost border-base-300 btn-primary gap-2 relative home-action-btn"
-                    :style="{ border: 'var(--border) solid #0000', transitionDelay: '1s' }">
-                <Newspaper class="w-4 h-4"/>
+                class="btn btn-ghost border-base-300 btn-primary gap-2 relative home-action-btn"
+                :style="{ border: 'var(--border) solid #0000', transitionDelay: '1s' }">
+                <Newspaper class="w-4 h-4" />
                 <span v-if="props.unreadNewsCount && props.unreadNewsCount > 0"
-                      class="absolute -top-2 -right-2 bg-primary text-primary-content text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center border-2 border-base-100 px-1">
+                    class="absolute -top-2 -right-2 bg-primary text-primary-content text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center border-2 border-base-100 px-1">
                     {{ props.unreadNewsCount > 9 ? '9+' : props.unreadNewsCount }}
                 </span>
             </button>
         </div>
     </div>
 
-    <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)"/>
+    <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)" />
 
     <div v-if="filteredClients.length === 0 && !error && clientsLoaded"
-         class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
+        class="text-center py-10 text-base-content/70 animate-fadeIn flex flex-col items-center">
         <div class="text-lg font-semibold mb-2">{{ t('home.no_clients') }}</div>
         <div class="text-sm mb-4">{{ t('home.adjust_search') }}</div>
         <button
-          v-if="searchQuery || activeFilters.fabric || activeFilters.vanilla || activeFilters.forge || activeFilters.installed"
-          @click="clearAllFilters" class="btn btn-sm btn-primary">
+            v-if="searchQuery || activeFilters.fabric || activeFilters.vanilla || activeFilters.forge || activeFilters.installed"
+            @click="clearAllFilters" class="btn btn-sm btn-primary">
             {{ t('home.clear_filters') }}
         </button>
     </div>
@@ -1670,9 +1670,10 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
-         :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }">
+        :class="{ 'multi-select-mode': isCtrlPressed && expandedClientId === null }"
+        :style="{ paddingBottom: selectedClients.size > 0 ? '80px' : '0px' }">
         <div v-for="(client, idx) in filteredClients" :key="client.id"
-             :class="['client-card-item', { 'slide-in-animate': playClientSlideAnim }]"
+            :class="['client-card-item', { 'slide-in-animate': playClientSlideAnim }]"
             :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-memo="[
                 client.id,
                 isClientRunning(client.id),
@@ -1685,23 +1686,22 @@ onBeforeUnmount(() => {
                 requirementsInProgress
             ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
-                        :isClientInstalling="isClientInstalling(client)"
-                        :installationStatus="installationStatus.get(client.filename)"
-                        :isRequirementsInProgress="requirementsInProgress"
-                        :isAnyClientDownloading="isAnyClientDownloading"
-                        :isFavorite="isClientFavorite(client.id)" :isSelected="isClientSelected(client.id)"
-                        :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
-                        :isHashVerifying="hashVerifyingClients.has(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
-                        @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
-                        @show-context-menu="showContextMenu" @client-click="handleClientClick"
-                        @expanded-state-changed="handleExpandedStateChanged"
-                        @show-user-profile="$emit('show-user-profile', $event)"/>
+                :isClientInstalling="isClientInstalling(client)"
+                :installationStatus="installationStatus.get(client.filename)"
+                :isRequirementsInProgress="requirementsInProgress" :isAnyClientDownloading="isAnyClientDownloading"
+                :isFavorite="isClientFavorite(client.id)" :isSelected="isClientSelected(client.id)"
+                :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
+                :isHashVerifying="hashVerifyingClients.has(client.id)" :isAnyCardExpanded="isAnyCardExpanded"
+                @launch="handleLaunchClick" @download="downloadClient" @open-log-viewer="openLogViewer"
+                @show-context-menu="showContextMenu" @client-click="handleClientClick"
+                @expanded-state-changed="handleExpandedStateChanged"
+                @show-user-profile="$emit('show-user-profile', $event)" />
         </div>
     </div>
 
     <div v-if="contextMenu.visible" :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
-         class="fixed z-40 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
-         :class="contextMenu.animationClass">
+        class="fixed z-40 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
+        :class="contextMenu.animationClass">
         <h3 v-if="selectedClients.size <= 1"
             class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30">
             {{ contextMenu.client?.name }}
@@ -1718,44 +1718,44 @@ onBeforeUnmount(() => {
         <ul v-if="selectedClients.size <= 1">
             <li>
                 <a @click="toggleFavorite(contextMenu.client!)"
-                   class="flex items-center gap-2 text-sm active:bg-primary/30">
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
                     <Star class="w-4 h-4" :class="{
                         'fill-yellow-400 text-yellow-400': isClientFavorite(
                             contextMenu.client?.id || 0
                         ),
-                    }"/>
+                    }" />
                     {{
                         isClientFavorite(contextMenu.client?.id || 0)
-                          ? t('theme.actions.remove_favorite')
-                          : t('theme.actions.add_favorite')
+                            ? t('theme.actions.remove_favorite')
+                            : t('theme.actions.add_favorite')
                     }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="reinstallClient(contextMenu.client!)"
-                   class="flex items-center gap-2 text-sm active:bg-primary/30">
-                    <RefreshCcw class="w-4 h-4"/>
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
+                    <RefreshCcw class="w-4 h-4" />
                     {{ t('common.reinstall') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="deleteClient(contextMenu.client!)"
-                   class="flex items-center gap-2 text-sm active:bg-primary/30">
-                    <Trash2 class="w-4 h-4"/>
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
+                    <Trash2 class="w-4 h-4" />
                     {{ t('common.delete') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="openClientFolder(contextMenu.client!)"
-                   class="flex items-center gap-2 text-sm active:bg-primary/30">
-                    <Folder class="w-4 h-4"/>
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
+                    <Folder class="w-4 h-4" />
                     {{ t('theme.actions.open_folder') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">
                 <a @click="copyClientLogs(contextMenu.client!)"
-                   class="flex items-center gap-2 text-sm active:bg-primary/30">
-                    <Copy class="w-4 h-4"/>
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
+                    <Copy class="w-4 h-4" />
                     {{ t('logs.copy_logs') }}
                 </a>
             </li>
@@ -1764,41 +1764,42 @@ onBeforeUnmount(() => {
 
     <transition name="slide-up-bottom">
         <div v-if="selectedClients.size > 0"
-             class="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-auto max-w-[calc(100%-2rem)] bg-neutral text-neutral-content px-4 py-3 rounded-lg shadow-xl z-30 flex items-center gap-3 sm:gap-4">
+            class="fixed left-1/2 transform -translate-x-1/2 w-auto max-w-[calc(100%-2rem)] bg-neutral text-neutral-content px-4 py-3 rounded-lg shadow-xl z-30 flex items-center gap-3 sm:gap-4"
+            :style="{ bottom: `calc(1rem + var(--sidebar-bottom-height, 0px))` }">
             <span class="font-medium text-xs sm:text-sm whitespace-nowrap">{{
-                    t('home.selected_clients', {
-                        count: selectedClients.size,
-                    })
-                }}</span>
+                t('home.selected_clients', {
+                    count: selectedClients.size,
+                })
+            }}</span>
 
             <div class="flex items-center gap-1 sm:gap-2">
                 <transition name="button-fade" mode="out-in">
                     <button v-if="canStopSelected" @click="stopMultipleClients" :title="t('home.stop_selected')"
-                            class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
-                        <StopCircle class="w-4 h-4 sm:w-5 sm:h-5"/>
+                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
+                        <StopCircle class="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </transition>
 
                 <transition name="button-fade" mode="out-in">
                     <button v-if="canDownloadSelected" @click="downloadMultipleClients"
-                            :title="t('home.download_selected')"
-                            class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
-                        <Download class="w-4 h-4 sm:w-5 sm:h-5"/>
+                        :title="t('home.download_selected')"
+                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
+                        <Download class="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </transition>
 
                 <transition name="button-fade" mode="out-in">
                     <button v-if="canReinstallSelected" @click="reinstallMultipleClients"
-                            :title="t('home.reinstall_selected')"
-                            class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
-                        <RefreshCcw class="w-4 h-4 sm:w-5 sm:h-5"/>
+                        :title="t('home.reinstall_selected')"
+                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
+                        <RefreshCcw class="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </transition>
 
                 <transition name="button-fade" mode="out-in">
                     <button v-if="canDeleteSelected" @click="deleteMultipleClients" :title="t('home.delete_selected')"
-                            class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
-                        <Trash2 class="w-4 h-4 sm:w-5 sm:h-5"/>
+                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
+                        <Trash2 class="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                 </transition>
             </div>
@@ -1811,7 +1812,7 @@ onBeforeUnmount(() => {
             " class="border-l border-neutral-content/30 h-5 sm:h-6 mx-1"></div>
 
             <button @click="clearSelection" class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square">
-                <X class="w-4 h-4 sm:w-5 sm:h-5"/>
+                <X class="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
         </div>
     </transition>
@@ -1820,7 +1821,7 @@ onBeforeUnmount(() => {
 <style>
 .client-card-item {
     transition: transform 0.2s ease-out,
-    box-shadow 0.2s ease-out;
+        box-shadow 0.2s ease-out;
     opacity: 1;
 }
 
@@ -1928,7 +1929,7 @@ onBeforeUnmount(() => {
 
 .menu.dropdown-content .relative .absolute {
     box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .menu.dropdown-content .relative .absolute button {

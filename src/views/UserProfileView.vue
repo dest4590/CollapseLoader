@@ -41,7 +41,8 @@
                                     <span v-if="userProfile.status.client_version" class="text-base-content/50 text-sm">
                                         ({{ userProfile.status.client_version }})
                                     </span>
-                                    <span v-if="playtimeDuration" class="badge badge-sm bg-base-300/50 border-none text-base-content/70 ml-2 py-0 px-2 text-[10px] h-4 flex items-center gap-1">
+                                    <span v-if="playtimeDuration"
+                                        class="badge badge-sm bg-base-300/50 border-none text-base-content/70 ml-2 py-0 px-2 text-[10px] h-4 flex items-center gap-1">
                                         <Clock class="w-2.5 h-2.5" />
                                         {{ playtimeDuration }}
                                     </span>
@@ -240,10 +241,19 @@
                     <span class="loading loading-spinner loading-md"></span>
                 </div>
 
-                <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <AchievementCard v-for="ach in sortedAchievements" :key="ach.key" :achievement-key="ach.key"
-                        :icon-name="ach.icon" :locked="!isUnlocked(ach.id)" :unlocked-at="getUnlockedAt(ach.id)"
-                        :hidden="ach.hidden" />
+                <div v-else>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <AchievementCard v-for="ach in displayedAchievements" :key="ach.key" :achievement-key="ach.key"
+                            :icon-name="ach.icon" :locked="!isUnlocked(ach.id)" :unlocked-at="getUnlockedAt(ach.id)"
+                            :hidden="ach.hidden" />
+                    </div>
+
+                    <div v-if="achievements.length > initialDisplayCount" class="flex justify-center mt-4">
+                        <button @click="toggleAchievementsExpand" class="btn btn-ghost btn-sm">
+                            {{ isAchievementsExpanded ? t('common.show_less') : t('common.show_more') }}
+                            <component :is="isAchievementsExpanded ? ChevronUp : ChevronDown" class="w-4 h-4 ml-1" />
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="mt-6" v-if="!globalUserStatus.isStreamer.value">
@@ -262,7 +272,8 @@
                         </template>
                         <template v-else>
                             <div v-if="presets && presets.length">
-                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id" :initial-presets="presets" />
+                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id"
+                                    :initial-presets="presets" />
                             </div>
                             <div v-else class="text-center py-8 text-base-content/70">
                                 <p class="mb-3">{{ t('userProfile.no_presets') }}</p>
@@ -309,6 +320,8 @@ import {
     Ban,
     ArrowLeft,
     Copy,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-vue-next';
 import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
@@ -342,6 +355,8 @@ const presetsLoading = ref(false);
 const achievements = ref<Achievement[]>([]);
 const userAchievements = ref<UserAchievement[]>([]);
 const loadingAchievements = ref(false);
+const isAchievementsExpanded = ref(false);
+const initialDisplayCount = 6;
 
 const { username } = useUser();
 
@@ -449,6 +464,16 @@ const loadAchievements = async () => {
     }
 };
 
+const displayedAchievements = computed(() => {
+    const sorted = sortedAchievements.value;
+    if (isAchievementsExpanded.value) return sorted;
+    return sorted.slice(0, initialDisplayCount);
+});
+
+const toggleAchievementsExpand = () => {
+    isAchievementsExpanded.value = !isAchievementsExpanded.value;
+};
+
 const loadUserProfile = async () => {
     if (!props.userId) {
         error.value = t('userProfile.no_user_id');
@@ -460,15 +485,15 @@ const loadUserProfile = async () => {
         loading.value = true;
         error.value = null;
         userProfile.value = await userService.getUserProfile(props.userId, ['presets', 'achievements']);
-        
+
         if (userProfile.value.presets) {
             presets.value = userProfile.value.presets;
         }
-        
+
         if (userProfile.value.achievements) {
             userAchievements.value = userProfile.value.achievements;
             if (achievements.value.length === 0) {
-                 achievements.value = await achievementService.getAllAchievements();
+                achievements.value = await achievementService.getAllAchievements();
             }
         }
     } catch (err: any) {

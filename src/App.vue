@@ -19,6 +19,7 @@ import { settingsService } from './services/settingsService';
 import { useToast } from './services/toastService';
 import { themeService } from './services/themeService';
 import { updaterService } from './services/updaterService';
+import { webSocketService } from './services/webSocketService';
 import About from './views/About.vue';
 import AccountView from './views/AccountView.vue';
 import AppLogs from './views/AppLogs.vue';
@@ -167,8 +168,8 @@ const handleDisclaimerAccepted = async () => {
     } catch (error) {
         console.error('Failed to mark disclaimer as shown:', error);
         addToast(
-          t('toast.settings.disclaimer_save_failed', { error }),
-          'error'
+            t('toast.settings.disclaimer_save_failed', { error }),
+            'error'
         );
     }
 };
@@ -191,6 +192,7 @@ const handleLoggedOut = () => {
     clearUserData();
 
     globalUserStatus.stopStatusSync();
+    webSocketService.disconnect();
 };
 
 const handleLoggedIn = async () => {
@@ -203,6 +205,7 @@ const handleLoggedIn = async () => {
     await syncService.checkAndRestoreOnStartup();
 
     globalUserStatus.initializeStatusSystem();
+    webSocketService.connect();
 };
 
 const handleRegistered = () => {
@@ -292,10 +295,10 @@ const getTransitionName = () => {
     const previousIndex = tabOrder.indexOf(previousTab.value);
 
     return currentIndex > previousIndex
-      ? 'slide-down'
-      : currentIndex < previousIndex
-        ? 'slide-up'
-        : 'fade-slide';
+        ? 'slide-down'
+        : currentIndex < previousIndex
+            ? 'slide-up'
+            : 'fade-slide';
 };
 
 onMounted(() => {
@@ -315,9 +318,9 @@ onMounted(() => {
             const target = clients.find(c => c.id === clientId)
 
             addToast(
-              t('home.launching', { client: target?.name || 'Client' }),
-              'info',
-              2000
+                t('home.launching', { client: target?.name || 'Client' }),
+                'info',
+                2000
             );
 
             if (target) {
@@ -421,11 +424,11 @@ onMounted(() => {
                 themeService.emergencyReset();
 
                 addToast(
-                  t('toast.theme.emergency_reset_done', {
-                      action: t('toast.theme.emergency_reset_toggle_instruction')
-                  }),
-                  'info',
-                  8000
+                    t('toast.theme.emergency_reset_done', {
+                        action: t('toast.theme.emergency_reset_toggle_instruction')
+                    }),
+                    'info',
+                    8000
                 );
             }
         } catch (err) {
@@ -434,6 +437,18 @@ onMounted(() => {
     };
 
     window.addEventListener('keydown', emergencyHandler);
+
+    window.addEventListener('achievement-unlocked', (event: any) => {
+        const { key } = event.detail;
+        const name = t(`achievements.list.${key}.name`);
+        const description = t(`achievements.list.${key}.description`);
+        addToast(
+            `${t('achievements.unlocked_title', { name })}\n${description}`,
+            'success',
+            5000
+        );
+    });
+
     onUnmounted(() => {
         window.removeEventListener('keydown', emergencyHandler);
     });
@@ -450,53 +465,54 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Preloader v-model:show="showPreloader" :is-dev="isDev" :loading-state="loadingState"
-               :current-progress="currentProgress" :total-steps="totalSteps" :halloween-active="halloweenActive"
-               :current-theme="currentTheme"/>
+    <div :style="{
+        '--sidebar-bottom-height': sidebarPosition === 'bottom' ? '80px' : '0px',
+        '--sidebar-top-height': sidebarPosition === 'top' ? '80px' : '0px',
+        '--toast-bottom-offset': sidebarPosition === 'bottom' ? 'calc(1rem + 80px)' : '1rem',
+        '--toast-top-offset': sidebarPosition === 'top' ? 'calc(4rem + 80px)' : '4rem',
+        '--toast-left-offset': sidebarPosition === 'left' ? 'calc(1rem + 80px)' : '1rem',
+        '--toast-right-offset': sidebarPosition === 'right' ? 'calc(1rem + 80px)' : '1rem'
+    }">
+        <Preloader v-model:show="showPreloader" :is-dev="isDev" :loading-state="loadingState"
+            :current-progress="currentProgress" :total-steps="totalSteps" :halloween-active="halloweenActive"
+            :current-theme="currentTheme" />
 
-    <InitialSetupModals :show-first-run="showFirstRunInfo" :show-disclaimer="showInitialDisclaimer"
-                        :current-theme="currentTheme" @first-run-accepted="handleFirstRunAccepted"
-                        @disclaimer-accepted="handleDisclaimerAccepted" @auto-login="handleLoggedIn"/>
+        <InitialSetupModals :show-first-run="showFirstRunInfo" :show-disclaimer="showInitialDisclaimer"
+            :current-theme="currentTheme" @first-run-accepted="handleFirstRunAccepted"
+            @disclaimer-accepted="handleDisclaimerAccepted" @auto-login="handleLoggedIn" />
 
-    <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu"/>
+        <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu" />
 
-    <div class="flex h-screen flex-col overflow-hidden"
-         v-if="!showInitialDisclaimer && !showFirstRunInfo && contentVisible">
-        <Titlebar/>
+        <div class="flex h-screen flex-col overflow-hidden"
+            v-if="!showInitialDisclaimer && !showFirstRunInfo && contentVisible">
+            <Titlebar />
 
-        <div class="flex-1 flex overflow-hidden relative pt-10">
-            <Sidebar
-              :activeTab="activeTab"
-              @changeTab="setActiveTab"
-              @open-dev-menu="handleOpenDevMenu"
-              :is-online="appOnline"
-              :is-authenticated="isAuthenticated"
-              :position="sidebarPosition"
-              @update:position="updateSidebarPosition"
-            />
+            <div class="flex-1 flex overflow-hidden relative pt-10">
+                <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
+                    :is-online="appOnline" :is-authenticated="isAuthenticated" :position="sidebarPosition"
+                    @update:position="updateSidebarPosition" />
 
-            <main :class="mainClasses">
-                <transition :name="getTransitionName()" mode="out-in" appear>
-                    <div :key="activeTab + (currentUserId || '')">
-                        <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"
-                                   @registered="handleRegistered" @change-view="setActiveTab"
-                                   @show-user-profile="showUserProfile"
-                                   @back-to-friends="() => setActiveTab('friends')"
-                                   @unread-count-updated="handleUnreadNewsCountUpdated" :key="activeTab"
-                                   :is-online="appOnline"
-                                   :user-id="currentUserId"
-                                   v-bind="activeTab === 'home' ? { unreadNewsCount, apiInitialized } : {}"/>
-                    </div>
-                </transition>
-            </main>
+                <main :class="mainClasses">
+                    <transition :name="getTransitionName()" mode="out-in" appear>
+                        <div :key="activeTab + (currentUserId || '')">
+                            <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"
+                                @registered="handleRegistered" @change-view="setActiveTab"
+                                @show-user-profile="showUserProfile" @back-to-friends="() => setActiveTab('friends')"
+                                @unread-count-updated="handleUnreadNewsCountUpdated" :key="activeTab"
+                                :is-online="appOnline" :user-id="currentUserId"
+                                v-bind="activeTab === 'home' ? { unreadNewsCount, apiInitialized } : {}" />
+                        </div>
+                    </transition>
+                </main>
+            </div>
         </div>
-    </div>
 
-    <DownloadProgress/>
-    <ToastContainer/>
-    <GlobalModal/>
-    <RegisterPromptModal v-model="showRegistrationPrompt" @register="handleRegisterPrompt"
-                         @cancel="hideRegistrationPrompt"/>
+        <DownloadProgress />
+        <ToastContainer />
+        <GlobalModal />
+        <RegisterPromptModal v-model="showRegistrationPrompt" @register="handleRegisterPrompt"
+            @cancel="hideRegistrationPrompt" />
+    </div>
 </template>
 
 
