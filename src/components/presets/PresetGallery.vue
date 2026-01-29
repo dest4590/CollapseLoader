@@ -21,7 +21,7 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div class="card bg-[#141414] border border-white/5 shadow-xl hover:bg-[#1a1a1a] transition-all duration-300 rounded-xl group" 
+                <div class="card bg-base-100 border border-white/5 shadow-xl hover:bg-base-300 transition-all duration-300 rounded-xl group" 
                      v-for="p in filteredPresets" :key="p.id">
                     <div class="card-body p-3.5">
                         <div class="cursor-pointer" @click="openDetails(p)">
