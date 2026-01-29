@@ -4,13 +4,15 @@ import { settingsService } from '../services/settingsService';
 import en from './locales/en.json';
 import ru from './locales/ru.json';
 import ua from './locales/ua.json';
-import zh_cn from './locales/zh_cn.json'
+import zh_cn from './locales/zh_cn.json';
+import pl from './locales/pl.json'; 
 
 const messages = {
     en,
     ru,
     ua,
-    zh_cn
+    zh_cn,
+    pl 
 };
 
 interface Setting<T> {
@@ -85,6 +87,7 @@ export const getAvailableLanguages = () => {
         { code: 'en', name: 'English', nativeName: 'English' },
         { code: 'ru', name: 'Russian', nativeName: 'Русский' },
         { code: 'ua', name: 'Ukrainian', nativeName: 'Українська' },
-        { code: 'zh_cn', name: 'Chinese', nativeName: '简体中文' }
+        { code: 'zh_cn', name: 'Chinese', nativeName: '简体中文' },
+        { code: 'pl', name: 'Polish', nativeName: 'Polski' } 
     ];
 };
