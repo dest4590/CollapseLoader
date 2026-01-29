@@ -202,6 +202,24 @@ jobs:
                   }
 
                   echo "ARTIFACT_PATH=artifacts-windows" >> $env:GITHUB_ENV
+            - name: Upload Windows artifacts to Telegram
+              if: matrix.platform == 'windows-latest'
+              shell: pwsh
+              env:
+                  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+              run: |
+                  $token = $env:TELEGRAM_TOKEN
+                  $chatId = $env:TELEGRAM_CHAT_ID
+                  if (-not $token -or -not $chatId) { Write-Host "Telegram token or chat id not set; skipping upload."; exit 0 }
+                  $patterns = @('*.msi','*-setup.exe','*.exe')
+                  foreach ($pattern in $patterns) {
+                    Get-ChildItem -Path artifacts-windows -Filter $pattern -File -Recurse | ForEach-Object {
+                      Write-Host "Uploading $($_.FullName) to Telegram..."
+                      $uri = "https://api.telegram.org/bot$token/sendDocument"
+                      curl.exe -s -X POST $uri -F "chat_id=$chatId" -F "document=@$($_.FullName)" -F "caption=Build artifact $($_.Name)"
+                    }
+                  }
 
             - name: Collect Ubuntu artifacts
               if: matrix.platform == 'ubuntu-latest'
@@ -238,6 +256,22 @@ jobs:
                   done
 
                   echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
+
+            - name: Upload Ubuntu artifacts to Telegram
+              if: matrix.platform == 'ubuntu-latest'
+              shell: bash
+              env:
+                  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+              run: |
+                  token="${TELEGRAM_TOKEN}"
+                  chatId="${TELEGRAM_CHAT_ID}"
+                  if [ -z "$token" ] || [ -z "$chatId" ]; then echo "Telegram token or chat id not set; skipping upload."; exit 0; fi
+                  for f in artifacts-ubuntu/*.AppImage; do
+                    [ -f "$f" ] || continue
+                    echo "Uploading $f to Telegram..."
+                    curl -s -X POST "https://api.telegram.org/bot${token}/sendDocument" -F chat_id="${chatId}" -F document=@"$f" -F caption="Build artifact $(basename "$f")"
+                  done
 
             - name: VirusTotal Scan (Windows only)
               if: matrix.platform == 'windows-latest' && github.event.repository.fork == false
