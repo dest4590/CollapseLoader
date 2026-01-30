@@ -120,8 +120,10 @@ impl Servers {
             match client.head(&server.url).send().await {
                 Ok(resp) => {
                     if resp.status().is_success() {
-                        let mut lock = selected.write().unwrap();
-                        *lock = Some(server.clone());
+                        {
+                            let mut lock = selected.write().unwrap();
+                            *lock = Some(server.clone());
+                        }
                         return;
                     } else {
                         log_warn!(

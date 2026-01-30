@@ -109,8 +109,12 @@ fn main() {
     let git_hash = execute_git_command(&["rev-parse", "HEAD"]).unwrap_or_else(|_| "unknown".into());
     let git_branch = execute_git_command(&["rev-parse", "--abbrev-ref", "HEAD"])
         .unwrap_or_else(|_| "unknown".into());
+    let git_commit_body = execute_git_command(&["show", "-s", "--format=%B", "HEAD"])
+        .unwrap_or_else(|_| "unknown".into());
+
     println!("cargo:rustc-env=GIT_HASH={git_hash}");
     println!("cargo:rustc-env=GIT_BRANCH={git_branch}");
+    println!("cargo:rustc-env=GIT_COMMIT_BODY={git_commit_body}");
 
     info(&format!("Build kind: {build_kind}"));
     info(&format!("Profile: {profile}"));

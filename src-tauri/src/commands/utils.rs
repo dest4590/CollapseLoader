@@ -19,6 +19,7 @@ pub fn get_version() -> Result<serde_json::Value, String> {
       "version":  env!("CARGO_PKG_VERSION").to_string(),
       "codename": CODENAME,
       "commitHash": env!("GIT_HASH").to_string(),
+      "commitMessage": env!("GIT_COMMIT_BODY").to_string(),
       "branch": env!("GIT_BRANCH").to_string(),
       "development": env!("DEVELOPMENT").to_lowercase(),
     });
@@ -92,9 +93,10 @@ pub async fn change_data_folder(
     }
 
     log_info!("Stopping all running clients before changing data folder");
+    
     let running: Vec<u32> = get_running_client_ids(state.clone())
-        .await
-        .map_err(|e| e.to_string())?;
+        .await?;
+
     for id in running {
         log_debug!("Stopping client with ID: {}", id);
         let _ = stop_client(id, state.clone()).await;

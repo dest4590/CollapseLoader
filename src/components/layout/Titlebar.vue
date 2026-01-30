@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/core';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Minus, Square, X } from 'lucide-vue-next';
 
 const appWindow = getCurrentWindow();
@@ -26,7 +26,16 @@ const version = ref('');
 const codename = ref('');
 const commitFull = ref('');
 const commitShort = ref('');
+const commitMessage = ref('');
 const isVisible = ref(false);
+
+const tooltipContent = computed(() => {
+    const lines = [];
+    if (version.value) lines.push(`Build: v${version.value}${codename.value ? ` (${codename.value})` : ''}`);
+    if (commitFull.value) lines.push(`Commit: ${commitFull.value}`);
+    if (commitMessage.value) lines.push(`\nMessage: ${commitMessage.value}`);
+    return lines.length > 0 ? lines.join('\n') : 'No version info';
+});
 
 const fetchVersion = async () => {
     try {
@@ -36,6 +45,7 @@ const fetchVersion = async () => {
         codename.value = data.codename || '';
         commitFull.value = String(data.commitHash || '');
         commitShort.value = commitFull.value ? String(commitFull.value).slice(0, 7) : '';
+        commitMessage.value = data.commitMessage || '';
     } catch (e) {
         console.error('Titlebar: failed to fetch version info', e);
     }
@@ -63,39 +73,45 @@ onUnmounted(() => {
         'titlebar fixed top-0 left-0 right-0 flex justify-between items-center h-10 select-none z-100',
         isVisible ? 'opacity-100' : 'opacity-0'
     ]">
-        <div class="flex items-center pl-3 gap-2 pointer-events-none">
-            <span :class="[
-                'text-[12px] font-semibold tracking-tight text-base-content/80 uppercase',
+
+        <div data-tauri-drag-region class="flex items-center pl-3 gap-2 h-full grow">
+
+            <span data-tauri-drag-region :class="[
+                'text-[12px] font-semibold tracking-tight text-base-content/80 uppercase cursor-default',
                 'transition-all duration-1000 delay-200 ease-out',
                 isVisible ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 -translate-x-8 scale-90'
             ]">
                 CollapseLoader
             </span>
-            <span v-if="version || codename || commitShort"
-                :title="(version ? `v${version}` : '') + (codename ? ` · ${codename}` : '') + (commitFull ? ` (commit ${commitFull})` : '')"
-                :class="[
-                    'text-[10px] font-medium tracking-tight text-base-content/50 uppercase select-none',
-                    'transition-all duration-1000 delay-400 ease-out',
-                    isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
-                ]">
-                <template v-if="version">v{{ version }}</template>
-                <template v-if="codename"> <span class="mx-1">·</span> {{ codename }}</template>
-                <template v-if="commitShort"> <span class="mx-1">·</span> {{ commitShort }}</template>
-            </span>
+
+            <div v-if="version || codename || commitShort" data-tauri-drag-region :data-tip="tooltipContent" :class="[
+                'tooltip tooltip-bottom tooltip-multiline cursor-default pointer-events-auto',
+                'text-[10px] font-medium tracking-tight text-base-content/50 select-none',
+                'transition-all duration-1000 delay-400 ease-out',
+                isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
+            ]">
+
+                <span data-tauri-drag-region v-if="version">v{{ version }}</span>
+                <span data-tauri-drag-region v-if="codename"> <span class="mx-1">·</span> {{ codename }}</span>
+                <span data-tauri-drag-region v-if="commitShort">
+                    <span class="mx-1">·</span>
+                    <span data-tauri-drag-region>{{ commitShort }}</span>
+                </span>
+            </div>
         </div>
+
         <div :class="[
-            'flex h-full',
+            'flex h-full relative z-10',
             'transition-all duration-1000 delay-300 ease-out',
             isVisible ? 'opacity-100 translate-x-0 scale-100' : 'opacity-0 translate-x-8 scale-90'
         ]">
-            <button class="titlebar-btn" @click="minimize" title="Minimize" aria-label="Minimize window">
+            <button class="titlebar-btn" @click="minimize" title="Minimize">
                 <Minus :size="14" :stroke-width="2.5" />
             </button>
-            <button class="titlebar-btn" @click="maximize" :title="isMaximized ? 'Restore' : 'Maximize'"
-                :aria-label="isMaximized ? 'Restore window' : 'Maximize window'">
+            <button class="titlebar-btn" @click="maximize" :title="isMaximized ? 'Restore' : 'Maximize'">
                 <Square :size="12" :stroke-width="2.5" />
             </button>
-            <button class="titlebar-btn titlebar-close" @click="close" title="Close" aria-label="Close window">
+            <button class="titlebar-btn titlebar-close" @click="close" title="Close">
                 <X :size="14" :stroke-width="2.5" />
             </button>
         </div>
@@ -108,6 +124,23 @@ onUnmounted(() => {
     backdrop-filter: blur(6px);
     border-bottom: 1px solid rgba(148, 163, 184, 0.06);
     transition: opacity .25s ease, transform .35s cubic-bezier(.2, .9, .2, 1);
+}
+
+.tooltip-multiline:before {
+    white-space: pre-wrap;
+    text-align: left;
+    max-width: 320px;
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    background-color: #121212;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.tooltip-multiline:after {
+    border-bottom-color: #121212;
 }
 
 .titlebar-btn {

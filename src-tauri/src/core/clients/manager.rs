@@ -49,7 +49,7 @@ impl ClientManager {
         Ok(clients)
     }
 
-    pub fn get_client<F>(manager: &Arc<Mutex<ClientManager>>, client_id: u32, f: F)
+    pub fn get_client<F>(manager: &Arc<Mutex<Self>>, client_id: u32, f: F)
     where
         F: FnOnce(&mut Client),
     {
@@ -67,8 +67,10 @@ impl ClientManager {
         }
 
         let clients_task = tokio::task::spawn_blocking(|| {
-            if let Some(api_instance) = API.as_ref() {
-                match api_instance.json::<Vec<Client>>("clients") {
+            API.as_ref().map_or_else(|| {
+                log_warn!("API instance not available. Attempting to load clients from cache.");
+                Self::load_from_cache("clients.json")
+            }, |api_instance| match api_instance.json::<Vec<Client>>("clients") {
                     Ok(clients) => Ok(clients),
                     Err(e) => {
                         log_warn!(
@@ -77,40 +79,28 @@ impl ClientManager {
                         );
                         Self::load_from_cache("clients.json")
                     }
-                }
-            } else {
-                log_warn!("API instance not available. Attempting to load clients from cache.");
-                Self::load_from_cache("clients.json")
-            }
+                })
         });
 
         let fabric_clients_task = tokio::task::spawn_blocking(
             || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-                if let Some(api_instance) = API.as_ref() {
-                    api_instance
+                API.as_ref().map_or_else(|| Ok(Vec::new()), |api_instance| api_instance
                         .json::<Vec<Client>>("fabric-clients")
                         .or_else(|e| {
                             log_warn!("Failed to fetch fabric clients: {}", e);
                             Ok(Vec::new())
-                        })
-                } else {
-                    Ok(Vec::new())
-                }
+                        }))
             },
         );
 
         let forge_clients_task = tokio::task::spawn_blocking(
             || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-                if let Some(api_instance) = API.as_ref() {
-                    api_instance
+                API.as_ref().map_or_else(|| Ok(Vec::new()), |api_instance| api_instance
                         .json::<Vec<Client>>("forge-clients")
                         .or_else(|e| {
                             log_warn!("Failed to fetch forge clients: {}", e);
                             Ok(Vec::new())
-                        })
-                } else {
-                    Ok(Vec::new())
-                }
+                        }))
             },
         );
 
@@ -222,7 +212,7 @@ impl ClientManager {
 
         if minimize_to_tray_on_launch {
             let running_clients =
-                Client::get_running_clients(&Arc::new(Mutex::new(ClientManager {
+                Client::get_running_clients(&Arc::new(Mutex::new(Self {
                     clients: self.clients.clone(),
                 })));
 

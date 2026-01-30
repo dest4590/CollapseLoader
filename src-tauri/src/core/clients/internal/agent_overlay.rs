@@ -192,7 +192,9 @@ impl AgentOverlayManager {
             format!("Failed to parse agent/overlay info: {e}")
         })?;
 
-        Ok(info.data.ok_or_else(|| "No agent/overlay info found".to_string())?)
+        info
+            .data
+            .ok_or_else(|| "No agent/overlay info found".to_string())
     }
 
     async fn download_file(url: &str, path: &PathBuf) -> Result<(), String> {

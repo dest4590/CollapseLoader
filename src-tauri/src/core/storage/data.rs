@@ -394,10 +394,10 @@ impl Data {
     }
 
     pub async fn verify_file_md5(
-        path: &std::path::PathBuf,
+        path: &Path,
         expected: &str,
     ) -> Result<bool, String> {
-        let path = path.clone();
+        let path = path.to_path_buf();
         let expected = expected.to_lowercase();
         let calc = tokio::task::spawn_blocking(move || {
             crate::core::utils::hashing::calculate_md5_hash(&path)
@@ -473,10 +473,7 @@ impl Data {
             return false;
         }
 
-        match std::fs::read_dir(&path) {
-            Ok(mut entries) => entries.next().is_some(),
-            Err(_) => false,
-        }
+        std::fs::read_dir(&path).is_ok_and(|mut entries| entries.next().is_some())
     }
 
     pub fn verify_folder_integrity(&self, folder_name: &str) -> bool {

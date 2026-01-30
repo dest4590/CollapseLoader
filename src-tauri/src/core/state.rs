@@ -6,7 +6,7 @@ pub struct ClientState {
 }
 
 impl ClientState {
-    pub fn new(manager: Arc<Mutex<ClientManager>>) -> Self {
+    pub const fn new(manager: Arc<Mutex<ClientManager>>) -> Self {
         Self { manager }
     }
 }
@@ -20,7 +20,7 @@ impl Default for CustomClientsState {
 }
 
 impl CustomClientsState {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self
     }
 
@@ -40,7 +40,7 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(client_manager: Arc<Mutex<ClientManager>>) -> Self {
+    pub const fn new(client_manager: Arc<Mutex<ClientManager>>) -> Self {
         Self {
             clients: ClientState::new(client_manager),
             custom_clients: CustomClientsState::new(),

@@ -5,9 +5,9 @@ use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
-use tauri::Manager;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::Manager;
 
 use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
 
@@ -38,7 +38,7 @@ pub fn check_webkit_warning() -> Result<(), StartupError> {
 
 #[cfg(target_os = "windows")]
 pub fn handle_startup_error(error: &StartupError) {
-    if let StartupError::WebView2NotInstalled = error {
+    if matches!(error, StartupError::WebView2NotInstalled) {
         let should_install = messagebox::show_confirm(
             "WebView2 Not Installed",
             "WebView2 is not installed. Would you like to download and install it now?",

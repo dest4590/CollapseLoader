@@ -73,13 +73,15 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         return Err("Fetched client list is empty".to_string());
     }
 
-    let mut manager = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to lock state".to_string())?;
+    {
+        let mut manager = state
+            .clients
+            .manager
+            .lock()
+            .map_err(|_| "Failed to lock state".to_string())?;
 
-    manager.clients = clients;
+        manager.clients = clients;
+    }
 
     Ok(())
 }

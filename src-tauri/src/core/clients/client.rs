@@ -708,7 +708,7 @@ impl Client {
         Ok(())
     }
 
-    fn fix_java_permissions(&self) {
+    const fn fix_java_permissions(&self) {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;

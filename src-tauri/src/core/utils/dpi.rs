@@ -29,7 +29,7 @@ pub fn kill_winws() {
     log_info!("Attempting to kill any existing winws.exe processes");
 
     let mut cmd = Command::new("taskkill");
-    cmd.args(&["/F", "/IM", "winws.exe", "/T"]);
+    cmd.args(["/F", "/IM", "winws.exe", "/T"]);
 
     if !is_development_enabled() {
         cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
@@ -106,7 +106,10 @@ pub fn download_dpi_bypass() -> Result<(), String> {
             if r.status().is_success() {
                 match r.json::<serde_json::Value>() {
                     Ok(json) => {
-                        if let Some(assets) = json.get("assets").and_then(|v| v.as_array()) {
+                        json.get("assets").and_then(|v| v.as_array()).map_or_else(|| {
+                            log_warn!("No assets field in GitHub release JSON; falling back to hardcoded URL");
+                            DPI_ZIP_FALLBACK_URL.to_string()
+                        }, |assets| {
                             let mut found: Option<String> = None;
                             for asset in assets {
                                 if asset.get("name").and_then(|n| n.as_str()) == Some(DPI_ZIP_NAME)
@@ -119,19 +122,16 @@ pub fn download_dpi_bypass() -> Result<(), String> {
                                     }
                                 }
                             }
-                            if let Some(u) = found {
+                            found.map_or_else(|| {
+                                log_warn!("Asset {} not found in latest release; falling back to hardcoded URL", DPI_ZIP_NAME);
+                                DPI_ZIP_FALLBACK_URL.to_string()
+                            }, |u| {
                                 log_info!(
                                     "Resolved latest DPI package URL from GitHub releases API"
                                 );
                                 u
-                            } else {
-                                log_warn!("Asset {} not found in latest release; falling back to hardcoded URL", DPI_ZIP_NAME);
-                                DPI_ZIP_FALLBACK_URL.to_string()
-                            }
-                        } else {
-                            log_warn!("No assets field in GitHub release JSON; falling back to hardcoded URL");
-                            DPI_ZIP_FALLBACK_URL.to_string()
-                        }
+                            })
+                        })
                     }
                     Err(e) => {
                         log_warn!("Failed to parse GitHub release JSON: {}. Falling back to hardcoded URL", e);
@@ -223,11 +223,7 @@ fn start_winws_background_inner() -> Result<(), String> {
     }
 
     fn extend_with_game_filter(base: &str, game_filter: &Option<String>) -> String {
-        if let Some(filter) = game_filter {
-            format!("{},{}", base, filter)
-        } else {
-            base.to_string()
-        }
+        game_filter.as_ref().map_or_else(|| base.to_string(), |filter| format!("{},{}", base, filter))
     }
 
     let game_filter = std::env::var("GameFilter")

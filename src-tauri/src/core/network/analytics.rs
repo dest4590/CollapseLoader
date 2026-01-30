@@ -39,7 +39,11 @@ impl Analytics {
 
             log_debug!("Sending {} to {}", analytics_type, url);
 
-            match client.post(&url).bearer_auth(token.as_deref().unwrap_or("")).send() {
+            match client
+                .post(&url)
+                .bearer_auth(token.as_deref().unwrap_or(""))
+                .send()
+            {
                 Ok(_) => {}
                 Err(e) => {
                     log_debug!("Failed to send {}: {}", analytics_type, e);
@@ -49,7 +53,8 @@ impl Analytics {
     }
 
     fn get_server_url(analytics_type: &str) -> Option<String> {
-        match SERVERS.selected_api.read().unwrap().clone() {
+        let value = SERVERS.selected_api.read().unwrap().clone();
+        match value {
             Some(server) => Some(server.url),
             None => {
                 log_debug!("No API server selected for {}", analytics_type);

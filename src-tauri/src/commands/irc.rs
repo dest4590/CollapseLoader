@@ -108,8 +108,10 @@ pub async fn connect_irc(
                         Ok(0) => {
                             log_info!("IRC connection closed by server");
                             app_clone.emit("irc-disconnected", ()).unwrap_or_default();
-                            let mut writer_guard = writer_for_reader.lock().await;
-                            *writer_guard = None;
+                            {
+                                let mut writer_guard = writer_for_reader.lock().await;
+                                *writer_guard = None;
+                            }
                             break;
                         }
                         Ok(_) => {
@@ -123,8 +125,10 @@ pub async fn connect_irc(
                                 .emit("irc-error", e.to_string())
                                 .unwrap_or_default();
                             app_clone.emit("irc-disconnected", ()).unwrap_or_default();
-                            let mut writer_guard = writer_for_reader.lock().await;
-                            *writer_guard = None;
+                            {
+                                let mut writer_guard = writer_for_reader.lock().await;
+                                *writer_guard = None;
+                            }
                             break;
                         }
                     }
@@ -142,8 +146,8 @@ pub async fn connect_irc(
 
 #[tauri::command]
 pub async fn disconnect_irc(state: State<'_, IrcState>) -> Result<(), String> {
-    let mut writer = state.writer.lock().await;
-    if let Some(mut w) = writer.take() {
+    let value = state.writer.lock().await.take();
+    if let Some(mut w) = value {
         let _ = w.shutdown().await;
     }
     Ok(())
