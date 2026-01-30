@@ -278,7 +278,14 @@
     "avatar_upload_failed": "Failed to upload avatar",
     "reset_avatar": "Reset avatar",
     "avatar_reset_success": "Avatar reset successfully",
-    "avatar_reset_failed": "Failed to reset avatar: {error}"
+    "avatar_reset_failed": "Failed to reset avatar: {error}",
+    "favorite_client": "Favorite Client",
+    "favorite_client_description": "Select your favorite client to display on your profile",
+    "select_favorite_client": "Select favorite client",
+    "no_favorite_client": "No favorite client selected",
+    "current_favorite": "Current favorite",
+    "favorite_client_updated": "Favorite client updated successfully",
+    "favorite_client_update_failed": "Failed to update favorite client"
   },
   "roles": {
     "user": "User",
@@ -791,6 +798,7 @@
     "user_not_found": "User not found",
     "login_required": "You need to be logged in to view profiles",
     "profile_load_failed": "Failed to load user profile",
+    "favorite_client": "Favorite Client",
     "friend_request_sent_success": "Friend request sent to {name}",
     "friend_request_failed": "Failed to send friend request: {error}",
     "copy_username": "Copy username",

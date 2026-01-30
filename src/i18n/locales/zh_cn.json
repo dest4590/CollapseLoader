@@ -278,7 +278,14 @@
     "avatar_upload_failed": "上传头像失败",
     "reset_avatar": "重置头像",
     "avatar_reset_success": "头像重置成功",
-    "avatar_reset_failed": "重置头像失败：{error}"
+    "avatar_reset_failed": "重置头像失败：{error}",
+    "current_favorite": "目前最喜欢的",
+    "favorite_client": "最喜欢的客户",
+    "favorite_client_description": "选择您最喜欢的客户以显示在您的个人资料上",
+    "favorite_client_update_failed": "更新收藏客户端失败",
+    "favorite_client_updated": "收藏客户端更新成功",
+    "no_favorite_client": "没有选择最喜欢的客户",
+    "select_favorite_client": "选择最喜欢的客户"
   },
   "roles": {
     "user": "用户",
@@ -797,7 +804,8 @@
     "presets": "预设",
     "no_presets": "该用户尚未分享任何预设。",
     "create_preset": "创建预设",
-    "presets_hidden_streamer": "主播模式下已隐藏预设。"
+    "presets_hidden_streamer": "主播模式下已隐藏预设。",
+    "favorite_client": "最喜欢的客户"
   },
   "sync": {
     "last_sync": "上次同步",
@@ -865,7 +873,9 @@
       "copied_success": "应用日志已复制到剪贴板！",
       "copy_failed": "复制应用日志失败：{error}",
       "client_logs_copied": "日志已复制到剪贴板！",
-      "client_logs_copy_failed": "复制日志到剪贴板失败。"
+      "client_logs_copy_failed": "复制日志到剪贴板失败。",
+      "download_failed": "无法保存日志：{错误}",
+      "download_success": "日志保存成功！"
     },
     "users": {
       "blocked_load_failed": "加载被屏蔽用户失败",
@@ -1056,7 +1066,12 @@
     "comment_placeholder": "撰写评论...",
     "preset_picker_label": "选择本地预设",
     "preset_picker_placeholder": "选择一个预设...",
-    "no_local_presets": "您还没有任何预设"
+    "no_local_presets": "您还没有任何预设",
+    "by_author": "加时{姓名}",
+    "sort_comments": "评论最多",
+    "sort_downloads": "下载次数最多",
+    "sort_newest": "最新",
+    "sort_popular": "受欢迎的"
   },
   "events": {
     "halloween": {

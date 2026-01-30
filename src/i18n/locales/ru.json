@@ -278,7 +278,14 @@
     "avatar_upload_failed": "Не удалось загрузить аватар",
     "reset_avatar": "Сбросить аватар",
     "avatar_reset_success": "Аватар успешно сброшен",
-    "avatar_reset_failed": "Не удалось сбросить аватар: {error}"
+    "avatar_reset_failed": "Не удалось сбросить аватар: {error}",
+    "favorite_client": "Любимый клиент",
+    "favorite_client_description": "Выберите свой любимый клиент для отображения в профиле",
+    "select_favorite_client": "Выбрать любимый клиент",
+    "no_favorite_client": "Любимый клиент не выбран",
+    "current_favorite": "Текущий любимый",
+    "favorite_client_updated": "Любимый клиент успешно обновлён",
+    "favorite_client_update_failed": "Не удалось обновить любимый клиент"
   },
   "roles": {
     "user": "Пользователь",
@@ -791,6 +798,7 @@
     "user_not_found": "Пользователь не найден",
     "login_required": "Необходимо войти в систему для просмотра профилей",
     "profile_load_failed": "Не удалось загрузить профиль пользователя",
+    "favorite_client": "Любимый клиент",
     "friend_request_sent_success": "Запрос в друзья отправлен {name}",
     "friend_request_failed": "Не удалось отправить запрос в друзья: {error}",
     "copy_username": "Копировать имя пользователя",

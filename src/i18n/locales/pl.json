@@ -278,14 +278,21 @@
     "avatar_upload_failed": "Nie udało się przesłać awatara",
     "reset_avatar": "Zresetuj awatar",
     "avatar_reset_success": "Awatar pomyślnie zresetowany",
-    "avatar_reset_failed": "Nie udało się zresetować awatara: {error}"
+    "avatar_reset_failed": "Nie udało się zresetować awatara: {error}",
+    "current_favorite": "Aktualny faworyt",
+    "favorite_client": "Ulubiony Klient",
+    "favorite_client_description": "Wybierz swojego ulubionego klienta, który chcesz wyświetlić w swoim profilu",
+    "favorite_client_update_failed": "Nie udało się zaktualizować ulubionego klienta",
+    "favorite_client_updated": "Ulubiony klient został pomyślnie zaktualizowany",
+    "no_favorite_client": "Nie wybrano ulubionego klienta",
+    "select_favorite_client": "Wybierz ulubionego klienta"
   },
   "roles": {
-    "USER": "Użytkownik",
-    "TESTER": "Tester",
-    "ADMIN": "Admin",
-    "DEVELOPER": "Deweloper",
-    "OWNER": "Właściciel"
+    "admin": "Administrator",
+    "developer": "Wywoływacz",
+    "owner": "Właściciel",
+    "tester": "Próbnik",
+    "user": "Użytkownik"
   },
   "appLogs": {
     "autoScroll": "Automatyczne przewijanie",
@@ -692,7 +699,9 @@
       "irc_chat": "Rozmawiaj z innymi użytkownikami CollapseLoader na czacie IRC w każdym kliencie.",
       "hash_verify": "Włącz weryfikację sumy kontrolnej, aby upewnić się, że pobrane klienty nie są uszkodzone. Pomaga to w terminowym aktualizowaniu klientów do najnowszej wersji.",
       "dpi_bypass": "Włącz, jeśli pobieranie klienta zatrzymało się na 0%, klient nie uruchamia się lub klienty nie ładują się.",
-      "sync_client_settings": "Synchronizuj ustawienia, paczki zasobów i inne parametry między wszystkimi klientami."
+      "sync_client_settings": "Synchronizuj ustawienia, paczki zasobów i inne parametry między wszystkimi klientami.",
+      "close_to_tray": "Zminimalizuj aplikację do zasobnika systemowego, zamiast zamykać ją po kliknięciu przycisku zamykania.",
+      "minimize_to_tray_on_launch": "Zminimalizuj aplikację do zasobnika systemowego po uruchomieniu klienta."
     },
     "ram_warning": {},
     "telemetry": "Analityka",
@@ -753,7 +762,9 @@
     "remote_accounts_more": "i jeszcze {count} kont",
     "remote_accounts_empty": "Na Atlas nie ma jeszcze zsynchronizowanych kont.",
     "sync_login_required": "Zaloguj się, aby włączyć synchronizację",
-    "not_signed_in": "Nie jesteś zalogowany"
+    "not_signed_in": "Nie jesteś zalogowany",
+    "close_to_tray": "Blisko tacy",
+    "minimize_to_tray_on_launch": "Minimalizuj do zasobnika przy uruchomieniu"
   },
   "userProfile": {
     "playing": "Gra w",
@@ -805,7 +816,8 @@
     "create_preset": "Utwórz preset",
     "presets_title": "Presety",
     "presets": "presetów",
-    "presets_hidden_streamer": "Presety ukryte w trybie streamera."
+    "presets_hidden_streamer": "Presety ukryte w trybie streamera.",
+    "favorite_client": "Ulubiony Klient"
   },
   "sync": {
     "last_sync": "Ostatnia synchronizacja",
@@ -981,7 +993,8 @@
         }
       },
       "no_changelog_desc": "Aktualizacje i zmiany pojawią się tutaj.",
-      "comments_tab": "Komentarze"
+      "comments_tab": "Komentarze",
+      "your_rating": "Twoja ocena"
     },
     "comments": {
       "delete": "Usuń",
@@ -1064,7 +1077,12 @@
     "comment_placeholder": "Napisz komentarz...",
     "preset_picker_label": "Wybierz preset lokalny",
     "preset_picker_placeholder": "Wybierz preset...",
-    "no_local_presets": "Nie masz jeszcze żadnych presetów"
+    "no_local_presets": "Nie masz jeszcze żadnych presetów",
+    "by_author": "OT {imię}",
+    "sort_comments": "Najczęściej komentowane",
+    "sort_downloads": "Najczęściej pobierane",
+    "sort_newest": "Najnowszy",
+    "sort_popular": "Popularny"
   },
   "events": {
     "halloween": {

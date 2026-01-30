@@ -278,7 +278,14 @@
     "avatar_upload_failed": "Не вдалося завантажити аватар",
     "reset_avatar": "Скинути аватар",
     "avatar_reset_success": "Аватар успішно скинуто",
-    "avatar_reset_failed": "Не вдалося скинути аватар: {error}"
+    "avatar_reset_failed": "Не вдалося скинути аватар: {error}",
+    "current_favorite": "Поточний улюблений",
+    "favorite_client": "Улюблений клієнт",
+    "favorite_client_description": "Виберіть улюблений клієнт для відображення у вашому профілі",
+    "favorite_client_update_failed": "Не вдалося оновити улюблений клієнт",
+    "favorite_client_updated": "Улюблений клієнт успішно оновлено",
+    "no_favorite_client": "Не вибрано улюблений клієнт",
+    "select_favorite_client": "Вибрати улюблений клієнт"
   },
   "roles": {
     "user": "Користувач",
@@ -808,7 +815,8 @@
     "presets": "пресетів",
     "no_presets": "Цей користувач ще не поділився жодними пресетами.",
     "create_preset": "Створити пресет",
-    "presets_hidden_streamer": "Пресети приховані в режимі стрімера."
+    "presets_hidden_streamer": "Пресети приховані в режимі стрімера.",
+    "favorite_client": "Улюблений клієнт"
   },
   "sync": {
     "last_sync": "Остання синхронізація",

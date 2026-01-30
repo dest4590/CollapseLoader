@@ -86,6 +86,39 @@
                 </div>
             </div>
 
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
+                            {{ t('account.favorite_client') }}
+                        </h2>
+                        <p class="text-sm text-base-content/70 mb-4">
+                            {{ t('account.favorite_client_description') }}
+                        </p>
+                        <div v-if="loadingClients" class="flex justify-center py-4">
+                            <span class="loading loading-spinner loading-md"></span>
+                        </div>
+                        <div v-else class="form-control">
+                            <select v-model="selectedFavoriteClientId" class="select select-bordered w-full bg-base-100"
+                                @change="handleFavoriteClientChange"
+                                :disabled="isLoadingFromCache || updatingFavoriteClient">
+                                <option :value="null">{{ t('account.no_favorite_client') }}</option>
+                                <option v-for="client in availableClients" :key="client.id" :value="client.id">
+                                    {{ client.name }} {{ formatVersion(client.version) }}
+                                </option>
+                            </select>
+                            <div v-if="currentFavoriteClient" class="mt-3 p-3 bg-base-300 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-medium">{{ t('account.current_favorite') }}:</span>
+                                    <span class="badge badge-primary">{{ currentFavoriteClient.name }} {{
+                                        formatVersion(currentFavoriteClient.version) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div>
                 <div class="card bg-base-200 shadow-md border border-base-300 h-full">
                     <div class="card-body">
@@ -213,6 +246,22 @@ import { EditIcon, EyeIcon, EyeOffIcon, ChevronDown, ChevronUp } from 'lucide-vu
 import getRoleBadge from '../utils/roleBadge';
 import { globalUserStatus } from '../composables/useUserStatus';
 import { syncService, SyncServiceState } from '../services/syncService';
+import { invoke } from '@tauri-apps/api/core';
+
+interface Client {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    md5_hash: string;
+    main_class: string;
+    show: boolean;
+    working: boolean;
+    insecure: boolean;
+    launches: number;
+    downloads: number;
+    size: number;
+}
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -229,6 +278,11 @@ const userAchievements = ref<UserAchievement[]>([]);
 const loadingAchievements = ref(false);
 const isAchievementsExpanded = ref(false);
 const initialDisplayCount = 4;
+
+const availableClients = ref<Client[]>([]);
+const loadingClients = ref(false);
+const selectedFavoriteClientId = ref<number | null>(null);
+const updatingFavoriteClient = ref(false);
 
 const {
     username,
@@ -272,6 +326,15 @@ const userInfo = computed(() => {
         email: mail,
         role: role,
     };
+});
+
+const currentFavoriteClient = computed(() => {
+    const profile = useUser().profile.value;
+    if (profile && (profile as any).favorite_client_id) {
+        const clientId = (profile as any).favorite_client_id;
+        return availableClients.value.find(c => c.id === clientId) || null;
+    }
+    return null;
 });
 
 const roleBadge = computed(() => {
@@ -346,6 +409,55 @@ const toggleShowEmail = () => {
     showEmail.value = !showEmail.value;
 };
 
+const formatVersion = (version: string): string => {
+    if (!version) return '';
+    return version.replace(/^V/, '').replace(/_/g, '.');
+};
+
+const loadClients = async () => {
+    try {
+        loadingClients.value = true;
+        const clients = await invoke<Client[]>('get_clients');
+        availableClients.value = clients.filter(c => c.show && c.working);
+
+        const profile = useUser().profile.value;
+        if (profile && (profile as any).favorite_client_id) {
+            selectedFavoriteClientId.value = (profile as any).favorite_client_id;
+        }
+    } catch (error) {
+        console.error('Failed to load clients:', error);
+        addToast(t('errors.clients_load_failed'), 'error');
+    } finally {
+        loadingClients.value = false;
+    }
+};
+
+const handleFavoriteClientChange = async () => {
+    try {
+        updatingFavoriteClient.value = true;
+        const result = await userService.updateUserProfile(null, selectedFavoriteClientId.value);
+
+        if (result.success) {
+            await refreshUserData();
+            addToast(t('account.favorite_client_updated'), 'success');
+        } else {
+            addToast(result.error || t('account.favorite_client_update_failed'), 'error');
+            // Revert selection on error
+            const profile = useUser().profile.value;
+            if (profile && (profile as any).favorite_client_id) {
+                selectedFavoriteClientId.value = (profile as any).favorite_client_id;
+            } else {
+                selectedFavoriteClientId.value = null;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update favorite client:', error);
+        addToast(t('account.favorite_client_update_failed'), 'error');
+    } finally {
+        updatingFavoriteClient.value = false;
+    }
+};
+
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
 
@@ -358,6 +470,7 @@ onMounted(async () => {
 
     await syncService.initializeSyncStatus();
     await loadAchievements();
+    await loadClients();
 });
 
 watch(

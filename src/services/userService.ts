@@ -15,6 +15,7 @@ export interface UserProfile {
     social_links: SocialLink[];
     created_at: string;
     updated_at: string;
+    favorite_client_id: number | null;
 }
 
 export interface UserInitData {
@@ -289,9 +290,13 @@ class UserService {
         }
     }
 
-    async updateUserProfile(nickname: string | null): Promise<{ success: boolean; error?: string }> {
+    async updateUserProfile(nickname: string | null, favoriteClientId?: number | null): Promise<{ success: boolean; error?: string }> {
         try {
-            await apiClient.patch('/users/me/profile', { nickname });
+            const payload: any = { nickname };
+            if (favoriteClientId !== undefined) {
+                payload.favorite_client_id = favoriteClientId;
+            }
+            await apiClient.patch('/users/me/profile', payload);
             await this.refreshCachedUser();
             return { success: true };
         } catch (error: any) {

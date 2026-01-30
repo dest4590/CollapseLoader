@@ -142,6 +142,13 @@
                                 <span class="text-base-content/70">{{ t('userProfile.member_since') }}:</span>
                                 <span class="font-medium">{{ formatDate(userProfile.member_since) }}</span>
                             </div>
+
+                            <div v-if="favoriteClientDisplay" class="flex justify-between items-center">
+                                <span class="text-base-content/70">{{ t('userProfile.favorite_client') }}:</span>
+                                <span class="badge badge-primary">
+                                    {{ favoriteClientDisplay.name }} {{ formatVersion(favoriteClientDisplay.version) }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -323,15 +330,30 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
 import { globalUserStatus } from '../composables/useUserStatus';
+import { invoke } from '@tauri-apps/api/core';
+
+interface Client {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    md5_hash: string;
+    main_class: string;
+    show: boolean;
+    working: boolean;
+    insecure: boolean;
+    launches: number;
+    downloads: number;
+    size: number;
+}
 import { useStreamerMode } from '../composables/useStreamerMode';
 import getRoleBadge from '../utils/roleBadge';
-import { formatDate } from '../utils/utils';
 import { resolveApiAssetUrl } from '../utils/url';
 import { marketplaceService } from '../services/marketplaceService';
 import { useUser } from '../composables/useUser';
 import { achievementService, type Achievement, type UserAchievement } from '../services/achievementService';
+import { useI18n } from 'vue-i18n';
 
 interface Props {
     userId?: number;
@@ -356,7 +378,8 @@ const achievements = ref<Achievement[]>([]);
 const userAchievements = ref<UserAchievement[]>([]);
 const loadingAchievements = ref(false);
 const isAchievementsExpanded = ref(false);
-const initialDisplayCount = 6;
+const initialDisplayCount = 4;
+const availableClients = ref<Client[]>([]);
 
 const { username } = useUser();
 
@@ -412,8 +435,18 @@ const presetsCountLabel = computed(() => {
 });
 
 const displayNickname = computed(() => {
-    if (!userProfile.value) return '';
-    return streamer.getDisplayName(userProfile.value.nickname, userProfile.value.username);
+    if (globalUserStatus.isStreamer.value) {
+        return '??????';
+    }
+    return userProfile.value?.nickname || userProfile.value?.username || 'User';
+});
+
+const favoriteClientDisplay = computed(() => {
+    if (userProfile.value && (userProfile.value as any).favorite_client_id) {
+        const clientId = (userProfile.value as any).favorite_client_id;
+        return availableClients.value.find(c => c.id === clientId) || null;
+    }
+    return null;
 });
 
 const displayUsername = computed(() => {
@@ -545,6 +578,26 @@ const handleSendFriendRequest = async () => {
         addToast(t('userProfile.friend_request_failed', { error: error }), 'error');
     } finally {
         sendingRequest.value = false;
+    }
+};
+
+const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+const formatVersion = (version: string): string => {
+    if (!version) return '';
+    return version.replace(/^V/, '').replace(/_/g, '.');
+};
+
+const loadClients = async () => {
+    try {
+        const clients = await invoke<Client[]>('get_clients');
+        availableClients.value = clients.filter(c => c.show && c.working);
+    } catch (error) {
+        console.error('Failed to load clients:', error);
     }
 };
 
@@ -802,5 +855,6 @@ onMounted(async () => {
     await loadUserProfile();
     if (!userProfile.value?.presets) await loadUserPresets();
     if (!userProfile.value?.achievements) await loadAchievements();
+    await loadClients();
 });
 </script>
