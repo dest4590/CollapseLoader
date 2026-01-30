@@ -23,6 +23,7 @@ class WebSocketService {
                 console.log('Connected to WebSocket');
                 this.subscribeToUserAchievements();
                 this.subscribeToFriendNotifications();
+                this.subscribeToCommands();
             },
             onDisconnect: () => {
                 this.connected = false;
@@ -112,6 +113,29 @@ class WebSocketService {
     private handleAchievementUnlock(achievement: any) {
         const event = new CustomEvent('achievement-unlocked', { detail: achievement });
         window.dispatchEvent(event);
+    }
+
+    private subscribeToCommands() {
+        if (!this.client) {
+            console.error('Cannot subscribe: WebSocket client is not initialized');
+            return;
+        }
+
+        this.client.subscribe('/topic/commands', (message) => {
+            if (message.body) {
+                const data = JSON.parse(message.body);
+                this.handleCommand(data);
+            }
+        });
+    }
+
+    private async handleCommand(data: any) {
+        if (data.command === 'CHECK_FOR_UPDATES') {
+            const { updaterService } = await import('./updaterService');
+            const i18n = (await import('../i18n')).default;
+            const t = i18n.global.t;
+            await updaterService.checkForUpdates(false, t);
+        }
     }
 }
 
