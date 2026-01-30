@@ -23,7 +23,7 @@
                                 </div>
 
                                 <p class="text-base-content/70 text-sm mt-1">
-                                    @{{ username }}
+                                    @{{ userInfo.username }}
                                 </p>
 
                                 <p class="text-base-content/60 text-xs mt-1 flex items-center gap-2">

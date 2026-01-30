@@ -1700,7 +1700,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-if="contextMenu.visible" :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
-        class="fixed z-40 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
+        class="fixed z-[100] menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
         :class="contextMenu.animationClass">
         <h3 v-if="selectedClients.size <= 1"
             class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30">
