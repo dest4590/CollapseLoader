@@ -118,6 +118,7 @@ export interface PublicUserProfile {
     role: string | null;
     achievements?: any[];
     presets?: any[];
+    favorite_client_id: number | null;
 }
 
 export interface UserPreference {
@@ -413,7 +414,8 @@ class UserService {
             social_links: profile?.social_links ?? [],
             role: profile?.role ?? null,
             achievements: publicUser.achievements,
-            presets: publicUser.presets
+            presets: publicUser.presets,
+            favorite_client_id: profile?.favorite_client_id ?? null,
         };
 
         if (publicUser.friendship_status) {
