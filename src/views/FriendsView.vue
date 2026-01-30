@@ -157,6 +157,10 @@ onMounted(async () => {
         loadFriendsAndStatus,
         FULL_DATA_UPDATE_INTERVAL
     );
+
+    window.addEventListener('friend-request-received', handleRefreshEvent);
+    window.addEventListener('friend-request-accepted', handleRefreshEvent);
+    window.addEventListener('friend-request-canceled', handleRefreshEvent);
 });
 
 onUnmounted(() => {
@@ -166,12 +170,19 @@ onUnmounted(() => {
     if (fullDataRefreshInterval) {
         clearInterval(fullDataRefreshInterval);
     }
+    window.removeEventListener('friend-request-received', handleRefreshEvent);
+    window.removeEventListener('friend-request-accepted', handleRefreshEvent);
+    window.removeEventListener('friend-request-canceled', handleRefreshEvent);
 });
+
+const handleRefreshEvent = () => {
+    loadFriendsAndStatus(true);
+};
 
 const loadFriendsAndStatus = async (forceReload = false) => {
     try {
         if (forceReload || friends.value.length === 0) {
-            await loadFriendsData();
+            await loadFriendsData(forceReload);
         } else {
             await updateFriendStatuses();
         }

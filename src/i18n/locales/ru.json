@@ -1084,6 +1084,16 @@
     }
   },
   "login": "Вам необходимо войти в свою учетную запись.",
+  "notifications": {
+    "friend_request_received": {
+      "title": "Запрос в друзья",
+      "message": "{name} отправил вам запрос в друзья!"
+    },
+    "friend_request_accepted": {
+      "title": "Запрос принят",
+      "message": "{name} принял ваш запрос в друзья!"
+    }
+  },
   "achievements": {
     "title": "Достижения",
     "unlocked_title": "Достижение разблокировано: {name}",

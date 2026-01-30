@@ -40,6 +40,7 @@ import { getIsDevelopment } from './utils/isDevelopment';
 import Preloader from './components/core/Preloader.vue';
 import { useAppInit } from './composables/useAppInit';
 import type { Client } from './types/ui';
+import notificationSound from './assets/misc/notification.mp3';
 
 interface Setting<T> {
     description: string;
@@ -445,7 +446,31 @@ onMounted(() => {
         addToast(
             `${t('achievements.unlocked_title', { name })}\n${description}`,
             'success',
-            5000
+            9000
+        );
+    });
+
+    window.addEventListener('friend-request-received', (event: any) => {
+        const { sender, nickname } = event.detail;
+        const displayName = nickname || sender;
+        const audio = new Audio(notificationSound);
+        audio.play().catch(e => console.error('Failed to play notification sound:', e));
+        addToast(
+            t('notifications.friend_request_received.message', { name: displayName }),
+            'info',
+            15000
+        );
+    });
+
+    window.addEventListener('friend-request-accepted', (event: any) => {
+        const { sender, nickname } = event.detail;
+        const displayName = nickname || sender;
+        const audio = new Audio(notificationSound);
+        audio.play().catch(e => console.error('Failed to play notification sound:', e));
+        addToast(
+            t('notifications.friend_request_accepted.message', { name: displayName }),
+            'success',
+            15000
         );
     });
 

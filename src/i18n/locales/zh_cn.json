@@ -1077,6 +1077,16 @@
     "installation_complete": "安装完成"
   },
   "login": "您需要登录您的帐户。",
+  "notifications": {
+    "friend_request_received": {
+      "title": "好友请求",
+      "message": "{name} 向你发送了好友请求！"
+    },
+    "friend_request_accepted": {
+      "title": "好友请求已接受",
+      "message": "{name} 接受了你的好友请求！"
+    }
+  },
   "achievements": {
     "title": "成就",
     "unlocked_title": "成就已解锁: {name}",

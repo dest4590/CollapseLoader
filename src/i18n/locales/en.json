@@ -1085,6 +1085,16 @@
     }
   },
   "login": "You need to log in to your account.",
+  "notifications": {
+    "friend_request_received": {
+      "title": "Friend Request",
+      "message": "{name} sent you a friend request!"
+    },
+    "friend_request_accepted": {
+      "title": "Friend Request Accepted",
+      "message": "{name} accepted your friend request!"
+    }
+  },
   "achievements": {
     "title": "Achievements",
     "unlocked_title": "Achievement unlocked: {name}",

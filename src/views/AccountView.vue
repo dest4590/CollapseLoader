@@ -324,7 +324,7 @@ const getUnlockedAt = (achievementId: number) => {
 };
 
 const loadAchievements = async () => {
-    const userId = (useUser().profile.value as any)?.id;
+    const userId = (useUser().info.value as any)?.id;
     if (!userId) return;
 
     loadingAchievements.value = true;
@@ -384,7 +384,7 @@ watch(
     { immediate: true }
 );
 
-watch(() => (useUser().profile.value as any)?.id, (newId) => {
+watch(() => (useUser().info.value as any)?.id, (newId) => {
     if (newId) {
         loadAchievements();
     }

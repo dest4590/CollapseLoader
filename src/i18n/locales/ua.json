@@ -1084,6 +1084,16 @@
     }
   },
   "login": "Вам потрібно увійти у свій обліковий запис.",
+  "notifications": {
+    "friend_request_received": {
+      "title": "Запит у друзі",
+      "message": "{name} надіслав вам запит у друзі!"
+    },
+    "friend_request_accepted": {
+      "title": "Запит прийнято",
+      "message": "{name} прийняв ваш запит у друзі!"
+    }
+  },
   "achievements": {
     "title": "Досягнення",
     "unlocked_title": "Досягнення розблоковано: {name}",

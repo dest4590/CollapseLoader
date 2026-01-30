@@ -1074,6 +1074,16 @@
     }
   },
   "login": "Musisz zalogować się na swoje konto.",
+  "notifications": {
+    "friend_request_received": {
+      "title": "Zaproszenie do znajomych",
+      "message": "{name} wysłał Ci zaproszenie do znajomych!"
+    },
+    "friend_request_accepted": {
+      "title": "Zaproszenie zaakceptowane",
+      "message": "{name} zaakceptował Twoje zaproszenie do znajomych!"
+    }
+  },
   "achievements": {
     "title": "Osiągnięcia",
     "unlocked_title": "Osiągnięcie odblokowane: {name}",

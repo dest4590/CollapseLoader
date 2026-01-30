@@ -22,6 +22,7 @@ class WebSocketService {
                 this.connected = true;
                 console.log('Connected to WebSocket');
                 this.subscribeToUserAchievements();
+                this.subscribeToFriendNotifications();
             },
             onDisconnect: () => {
                 this.connected = false;
@@ -78,6 +79,34 @@ class WebSocketService {
                 this.handleAchievementUnlock(achievement);
             }
         });
+    }
+
+    private subscribeToFriendNotifications() {
+        if (!this.client) {
+            console.error('Cannot subscribe: WebSocket client is not initialized');
+            return;
+        }
+
+        this.client.subscribe('/user/queue/friends', (message) => {
+            if (message.body) {
+                const data = JSON.parse(message.body);
+                this.handleFriendNotification(data);
+            }
+        });
+    }
+
+    private handleFriendNotification(data: any) {
+        let eventType = '';
+        if (data.type === 'REQUEST_RECEIVED') {
+            eventType = 'friend-request-received';
+        } else if (data.type === 'REQUEST_ACCEPTED' || data.type === 'FRIEND_ADDED') {
+            eventType = 'friend-request-accepted';
+        }
+
+        if (eventType) {
+            const event = new CustomEvent(eventType, { detail: data });
+            window.dispatchEvent(event);
+        }
     }
 
     private handleAchievementUnlock(achievement: any) {

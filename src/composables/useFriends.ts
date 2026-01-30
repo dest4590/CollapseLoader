@@ -48,7 +48,7 @@ export function useFriends() {
             return;
         }
 
-        if (globalFriendsState.isLoading) {
+        if (globalFriendsState.isLoading && !forceRefresh) {
             console.log('Friends data loading already in progress');
             return;
         }
@@ -57,6 +57,10 @@ export function useFriends() {
             globalFriendsState.lastUpdated &&
             Date.now() - new Date(globalFriendsState.lastUpdated).getTime() < 30000) {
             return;
+        }
+
+        if (forceRefresh) {
+            console.log('Force refreshing friends data...');
         }
 
         globalFriendsState.isLoading = true;
