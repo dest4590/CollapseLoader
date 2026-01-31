@@ -61,23 +61,6 @@ const password = ref('');
 const confirmPassword = ref('');
 const isRegistering = ref(false);
 
-const extractAuthToken = (payload: any): string | null => {
-    if (!payload) return null;
-    const candidate =
-        payload.token ||
-        payload.auth_token ||
-        payload.access_token ||
-        payload.accessToken ||
-        payload?.tokens?.token ||
-        payload?.tokens?.access_token ||
-        payload?.tokens?.accessToken ||
-        payload?.data?.token ||
-        payload?.data?.auth_token ||
-        payload?.data?.access_token ||
-        payload?.data?.accessToken;
-    return typeof candidate === 'string' && candidate.length > 0 ? candidate : null;
-};
-
 const handleRegister = async () => {
     if (password.value !== confirmPassword.value) {
         addToast(t('validation.passwords_no_match'), 'error');
@@ -101,6 +84,7 @@ const handleRegister = async () => {
             {
                 username: username.value,
                 password: password.value,
+                email: email.value,
             },
             {
                 headers: {
@@ -125,7 +109,7 @@ const handleRegister = async () => {
                 }
             );
 
-            const authToken = extractAuthToken(loginResponse);
+            const authToken = loginResponse?.data?.token;
 
             if (authToken) {
                 localStorage.setItem('authToken', authToken);

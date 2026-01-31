@@ -8,14 +8,13 @@ defineEmits(['close'])
 
 const { addToast } = useToast();
 const { t } = useI18n();
-const displayOption = ref<string>('separate');
 const selectedOption = ref<string>('separate');
 
 const getFlags = async () => {
     try {
         const flags = await invoke('get_flags');
         const typedFlags = flags as { custom_clients_display?: string };
-        displayOption.value = typedFlags.custom_clients_display || 'separate';
+        selectedOption.value = typedFlags.custom_clients_display || 'separate';
         return typedFlags;
     } catch (err) {
         console.error('Error loading flags:', err);
