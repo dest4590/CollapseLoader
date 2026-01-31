@@ -8,9 +8,10 @@
             <div class="flex items-start justify-between gap-4 sticky top-0 bg-base-200 z-10 py-2 -mt-2">
                 <div class="flex-1 min-w-0">
                     <h2 class="text-xl font-semibold truncate">{{ preset.title ?? preset.name }}</h2>
-                    <p class="text-xs text-base-content/60 truncate">{{ t('marketplace.by_user', {
-                        name: ownerDisplayName
-                    }) }}</p>
+                    <p class="text-xs text-base-content/60 truncate cursor-pointer hover:text-base-content/80 transition-colors"
+                        @click="emit('show-user-profile', preset.author?.id)">
+                        {{ t('marketplace.by_user', { name: ownerDisplayName }) }}
+                    </p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-ghost">
@@ -19,6 +20,11 @@
                     <span class="badge badge-ghost">
                         <Download class="w-4 h-4" />
                         {{ preset.downloads_count }}
+                    </span>
+                    <span class="badge badge-ghost hover:bg-base-300 transition-colors cursor-pointer"
+                        @click="scrollToComments">
+                        <MessageSquare class="w-4 h-4" />
+                        {{ preset.comments_count || 0 }}
                     </span>
                     <span v-if="isOwner" class="badge badge-ghost"
                         :class="preset.is_public ? 'text-success' : 'text-warning'">
@@ -38,10 +44,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -50,7 +56,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                    }}</button>
+                        }}</button>
                 </template>
             </div>
 
@@ -77,7 +83,7 @@
 
             <div class="divider my-2"></div>
 
-            <div>
+            <div id="preset-comments-section">
                 <h3 class="font-medium mb-3 flex items-center justify-between">
                     <span>{{ t('marketplace.comments') }}</span>
                     <span class="text-sm opacity-60">{{ comments.length }}</span>
@@ -97,19 +103,24 @@
                                 </div>
 
                                 <div v-for="c in comments" :key="c.id"
-                                    class="p-3 rounded-box border border-base-300 bg-base-100 mt-2">
+                                    class="p-3 rounded-xl border border-white/5 bg-white/5 mt-2">
                                     <div class="flex gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-base-300 flex items-center justify-center text-sm font-semibold">
-                                            {{ c.author_username ? c.author_username.charAt(0).toUpperCase() : '?' }}
+                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/80 shrink-0 cursor-pointer hover:bg-white/20 transition-colors"
+                                            @click="emit('show-user-profile', c.authorId)">
+                                            {{ (c.authorNickname || c.authorUsername || '?').charAt(0).toUpperCase() }}
                                         </div>
 
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center justify-between gap-2 text-xs opacity-70">
                                                 <div class="truncate">
-                                                    <span class="font-medium mr-2">{{ c.author_username }}</span>
-                                                    <span class="text-[11px] opacity-60">{{ formatDate(c.created_at)
-                                                    }}</span>
+                                                    <span
+                                                        class="font-bold text-white/80 mr-2 cursor-pointer hover:text-white transition-colors"
+                                                        @click="emit('show-user-profile', c.authorId)">
+                                                        {{ c.authorNickname || c.authorUsername }}
+                                                    </span>
+                                                    <span class="text-[10px] text-white/40 font-medium">{{
+                                                        formatDate(c.createdAt ||
+                                                        c.created_at) }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
@@ -160,7 +171,7 @@ import { useI18n } from 'vue-i18n';
 import { formatDate } from '../../../../utils/utils';
 import { marketplaceService } from '../../../../services/marketplaceService';
 import { useUser } from '../../../../composables/useUser';
-import { ChevronLeft, ChevronRight, Download, ThumbsUp } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Download, ThumbsUp, MessageSquare } from 'lucide-vue-next';
 import { presetService } from '../../../../services/presetService';
 import { useToast } from '../../../../services/toastService';
 import { useModal } from '../../../../services/modalService';
@@ -170,7 +181,7 @@ import { buildPresetCreatePayload } from '../../../../utils/presetPayload';
 import type { MarketplacePreset, MarketplaceTheme } from '../../../../types/presets';
 
 const props = defineProps<{ id: number; onNavigate?: (dir: 'prev' | 'next') => void }>();
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'show-user-profile']);
 
 const { t } = useI18n();
 const { username } = useUser();
@@ -356,7 +367,7 @@ async function downloadFromDetails() {
         const name = p.title ?? p.name ?? 'Imported preset';
         const input = buildPresetCreatePayload(name, p.description || undefined, themeSource.value);
         await presetService.createPreset(input);
-        addToast(t('theme.presets.messages.import_success'), 'success');
+        addToast(t('theme.presets.messages.import_success', { name }), 'success');
         try {
             await marketplaceService.downloadPreset(p.id);
             if (preset.value) {
@@ -434,6 +445,12 @@ onMounted(async () => {
         await Promise.all([loadPreset(), loadComments()]);
     }
 });
+function scrollToComments() {
+    const el = document.getElementById('preset-comments-section');
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
 </script>
 
 <style scoped></style>

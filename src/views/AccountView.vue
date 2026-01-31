@@ -23,7 +23,7 @@
                                 </div>
 
                                 <p class="text-base-content/70 text-sm mt-1">
-                                    @{{ username }}
+                                    @{{ userInfo.username }}
                                 </p>
 
                                 <p class="text-base-content/60 text-xs mt-1 flex items-center gap-2">
@@ -45,6 +45,73 @@
                                         <button @click="openSocialLinks" class="btn btn-primary btn-xs ml-3">{{
                                             t('account.social_links') }}</button>
                                     </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-lg font-medium text-primary-focus">
+                                {{ t('achievements.title') }}
+                            </h2>
+                            <span v-if="achievements.length > 0" class="text-sm text-base-content/60">
+                                {{ unlockedCount }} / {{ achievements.length }}
+                            </span>
+                        </div>
+                        <div v-if="loadingAchievements" class="flex justify-center py-4">
+                            <span class="loading loading-spinner loading-md"></span>
+                        </div>
+                        <div v-else>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <AchievementCard v-for="ach in displayedAchievements" :key="ach.key"
+                                    :achievement-key="ach.key" :icon-name="ach.icon" :locked="!isUnlocked(ach.id)"
+                                    :unlocked-at="getUnlockedAt(ach.id)" :hidden="ach.hidden"
+                                    :receive-percentage="ach.receivePercentage" />
+                            </div>
+
+                            <div v-if="achievements.length > initialDisplayCount" class="flex justify-center mt-4">
+                                <button @click="toggleAchievementsExpand" class="btn btn-ghost btn-sm">
+                                    {{ isAchievementsExpanded ? t('common.show_less') : t('common.show_more') }}
+                                    <component :is="isAchievementsExpanded ? ChevronUp : ChevronDown"
+                                        class="w-4 h-4 ml-1" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
+                            {{ t('account.favorite_client') }}
+                        </h2>
+                        <p class="text-sm text-base-content/70 mb-4">
+                            {{ t('account.favorite_client_description') }}
+                        </p>
+                        <div v-if="loadingClients" class="flex justify-center py-4">
+                            <span class="loading loading-spinner loading-md"></span>
+                        </div>
+                        <div v-else class="form-control">
+                            <select v-model="selectedFavoriteClientId" class="select select-bordered w-full bg-base-100"
+                                @change="handleFavoriteClientChange"
+                                :disabled="isLoadingFromCache || updatingFavoriteClient">
+                                <option :value="null">{{ t('account.no_favorite_client') }}</option>
+                                <option v-for="client in availableClients" :key="client.id" :value="client.id">
+                                    {{ client.name }} {{ formatVersion(client.version) }}
+                                </option>
+                            </select>
+                            <div v-if="currentFavoriteClient" class="mt-3 p-3 bg-base-300 rounded-lg">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-medium">{{ t('account.current_favorite') }}:</span>
+                                    <span class="badge badge-primary">{{ currentFavoriteClient.name }} {{
+                                        formatVersion(currentFavoriteClient.version) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -171,12 +238,30 @@ import ChangePasswordConfirmModal from '../components/modals/social/account/Chan
 import LogoutConfirmModal from '../components/modals/social/account/LogoutConfirmModal.vue';
 import AvatarUploadModal from '../components/modals/social/account/AvatarUploadModal.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
+import AchievementCard from '../components/features/profile/AchievementCard.vue';
 import { useUser } from '../composables/useUser';
 import { userService } from '../services/userService';
-import { EditIcon, EyeIcon, EyeOffIcon } from 'lucide-vue-next';
+import { achievementService, type Achievement, type UserAchievement } from '../services/achievementService';
+import { EditIcon, EyeIcon, EyeOffIcon, ChevronDown, ChevronUp } from 'lucide-vue-next';
 import getRoleBadge from '../utils/roleBadge';
 import { globalUserStatus } from '../composables/useUserStatus';
 import { syncService, SyncServiceState } from '../services/syncService';
+import { invoke } from '@tauri-apps/api/core';
+
+interface Client {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    md5_hash: string;
+    main_class: string;
+    show: boolean;
+    working: boolean;
+    insecure: boolean;
+    launches: number;
+    downloads: number;
+    size: number;
+}
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -187,6 +272,17 @@ const newPassword = ref('');
 const confirmNewPassword = ref('');
 const nickname = ref('');
 const showEmail = ref(false);
+
+const achievements = ref<Achievement[]>([]);
+const userAchievements = ref<UserAchievement[]>([]);
+const loadingAchievements = ref(false);
+const isAchievementsExpanded = ref(false);
+const initialDisplayCount = 4;
+
+const availableClients = ref<Client[]>([]);
+const loadingClients = ref(false);
+const selectedFavoriteClientId = ref<number | null>(null);
+const updatingFavoriteClient = ref(false);
 
 const {
     username,
@@ -232,6 +328,15 @@ const userInfo = computed(() => {
     };
 });
 
+const currentFavoriteClient = computed(() => {
+    const profile = useUser().profile.value;
+    if (profile && (profile as any).favorite_client_id) {
+        const clientId = (profile as any).favorite_client_id;
+        return availableClients.value.find(c => c.id === clientId) || null;
+    }
+    return null;
+});
+
 const roleBadge = computed(() => {
     return getRoleBadge(userInfo.value.role, (k: string) => t(k));
 });
@@ -250,8 +355,107 @@ const maskedEmail = computed(() => {
     return `${maskedLocal}@${maskedDomain}`;
 });
 
+const unlockedCount = computed(() => userAchievements.value.length);
+
+const sortedAchievements = computed(() => {
+    return [...achievements.value].sort((a, b) => {
+        const aUnlocked = isUnlocked(a.id);
+        const bUnlocked = isUnlocked(b.id);
+        if (aUnlocked && !bUnlocked) return -1;
+        if (!aUnlocked && bUnlocked) return 1;
+        return 0;
+    });
+});
+
+const displayedAchievements = computed(() => {
+    const sorted = sortedAchievements.value;
+    if (isAchievementsExpanded.value) return sorted;
+    return sorted.slice(0, initialDisplayCount);
+});
+
+const toggleAchievementsExpand = () => {
+    isAchievementsExpanded.value = !isAchievementsExpanded.value;
+};
+
+const isUnlocked = (achievementId: number) => {
+    return userAchievements.value.some(ua => ua.achievement.id === achievementId);
+};
+
+const getUnlockedAt = (achievementId: number) => {
+    const ua = userAchievements.value.find(ua => ua.achievement.id === achievementId);
+    return ua ? ua.unlockedAt : null;
+};
+
+const loadAchievements = async () => {
+    const userId = (useUser().info.value as any)?.id;
+    if (!userId) return;
+
+    loadingAchievements.value = true;
+    try {
+        const [all, user] = await Promise.all([
+            achievementService.getAllAchievements(),
+            achievementService.getUserAchievements(userId)
+        ]);
+        achievements.value = all || [];
+        userAchievements.value = user || [];
+    } catch (e) {
+        console.error("Failed to load achievements", e);
+    } finally {
+        loadingAchievements.value = false;
+    }
+};
+
 const toggleShowEmail = () => {
     showEmail.value = !showEmail.value;
+};
+
+const formatVersion = (version: string): string => {
+    if (!version) return '';
+    return version.replace(/^V/, '').replace(/_/g, '.');
+};
+
+const loadClients = async () => {
+    try {
+        loadingClients.value = true;
+        const clients = await invoke<Client[]>('get_clients');
+        availableClients.value = clients.filter(c => c.show && c.working);
+
+        const profile = useUser().profile.value;
+        if (profile && (profile as any).favorite_client_id) {
+            selectedFavoriteClientId.value = (profile as any).favorite_client_id;
+        }
+    } catch (error) {
+        console.error('Failed to load clients:', error);
+        addToast(t('errors.clients_load_failed'), 'error');
+    } finally {
+        loadingClients.value = false;
+    }
+};
+
+const handleFavoriteClientChange = async () => {
+    try {
+        updatingFavoriteClient.value = true;
+        const result = await userService.updateUserProfile(null, selectedFavoriteClientId.value);
+
+        if (result.success) {
+            await refreshUserData();
+            addToast(t('account.favorite_client_updated'), 'success');
+        } else {
+            addToast(result.error || t('account.favorite_client_update_failed'), 'error');
+            // Revert selection on error
+            const profile = useUser().profile.value;
+            if (profile && (profile as any).favorite_client_id) {
+                selectedFavoriteClientId.value = (profile as any).favorite_client_id;
+            } else {
+                selectedFavoriteClientId.value = null;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to update favorite client:', error);
+        addToast(t('account.favorite_client_update_failed'), 'error');
+    } finally {
+        updatingFavoriteClient.value = false;
+    }
 };
 
 const syncState = ref<SyncServiceState>(syncService.getState());
@@ -265,6 +469,8 @@ onMounted(async () => {
     });
 
     await syncService.initializeSyncStatus();
+    await loadAchievements();
+    await loadClients();
 });
 
 watch(
@@ -284,10 +490,18 @@ watch(
         if (!isAuthed && wasAuthed) {
             nickname.value = '';
             showEmail.value = false;
+            achievements.value = [];
+            userAchievements.value = [];
         }
     },
     { immediate: true }
 );
+
+watch(() => (useUser().info.value as any)?.id, (newId) => {
+    if (newId) {
+        loadAchievements();
+    }
+});
 
 onUnmounted(() => {
     if (unsubscribeSyncService) {

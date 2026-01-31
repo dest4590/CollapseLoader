@@ -11,7 +11,7 @@
       </div>
     </div>
 
-    <PresetGallery :key="reloadKey" />
+    <PresetGallery :key="reloadKey" @show-user-profile="(id) => $emit('show-user-profile', id)" />
   </div>
 </template>
 

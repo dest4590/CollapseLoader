@@ -5,6 +5,8 @@ use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
 
 use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
@@ -36,7 +38,7 @@ pub fn check_webkit_warning() -> Result<(), StartupError> {
 
 #[cfg(target_os = "windows")]
 pub fn handle_startup_error(error: &StartupError) {
-    if let StartupError::WebView2NotInstalled = error {
+    if matches!(error, StartupError::WebView2NotInstalled) {
         let should_install = messagebox::show_confirm(
             "WebView2 Not Installed",
             "WebView2 is not installed. Would you like to download and install it now?",
@@ -144,90 +146,7 @@ pub fn run() {
             commands::clients::delete_client,
             commands::clients::increment_client_counter,
             commands::clients::get_custom_clients,
-            commands::clients::add_custom_client,package org.collapseloader.atlas.domain.presets.entity;
-
-import jakarta.persistence.*;
-import lombok.*;
-import org.collapseloader.atlas.domain.users.entity.User;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
-@Entity
-@Table(
-        name = "presets",
-        indexes = {
-                @Index(name = "presets_owner_idx", columnList = "owner_id"),
-                @Index(name = "presets_public_idx", columnList = "is_public"),
-                @Index(name = "presets_created_idx", columnList = "created_at")
-        }
-)
-@Getter
-@Setter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Preset {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
-    @ToString.Exclude
-    private User owner;
-
-    @Column(name = "name", nullable = false, length = 120)
-    private String name;
-
-    @Column(length = 2048)
-    private String description;
-
-    @Column(name = "is_public", nullable = false)
-    private boolean isPublic = true;
-
-    @Embedded
-    private PresetTheme theme;
-
-    @Column(name = "likes_count", nullable = false)
-    private long likesCount;
-
-    @Column(name = "downloads_count", nullable = false)
-    private long downloadsCount;
-
-    @Column(name = "comments_count", nullable = false)
-    private long commentsCount;
-
-    @OneToMany(mappedBy = "preset", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    @Builder.Default
-    private List<PresetLike> likes = new ArrayList<>();
-
-    @OneToMany(mappedBy = "preset", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    @Builder.Default
-    private List<PresetComment> comments = new ArrayList<>();
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-
-    @PrePersist
-    private void ensureTheme() {
-        if (theme == null) {
-            theme = new PresetTheme();
-        }
-    }
-}
-
+            commands::clients::add_custom_client,
             commands::clients::remove_custom_client,
             commands::clients::update_custom_client,
             commands::clients::launch_custom_client,
@@ -340,6 +259,53 @@ public class Preset {
                 Analytics::send_start_analytics();
             });
 
+            let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+            let hide = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show, &hide, &quit])?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "hide" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.hide();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let is_visible = window.is_visible().unwrap_or(true);
+                            if is_visible {
+                                let _ = window.hide();
+                            } else {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                })
+                .build(app)?;
+
             #[cfg(target_os = "windows")]
             {
                 use crate::core::utils::dpi;
@@ -348,9 +314,15 @@ public class Preset {
 
             Ok(())
         })
-        .on_window_event(|_window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                discord_rpc::shutdown();
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let settings = crate::core::storage::settings::SETTINGS.lock().unwrap();
+                if settings.close_to_tray.value {
+                    api.prevent_close();
+                    let _ = window.hide();
+                } else {
+                    discord_rpc::shutdown();
+                }
             }
         })
         .run(tauri::generate_context!())

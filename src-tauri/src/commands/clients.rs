@@ -5,11 +5,10 @@ use core::clients::{
 };
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 use crate::core::{
     clients::custom_clients::CustomClient,
-    network::analytics::Analytics,
     storage::{custom_clients::CustomClientUpdate, data::Data},
     utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
 };
@@ -74,13 +73,15 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         return Err("Fetched client list is empty".to_string());
     }
 
-    let mut manager = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to lock state".to_string())?;
+    {
+        let mut manager = state
+            .clients
+            .manager
+            .lock()
+            .map_err(|_| "Failed to lock state".to_string())?;
 
-    manager.clients = clients;
+        manager.clients = clients;
+    }
 
     Ok(())
 }
@@ -331,6 +332,17 @@ pub async fn launch_client(
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
 
+    let minimize_on_launch = {
+        let settings = SETTINGS.lock().unwrap();
+        settings.minimize_to_tray_on_launch.value
+    };
+
+    if minimize_on_launch {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
+    }
+
     client.run(options, state.clients.manager.clone()).await
 }
 
@@ -397,7 +409,6 @@ pub async fn download_client_only(
 
     let requirements_download = client.download_requirements(&app_handle);
 
-    Analytics::send_client_download_analytics(id);
     log_debug!("Sent client download analytics for ID: {}", id);
 
     tokio::try_join!(client_download, requirements_download)?;
@@ -750,6 +761,17 @@ pub async fn launch_custom_client(
     );
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), true);
+
+    let minimize_on_launch = {
+        let settings = SETTINGS.lock().unwrap();
+        settings.minimize_to_tray_on_launch.value
+    };
+
+    if minimize_on_launch {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
+    }
 
     client.run(options, state.clients.manager.clone()).await
 }

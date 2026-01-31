@@ -10,13 +10,37 @@ export interface SocialLink {
 export interface UserProfile {
     id: number;
     nickname: string | null;
-    avatar_path: string | null;
     avatar_url: string | null;
-    avatar_updated_at: string | null;
     role: string | null;
     social_links: SocialLink[];
     created_at: string;
     updated_at: string;
+    favorite_client_id: number | null;
+}
+
+export interface UserInitData {
+    user: {
+        id: number;
+        username: string;
+        email: string;
+        role: string;
+        created_at: string;
+        updated_at: string;
+        last_login_at: string | null;
+        profile: UserProfile;
+        status: UserStatus;
+    };
+    preferences: UserPreference[];
+    favorites: UserFavorite[];
+    accounts: UserExternalAccount[];
+    friends: {
+        friends: any[];
+        requests: {
+            sent: any[];
+            received: any[];
+            blocked: any[];
+        };
+    };
 }
 
 export interface UserInfo {
@@ -39,6 +63,7 @@ export interface UserStatus {
     status: string;
     client_name: string | null;
     updated_at: string | null;
+    started_at?: string | null;
 }
 
 export interface ClientUserStatus {
@@ -47,6 +72,7 @@ export interface ClientUserStatus {
     current_client: string | null;
     client_version?: string | null;
     updated_at: string | null;
+    started_at: string | null;
     raw_status: string | null;
 }
 
@@ -54,6 +80,7 @@ export interface Friend {
     id: number;
     username: string;
     nickname: string | null;
+    avatar_url: string | null;
     status: ClientUserStatus;
 }
 
@@ -69,6 +96,7 @@ export interface FriendRequest {
 export interface FriendRequestsBatch {
     sent: FriendRequest[];
     received: FriendRequest[];
+    blocked: FriendRequest[];
 }
 
 export interface SearchUser {
@@ -88,6 +116,9 @@ export interface PublicUserProfile {
     avatar_url: string | null;
     social_links: SocialLink[];
     role: string | null;
+    achievements?: any[];
+    presets?: any[];
+    favorite_client_id: number | null;
 }
 
 export interface UserPreference {
@@ -125,6 +156,31 @@ export interface SyncData {
 export interface SyncStatus {
     last_sync_timestamp: string | null;
     has_cloud_data: boolean;
+}
+
+export interface UserInitData {
+    user: {
+        id: number;
+        username: string;
+        email: string;
+        role: string;
+        created_at: string;
+        updated_at: string;
+        last_login_at: string | null;
+        profile: UserProfile;
+        status: UserStatus;
+    };
+    preferences: UserPreference[];
+    favorites: UserFavorite[];
+    accounts: UserExternalAccount[];
+    friends: {
+        friends: any[];
+        requests: {
+            sent: any[];
+            received: any[];
+            blocked: any[];
+        };
+    };
 }
 
 const CACHE_KEY = 'userData';
@@ -183,20 +239,22 @@ class UserService {
             current_client: status?.client_name ?? null,
             last_seen: isOnline ? null : updatedAt,
             updated_at: updatedAt,
+            started_at: status?.started_at ?? null,
             raw_status: raw,
         };
     }
 
-    private mapFriend(friend: any): Friend {
+    public mapFriend(friend: any): Friend {
         return {
             id: friend.id,
             username: friend.username,
             nickname: friend.nickname ?? null,
+            avatar_url: friend.avatar_url ?? null,
             status: this.mapStatus(friend.status),
         };
     }
 
-    private mapFriendRequest(request: any): FriendRequest {
+    public mapFriendRequest(request: any): FriendRequest {
         return {
             id: request.id,
             requester: this.mapFriend(request.requester),
@@ -233,9 +291,13 @@ class UserService {
         }
     }
 
-    async updateUserProfile(nickname: string | null): Promise<{ success: boolean; error?: string }> {
+    async updateUserProfile(nickname: string | null, favoriteClientId?: number | null): Promise<{ success: boolean; error?: string }> {
         try {
-            await apiClient.patch('/users/me/profile', { nickname });
+            const payload: any = { nickname };
+            if (favoriteClientId !== undefined) {
+                payload.favorite_client_id = favoriteClientId;
+            }
+            await apiClient.patch('/users/me/profile', payload);
             await this.refreshCachedUser();
             return { success: true };
         } catch (error: any) {
@@ -315,8 +377,30 @@ class UserService {
         }
     }
 
-    async getUserProfile(userId: number): Promise<PublicUserProfile> {
-        const publicUser = await apiClient.get<any>(`/users/${userId}`);
+
+    async initializeUserFull(): Promise<UserInitData> {
+        try {
+            const data = await apiClient.get<UserInitData>('/users/init');
+            const userInfo = {
+                id: data.user.id,
+                username: data.user.username,
+                email: data.user.email,
+                role: data.user.role,
+                created_at: data.user.created_at,
+                updated_at: data.user.updated_at,
+                last_login_at: data.user.last_login_at ?? null,
+            };
+            this.setCachedData({ profile: data.user.profile, info: userInfo as UserInfo });
+            return data;
+        } catch (error) {
+            console.error('Failed to initialize user (full):', error);
+            throw error;
+        }
+    }
+
+    async getUserProfile(userId: number, include: string[] = []): Promise<PublicUserProfile> {
+        const query = include.length > 0 ? `?include=${include.join(',')}` : '';
+        const publicUser = await apiClient.get<any>(`/users/${userId}${query}`);
 
         const profile = publicUser.profile || null;
         const base: PublicUserProfile = {
@@ -329,7 +413,14 @@ class UserService {
             avatar_url: profile?.avatar_url ?? null,
             social_links: profile?.social_links ?? [],
             role: profile?.role ?? null,
+            achievements: publicUser.achievements,
+            presets: publicUser.presets,
+            favorite_client_id: profile?.favorite_client_id ?? null,
         };
+
+        if (publicUser.friendship_status) {
+            return { ...base, friendship_status: publicUser.friendship_status };
+        }
 
         const token = localStorage.getItem('authToken');
         if (!token) return base;
@@ -377,6 +468,7 @@ class UserService {
         const requests: FriendRequestsBatch = {
             sent: (resp.requests?.sent || []).map((r: any) => this.mapFriendRequest(r)),
             received: (resp.requests?.received || []).map((r: any) => this.mapFriendRequest(r)),
+            blocked: (resp.requests?.blocked || []).map((r: any) => this.mapFriendRequest(r)),
         };
 
         return { friends, requests };
@@ -435,7 +527,6 @@ class UserService {
         };
 
         const consider = (r: FriendRequest) => {
-            if (r.status !== 'blocked') return;
             if (meId && r.requester.id === meId) add(r.addressee);
             else if (meId && r.addressee.id === meId) add(r.requester);
             else {
@@ -444,8 +535,7 @@ class UserService {
             }
         };
 
-        batch.requests.sent.forEach(consider);
-        batch.requests.received.forEach(consider);
+        batch.requests.blocked.forEach(consider);
 
         return blocked;
     }
@@ -577,6 +667,42 @@ class UserService {
         }
     }
 
+    formatSyncData(
+        preferences: UserPreference[],
+        favorites: UserFavorite[],
+        accounts: UserExternalAccount[]
+    ): SyncData {
+        const settingsPref = preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) || null;
+
+        const favorites_data = (favorites || [])
+            .filter((f) => f.type === SYNC_FAVORITE_TYPE)
+            .map((f) => Number.parseInt(String(f.reference), 10))
+            .filter((n) => Number.isFinite(n));
+
+        const accounts_data = (accounts || [])
+            .filter((a) => a.provider === SYNC_ACCOUNT_PROVIDER)
+            .map((a) => {
+                const meta: any = a.metadata && typeof a.metadata === 'object' ? a.metadata : {};
+                return {
+                    username: a.external_id,
+                    tags: Array.isArray(meta.tags) ? meta.tags : ['cloud-sync'],
+                };
+            });
+
+        const last_sync_timestamp = this.maxIsoTimestamp([
+            settingsPref?.updated_at ?? null,
+            ...favorites.map((f) => f.created_at ?? null),
+            ...accounts.map((a) => a.updated_at ?? null),
+        ]);
+
+        return {
+            settings_data: (settingsPref?.value ?? {}) as any,
+            favorites_data,
+            accounts_data,
+            last_sync_timestamp,
+        };
+    }
+
     async downloadFromCloud(): Promise<SyncData | null> {
         try {
             const [preferences, favorites, accounts] = await Promise.all([
@@ -585,35 +711,7 @@ class UserService {
                 this.getExternalAccounts(),
             ]);
 
-            const settingsPref = preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) || null;
-
-            const favorites_data = (favorites || [])
-                .filter((f) => f.type === SYNC_FAVORITE_TYPE)
-                .map((f) => Number.parseInt(String(f.reference), 10))
-                .filter((n) => Number.isFinite(n));
-
-            const accounts_data = (accounts || [])
-                .filter((a) => a.provider === SYNC_ACCOUNT_PROVIDER)
-                .map((a) => {
-                    const meta: any = a.metadata && typeof a.metadata === 'object' ? a.metadata : {};
-                    return {
-                        username: a.external_id,
-                        tags: Array.isArray(meta.tags) ? meta.tags : ['cloud-sync'],
-                    };
-                });
-
-            const last_sync_timestamp = this.maxIsoTimestamp([
-                settingsPref?.updated_at ?? null,
-                ...favorites.map((f) => f.created_at ?? null),
-                ...accounts.map((a) => a.updated_at ?? null),
-            ]);
-
-            return {
-                settings_data: (settingsPref?.value ?? {}) as any,
-                favorites_data,
-                accounts_data,
-                last_sync_timestamp,
-            };
+            return this.formatSyncData(preferences, favorites, accounts);
         } catch (error) {
             console.error('Failed to download from cloud:', error);
             return null;

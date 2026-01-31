@@ -1,12 +1,13 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { getApiBaseWithVersion, ensureApiUrl } from '../config';
 import { getCurrentLanguage } from '../i18n';
+import { useToast } from './toastService';
 
 export interface ApiResponse<T> {
     success: boolean;
     data: T;
     error: string | null;
-    timestamp: string;
+    timestamp: number | string;
 }
 
 const isApiResponse = (value: any): value is ApiResponse<any> => {
@@ -58,6 +59,23 @@ class ApiClient {
 
             return config;
         });
+
+        this.client.interceptors.response.use(
+            (response) => response,
+            (error: AxiosError) => {
+                const { addToast } = useToast();
+                let errorMessage = 'An unexpected error occurred';
+
+                if (error.response?.data && isApiResponse(error.response.data)) {
+                    errorMessage = (error.response.data as ApiResponse<any>).error || errorMessage;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                addToast(errorMessage, 'error');
+                return Promise.reject(error);
+            }
+        );
     }
 
     async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
@@ -96,6 +114,8 @@ class ApiClient {
     private unwrapResponse<T>(payload: any): T {
         if (isApiResponse(payload)) {
             if (!payload.success) {
+                const { addToast } = useToast();
+                addToast(payload.error || 'Request failed', 'error');
                 throw new ApiResponseError(payload);
             }
             return payload.data as T;

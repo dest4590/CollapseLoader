@@ -30,7 +30,11 @@ class SettingsService {
             const loaded = await invoke<SettingsMap>('get_settings');
             Object.keys(this.settings).forEach((k) => delete this.settings[k]);
             Object.entries(loaded || {}).forEach(([k, v]) => {
-                this.settings[k] = v;
+                if (v && typeof v === 'object' && 'value' in v && 'show' in v) {
+                    this.settings[k] = v;
+                } else {
+                    this.settings[k] = { value: v, show: true };
+                }
             });
         } catch (err) {
             console.error('Failed to load settings:', err);

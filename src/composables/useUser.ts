@@ -109,6 +109,14 @@ const clearUserData = (): void => {
     globalUserState.lastUpdated = null;
 };
 
+const hydrateUser = (profile: UserProfile, info: UserInfo): void => {
+    globalUserState.profile = profile;
+    globalUserState.info = info;
+    globalUserState.lastUpdated = new Date().toISOString();
+    globalUserState.isLoaded = true;
+    globalUserState.isLoading = false;
+};
+
 const refreshUserData = (): Promise<void> => {
     return loadUserData(true);
 };
@@ -153,6 +161,7 @@ export function useUser() {
         loadUserData,
         updateUserProfile,
         clearUserData,
+        hydrateUser,
         refreshUserData,
         logout
     };

@@ -107,25 +107,6 @@ const handleLogin = async () => {
     } catch (error: any) {
         console.error('Login failed:', error);
         console.error('Error response:', error.response);
-
-        if (error.response && error.response.data) {
-            let errorMessage = t('auth.login.login_failed');
-            const errors = error.response.data;
-            if (errors.non_field_errors) {
-                errorMessage = errors.non_field_errors.join(' ');
-            } else if (Array.isArray(errors) && errors.length > 0) {
-                errorMessage = errors.join(' ');
-            } else if (typeof errors === 'string') {
-                errorMessage = errors;
-            } else if (errors.error) {
-                errorMessage = errors.error;
-            } else if (errors.detail) {
-                errorMessage = errors.detail;
-            }
-            addToast(errorMessage, 'error');
-        } else {
-            addToast(t('auth.login.login_failed'), 'error');
-        }
     }
 };
 </script>

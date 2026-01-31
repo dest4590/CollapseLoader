@@ -21,6 +21,7 @@ const halloweenActive = ref(isHalloweenEvent());
 
 const sidebarHelpVideo = new URL('../../assets/videos/sidebar-help.mp4', import.meta.url).href;
 const sidebarHelpKey = 'sidebar-help-shown';
+const sidebarCenterKey = 'sidebar-centered';
 const showSidebarHelp = ref(false);
 
 const props = defineProps<{
@@ -163,6 +164,10 @@ const toggleCenter = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (target.closest('button')) return;
     isCentered.value = !isCentered.value;
+    try {
+        localStorage.setItem(sidebarCenterKey, isCentered.value.toString());
+    } catch {
+    }
     if (showSidebarHelp.value) {
         hideSidebarHelp();
     }
@@ -259,6 +264,11 @@ onMounted(async () => {
         if (!shown) {
             showSidebarHelp.value = true;
         }
+
+        const centered = localStorage.getItem(sidebarCenterKey);
+        if (centered === 'true') {
+            isCentered.value = true;
+        }
     } catch {
     }
 });
@@ -308,7 +318,7 @@ onUnmounted(() => {
                 <div class="flex justify-end mt-1 gap-2">
                     <button class="btn btn-ghost btn-xs" @click.stop="hideSidebarHelp">{{
                         t('navigation.sidebar_help.got_it')
-                        }}
+                    }}
                     </button>
                 </div>
             </div>

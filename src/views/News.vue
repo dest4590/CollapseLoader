@@ -53,10 +53,9 @@
         </div>
 
         <div v-else class="space-y-6">
-            <div v-for="(article, index) in filteredNews" :key="article.id"
+            <div v-for="(article, index) in filteredNews" :key="article.id" :ref="el => newsCardRefs[article.id] = el"
                 class="card bg-base-200 shadow-md border border-base-300 news-card hover:shadow-lg transition-all duration-300"
-                :class="{ 'unread-article': !isNewsRead(article) }" :style="{ 'animation-delay': index * 0.1 + 's' }"
-                @click="markNewsAsRead(article)">
+                :class="{ 'unread-article': !isNewsRead(article) }" :style="{ 'animation-delay': index * 0.1 + 's' }">
                 <div class="card-body p-6">
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex items-center gap-2">
@@ -88,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, watch, computed, onBeforeUnmount, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from '../services/toastService';
 import { apiGet } from '../services/apiClient';
@@ -114,6 +113,8 @@ const error = ref<string | null>(null);
 const currentLanguage = ref(getCurrentLanguage() || 'en');
 const searchQuery = ref('');
 const unreadCount = ref(0);
+const newsCardRefs = ref<Record<number, any>>({});
+let observer: IntersectionObserver | null = null;
 
 const emit = defineEmits<{
     'change-view': [view: string];
@@ -226,6 +227,48 @@ const filteredNews = computed(() => {
     );
 });
 
+const setupObserver = () => {
+    if (observer) {
+        observer.disconnect();
+    }
+
+    observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const element = entry.target;
+                    const articleId = Object.keys(newsCardRefs.value).find(
+                        (id) => newsCardRefs.value[parseInt(id)] === element
+                    );
+
+                    if (articleId) {
+                        const article = news.value.find((a) => a.id === parseInt(articleId));
+                        if (article) {
+                            markNewsAsRead(article);
+                        }
+                    }
+                }
+            });
+        },
+        {
+            threshold: 0.5,
+            rootMargin: '0px',
+        }
+    );
+
+    Object.values(newsCardRefs.value).forEach((element) => {
+        if (element) {
+            observer!.observe(element);
+        }
+    });
+};
+
+watch(filteredNews, () => {
+    nextTick(() => {
+        setupObserver();
+    });
+});
+
 const renderNewsContent = (raw: string): string => {
     let safe = raw
         .replace(/&/g, '&amp;')
@@ -253,6 +296,12 @@ watch(() => getCurrentLanguage(), (newLang) => {
 
 onMounted(() => {
     fetchNews();
+});
+
+onBeforeUnmount(() => {
+    if (observer) {
+        observer.disconnect();
+    }
 });
 </script>
 

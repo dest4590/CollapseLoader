@@ -23,6 +23,10 @@
                             <span v-if="friend.status.client_version" class="text-xs text-base-content/50">
                                 ({{ friend.status.client_version }})
                             </span>
+                            <span v-if="playtimeDuration" class="badge badge-sm bg-base-300/50 border-none text-base-content/70 ml-1 py-0 px-2 text-[10px] h-4 flex items-center gap-1 shrink-0">
+                                <Clock class="w-2.5 h-2.5" />
+                                {{ playtimeDuration }}
+                            </span>
                         </div>
 
                         <div v-else-if="friend.status.is_online" class="flex items-center gap-2 mt-1">
@@ -77,7 +81,7 @@ import UserAvatar from '../../ui/UserAvatar.vue';
 import type { Friend } from '../../../services/userService';
 import { useI18n } from 'vue-i18n';
 import { useStreamerMode } from '../../../composables/useStreamerMode';
-import { computed } from 'vue';
+import { computed, ref, onUnmounted, watch } from 'vue';
 
 const props = defineProps<{
     friend: Friend;
@@ -142,6 +146,47 @@ const handleBlockFriend = () => {
 const handleViewProfile = () => {
     emit('viewProfile', props.friend.id);
 };
+
+const playtimeDuration = ref('');
+let playtimeInterval: any = null;
+
+const updatePlaytime = () => {
+    if (!props.friend.status?.started_at) {
+        playtimeDuration.value = '';
+        return;
+    }
+    const start = new Date(props.friend.status.started_at).getTime();
+    const now = new Date().getTime();
+    const diff = Math.max(0, now - start);
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+        playtimeDuration.value = `${hours}h ${minutes}m`;
+    } else {
+        playtimeDuration.value = `${minutes}m`;
+    }
+};
+
+watch(() => props.friend.status?.started_at, (newVal) => {
+    if (newVal) {
+        updatePlaytime();
+        if (!playtimeInterval) {
+            playtimeInterval = setInterval(updatePlaytime, 60000);
+        }
+    } else {
+        if (playtimeInterval) {
+            clearInterval(playtimeInterval);
+            playtimeInterval = null;
+        }
+        playtimeDuration.value = '';
+    }
+}, { immediate: true });
+
+onUnmounted(() => {
+    if (playtimeInterval) clearInterval(playtimeInterval);
+});
 </script>
 
 <style scoped>

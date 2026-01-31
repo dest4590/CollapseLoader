@@ -18,7 +18,7 @@ pub struct Setting<T> {
 }
 
 impl<T> Setting<T> {
-    pub const fn new(value: T, show: bool) -> Self {
+    pub fn new(value: T, show: bool) -> Self {
         Self { value, show }
     }
 }
@@ -125,6 +125,8 @@ define_settings! {
         hash_verify: Setting<bool> = (true, true),
         sync_client_settings: Setting<bool> = (true, true),
         dpi_bypass: Setting<bool> = (false, true),
+        minimize_to_tray_on_launch: Setting<bool> = (false, true),
+        close_to_tray: Setting<bool> = (false, true),
     }
 }
 

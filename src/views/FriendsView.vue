@@ -7,44 +7,6 @@
         </div>
 
         <div class="controls flex items-center gap-2">
-            <div v-if="blockedUsers.length > 0" class="relative">
-                <button @click.stop="toggleBlockedDropdown()" class="btn btn-outline btn-sm flex items-center gap-2"
-                    aria-haspopup="true" aria-expanded="false">
-                    <Shield class="w-4 h-4" />
-                    <span class="ml-1">{{ t('blockedUsers.title', { count: blockedUsers.length }) }}</span>
-                </button>
-
-                <div ref="blockedDropdown"
-                    class="hidden dropdown-content card card-compact w-72 p-2 shadow bg-base-100 border border-base-300 absolute right-0 mt-2 z-9999"
-                    role="dialog">
-                    <div class="card-body p-2">
-                        <div class="space-y-2 max-h-64 overflow-y-auto">
-                            <div v-for="user in blockedUsers" :key="user.id"
-                                class="flex items-center justify-between p-2 bg-base-200 rounded-lg">
-                                <div class="flex items-center gap-2">
-                                    <div @click="$emit('show-user-profile', user.id)"
-                                        class="avatar-click-area cursor-pointer">
-                                        <UserAvatar :name="getDisplayNickname(user)" size="sm" />
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-sm">
-                                            {{ getDisplayNickname(user) }}
-                                        </p>
-                                        <p class="text-xs text-base-content/70">
-                                            @{{ getDisplayUsername(user) }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button @click="unblockUser(user)" class="btn btn-primary btn-xs">
-                                    <UserCheck class="w-3 h-3 mr-1" />
-                                    {{ t('common.unblock') }}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <button @click="showAddFriendModal" class="btn btn-primary btn-sm flex items-center gap-2">
                 <UserPlus class="w-4 h-4" />
                 {{ t('friends.addFriend') }}
@@ -54,8 +16,9 @@
 
     <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)" />
 
-    <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0" class="mb-6">
-        <div class="requests-grid grid gap-4 sm:grid-cols-2 items-stretch">
+    <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0 || blockedUsers.length > 0"
+        class="mb-6">
+        <div class="requests-grid grid gap-4 lg:grid-cols-3 items-stretch">
             <div v-if="friendRequests.received.length > 0" class="requests-panel">
                 <div class="panel-header flex items-center justify-between mb-2">
                     <h3 class="text-md font-medium text-info">{{ t('friends.receivedRequests') }}</h3>
@@ -63,20 +26,52 @@
                 </div>
                 <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
                     <FriendRequestCard v-for="request in friendRequests.received" :key="request.id"
-                        :user="request.requester"
-                        :request-id="request.id" type="received" @accept="respondToRequest($event, 'accept')"
-                        @reject="respondToRequest($event, 'reject')"
+                        :user="request.requester" :request-id="request.id" type="received"
+                        @accept="respondToRequest($event, 'accept')" @reject="respondToRequest($event, 'reject')"
                         @view-profile="$emit('show-user-profile', $event)" />
                 </div>
             </div>
 
             <div v-if="friendRequests.sent.length > 0" class="requests-panel">
-                <h3 class="text-md font-medium text-warning mb-2">{{ t('friends.sentRequests') }}</h3>
+                <div class="panel-header flex items-center justify-between mb-2">
+                    <h3 class="text-md font-medium text-warning">{{ t('friends.sentRequests') }}</h3>
+                    <span class="text-sm text-base-content/60">{{ friendRequests.sent.length }}</span>
+                </div>
                 <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
                     <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
-                        :user="request.addressee"
-                        :request-id="request.id" type="sent" @cancel="cancelRequest"
+                        :user="request.addressee" :request-id="request.id" type="sent" @cancel="cancelRequest"
                         @view-profile="$emit('show-user-profile', $event)" />
+                </div>
+            </div>
+
+            <div v-if="blockedUsers.length > 0" class="requests-panel">
+                <div class="panel-header flex items-center justify-between mb-2">
+                    <h3 class="text-md font-medium text-error">{{ t('blockedUsers.title', { count: '' }).replace('()',
+                        '').trim() }}</h3>
+                    <span class="text-sm text-base-content/60">{{ blockedUsers.length }}</span>
+                </div>
+                <div class="requests-list space-y-2">
+                    <div v-for="user in blockedUsers" :key="user.id"
+                        class="flex items-center justify-between p-2 bg-base-200/50 rounded-lg border border-base-300/50">
+                        <div class="flex items-center gap-2">
+                            <div @click="$emit('show-user-profile', user.id)" class="avatar-click-area cursor-pointer">
+                                <UserAvatar :name="getDisplayNickname(user)" size="sm" />
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-medium text-sm truncate max-w-25">
+                                    {{ getDisplayNickname(user) }}
+                                </p>
+                                <p class="text-[10px] text-base-content/50 truncate max-w-25">
+                                    @{{ getDisplayUsername(user) }}
+                                </p>
+                            </div>
+                        </div>
+                        <button @click="unblockUser(user)"
+                            class="btn btn-error btn-outline btn-xs gap-1 hover:btn-error">
+                            <UserCheck class="w-3 h-3" />
+                            {{ t('common.unblock') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,21 +83,20 @@
             <p>{{ t('friends.noFriends') }}</p>
         </div>
 
-	        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-	            <FriendCard v-for="friend in friends" :key="friend.id" :friend="friend"
-	                @remove-friend="removeFriend" @block-friend="blockFriend"
-	                @view-profile="$emit('show-user-profile', $event)" />
-	        </div>
-	    </div>
+        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <FriendCard v-for="friend in friends" :key="friend.id" :friend="friend" @remove-friend="removeFriend"
+                @block-friend="blockFriend" @view-profile="$emit('show-user-profile', $event)" />
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref} from 'vue';
-import {useToast} from '../services/toastService';
-import {useModal} from '../services/modalService';
-import {useI18n} from 'vue-i18n';
-import {type Friend, userService, type UserStatus,} from '../services/userService';
-import {useFriends} from '../composables/useFriends';
+import { onMounted, onUnmounted, ref } from 'vue';
+import { useToast } from '../services/toastService';
+import { useModal } from '../services/modalService';
+import { useI18n } from 'vue-i18n';
+import { type Friend, userService, type UserStatus, } from '../services/userService';
+import { useFriends } from '../composables/useFriends';
 import AddFriendModal from '../components/modals/social/friends/AddFriendModal.vue';
 import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
 import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
@@ -110,8 +104,8 @@ import FriendCard from '../components/features/friends/FriendCard.vue';
 import FriendRequestCard from '../components/features/friends/FriendRequestCard.vue';
 import UserAvatar from '../components/ui/UserAvatar.vue';
 import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
-import {Shield, UserCheck, UserPlus, Users} from 'lucide-vue-next';
-import {useStreamerMode} from '../composables/useStreamerMode';
+import { UserCheck, UserPlus, Users } from 'lucide-vue-next';
+import { useStreamerMode } from '../composables/useStreamerMode';
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -136,13 +130,7 @@ const { friends, friendRequests, loadFriendsData, updateFriendStatuses } =
     useFriends();
 const currentUserStatus = ref<UserStatus | null>(null);
 const blockedUsers = ref<Friend[]>([]);
-const blockedDropdown = ref<HTMLElement | null>(null);
 const streamer = useStreamerMode();
-
-const toggleBlockedDropdown = () => {
-    if (!blockedDropdown.value) return;
-    blockedDropdown.value.classList.toggle('hidden');
-};
 
 const getDisplayNickname = (user: Friend) => {
     return streamer.getDisplayName(user.nickname, user.username);
@@ -159,7 +147,7 @@ let statusRefreshInterval: number | null = null;
 let fullDataRefreshInterval: number | null = null;
 
 onMounted(async () => {
-    await loadFriendsAndStatus(true);
+    await loadFriendsAndStatus(false);
 
     statusRefreshInterval = window.setInterval(
         updateStatuses,
@@ -169,6 +157,10 @@ onMounted(async () => {
         loadFriendsAndStatus,
         FULL_DATA_UPDATE_INTERVAL
     );
+
+    window.addEventListener('friend-request-received', handleRefreshEvent);
+    window.addEventListener('friend-request-accepted', handleRefreshEvent);
+    window.addEventListener('friend-request-canceled', handleRefreshEvent);
 });
 
 onUnmounted(() => {
@@ -178,12 +170,19 @@ onUnmounted(() => {
     if (fullDataRefreshInterval) {
         clearInterval(fullDataRefreshInterval);
     }
+    window.removeEventListener('friend-request-received', handleRefreshEvent);
+    window.removeEventListener('friend-request-accepted', handleRefreshEvent);
+    window.removeEventListener('friend-request-canceled', handleRefreshEvent);
 });
+
+const handleRefreshEvent = () => {
+    loadFriendsAndStatus(true);
+};
 
 const loadFriendsAndStatus = async (forceReload = false) => {
     try {
         if (forceReload || friends.value.length === 0) {
-            await loadFriendsData();
+            await loadFriendsData(forceReload);
         } else {
             await updateFriendStatuses();
         }
@@ -386,9 +385,9 @@ const unblockUser = async (user: Friend) => {
     padding-bottom: 0.4rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .requests-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 

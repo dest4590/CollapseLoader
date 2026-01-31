@@ -278,14 +278,21 @@
     "avatar_upload_failed": "上传头像失败",
     "reset_avatar": "重置头像",
     "avatar_reset_success": "头像重置成功",
-    "avatar_reset_failed": "重置头像失败：{error}"
+    "avatar_reset_failed": "重置头像失败：{error}",
+    "current_favorite": "目前最喜欢的",
+    "favorite_client": "最喜欢的客户",
+    "favorite_client_description": "选择您最喜欢的客户以显示在您的个人资料上",
+    "favorite_client_update_failed": "更新收藏客户端失败",
+    "favorite_client_updated": "收藏客户端更新成功",
+    "no_favorite_client": "没有选择最喜欢的客户",
+    "select_favorite_client": "选择最喜欢的客户"
   },
   "roles": {
-    "USER": "用户",
-    "TESTER": "测试员",
-    "ADMIN": "管理员",
-    "DEVELOPER": "开发者",
-    "OWNER": "所有者"
+    "user": "用户",
+    "tester": "测试员",
+    "admin": "管理员",
+    "developer": "开发者",
+    "owner": "所有者"
   },
   "time": {
     "offline": "离线",
@@ -318,7 +325,9 @@
     "send": "发送",
     "copied_to_clipboard": "颜色 {color} 已复制到剪贴板",
     "done": "完成",
-    "click": "点击"
+    "click": "点击",
+    "show_more": "显示更多",
+    "show_less": "收起"
   },
   "auth": {
     "logout": {
@@ -676,7 +685,9 @@
       "irc_chat": "在每个客户端中提供的 IRC 聊天中与其他 CollapseLoader 用户聊天。",
       "hash_verify": "启用哈希校验以确保下载的客户端未损坏。这有助于保持客户端最新。",
       "sync_client_settings": "在所有客户端之间同步选项、资源包及其他设置。",
-      "dpi_bypass": "如果客户端下载卡在 0%、客户端无法启动或客户端加载失败，则启用此功能。"
+      "dpi_bypass": "如果客户端下载卡在 0%、客户端无法启动或客户端加载失败，则启用此功能。",
+      "minimize_to_tray_on_launch": "启动客户端时将应用最小化到系统托盘。",
+      "close_to_tray": "点击关闭按钮时将应用最小化到系统托盘而不是关闭。"
     },
     "telemetry": "分析",
     "open_data": "打开数据文件夹",
@@ -721,6 +732,8 @@
       "restart_required": "请重启应用以使更改生效"
     },
     "sync_client_settings": "同步客户端设置",
+    "minimize_to_tray_on_launch": "启动时最小化到系统托盘",
+    "close_to_tray": "关闭到系统托盘",
     "ram": {
       "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
     },
@@ -791,7 +804,8 @@
     "presets": "预设",
     "no_presets": "该用户尚未分享任何预设。",
     "create_preset": "创建预设",
-    "presets_hidden_streamer": "主播模式下已隐藏预设。"
+    "presets_hidden_streamer": "主播模式下已隐藏预设。",
+    "favorite_client": "最喜欢的客户"
   },
   "sync": {
     "last_sync": "上次同步",
@@ -859,7 +873,9 @@
       "copied_success": "应用日志已复制到剪贴板！",
       "copy_failed": "复制应用日志失败：{error}",
       "client_logs_copied": "日志已复制到剪贴板！",
-      "client_logs_copy_failed": "复制日志到剪贴板失败。"
+      "client_logs_copy_failed": "复制日志到剪贴板失败。",
+      "download_failed": "无法保存日志：{错误}",
+      "download_success": "日志保存成功！"
     },
     "users": {
       "blocked_load_failed": "加载被屏蔽用户失败",
@@ -965,7 +981,8 @@
         }
       },
       "no_changelog_desc": "更新与改动将显示在此处。",
-      "comments_tab": "评论"
+      "comments_tab": "评论",
+      "your_rating": "您的评价"
     },
     "comments": {
       "delete": "删除",
@@ -1049,7 +1066,12 @@
     "comment_placeholder": "撰写评论...",
     "preset_picker_label": "选择本地预设",
     "preset_picker_placeholder": "选择一个预设...",
-    "no_local_presets": "您还没有任何预设"
+    "no_local_presets": "您还没有任何预设",
+    "by_author": "加时{姓名}",
+    "sort_comments": "评论最多",
+    "sort_downloads": "下载次数最多",
+    "sort_newest": "最新",
+    "sort_popular": "受欢迎的"
   },
   "events": {
     "halloween": {
@@ -1069,5 +1091,75 @@
     "download_complete": "下载完成",
     "installation_complete": "安装完成"
   },
-  "login": "您需要登录您的帐户。"
+  "login": "您需要登录您的帐户。",
+  "notifications": {
+    "friend_request_received": {
+      "title": "好友请求",
+      "message": "{name} 向你发送了好友请求！"
+    },
+    "friend_request_accepted": {
+      "title": "好友请求已接受",
+      "message": "{name} 接受了你的好友请求！"
+    }
+  },
+  "achievements": {
+    "title": "成就",
+    "unlocked_title": "成就已解锁: {name}",
+    "locked": "未解锁",
+    "unlocked_at": "解锁于 {date}",
+    "owned_percentage": "{percent}% 的玩家拥有此成就",
+    "login_to_unlock": "您需要登录才能解锁此成就。",
+    "secret_title": "隐藏成就",
+    "secret_description": "继续玩下去以揭开这个秘密！",
+    "list": {
+      "PLAYED_1Hour": {
+        "name": "小试牛刀",
+        "description": "累计游玩 1 小时。"
+      },
+      "PLAYED_10Hours": {
+        "name": "持之以恒",
+        "description": "累计游玩 10 小时。"
+      },
+      "FIRST_GAME": {
+        "name": "迈出第一步",
+        "description": "启动您的第一个客户端。"
+      },
+      "SECRET_FINDER": {
+        "name": "秘密发现者",
+        "description": "你发现了一个秘密！"
+      },
+      "SOCIAL_BUTTERFLY": {
+        "name": "社交高手",
+        "description": "在个人资料中添加社交链接。"
+      },
+      "FREQUENT_FLYER": {
+        "name": "常客",
+        "description": "启动客户端 50 次。"
+      },
+      "PRESET_MAX": {
+        "name": "时尚达人",
+        "description": "创建并分享一个自定义预设。"
+      },
+      "BETA_TESTER": {
+        "name": "内测玩家",
+        "description": "加入测试计划。"
+      },
+      "COLLECTOR": {
+        "name": "收藏家",
+        "description": "收藏 5 个不同的客户端。"
+      },
+      "NIGHT_OWL": {
+        "name": "熬夜冠军",
+        "description": "在凌晨 2 点到 5 点之间游玩。"
+      },
+      "EARLY_BIRD": {
+        "name": "早起鸟儿",
+        "description": "在凌晨 5 点到 8 点之间游玩。"
+      },
+      "WEEKEND_WARRIOR": {
+        "name": "周末勇士",
+        "description": "在周末游玩。"
+      }
+    }
+  }
 }

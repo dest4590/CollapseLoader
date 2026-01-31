@@ -202,6 +202,50 @@ jobs:
                   }
 
                   echo "ARTIFACT_PATH=artifacts-windows" >> $env:GITHUB_ENV
+            - name: Upload Windows artifacts to Telegram
+              if: matrix.platform == 'windows-latest'
+              shell: pwsh
+              env:
+                  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+              run: |
+                  $token = $env:TELEGRAM_TOKEN
+                  $chatId = $env:TELEGRAM_CHAT_ID
+                  if (-not $token -or -not $chatId) { Write-Host "Telegram token or chat id not set; skipping upload."; exit 0 }
+
+                  $files = Get-ChildItem -Path artifacts-windows -File -Recurse | Where-Object { $_.Extension -in '.msi','.exe' -or $_.Name -like '*-setup.exe' } | ForEach-Object { $_.FullName }
+                  if (-not $files) { Write-Host "No artifacts found to upload."; exit 0 }
+
+                  $repo = $env:GITHUB_REPOSITORY
+                  $hash = $env:HASH
+                  $commitUrl = "https://github.com/$repo/commit/$hash"
+
+                  $media = @()
+                  for ($i = 0; $i -lt $files.Count; $i++) {
+                    $attachName = "file$i"
+                    $item = @{ type = 'document'; media = "attach://$attachName" }
+                    if ($i -eq 0) {
+                      $item.caption = "Build artifacts for commit [$hash]($commitUrl)"
+                      $item.parse_mode = 'Markdown'
+                    }
+                    $media += $item
+                  }
+
+                  $mediaJson = ($media | ConvertTo-Json -Compress)
+                  $uri = "https://api.telegram.org/bot$token/sendMediaGroup"
+
+                  $form = @()
+                  $form += '-F'; $form += "chat_id=$chatId"
+                  $form += '-F'; $form += "media=$mediaJson"
+
+                  for ($i = 0; $i -lt $files.Count; $i++) {
+                    $attachName = "file$i"
+                    $path = $files[$i]
+                    $form += '-F'; $form += "${attachName}=@$path"
+                  }
+
+                  Write-Host "Uploading artifacts as a single media group to Telegram..."
+                  & curl.exe -s -X POST $uri @form
 
             - name: Collect Ubuntu artifacts
               if: matrix.platform == 'ubuntu-latest'
@@ -238,6 +282,59 @@ jobs:
                   done
 
                   echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
+
+            - name: Upload Ubuntu artifacts to Telegram
+              if: matrix.platform == 'ubuntu-latest'
+              shell: bash
+              env:
+                  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+              run: |
+                  token="${TELEGRAM_TOKEN}"
+                  chatId="${TELEGRAM_CHAT_ID}"
+                  if [ -z "$token" ] || [ -z "$chatId" ]; then echo "Telegram token or chat id not set; skipping upload."; exit 0; fi
+
+                  files=(artifacts-ubuntu/*)
+                  # Filter only regular files
+                  real_files=()
+                  for f in "${files[@]}"; do
+                    [ -f "$f" ] || continue
+                    real_files+=("$f")
+                  done
+                  if [ ${#real_files[@]} -eq 0 ]; then echo "No artifacts found to upload."; exit 0; fi
+
+                  repo="${GITHUB_REPOSITORY}"
+                  hash="${HASH}"
+                  commit_url="https://github.com/${repo}/commit/${hash}"
+
+                  media_parts="[]"
+                  media_json='['
+                  for i in "${!real_files[@]}"; do
+                    name="file${i}"
+                    entry="{\"type\":\"document\",\"media\":\"attach://${name}\"}"
+                    if [ "$i" -eq 0 ]; then
+                      # add caption + parse_mode to first item
+                      caption="Build artifacts for commit [${hash}](${commit_url})"
+                      entry="{\"type\":\"document\",\"media\":\"attach://${name}\",\"caption\":\"${caption}\",\"parse_mode\":\"Markdown\"}"
+                    fi
+                    media_json+="$entry"
+                    if [ "$i" -lt $((${#real_files[@]} - 1)) ]; then
+                      media_json+=','
+                    fi
+                  done
+                  media_json+=']'
+
+                  curl_cmd=(curl -s -X POST "https://api.telegram.org/bot${token}/sendMediaGroup")
+                  curl_cmd+=(-F "chat_id=${chatId}")
+                  curl_cmd+=(-F "media=${media_json}")
+                  for i in "${!real_files[@]}"; do
+                    name="file${i}"
+                    path="${real_files[$i]}"
+                    curl_cmd+=(-F "${name}=@${path}")
+                  done
+
+                  echo "Uploading artifacts as a single media group to Telegram..."
+                  "${curl_cmd[@]}"
 
             - name: VirusTotal Scan (Windows only)
               if: matrix.platform == 'windows-latest' && github.event.repository.fork == false

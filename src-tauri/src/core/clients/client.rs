@@ -244,7 +244,7 @@ pub struct Requirement {
     size: Option<u64>,
 }
 
-const fn default_meta() -> Meta {
+fn default_meta() -> Meta {
     Meta {
         is_new: false,
         is_fabric: false,
@@ -267,7 +267,7 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
-    pub const fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
+    pub fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
         Self {
             app_handle,
             user_token,
@@ -839,7 +839,7 @@ impl Client {
         manager: Arc<Mutex<ClientManager>>,
     ) -> Result<(), String> {
         if !options.is_custom && SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value) {
-            Analytics::send_client_analytics(self.id);
+            Analytics::send_client_analytics(self.id, &options.user_token);
         }
 
         {
@@ -961,13 +961,6 @@ impl Client {
                 agent_overlay_path.display()
             ));
         }
-
-        cmd.arg("--add-opens")
-            .arg("java.base/jdk.internal.misc=ALL-UNNAMED");
-        cmd.arg("--add-opens").arg("java.base/sun.misc=ALL-UNNAMED");
-        cmd.arg("--add-opens")
-            .arg("java.base/java.lang=ALL-UNNAMED");
-        cmd.arg("--add-opens").arg("java.base/java.io=ALL-UNNAMED");
 
         cmd.arg("-cp").arg(classpath).arg(&self.main_class);
 

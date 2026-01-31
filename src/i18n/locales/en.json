@@ -278,14 +278,21 @@
     "avatar_upload_failed": "Failed to upload avatar",
     "reset_avatar": "Reset avatar",
     "avatar_reset_success": "Avatar reset successfully",
-    "avatar_reset_failed": "Failed to reset avatar: {error}"
+    "avatar_reset_failed": "Failed to reset avatar: {error}",
+    "favorite_client": "Favorite Client",
+    "favorite_client_description": "Select your favorite client to display on your profile",
+    "select_favorite_client": "Select favorite client",
+    "no_favorite_client": "No favorite client selected",
+    "current_favorite": "Current favorite",
+    "favorite_client_updated": "Favorite client updated successfully",
+    "favorite_client_update_failed": "Failed to update favorite client"
   },
   "roles": {
-    "USER": "User",
-    "TESTER": "Tester",
-    "ADMIN": "Admin",
-    "DEVELOPER": "Developer",
-    "OWNER": "Owner"
+    "user": "User",
+    "tester": "Tester",
+    "admin": "Admin",
+    "developer": "Developer",
+    "owner": "Owner"
   },
   "time": {
     "offline": "Offline",
@@ -318,7 +325,9 @@
     "send": "Send",
     "copied_to_clipboard": "Color {color} copied to clipboard",
     "done": "Done",
-    "click": "Click"
+    "click": "Click",
+    "show_more": "Show More",
+    "show_less": "Show Less"
   },
   "auth": {
     "logout": {
@@ -703,7 +712,9 @@
       "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
       "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
       "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
-      "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients."
+      "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients.",
+      "minimize_to_tray_on_launch": "Minimize the app to system tray when a client is launched.",
+      "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked."
     },
     "ram_warning": {},
     "telemetry": "Analytics",
@@ -749,6 +760,8 @@
       "restart_required": "Please restart the app for changes to take effect"
     },
     "sync_client_settings": "Sync client settings",
+    "minimize_to_tray_on_launch": "Minimize to tray on launch",
+    "close_to_tray": "Close to tray",
     "reset_settings": "Reset settings",
     "sync_login_required": "Sign in to enable syncing",
     "not_signed_in": "You are not logged in"
@@ -785,6 +798,7 @@
     "user_not_found": "User not found",
     "login_required": "You need to be logged in to view profiles",
     "profile_load_failed": "Failed to load user profile",
+    "favorite_client": "Favorite Client",
     "friend_request_sent_success": "Friend request sent to {name}",
     "friend_request_failed": "Failed to send friend request: {error}",
     "copy_username": "Copy username",
@@ -962,6 +976,7 @@
       "rating": "Rating",
       "no_rating": "No ratings yet",
       "login_to_rate": "Log in to rate",
+      "your_rating": "Your Rating",
       "source_link": "Source Link",
       "created": "Created",
       "changelog": "Changelog",
@@ -1041,6 +1056,10 @@
     "private_label": "Private",
     "make_private": "Make private",
     "make_public": "Make public",
+    "sort_newest": "Newest",
+    "sort_popular": "Popular",
+    "sort_downloads": "Most Downloaded",
+    "sort_comments": "Most Commented",
     "edit_modal_title": "Edit Preset",
     "delete_confirm": "Are you sure you want to delete this preset? This action cannot be undone.",
     "share": "Share",
@@ -1054,6 +1073,7 @@
     "apply": "Apply",
     "like": "Like",
     "by_user": "by {name}",
+    "by_author": "OT {name}",
     "no_items": "No presets yet",
     "preset_details_title": "Preset Details",
     "preset_details": "Preset details",
@@ -1072,5 +1092,75 @@
       "tooltip": "Happy Halloween! (Oct 25 - Nov 5)"
     }
   },
-  "login": "You need to log in to your account."
+  "login": "You need to log in to your account.",
+  "notifications": {
+    "friend_request_received": {
+      "title": "Friend Request",
+      "message": "{name} sent you a friend request!"
+    },
+    "friend_request_accepted": {
+      "title": "Friend Request Accepted",
+      "message": "{name} accepted your friend request!"
+    }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "unlocked_title": "Achievement unlocked: {name}",
+    "locked": "Locked",
+    "unlocked_at": "Unlocked {date}",
+    "owned_percentage": "{percent}% of players have this",
+    "login_to_unlock": "You need to be logged in to unlock this achievement.",
+    "secret_title": "Hidden Achievement",
+    "secret_description": "Keep playing to unlock this secret!",
+    "list": {
+      "PLAYED_1Hour": {
+        "name": "Getting Started",
+        "description": "Play for 1 hour."
+      },
+      "PLAYED_10Hours": {
+        "name": "Dedicated",
+        "description": "Play for 10 hours."
+      },
+      "FIRST_GAME": {
+        "name": "First Steps",
+        "description": "Launch your first client."
+      },
+      "SECRET_FINDER": {
+        "name": "Secret Finder",
+        "description": "You found a secret!"
+      },
+      "SOCIAL_BUTTERFLY": {
+        "name": "Social Butterfly",
+        "description": "Add a social link to your profile."
+      },
+      "FREQUENT_FLYER": {
+        "name": "Frequent Flyer",
+        "description": "Launch clients 50 times."
+      },
+      "PRESET_MAX": {
+        "name": "Fashionista",
+        "description": "Create and share a customization preset."
+      },
+      "BETA_TESTER": {
+        "name": "Beta Tester",
+        "description": "Join the testing program."
+      },
+      "COLLECTOR": {
+        "name": "Collector",
+        "description": "Favorite 5 different clients."
+      },
+      "NIGHT_OWL": {
+        "name": "Night Owl",
+        "description": "Play between 2 AM and 5 AM."
+      },
+      "EARLY_BIRD": {
+        "name": "Early Bird",
+        "description": "Play between 5 AM and 8 AM."
+      },
+      "WEEKEND_WARRIOR": {
+        "name": "Weekend Warrior",
+        "description": "Play on a weekend."
+      }
+    }
+  }
 }

@@ -10,6 +10,8 @@ import IconGitHub from '../assets/icons/github.svg';
 import IconTelegram from '../assets/icons/telegram.svg';
 import IconDiscord from '../assets/icons/discord.svg';
 import { CircleFadingArrowUp } from 'lucide-vue-next';
+import { achievementService } from '../services/achievementService';
+import { useUser } from '../composables/useUser';
 
 const { t } = useI18n();
 const LogoUrl = String(Logo);
@@ -17,6 +19,7 @@ const IconGitHubUrl = String(IconGitHub);
 const IconTelegramUrl = String(IconTelegram);
 const IconDiscordUrl = String(IconDiscord);
 const { addToast } = useToast();
+const { isAuthenticated } = useUser();
 
 const version = ref('');
 const codename = ref('');
@@ -24,6 +27,26 @@ const commitHash = ref('');
 const branch = ref('');
 const development = ref(false);
 const isCheckingUpdates = ref(false);
+const logoClicks = ref(0);
+
+const handleLogoClick = async () => {
+    logoClicks.value++;
+    if (logoClicks.value === 7) {
+        if (!isAuthenticated.value) {
+            addToast(t('achievements.login_to_unlock'), 'warning');
+            logoClicks.value = 0;
+            return;
+        }
+
+        try {
+            await achievementService.unlockAchievement('SECRET_FINDER');
+            addToast(t('achievements.list.SECRET_FINDER.name') + ': ' + t('achievements.list.SECRET_FINDER.description'), 'success');
+        } catch (error) {
+            console.error('Failed to unlock secret achievement:', error);
+        }
+        logoClicks.value = 0;
+    }
+};
 
 const getVersion = async () => {
     try {
@@ -86,7 +109,9 @@ onMounted(async () => {
 <template>
     <div class="slide-up">
         <div class="flex flex-col items-center mb-4">
-            <img :src="LogoUrl" alt="CollapseLoader Logo" class="w-36 h-36" />
+            <img :src="LogoUrl" alt="CollapseLoader Logo"
+                class="w-36 h-36 cursor-pointer select-none active:scale-95 transition-transform"
+                @click="handleLogoClick" />
 
             <div class="text-center">
                 <h1 class="text-4xl font-bold mb-2">
@@ -97,10 +122,10 @@ onMounted(async () => {
                     <div class="tooltip-content flex flex-col">
                         <span class="text-sm font-semibold text-base-content">{{
                             codename
-                            }}</span>
+                        }}</span>
                         <span class="text-xs text-base-content/50">{{
                             commitHash
-                            }}</span>
+                        }}</span>
                     </div>
                     <p class="text-base-content/70">{{ version ? `v${version}` : '-' }}</p>
                 </div>
@@ -146,21 +171,21 @@ onMounted(async () => {
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.version')
-                        }}</span>
+                    }}</span>
                     <span class="font-medium">{{ version }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.codename')
-                        }}</span>
+                    }}</span>
                     <span class="font-medium">{{ codename }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">
                     <span class="text-base-content/80">{{
                         t('about.commit')
-                        }}</span>
+                    }}</span>
                     <code class="bg-base-300 px-2 py-1 rounded text-xs">{{
                         commitHash
                     }}</code>

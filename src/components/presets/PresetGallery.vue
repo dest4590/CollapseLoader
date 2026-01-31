@@ -5,63 +5,99 @@
             <span>{{ t('common.loading') }}</span>
         </div>
         <div v-else>
-            <div class="mb-4">
-                <input type="text" class="input input-bordered w-full"
-                    :placeholder="t('marketplace.search_placeholder')" v-model="search" />
+            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                <div class="relative flex-1">
+                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <input type="text" class="input input-bordered w-full pl-10 bg-white/5 border-white/10 focus:border-white/20 transition-all"
+                        :placeholder="t('marketplace.search_placeholder')" v-model="search" @input="debouncedLoad" />
+                </div>
+                <div class="flex gap-2">
+                    <select class="select select-bordered bg-white/5 border-white/10" v-model="sortBy" @change="load">
+                        <option value="newest">{{ t('marketplace.sort_newest') }}</option>
+                        <option value="popular">{{ t('marketplace.sort_popular') }}</option>
+                        <option value="downloads">{{ t('marketplace.sort_downloads') }}</option>
+                        <option value="comments">{{ t('marketplace.sort_comments') }}</option>
+                    </select>
+                </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div class="card bg-base-200 border border-base-300 shadow-sm hover:shadow" v-for="p in filteredPresets"
-                    :key="p.id">
-                    <div class="card-body p-4">
-                        <div class="cursor-pointer rounded-box hover:bg-base-300/20 transition-colors p-1 -m-1"
-                            @click="openDetails(p)">
-                            <h4 class="card-title text-lg">
+                <div class="card bg-base-100 border border-white/5 shadow-xl hover:bg-base-300 transition-all duration-300 rounded-xl group" 
+                     v-for="p in filteredPresets" :key="p.id">
+                    <div class="card-body p-3.5">
+                        <div class="cursor-pointer" @click="openDetails(p)">
+                            <h4 class="text-lg font-bold text-white tracking-tight mb-0">
                                 {{ p.title ?? p.name }}
                             </h4>
-                            <p class="text-xs text-base-content/70">
-                                {{ t('marketplace.by_user', { name: getOwnerName(p) || '' }) }}
+                            <p class="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2 hover:text-white/50 transition-colors cursor-pointer"
+                                @click.stop="$emit('show-user-profile', p.author?.id)">
+                                {{ t('marketplace.by_author', { name: getOwnerName(p).toUpperCase() || '' }) }}
                             </p>
-                            <p class="text-sm text-base-content/80 line-clamp-3 mt-2" v-if="p.description">{{ p.description }}</p>
-                            <div class="mt-2 flex items-center gap-3 text-xs text-base-content/60">
-                                <span class="badge badge-ghost">
-                                    <ThumbsUp class="w-4 h-4" />
-                                    {{ p.likes_count }}
+
+                            <PresetColorPreview :preset="p" class="mt-2!" />
+
+                            <p class="text-xs text-white/50 line-clamp-2 mt-3 leading-snug min-h-8" v-if="p.description">
+                                {{ p.description }}
+                            </p>
+
+                            <div class="mt-4 flex items-center gap-4 text-white/30">
+                                <span class="flex items-center gap-1.5 hover:text-white/50 transition-colors">
+                                    <ThumbsUp class="w-3.5 h-3.5" />
+                                    <span class="text-[11px] font-bold">{{ p.likes_count || 0 }}</span>
                                 </span>
-                                <span class="badge badge-ghost">
-                                    <Download class="w-4 h-4" />
-                                    {{ p.downloads_count }}
+                                <span class="flex items-center gap-1.5 hover:text-white/50 transition-colors">
+                                    <Download class="w-3.5 h-3.5" />
+                                    <span class="text-[11px] font-bold">{{ p.downloads_count || 0 }}</span>
                                 </span>
-                                <span v-if="isOwner(p)" class="badge"
-                                    :class="p.is_public ? 'badge-success' : 'badge-warning'">
-                                    {{ p.is_public ? t('marketplace.public_label') : t('marketplace.private_label') }}
+                                <span class="flex items-center gap-1.5 hover:text-white/50 transition-colors">
+                                    <MessageSquare class="w-3.5 h-3.5" />
+                                    <span class="text-[11px] font-bold">{{ p.comments_count || 0 }}</span>
                                 </span>
                             </div>
                         </div>
-                        <div class="card-actions justify-end mt-3">
-                            <button class="btn btn-primary btn-sm" @click.stop="apply(p)">{{ t('marketplace.apply')
-                                }}</button>
-                            <button class="btn btn-primary btn-sm" @click.stop="download(p)">{{ t('common.download')
-                                }}</button>
-                            <button class="btn btn-secondary btn-sm" @click.stop="like(p)">{{ t('marketplace.like')
-                                }}</button>
-                            <button class="btn btn-secondary btn-sm" @click.stop="openDetails(p)">{{ t('common.details')
-                                }}</button>
-                            <template v-if="isOwner(p)">
-                                <button class="btn btn-neutral btn-sm" @click.stop="openEdit(p)">{{ t('common.edit')
-                                    }}</button>
-                                <button class="btn btn-neutral btn-sm" @click.stop="toggleVisibility(p)">
-                                    {{ p.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
+
+                        <div class="card-actions justify-end mt-2">
+                            <div class="flex items-center gap-1.5">
+                                <template v-if="isOwner(p)">
+                                    <div class="dropdown dropdown-end dropdown-top">
+                                        <button tabindex="0" class="btn btn-circle btn-xs btn-ghost hover:bg-white/10" @click.stop>
+                                            <MoreVertical class="w-3.5 h-3.5 text-white/30" />
+                                        </button>
+                                        <ul tabindex="0" class="dropdown-content z-10 menu p-1.5 shadow-2xl bg-[#1a1a1a] rounded-xl w-48 border border-white/10 mb-2">
+                                            <li><a @click.stop="openEdit(p)" class="hover:bg-white/5 py-2 text-sm">
+                                                <Edit class="w-3.5 h-3.5" /> {{ t('common.edit') }}
+                                            </a></li>
+                                            <li><a @click.stop="toggleVisibility(p)" class="hover:bg-white/5 py-2 text-sm">
+                                                <component :is="p.is_public ? 'EyeOff' : 'Eye'" class="w-3.5 h-3.5" />
+                                                {{ p.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
+                                            </a></li>
+                                            <li><a @click.stop="askDelete(p)" class="text-error hover:bg-error/10 py-2 text-sm">
+                                                <Trash2 class="w-3.5 h-3.5" /> {{ t('common.delete') }}
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </template>
+                                
+                                <button class="btn btn-circle btn-sm btn-primary bg-white hover:bg-white/90 border-none group/apply" 
+                                    @click.stop="apply(p)">
+                                    <Play class="w-4 h-4 text-black fill-black" />
                                 </button>
-                                <button class="btn btn-error btn-sm" @click.stop="askDelete(p)">{{
-                                    t('common.delete') }}</button>
-                            </template>
+                                <button class="btn btn-circle btn-sm bg-white/10 hover:bg-white/20 border-none" 
+                                    @click.stop="download(p)">
+                                    <Download class="w-4 h-4 text-white" />
+                                </button>
+                                <button class="btn btn-circle btn-sm bg-white/10 hover:bg-white/20 border-none"
+                                    :class="{ 'bg-primary/20 text-primary': p.liked }"
+                                    @click.stop="like(p)">
+                                    <ThumbsUp class="w-4 h-4" :class="{ 'fill-current': p.liked }" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-if="!filteredPresets.length" class="text-sm text-base-content/60 mt-4">{{ t('marketplace.no_items')
-            }}</div>
         </div>
+        <div v-if="!filteredPresets.length" class="text-sm text-base-content/60 mt-4">{{ t('marketplace.no_items')
+            }}</div>
     </div>
 </template>
 
@@ -77,12 +113,15 @@ import { useModal } from '../../services/modalService';
 import MarketplaceEditPresetModal from '../modals/social/presets/MarketplaceEditPresetModal.vue';
 import PresetDetailsModal from '../modals/social/presets/PresetDetailsModal.vue';
 import MarketplaceDeleteConfirmModal from '../modals/social/presets/MarketplaceDeleteConfirmModal.vue';
-import { Download, ThumbsUp } from 'lucide-vue-next';
+import { Download, ThumbsUp, MessageSquare, Search, Play, MoreVertical, Edit, Trash2, Eye, EyeOff } from 'lucide-vue-next';
 import { buildPresetCreatePayload } from '../../utils/presetPayload';
+import PresetColorPreview from './PresetColorPreview.vue';
 
 type MarketplacePresetView = MarketplacePreset & {
     liking?: boolean;
 };
+
+let debounceTimer: any = null;
 
 function getThemeValues(preset: MarketplacePreset): MarketplaceTheme {
     return preset.theme || {};
@@ -90,11 +129,13 @@ function getThemeValues(preset: MarketplacePreset): MarketplaceTheme {
 
 export default defineComponent({
     name: 'PresetGallery',
-    components: { Download, ThumbsUp },
+    components: { Download, ThumbsUp, MessageSquare, Search, Play, MoreVertical, Edit, Trash2, Eye, EyeOff, PresetColorPreview },
     props: {
-        ownerId: { type: Number, required: false }
+        ownerId: { type: Number, required: false },
+        initialPresets: { type: Array as () => MarketplacePresetView[], required: false }
     },
-    setup(props) {
+    emits: ['show-user-profile'],
+    setup(props, { emit }) {
         const presets = ref<MarketplacePresetView[]>([]);
         const loading = ref(true);
         const search = ref('');
@@ -104,11 +145,22 @@ export default defineComponent({
 
         const { showModal, hideModal } = useModal();
 
+        const sortBy = ref('newest');
+
         async function load() {
             loading.value = true;
             try {
+                if (props.initialPresets && !search.value.trim() && sortBy.value === 'newest' && presets.value.length === 0) {
+                     presets.value = props.initialPresets.map((preset) => ({ ...preset, liking: false }));
+                     loading.value = false;
+                     return;
+                }
+
                 const params: any = {};
                 if (props.ownerId) params.owner = props.ownerId;
+                if (search.value.trim()) params.q = search.value.trim();
+                params.sort = sortBy.value;
+
                 const data = await marketplaceService.listPresets(params);
                 presets.value = data.map((preset) => ({ ...preset, liking: false }));
             } finally {
@@ -116,16 +168,14 @@ export default defineComponent({
             }
         }
 
-        const filteredPresets = computed(() => {
-            const q = search.value.trim().toLowerCase();
-            if (!q) return presets.value;
-            return presets.value.filter((p) => {
-                const parts = [p.title ?? p.name, p.description, getOwnerName(p)]
-                    .filter(Boolean)
-                    .map((v) => String(v).toLowerCase());
-                return parts.some((text) => text.includes(q));
-            });
-        });
+        function debouncedLoad() {
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                load();
+            }, 300);
+        }
+
+        const filteredPresets = computed(() => presets.value);
 
         function getOwnerName(p: MarketplacePreset): string {
             return p.author?.displayName ?? p.author?.username ?? p.owner_username ?? '';
@@ -184,7 +234,7 @@ export default defineComponent({
                 const name = p.title ?? p.name ?? 'Imported preset';
                 const input = buildPresetCreatePayload(name, p.description, getThemeValues(p));
                 await presetService.createPreset(input);
-                addToast(t('theme.presets.messages.import_success'), 'success');
+                addToast(t('theme.presets.messages.import_success', { name }), 'success');
                 try {
                     await marketplaceService.downloadPreset(p.id);
                     p.downloads_count = (p.downloads_count || 0) + 1;
@@ -225,7 +275,12 @@ export default defineComponent({
                 PresetDetailsModal,
                 { title: t('marketplace.preset_details_title'), contentClass: 'wide' },
                 { id: p.id, onNavigate: (dir: 'prev' | 'next') => navigateFrom(p.id, dir) },
-                {}
+                {
+                    'show-user-profile': (userId: number) => {
+                        hideModal(id);
+                        emit('show-user-profile', userId);
+                    }
+                }
             );
         }
 
@@ -243,7 +298,12 @@ export default defineComponent({
                 PresetDetailsModal,
                 { title: t('marketplace.preset_details_title'), contentClass: 'wide' },
                 { id: next.id, onNavigate: (d: 'prev' | 'next') => navigateFrom(next.id, d) },
-                {}
+                {
+                    'show-user-profile': (userId: number) => {
+                        hideModal(newId);
+                        emit('show-user-profile', userId);
+                    }
+                }
             );
         }
 
@@ -293,7 +353,10 @@ export default defineComponent({
             toggleVisibility,
             askDelete,
             t,
+            sortBy,
+            debouncedLoad,
             getOwnerName,
+            load,
         };
     }
 });

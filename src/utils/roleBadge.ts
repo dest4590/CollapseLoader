@@ -9,7 +9,7 @@ export function getRoleBadge(role: string | null | undefined, t: (key: string) =
         owner: { class: 'badge badge-error', key: 'roles.owner' },
     };
 
-    const info = mapping[role] || { class: 'badge badge-outline', key: `roles.${role}` };
+    const info = mapping[role.toLowerCase()] || { class: 'badge badge-outline', key: `roles.${role.toLowerCase()}` };
     return { text: t(info.key), className: info.class };
 }
 

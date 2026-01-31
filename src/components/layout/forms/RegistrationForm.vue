@@ -61,23 +61,6 @@ const password = ref('');
 const confirmPassword = ref('');
 const isRegistering = ref(false);
 
-const extractAuthToken = (payload: any): string | null => {
-    if (!payload) return null;
-    const candidate =
-        payload.token ||
-        payload.auth_token ||
-        payload.access_token ||
-        payload.accessToken ||
-        payload?.tokens?.token ||
-        payload?.tokens?.access_token ||
-        payload?.tokens?.accessToken ||
-        payload?.data?.token ||
-        payload?.data?.auth_token ||
-        payload?.data?.access_token ||
-        payload?.data?.accessToken;
-    return typeof candidate === 'string' && candidate.length > 0 ? candidate : null;
-};
-
 const handleRegister = async () => {
     if (password.value !== confirmPassword.value) {
         addToast(t('validation.passwords_no_match'), 'error');
@@ -101,6 +84,7 @@ const handleRegister = async () => {
             {
                 username: username.value,
                 password: password.value,
+                email: email.value,
             },
             {
                 headers: {
@@ -125,7 +109,7 @@ const handleRegister = async () => {
                 }
             );
 
-            const authToken = extractAuthToken(loginResponse);
+            const authToken = loginResponse?.data?.token;
 
             if (authToken) {
                 localStorage.setItem('authToken', authToken);
@@ -139,35 +123,11 @@ const handleRegister = async () => {
             }
         } catch (loginError) {
             console.error('Auto-login failed:', loginError);
-            addToast(t('auth.register.auto_login_failed'), 'warning');
             emit('registered');
         }
     } catch (error: any) {
         console.error('Registration failed:', error);
         console.error('Registration error response:', error.response);
-
-        if (error.response && error.response.data) {
-            let errorMessage = t('auth.register.registration_failed');
-            const errors = error.response.data;
-            if (errors.username) {
-                errorMessage = `Username: ${errors.username.join(' ')}`;
-            } else if (errors.email) {
-                errorMessage = `Email: ${errors.email.join(' ')}`;
-            } else if (errors.password) {
-                errorMessage = `Password: ${errors.password.join(' ')}`;
-            } else if (Array.isArray(errors) && errors.length > 0) {
-                errorMessage = errors.join(' ');
-            } else if (typeof errors === 'string') {
-                errorMessage = errors;
-            } else if (errors.error) {
-                errorMessage = errors.error;
-            } else if (errors.detail) {
-                errorMessage = errors.detail;
-            }
-            addToast(errorMessage, 'error');
-        } else {
-            addToast(t('auth.register.registration_failed'), 'error');
-        }
     } finally {
         isRegistering.value = false;
     }

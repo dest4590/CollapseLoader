@@ -1,20 +1,22 @@
-import {ref} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {invoke} from '@tauri-apps/api/core';
-import {listen} from '@tauri-apps/api/event';
-import {bootLogService} from '../services/bootLogService';
-import {applyLanguageOnStartup, applyThemeOnStartup} from '../utils/settings';
-import {applyCursorForEvent, isHalloweenEvent} from '../utils/events';
-import {useToast} from '../services/toastService';
-import {globalUserStatus} from './useUserStatus';
-import {useUser} from './useUser';
-import {globalFriends} from './useFriends';
-import {updaterService} from '../services/updaterService';
-import {syncService} from '../services/syncService';
-import {getCurrentLanguage} from '../i18n';
-import {useModal} from '../services/modalService';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { bootLogService } from '../services/bootLogService';
+import { applyLanguageOnStartup, applyThemeOnStartup } from '../utils/settings';
+import { applyCursorForEvent, isHalloweenEvent } from '../utils/events';
+import { useToast } from '../services/toastService';
+import { globalUserStatus } from './useUserStatus';
+import { useUser } from './useUser';
+import { userService } from '../services/userService';
+import { globalFriends } from './useFriends';
+import { updaterService } from '../services/updaterService';
+import { syncService } from '../services/syncService';
+import { getCurrentLanguage } from '../i18n';
+import { useModal } from '../services/modalService';
 import ClientCrashModal from '../components/modals/clients/ClientCrashModal.vue';
-import {apiGet} from '../services/apiClient';
+import { apiGet } from '../services/apiClient';
+import { webSocketService } from '../services/webSocketService';
 
 interface Flags {
     disclaimer_shown: { value: boolean };
@@ -26,8 +28,8 @@ export function useAppInit() {
     const { t, locale } = useI18n();
     const { addToast } = useToast();
     const { showModal } = useModal();
-    const { loadUserData } = useUser();
-    const { loadFriendsData } = globalFriends;
+    const { loadUserData, hydrateUser } = useUser();
+    const { loadFriendsData, hydrateFriends } = globalFriends;
     const { initializeStatusSystem } = globalUserStatus;
 
     const showPreloader = ref(true);
@@ -51,11 +53,35 @@ export function useAppInit() {
         if (!isAuthenticated || !isOnline.value) return;
 
         try {
-            await loadUserData();
+            const initData = await userService.initializeUserFull();
+
+            const userInfo = {
+                id: initData.user.id,
+                username: initData.user.username,
+                email: initData.user.email,
+                role: initData.user.role,
+                created_at: initData.user.created_at,
+                updated_at: initData.user.updated_at,
+                last_login_at: initData.user.last_login_at ?? null,
+            };
+            hydrateUser(initData.user.profile, userInfo);
+
+            hydrateFriends(initData.friends);
+
             initializeStatusSystem();
-            await loadFriendsData();
+
+            await syncService.restoreFromInitData(initData);
+
         } catch (error) {
-            console.error('Failed to initialize user data on startup:', error);
+            console.error('Failed to initialize user data (consolidated), falling back:', error);
+            try {
+                await loadUserData();
+                initializeStatusSystem();
+                await loadFriendsData();
+                await syncService.checkAndRestoreOnStartup();
+            } catch (fallbackError) {
+                console.error('Fallback initialization also failed:', fallbackError);
+            }
         }
     };
 
@@ -221,10 +247,10 @@ export function useAppInit() {
                 await initializeUserDataWrapper(isAuthenticated.value);
                 bootLogService.userDataSuccess();
 
-                globalUserStatus.initializeStatusSystem();
                 bootLogService.syncInit();
-                await syncService.checkAndRestoreOnStartup();
                 bootLogService.syncReady();
+
+                webSocketService.connect();
             } catch (error) {
                 console.error('Failed to initialize user data on startup:', error);
                 bootLogService.userDataFailed();
