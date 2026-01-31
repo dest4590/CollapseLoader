@@ -244,7 +244,7 @@ pub struct Requirement {
     size: Option<u64>,
 }
 
-const fn default_meta() -> Meta {
+fn default_meta() -> Meta {
     Meta {
         is_new: false,
         is_fabric: false,
@@ -267,7 +267,7 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
-    pub const fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
+    pub fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
         Self {
             app_handle,
             user_token,
@@ -708,7 +708,7 @@ impl Client {
         Ok(())
     }
 
-    const fn fix_java_permissions(&self) {
+    fn fix_java_permissions(&self) {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;

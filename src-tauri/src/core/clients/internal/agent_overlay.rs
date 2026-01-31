@@ -32,7 +32,7 @@ pub struct AgentArguments {
 }
 
 impl AgentArguments {
-    pub const fn new(
+    pub fn new(
         token: String,
         client_name: String,
         analytics: bool,

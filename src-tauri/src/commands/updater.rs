@@ -374,7 +374,7 @@ exit
 }
 
 #[tauri::command]
-pub const fn get_changelog() -> Vec<ChangelogEntry> {
+pub fn get_changelog() -> Vec<ChangelogEntry> {
     Vec::new()
 }
 

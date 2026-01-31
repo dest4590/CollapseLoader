@@ -20,7 +20,7 @@ enum CrashType {
 }
 
 impl LogChecker {
-    pub const fn new(client: Client) -> Self {
+    pub fn new(client: Client) -> Self {
         Self { client }
     }
 

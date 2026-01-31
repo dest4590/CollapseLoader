@@ -18,7 +18,7 @@ pub struct Setting<T> {
 }
 
 impl<T> Setting<T> {
-    pub const fn new(value: T, show: bool) -> Self {
+    pub fn new(value: T, show: bool) -> Self {
         Self { value, show }
     }
 }

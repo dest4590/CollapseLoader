@@ -27,7 +27,7 @@ impl Args {
         println!("  --help, -h       Print help information");
     }
 
-    pub const fn process(&self) {
+    pub fn process(&self) {
         #[cfg(target_os = "linux")]
         {
             if env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
