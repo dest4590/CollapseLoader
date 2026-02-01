@@ -220,12 +220,18 @@ jobs:
                   $hash = $env:HASH
                   $commitUrl = "https://github.com/$repo/commit/$hash"
 
+                  # Try to get the commit subject (short message)
+                  $commitSubject = ''
+                  try { $commitSubject = (git log -1 --pretty=format:'%s' $hash) } catch { }
+                  if (-not $commitSubject) { try { $commitSubject = (git log -1 --pretty=format:'%s') } catch { $commitSubject = '' } }
+                  if (-not $commitSubject) { $commitSubject = "(no commit message)" }
+
                   $media = @()
                   for ($i = 0; $i -lt $files.Count; $i++) {
                     $attachName = "file$i"
                     $item = @{ type = 'document'; media = "attach://$attachName" }
                     if ($i -eq 0) {
-                      $item.caption = "Build artifacts for commit [$hash]($commitUrl)"
+                      $item.caption = "Build artifacts for commit [$hash]($commitUrl) - $commitSubject"
                       $item.parse_mode = 'Markdown'
                     }
                     $media += $item
@@ -307,34 +313,29 @@ jobs:
                   hash="${HASH}"
                   commit_url="https://github.com/${repo}/commit/${hash}"
 
-                  media_parts="[]"
-                  media_json='['
-                  for i in "${!real_files[@]}"; do
-                    name="file${i}"
-                    entry="{\"type\":\"document\",\"media\":\"attach://${name}\"}"
-                    if [ "$i" -eq 0 ]; then
-                      # add caption + parse_mode to first item
-                      caption="Build artifacts for commit [${hash}](${commit_url})"
-                      entry="{\"type\":\"document\",\"media\":\"attach://${name}\",\"caption\":\"${caption}\",\"parse_mode\":\"Markdown\"}"
-                    fi
-                    media_json+="$entry"
-                    if [ "$i" -lt $((${#real_files[@]} - 1)) ]; then
-                      media_json+=','
-                    fi
-                  done
-                  media_json+=']'
+                  # Get commit subject (short message)
+                  commit_subject=$(git log -1 --pretty=%s ${hash} 2>/dev/null || git log -1 --pretty=%s 2>/dev/null || echo "(no commit message)")
+                  caption="Build artifacts for commit [${hash}](${commit_url}) - ${commit_subject}"
 
-                  curl_cmd=(curl -s -X POST "https://api.telegram.org/bot${token}/sendMediaGroup")
-                  curl_cmd+=(-F "chat_id=${chatId}")
-                  curl_cmd+=(-F "media=${media_json}")
-                  for i in "${!real_files[@]}"; do
-                    name="file${i}"
-                    path="${real_files[$i]}"
-                    curl_cmd+=(-F "${name}=@${path}")
-                  done
+                  # Sanitize commit subject for use in filenames
+                  sanitized_commit_subject=$(echo "$commit_subject" | tr ' ' '_' | sed 's/[^A-Za-z0-9._-]/_/g' | cut -c1-80)
+                  if [ -z "$sanitized_commit_subject" ]; then
+                    sanitized_commit_subject="no_subject"
+                  fi
 
-                  echo "Uploading artifacts as a single media group to Telegram..."
-                  "${curl_cmd[@]}"
+                  # Create a tar.gz archive of the artifacts and upload it as a single document
+                  archive_name="artifacts-ubuntu-${hash}-${sanitized_commit_subject}.tar.gz"
+                  rm -f "$archive_name"
+                  tar -czf "$archive_name" -C artifacts-ubuntu .
+
+                  echo "Uploading archive $archive_name to Telegram..."
+                  curl -s -X POST "https://api.telegram.org/bot${token}/sendDocument" \
+                    -F chat_id="${chatId}" \
+                    -F document=@"${archive_name}" \
+                    -F caption="${caption}" \
+                    -F parse_mode=Markdown
+
+                  echo "Upload finished."
 
             - name: VirusTotal Scan (Windows only)
               if: matrix.platform == 'windows-latest' && github.event.repository.fork == false
