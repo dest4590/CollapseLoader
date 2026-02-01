@@ -82,10 +82,7 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     }
     vec![
         Server::new("https://cdn.collapseloader.org/"),
-        Server::new("https://collapse.ttfdk.lol/cdn/"),
-        Server::new(
-            "https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/collapse/o/",
-        ),
+        Server::new("http://141.148.224.27/cdn/"),
     ]
 });
 
@@ -99,7 +96,7 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
 
     vec![
         Server::new("https://atlas.collapseloader.org/"),
-        Server::new("https://collapse.ttfdk.lol/auth/"),
+        Server::new("http://141.148.224.27/atlas/"),
     ]
 });
 
