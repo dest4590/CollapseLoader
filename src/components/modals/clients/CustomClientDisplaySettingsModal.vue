@@ -13,8 +13,8 @@ const selectedOption = ref<string>('separate');
 const getFlags = async () => {
     try {
         const flags = await invoke('get_flags');
-        const typedFlags = flags as { custom_clients_display?: string };
-        selectedOption.value = typedFlags.custom_clients_display || 'separate';
+        const typedFlags = flags as { custom_clients_display?: { value: string } };
+        selectedOption.value = typedFlags.custom_clients_display?.value || 'separate';
         return typedFlags;
     } catch (err) {
         console.error('Error loading flags:', err);
@@ -32,11 +32,6 @@ const setCustomClientsDisplay = async () => {
     }
 };
 
-const handleSelect = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    selectedOption.value = target.value;
-};
-
 onMounted(async () => {
     await getFlags();
 });
@@ -50,7 +45,7 @@ watch(selectedOption, async () => {
         <label class="label mb-2">
             <span class="label-text font-medium">{{ $t('custom_clients.display_mode') }}</span>
         </label>
-        <select v-model="selectedOption" @select="handleSelect" class="select select-bordered w-full">
+        <select v-model="selectedOption" class="select select-bordered w-full">
             <option value="separate">{{ $t('custom_clients.display_mode_separate') }}</option>
             <option value="global">{{ $t('custom_clients.display_mode_global') }}</option>
         </select>
