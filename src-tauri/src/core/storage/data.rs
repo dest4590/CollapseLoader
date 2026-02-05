@@ -313,8 +313,8 @@ impl Data {
             }
 
             let client_target = client_dir.join(name);
-            if client_target.exists() {
-                let res = if client_target.is_dir() {
+            if let Ok(meta) = tokio_fs::symlink_metadata(&client_target).await {
+                let res = if meta.is_dir() {
                     tokio_fs::remove_dir_all(&client_target).await
                 } else {
                     tokio_fs::remove_file(&client_target).await
@@ -329,7 +329,7 @@ impl Data {
                 }
             }
 
-            if let Err(e) = Self::create_symlink(&target, &client_target) {
+            if let Err(e) = Self::create_symlink(&target, &client_target, is_dir) {
                 log_warn!(
                     "Failed to symlink {} for {}: {} -> {}: {}",
                     name,
@@ -344,7 +344,7 @@ impl Data {
         Ok(())
     }
 
-    fn create_symlink(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
+    fn create_symlink(src: &std::path::Path, dst: &std::path::Path, is_dir: bool) -> Result<(), String> {
         #[cfg(target_family = "unix")]
         {
             std::os::unix::fs::symlink(src, dst).map_err(|e| e.to_string())
@@ -353,10 +353,8 @@ impl Data {
         #[cfg(target_family = "windows")]
         {
             use std::os::windows::fs::{symlink_dir, symlink_file};
-            if src.is_dir() {
+            if is_dir {
                 symlink_dir(src, dst).map_err(|e| e.to_string())
-            } else if src.is_file() {
-                symlink_file(src, dst).map_err(|e| e.to_string())
             } else {
                 symlink_file(src, dst).map_err(|e| e.to_string())
             }

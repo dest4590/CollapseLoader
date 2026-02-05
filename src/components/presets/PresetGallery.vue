@@ -7,12 +7,15 @@
         <div v-else>
             <div class="flex flex-col md:flex-row gap-4 mb-4">
                 <div class="relative flex-1">
-                    <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                    <input type="text" class="input input-bordered w-full pl-10 bg-white/5 border-white/10 focus:border-white/20 transition-all"
+                    <input type="text"
+                        class="input input-bordered w-full pl-10 transition-all bg-base-100/10 border-base-content/10 focus:border-primary/50"
                         :placeholder="t('marketplace.search_placeholder')" v-model="search" @input="debouncedLoad" />
+                    <Search
+                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/60 z-10 pointer-events-none" />
                 </div>
                 <div class="flex gap-2">
-                    <select class="select select-bordered bg-white/5 border-white/10" v-model="sortBy" @change="load">
+                    <select class="select select-bordered bg-base-100/10 border-base-content/10" v-model="sortBy"
+                        @change="load">
                         <option value="newest">{{ t('marketplace.sort_newest') }}</option>
                         <option value="popular">{{ t('marketplace.sort_popular') }}</option>
                         <option value="downloads">{{ t('marketplace.sort_downloads') }}</option>
@@ -21,21 +24,27 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div class="card bg-base-100 border border-white/5 shadow-xl hover:bg-base-300 transition-all duration-300 rounded-xl group" 
-                     v-for="p in filteredPresets" :key="p.id">
+                <div class="card bg-base-100 border border-white/5 shadow-xl hover:bg-base-300 transition-all duration-300 rounded-xl group"
+                    v-for="p in filteredPresets" :key="p.id">
                     <div class="card-body p-3.5">
                         <div class="cursor-pointer" @click="openDetails(p)">
-                            <h4 class="text-lg font-bold text-white tracking-tight mb-0">
+                            <h4 class="text-lg font-bold text-base-content tracking-tight mb-0">
                                 {{ p.title ?? p.name }}
                             </h4>
-                            <p class="text-[10px] font-black text-white/30 uppercase tracking-widest mb-2 hover:text-white/50 transition-colors cursor-pointer"
+                            <p class="text-[10px] font-black text-base-content/30 uppercase tracking-widest mb-2 hover:text-base-content/50 transition-colors cursor-pointer"
                                 @click.stop="$emit('show-user-profile', p.author?.id)">
                                 {{ t('marketplace.by_author', { name: getOwnerName(p).toUpperCase() || '' }) }}
                             </p>
 
+                            <div v-if="getThemeValues(p).backgroundImage"
+                                class="w-full h-24 rounded-lg bg-cover bg-center border border-white/5 mb-2 transition-transform group-hover:scale-[1.02]"
+                                :style="{ backgroundImage: `url(${getThemeValues(p).backgroundImage})` }">
+                            </div>
+
                             <PresetColorPreview :preset="p" class="mt-2!" />
 
-                            <p class="text-xs text-white/50 line-clamp-2 mt-3 leading-snug min-h-8" v-if="p.description">
+                            <p class="text-xs text-white/50 line-clamp-2 mt-3 leading-snug min-h-8"
+                                v-if="p.description">
                                 {{ p.description }}
                             </p>
 
@@ -59,35 +68,41 @@
                             <div class="flex items-center gap-1.5">
                                 <template v-if="isOwner(p)">
                                     <div class="dropdown dropdown-end dropdown-top">
-                                        <button tabindex="0" class="btn btn-circle btn-xs btn-ghost hover:bg-white/10" @click.stop>
+                                        <button tabindex="0" class="btn btn-circle btn-xs btn-ghost hover:bg-white/10"
+                                            @click.stop>
                                             <MoreVertical class="w-3.5 h-3.5 text-white/30" />
                                         </button>
-                                        <ul tabindex="0" class="dropdown-content z-10 menu p-1.5 shadow-2xl bg-[#1a1a1a] rounded-xl w-48 border border-white/10 mb-2">
+                                        <ul tabindex="0"
+                                            class="dropdown-content z-10 menu p-1.5 shadow-2xl bg-[#1a1a1a] rounded-xl w-48 border border-white/10 mb-2">
                                             <li><a @click.stop="openEdit(p)" class="hover:bg-white/5 py-2 text-sm">
-                                                <Edit class="w-3.5 h-3.5" /> {{ t('common.edit') }}
-                                            </a></li>
-                                            <li><a @click.stop="toggleVisibility(p)" class="hover:bg-white/5 py-2 text-sm">
-                                                <component :is="p.is_public ? 'EyeOff' : 'Eye'" class="w-3.5 h-3.5" />
-                                                {{ p.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
-                                            </a></li>
-                                            <li><a @click.stop="askDelete(p)" class="text-error hover:bg-error/10 py-2 text-sm">
-                                                <Trash2 class="w-3.5 h-3.5" /> {{ t('common.delete') }}
-                                            </a></li>
+                                                    <Edit class="w-3.5 h-3.5" /> {{ t('common.edit') }}
+                                                </a></li>
+                                            <li><a @click.stop="toggleVisibility(p)"
+                                                    class="hover:bg-white/5 py-2 text-sm">
+                                                    <component :is="p.is_public ? 'EyeOff' : 'Eye'"
+                                                        class="w-3.5 h-3.5" />
+                                                    {{ p.is_public ? t('marketplace.make_private') :
+                                                        t('marketplace.make_public') }}
+                                                </a></li>
+                                            <li><a @click.stop="askDelete(p)"
+                                                    class="text-error hover:bg-error/10 py-2 text-sm">
+                                                    <Trash2 class="w-3.5 h-3.5" /> {{ t('common.delete') }}
+                                                </a></li>
                                         </ul>
                                     </div>
                                 </template>
-                                
-                                <button class="btn btn-circle btn-sm btn-primary bg-white hover:bg-white/90 border-none group/apply" 
+
+                                <button
+                                    class="btn btn-circle btn-sm btn-primary bg-white hover:bg-white/90 border-none group/apply"
                                     @click.stop="apply(p)">
                                     <Play class="w-4 h-4 text-black fill-black" />
                                 </button>
-                                <button class="btn btn-circle btn-sm bg-white/10 hover:bg-white/20 border-none" 
+                                <button class="btn btn-circle btn-sm bg-white/10 hover:bg-white/20 border-none"
                                     @click.stop="download(p)">
                                     <Download class="w-4 h-4 text-white" />
                                 </button>
                                 <button class="btn btn-circle btn-sm bg-white/10 hover:bg-white/20 border-none"
-                                    :class="{ 'bg-primary/20 text-primary': p.liked }"
-                                    @click.stop="like(p)">
+                                    :class="{ 'bg-primary/20 text-primary': p.liked }" @click.stop="like(p)">
                                     <ThumbsUp class="w-4 h-4" :class="{ 'fill-current': p.liked }" />
                                 </button>
                             </div>
@@ -97,7 +112,7 @@
             </div>
         </div>
         <div v-if="!filteredPresets.length" class="text-sm text-base-content/60 mt-4">{{ t('marketplace.no_items')
-            }}</div>
+        }}</div>
     </div>
 </template>
 
@@ -151,9 +166,9 @@ export default defineComponent({
             loading.value = true;
             try {
                 if (props.initialPresets && !search.value.trim() && sortBy.value === 'newest' && presets.value.length === 0) {
-                     presets.value = props.initialPresets.map((preset) => ({ ...preset, liking: false }));
-                     loading.value = false;
-                     return;
+                    presets.value = props.initialPresets.map((preset) => ({ ...preset, liking: false }));
+                    loading.value = false;
+                    return;
                 }
 
                 const params: any = {};
@@ -206,6 +221,9 @@ export default defineComponent({
                 warningContent: theme.warningContent,
                 error: theme.error,
                 errorContent: theme.errorContent,
+                backgroundImage: theme.backgroundImage,
+                backgroundBlur: theme.backgroundBlur,
+                backgroundOpacity: theme.backgroundOpacity,
             } as any);
         }
 
@@ -357,6 +375,7 @@ export default defineComponent({
             debouncedLoad,
             getOwnerName,
             load,
+            getThemeValues,
         };
     }
 });

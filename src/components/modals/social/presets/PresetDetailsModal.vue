@@ -44,10 +44,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                }}</button>
+                    }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -56,11 +56,28 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                    }}</button>
+                        }}</button>
                 </template>
             </div>
 
             <p class="text-sm whitespace-pre-line">{{ preset.description }}</p>
+
+            <div v-if="themeSource.backgroundImage" class="space-y-2">
+                <h3 class="font-medium flex items-center gap-2">
+                    <ImageIcon class="w-4 h-4" />
+                    {{ t('customization.background_image') }}
+                </h3>
+                <div class="w-full h-48 rounded-xl bg-cover bg-center border border-white/5"
+                    :style="{ backgroundImage: `url(${themeSource.backgroundImage})` }">
+                </div>
+                <div class="flex gap-4 text-xs opacity-60">
+                    <span v-if="themeSource.backgroundBlur !== undefined">{{ t('customization.background_blur') }}: {{
+                        themeSource.backgroundBlur }}px</span>
+                    <span v-if="themeSource.backgroundOpacity !== undefined">{{ t('customization.background_opacity')
+                        }}: {{
+                            themeSource.backgroundOpacity }}%</span>
+                </div>
+            </div>
 
             <div class="divider my-2"></div>
 
@@ -171,7 +188,7 @@ import { useI18n } from 'vue-i18n';
 import { formatDate } from '../../../../utils/utils';
 import { marketplaceService } from '../../../../services/marketplaceService';
 import { useUser } from '../../../../composables/useUser';
-import { ChevronLeft, ChevronRight, Download, ThumbsUp, MessageSquare } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Download, ThumbsUp, MessageSquare, Image as ImageIcon } from 'lucide-vue-next';
 import { presetService } from '../../../../services/presetService';
 import { useToast } from '../../../../services/toastService';
 import { useModal } from '../../../../services/modalService';

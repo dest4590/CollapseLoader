@@ -69,6 +69,9 @@ async function share() {
             warningContent: s.warningContent || undefined,
             error: s.error || undefined,
             errorContent: s.errorContent || undefined,
+            backgroundImage: s.backgroundImage || undefined,
+            backgroundBlur: s.backgroundBlur,
+            backgroundOpacity: s.backgroundOpacity,
             is_public: isPublic.value,
         };
         await marketplaceService.createPreset(payload);

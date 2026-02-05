@@ -597,13 +597,7 @@
       }
     },
     "dark": "Темна",
-    "light": "Світла",
-    "background_blur": "Розмиття",
-    "background_image": "URL Фонового зображення",
-    "background_image_help": "Підтримує jpg, png, webp, data-urls",
-    "background_image_placeholder": "https://example.com/image.jpg",
-    "background_opacity": "Прозорість",
-    "background_title": "Задній фон"
+    "light": "Світла"
   },
   "logs": {
     "copy_logs": "Копіювати логи",
@@ -842,7 +836,7 @@
     "account": "Акаунт",
     "about": "Про програму",
     "news": "Новини",
-    "customization": "Кастомізація",
+    "customization": "Фон",
     "custom_clients": "Власні клієнти",
     "sidebar_help": {
       "title": "Порада:",
@@ -1011,7 +1005,14 @@
       "placeholder": "Напишіть коментар..."
     }
   },
-  "customization": {},
+  "customization": {
+    "background_title": "Фон",
+    "background_image": "URL зображення",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_image_help": "Підтримує jpg, png, webp, data-urls",
+    "background_blur": "Розмиття",
+    "background_opacity": "Прозорість"
+  },
   "updater": {
     "update_available": "Доступне оновлення",
     "current": "Поточна",

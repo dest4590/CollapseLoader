@@ -105,29 +105,28 @@ const applyPreset = () => {
 
     Object.entries(varMap).forEach(([key, cssVar]) => {
         const value = settings[key];
-        if (value !== undefined && value !== null) {
+
+        if (value !== undefined && value !== null && (typeof value === 'string' ? value.trim().length > 0 : true)) {
             let cssValue = String(value);
             if (key === 'backgroundBlur') cssValue = `${value}px`;
-            if (key === 'backgroundOpacity') cssValue = String(value);
-            if (key === 'backgroundImage' && value.trim().length > 0) {
+            if (key === 'backgroundImage') {
                 cssValue = value.startsWith('http') || value.startsWith('data:') ? `url("${value}")` : value;
-                root.setAttribute('data-has-background', 'true');
-            } else if (key === 'backgroundImage') {
-                root.removeAttribute('data-has-background');
             }
-
-            if (typeof value === 'string' ? value.trim().length > 0 : true) {
-                root.style.setProperty(cssVar, cssValue);
-            } else {
-                root.style.removeProperty(cssVar);
-            }
+            root.style.setProperty(cssVar, cssValue);
         } else {
             root.style.removeProperty(cssVar);
-            if (key === 'backgroundImage') {
-                root.removeAttribute('data-has-background');
-            }
         }
     });
+
+    const bgImage = presetSettings.backgroundImage;
+    const bgOpacity = presetSettings.backgroundOpacity;
+    const hasBg = bgImage && bgImage.trim().length > 0 && bgOpacity && bgOpacity > 0;
+
+    if (hasBg) {
+        root.setAttribute('data-has-background', 'true');
+    } else {
+        root.removeAttribute('data-has-background');
+    }
 
     let styleEl = document.getElementById('custom-theme-styles');
     if (!styleEl) {
@@ -272,7 +271,7 @@ const importPreset = (presetJSON: string): void => {
             warningContent: typeof parsed.warningContent === 'string' || parsed.warningContent === null ? parsed.warningContent : presetSettings.warningContent,
             error: typeof parsed.error === 'string' || parsed.error === null ? parsed.error : presetSettings.error,
             errorContent: typeof parsed.errorContent === 'string' || parsed.errorContent === null ? parsed.errorContent : presetSettings.errorContent,
-            
+
             backgroundImage: typeof parsed.backgroundImage === 'string' || parsed.backgroundImage === null ? parsed.backgroundImage : presetSettings.backgroundImage,
             backgroundBlur: typeof parsed.backgroundBlur === 'number' || parsed.backgroundBlur === null ? parsed.backgroundBlur : presetSettings.backgroundBlur,
             backgroundOpacity: typeof parsed.backgroundOpacity === 'number' || parsed.backgroundOpacity === null ? parsed.backgroundOpacity : presetSettings.backgroundOpacity

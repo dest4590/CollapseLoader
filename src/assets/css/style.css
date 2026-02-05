@@ -108,18 +108,42 @@ html[data-has-background="true"] {
   background-color: transparent !important;
 }
 
-html[data-has-background="true"] main,
-html[data-has-background="true"] aside,
-html[data-has-background="true"] nav,
-html[data-has-background="true"] [class*="bg-base-"] {
-  background-color: color-mix(in srgb, var(--color-base-200, #141414), transparent 50%) !important;
-  backdrop-filter: blur(4px) !important;
-  -webkit-backdrop-filter: blur(4px) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+html[data-has-background="true"] .main-content,
+html[data-has-background="true"] .main-sidebar,
+html[data-has-background="true"] .titlebar {
+  background-color: color-mix(in srgb, var(--color-base-100, #1f1f1f), transparent 70%) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-color: rgba(255, 255, 255, 0.03) !important;
 }
 
-html[data-has-background="true"] .card {
-  background-color: color-mix(in srgb, var(--color-base-100, #1a1a1a), transparent 70%) !important;
+html[data-has-background="true"] .irc-chat > div,
+html[data-has-background="true"] .irc-chat > button {
+  background-color: transparent !important;
+}
+
+html[data-has-background="true"] .card,
+html[data-has-background="true"] .irc-chat {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-has-background="true"] .main-sidebar {
+  border-right-color: rgba(255, 255, 255, 0.05) !important;
+  border-left-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+html[data-has-background="true"] .dropdown-content,
+html[data-has-background="true"] .menu,
+html[data-has-background="true"] .modal-box,
+html[data-has-background="true"] .input,
+html[data-has-background="true"] .select,
+html[data-has-background="true"] .textarea {
+  background-color: var(--color-base-100, #141414) !important;
+  backdrop-filter: none !important;
+  opacity: 1 !important;
 }
 
 .slide-up {

@@ -1167,61 +1167,62 @@ onBeforeUnmount(() => {
 
                     <ClientInfo :client="client" :expanded="inTransition" />
 
-                    <div class="card-actions justify-end mt-2">
-                        <button v-if="clientIsRunning && !clientIsInstalling" @click.stop="handleOpenLogViewer"
-                            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20">
+                    <transition-group name="action-list" tag="div" class="card-actions justify-end mt-2 relative"
+                        :class="[
+                            (isAnimating || isExpanded) ? 'mr-4' : ''
+                        ]">
+                        <div v-if="clientIsInstalling" key="installing" class="w-full">
+                            <div class="flex justify-between mb-1 text-xs text-base-content">
+                                <span class="truncate max-w-[90%]">
+                                    {{ currentInstallStatus?.action }}
+                                    {{ client.name }}
+                                </span>
+                                <span>
+                                    {{ currentInstallStatus?.percentage }}%
+                                </span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" :style="{
+                                    width: `${currentInstallStatus?.percentage}%`,
+                                }"></div>
+                            </div>
+                        </div>
+
+                        <div v-else key="standard-actions" class="flex items-center space-x-2">
+                            <button v-if="!client.meta.installed" @click="handleDownloadClick"
+                                class="btn btn-sm btn-primary relative overflow-hidden group"
+                                :disabled="isRequirementsInProgress || !client.working">
+                                <span
+                                    class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
+                                    <Download v-if="client.working" class="w-4 h-4 mr-1" />
+                                    <span v-if="client.working">{{
+                                        t('home.download')
+                                    }}</span>
+                                    <span v-else-if="!client.working">{{
+                                        t('home.unavailable')
+                                    }}</span>
+                                </span>
+                                <span
+                                    class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:-translate-y-0">
+                                    {{ client.meta.size || '0' }} MB
+                                </span>
+                            </button>
+                            <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
+                                :disabled="isRequirementsInProgress" :class="clientIsRunning
+                                    ? 'btn-error'
+                                    : 'btn-primary'
+                                    ">
+                                <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
+                                {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
+                            </button>
+                        </div>
+
+                        <button v-if="clientIsRunning && !clientIsInstalling" key="terminal"
+                            @click.stop="handleOpenLogViewer"
+                            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 ml-2">
                             <Terminal class="w-4 h-4" />
                         </button>
-                        
-                        <transition name="fade-transform" mode="out-in">
-                            <div class="transition-all" :class="isAnimating || isExpanded ? 'mr-4' : ''">
-                                <div v-if="clientIsInstalling" class="w-full">
-                                    <div class="flex justify-between mb-1 text-xs text-base-content">
-                                        <span class="truncate max-w-[90%]">
-                                            {{ currentInstallStatus?.action }}
-                                            {{ client.name }}
-                                        </span>
-                                        <span>
-                                            {{ currentInstallStatus?.percentage }}%
-                                        </span>
-                                    </div>
-                                    <div class="progress-bar-container">
-                                        <div class="progress-bar" :style="{
-                                            width: `${currentInstallStatus?.percentage}%`,
-                                        }"></div>
-                                    </div>
-                                </div>
-                                <div v-else class="flex items-center space-x-2">
-                                    <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                                        class="btn btn-sm btn-primary relative overflow-hidden group"
-                                        :disabled="isRequirementsInProgress || !client.working">
-                                        <span
-                                            class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
-                                            <Download v-if="client.working" class="w-4 h-4 mr-1" />
-                                            <span v-if="client.working">{{
-                                                t('home.download')
-                                            }}</span>
-                                            <span v-else-if="!client.working">{{
-                                                t('home.unavailable')
-                                            }}</span>
-                                        </span>
-                                        <span
-                                            class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-                                            {{ client.meta.size || '0' }} MB
-                                        </span>
-                                    </button>
-                                    <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
-                                        :disabled="isRequirementsInProgress" :class="clientIsRunning
-                                            ? 'btn-error'
-                                            : 'btn-primary'
-                                            ">
-                                        <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
-                                        {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
+                    </transition-group>
                     <div class="client-details">
                         <div class="space-y-4">
                             <div v-if="isLoadingDetails" class="text-center py-4">
@@ -1290,10 +1291,10 @@ onBeforeUnmount(() => {
                                                             <div
                                                                 class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
                                                                 <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1)
-                                                                    }}/5</span>
+                                                                }}/5</span>
                                                                 <span v-else>—</span>
                                                                 <span class="text-base-content/50"> ({{ ratingCount
-                                                                    }})</span>
+                                                                }})</span>
                                                             </div>
                                                         </div>
 
@@ -1360,7 +1361,7 @@ onBeforeUnmount(() => {
                                                             <ExternalLink class="w-4 h-4" />
                                                             <span class="truncate max-w-[18rem]">{{
                                                                 clientDetails.source_link
-                                                            }}</span>
+                                                                }}</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1404,7 +1405,7 @@ onBeforeUnmount(() => {
                                                                     class="timeline-end timeline-box shadow-sm bg-base-100/40 w-full mb-2 border border-base-content/10">
                                                                     <div class="font-bold text-sm text-base-content">v{{
                                                                         entry.version
-                                                                    }}
+                                                                        }}
                                                                     </div>
                                                                     <div
                                                                         class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
@@ -1424,10 +1425,10 @@ onBeforeUnmount(() => {
                                                         <Info class="w-8 h-8 text-base-content/50 mb-2" />
                                                         <p class="text-sm font-medium text-base-content/70">{{
                                                             t('client.details.no_changelog')
-                                                        }}</p>
+                                                            }}</p>
                                                         <p class="text-xs text-base-content/50 mt-1">{{
                                                             t('client.details.no_changelog_desc')
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1480,7 +1481,7 @@ onBeforeUnmount(() => {
                                                     <span v-if="!canComment">{{ t('login') }}</span>
                                                     <span>{{
                                                         Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
-                                                    }}/{{ MAX_COMMENT_LENGTH }}</span>
+                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
                                                 </div>
 
                                                 <div v-if="isLoadingComments" class="flex justify-center py-8">
@@ -1522,7 +1523,7 @@ onBeforeUnmount(() => {
                                                             </span>
                                                             <time class="text-[10px]">{{
                                                                 formatDate(comment.created_at)
-                                                            }}
+                                                                }}
                                                             </time>
                                                             <button
                                                                 v-if="currentUser && currentUser.username === comment.author_username"
@@ -1683,7 +1684,7 @@ onBeforeUnmount(() => {
                         </div>
                         <div v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed">{{
                             t('client.details.screenshot_viewer.controls.navigate')
-                        }}
+                            }}
                         </div>
                         <div>{{ t('client.details.screenshot_viewer.controls.click_zoom') }}</div>
                         <div v-if="isZoomed">{{ t('client.details.screenshot_viewer.controls.drag_pan') }}</div>
@@ -2003,6 +2004,21 @@ img.cursor-grabbing {
     opacity: 0;
 }
 
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+    transition: all 0.3s ease;
+}
+
+.fade-transform-enter-from {
+    opacity: 0;
+    transform: translateX(10px);
+}
+
+.fade-transform-leave-to {
+    opacity: 0;
+    transform: translateX(-10px);
+}
+
 
 @keyframes fade-in {
     from {
@@ -2023,5 +2039,22 @@ img.cursor-grabbing {
 .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--thumb-color) var(--track-color);
+}
+
+/* Action List Transitions */
+.action-list-move,
+.action-list-enter-active,
+.action-list-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-list-enter-from,
+.action-list-leave-to {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+.action-list-leave-active {
+    position: absolute;
 }
 </style>

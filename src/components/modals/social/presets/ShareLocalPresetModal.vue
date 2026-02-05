@@ -102,6 +102,9 @@ async function share() {
                 warningContent: s.warningContent,
                 error: s.error,
                 errorContent: s.errorContent,
+                backgroundImage: s.backgroundImage,
+                backgroundBlur: s.backgroundBlur,
+                backgroundOpacity: s.backgroundOpacity,
                 is_public: isPublic.value,
             };
 

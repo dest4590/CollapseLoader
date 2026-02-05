@@ -129,6 +129,13 @@ pub async fn change_data_folder(
                         let entry = entry.map_err(|e| e.to_string())?;
                         let path = entry.path();
                         let target = dst.join(entry.file_name());
+
+                        let file_type = entry.file_type().map_err(|e| e.to_string())?;
+                        if file_type.is_symlink() {
+                            log_debug!("Skipping symlink during move: {:?}", path);
+                            continue;
+                        }
+
                         if path.is_dir() {
                             fs::create_dir_all(&target).map_err(|e| e.to_string())?;
                             copy_dir_recursive(&path, &target)?;

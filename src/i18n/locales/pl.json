@@ -597,13 +597,7 @@
       }
     },
     "dark": "Ciemny",
-    "light": "Jasny",
-    "background_blur": "Plama",
-    "background_image": "Adres URL obrazu tła",
-    "background_image_help": "Obsługuje jpg, png, webp, adresy URL danych",
-    "background_image_placeholder": "https://example.com/image.jpg",
-    "background_opacity": "Nieprzezroczystość",
-    "background_title": "Tło"
+    "light": "Jasny"
   },
   "logs": {
     "copy_logs": "Kopiuj logi",
@@ -1012,7 +1006,14 @@
       "placeholder": "Napisz komentarz..."
     }
   },
-  "customization": {},
+  "customization": {
+    "background_title": "Tło",
+    "background_image": "Adres URL obrazu tła",
+    "background_image_help": "Obsługuje jpg, png, webp, adresy URL danych",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_blur": "Rozmycie",
+    "background_opacity": "Nieprzezroczystość"
+  },
   "updater": {
     "update_available": "Dostępna aktualizacja",
     "current": "Bieżąca",
@@ -1088,7 +1089,7 @@
     "preset_picker_label": "Wybierz preset lokalny",
     "preset_picker_placeholder": "Wybierz preset...",
     "no_local_presets": "Nie masz jeszcze żadnych presetów",
-    "by_author": "OT {imię}",
+    "by_author": "PRZEZ {imię}",
     "sort_comments": "Najczęściej komentowane",
     "sort_downloads": "Najczęściej pobierane",
     "sort_newest": "Najnowszy",

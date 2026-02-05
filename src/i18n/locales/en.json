@@ -597,13 +597,7 @@
       }
     },
     "dark": "Dark",
-    "light": "Light",
-    "background_title": "Background",
-    "background_image": "Background Image URL",
-    "background_image_placeholder": "https://example.com/image.jpg",
-    "background_image_help": "Supports jpg, png, webp, data-urls",
-    "background_blur": "Blur",
-    "background_opacity": "Opacity"
+    "light": "Light"
   },
   "logs": {
     "copy_logs": "Copy logs",
@@ -1012,7 +1006,14 @@
       "delete": "Delete"
     }
   },
-  "customization": {},
+  "customization": {
+    "background_title": "Background",
+    "background_image": "Background Image",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_image_help": "Supports jpg, png, webp, data-urls",
+    "background_blur": "Blur",
+    "background_opacity": "Opacity"
+  },
   "updater": {
     "update_available": "Update Available",
     "current": "Current",
@@ -1083,7 +1084,7 @@
     "apply": "Apply",
     "like": "Like",
     "by_user": "by {name}",
-    "by_author": "OT {name}",
+    "by_author": "BY {name}",
     "no_items": "No presets yet",
     "preset_details_title": "Preset Details",
     "preset_details": "Preset details",

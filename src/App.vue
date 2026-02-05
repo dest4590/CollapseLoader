@@ -517,7 +517,7 @@ onUnmounted(() => {
                     :is-online="appOnline" :is-authenticated="isAuthenticated" :position="sidebarPosition"
                     @update:position="updateSidebarPosition" />
 
-                <main :class="mainClasses">
+                <main :class="[mainClasses, 'main-content']">
                     <transition :name="getTransitionName()" mode="out-in" appear>
                         <div :key="activeTab + (currentUserId || '')">
                             <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"

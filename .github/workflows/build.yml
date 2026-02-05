@@ -1,424 +1,376 @@
 name: Build and Release
 on:
-    push:
-        branches:
-            - main
-            - dev
-        paths:
-            - 'src/**'
-            - 'src-tauri/**'
-            - '**.json'
-            - '**.toml'
-            - '**.yml'
-            - '**.yaml'
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "src/**"
+      - "src-tauri/**"
+      - "**.json"
+      - "**.toml"
+      - "**.yml"
+      - "**.yaml"
 
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
-    check-skip:
-        runs-on: ubuntu-latest
-        outputs:
-            skip: ${{ steps.check.outputs.skip }}
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Check commit messages for skip keywords
-              id: check
-              shell: bash
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  set -euo pipefail
-
-                  keywords='\[skip ci\]|\[ci skip\]|skip-ci|skip_ci|SKIP_CI|NO_CI|skipci'
-
-                  # Determine the single relevant commit SHA:
-                  # - For pull_request events use the PR head SHA
-                  # - Otherwise prefer .after, head_commit.id, or GITHUB_SHA
-                  commit_sha="$(jq -r '.pull_request.head.sha // .after // .head_commit.id // .sha // empty' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
-                  commit_sha="${commit_sha:-${GITHUB_SHA:-}}"
-
-                  if [ -z "$commit_sha" ]; then
-                    echo "No commit SHA found; defaulting to full log fallback."
-                    messages="$(git log --pretty=%B -n 10 || true)"
-                  else
-                    echo "Checking commit: $commit_sha"
-                    # try to fetch the specific SHA if it's not present locally
-                    if ! git cat-file -e "$commit_sha^{commit}" 2>/dev/null; then
-                      git fetch --no-tags --depth=1 origin "$commit_sha" || git fetch --no-tags --depth=50 origin +refs/heads/*:refs/remotes/origin/* || true
-                    fi
-                    messages="$(git show -s --format=%B "$commit_sha" 2>/dev/null || true)"
-                  fi
-
-                  # Fallback: if no message found, try event commits array
-                  if [ -z "$(echo "$messages" | tr -d '[:space:]')" ]; then
-                    messages="$(jq -r '.commits[]?.message // empty' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
-                  fi
-
-                  echo "---- Collected commit message(s) ----"
-                  if [ -n "$(echo "$messages" | tr -d '[:space:]')" ]; then
-                    printf "%s\n" "$messages"
-                  else
-                    echo "<no commit messages found>"
-                  fi
-                  echo "---- End commit message(s) ----"
-
-                  echo "---- Matching lines (case-insensitive) ----"
-                  echo "$messages" | nl -ba | grep -Ei --color=never "$keywords" || true
-                  echo "---- End matching lines ----"
-
-                  skip_found=false
-                  if echo "$messages" | grep -Ei "$keywords" >/dev/null; then
-                    echo "Found skip keyword in commit message. Cancelling run."
-                    skip_found=true
-                  else
-                    echo "No skip keyword found in commit message. Continuing run."
-                  fi
-
-                  echo "skip=$skip_found" >> $GITHUB_OUTPUT
-
-    build:
-        needs: check-skip
-        if: needs.check-skip.outputs.skip != 'true'
-        strategy:
-            fail-fast: false
-            matrix:
-                platform: [windows-latest, ubuntu-latest]
-
-        runs-on: ${{ matrix.platform }}
-        permissions:
-            contents: write
-            actions: write
-            id-token: write
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-
-            - name: Install Rust stable
-              uses: dtolnay/rust-toolchain@stable
-
-            - name: Setup sccache
-              uses: mozilla-actions/sccache-action@v0.0.9
-
-            - name: Cache sccache
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      ~/.cache/sccache
-                      ~/AppData/Local/Mozilla/sccache
-                  key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-sccache-
-
-            - name: Install dependencies (ubuntu only)
-              if: matrix.platform == 'ubuntu-latest'
-              run: |
-                  sudo apt-get update
-                  sudo apt-get install -y libgtk-3-dev libappindicator3-dev librsvg2-dev patchelf \
-                  build-essential curl wget file libssl-dev \
-                  libjavascriptcoregtk-4.1-dev libwebkit2gtk-4.1-dev \
-                  libsoup-3.0-dev pkg-config
-
-            - name: Configure pkg-config (Ubuntu only)
-              if: matrix.platform == 'ubuntu-latest'
-              run: |
-                  echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
-                  ls -la /usr/lib/x86_64-linux-gnu/pkgconfig/ || true
-                  pkg-config --list-all | grep -i javascript || true
-
-            - name: Install frontend dependencies (Windows)
-              if: matrix.platform == 'windows-latest'
-              run: npm ci; npm install
-
-            - name: Install frontend dependencies (Ubuntu)
-              if: matrix.platform == 'ubuntu-latest'
-              run: npm ci || npm install
-
-            - name: Get version from package.json (Ubuntu)
-              if: matrix.platform == 'ubuntu-latest'
-              id: package-version-ubuntu
-              uses: martinbeentjes/npm-get-version-action@main
-
-            - name: Get version from package.json (Windows)
-              if: matrix.platform == 'windows-latest'
-              id: package-version-windows
-              shell: bash
-              run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-            - name: Get commit hash
-              id: commit-hash
-              run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-              shell: bash
-
-            - name: Build the app
-              uses: tauri-apps/tauri-action@v0
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  RUSTC_WRAPPER: sccache
-                  PKG_CONFIG_PATH: /usr/lib/pkgconfig:/usr/share/pkgconfig
-                  PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
-                  PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
-              with:
-                  includeUpdaterJson: true
-                  updaterJsonKeepUniversal: true
-
-            - name: Show sccache stats
-              run: sccache --show-stats
-
-            - name: Collect Windows artifacts
-              if: matrix.platform == 'windows-latest'
-              shell: pwsh
-              run: |
-                  mkdir -p artifacts-windows
-                  $version = "${{ steps.package-version-windows.outputs.current-version }}"
-
-                  Get-ChildItem -Path ./src-tauri/target/release/bundle/msi/*.msi -Recurse | ForEach-Object {
-                    Copy-Item $_.FullName -Destination artifacts-windows/
-                    $md5 = Get-FileHash $_.FullName -Algorithm MD5
-                    echo "MSI_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
-                  }
-
-                  Get-ChildItem -Path ./src-tauri/target/release/bundle/nsis/*-setup.exe -Recurse | ForEach-Object {
-                    Copy-Item $_.FullName -Destination artifacts-windows/
-                    $md5 = Get-FileHash $_.FullName -Algorithm MD5
-                    echo "NSIS_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
-                  }
-
-                  Get-ChildItem -Path ./src-tauri/target/release/*.exe | ForEach-Object {
-                    $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
-                    $extension = [System.IO.Path]::GetExtension($_.Name)
-                    $newName = "${baseName}_${version}${extension}"
-                    $newPath = Join-Path "artifacts-windows" $newName
-                    Copy-Item $_.FullName -Destination $newPath
-                    $md5 = Get-FileHash $_.FullName -Algorithm MD5
-                    echo "EXE_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
-                  }
-
-                  echo "ARTIFACT_PATH=artifacts-windows" >> $env:GITHUB_ENV
-            - name: Upload Windows artifacts to Telegram
-              if: matrix.platform == 'windows-latest'
-              shell: pwsh
-              env:
-                  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-              run: |
-                  $token = $env:TELEGRAM_TOKEN
-                  $chatId = $env:TELEGRAM_CHAT_ID
-                  if (-not $token -or -not $chatId) { Write-Host "Telegram token or chat id not set; skipping upload."; exit 0 }
-
-                  $files = Get-ChildItem -Path artifacts-windows -File -Recurse | Where-Object { $_.Extension -in '.msi','.exe' -or $_.Name -like '*-setup.exe' } | ForEach-Object { $_.FullName }
-                  if (-not $files) { Write-Host "No artifacts found to upload."; exit 0 }
-
-                  $repo = $env:GITHUB_REPOSITORY
-                  $hash = $env:HASH
-                  $commitUrl = "https://github.com/$repo/commit/$hash"
-
-                  # Try to get the commit subject (short message)
-                  $commitSubject = ''
-                  try { $commitSubject = (git log -1 --pretty=format:'%s' $hash) } catch { }
-                  if (-not $commitSubject) { try { $commitSubject = (git log -1 --pretty=format:'%s') } catch { $commitSubject = '' } }
-                  if (-not $commitSubject) { $commitSubject = "(no commit message)" }
-
-                  $media = @()
-                  for ($i = 0; $i -lt $files.Count; $i++) {
-                    $attachName = "file$i"
-                    $item = @{ type = 'document'; media = "attach://$attachName" }
-                    if ($i -eq 0) {
-                      $item.caption = "Build artifacts for commit [$hash]($commitUrl) - $commitSubject"
-                      $item.parse_mode = 'Markdown'
-                    }
-                    $media += $item
-                  }
-
-                  $mediaJson = ($media | ConvertTo-Json -Compress)
-                  $uri = "https://api.telegram.org/bot$token/sendMediaGroup"
-
-                  $form = @()
-                  $form += '-F'; $form += "chat_id=$chatId"
-                  $form += '-F'; $form += "media=$mediaJson"
-
-                  for ($i = 0; $i -lt $files.Count; $i++) {
-                    $attachName = "file$i"
-                    $path = $files[$i]
-                    $form += '-F'; $form += "${attachName}=@$path"
-                  }
-
-                  Write-Host "Uploading artifacts as a single media group to Telegram..."
-                  & curl.exe -s -X POST $uri @form
-
-            - name: Collect Ubuntu artifacts
-              if: matrix.platform == 'ubuntu-latest'
-              run: |
-                  mkdir -p artifacts-ubuntu
-                  version="${{ steps.package-version-ubuntu.outputs.current-version }}"
-
-                  find ./src-tauri/target/release/bundle/deb -name "*.deb" | while read file; do
-                    cp "$file" artifacts-ubuntu/
-                    MD5=$(md5sum "$file" | awk '{ print $1 }')
-                    echo "DEB_MD5=$MD5" >> $GITHUB_ENV
-                  done
-
-                  find ./src-tauri/target/release/bundle/appimage -name "*.AppImage" 2>/dev/null | while read file; do
-                    cp "$file" artifacts-ubuntu/
-                    MD5=$(md5sum "$file" | awk '{ print $1 }')
-                    echo "APPIMAGE_MD5=$MD5" >> $GITHUB_ENV
-                  done
-
-                  # Include the standalone Linux binary with version
-                  find ./src-tauri/target/release -maxdepth 1 -type f -executable -not -name "*.so" -not -name "*.d" | while read file; do
-                    if [ -f "$file" ] && file "$file" | grep -q "ELF.*executable"; then
-                      basename=$(basename "$file")
-                      extension=""
-                      if [[ "$basename" == *.* ]]; then
-                        extension=".${basename##*.}"
-                        basename="${basename%.*}"
-                      fi
-                      versioned_name="${basename}_${version}${extension}"
-                      cp "$file" "artifacts-ubuntu/$versioned_name"
-                      MD5=$(md5sum "$file" | awk '{ print $1 }')
-                      echo "BINARY_MD5=$MD5" >> $GITHUB_ENV
-                    fi
-                  done
-
-                  echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
-
-            - name: Upload Ubuntu artifacts to Telegram
-              if: matrix.platform == 'ubuntu-latest'
-              shell: bash
-              env:
-                  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-                  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-              run: |
-                  token="${TELEGRAM_TOKEN}"
-                  chatId="${TELEGRAM_CHAT_ID}"
-                  if [ -z "$token" ] || [ -z "$chatId" ]; then echo "Telegram token or chat id not set; skipping upload."; exit 0; fi
-
-                  files=(artifacts-ubuntu/*)
-                  # Filter only regular files
-                  real_files=()
-                  for f in "${files[@]}"; do
-                    [ -f "$f" ] || continue
-                    real_files+=("$f")
-                  done
-                  if [ ${#real_files[@]} -eq 0 ]; then echo "No artifacts found to upload."; exit 0; fi
-
-                  repo="${GITHUB_REPOSITORY}"
-                  hash="${HASH}"
-                  commit_url="https://github.com/${repo}/commit/${hash}"
-
-                  # Get commit subject (short message)
-                  commit_subject=$(git log -1 --pretty=%s ${hash} 2>/dev/null || git log -1 --pretty=%s 2>/dev/null || echo "(no commit message)")
-                  caption="Build artifacts for commit [${hash}](${commit_url}) - ${commit_subject}"
-
-                  # Sanitize commit subject for use in filenames
-                  sanitized_commit_subject=$(echo "$commit_subject" | tr ' ' '_' | sed 's/[^A-Za-z0-9._-]/_/g' | cut -c1-80)
-                  if [ -z "$sanitized_commit_subject" ]; then
-                    sanitized_commit_subject="no_subject"
-                  fi
-
-                  # Create a tar.gz archive of the artifacts and upload it as a single document
-                  archive_name="artifacts-ubuntu-${hash}-${sanitized_commit_subject}.tar.gz"
-                  rm -f "$archive_name"
-                  tar -czf "$archive_name" -C artifacts-ubuntu .
-
-                  echo "Uploading archive $archive_name to Telegram..."
-                  curl -s -X POST "https://api.telegram.org/bot${token}/sendDocument" \
-                    -F chat_id="${chatId}" \
-                    -F document=@"${archive_name}" \
-                    -F caption="${caption}" \
-                    -F parse_mode=Markdown
-
-                  echo "Upload finished."
-
-            - name: VirusTotal Scan (Windows only)
-              if: matrix.platform == 'windows-latest' && github.event.repository.fork == false
-              uses: crazy-max/ghaction-virustotal@v4
-              id: virustotal
-              with:
-                  vt_api_key: ${{ secrets.VT_API_KEY }}
-                  files: |
-                      artifacts-windows/*.msi
-                      artifacts-windows/*-setup.exe
-                      artifacts-windows/*.exe
-
-            - name: Extract and Print URL(s) of VirusTotal Scan (Windows only)
-              if: matrix.platform == 'windows-latest' && github.event.repository.fork == false && steps.virustotal.outputs.analysis != ''
-              shell: bash
-              run: |
-                  ANALYSIS="${{ steps.virustotal.outputs.analysis }}"
-                  urls=$(echo "$ANALYSIS" | tr ',' '\n' | grep -oE 'https?://[^[:space:]]*virustotal[^[:space:]]*' | sed 's/[[:space:]]*$//' | uniq)
-                  if [ -n "$urls" ]; then
-                    printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
-                    printf 'VIRUSTOTAL_LINE<<EOF\nVirusTotal scan:\n%s\nEOF\n' "$(echo "$urls" | sed 's/^/- /')" >> $GITHUB_ENV
-                  else
-                    echo "VIRUSTOTAL_URL=" >> $GITHUB_ENV
-                    echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
-                  fi
-
-            - name: Upload artifact
-              uses: actions/upload-artifact@v4
-              with:
-                  name: CollapseLoader-${{ matrix.platform }}-${{ env.HASH }}
-                  path: ${{ matrix.platform == 'windows-latest' && 'artifacts-windows/**' || 'artifacts-ubuntu/**' }}
-
-    create-release:
-        needs: [check-skip, build]
-        if: needs.check-skip.outputs.skip != 'true'
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-            actions: read
-
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-
-            - name: Get version from package.json
-              id: package-version
-              run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-            - name: Get commit hash
-              id: commit-hash
-              run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-              shell: bash
-
-            - name: Download all artifacts
-              uses: actions/download-artifact@v4
-              with:
-                  path: release-artifacts
-
-            - name: List artifacts
-              run: find release-artifacts -type f
-
-            - name: Create Release
-              uses: softprops/action-gh-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  VIRUSTOTAL_LINE: ${{ env.VIRUSTOTAL_LINE }}
-              with:
-                  tag_name: prerelease-v${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}
-                  name: 'CollapseLoader ${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}'
-                  body: |
-
-                      Automatic build from GitHub Actions
-
-                      - Windows (.msi, .exe installer, standalone .exe with version)
-                      - Linux (.deb, standalone binary with version)
-
-                      Note: This is an automated build from the main branch.
-                      Commit hash: ${{ env.HASH }}
-                      ${{ env.VIRUSTOTAL_LINE }}
-                  files: release-artifacts/**/*
-                  prerelease: true
+  check-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check commit messages for skip keywords
+        id: check
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          keywords='\[skip ci\]|\[ci skip\]|skip-ci|skip_ci|SKIP_CI|NO_CI|skipci'
+
+          # Determine the single relevant commit SHA:
+          # - For pull_request events use the PR head SHA
+          # - Otherwise prefer .after, head_commit.id, or GITHUB_SHA
+          commit_sha="$(jq -r '.pull_request.head.sha // .after // .head_commit.id // .sha // empty' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
+          commit_sha="${commit_sha:-${GITHUB_SHA:-}}"
+
+          if [ -z "$commit_sha" ]; then
+            echo "No commit SHA found; defaulting to full log fallback."
+            messages="$(git log --pretty=%B -n 10 || true)"
+          else
+            echo "Checking commit: $commit_sha"
+            # try to fetch the specific SHA if it's not present locally
+            if ! git cat-file -e "$commit_sha^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "$commit_sha" || git fetch --no-tags --depth=50 origin +refs/heads/*:refs/remotes/origin/* || true
+            fi
+            messages="$(git show -s --format=%B "$commit_sha" 2>/dev/null || true)"
+          fi
+
+          # Fallback: if no message found, try event commits array
+          if [ -z "$(echo "$messages" | tr -d '[:space:]')" ]; then
+            messages="$(jq -r '.commits[]?.message // empty' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
+          fi
+
+          echo "---- Collected commit message(s) ----"
+          if [ -n "$(echo "$messages" | tr -d '[:space:]')" ]; then
+            printf "%s\n" "$messages"
+          else
+            echo "<no commit messages found>"
+          fi
+          echo "---- End commit message(s) ----"
+
+          echo "---- Matching lines (case-insensitive) ----"
+          echo "$messages" | nl -ba | grep -Ei --color=never "$keywords" || true
+          echo "---- End matching lines ----"
+
+          skip_found=false
+          if echo "$messages" | grep -Ei "$keywords" >/dev/null; then
+            echo "Found skip keyword in commit message. Cancelling run."
+            skip_found=true
+          else
+            echo "No skip keyword found in commit message. Continuing run."
+          fi
+
+          echo "skip=$skip_found" >> $GITHUB_OUTPUT
+
+  build:
+    needs: check-skip
+    if: needs.check-skip.outputs.skip != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, ubuntu-latest]
+
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+      actions: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+
+      - name: Cache sccache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/sccache
+            ~/AppData/Local/Mozilla/sccache
+          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libappindicator3-dev librsvg2-dev patchelf \
+          build-essential curl wget file libssl-dev \
+          libjavascriptcoregtk-4.1-dev libwebkit2gtk-4.1-dev \
+          libsoup-3.0-dev pkg-config
+
+      - name: Configure pkg-config (Ubuntu only)
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
+          ls -la /usr/lib/x86_64-linux-gnu/pkgconfig/ || true
+          pkg-config --list-all | grep -i javascript || true
+
+      - name: Install frontend dependencies (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: npm ci; npm install
+
+      - name: Install frontend dependencies (Ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
+        run: npm ci || npm install
+
+      - name: Get version from package.json (Ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
+        id: package-version-ubuntu
+        uses: martinbeentjes/npm-get-version-action@main
+
+      - name: Get version from package.json (Windows)
+        if: matrix.platform == 'windows-latest'
+        id: package-version-windows
+        shell: bash
+        run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Get commit hash
+        id: commit-hash
+        run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUSTC_WRAPPER: sccache
+          PKG_CONFIG_PATH: /usr/lib/pkgconfig:/usr/share/pkgconfig
+          PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
+          PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
+        with:
+          includeUpdaterJson: true
+          updaterJsonKeepUniversal: true
+
+      - name: Show sccache stats
+        run: sccache --show-stats
+
+      - name: Collect Windows artifacts
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          mkdir -p artifacts-windows
+          $version = "${{ steps.package-version-windows.outputs.current-version }}"
+
+          Get-ChildItem -Path ./src-tauri/target/release/bundle/msi/*.msi -Recurse | ForEach-Object {
+            Copy-Item $_.FullName -Destination artifacts-windows/
+            $md5 = Get-FileHash $_.FullName -Algorithm MD5
+            echo "MSI_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
+          }
+
+          Get-ChildItem -Path ./src-tauri/target/release/bundle/nsis/*-setup.exe -Recurse | ForEach-Object {
+            Copy-Item $_.FullName -Destination artifacts-windows/
+            $md5 = Get-FileHash $_.FullName -Algorithm MD5
+            echo "NSIS_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
+          }
+
+          Get-ChildItem -Path ./src-tauri/target/release/*.exe | ForEach-Object {
+            $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+            $extension = [System.IO.Path]::GetExtension($_.Name)
+            $newName = "${baseName}_${version}${extension}"
+            $newPath = Join-Path "artifacts-windows" $newName
+            Copy-Item $_.FullName -Destination $newPath
+            $md5 = Get-FileHash $_.FullName -Algorithm MD5
+            echo "EXE_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
+          }
+
+          echo "ARTIFACT_PATH=artifacts-windows" >> $env:GITHUB_ENV
+      - name: Upload Windows artifacts to Telegram
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: |
+          $token = $env:TELEGRAM_TOKEN
+          $chatId = $env:TELEGRAM_CHAT_ID
+          if (-not $token -or -not $chatId) { Write-Host "Telegram token or chat id not set; skipping upload."; exit 0 }
+
+          $files = Get-ChildItem -Path artifacts-windows -File -Recurse | Where-Object { $_.Extension -in '.msi','.exe' -or $_.Name -like '*-setup.exe' } | ForEach-Object { $_.FullName }
+          if (-not $files) { Write-Host "No artifacts found to upload."; exit 0 }
+
+          $repo = $env:GITHUB_REPOSITORY
+          $hash = $env:HASH
+          $commitUrl = "https://github.com/$repo/commit/$hash"
+
+          # Try to get the commit subject (short message)
+          $commitSubject = ''
+          try { $commitSubject = (git log -1 --pretty=format:'%s' $hash) } catch { }
+          if (-not $commitSubject) { try { $commitSubject = (git log -1 --pretty=format:'%s') } catch { $commitSubject = '' } }
+          if (-not $commitSubject) { $commitSubject = "(no commit message)" }
+
+          $media = @()
+          for ($i = 0; $i -lt $files.Count; $i++) {
+            $attachName = "file$i"
+            $item = @{ type = 'document'; media = "attach://$attachName" }
+            if ($i -eq 0) {
+              $item.caption = "Build artifacts for commit [$hash]($commitUrl) - $commitSubject"
+              $item.parse_mode = 'Markdown'
+            }
+            $media += $item
+          }
+
+          $mediaJson = ($media | ConvertTo-Json -Compress)
+          $uri = "https://api.telegram.org/bot$token/sendMediaGroup"
+
+          $form = @()
+          $form += '-F'; $form += "chat_id=$chatId"
+          $form += '-F'; $form += "media=$mediaJson"
+
+          for ($i = 0; $i -lt $files.Count; $i++) {
+            $attachName = "file$i"
+            $path = $files[$i]
+            $form += '-F'; $form += "${attachName}=@$path"
+          }
+
+          Write-Host "Uploading artifacts as a single media group to Telegram..."
+          & curl.exe -s -X POST $uri @form
+
+      - name: Collect Ubuntu artifacts
+        if: matrix.platform == 'ubuntu-latest'
+        run: |
+          mkdir -p artifacts-ubuntu
+          version="${{ steps.package-version-ubuntu.outputs.current-version }}"
+
+          find ./src-tauri/target/release/bundle/deb -name "*.deb" | while read file; do
+            cp "$file" artifacts-ubuntu/
+            MD5=$(md5sum "$file" | awk '{ print $1 }')
+            echo "DEB_MD5=$MD5" >> $GITHUB_ENV
+          done
+
+          find ./src-tauri/target/release/bundle/appimage -name "*.AppImage" 2>/dev/null | while read file; do
+            cp "$file" artifacts-ubuntu/
+            MD5=$(md5sum "$file" | awk '{ print $1 }')
+            echo "APPIMAGE_MD5=$MD5" >> $GITHUB_ENV
+          done
+
+          # Include the standalone Linux binary with version
+          find ./src-tauri/target/release -maxdepth 1 -type f -executable -not -name "*.so" -not -name "*.d" | while read file; do
+            if [ -f "$file" ] && file "$file" | grep -q "ELF.*executable"; then
+              basename=$(basename "$file")
+              extension=""
+              if [[ "$basename" == *.* ]]; then
+                extension=".${basename##*.}"
+                basename="${basename%.*}"
+              fi
+              versioned_name="${basename}_${version}${extension}"
+              cp "$file" "artifacts-ubuntu/$versioned_name"
+              MD5=$(md5sum "$file" | awk '{ print $1 }')
+              echo "BINARY_MD5=$MD5" >> $GITHUB_ENV
+            fi
+          done
+
+          echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
+
+      - name: VirusTotal Scan (Windows only)
+        if: matrix.platform == 'windows-latest' && github.event.repository.fork == false
+        uses: crazy-max/ghaction-virustotal@v4
+        id: virustotal
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: |
+            artifacts-windows/*.msi
+            artifacts-windows/*-setup.exe
+            artifacts-windows/*.exe
+
+      - name: Extract and Print URL(s) of VirusTotal Scan (Windows only)
+        if: matrix.platform == 'windows-latest' && github.event.repository.fork == false && steps.virustotal.outputs.analysis != ''
+        shell: bash
+        run: |
+          ANALYSIS="${{ steps.virustotal.outputs.analysis }}"
+          urls=$(echo "$ANALYSIS" | tr ',' '\n' | grep -oE 'https?://[^[:space:]]*virustotal[^[:space:]]*' | sed 's/[[:space:]]*$//' | uniq)
+          if [ -n "$urls" ]; then
+            printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
+            printf 'VIRUSTOTAL_LINE<<EOF\nVirusTotal scan:\n%s\nEOF\n' "$(echo "$urls" | sed 's/^/- /')" >> $GITHUB_ENV
+          else
+            echo "VIRUSTOTAL_URL=" >> $GITHUB_ENV
+            echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CollapseLoader-${{ matrix.platform }}-${{ env.HASH }}
+          path: ${{ matrix.platform == 'windows-latest' && 'artifacts-windows/**' || 'artifacts-ubuntu/**' }}
+
+  create-release:
+    needs: [check-skip, build]
+    if: needs.check-skip.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Get version from package.json
+        id: package-version
+        run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Get commit hash
+        id: commit-hash
+        run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: List artifacts
+        run: find release-artifacts -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VIRUSTOTAL_LINE: ${{ env.VIRUSTOTAL_LINE }}
+        with:
+          tag_name: prerelease-v${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}
+          name: "CollapseLoader ${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}"
+          body: |
+
+            Automatic build from GitHub Actions
+
+            - Windows (.msi, .exe installer, standalone .exe with version)
+            - Linux (.deb, standalone binary with version)
+
+            Note: This is an automated build from the main branch.
+            Commit hash: ${{ env.HASH }}
+            ${{ env.VIRUSTOTAL_LINE }}
+          files: release-artifacts/**/*
+          prerelease: true

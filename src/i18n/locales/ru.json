@@ -597,13 +597,7 @@
       }
     },
     "dark": "Темная",
-    "light": "Светлая",
-    "background_title": "Задний фон",
-    "background_image": "URL Фонового изображения",
-    "background_image_placeholder": "https://example.com/image.jpg",
-    "background_image_help": "Поддерживает jpg, png, webp, data-urls",
-    "background_blur": "Размытие",
-    "background_opacity": "Прозрачность"
+    "light": "Светлая"
   },
   "logs": {
     "copy_logs": "Копировать логи",
@@ -1012,7 +1006,14 @@
       "placeholder": "Напишите комментарий..."
     }
   },
-  "customization": {},
+  "customization": {
+    "background_title": "Фон",
+    "background_image": "URL изображения",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_image_help": "Поддерживает jpg, png, webp, data-urls",
+    "background_blur": "Размытие",
+    "background_opacity": "Прозрачность"
+  },
   "updater": {
     "update_available": "Доступно обновление",
     "current": "Текущая",

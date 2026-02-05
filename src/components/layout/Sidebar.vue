@@ -305,7 +305,7 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div ref="sidebarRef" :class="[sidebarClasses, animationClass]" @mousedown="startDrag" @dblclick="toggleCenter">
+    <div ref="sidebarRef" :class="[sidebarClasses, animationClass, 'main-sidebar']" @mousedown="startDrag" @dblclick="toggleCenter">
         <div v-if="showSidebarHelp" ref="helpTooltipRef"
             :class="['sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]', helpTooltipClasses]">
             <div class="flex flex-col gap-2">

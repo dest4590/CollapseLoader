@@ -597,13 +597,7 @@
       }
     },
     "dark": "黑暗的",
-    "light": "光",
-    "background_blur": "模糊",
-    "background_image": "背景图片网址",
-    "background_image_help": "支持 jpg、png、webp、data-url",
-    "background_image_placeholder": "https://example.com/image.jpg",
-    "background_opacity": "不透明度",
-    "background_title": "背景"
+    "light": "光"
   },
   "errors": {
     "clients_load_failed": "加载客户端列表失败：{error}",
@@ -1000,7 +994,14 @@
       "placeholder": "写一条评论..."
     }
   },
-  "customization": {},
+  "customization": {
+    "background_title": "背景",
+    "background_image": "背景图片网址",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_image_help": "支持 jpg、png、webp、data-url",
+    "background_blur": "模糊",
+    "background_opacity": "不透明度"
+  },
   "updater": {
     "update_available": "有可用更新",
     "current": "当前",
@@ -1077,7 +1078,7 @@
     "preset_picker_label": "选择本地预设",
     "preset_picker_placeholder": "选择一个预设...",
     "no_local_presets": "您还没有任何预设",
-    "by_author": "加时{姓名}",
+    "by_author": "作者：{name}",
     "sort_comments": "评论最多",
     "sort_downloads": "下载次数最多",
     "sort_newest": "最新",
