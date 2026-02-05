@@ -75,14 +75,13 @@
 }
 
 html {
-  @apply bg-base-100;
+  @apply bg-base-200;
   min-height: 100vh;
 }
 
 body {
   min-height: 100vh;
   position: relative;
-  background-color: transparent;
 }
 
 body::before {
@@ -105,21 +104,21 @@ body::before {
     opacity 0.3s ease;
 }
 
-html[style*="--background-image"] {
+html[data-has-background="true"] {
   background-color: transparent !important;
 }
 
-html[style*="--background-image"] main,
-html[style*="--background-image"] aside,
-html[style*="--background-image"] nav,
-html[style*="--background-image"] [class*="bg-base-"] {
+html[data-has-background="true"] main,
+html[data-has-background="true"] aside,
+html[data-has-background="true"] nav,
+html[data-has-background="true"] [class*="bg-base-"] {
   background-color: color-mix(in srgb, var(--color-base-200, #141414), transparent 50%) !important;
   backdrop-filter: blur(4px) !important;
   -webkit-backdrop-filter: blur(4px) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-html[style*="--background-image"] .card {
+html[data-has-background="true"] .card {
   background-color: color-mix(in srgb, var(--color-base-100, #1a1a1a), transparent 70%) !important;
 }
 

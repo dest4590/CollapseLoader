@@ -111,6 +111,9 @@ const applyPreset = () => {
             if (key === 'backgroundOpacity') cssValue = String(value);
             if (key === 'backgroundImage' && value.trim().length > 0) {
                 cssValue = value.startsWith('http') || value.startsWith('data:') ? `url("${value}")` : value;
+                root.setAttribute('data-has-background', 'true');
+            } else if (key === 'backgroundImage') {
+                root.removeAttribute('data-has-background');
             }
 
             if (typeof value === 'string' ? value.trim().length > 0 : true) {
@@ -120,6 +123,9 @@ const applyPreset = () => {
             }
         } else {
             root.style.removeProperty(cssVar);
+            if (key === 'backgroundImage') {
+                root.removeAttribute('data-has-background');
+            }
         }
     });
 

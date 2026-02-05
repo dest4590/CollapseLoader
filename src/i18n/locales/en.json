@@ -722,7 +722,9 @@
       "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
       "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients.",
       "minimize_to_tray_on_launch": "Minimize the app to system tray when a client is launched.",
-      "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked."
+      "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked.",
+      "java_path": "Path to the Java executable. Leave empty to use the default version.",
+      "java_args": "Custom JVM arguments to pass to the client on launch."
     },
     "ram_warning": {},
     "telemetry": "Analytics",

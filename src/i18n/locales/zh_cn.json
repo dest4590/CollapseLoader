@@ -695,7 +695,9 @@
       "sync_client_settings": "在所有客户端之间同步选项、资源包及其他设置。",
       "dpi_bypass": "如果客户端下载卡在 0%、客户端无法启动或客户端加载失败，则启用此功能。",
       "minimize_to_tray_on_launch": "启动客户端时将应用最小化到系统托盘。",
-      "close_to_tray": "点击关闭按钮时将应用最小化到系统托盘而不是关闭。"
+      "close_to_tray": "点击关闭按钮时将应用最小化到系统托盘而不是关闭。",
+      "java_path": "Java 可执行文件的路径。留空则使用默认版本。",
+      "java_args": "启动客户端时传递的自定义 JVM 参数。"
     },
     "telemetry": "分析",
     "open_data": "打开数据文件夹",

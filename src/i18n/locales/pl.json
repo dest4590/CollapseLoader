@@ -709,7 +709,9 @@
       "dpi_bypass": "Włącz, jeśli pobieranie klienta zatrzymało się na 0%, klient nie uruchamia się lub klienty nie ładują się.",
       "sync_client_settings": "Synchronizuj ustawienia, paczki zasobów i inne parametry między wszystkimi klientami.",
       "close_to_tray": "Zminimalizuj aplikację do zasobnika systemowego, zamiast zamykać ją po kliknięciu przycisku zamykania.",
-      "minimize_to_tray_on_launch": "Zminimalizuj aplikację do zasobnika systemowego po uruchomieniu klienta."
+      "minimize_to_tray_on_launch": "Zminimalizuj aplikację do zasobnika systemowego po uruchomieniu klienta.",
+      "java_path": "Ścieżka do pliku wykonywalnego Java. Pozostaw puste, aby użyć domyślnej wersji.",
+      "java_args": "Dodatkowe argumenty JVM używane podczas uruchamiania klienta."
     },
     "ram_warning": {},
     "telemetry": "Analityka",
