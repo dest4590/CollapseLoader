@@ -327,7 +327,8 @@
     "done": "Done",
     "click": "Click",
     "show_more": "Show More",
-    "show_less": "Show Less"
+    "show_less": "Show Less",
+    "advanced": "Advanced"
   },
   "auth": {
     "logout": {
@@ -409,6 +410,7 @@
     "download": "Download",
     "stop": "Stop",
     "launch": "Launch",
+    "launch_another": "Launch another instance",
     "start_with": "Start with",
     "selected_clients": "Selected: {count} clients",
     "multiple_clients_selected": "{count} clients selected",
@@ -595,7 +597,13 @@
       }
     },
     "dark": "Dark",
-    "light": "Light"
+    "light": "Light",
+    "background_title": "Background",
+    "background_image": "Background Image URL",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_image_help": "Supports jpg, png, webp, data-urls",
+    "background_blur": "Blur",
+    "background_opacity": "Opacity"
   },
   "logs": {
     "copy_logs": "Copy logs",

@@ -17,6 +17,8 @@ const form = reactive({
     mainClass: 'net.minecraft.client.main.Main',
     filePath: '',
     fileName: '',
+    javaPath: '',
+    javaArgs: '',
 });
 
 const loading = ref(false);
@@ -89,6 +91,8 @@ const handleSubmit = async () => {
             filename: form.fileName,
             filePath: form.filePath,
             mainClass: form.mainClass.trim(),
+            javaPath: form.javaPath.trim() || null,
+            javaArgs: form.javaArgs.trim() || null,
         });
 
         Object.assign(form, {
@@ -97,6 +101,8 @@ const handleSubmit = async () => {
             mainClass: 'net.minecraft.client.main.Main',
             filePath: '',
             fileName: '',
+            javaPath: '',
+            javaArgs: '',
         });
 
         emit('client-added');
@@ -116,7 +122,8 @@ const handleSubmit = async () => {
                 <label class="label">
                     <span class="label-text">{{ $t('modals.add_custom_client_modal.client_name') }} *</span>
                 </label>
-                <input v-model="form.name" type="text" :placeholder="$t('modals.add_custom_client_modal.enter_client_name')" class="input input-bordered"
+                <input v-model="form.name" type="text"
+                    :placeholder="$t('modals.add_custom_client_modal.enter_client_name')" class="input input-bordered"
                     :class="{ 'input-error': errors.name }" />
                 <label v-if="errors.name" class="label">
                     <span class="label-text-alt text-error">{{ errors.name }}</span>
@@ -138,7 +145,8 @@ const handleSubmit = async () => {
                 <label class="label">
                     <span class="label-text">{{ $t('modals.add_custom_client_modal.main_class') }} *</span>
                 </label>
-                <input v-model="form.mainClass" type="text" :placeholder="$t('modals.add_custom_client_modal.main_class_placeholder')"
+                <input v-model="form.mainClass" type="text"
+                    :placeholder="$t('modals.add_custom_client_modal.main_class_placeholder')"
                     class="input input-bordered" :class="{ 'input-error': errors.mainClass }" />
                 <label v-if="errors.mainClass" class="label">
                     <span class="label-text-alt text-error">{{ errors.mainClass }}</span>
@@ -150,7 +158,8 @@ const handleSubmit = async () => {
                     <span class="label-text">{{ $t('modals.add_custom_client_modal.jar_file') }} *</span>
                 </label>
                 <div class="flex gap-2">
-                    <input :value="form.fileName || $t('modals.add_custom_client_modal.no_file_selected')" type="text" :placeholder="$t('modals.add_custom_client_modal.select_jar_file')"
+                    <input :value="form.fileName || $t('modals.add_custom_client_modal.no_file_selected')" type="text"
+                        :placeholder="$t('modals.add_custom_client_modal.select_jar_file')"
                         class="input input-bordered flex-1" readonly :class="{ 'input-error': errors.filePath }" />
                     <button type="button" @click="selectFile" class="btn btn-outline">
                         {{ $t('common.browse') }}
@@ -160,8 +169,28 @@ const handleSubmit = async () => {
                     <span class="label-text-alt text-error">{{ errors.filePath }}</span>
                 </label>
                 <label v-if="form.fileName" class="label">
-                    <span class="label-text-alt text-success">{{ $t('modals.add_custom_client_modal.selected') }}: {{ form.fileName }}</span>
+                    <span class="label-text-alt text-success">{{ $t('modals.add_custom_client_modal.selected') }}: {{
+                        form.fileName }}</span>
                 </label>
+            </div>
+
+            <div class="divider text-xs opacity-50 uppercase tracking-widest">{{ $t('common.advanced') }}
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Custom Java Path (Optional)</span>
+                </label>
+                <input v-model="form.javaPath" type="text" placeholder="C:\Path\To\bin\java.exe"
+                    class="input input-bordered" />
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Custom Java Arguments (Optional)</span>
+                </label>
+                <textarea v-model="form.javaArgs" class="textarea textarea-bordered h-20"
+                    placeholder="-Xms512M -XX:+UseG1GC"></textarea>
             </div>
         </div>
         <div class="modal-action">
@@ -170,7 +199,8 @@ const handleSubmit = async () => {
             </button>
             <button type="submit" class="btn btn-primary" :disabled="loading">
                 <span v-if="loading" class="loading loading-spinner loading-sm"></span>
-                {{ loading ? $t('modals.add_custom_client_modal.adding') : $t('modals.add_custom_client_modal.add_client') }}
+                {{ loading ? $t('modals.add_custom_client_modal.adding') :
+                    $t('modals.add_custom_client_modal.add_client') }}
             </button>
         </div>
     </form>

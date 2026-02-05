@@ -44,10 +44,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -56,7 +56,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                        }}</button>
+                    }}</button>
                 </template>
             </div>
 
@@ -120,7 +120,7 @@
                                                     </span>
                                                     <span class="text-[10px] text-white/40 font-medium">{{
                                                         formatDate(c.createdAt ||
-                                                        c.created_at) }}</span>
+                                                            c.created_at) }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
@@ -334,6 +334,9 @@ function applyFromDetails() {
         warningContent: theme.warningContent,
         error: theme.error,
         errorContent: theme.errorContent,
+        backgroundImage: theme.backgroundImage,
+        backgroundBlur: theme.backgroundBlur,
+        backgroundOpacity: theme.backgroundOpacity,
     } as any);
 }
 

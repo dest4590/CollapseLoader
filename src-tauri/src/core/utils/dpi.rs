@@ -202,7 +202,7 @@ fn start_winws_background_inner() -> Result<(), String> {
     kill_winws();
 
     use std::path::PathBuf;
-    let base_dir: PathBuf = DATA.root_dir.join(DPI_FOLDER_NAME);
+    let base_dir: PathBuf = DATA.root_dir.lock().unwrap().join(DPI_FOLDER_NAME);
     let bin_dir = base_dir.join("bin");
     let lists_dir = base_dir.join("lists");
     let winws_path = bin_dir.join("winws.exe");

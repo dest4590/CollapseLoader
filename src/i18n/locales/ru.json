@@ -364,7 +364,8 @@
     "done": "Готово",
     "click": "Нажмите",
     "show_more": "Показать больше",
-    "show_less": "Скрыть"
+    "show_less": "Скрыть",
+    "advanced": "Дополнительные"
   },
   "friends": {
     "addFriend": "Добавить друга",
@@ -407,6 +408,7 @@
     "deleted_success": "{name} успешно удален",
     "download": "Скачать",
     "launch": "Запустить",
+    "launch_another": "Запустить ещё раз",
     "stop": "Остановить",
     "unavailable": "Не доступно",
     "start_with": "Запустить с",
@@ -595,7 +597,13 @@
       }
     },
     "dark": "Темная",
-    "light": "Светлая"
+    "light": "Светлая",
+    "background_title": "Задний фон",
+    "background_image": "URL Фонового изображения",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_image_help": "Поддерживает jpg, png, webp, data-urls",
+    "background_blur": "Размытие",
+    "background_opacity": "Прозрачность"
   },
   "logs": {
     "copy_logs": "Копировать логи",

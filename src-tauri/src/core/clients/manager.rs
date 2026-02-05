@@ -169,7 +169,7 @@ impl ClientManager {
     fn load_from_cache(
         filename: &str,
     ) -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-        let cache_path = DATA.root_dir.join(API_CACHE_DIR).join(filename);
+        let cache_path = DATA.root_dir.lock().unwrap().join(API_CACHE_DIR).join(filename);
         if cache_path.exists() {
             let file = File::open(&cache_path)
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;

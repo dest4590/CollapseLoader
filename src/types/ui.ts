@@ -31,6 +31,8 @@ export interface CustomClient {
     description?: string;
     created_at: string;
     is_installed: boolean;
+    java_path?: string | null;
+    java_args?: string | null;
 }
 
 export interface ClientDetails {

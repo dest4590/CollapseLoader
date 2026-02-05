@@ -18,7 +18,7 @@ pub struct Api {
 
 impl Api {
     pub fn json<T: DeserializeOwned>(&self, path: &str) -> Result<T, Box<dyn std::error::Error>> {
-        let cache_dir = DATA.root_dir.join(API_CACHE_DIR);
+        let cache_dir = DATA.root_dir.lock().unwrap().join(API_CACHE_DIR);
         cache::ensure_cache_dir(&cache_dir);
 
         let cache_file_path = cache::cache_file_path(&cache_dir, path);

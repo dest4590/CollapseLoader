@@ -134,6 +134,9 @@ const save = async () => {
                 warningContent: props.editingPreset.warningContent,
                 error: props.editingPreset.error,
                 errorContent: props.editingPreset.errorContent,
+                backgroundImage: props.editingPreset.backgroundImage,
+                backgroundBlur: props.editingPreset.backgroundBlur,
+                backgroundOpacity: props.editingPreset.backgroundOpacity,
             });
         } else {
             emit('save', {

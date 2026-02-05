@@ -124,7 +124,6 @@ const imageTransitionDirection = ref<'next' | 'prev'>('next');
 const imageRef = shallowRef<HTMLImageElement | null>(null);
 const imageContainerRef = shallowRef<HTMLElement | null>(null);
 const backdropRef = shallowRef<HTMLElement | null>(null);
-const actionsRef = shallowRef<HTMLElement | null>(null);
 const favoriteRef = shallowRef<HTMLElement | null>(null);
 
 const scrollContainer = shallowRef<HTMLElement | null>(null);
@@ -617,15 +616,6 @@ const expandCard = async () => {
         }
     });
 
-    if (actionsRef.value) {
-        tl.to(actionsRef.value, {
-            autoAlpha: 0,
-            height: 0,
-            marginTop: 0,
-            duration: 0.3,
-            ease: 'power2.out'
-        }, 0);
-    }
     if (favoriteRef.value) {
         tl.to(favoriteRef.value, {
             autoAlpha: 0,
@@ -765,16 +755,6 @@ const collapseCard = () => {
         ease: 'power3.inOut',
     }, detailsContainer ? "-=0.2" : ">");
 
-    if (actionsRef.value) {
-        tl.to(actionsRef.value, {
-            autoAlpha: 1,
-            height: 'auto',
-            marginTop: '0.5rem',
-            duration: 0.3,
-            ease: 'power2.out',
-            clearProps: 'all'
-        }, "-=0.3");
-    }
     if (favoriteRef.value) {
         tl.to(favoriteRef.value, {
             autoAlpha: 1,
@@ -1187,55 +1167,58 @@ onBeforeUnmount(() => {
 
                     <ClientInfo :client="client" :expanded="inTransition" />
 
-                    <div ref="actionsRef" class="card-actions justify-end mt-2">
+                    <div class="card-actions justify-end mt-2">
                         <button v-if="clientIsRunning && !clientIsInstalling" @click.stop="handleOpenLogViewer"
                             class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20">
                             <Terminal class="w-4 h-4" />
                         </button>
+                        
                         <transition name="fade-transform" mode="out-in">
-                            <div v-if="clientIsInstalling" class="w-full">
-                                <div class="flex justify-between mb-1 text-xs text-base-content">
-                                    <span class="truncate max-w-[90%]">
-                                        {{ currentInstallStatus?.action }}
-                                        {{ client.name }}
-                                    </span>
-                                    <span>
-                                        {{ currentInstallStatus?.percentage }}%
-                                    </span>
+                            <div class="transition-all" :class="isAnimating || isExpanded ? 'mr-4' : ''">
+                                <div v-if="clientIsInstalling" class="w-full">
+                                    <div class="flex justify-between mb-1 text-xs text-base-content">
+                                        <span class="truncate max-w-[90%]">
+                                            {{ currentInstallStatus?.action }}
+                                            {{ client.name }}
+                                        </span>
+                                        <span>
+                                            {{ currentInstallStatus?.percentage }}%
+                                        </span>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" :style="{
+                                            width: `${currentInstallStatus?.percentage}%`,
+                                        }"></div>
+                                    </div>
                                 </div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" :style="{
-                                        width: `${currentInstallStatus?.percentage}%`,
-                                    }"></div>
+                                <div v-else class="flex items-center space-x-2">
+                                    <button v-if="!client.meta.installed" @click="handleDownloadClick"
+                                        class="btn btn-sm btn-primary relative overflow-hidden group"
+                                        :disabled="isRequirementsInProgress || !client.working">
+                                        <span
+                                            class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
+                                            <Download v-if="client.working" class="w-4 h-4 mr-1" />
+                                            <span v-if="client.working">{{
+                                                t('home.download')
+                                            }}</span>
+                                            <span v-else-if="!client.working">{{
+                                                t('home.unavailable')
+                                            }}</span>
+                                        </span>
+                                        <span
+                                            class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+                                            {{ client.meta.size || '0' }} MB
+                                        </span>
+                                    </button>
+                                    <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
+                                        :disabled="isRequirementsInProgress" :class="clientIsRunning
+                                            ? 'btn-error'
+                                            : 'btn-primary'
+                                            ">
+                                        <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
+                                        {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
+                                    </button>
                                 </div>
-                            </div>
-                            <div v-else class="flex items-center space-x-2">
-                                <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                                    class="btn btn-sm btn-primary relative overflow-hidden group"
-                                    :disabled="isRequirementsInProgress || !client.working">
-                                    <span
-                                        class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
-                                        <Download v-if="client.working" class="w-4 h-4 mr-1" />
-                                        <span v-if="client.working">{{
-                                            t('home.download')
-                                        }}</span>
-                                        <span v-else-if="!client.working">{{
-                                            t('home.unavailable')
-                                        }}</span>
-                                    </span>
-                                    <span
-                                        class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-                                        {{ client.meta.size || '0' }} MB
-                                    </span>
-                                </button>
-                                <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
-                                    :disabled="isRequirementsInProgress" :class="clientIsRunning
-                                        ? 'btn-error'
-                                        : 'btn-primary'
-                                        ">
-                                    <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
-                                    {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
-                                </button>
                             </div>
                         </transition>
                     </div>
@@ -1370,10 +1353,10 @@ onBeforeUnmount(() => {
                                                         class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
                                                         {{ t('client.details.source_link') }}
                                                     </div>
-                                                    <div class="stat-value text-sm">
+                                                    <div class="stat-value text-sm flex items-center gap-2">
                                                         <button type="button"
                                                             class="btn btn-ghost btn-sm justify-start px-2 gap-2 min-h-0 h-8"
-                                                            @click="handleClientSourceLink(clientDetails.source_link)">
+                                                            @click.stop="handleClientSourceLink(clientDetails.source_link)">
                                                             <ExternalLink class="w-4 h-4" />
                                                             <span class="truncate max-w-[18rem]">{{
                                                                 clientDetails.source_link

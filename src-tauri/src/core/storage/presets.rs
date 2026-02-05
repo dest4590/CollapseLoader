@@ -42,6 +42,7 @@ pub struct ThemePreset {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PresetManager {
     pub presets: HashMap<String, ThemePreset>,
+    #[serde(skip)]
     pub config_path: PathBuf,
 }
 
@@ -69,6 +70,12 @@ impl JsonStorage for PresetManager {
 }
 
 impl PresetManager {
+    pub fn load_from_disk(path: PathBuf) -> Self {
+        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+        loaded.config_path = path;
+        loaded
+    }
+
     pub fn add_preset(&mut self, preset: ThemePreset) -> Result<(), String> {
         if self.presets.contains_key(&preset.id) {
             return Err(format!(

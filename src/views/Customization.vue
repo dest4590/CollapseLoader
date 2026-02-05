@@ -73,7 +73,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.base100')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base100"
@@ -81,7 +81,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.base200')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base200"
@@ -89,7 +89,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.base300')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base300"
@@ -128,7 +128,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.secondary')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="secondary"
@@ -144,7 +144,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.accent')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="accent"
@@ -167,7 +167,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.neutral')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="neutral"
@@ -183,7 +183,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.info')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="info"
@@ -199,7 +199,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.success')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="success"
@@ -215,7 +215,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.warning')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="warning"
@@ -231,7 +231,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.error')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="error"
@@ -244,6 +244,52 @@
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="errorContent"
                                     @input="handleColorInput('errorContent', ($event.target as HTMLInputElement).value)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('theme.background_title',
+                            'Background') }}</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <div class="lg:col-span-12">
+                                <label class="label text-sm font-medium text-base-content">{{
+                                    t('theme.background_image', 'Background Image URL') }}</label>
+                                <div class="relative">
+                                    <input type="text" class="input input-bordered w-full pr-10"
+                                        :value="backgroundImage"
+                                        :placeholder="t('theme.background_image_placeholder', 'https://example.com/image.jpg')"
+                                        @input="handleBackgroundInput('backgroundImage', ($event.target as HTMLInputElement).value)" />
+                                    <button v-if="backgroundImage"
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost"
+                                        @click="handleBackgroundInput('backgroundImage', '')">
+                                        &times;
+                                    </button>
+                                </div>
+                                <p class="text-xs text-base-content/50 mt-1">{{ t('theme.background_image_help',
+                                    'Supports jpg, png, webp, data-urls') }}</p>
+                            </div>
+
+                            <div class="lg:col-span-6">
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-base-content">{{ t('theme.background_blur',
+                                        'Blur') }}</label>
+                                    <span class="text-xs font-mono">{{ backgroundBlur ?? 0 }}px</span>
+                                </div>
+                                <input type="range" min="0" max="20" step="1" class="range range-primary range-sm"
+                                    :value="backgroundBlur ?? 0"
+                                    @input="handleBackgroundInput('backgroundBlur', Number(($event.target as HTMLInputElement).value))" />
+                            </div>
+
+                            <div class="lg:col-span-6">
+                                <div class="flex justify-between mb-2">
+                                    <label class="text-sm font-medium text-base-content">{{
+                                        t('theme.background_opacity', 'Opacity') }}</label>
+                                    <span class="text-xs font-mono">{{ backgroundOpacity ?? 100 }}%</span>
+                                </div>
+                                <input type="range" min="0" max="100" step="1" class="range range-primary range-sm"
+                                    :value="backgroundOpacity ?? 100"
+                                    @input="handleBackgroundInput('backgroundOpacity', Number(($event.target as HTMLInputElement).value))" />
                             </div>
                         </div>
                     </div>
@@ -308,7 +354,7 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                                 <div>
                                     <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                    }}</label>
+                                        }}</label>
                                     <VueMonacoEditor v-model:value="customCSS" language="css"
                                         :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
                                             readOnly: !enableCustomCSS,
@@ -413,7 +459,10 @@ const {
     warning,
     warningContent,
     error,
-    errorContent
+    errorContent,
+    backgroundImage,
+    backgroundBlur,
+    backgroundOpacity
 } = toRefs(themeService.presetSettings);
 
 watch(themeService.presetSettings, () => {
@@ -458,6 +507,22 @@ const handleColorInput = (settingKey: string, color: string): void => {
     const r = _colorRefs[settingKey];
     if (r) {
         r.value = color && color.trim().length > 0 ? color : null;
+    }
+};
+
+const handleBackgroundInput = (settingKey: string, value: any): void => {
+    const refs: Record<string, any> = {
+        backgroundImage,
+        backgroundBlur,
+        backgroundOpacity
+    };
+    const r = refs[settingKey];
+    if (r) {
+        if (settingKey === 'backgroundImage') {
+            r.value = value && value.trim().length > 0 ? value : null;
+        } else {
+            r.value = value;
+        }
     }
 };
 

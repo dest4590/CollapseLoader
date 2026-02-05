@@ -364,7 +364,8 @@
     "done": "Gotowe",
     "click": "Kliknij",
     "show_more": "Pokaż więcej",
-    "show_less": "Ukryj"
+    "show_less": "Ukryj",
+    "advanced": "Zaawansowany"
   },
   "friends": {
     "addFriend": "Dodaj znajomego",
@@ -441,7 +442,8 @@
     "filters": {
       "installed": "Zainstalowane"
     },
-    "clear_filters": "Wyczyść filtry"
+    "clear_filters": "Wyczyść filtry",
+    "launch_another": "Uruchom inną instancję"
   },
   "theme": {
     "actions": {
@@ -595,7 +597,13 @@
       }
     },
     "dark": "Ciemny",
-    "light": "Jasny"
+    "light": "Jasny",
+    "background_blur": "Plama",
+    "background_image": "Adres URL obrazu tła",
+    "background_image_help": "Obsługuje jpg, png, webp, adresy URL danych",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_opacity": "Nieprzezroczystość",
+    "background_title": "Tło"
   },
   "logs": {
     "copy_logs": "Kopiuj logi",

@@ -27,6 +27,9 @@ export interface ThemePreset {
     warningContent?: string;
     error?: string;
     errorContent?: string;
+    backgroundImage?: string;
+    backgroundBlur?: number;
+    backgroundOpacity?: number;
 }
 
 export interface CreatePresetInput {
@@ -56,6 +59,9 @@ export interface CreatePresetInput {
     warningContent?: string;
     error?: string;
     errorContent?: string;
+    backgroundImage?: string;
+    backgroundBlur?: number;
+    backgroundOpacity?: number;
 }
 
 export interface UpdatePresetInput extends CreatePresetInput {
@@ -85,6 +91,9 @@ export interface MarketplaceTheme {
     warningContent?: string;
     error?: string;
     errorContent?: string;
+    backgroundImage?: string;
+    backgroundBlur?: number;
+    backgroundOpacity?: number;
 }
 
 export interface MarketplaceAuthor {

@@ -16,7 +16,7 @@ use tokio::fs as tokio_fs;
 use tokio::task;
 
 pub struct Data {
-    pub root_dir: PathBuf,
+    pub root_dir: Mutex<PathBuf>,
 }
 
 pub static APP_HANDLE: std::sync::LazyLock<Mutex<Option<tauri::AppHandle>>> =
@@ -42,7 +42,7 @@ impl Data {
             log_info!("Created root data directory: {}", root_dir.display());
         }
 
-        Self { root_dir }
+        Self { root_dir: Mutex::new(root_dir) }
     }
 
     pub fn has_extension(file_path: &str, extension: &str) -> bool {
@@ -53,7 +53,7 @@ impl Data {
 
     pub fn get_local(&self, relative_path: &str) -> PathBuf {
         let parts: Vec<&str> = relative_path.split(|c| ['/', '\\'].contains(&c)).collect();
-        let mut path = self.root_dir.clone();
+        let mut path = self.root_dir.lock().unwrap().clone();
         for part in parts {
             if part.is_empty() {
                 continue;
@@ -93,7 +93,7 @@ impl Data {
             .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or(file);
-        self.root_dir.join(file_name)
+        self.root_dir.lock().unwrap().join(file_name)
     }
 
     pub fn get_as_folder_string(file: &str) -> String {
@@ -136,21 +136,21 @@ impl Data {
                 .file_name()
                 .and_then(|n| n.to_str())
                 .unwrap_or(file);
-            self.root_dir
+            self.root_dir.lock().unwrap()
                 .join(&info.file_name)
                 .join("mods")
                 .join(jar_basename)
         } else if Self::has_extension(&info.local_file, "jar") {
-            self.root_dir.join(&info.file_name).join(&info.local_file)
+            self.root_dir.lock().unwrap().join(&info.file_name).join(&info.local_file)
         } else {
-            self.root_dir.join(&info.local_file)
+            self.root_dir.lock().unwrap().join(&info.local_file)
         }
     }
 
     fn should_skip_download(&self, info: &FileInfo) -> bool {
         if Self::has_extension(&info.local_file, "zip") {
-            let zip_path = self.root_dir.join(&info.local_file);
-            let unzip_path = self.root_dir.join(info.local_file.trim_end_matches(".zip"));
+            let zip_path = self.root_dir.lock().unwrap().join(&info.local_file);
+            let unzip_path = self.root_dir.lock().unwrap().join(info.local_file.trim_end_matches(".zip"));
             zip_path.exists() && unzip_path.exists()
         } else if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
@@ -159,7 +159,7 @@ impl Data {
                     .and_then(|n| n.to_str())
                     .unwrap_or(&info.local_file);
                 let jar_path = self
-                    .root_dir
+                    .root_dir.lock().unwrap()
                     .join(&info.file_name)
                     .join("mods")
                     .join(jar_basename);
@@ -179,7 +179,7 @@ impl Data {
     async fn prepare_download_dirs(&self, info: &FileInfo) -> Result<(), String> {
         if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
-                let mods_dir = self.root_dir.join(&info.file_name).join("mods");
+                let mods_dir = self.root_dir.lock().unwrap().join(&info.file_name).join("mods");
                 if let Err(e) = tokio_fs::create_dir_all(&mods_dir).await {
                     log_error!(
                         "Failed to create fabric mods directory {}: {}",
@@ -268,14 +268,14 @@ impl Data {
     }
 
     pub async fn ensure_client_synced(&self, client_base: &str) -> Result<(), String> {
-        let global_options_dir = self.root_dir.join("synced_options");
+        let global_options_dir = self.root_dir.lock().unwrap().join("synced_options");
         if !global_options_dir.exists() {
             tokio_fs::create_dir_all(&global_options_dir)
                 .await
                 .map_err(|e| format!("Failed to create global options dir: {e}"))?;
         }
 
-        let client_dir = self.root_dir.join(client_base);
+        let client_dir = self.root_dir.lock().unwrap().join(client_base);
         if !client_dir.exists() {
             tokio_fs::create_dir_all(&client_dir)
                 .await
@@ -370,7 +370,7 @@ impl Data {
 
         let download_url = Self::get_download_url(file)?;
 
-        let dest_dir = self.root_dir.join(dest_folder);
+        let dest_dir = self.root_dir.lock().unwrap().join(dest_folder);
         if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
             log_error!(
                 "Failed to create destination folder {}: {}",
@@ -430,7 +430,7 @@ impl Data {
         }
 
         for requirement in &requirements {
-            let path = self.root_dir.join(requirement);
+            let path = self.root_dir.lock().unwrap().join(requirement);
             if path.exists() {
                 if path.is_dir() {
                     tokio_fs::remove_dir_all(&path)
@@ -448,7 +448,7 @@ impl Data {
     }
 
     pub async fn reset_cache(&self) -> Result<(), String> {
-        let cache_dir = self.root_dir.join("cache");
+        let cache_dir = self.root_dir.lock().unwrap().join("cache");
         if cache_dir.exists() {
             tokio_fs::remove_dir_all(&cache_dir)
                 .await
@@ -477,7 +477,7 @@ impl Data {
     }
 
     pub fn verify_folder_integrity(&self, folder_name: &str) -> bool {
-        let folder_path = self.root_dir.join(folder_name);
+        let folder_path = self.root_dir.lock().unwrap().join(folder_name);
         let manifest_path = folder_path.join("manifest.txt");
 
         if !manifest_path.exists() {

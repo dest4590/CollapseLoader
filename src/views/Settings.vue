@@ -29,6 +29,8 @@ import {
     WifiOff,
     Minimize2,
     MousePointer2,
+    Coffee,
+    Terminal,
 } from 'lucide-vue-next';
 import { useToast } from '../services/toastService';
 import type { ToastPosition } from '../types/toast';
@@ -498,6 +500,14 @@ const getFormattedLabel = (key: string) => {
         return t('settings.close_to_tray');
     }
 
+    if (key === 'java_path') {
+        return 'Custom Java Path';
+    }
+
+    if (key === 'java_args') {
+        return 'Custom Java Arguments';
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
@@ -741,6 +751,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
                                 <Minimize2 v-if="key === 'minimize_to_tray_on_launch'" class="w-5 h-5 text-primary" />
                                 <MousePointer2 v-if="key === 'close_to_tray'" class="w-5 h-5 text-primary" />
+                                <Coffee v-if="key === 'java_path'" class="w-5 h-5 text-primary" />
+                                <Terminal v-if="key === 'java_args'" class="w-5 h-5 text-primary" />
                                 {{ getFormattedLabel(key) }}
                                 <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top"
                                     :data-tip="$t('settings.telemetry_info_title')">
@@ -952,7 +964,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <WifiOff class="w-4 h-4" />
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -961,7 +973,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -971,104 +983,95 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 <div v-else key="accounts" class="space-y-6 overflow-x-hidden">
                     <div class="card bg-base-200 shadow-md border border-base-300">
                         <div class="card-body p-4">
-                    <div
-                        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                        <div>
-                            <h2
-                                class="card-title text-lg font-semibold text-primary-focus flex items-center gap-2">
-                                <User class="w-5 h-5" />
-                                {{ t('settings.accounts_management') }}
-                            </h2>
-                            <p class="text-sm text-base-content/70 mt-1">
-                                {{ t('settings.accounts_description') }}
-                            </p>
-                        </div>
-                        <button @click="showAddAccountDialog" class="btn btn-primary btn-sm">
-                            <Plus class="w-4 h-4 mr-2" />
-                            {{ t('settings.add_account') }}
-                        </button>
-                    </div>
-
-                    <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-                        <div class="card-body p-4 space-y-4">
-                            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <div
+                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                                 <div>
-                                    <h3 class="font-semibold text-lg flex items-center gap-2">
-                                        <FolderSync class="w-5 h-5 text-primary" />
-                                        {{ t('settings.local_account_sync') }}
-                                    </h3>
+                                    <h2
+                                        class="card-title text-lg font-semibold text-primary-focus flex items-center gap-2">
+                                        <User class="w-5 h-5" />
+                                        {{ t('settings.accounts_management') }}
+                                    </h2>
                                     <p class="text-sm text-base-content/70 mt-1">
-                                        {{ t('settings.local_account_sync_description') }}
+                                        {{ t('settings.accounts_description') }}
                                     </p>
                                 </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <button
-                                        class="btn btn-outline btn-sm flex items-center gap-2"
-                                        @click="syncLocalAccountsFromCloud"
-                                        :disabled="isAccountSyncing || !isAuthenticated || remoteAccountsLoading"
-                                    >
-                                        <Download class="w-4 h-4" />
-                                        {{ t('settings.sync_accounts_from_cloud_button') }}
-                                    </button>
-                                    <button
-                                        class="btn btn-primary btn-sm flex items-center gap-2"
-                                        @click="syncLocalAccountsToCloud"
-                                        :disabled="isAccountSyncing || !isAuthenticated || remoteAccountsLoading"
-                                    >
-                                        <Upload class="w-4 h-4" />
-                                        {{ t('settings.sync_accounts_to_cloud_button') }}
-                                    </button>
+                                <button @click="showAddAccountDialog" class="btn btn-primary btn-sm">
+                                    <Plus class="w-4 h-4 mr-2" />
+                                    {{ t('settings.add_account') }}
+                                </button>
+                            </div>
+
+                            <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
+                                <div class="card-body p-4 space-y-4">
+                                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                        <div>
+                                            <h3 class="font-semibold text-lg flex items-center gap-2">
+                                                <FolderSync class="w-5 h-5 text-primary" />
+                                                {{ t('settings.local_account_sync') }}
+                                            </h3>
+                                            <p class="text-sm text-base-content/70 mt-1">
+                                                {{ t('settings.local_account_sync_description') }}
+                                            </p>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button class="btn btn-outline btn-sm flex items-center gap-2"
+                                                @click="syncLocalAccountsFromCloud"
+                                                :disabled="isAccountSyncing || !isAuthenticated || remoteAccountsLoading">
+                                                <Download class="w-4 h-4" />
+                                                {{ t('settings.sync_accounts_from_cloud_button') }}
+                                            </button>
+                                            <button class="btn btn-primary btn-sm flex items-center gap-2"
+                                                @click="syncLocalAccountsToCloud"
+                                                :disabled="isAccountSyncing || !isAuthenticated || remoteAccountsLoading">
+                                                <Upload class="w-4 h-4" />
+                                                {{ t('settings.sync_accounts_to_cloud_button') }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm text-base-content/70 flex items-center gap-2">
+                                        <Cloud class="w-4 h-4 text-primary" />
+                                        <span>
+                                            <span v-if="isAccountSyncing">{{ t('settings.syncing') }}</span>
+                                            <span v-else-if="remoteAccountsLoading">
+                                                {{ t('settings.remote_accounts_loading') }}
+                                            </span>
+                                            <span v-else-if="remoteAccounts.length > 0">
+                                                {{
+                                                    t('settings.remote_accounts_present', {
+                                                        count: remoteAccounts.length,
+                                                    })
+                                                }}
+                                            </span>
+                                            <span v-else>
+                                                {{ t('settings.remote_accounts_empty') }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <ul v-if="remoteAccounts.length > 0 && !remoteAccountsLoading"
+                                        class="text-sm text-base-content/70 space-y-1 pl-3 list-disc">
+                                        <li v-for="account in remoteAccounts.slice(0, 3)" :key="account.id">
+                                            <span class="font-semibold">{{ account.display_name || account.external_id
+                                                }}</span>
+                                            <span class="text-xs text-base-content/50 ml-1">
+                                                ({{ account.external_id }})
+                                            </span>
+                                        </li>
+                                        <li v-if="remoteAccounts.length > 3" class="text-xs text-base-content/50">
+                                            {{ t('settings.remote_accounts_more', { count: remoteAccounts.length - 3 })
+                                            }}
+                                        </li>
+                                    </ul>
+                                    <div v-if="!isAuthenticated"
+                                        class="alert alert-warning alert-sm rounded-md border border-base-300 p-3 text-sm flex items-center gap-2">
+                                        <LogIn class="w-4 h-4" />
+                                        {{ t('settings.sync_login_required') }}
+                                    </div>
                                 </div>
                             </div>
-                            <div class="text-sm text-base-content/70 flex items-center gap-2">
-                                <Cloud class="w-4 h-4 text-primary" />
-                                <span>
-                                    <span v-if="isAccountSyncing">{{ t('settings.syncing') }}</span>
-                                    <span v-else-if="remoteAccountsLoading">
-                                        {{ t('settings.remote_accounts_loading') }}
-                                    </span>
-                                    <span v-else-if="remoteAccounts.length > 0">
-                                        {{
-                                            t('settings.remote_accounts_present', {
-                                                count: remoteAccounts.length,
-                                            })
-                                        }}
-                                    </span>
-                                    <span v-else>
-                                        {{ t('settings.remote_accounts_empty') }}
-                                    </span>
-                                </span>
-                            </div>
-                            <ul
-                                v-if="remoteAccounts.length > 0 && !remoteAccountsLoading"
-                                class="text-sm text-base-content/70 space-y-1 pl-3 list-disc"
-                            >
-                                <li
-                                    v-for="account in remoteAccounts.slice(0, 3)"
-                                    :key="account.id"
-                                >
-                                    <span class="font-semibold">{{ account.display_name || account.external_id }}</span>
-                                    <span class="text-xs text-base-content/50 ml-1">
-                                        ({{ account.external_id }})
-                                    </span>
-                                </li>
-                                <li v-if="remoteAccounts.length > 3" class="text-xs text-base-content/50">
-                                    {{ t('settings.remote_accounts_more', { count: remoteAccounts.length - 3 }) }}
-                                </li>
-                            </ul>
-                            <div
-                                v-if="!isAuthenticated"
-                                class="alert alert-warning alert-sm rounded-md border border-base-300 p-3 text-sm flex items-center gap-2"
-                            >
-                                <LogIn class="w-4 h-4" />
-                                {{ t('settings.sync_login_required') }}
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                        <div class="relative flex-1">
-                            <input v-model="searchQuery" type="text"
+                            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                                <div class="relative flex-1">
+                                    <input v-model="searchQuery" type="text"
                                         :placeholder="t('settings.search_accounts')"
                                         class="input input-bordered input-sm w-full pl-10" />
                                     <Search class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 z-50" />

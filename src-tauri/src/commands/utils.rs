@@ -6,6 +6,12 @@ use crate::commands::clients::{
 use crate::core::utils::discord_rpc;
 use crate::core::utils::globals::{API_VERSION, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
+use crate::core::storage::accounts::ACCOUNT_MANAGER;
+use crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER;
+use crate::core::storage::favorites::FAVORITE_MANAGER;
+use crate::core::storage::flags::FLAGS_MANAGER;
+use crate::core::storage::presets::PRESET_MANAGER;
+use crate::core::storage::settings::SETTINGS;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -34,7 +40,7 @@ pub fn is_development() -> Result<bool, String> {
 
 #[tauri::command]
 pub fn open_data_folder() -> Result<String, String> {
-    let path = DATA.root_dir.to_string_lossy().to_string();
+    let path = DATA.root_dir.lock().unwrap().to_string_lossy().to_string();
     log_info!("Opening data folder at: {}", path);
 
     if let Err(e) = open::that(&path) {
@@ -58,7 +64,7 @@ pub async fn reset_requirements() -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_data_folder() -> Result<String, String> {
-    let path = DATA.root_dir.to_string_lossy().to_string();
+    let path = DATA.root_dir.lock().unwrap().to_string_lossy().to_string();
     log_debug!("Getting data folder path: {}", path);
     Ok(path)
 }
@@ -108,7 +114,7 @@ pub async fn change_data_folder(
         let _ = stop_custom_client(id, state.clone()).await;
     }
 
-    let current_dir = DATA.root_dir.clone();
+    let current_dir = DATA.root_dir.lock().unwrap().clone();
     log_debug!("Current data directory is: {:?}", current_dir);
 
     if mode == "move" {
@@ -172,9 +178,41 @@ pub async fn change_data_folder(
         override_file
     );
     fs::write(&override_file, &new_path).map_err(|e| {
-        log_error!("Failed to write override file: {}", e);
-        format!("Failed to write override: {e}")
+        log_error!("Failed to write to override file: {:?}", e);
+        format!("Failed to write to override file: {e}")
     })?;
+
+    {
+        let mut root = DATA.root_dir.lock().unwrap();
+        *root = PathBuf::from(new_path.clone());
+    }
+
+    let new_root = PathBuf::from(new_path.clone());
+
+    if let Ok(mut s) = SETTINGS.lock() {
+        s.config_path = new_root.join("config.json");
+        log_debug!("Updated SETTINGS path: {:?}", s.config_path);
+    }
+    if let Ok(mut pm) = PRESET_MANAGER.lock() {
+        pm.config_path = new_root.join("presets.json");
+        log_debug!("Updated PRESET_MANAGER path: {:?}", pm.config_path);
+    }
+    if let Ok(mut am) = ACCOUNT_MANAGER.lock() {
+        am.accounts_path = new_root.join("accounts.json");
+        log_debug!("Updated ACCOUNT_MANAGER path: {:?}", am.accounts_path);
+    }
+    if let Ok(mut ccm) = CUSTOM_CLIENT_MANAGER.lock() {
+        ccm.custom_clients_path = new_root.join("custom_clients.json");
+        log_debug!("Updated CUSTOM_CLIENT_MANAGER path: {:?}", ccm.custom_clients_path);
+    }
+    if let Ok(mut fm) = FAVORITE_MANAGER.lock() {
+        fm.favorites_path = new_root.join("favorites.json");
+        log_debug!("Updated FAVORITE_MANAGER path: {:?}", fm.favorites_path);
+    }
+    if let Ok(mut f) = FLAGS_MANAGER.lock() {
+        f.flags_path = new_root.join("flags.json");
+        log_debug!("Updated FLAGS_MANAGER path: {:?}", f.flags_path);
+    }
 
     if let Some(window) = app.get_webview_window("main") {
         log_debug!("Emitting 'data-folder-changed' event to main window");

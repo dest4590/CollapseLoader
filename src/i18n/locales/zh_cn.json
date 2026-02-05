@@ -327,7 +327,8 @@
     "done": "完成",
     "click": "点击",
     "show_more": "显示更多",
-    "show_less": "收起"
+    "show_less": "收起",
+    "advanced": "先进的"
   },
   "auth": {
     "logout": {
@@ -441,7 +442,8 @@
     "filters": {
       "installed": "已安装"
     },
-    "clear_filters": "清除筛选条件"
+    "clear_filters": "清除筛选条件",
+    "launch_another": "启动另一个实例"
   },
   "theme": {
     "actions": {
@@ -595,7 +597,13 @@
       }
     },
     "dark": "黑暗的",
-    "light": "光"
+    "light": "光",
+    "background_blur": "模糊",
+    "background_image": "背景图片网址",
+    "background_image_help": "支持 jpg、png、webp、data-url",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_opacity": "不透明度",
+    "background_title": "背景"
   },
   "errors": {
     "clients_load_failed": "加载客户端列表失败：{error}",

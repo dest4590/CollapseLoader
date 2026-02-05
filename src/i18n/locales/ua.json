@@ -327,7 +327,8 @@
     "done": "Готово",
     "click": "Натисніть",
     "show_more": "Показати більше",
-    "show_less": "Сховати"
+    "show_less": "Сховати",
+    "advanced": "Доповнені"
   },
   "auth": {
     "logout": {
@@ -441,7 +442,8 @@
     "filters": {
       "installed": "Встановлені"
     },
-    "clear_filters": "Очистити фільтри"
+    "clear_filters": "Очистити фільтри",
+    "launch_another": "Запустити ще раз"
   },
   "theme": {
     "actions": {
@@ -595,7 +597,13 @@
       }
     },
     "dark": "Темна",
-    "light": "Світла"
+    "light": "Світла",
+    "background_blur": "Розмиття",
+    "background_image": "URL Фонового зображення",
+    "background_image_help": "Підтримує jpg, png, webp, data-urls",
+    "background_image_placeholder": "https://example.com/image.jpg",
+    "background_opacity": "Прозорість",
+    "background_title": "Задній фон"
   },
   "logs": {
     "copy_logs": "Копіювати логи",

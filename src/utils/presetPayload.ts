@@ -30,5 +30,8 @@ export function buildPresetCreatePayload(
         warningContent: theme.warningContent,
         error: theme.error,
         errorContent: theme.errorContent,
+        backgroundImage: theme.backgroundImage,
+        backgroundBlur: theme.backgroundBlur,
+        backgroundOpacity: theme.backgroundOpacity,
     };
 }

@@ -25,6 +25,10 @@ interface ThemeSettings {
     warningContent?: string | null;
     error?: string | null;
     errorContent?: string | null;
+
+    backgroundImage?: string | null;
+    backgroundBlur?: number | null;
+    backgroundOpacity?: number | null;
 }
 
 const defaultSettings: ThemeSettings = {
@@ -52,6 +56,10 @@ const defaultSettings: ThemeSettings = {
     warningContent: null,
     error: null,
     errorContent: null,
+
+    backgroundImage: null,
+    backgroundBlur: 0,
+    backgroundOpacity: 100,
 };
 
 const presetSettings = reactive<ThemeSettings>({ ...defaultSettings });
@@ -61,7 +69,8 @@ export const cssVarList = [
     '--color-base-100', '--color-base-200', '--color-base-300', '--color-base-content',
     '--color-primary-content', '--color-secondary', '--color-secondary-content', '--color-accent', '--color-accent-content',
     '--color-neutral', '--color-neutral-content', '--color-info', '--color-info-content', '--color-success', '--color-success-content',
-    '--color-warning', '--color-warning-content', '--color-error', '--color-error-content'
+    '--color-warning', '--color-warning-content', '--color-error', '--color-error-content',
+    '--background-image', '--background-blur', '--background-opacity'
 ];
 
 const applyPreset = () => {
@@ -88,13 +97,27 @@ const applyPreset = () => {
         warning: '--color-warning',
         warningContent: '--color-warning-content',
         error: '--color-error',
-        errorContent: '--color-error-content'
+        errorContent: '--color-error-content',
+        backgroundImage: '--background-image',
+        backgroundBlur: '--background-blur',
+        backgroundOpacity: '--background-opacity'
     };
 
     Object.entries(varMap).forEach(([key, cssVar]) => {
         const value = settings[key];
-        if (value && typeof value === 'string' && value.trim().length > 0) {
-            root.style.setProperty(cssVar, value);
+        if (value !== undefined && value !== null) {
+            let cssValue = String(value);
+            if (key === 'backgroundBlur') cssValue = `${value}px`;
+            if (key === 'backgroundOpacity') cssValue = String(value);
+            if (key === 'backgroundImage' && value.trim().length > 0) {
+                cssValue = value.startsWith('http') || value.startsWith('data:') ? `url("${value}")` : value;
+            }
+
+            if (typeof value === 'string' ? value.trim().length > 0 : true) {
+                root.style.setProperty(cssVar, cssValue);
+            } else {
+                root.style.removeProperty(cssVar);
+            }
         } else {
             root.style.removeProperty(cssVar);
         }
@@ -204,7 +227,11 @@ const exportPreset = (): string => {
         warning: presetSettings.warning,
         warningContent: presetSettings.warningContent,
         error: presetSettings.error,
-        errorContent: presetSettings.errorContent
+        errorContent: presetSettings.errorContent,
+
+        backgroundImage: presetSettings.backgroundImage,
+        backgroundBlur: presetSettings.backgroundBlur,
+        backgroundOpacity: presetSettings.backgroundOpacity
     };
     return JSON.stringify(preset, null, 2);
 };
@@ -238,7 +265,11 @@ const importPreset = (presetJSON: string): void => {
             warning: typeof parsed.warning === 'string' || parsed.warning === null ? parsed.warning : presetSettings.warning,
             warningContent: typeof parsed.warningContent === 'string' || parsed.warningContent === null ? parsed.warningContent : presetSettings.warningContent,
             error: typeof parsed.error === 'string' || parsed.error === null ? parsed.error : presetSettings.error,
-            errorContent: typeof parsed.errorContent === 'string' || parsed.errorContent === null ? parsed.errorContent : presetSettings.errorContent
+            errorContent: typeof parsed.errorContent === 'string' || parsed.errorContent === null ? parsed.errorContent : presetSettings.errorContent,
+            
+            backgroundImage: typeof parsed.backgroundImage === 'string' || parsed.backgroundImage === null ? parsed.backgroundImage : presetSettings.backgroundImage,
+            backgroundBlur: typeof parsed.backgroundBlur === 'number' || parsed.backgroundBlur === null ? parsed.backgroundBlur : presetSettings.backgroundBlur,
+            backgroundOpacity: typeof parsed.backgroundOpacity === 'number' || parsed.backgroundOpacity === null ? parsed.backgroundOpacity : presetSettings.backgroundOpacity
         });
     } catch (e) {
         console.error('Failed to import theme preset:', e);

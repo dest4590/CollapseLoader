@@ -1,135 +1,180 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @plugin "daisyui" {
-    logs: false;
+  logs: false;
 }
 
 @plugin "daisyui/theme" {
-    name: 'dark';
-    default: true;
-    prefersdark: true;
-    color-scheme: 'dark';
-    --color-base-100: oklch(14% 0 0);
-    --color-base-200: oklch(20% 0 0);
-    --color-base-300: oklch(0.244 0 89.876);
-    --color-base-content: oklch(1 0 89.876);
-    --color-primary: oklch(1 0 89.876);
-    --color-primary-content: oklch(0% 0 0);
-    --color-secondary: oklch(0.364 0 89.876);
-    --color-secondary-content: oklch(98% 0.003 247.858);
-    --color-accent: oklch(0.293 0 89.876);
-    --color-accent-content: oklch(100% 0 0);
-    --color-neutral: oklch(27% 0.006 286.033);
-    --color-neutral-content: oklch(98% 0 0);
-    --color-info: oklch(58% 0.158 241.966);
-    --color-info-content: oklch(97% 0.013 236.62);
-    --color-success: oklch(64% 0.2 131.684);
-    --color-success-content: oklch(98% 0.031 120.757);
-    --color-warning: oklch(68% 0.162 75.834);
-    --color-warning-content: oklch(98% 0.026 102.212);
-    --color-error: oklch(58% 0.253 17.585);
-    --color-error-content: oklch(96% 0.015 12.422);
-    --radius-selector: 0.5rem;
-    --radius-field: 0.5rem;
-    --radius-box: 0.5rem;
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
+  name: "dark";
+  default: true;
+  prefersdark: true;
+  color-scheme: "dark";
+  --color-base-100: oklch(14% 0 0);
+  --color-base-200: oklch(20% 0 0);
+  --color-base-300: oklch(0.244 0 89.876);
+  --color-base-content: oklch(1 0 89.876);
+  --color-primary: oklch(1 0 89.876);
+  --color-primary-content: oklch(0% 0 0);
+  --color-secondary: oklch(0.364 0 89.876);
+  --color-secondary-content: oklch(98% 0.003 247.858);
+  --color-accent: oklch(0.293 0 89.876);
+  --color-accent-content: oklch(100% 0 0);
+  --color-neutral: oklch(27% 0.006 286.033);
+  --color-neutral-content: oklch(98% 0 0);
+  --color-info: oklch(58% 0.158 241.966);
+  --color-info-content: oklch(97% 0.013 236.62);
+  --color-success: oklch(64% 0.2 131.684);
+  --color-success-content: oklch(98% 0.031 120.757);
+  --color-warning: oklch(68% 0.162 75.834);
+  --color-warning-content: oklch(98% 0.026 102.212);
+  --color-error: oklch(58% 0.253 17.585);
+  --color-error-content: oklch(96% 0.015 12.422);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 @plugin "daisyui/theme" {
-    name: 'light';
-    default: false;
-    prefersdark: false;
-    color-scheme: 'light';
-    --color-base-100: oklch(100% 0 0);
-    --color-base-200: oklch(98% 0 0);
-    --color-base-300: oklch(95% 0 0);
-    --color-base-content: oklch(21% 0.006 285.885);
-    --color-primary: oklch(21% 0.006 285.885);
-    --color-primary-content: oklch(93% 0.034 272.788);
-    --color-secondary: oklch(65% 0.241 354.308);
-    --color-secondary-content: oklch(94% 0.028 342.258);
-    --color-accent: oklch(21% 0.006 56.043);
-    --color-accent-content: oklch(98% 0 0);
-    --color-neutral: oklch(14% 0.005 285.823);
-    --color-neutral-content: oklch(92% 0.004 286.32);
-    --color-info: oklch(74% 0.16 232.661);
-    --color-info-content: oklch(29% 0.066 243.157);
-    --color-success: oklch(76% 0.177 163.223);
-    --color-success-content: oklch(37% 0.077 168.94);
-    --color-warning: oklch(82% 0.189 84.429);
-    --color-warning-content: oklch(41% 0.112 45.904);
-    --color-error: oklch(71% 0.194 13.428);
-    --color-error-content: oklch(27% 0.105 12.094);
-    --radius-selector: 0.5rem;
-    --radius-field: 0.5rem;
-    --radius-box: 0.5rem;
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
+  name: "light";
+  default: false;
+  prefersdark: false;
+  color-scheme: "light";
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0 0);
+  --color-base-300: oklch(95% 0 0);
+  --color-base-content: oklch(21% 0.006 285.885);
+  --color-primary: oklch(21% 0.006 285.885);
+  --color-primary-content: oklch(93% 0.034 272.788);
+  --color-secondary: oklch(65% 0.241 354.308);
+  --color-secondary-content: oklch(94% 0.028 342.258);
+  --color-accent: oklch(21% 0.006 56.043);
+  --color-accent-content: oklch(98% 0 0);
+  --color-neutral: oklch(14% 0.005 285.823);
+  --color-neutral-content: oklch(92% 0.004 286.32);
+  --color-info: oklch(74% 0.16 232.661);
+  --color-info-content: oklch(29% 0.066 243.157);
+  --color-success: oklch(76% 0.177 163.223);
+  --color-success-content: oklch(37% 0.077 168.94);
+  --color-warning: oklch(82% 0.189 84.429);
+  --color-warning-content: oklch(41% 0.112 45.904);
+  --color-error: oklch(71% 0.194 13.428);
+  --color-error-content: oklch(27% 0.105 12.094);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.5rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 html {
-    @apply bg-base-200;
+  @apply bg-base-100;
+  min-height: 100vh;
+}
+
+body {
+  min-height: 100vh;
+  position: relative;
+  background-color: transparent;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--background-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--background-blur, 0px));
+  opacity: calc(var(--background-opacity, 100) / 100);
+  z-index: -1;
+  pointer-events: none;
+  transition:
+    filter 0.3s ease,
+    opacity 0.3s ease;
+}
+
+html[style*="--background-image"] {
+  background-color: transparent !important;
+}
+
+html[style*="--background-image"] main,
+html[style*="--background-image"] aside,
+html[style*="--background-image"] nav,
+html[style*="--background-image"] [class*="bg-base-"] {
+  background-color: color-mix(in srgb, var(--color-base-200, #141414), transparent 50%) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html[style*="--background-image"] .card {
+  background-color: color-mix(in srgb, var(--color-base-100, #1a1a1a), transparent 70%) !important;
 }
 
 .slide-up {
-    animation: slideUp 0.5s ease forwards;
+  animation: slideUp 0.5s ease forwards;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .btn,
 .input,
 .select,
 .textarea {
-    outline: none;
+  outline: none;
 }
 
 .label,
 .label-text {
-    display: block;
+  display: block;
 }
 
-:root.winter-event[data-theme='dark'] {
-    --color-primary: oklch(86% 0.06 240);
-    --color-primary-content: oklch(0% 0 0);
-    --color-accent: oklch(78% 0.05 210);
-    --color-accent-content: oklch(0% 0 0);
-    --color-info: oklch(72% 0.12 230);
+:root.winter-event[data-theme="dark"] {
+  --color-primary: oklch(86% 0.06 240);
+  --color-primary-content: oklch(0% 0 0);
+  --color-accent: oklch(78% 0.05 210);
+  --color-accent-content: oklch(0% 0 0);
+  --color-info: oklch(72% 0.12 230);
 }
 
-:root.winter-event[data-theme='light'] {
-    --color-primary: oklch(28% 0.06 245);
-    --color-primary-content: oklch(98% 0 0);
-    --color-accent: oklch(32% 0.05 220);
-    --color-accent-content: oklch(98% 0 0);
-    --color-info: oklch(45% 0.11 240);
+:root.winter-event[data-theme="light"] {
+  --color-primary: oklch(28% 0.06 245);
+  --color-primary-content: oklch(98% 0 0);
+  --color-accent: oklch(32% 0.05 220);
+  --color-accent-content: oklch(98% 0 0);
+  --color-info: oklch(45% 0.11 240);
 }
 
 :root.winter-event .card {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }

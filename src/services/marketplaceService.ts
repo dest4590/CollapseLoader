@@ -24,6 +24,9 @@ const themeFieldAliases: Record<keyof MarketplaceTheme, string[]> = {
     warningContent: ['warningContent', 'warning_content'],
     error: ['error'],
     errorContent: ['errorContent', 'error_content'],
+    backgroundImage: ['backgroundImage', 'background_image'],
+    backgroundBlur: ['backgroundBlur', 'background_blur'],
+    backgroundOpacity: ['backgroundOpacity', 'background_opacity'],
 };
 
 function extractTheme(source: Record<string, any> = {}): MarketplaceTheme {
@@ -32,7 +35,12 @@ function extractTheme(source: Record<string, any> = {}): MarketplaceTheme {
         const aliases = themeFieldAliases[key];
         for (const alias of aliases) {
             if (Object.prototype.hasOwnProperty.call(source, alias)) {
-                theme[key] = source[alias];
+                let val = source[alias];
+                
+                if ((key === 'backgroundBlur' || key === 'backgroundOpacity') && val !== null && val !== undefined) {
+                    val = Number(val);
+                }
+                theme[key] = val;
                 break;
             }
         }

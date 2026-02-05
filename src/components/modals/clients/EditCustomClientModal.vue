@@ -17,6 +17,8 @@ const form = reactive({
     name: '',
     version: '',
     mainClass: '',
+    javaPath: '',
+    javaArgs: '',
 });
 
 const loading = ref(false);
@@ -54,6 +56,8 @@ const handleSubmit = async () => {
             name: form.name.trim(),
             version: form.version,
             mainClass: form.mainClass.trim(),
+            javaPath: form.javaPath.trim() || null,
+            javaArgs: form.javaArgs.trim() || null,
         });
 
         emit('client-edited');
@@ -73,6 +77,8 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
         form.name = client.name;
         form.version = client.version;
         form.mainClass = client.main_class;
+        form.javaPath = client.java_path || '';
+        form.javaArgs = client.java_args || '';
     }
 }, { immediate: true });
 </script>
@@ -83,7 +89,8 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
             <label class="label">
                 <span class="label-text">{{ $t('modals.edit_custom_client_modal.client_name') }} *</span>
             </label>
-            <input v-model="form.name" type="text" :placeholder="$t('modals.edit_custom_client_modal.enter_client_name')" class="input input-bordered"
+            <input v-model="form.name" type="text"
+                :placeholder="$t('modals.edit_custom_client_modal.enter_client_name')" class="input input-bordered"
                 :class="{ 'input-error': errors.name }" />
             <label v-if="errors.name" class="label">
                 <span class="label-text-alt text-error">{{ errors.name }}</span>
@@ -105,11 +112,31 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
             <label class="label">
                 <span class="label-text">{{ $t('modals.edit_custom_client_modal.main_class') }} *</span>
             </label>
-            <input v-model="form.mainClass" type="text" :placeholder="$t('modals.edit_custom_client_modal.main_class_placeholder')"
-                class="input input-bordered" :class="{ 'input-error': errors.mainClass }" />
+            <input v-model="form.mainClass" type="text"
+                :placeholder="$t('modals.edit_custom_client_modal.main_class_placeholder')" class="input input-bordered"
+                :class="{ 'input-error': errors.mainClass }" />
             <label v-if="errors.mainClass" class="label">
                 <span class="label-text-alt text-error">{{ errors.mainClass }}</span>
             </label>
+        </div>
+
+        <div class="divider text-xs opacity-50 uppercase tracking-widest">{{ $t('common.advanced') || 'Advanced' }}
+        </div>
+
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Custom Java Path (Optional)</span>
+            </label>
+            <input v-model="form.javaPath" type="text" placeholder="C:\Path\To\bin\java.exe"
+                class="input input-bordered" />
+        </div>
+
+        <div class="form-control">
+            <label class="label">
+                <span class="label-text">Custom Java Arguments (Optional)</span>
+            </label>
+            <textarea v-model="form.javaArgs" class="textarea textarea-bordered h-20"
+                placeholder="-Xms512M -XX:+UseG1GC"></textarea>
         </div>
 
         <div class="modal-action">
@@ -118,7 +145,8 @@ watch(() => modals['edit-custom-client']?.props?.client, (client: CustomClient |
             </button>
             <button type="submit" class="btn btn-primary" :disabled="loading">
                 <div v-if="loading" class="loading loading-spinner loading-sm"></div>
-                {{ loading ? $t('modals.edit_custom_client_modal.updating') : $t('modals.edit_custom_client_modal.update_client') }}
+                {{ loading ? $t('modals.edit_custom_client_modal.updating') :
+                    $t('modals.edit_custom_client_modal.update_client') }}
             </button>
         </div>
     </form>

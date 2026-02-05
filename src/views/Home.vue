@@ -2,7 +2,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { Copy, Download, FileText, Folder, Newspaper, RefreshCcw, Star, StopCircle, Trash2, X } from 'lucide-vue-next';
+import { Copy, Download, FileText, Folder, Newspaper, Plus, RefreshCcw, Star, StopCircle, Trash2, X } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
 import FiltersMenu from '../components/common/FiltersMenu.vue';
@@ -1106,6 +1106,15 @@ const showContextMenu = (event: MouseEvent, client: Client) => {
     document.addEventListener('click', hideContextMenu);
 };
 
+const launchAnotherInstance = (client: Client) => {
+    if (client.meta.is_custom) {
+        handleLaunchCustomClient(client);
+    } else {
+        launchClient(client.id);
+    }
+    hideContextMenu();
+};
+
 const hideContextMenu = () => {
     if (!contextMenu.value.visible) return;
 
@@ -1729,6 +1738,13 @@ onBeforeUnmount(() => {
                             ? t('theme.actions.remove_favorite')
                             : t('theme.actions.add_favorite')
                     }}
+                </a>
+            </li>
+            <li v-if="contextMenu.client?.meta.installed && isClientRunning(contextMenu.client!.id)">
+                <a @click="launchAnotherInstance(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30">
+                    <Plus class="w-4 h-4" />
+                    {{ t('home.launch_another') }}
                 </a>
             </li>
             <li v-if="contextMenu.client?.meta.installed">

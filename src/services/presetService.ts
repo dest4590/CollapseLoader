@@ -57,6 +57,9 @@ export class PresetService {
             warningContent: settings.warningContent || undefined,
             error: settings.error || undefined,
             errorContent: settings.errorContent || undefined,
+            backgroundImage: settings.backgroundImage || undefined,
+            backgroundBlur: settings.backgroundBlur || undefined,
+            backgroundOpacity: settings.backgroundOpacity || undefined,
         };
     }
 
@@ -86,6 +89,9 @@ export class PresetService {
             warningContent: preset.warningContent,
             error: preset.error,
             errorContent: preset.errorContent,
+            backgroundImage: preset.backgroundImage,
+            backgroundBlur: preset.backgroundBlur,
+            backgroundOpacity: preset.backgroundOpacity,
         });
     }
 }

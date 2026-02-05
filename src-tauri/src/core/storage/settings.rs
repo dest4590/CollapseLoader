@@ -127,6 +127,8 @@ define_settings! {
         dpi_bypass: Setting<bool> = (false, true),
         minimize_to_tray_on_launch: Setting<bool> = (false, true),
         close_to_tray: Setting<bool> = (false, true),
+        java_path: Setting<String> = ("".to_string(), true),
+        java_args: Setting<String> = ("".to_string(), true),
     }
 }
 
