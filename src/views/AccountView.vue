@@ -426,7 +426,7 @@ const loadClients = async () => {
         }
     } catch (error) {
         console.error('Failed to load clients:', error);
-        addToast(t('errors.clients_load_failed'), 'error');
+        addToast(t('errors.clients_load_failed', { error }), 'error');
     } finally {
         loadingClients.value = false;
     }

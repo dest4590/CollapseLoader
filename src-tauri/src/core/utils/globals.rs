@@ -73,19 +73,6 @@ pub static SKIP_AGENT_OVERLAY_VERIFICATION: LazyLock<bool> =
 
 pub static MOCK_CLIENTS: LazyLock<bool> = LazyLock::new(|| parse_env_bool("MOCK_CLIENTS"));
 
-pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
-    if let Ok(url) = std::env::var("FORCE_CDN") {
-        if !url.is_empty() {
-            log_info!("Using forced CDN server: {}", url);
-            return vec![Server::new(&url)];
-        }
-    }
-    vec![
-        Server::new("https://cdn.collapseloader.org/"),
-        Server::new("http://141.148.224.27/cdn/"),
-    ]
-});
-
 pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     if let Ok(url) = std::env::var("FORCE_API") {
         if !url.is_empty() {
@@ -97,6 +84,19 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     vec![
         Server::new("https://atlas.collapseloader.org/"),
         Server::new("http://141.148.224.27/atlas/"),
+    ]
+});
+
+pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
+    if let Ok(url) = std::env::var("FORCE_CDN") {
+        if !url.is_empty() {
+            log_info!("Using forced CDN server: {}", url);
+            return vec![Server::new(&url)];
+        }
+    }
+    vec![
+        Server::new("https://cdn.collapseloader.org/"),
+        Server::new("http://141.148.224.27/cdn/"),
     ]
 });
 

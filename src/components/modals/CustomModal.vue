@@ -22,10 +22,6 @@
                 <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-4 custom-scrollbar">
                     <slot name="body"></slot>
                 </div>
-
-                <div v-if="$slots.footer" class="p-4 border-t border-base-content/10 flex justify-end gap-2 shrink-0">
-                    <slot name="footer"></slot>
-                </div>
             </div>
         </div>
     </transition>

@@ -612,14 +612,14 @@ const getClients = async () => {
             clients.value = [];
             if (response !== null && response.length === 0) {
                 console.log("No clients available from backend, current list: " + response);
-                error.value = t('errors.clients_load_failed');
-                addToast(t('errors.clients_unavailable'), 'error');
+                error.value = t('errors.clients_load_failed', { error: 'No clients available' });
+                addToast(t('errors.clients_load_failed', { error: 'No clients available' }), 'error');
             }
         }
     } catch (err) {
         console.error('Error fetching clients:', err);
-        error.value = t('errors.clients_load_failed');
-        addToast(t('errors.clients_load_failed'), 'error');
+        error.value = t('errors.clients_load_failed', { error: err });
+        addToast(t('errors.clients_load_failed', { error: err }), 'error');
         clients.value = [];
     } finally {
         clientsLoaded.value = true;
