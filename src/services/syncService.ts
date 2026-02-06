@@ -107,7 +107,7 @@ class SyncService {
 
         try {
             const settingsPref = data.preferences.find((p) => p.key === 'collapseloader.settings') || null;
-            
+
             const maxIsoTimestamp = (timestamps: Array<string | null | undefined>): string | null => {
                 let max: number | null = null;
                 let maxIso: string | null = null;
@@ -210,9 +210,9 @@ class SyncService {
 
     async restoreFromInitData(data: UserInitData): Promise<void> {
         if (!this.state.isOnline) return;
-        
+
         this.hydrateSyncStatus(data);
-        
+
         if (!this.state.hasCloudData) return;
 
         try {
@@ -224,63 +224,63 @@ class SyncService {
     }
 
     private async restoreData(cloudData: SyncData): Promise<boolean> {
-         if (!cloudData) return false;
+        if (!cloudData) return false;
 
-            if (cloudData.settings_data && Object.keys(cloudData.settings_data).length > 0) {
-                await settingsService.loadSettings();
-                const currentSettings = settingsService.getSettings();
-                const mergedSettings = { ...currentSettings, ...cloudData.settings_data };
-                await settingsService.saveSettings(mergedSettings as any);
-            }
+        if (cloudData.settings_data && Object.keys(cloudData.settings_data).length > 0) {
+            await settingsService.loadSettings();
+            const currentSettings = settingsService.getSettings();
+            const mergedSettings = { ...currentSettings, ...cloudData.settings_data };
+            await settingsService.saveSettings(mergedSettings as any);
+        }
 
-            if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data)) {
-                try {
-                    const currentFavorites = await invoke<number[]>('get_favorite_clients');
-                    const favoritesChanged =
-                        cloudData.favorites_data.length !== currentFavorites.length ||
-                        !cloudData.favorites_data.every((id: number) => currentFavorites.includes(id));
+        if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data)) {
+            try {
+                const currentFavorites = await invoke<number[]>('get_favorite_clients');
+                const favoritesChanged =
+                    cloudData.favorites_data.length !== currentFavorites.length ||
+                    !cloudData.favorites_data.every((id: number) => currentFavorites.includes(id));
 
-                    if (favoritesChanged) {
-                        await invoke('set_all_favorites', { clientIds: cloudData.favorites_data });
-                    }
-                } catch (e) {
-                    console.warn('Failed to set all favorites, falling back to loop', e);
-                    const currentFavorites = await invoke<number[]>('get_favorite_clients');
-                    for (const clientId of currentFavorites) {
-                        await invoke('remove_favorite_client', { clientId });
-                    }
-                    for (const clientId of cloudData.favorites_data) {
-                        await invoke('add_favorite_client', { clientId });
-                    }
+                if (favoritesChanged) {
+                    await invoke('set_all_favorites', { clientIds: cloudData.favorites_data });
+                }
+            } catch (e) {
+                console.warn('Failed to set all favorites, falling back to loop', e);
+                const currentFavorites = await invoke<number[]>('get_favorite_clients');
+                for (const clientId of currentFavorites) {
+                    await invoke('remove_favorite_client', { clientId });
+                }
+                for (const clientId of cloudData.favorites_data) {
+                    await invoke('add_favorite_client', { clientId });
                 }
             }
+        }
 
-            if (cloudData.accounts_data && Array.isArray(cloudData.accounts_data)) {
-                try {
-                    const localAccounts = await invoke<any[]>('get_accounts');
-                    const localUsernames = new Set(localAccounts.map((acc: any) => acc.username));
+        if (cloudData.accounts_data && Array.isArray(cloudData.accounts_data)) {
+            try {
+                const localAccounts = await invoke<any[]>('get_accounts');
+                const localUsernames = new Set(localAccounts.map((acc: any) => acc.username));
 
-                    for (const cloudAccount of cloudData.accounts_data) {
-                        if (cloudAccount.username && !localUsernames.has(cloudAccount.username)) {
-                            try {
-                                await invoke('add_account', {
-                                    username: cloudAccount.username,
-                                    tags: cloudAccount.tags || ['cloud-sync']
-                                });
-                            } catch (error) {
-                                console.warn('Failed to add cloud account:', cloudAccount.username, error);
-                            }
+                for (const cloudAccount of cloudData.accounts_data) {
+                    if (cloudAccount.username && !localUsernames.has(cloudAccount.username)) {
+                        try {
+                            await invoke('add_account', {
+                                username: cloudAccount.username,
+                                tags: cloudAccount.tags || ['cloud-sync']
+                            });
+                        } catch (error) {
+                            console.warn('Failed to add cloud account:', cloudAccount.username, error);
                         }
                     }
-                } catch (error) {
-                    console.warn('Failed to sync accounts from cloud:', error);
                 }
+            } catch (error) {
+                console.warn('Failed to sync accounts from cloud:', error);
             }
+        }
 
-            this.state.lastSyncTime = cloudData.last_sync_timestamp || new Date().toISOString();
-            this.state.hasCloudData = true;
+        this.state.lastSyncTime = cloudData.last_sync_timestamp || new Date().toISOString();
+        this.state.hasCloudData = true;
 
-            return true;
+        return true;
     }
 
     async downloadFromCloud(): Promise<boolean> {

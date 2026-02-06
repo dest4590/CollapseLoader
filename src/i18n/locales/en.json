@@ -238,7 +238,8 @@
     "description": "Join our community for updates, support, and to report any issues you may encounter.",
     "open_failed": "Failed to open {platform}",
     "branch": "Branch",
-    "development": "Development Mode"
+    "development": "Development Mode",
+    "commit_message": "Commit Message"
   },
   "account": {
     "no_email": "No email",
@@ -1173,5 +1174,19 @@
         "description": "Play on a weekend."
       }
     }
-  }
+  },
+    "mods": {
+      "manager_title": "Mods Manager",
+      "search_placeholder": "Search mods on Modrinth...",
+      "no_results": "No mods found",
+      "no_compatible_version": "No compatible version found for {version}",
+      "install_success": "Successfully installed {mod}",
+      "install_failed": "Failed to install mod: {error}",
+      "manage_mods": "Manage Mods",
+      "installed": "Installed",
+      "install": "Install",
+      "choose_version": "Choose Version",
+      "versions_for": "Versions for {mod}",
+      "loading_versions": "Loading versions..."
+    }
 }

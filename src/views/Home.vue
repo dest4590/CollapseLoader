@@ -2,10 +2,11 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { Copy, Download, FileText, Folder, Newspaper, Plus, RefreshCcw, Star, StopCircle, Trash2, X } from 'lucide-vue-next';
+import { Copy, Download, FileText, Folder, Newspaper, Package, Plus, RefreshCcw, Star, StopCircle, Trash2, X } from 'lucide-vue-next';
 import SearchBar from '../components/common/SearchBar.vue';
 import ClientCard from '../components/features/clients/ClientCard.vue';
 import FiltersMenu from '../components/common/FiltersMenu.vue';
+import ModsManagerModal from '../components/modals/clients/ModsManagerModal.vue';
 import { useToast } from '../services/toastService';
 import { useModal } from '../services/modalService';
 import { syncService } from '../services/syncService';
@@ -161,7 +162,6 @@ watch(
             console.error('Failed to save active filters to localStorage:', e);
         }
 
-        // Debounce filter updates for performance
         if (filterDebounceTimer !== null) {
             clearTimeout(filterDebounceTimer);
         }
@@ -199,7 +199,7 @@ const hashVerifyingClients = ref<Set<number>>(new Set());
 const progressTargets = ref<Map<string, number>>(new Map());
 const progressAnimHandles = ref<Map<string, number>>(new Map());
 let lastProgressUpdate = 0;
-const PROGRESS_THROTTLE = 100; // Update at most every 100ms
+const PROGRESS_THROTTLE = 100;
 
 const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
 
@@ -209,7 +209,6 @@ const smoothUpdateProgress = (file: string, targetPercentage: number, action: st
 
     progressTargets.value.set(file, safeTarget);
 
-    // Throttle updates
     const now = performance.now();
     if (now - lastProgressUpdate < PROGRESS_THROTTLE && safeTarget < 100) {
         return;
@@ -397,13 +396,11 @@ const allClients = computed<Client[]>(() => {
     return clients.value;
 });
 
-// Memoize version parser
 const parseVersion = (v: string): number[] => {
     if (!v) return [];
     return v.split(/[^0-9]+/).map(s => parseInt(s, 10) || 0);
 };
 
-// Split filtering and sorting into separate computeds for better caching
 const baseFilteredClients = computed(() => {
     if (allClients.value.length === 0) {
         return [];
@@ -1141,6 +1138,11 @@ const openClientFolder = async (client: Client) => {
     hideContextMenu();
 };
 
+const openModsManager = (client: Client) => {
+    hideContextMenu();
+    showModal('mods-manager', ModsManagerModal, { title: t('mods.manager_title'), size: 'lg' }, { client });
+};
+
 const reinstallClient = async (client: Client) => {
     try {
         if (props.isOnline) {
@@ -1709,7 +1711,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-if="contextMenu.visible" :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
-        class="fixed z-[100] menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
+        class="fixed z-100 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
         :class="contextMenu.animationClass">
         <h3 v-if="selectedClients.size <= 1"
             class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30">
@@ -1725,6 +1727,14 @@ onBeforeUnmount(() => {
         </h3>
 
         <ul v-if="selectedClients.size <= 1">
+            <li
+                v-if="contextMenu.client?.client_type?.toLowerCase() === 'fabric' && contextMenu.client?.meta.installed">
+                <a @click="openModsManager(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30 text-primary font-medium">
+                    <Package class="w-4 h-4" />
+                    {{ t('mods.manage_mods') }}
+                </a>
+            </li>
             <li>
                 <a @click="toggleFavorite(contextMenu.client!)"
                     class="flex items-center gap-2 text-sm active:bg-primary/30">

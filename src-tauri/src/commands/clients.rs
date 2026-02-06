@@ -799,6 +799,82 @@ pub async fn get_running_custom_client_ids() -> Vec<u32> {
 }
 
 #[tauri::command]
+pub async fn install_mod_from_url(
+    id: u32,
+    url: String,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    log_info!(
+        "Installing mod for client {}: {} from {}",
+        id,
+        filename,
+        url
+    );
+
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let mods_folder_relative = match client.client_type {
+        ClientType::Fabric | ClientType::Forge | ClientType::Default => {
+            let (folder, _) = client.get_launch_paths().map_err(|e| e.to_string())?;
+            let root = DATA.root_dir.lock().unwrap().clone();
+            let relative = folder
+                .strip_prefix(&root)
+                .map_err(|_| "Client folder is outside of root directory".to_string())?;
+            relative.join("mods")
+        }
+    };
+
+    let mods_folder_str = mods_folder_relative
+        .to_str()
+        .ok_or_else(|| "Invalid mods folder path".to_string())?;
+
+    DATA.download_to_folder(&url, mods_folder_str).await?;
+
+    log_info!(
+        "Successfully installed mod: {} to {}",
+        filename,
+        mods_folder_str
+    );
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_installed_mods(id: u32, state: State<'_, AppState>) -> Result<Vec<String>, String> {
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let mods_folder = match client.client_type {
+        ClientType::Fabric | ClientType::Forge | ClientType::Default => {
+            let (folder, _) = client.get_launch_paths().map_err(|e| e.to_string())?;
+            folder.join("mods")
+        }
+    };
+
+    if !mods_folder.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut mods = Vec::new();
+    let mut entries = tokio::fs::read_dir(mods_folder)
+        .await
+        .map_err(|e| format!("Failed to read mods directory: {}", e))?;
+
+    while let Some(entry) = entries.next_entry().await.map_err(|e| e.to_string())? {
+        let path = entry.path();
+        if path.is_file() {
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.ends_with(".jar") {
+                    mods.push(filename.to_string());
+                }
+            }
+        }
+    }
+
+    Ok(mods)
+}
+
+#[tauri::command]
 pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Attempting to stop custom client with ID: {}", id);
     let custom_client = {

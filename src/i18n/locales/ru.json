@@ -238,7 +238,8 @@
     "title": "Об CollapseLoader",
     "version": "Версия",
     "branch": "Бренч",
-    "development": "Режим разработчика"
+    "development": "Режим разработчика",
+    "commit_message": "Сообщение коммита"
   },
   "account": {
     "change_password": "Изменить пароль",

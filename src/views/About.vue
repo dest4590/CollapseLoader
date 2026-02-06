@@ -24,6 +24,7 @@ const { isAuthenticated } = useUser();
 const version = ref('');
 const codename = ref('');
 const commitHash = ref('');
+const commitMessage = ref('');
 const branch = ref('');
 const development = ref(false);
 const isCheckingUpdates = ref(false);
@@ -57,6 +58,7 @@ const getVersion = async () => {
         commitHash.value = String(data.commitHash).slice(0, 7) || '';
         branch.value = data.branch || '';
         development.value = data.development === 'true' || false;
+        commitMessage.value = data.commitMessage || '';
     } catch (error) {
         console.error('Failed to get version:', error);
     }
@@ -189,6 +191,12 @@ onMounted(async () => {
                     <code class="bg-base-300 px-2 py-1 rounded text-xs">{{
                         commitHash
                     }}</code>
+                </div>
+
+
+                <div class="flex justify-between items-center py-2 border-b border-base-300/50">
+                    <span class="text-base-content/80">{{ t('about.commit_message') }}</span>
+                    <span>{{ commitMessage }}</span>
                 </div>
 
                 <div class="flex justify-between items-center py-2 border-b border-base-300/50">

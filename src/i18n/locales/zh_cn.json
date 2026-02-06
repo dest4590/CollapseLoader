@@ -238,7 +238,8 @@
     "description": "加入我们的社区以获取更新、支持，并反馈您遇到的问题。",
     "open_failed": "打开 {platform} 失败",
     "branch": "分支",
-    "development": "开发模式"
+    "development": "开发模式",
+    "commit_message": "提交消息"
   },
   "account": {
     "no_email": "暂无邮箱",

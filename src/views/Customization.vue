@@ -73,7 +73,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.base100')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base100"
@@ -81,7 +81,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.base200')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base200"
@@ -89,7 +89,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.base300')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base300"
@@ -128,7 +128,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.secondary')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="secondary"
@@ -144,7 +144,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.accent')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="accent"
@@ -167,7 +167,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.neutral')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="neutral"
@@ -183,7 +183,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.info')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="info"
@@ -199,7 +199,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.success')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="success"
@@ -215,7 +215,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.warning')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="warning"
@@ -231,7 +231,7 @@
                             </div>
                             <div class="form-control">
                                 <label class="label text-sm font-medium text-base-content">{{ t('theme.error')
-                                }}</label>
+                                    }}</label>
                                 <input type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="error"
@@ -250,7 +250,7 @@
 
                     <div class="mt-8">
                         <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('customization.background_title')
-                            }}</h3>
+                        }}</h3>
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <div class="lg:col-span-12">
                                 <label class="label text-sm font-medium text-base-content">{{
@@ -267,7 +267,7 @@
                                     </button>
                                 </div>
                                 <p class="text-xs text-base-content/50 mt-1">{{ t('customization.background_image_help')
-                                    }}</p>
+                                }}</p>
                             </div>
 
                             <div class="lg:col-span-6">
@@ -354,7 +354,7 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                                 <div>
                                     <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                    }}</label>
+                                        }}</label>
                                     <VueMonacoEditor v-model:value="customCSS" language="css"
                                         :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
                                             readOnly: !enableCustomCSS,
@@ -583,7 +583,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {
         event.preventDefault();
         themeService.saveCardSettings();
-        addToast(t('common.saved'), 'success');
     }
 };
 

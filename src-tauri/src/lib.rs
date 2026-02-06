@@ -202,6 +202,8 @@ pub fn run() {
             commands::irc::connect_irc,
             commands::irc::disconnect_irc,
             commands::irc::send_irc_message,
+            commands::clients::install_mod_from_url,
+            commands::clients::list_installed_mods,
         ])
         .setup(|app| {
             #[cfg(desktop)]

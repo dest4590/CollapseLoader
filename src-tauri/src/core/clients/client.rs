@@ -70,7 +70,6 @@ fn is_minecraft_version_dir_name(name: &str) -> bool {
         .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
-
 fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<PathBuf> {
     let mut jars = Vec::new();
 
@@ -153,7 +152,9 @@ impl Meta {
                     .file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or(filename);
-                DATA.root_dir.lock().unwrap()
+                DATA.root_dir
+                    .lock()
+                    .unwrap()
                     .join(Data::get_filename(filename))
                     .join(MODS_FOLDER)
                     .join(jar_basename)
@@ -164,7 +165,9 @@ impl Meta {
                         .file_name()
                         .and_then(|n| n.to_str())
                         .unwrap_or(filename);
-                    DATA.root_dir.lock().unwrap()
+                    DATA.root_dir
+                        .lock()
+                        .unwrap()
                         .join(Data::get_filename(filename))
                         .join(MODS_FOLDER)
                         .join(jar_basename)
@@ -298,15 +301,22 @@ impl Client {
     }
 
     fn java_executable_path(&self) -> PathBuf {
-        DATA.root_dir.lock().unwrap()
+        DATA.root_dir
+            .lock()
+            .unwrap()
             .join(self.jdk_folder_name())
             .join("bin")
             .join(format!("java{FILE_EXTENSION}"))
     }
 
-    fn get_launch_paths(&self) -> Result<(PathBuf, PathBuf), String> {
+    pub fn get_launch_paths(&self) -> Result<(PathBuf, PathBuf), String> {
         if self.meta.is_custom {
-            let folder = DATA.root_dir.lock().unwrap().join(CUSTOM_CLIENTS_FOLDER).join(&self.name);
+            let folder = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(CUSTOM_CLIENTS_FOLDER)
+                .join(&self.name);
             let jar = folder.join(&self.filename);
             return Ok((folder, jar));
         }
@@ -337,11 +347,15 @@ impl Client {
         let safe_ver = sanitize_version_for_paths(&self.version);
         match self.client_type {
             ClientType::Fabric => DATA
-                .root_dir.lock().unwrap()
+                .root_dir
+                .lock()
+                .unwrap()
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(format!("fabric_{}.jar", safe_ver)),
             ClientType::Forge => DATA
-                .root_dir.lock().unwrap()
+                .root_dir
+                .lock()
+                .unwrap()
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(format!("forge_{}.jar", safe_ver)),
             ClientType::Default => self.get_launch_paths().unwrap_or_default().1,
@@ -479,7 +493,12 @@ impl Client {
         if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
-            let mods_folder_abs = DATA.root_dir.lock().unwrap().join(&client_base).join(MODS_FOLDER);
+            let mods_folder_abs = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(&client_base)
+                .join(MODS_FOLDER);
 
             for req in mods {
                 let name = req.name.clone();
@@ -591,19 +610,29 @@ impl Client {
         };
 
         check_and_queue(self.jdk_folder_name(), &self.jdk_zip_name());
-        check_and_queue(if self.client_type == ClientType::Fabric { ASSETS_FABRIC_FOLDER } else { ASSETS_FOLDER }, if self.client_type == ClientType::Fabric { ASSETS_FABRIC_ZIP } else { ASSETS_ZIP });
-
-        let (libs_zip, libs_folder, natives_zip, natives_folder) =
-            if self.is_legacy_client() {
-                (
-                    LIBRARIES_LEGACY_ZIP,
-                    LIBRARIES_LEGACY_FOLDER,
-                    NATIVES_LEGACY_ZIP,
-                    NATIVES_LEGACY_FOLDER,
-                )
+        check_and_queue(
+            if self.client_type == ClientType::Fabric {
+                ASSETS_FABRIC_FOLDER
             } else {
-                (LIBRARIES_ZIP, LIBRARIES_FOLDER, NATIVES_ZIP, NATIVES_FOLDER)
-            };
+                ASSETS_FOLDER
+            },
+            if self.client_type == ClientType::Fabric {
+                ASSETS_FABRIC_ZIP
+            } else {
+                ASSETS_ZIP
+            },
+        );
+
+        let (libs_zip, libs_folder, natives_zip, natives_folder) = if self.is_legacy_client() {
+            (
+                LIBRARIES_LEGACY_ZIP,
+                LIBRARIES_LEGACY_FOLDER,
+                NATIVES_LEGACY_ZIP,
+                NATIVES_LEGACY_FOLDER,
+            )
+        } else {
+            (LIBRARIES_ZIP, LIBRARIES_FOLDER, NATIVES_ZIP, NATIVES_FOLDER)
+        };
 
         check_and_queue(libs_folder, libs_zip);
 
@@ -642,7 +671,9 @@ impl Client {
 
             let dest_filename = remote.rsplit('/').next().unwrap_or(&remote);
             let local_path = DATA
-                .root_dir.lock().unwrap()
+                .root_dir
+                .lock()
+                .unwrap()
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(dest_filename);
 
@@ -703,7 +734,12 @@ impl Client {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let bin_dir = DATA.root_dir.lock().unwrap().join(self.jdk_folder_name()).join("bin");
+            let bin_dir = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(self.jdk_folder_name())
+                .join("bin");
             if bin_dir.exists() {
                 if let Ok(entries) = std::fs::read_dir(&bin_dir) {
                     for entry in entries.flatten() {
@@ -741,7 +777,11 @@ impl Client {
             LIBRARIES_FABRIC_FOLDER,
             sanitize_version_for_paths(&self.version)
         );
-        let versioned_dir = DATA.root_dir.lock().unwrap().join(versioned_zip.replace(".zip", ""));
+        let versioned_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap()
+            .join(versioned_zip.replace(".zip", ""));
 
         if !dir_has_any_jars(&versioned_dir, false) {
             log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);
@@ -781,7 +821,9 @@ impl Client {
                 cp_parts.push(self.get_minecraft_jar_path());
 
                 let v_libs = DATA
-                    .root_dir.lock().unwrap()
+                    .root_dir
+                    .lock()
+                    .unwrap()
                     .join(LIBRARIES_FABRIC_FOLDER)
                     .join(sanitize_version_for_paths(&self.version));
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
@@ -885,9 +927,14 @@ impl Client {
 
         let natives_path = if self.is_legacy_client() {
             if IS_LINUX {
-                DATA.root_dir.lock().unwrap().join(NATIVES_LEGACY_LINUX_FOLDER)
+                DATA.root_dir
+                    .lock()
+                    .unwrap()
+                    .join(NATIVES_LEGACY_LINUX_FOLDER)
             } else {
-                DATA.root_dir.lock().unwrap()
+                DATA.root_dir
+                    .lock()
+                    .unwrap()
                     .join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
             }
         } else if self.meta.is_new {

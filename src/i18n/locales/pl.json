@@ -238,7 +238,8 @@
     "title": "O CollapseLoader",
     "version": "Wersja",
     "branch": "Gałąź",
-    "development": "Tryb deweloperski"
+    "development": "Tryb deweloperski",
+    "commit_message": "Zatwierdź wiadomość"
   },
   "account": {
     "change_password": "Zmień hasło",
