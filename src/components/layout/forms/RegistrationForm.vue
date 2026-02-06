@@ -40,6 +40,7 @@ import { useI18n } from 'vue-i18n';
 import { apiPost } from '../../../services/apiClient';
 import { getCurrentLanguage } from '../../../i18n';
 import { getApiBaseWithVersion } from '../../../config';
+import { invoke } from '@tauri-apps/api/core';
 
 interface Props {
     showCancelButton?: boolean;
@@ -109,17 +110,27 @@ const handleRegister = async () => {
                 }
             );
 
-            const authToken = loginResponse?.data?.token;
+            console.log('Login response:', loginResponse);
+
+            const authToken = loginResponse.token;
 
             if (authToken) {
                 localStorage.setItem('authToken', authToken);
                 userService.clearCache();
+                try {
+                    await invoke('update_presence', {
+                        details: 'In Menu',
+                        state: 'Browsing clients',
+                    });
+                } catch (error) {
+                    console.error('Failed to initialize Discord presence:', error);
+                }
+
                 addToast(t('auth.login.success'), 'success');
                 emit('logged-in');
             } else {
-                console.error('No auth token found in auto-login response:', loginResponse);
+                console.error('No auth token found in response:', loginResponse);
                 addToast(t('auth.login.no_token'), 'error');
-                emit('registered');
             }
         } catch (loginError) {
             console.error('Auto-login failed:', loginError);

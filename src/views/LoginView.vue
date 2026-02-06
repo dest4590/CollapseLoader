@@ -49,23 +49,6 @@ const emit = defineEmits(['logged-in', 'change-view']);
 const username = ref('');
 const password = ref('');
 
-const extractAuthToken = (payload: any): string | null => {
-    if (!payload) return null;
-    const candidate =
-        payload.token ||
-        payload.auth_token ||
-        payload.access_token ||
-        payload.accessToken ||
-        payload?.tokens?.token ||
-        payload?.tokens?.access_token ||
-        payload?.tokens?.accessToken ||
-        payload?.data?.token ||
-        payload?.data?.auth_token ||
-        payload?.data?.access_token ||
-        payload?.data?.accessToken;
-    return typeof candidate === 'string' && candidate.length > 0 ? candidate : null;
-};
-
 const handleLogin = async () => {
     try {
         const response = await apiPost(
@@ -84,7 +67,7 @@ const handleLogin = async () => {
 
         console.log('Login response:', response);
 
-        const authToken = extractAuthToken(response);
+        const authToken = response.data.token;
 
         if (authToken) {
             localStorage.setItem('authToken', authToken);
