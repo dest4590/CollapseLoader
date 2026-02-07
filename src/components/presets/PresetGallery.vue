@@ -112,7 +112,7 @@
             </div>
         </div>
         <div v-if="!filteredPresets.length" class="text-sm text-base-content/60 mt-4">{{ t('marketplace.no_items')
-        }}</div>
+            }}</div>
     </div>
 </template>
 

@@ -68,9 +68,11 @@ const handleLogin = async () => {
         console.log('Login response:', response);
 
         const authToken = response.data.token;
+        const refreshToken = response.data.refreshToken;
 
         if (authToken) {
             localStorage.setItem('authToken', authToken);
+            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
             userService.clearCache();
             try {
                 await invoke('update_presence', {

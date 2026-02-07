@@ -1197,10 +1197,10 @@ onBeforeUnmount(() => {
                                     <Download v-if="client.working" class="w-4 h-4 mr-1" />
                                     <span v-if="client.working">{{
                                         t('home.download')
-                                        }}</span>
+                                    }}</span>
                                     <span v-else-if="!client.working">{{
                                         t('home.unavailable')
-                                        }}</span>
+                                    }}</span>
                                 </span>
                                 <span
                                     class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
@@ -1292,10 +1292,10 @@ onBeforeUnmount(() => {
                                                             <div
                                                                 class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
                                                                 <span v-if="ratingAvg !== null">{{ ratingAvg.toFixed(1)
-                                                                    }}/5</span>
+                                                                }}/5</span>
                                                                 <span v-else>—</span>
                                                                 <span class="text-base-content/50"> ({{ ratingCount
-                                                                    }})</span>
+                                                                }})</span>
                                                             </div>
                                                         </div>
 
@@ -1362,7 +1362,7 @@ onBeforeUnmount(() => {
                                                             <ExternalLink class="w-4 h-4" />
                                                             <span class="truncate max-w-[18rem]">{{
                                                                 clientDetails.source_link
-                                                            }}</span>
+                                                                }}</span>
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1406,7 +1406,7 @@ onBeforeUnmount(() => {
                                                                     class="timeline-end timeline-box shadow-sm bg-base-100/40 w-full mb-2 border border-base-content/10">
                                                                     <div class="font-bold text-sm text-base-content">v{{
                                                                         entry.version
-                                                                    }}
+                                                                        }}
                                                                     </div>
                                                                     <div
                                                                         class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
@@ -1426,10 +1426,10 @@ onBeforeUnmount(() => {
                                                         <Info class="w-8 h-8 text-base-content/50 mb-2" />
                                                         <p class="text-sm font-medium text-base-content/70">{{
                                                             t('client.details.no_changelog')
-                                                        }}</p>
+                                                            }}</p>
                                                         <p class="text-xs text-base-content/50 mt-1">{{
                                                             t('client.details.no_changelog_desc')
-                                                        }}</p>
+                                                            }}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1482,7 +1482,7 @@ onBeforeUnmount(() => {
                                                     <span v-if="!canComment">{{ t('login') }}</span>
                                                     <span>{{
                                                         Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
-                                                    }}/{{ MAX_COMMENT_LENGTH }}</span>
+                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
                                                 </div>
 
                                                 <div v-if="isLoadingComments" class="flex justify-center py-8">
@@ -1524,7 +1524,7 @@ onBeforeUnmount(() => {
                                                             </span>
                                                             <time class="text-[10px]">{{
                                                                 formatDate(comment.created_at)
-                                                            }}
+                                                                }}
                                                             </time>
                                                             <button
                                                                 v-if="currentUser && currentUser.username === comment.author_username"
@@ -1685,7 +1685,7 @@ onBeforeUnmount(() => {
                         </div>
                         <div v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed">{{
                             t('client.details.screenshot_viewer.controls.navigate')
-                        }}
+                            }}
                         </div>
                         <div>{{ t('client.details.screenshot_viewer.controls.click_zoom') }}</div>
                         <div v-if="isZoomed">{{ t('client.details.screenshot_viewer.controls.drag_pan') }}</div>

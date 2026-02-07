@@ -305,7 +305,8 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div ref="sidebarRef" :class="[sidebarClasses, animationClass, 'main-sidebar']" @mousedown="startDrag" @dblclick="toggleCenter">
+    <div ref="sidebarRef" :class="[sidebarClasses, animationClass, 'main-sidebar']" @mousedown="startDrag"
+        @dblclick="toggleCenter">
         <div v-if="showSidebarHelp" ref="helpTooltipRef"
             :class="['sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]', helpTooltipClasses]">
             <div class="flex flex-col gap-2">
@@ -318,7 +319,7 @@ onUnmounted(() => {
                 <div class="flex justify-end mt-1 gap-2">
                     <button class="btn btn-ghost btn-xs" @click.stop="hideSidebarHelp">{{
                         t('navigation.sidebar_help.got_it')
-                    }}
+                        }}
                     </button>
                 </div>
             </div>

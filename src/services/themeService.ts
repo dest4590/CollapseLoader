@@ -1,4 +1,5 @@
 import { reactive, watchEffect } from 'vue';
+import { convertFileSrc } from '@tauri-apps/api/core';
 
 interface ThemeSettings {
     customCSS: string;
@@ -110,7 +111,11 @@ const applyPreset = () => {
             let cssValue = String(value);
             if (key === 'backgroundBlur') cssValue = `${value}px`;
             if (key === 'backgroundImage') {
-                cssValue = value.startsWith('http') || value.startsWith('data:') ? `url("${value}")` : value;
+                if (value.startsWith('http') || value.startsWith('data:')) {
+                    cssValue = `url("${value}")`;
+                } else if (value.trim().length > 0) {
+                    cssValue = `url("${convertFileSrc(value)}")`;
+                }
             }
             root.style.setProperty(cssVar, cssValue);
         } else {

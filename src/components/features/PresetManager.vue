@@ -123,7 +123,7 @@
 
             <div class="mt-4 flex items-center justify-between">
                 <button class="btn btn-sm" :disabled="currentPage === 1" @click="prevPage">{{ $t('common.previous')
-                    }}</button>
+                }}</button>
                 <div class="text-sm text-base-content/70">{{ $t('theme.presets.pagination.page_of', {
                     current:
                         currentPage, total: totalPages
@@ -374,7 +374,7 @@ const handleDocumentClick = (event: MouseEvent) => {
     }
 };
 
-onMounted(() => {
+onMounted(async () => {
     loadPresets();
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);

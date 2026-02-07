@@ -37,6 +37,13 @@ pub struct ThemePreset {
     pub warning_content: Option<String>,
     pub error: Option<String>,
     pub error_content: Option<String>,
+
+    #[serde(rename = "backgroundImage")]
+    pub background_image: Option<String>,
+    #[serde(rename = "backgroundBlur")]
+    pub background_blur: Option<f64>,
+    #[serde(rename = "backgroundOpacity")]
+    pub background_opacity: Option<f64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

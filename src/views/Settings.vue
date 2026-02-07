@@ -704,9 +704,9 @@ const handleToastPositionChange = (position: ToastPosition) => {
 };
 </script>
 <template>
-    <div class="max-w-4xl mx-auto slide-up">
+    <div class="max-w-6xl mx-auto slide-up px-4">
         <div v-if="!loading" class="transition-opacity duration-300">
-            <div role="tablist" class="tabs tabs-boxed mb-5 flex justify-center gap-4">
+            <div role="tablist" class="tabs tabs-boxed mb-4 flex justify-center gap-2">
                 <a @click="activeTab = 'general'" class="tab transition-all duration-300 z-50" :class="{
                     'tab-active transform scale-105 shadow-md bg-base-300':
                         activeTab === 'general',
@@ -733,80 +733,84 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 </a>
             </div>
             <transition name="tab-switch" mode="out-in">
-                <div v-if="activeTab === 'general'" key="general" class="space-y-6">
-                    <div v-for="([key, field], index) in filteredSettingsEntries" :key="key">
-                        <SettingCard :field="field" :delay="index * 0.05" :description="getSettingDescription(key)"
-                            :layout="(key === 'ram' || (typeof field.value !== 'boolean' && key !== 'language')) ? 'col' : 'row'">
-                            <template #title>
-                                <MemoryStick v-if="key === 'ram'" class="w-5 h-5 text-primary" />
-                                <Languages v-if="key === 'language'" class="w-5 h-5 text-primary" />
-                                <img src="@/assets/icons/discord.svg" v-if="key === 'discord_rpc_enabled'"
-                                    class="w-5 h-5 discord-icon" />
-                                <ChartNoAxesCombined v-if="key === 'optional_telemetry'" class="w-5 h-5 text-primary" />
-                                <Waypoints v-if="key === 'cordshare'" class="w-5 h-5 text-primary" />
-                                <MessagesSquare v-if="key === 'irc_chat'" class="w-5 h-5 text-primary" />
-                                <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
-                                <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
-                                <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
-                                <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
-                                <Minimize2 v-if="key === 'minimize_to_tray_on_launch'" class="w-5 h-5 text-primary" />
-                                <MousePointer2 v-if="key === 'close_to_tray'" class="w-5 h-5 text-primary" />
-                                <Coffee v-if="key === 'java_path'" class="w-5 h-5 text-primary" />
-                                <Terminal v-if="key === 'java_args'" class="w-5 h-5 text-primary" />
-                                {{ getFormattedLabel(key) }}
-                                <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top"
-                                    :data-tip="$t('settings.telemetry_info_title')">
-                                    <Info class="w-5 h-5 text-primary cursor-pointer" @click="showTelemetryModal" />
-                                </div>
-                            </template>
+                <div v-if="activeTab === 'general'" key="general" class="space-y-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div v-for="([key, field], index) in filteredSettingsEntries" :key="key">
+                            <SettingCard :field="field" :delay="index * 0.05" :description="getSettingDescription(key)"
+                                :layout="(key === 'ram' || (typeof field.value !== 'boolean' && key !== 'language')) ? 'col' : 'row'">
+                                <template #title>
+                                    <MemoryStick v-if="key === 'ram'" class="w-5 h-5 text-primary" />
+                                    <Languages v-if="key === 'language'" class="w-5 h-5 text-primary" />
+                                    <img src="@/assets/icons/discord.svg" v-if="key === 'discord_rpc_enabled'"
+                                        class="w-5 h-5 discord-icon" />
+                                    <ChartNoAxesCombined v-if="key === 'optional_telemetry'"
+                                        class="w-5 h-5 text-primary" />
+                                    <Waypoints v-if="key === 'cordshare'" class="w-5 h-5 text-primary" />
+                                    <MessagesSquare v-if="key === 'irc_chat'" class="w-5 h-5 text-primary" />
+                                    <BadgeCheck v-if="key === 'hash_verify'" class="w-5 h-5 text-primary" />
+                                    <FileText v-if="key === 'custom_clients_display'" class="w-5 h-5 text-primary" />
+                                    <FolderSync v-if="key === 'sync_client_settings'" class="w-5 h-5 text-primary" />
+                                    <CloudCog v-if="key === 'dpi_bypass'" class="w-5 h-5 text-primary" />
+                                    <Minimize2 v-if="key === 'minimize_to_tray_on_launch'"
+                                        class="w-5 h-5 text-primary" />
+                                    <MousePointer2 v-if="key === 'close_to_tray'" class="w-5 h-5 text-primary" />
+                                    <Coffee v-if="key === 'java_path'" class="w-5 h-5 text-primary" />
+                                    <Terminal v-if="key === 'java_args'" class="w-5 h-5 text-primary" />
+                                    {{ getFormattedLabel(key) }}
+                                    <div v-if="key === 'optional_telemetry'" class="tooltip tooltip-top"
+                                        :data-tip="$t('settings.telemetry_info_title')">
+                                        <Info class="w-5 h-5 text-primary cursor-pointer" @click="showTelemetryModal" />
+                                    </div>
+                                </template>
 
-                            <div v-if="key === 'ram'" class="space-y-3 w-full">
-                                <div class="flex items-center gap-2">
-                                    <AnimatedSlider v-model="ramOptionIndex" :min="0" :max="ramOptions.length - 1"
-                                        @update:modelValue="handleSliderChange" class="grow" />
-                                    <div class="flex items-center gap-2 rounded-md p-2 bg-base-200/50">
-                                        <input v-if="settings.ram" v-model.number="settings.ram.value" type="number"
-                                            min="512" step="512"
-                                            class="input input-ghost input-xs text-right p-0 h-6 w-12 font-mono" />
-                                        <span class="text-xs opacity-50">MB</span>
+                                <div v-if="key === 'ram'" class="space-y-3 w-full">
+                                    <div class="flex items-center gap-2">
+                                        <AnimatedSlider v-model="ramOptionIndex" :min="0" :max="ramOptions.length - 1"
+                                            @update:modelValue="handleSliderChange" class="grow" />
+                                        <div class="flex items-center gap-2 rounded-md p-2 bg-base-200/50">
+                                            <input v-if="settings.ram" v-model.number="settings.ram.value" type="number"
+                                                min="512" step="512"
+                                                class="input input-ghost input-xs text-right p-0 h-6 w-12 font-mono" />
+                                            <span class="text-xs opacity-50">MB</span>
+                                        </div>
+                                    </div>
+                                    <div v-if="showRamWarning" class="alert alert-warning alert-dash mt-2 py-2 text-sm">
+                                        <span>{{ t('settings.ram.warning', { selectedRamMb }) }}</span>
                                     </div>
                                 </div>
-                                <div v-if="showRamWarning" class="alert alert-warning alert-dash mt-2 py-2 text-sm">
-                                    <span>{{ t('settings.ram.warning', { selectedRamMb }) }}</span>
+
+                                <div v-else-if="key === 'language'">
+                                    <select :value="currentLanguage" @change="
+                                        handleLanguageChange(
+                                            ($event.target as HTMLSelectElement)
+                                                .value
+                                        )
+                                        " class="select select-bordered select-sm w-48 bg-base-100">
+                                        <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
+                                            {{ lang.nativeName }} ({{ lang.name }})
+                                        </option>
+                                    </select>
                                 </div>
-                            </div>
 
-                            <div v-else-if="key === 'language'">
-                                <select :value="currentLanguage" @change="
-                                    handleLanguageChange(
-                                        ($event.target as HTMLSelectElement)
-                                            .value
-                                    )
-                                    " class="select select-bordered select-sm w-48 bg-base-100">
-                                    <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
-                                        {{ lang.nativeName }} ({{ lang.name }})
-                                    </option>
-                                </select>
-                            </div>
+                                <div v-else-if="typeof field.value === 'boolean'">
+                                    <input type="checkbox" v-if="!isFeatureOnline(key) || isAuthenticated"
+                                        v-model="field.value" class="toggle toggle-primary toggle-sm" />
 
-                            <div v-else-if="typeof field.value === 'boolean'">
-                                <input type="checkbox" v-if="!isFeatureOnline(key) || isAuthenticated"
-                                    v-model="field.value" class="toggle toggle-primary toggle-sm" />
-
-                                <div v-else class="tooltip tooltip-left" :data-tip="$t('settings.login_required')">
-                                    <input type="checkbox" :checked="false"
-                                        class="toggle toggle-primary toggle-sm pointer-events-none opacity-50"
-                                        tabindex="-1" />
+                                    <div v-else class="tooltip tooltip-left" :data-tip="$t('settings.login_required')">
+                                        <input type="checkbox" :checked="false"
+                                            class="toggle toggle-primary toggle-sm pointer-events-none opacity-50"
+                                            tabindex="-1" />
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div v-else class="w-full">
-                                <input v-model="field.value" class="input input-bordered w-full bg-base-100" :type="typeof field.value === 'number'
-                                    ? 'number'
-                                    : 'text'
-                                    " />
-                            </div>
-                        </SettingCard>
+                                <div v-else class="w-full">
+                                    <input v-model="field.value" class="input input-bordered w-full bg-base-100" :type="typeof field.value === 'number'
+                                        ? 'number'
+                                        : 'text'
+                                        " />
+                                </div>
+                            </SettingCard>
+                        </div>
                     </div>
                     <SettingCard :delay="filteredSettingsEntries.length * 0.05" layout="row"
                         :description="$t('settings.toast_position.description')">
@@ -825,13 +829,13 @@ const handleToastPositionChange = (position: ToastPosition) => {
                         </div>
                     </SettingCard>
                     <div class="card bg-base-200 shadow-md border border-base-300">
-                        <div class="card-body p-4">
+                        <div class="card-body p-3">
                             <h2
-                                class="card-title text-lg font-semibold text-primary-focus mb-4 flex items-center gap-2">
+                                class="card-title text-sm font-semibold text-primary-focus mb-2 flex items-center gap-2">
                                 <SettingsIcon class="w-5 h-5" />
                                 {{ $t('settings.actions') }}
                             </h2>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <button
                                     class="btn btn-neutral btn-sm w-full sm:w-auto flex items-center gap-2 hover:btn-primary-focus transition-all duration-200"
                                     @click="openDataFolder">
@@ -862,11 +866,11 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     </div>
                 </div>
 
-                <div v-else-if="activeTab === 'sync'" key="sync" class="space-y-6">
+                <div v-else-if="activeTab === 'sync'" key="sync" class="space-y-3">
                     <div class="card bg-base-200 shadow-md border border-base-300">
-                        <div class="card-body p-4">
+                        <div class="card-body p-3">
                             <h2
-                                class="card-title text-lg font-semibold text-primary-focus mb-4 flex items-center gap-2">
+                                class="card-title text-base font-semibold text-primary-focus mb-2 flex items-center gap-2">
                                 <Cloud class="w-5 h-5" />
                                 {{ t('settings.sync_status') }}
                             </h2>
@@ -882,15 +886,15 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 {{ t('settings.sync_controls') }}
                             </h2>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="p-4 border border-base-300 rounded-lg hover:bg-base-100 transition-colors">
-                                    <div class="flex items-center gap-3 mb-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors">
+                                    <div class="flex items-center gap-2 mb-2">
                                         <Upload class="w-5 h-5 text-primary" />
                                         <h3 class="font-semibold">
                                             {{ t('settings.upload_title') }}
                                         </h3>
                                     </div>
-                                    <p class="text-sm text-base-content/70 mb-3">
+                                    <p class="text-sm text-base-content/70 mb-2">
                                         {{ t('settings.upload_description') }}
                                     </p>
                                     <button @click="handleUploadToCloud" class="btn btn-primary btn-sm w-full"
@@ -907,8 +911,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     </button>
                                 </div>
 
-                                <div class="p-4 border border-base-300 rounded-lg hover:bg-base-100 transition-colors">
-                                    <div class="flex items-center gap-3 mb-3">
+                                <div class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors">
+                                    <div class="flex items-center gap-2 mb-2">
                                         <Download class="w-5 h-5" />
                                         <h3 class="font-semibold">
                                             {{ t('settings.download_title') }}
@@ -933,10 +937,10 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </div>
                             </div>
 
-                            <div class="mt-6 p-4 border border-base-300 rounded-lg">
+                            <div class="mt-3 p-3 border border-base-300 rounded-lg">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <h3 class="font-semibold mb-1">
+                                        <h3 class="font-semibold text-sm mb-1">
                                             {{ t('settings.auto_sync') }}
                                         </h3>
                                         <p class="text-sm text-base-content/70">
@@ -952,42 +956,42 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </div>
                             </div>
 
-                            <div v-if="!isAuthenticated" class="mt-4 alert alert-warning">
+                            <div v-if="!isAuthenticated" class="mt-2 alert alert-warning py-2">
                                 <div class="flex items-center gap-2">
                                     <LogIn class="w-4 h-4" />
                                     <span>{{ t('settings.sync_login_required') }}</span>
                                 </div>
                             </div>
 
-                            <div v-if="!syncState.isOnline" class="mt-4 alert alert-warning">
+                            <div v-if="!syncState.isOnline" class="mt-2 alert alert-warning py-2">
                                 <div class="flex items-center gap-2">
                                     <WifiOff class="w-4 h-4" />
                                     <span>{{
                                         t('settings.offline_warning')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
 
-                            <div v-else-if="!syncState.hasCloudData" class="mt-4 alert alert-info">
+                            <div v-else-if="!syncState.hasCloudData" class="mt-2 alert alert-info py-2">
                                 <div class="flex items-center gap-2">
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div v-else key="accounts" class="space-y-6 overflow-x-hidden">
+                <div v-else key="accounts" class="space-y-3 overflow-x-hidden">
                     <div class="card bg-base-200 shadow-md border border-base-300">
-                        <div class="card-body p-4">
+                        <div class="card-body p-3">
                             <div
-                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
                                 <div>
                                     <h2
-                                        class="card-title text-lg font-semibold text-primary-focus flex items-center gap-2">
+                                        class="card-title text-base font-semibold text-primary-focus flex items-center gap-2">
                                         <User class="w-5 h-5" />
                                         {{ t('settings.accounts_management') }}
                                     </h2>
@@ -1001,11 +1005,11 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </button>
                             </div>
 
-                            <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-                                <div class="card-body p-4 space-y-4">
-                                    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <div class="card bg-base-200 shadow-md border border-base-300 mb-3">
+                                <div class="card-body p-3 space-y-3">
+                                    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                         <div>
-                                            <h3 class="font-semibold text-lg flex items-center gap-2">
+                                            <h3 class="font-semibold text-sm flex items-center gap-2">
                                                 <FolderSync class="w-5 h-5 text-primary" />
                                                 {{ t('settings.local_account_sync') }}
                                             </h3>
@@ -1051,7 +1055,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         class="text-sm text-base-content/70 space-y-1 pl-3 list-disc">
                                         <li v-for="account in remoteAccounts.slice(0, 3)" :key="account.id">
                                             <span class="font-semibold">{{ account.display_name || account.external_id
-                                                }}</span>
+                                            }}</span>
                                             <span class="text-xs text-base-content/50 ml-1">
                                                 ({{ account.external_id }})
                                             </span>
@@ -1069,7 +1073,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </div>
                             </div>
 
-                            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                            <div class="flex flex-col sm:flex-row gap-3 mb-3">
                                 <div class="relative flex-1">
                                     <input v-model="searchQuery" type="text"
                                         :placeholder="t('settings.search_accounts')"
@@ -1087,7 +1091,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 overflow-hidden">
                                 <AccountCard v-for="account in filteredAccounts" :key="account.id" :account="account"
                                     :formatDate="formatDate" @set-active="setActiveAccount" @edit-account="editAccount"
                                     @delete-account="deleteAccount">

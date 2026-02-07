@@ -35,6 +35,13 @@ pub struct CreatePresetInput {
     pub warning_content: Option<String>,
     pub error: Option<String>,
     pub error_content: Option<String>,
+
+    #[serde(rename = "backgroundImage")]
+    pub background_image: Option<String>,
+    #[serde(rename = "backgroundBlur")]
+    pub background_blur: Option<f64>,
+    #[serde(rename = "backgroundOpacity")]
+    pub background_opacity: Option<f64>,
 }
 
 #[derive(serde::Deserialize)]
@@ -70,6 +77,13 @@ pub struct UpdatePresetInput {
     pub warning_content: Option<String>,
     pub error: Option<String>,
     pub error_content: Option<String>,
+
+    #[serde(rename = "backgroundImage")]
+    pub background_image: Option<String>,
+    #[serde(rename = "backgroundBlur")]
+    pub background_blur: Option<f64>,
+    #[serde(rename = "backgroundOpacity")]
+    pub background_opacity: Option<f64>,
 }
 
 #[tauri::command]
@@ -125,6 +139,10 @@ pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
         warning_content: input.warning_content,
         error: input.error,
         error_content: input.error_content,
+
+        background_image: input.background_image,
+        background_blur: input.background_blur,
+        background_opacity: input.background_opacity,
     };
 
     preset_manager.add_preset(preset.clone())?;
@@ -178,6 +196,10 @@ pub fn update_preset(input: UpdatePresetInput) -> Result<ThemePreset, String> {
         warning_content: input.warning_content,
         error: input.error,
         error_content: input.error_content,
+
+        background_image: input.background_image,
+        background_blur: input.background_blur,
+        background_opacity: input.background_opacity,
     };
 
     preset_manager.update_preset(preset.clone())?;
@@ -232,6 +254,10 @@ pub fn duplicate_preset(id: String, new_name: String) -> Result<ThemePreset, Str
         warning_content: existing_preset.warning_content.clone(),
         error: existing_preset.error.clone(),
         error_content: existing_preset.error_content.clone(),
+
+        background_image: existing_preset.background_image.clone(),
+        background_blur: existing_preset.background_blur,
+        background_opacity: existing_preset.background_opacity,
     };
 
     preset_manager.add_preset(new_preset.clone())?;
