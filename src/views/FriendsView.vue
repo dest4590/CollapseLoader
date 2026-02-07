@@ -18,7 +18,7 @@
 
     <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0 || blockedUsers.length > 0"
         class="mb-6">
-        <div class="requests-grid grid gap-4 lg:grid-cols-3 items-stretch">
+        <div class="grid gap-4 lg:grid-cols-3 items-stretch">
             <div v-if="friendRequests.received.length > 0" class="requests-panel">
                 <div class="panel-header flex items-center justify-between mb-2">
                     <h3 class="text-md font-medium text-info">{{ t('friends.receivedRequests') }}</h3>
@@ -362,10 +362,6 @@ const unblockUser = async (user: Friend) => {
 
 .avatar-click-area:active {
     transform: scale(0.98);
-}
-
-.requests-grid {
-    grid-template-columns: 1fr;
 }
 
 .requests-panel {
