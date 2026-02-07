@@ -345,7 +345,8 @@
       "register_link": "Don't have an account?",
       "success": "Logged in successfully!",
       "login_failed": "Login failed. Please check your credentials.",
-      "no_token": "No authentication token received."
+      "no_token": "No authentication token received.",
+      "error": "Cannot login, check your username and password "
     },
     "register": {
       "title": "Register",
@@ -1175,18 +1176,18 @@
       }
     }
   },
-    "mods": {
-      "manager_title": "Mods Manager",
-      "search_placeholder": "Search mods on Modrinth...",
-      "no_results": "No mods found",
-      "no_compatible_version": "No compatible version found for {version}",
-      "install_success": "Successfully installed {mod}",
-      "install_failed": "Failed to install mod: {error}",
-      "manage_mods": "Manage Mods",
-      "installed": "Installed",
-      "install": "Install",
-      "choose_version": "Choose Version",
-      "versions_for": "Versions for {mod}",
-      "loading_versions": "Loading versions..."
-    }
+  "mods": {
+    "manager_title": "Mods Manager",
+    "search_placeholder": "Search mods on Modrinth...",
+    "no_results": "No mods found",
+    "no_compatible_version": "No compatible version found for {version}",
+    "install_success": "Successfully installed {mod}",
+    "install_failed": "Failed to install mod: {error}",
+    "manage_mods": "Manage Mods",
+    "installed": "Installed",
+    "install": "Install",
+    "choose_version": "Choose Version",
+    "versions_for": "Versions for {mod}",
+    "loading_versions": "Loading versions..."
+  }
 }

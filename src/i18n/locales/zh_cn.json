@@ -345,7 +345,8 @@
       "register_link": "还没有账户？",
       "success": "登录成功！",
       "login_failed": "登录失败。请检查您的凭据。",
-      "no_token": "未收到身份验证令牌。"
+      "no_token": "未收到身份验证令牌。",
+      "error": "无法登录，请检查您的用户名和密码"
     },
     "register": {
       "title": "注册",

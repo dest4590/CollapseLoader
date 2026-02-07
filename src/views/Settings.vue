@@ -735,7 +735,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
             <transition name="tab-switch" mode="out-in">
                 <div v-if="activeTab === 'general'" key="general" class="space-y-4">
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                        <div v-for="([key, field], index) in filteredSettingsEntries" :key="key">
+                        <div v-for="([key, field], index) in filteredSettingsEntries" :key="key"
+                            class="h-full flex w-full">
                             <SettingCard :field="field" :delay="index * 0.05" :description="getSettingDescription(key)"
                                 :layout="(key === 'ram' || (typeof field.value !== 'boolean' && key !== 'language')) ? 'col' : 'row'">
                                 <template #title>
@@ -968,7 +969,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <WifiOff class="w-4 h-4" />
                                     <span>{{
                                         t('settings.offline_warning')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
 
@@ -977,7 +978,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <Cloud class="w-4 h-4" />
                                     <span>{{
                                         t('settings.no_cloud_data')
-                                    }}</span>
+                                        }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1055,7 +1056,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         class="text-sm text-base-content/70 space-y-1 pl-3 list-disc">
                                         <li v-for="account in remoteAccounts.slice(0, 3)" :key="account.id">
                                             <span class="font-semibold">{{ account.display_name || account.external_id
-                                            }}</span>
+                                                }}</span>
                                             <span class="text-xs text-base-content/50 ml-1">
                                                 ({{ account.external_id }})
                                             </span>

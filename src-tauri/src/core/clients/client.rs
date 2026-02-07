@@ -506,7 +506,96 @@ impl Client {
 
                 let mod_basename = name.trim_end_matches(".jar");
                 let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
-                let remote_path = format!("fabric/deps/{mod_basename}.jar");
+                let remote_path = format!("fabric-deps/{mod_basename}.jar");
+
+                let mut need_download = true;
+                if dest.exists() {
+                    if let Some(ref expected) = expected_md5 {
+                        let ok = Data::verify_file_md5(&dest, expected)
+                            .await
+                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
+                        if ok {
+                            need_download = false;
+                        } else {
+                            log_warn!(
+                                "MD5 mismatch for {}. Expected: {}. Redownloading...",
+                                mod_basename,
+                                expected
+                            );
+                            let _ = std::fs::remove_file(&dest);
+                            need_download = true;
+                        }
+                    } else {
+                        need_download = false;
+                    }
+                }
+
+                if need_download {
+                    log_info!("Downloading dependency: {}", remote_path);
+                    DATA.download_to_folder(&remote_path, &mods_folder_rel)
+                        .await
+                        .map_err(|e| {
+                            format!("Failed to download dependency {mod_basename}: {e}")
+                        })?;
+
+                    if let Some(ref expected) = expected_md5 {
+                        let ok = Data::verify_file_md5(&dest, expected)
+                            .await
+                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
+                        if !ok {
+                            log_warn!(
+                                "MD5 mismatch after download for {}. Retrying...",
+                                mod_basename
+                            );
+                            let _ = std::fs::remove_file(&dest);
+                            DATA.download_to_folder(&remote_path, &mods_folder_rel)
+                                .await
+                                .map_err(|e| {
+                                    format!("Failed to redownload dependency {mod_basename}: {e}")
+                                })?;
+
+                            let ok2 =
+                                Data::verify_file_md5(&dest, expected).await.map_err(|e| {
+                                    format!(
+                                        "Failed to verify MD5 for {mod_basename} after retry: {e}"
+                                    )
+                                })?;
+                            if !ok2 {
+                                let _ = std::fs::remove_file(&dest);
+                                return Err(format!(
+                                    "MD5 mismatch for {mod_basename} after retry. Aborting."
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn download_forge_mods(&self) -> Result<(), String> {
+        if self.client_type != ClientType::Forge {
+            return Ok(());
+        }
+
+        if let Some(mods) = &self.dependencies {
+            let client_base = Data::get_filename(&self.filename);
+            let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
+            let mods_folder_abs = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(&client_base)
+                .join(MODS_FOLDER);
+
+            for req in mods {
+                let name = req.name.clone();
+                let expected_md5 = req.md5_hash.clone();
+
+                let mod_basename = name.trim_end_matches(".jar");
+                let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
+                let remote_path = format!("forge-deps/{mod_basename}.jar");
 
                 let mut need_download = true;
                 if dest.exists() {
@@ -692,6 +781,10 @@ impl Client {
             self.download_fabric_mods().await?;
         }
 
+        if self.client_type == ClientType::Forge {
+            self.download_forge_mods().await?;
+        }
+
         Ok(())
     }
 
@@ -718,6 +811,7 @@ impl Client {
         }
 
         self.download_fabric_mods().await?;
+        self.download_forge_mods().await?;
 
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 

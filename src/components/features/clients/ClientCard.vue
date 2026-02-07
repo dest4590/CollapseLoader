@@ -509,6 +509,21 @@ const removeRating = async () => {
 
         await apiDelete(getRatingEndpoint());
 
+        // Re-fetch client details (rating_avg/rating_count) when available
+        try {
+            if (clientDetails.value) {
+                const updated = await invoke<ClientDetails>('get_client_details', { clientId: props.client.id });
+                clientDetails.value = {
+                    ...clientDetails.value,
+                    rating_avg: updated.rating_avg,
+                    rating_count: updated.rating_count,
+                };
+                triggerRef(clientDetails);
+            }
+        } catch (e) {
+            console.warn('Failed to refetch client details after rating delete:', e);
+        }
+
         myRating.value = null;
     } catch (error) {
         console.error('Failed to remove rating:', error);

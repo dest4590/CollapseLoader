@@ -67,8 +67,8 @@ const handleLogin = async () => {
 
         console.log('Login response:', response);
 
-        const authToken = response.data.token;
-        const refreshToken = response.data.refreshToken;
+        const authToken = response.token;
+        const refreshToken = response.refreshToken;
 
         if (authToken) {
             localStorage.setItem('authToken', authToken);
@@ -92,6 +92,7 @@ const handleLogin = async () => {
     } catch (error: any) {
         console.error('Login failed:', error);
         console.error('Error response:', error.response);
+        addToast(t('auth.login.error'), 'error');
     }
 };
 </script>

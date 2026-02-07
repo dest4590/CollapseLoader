@@ -318,7 +318,8 @@
       "register_link": "Nie masz konta?",
       "success": "Zalogowano pomyślnie!",
       "login_failed": "Błąd logowania. Sprawdź swoje dane.",
-      "no_token": "Nie otrzymano tokena uwierzytelniającego."
+      "no_token": "Nie otrzymano tokena uwierzytelniającego.",
+      "error": "Nie można się zalogować. Sprawdź swoją nazwę użytkownika i hasło"
     },
     "register": {
       "title": "Rejestracja",
