@@ -8,10 +8,18 @@
             <div class="flex items-start justify-between gap-4 sticky top-0 bg-base-200 z-10 py-2 -mt-2">
                 <div class="flex-1 min-w-0">
                     <h2 class="text-xl font-semibold truncate">{{ preset.title ?? preset.name }}</h2>
-                    <p class="text-xs text-base-content/60 truncate cursor-pointer hover:text-base-content/80 transition-colors"
-                        @click="emit('show-user-profile', preset.author?.id)">
-                        {{ t('marketplace.by_user', { name: ownerDisplayName }) }}
-                    </p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <div v-if="preset.author?.author_avatar || preset.author?.avatar"
+                            class="w-5 h-5 rounded-full overflow-hidden border border-white/10 shrink-0 cursor-pointer"
+                            @click="emit('show-user-profile', preset.author?.id)">
+                            <img :src="resolveApiAssetUrl(preset.author.author_avatar || preset.author.avatar)"
+                                class="w-full h-full object-cover" :alt="ownerDisplayName" />
+                        </div>
+                        <p class="text-xs text-base-content/60 truncate cursor-pointer hover:text-base-content/80 transition-colors"
+                            @click="emit('show-user-profile', preset.author?.id)">
+                            {{ t('marketplace.by_user', { name: ownerDisplayName }) }}
+                        </p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-ghost">
@@ -44,10 +52,10 @@
 
             <div class="flex items-center gap-2 ml-2">
                 <button class="btn btn-neutral btn-sm" @click="applyFromDetails">{{ t('marketplace.apply')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="downloading" @click="downloadFromDetails">{{
                     t('common.download')
-                    }}</button>
+                }}</button>
                 <button class="btn btn-neutral btn-sm" :disabled="preset?.liking" @click="likeFromDetails">{{
                     t('marketplace.like') }}</button>
                 <template v-if="isOwner">
@@ -56,7 +64,7 @@
                         {{ preset.is_public ? t('marketplace.make_private') : t('marketplace.make_public') }}
                     </button>
                     <button class="btn btn-error btn-sm" @click="askDelete">{{ t('common.delete')
-                        }}</button>
+                    }}</button>
                 </template>
             </div>
 
@@ -74,7 +82,7 @@
                     <span v-if="themeSource.backgroundBlur !== undefined">{{ t('customization.background_blur') }}: {{
                         themeSource.backgroundBlur }}px</span>
                     <span v-if="themeSource.backgroundOpacity !== undefined">{{ t('customization.background_opacity')
-                        }}: {{
+                    }}: {{
                             themeSource.backgroundOpacity }}%</span>
                 </div>
             </div>
@@ -122,9 +130,15 @@
                                 <div v-for="c in comments" :key="c.id"
                                     class="p-3 rounded-xl border border-white/5 bg-white/5 mt-2">
                                     <div class="flex gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/80 shrink-0 cursor-pointer hover:bg-white/20 transition-colors"
-                                            @click="emit('show-user-profile', c.authorId)">
-                                            {{ (c.authorNickname || c.authorUsername || '?').charAt(0).toUpperCase() }}
+                                        <div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center overflow-hidden text-xs font-bold text-white/80 shrink-0 cursor-pointer hover:bg-white/20 transition-colors"
+                                            @click="emit('show-user-profile', c.author_id || c.authorId)">
+                                            <img v-if="c.author_avatar || c.avatar"
+                                                :src="resolveApiAssetUrl(c.author_avatar || c.avatar)"
+                                                class="w-full h-full object-cover"
+                                                :alt="c.author_username || c.authorUsername" />
+                                            <span v-else>{{ (c.author_nickname || c.author_username || c.authorNickname
+                                                ||
+                                                c.authorUsername || '?').charAt(0).toUpperCase() }}</span>
                                         </div>
 
                                         <div class="flex-1 min-w-0">
@@ -132,12 +146,12 @@
                                                 <div class="truncate">
                                                     <span
                                                         class="font-bold text-white/80 mr-2 cursor-pointer hover:text-white transition-colors"
-                                                        @click="emit('show-user-profile', c.authorId)">
-                                                        {{ c.authorNickname || c.authorUsername }}
+                                                        @click="emit('show-user-profile', c.author_id || c.authorId)">
+                                                        {{ c.author_nickname || c.author_username || c.authorNickname ||
+                                                            c.authorUsername }}
                                                     </span>
                                                     <span class="text-[10px] text-white/40 font-medium">{{
-                                                        formatDate(c.createdAt ||
-                                                            c.created_at) }}</span>
+                                                        formatDate(c.created_at || c.createdAt) }}</span>
                                                 </div>
                                                 <div v-if="canDelete(c)" class="flex items-center gap-2">
                                                     <button class="btn btn-ghost btn-xs" @click="onDeleteComment(c)"
@@ -186,6 +200,7 @@
 import { onMounted, ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { formatDate } from '../../../../utils/utils';
+import { resolveApiAssetUrl } from '../../../../utils/url';
 import { marketplaceService } from '../../../../services/marketplaceService';
 import { useUser } from '../../../../composables/useUser';
 import { ChevronLeft, ChevronRight, Download, ThumbsUp, MessageSquare, Image as ImageIcon } from 'lucide-vue-next';
@@ -280,7 +295,8 @@ async function copyColor(key: string) {
 
 function canDelete(c: any): boolean {
     const owner = preset.value?.author?.username ?? preset.value?.owner_username;
-    return !!username.value && (c.author_username === username.value || owner === username.value);
+    const author = c.author_username || c.authorUsername;
+    return !!username.value && (author === username.value || owner === username.value);
 }
 
 async function loadPreset() {

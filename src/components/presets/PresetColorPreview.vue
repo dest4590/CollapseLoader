@@ -1,9 +1,8 @@
 <template>
-    <div class="flex items-center gap-2 mt-2">
+    <div class="flex items-center gap-2">
         <div class="flex gap-2 h-2 rounded-full flex-1">
-        <div v-for="color in colors" :key="color" 
-             class="flex-1 h-full rounded-full shadow-sm"
-            :style="{ backgroundColor: color }">
+            <div v-for="color in colors" :key="color" class="flex-1 h-full rounded-full shadow-sm"
+                :style="{ backgroundColor: color }">
             </div>
         </div>
         <div v-if="hasBackground" class="flex-none">
