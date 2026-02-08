@@ -38,7 +38,6 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
             const bytesDiff = downloaded - lastDownloaded.value;
             if (timeDiff > 0 && bytesDiff >= 0) {
                 currentSpeed.value = bytesDiff / timeDiff;
-                console.log(`[DownloadMonitor] Speed: ${(currentSpeed.value / 1024).toFixed(1)} KB/s`);
             }
         }
         lastDownloaded.value = downloaded;
@@ -50,7 +49,6 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
     const checkSlowSpeed = () => {
         if (currentSpeed.value > 0 && currentSpeed.value < slowSpeedThreshold) {
             slowSpeedCount.value++;
-            console.log(`[DownloadMonitor] Slow speed! Count: ${slowSpeedCount.value}/${slowSpeedConsecutiveCount}`);
         } else {
             slowSpeedCount.value = 0;
         }
@@ -72,7 +70,6 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
         const timeSinceLastProgress = now - lastProgressTime.value;
 
         if (lastProgressTime.value > 0 && timeSinceLastProgress >= stalledTimeout) {
-            console.log(`[DownloadMonitor] Download stalled! No progress for ${(timeSinceLastProgress / 1000).toFixed(0)}s`);
             showStalledWarningModal();
         }
     };
