@@ -32,6 +32,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as LucideIcons from 'lucide-vue-next';
 import { Lock } from 'lucide-vue-next';
+import { formatDate } from '../../../utils/utils';
 
 const props = defineProps<{
     achievementKey: string;
@@ -58,8 +59,4 @@ const description = computed(() => {
     if (props.locked && props.hidden) return t('achievements.secret_description');
     return t(`achievements.list.${props.achievementKey}.description`);
 });
-
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-};
 </script>
