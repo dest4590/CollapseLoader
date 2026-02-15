@@ -68,12 +68,12 @@ const handleLogin = async () => {
         console.log('Login response:', response);
 
         const authToken = response.token;
-        const refreshToken = response.refreshToken;
 
         if (authToken) {
             localStorage.setItem('authToken', authToken);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+
             userService.clearCache();
+
             try {
                 await invoke('update_presence', {
                     details: 'In Menu',

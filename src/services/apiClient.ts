@@ -68,9 +68,7 @@ class ApiClient {
                 const originalRequest: any = error.config;
                 if (error.response?.status === 401 && !originalRequest?._retry) {
                     originalRequest._retry = true;
-                    if (!this.refreshingPromise) {
-                        this.refreshingPromise = this.refreshAccessToken();
-                    }
+
                     const ok = await this.refreshingPromise;
                     this.refreshingPromise = null;
                     if (ok) {
@@ -82,7 +80,6 @@ class ApiClient {
                         return this.client.request(originalRequest);
                     } else {
                         localStorage.removeItem('authToken');
-                        localStorage.removeItem('refreshToken');
                         return Promise.reject(error);
                     }
                 }
@@ -104,28 +101,6 @@ class ApiClient {
     }
 
     private refreshingPromise: Promise<boolean> | null = null;
-
-    private async refreshAccessToken(): Promise<boolean> {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) return false;
-        try {
-            const baseUrl = getApiBaseWithVersion();
-            const resp = await axios.post(`${baseUrl}/auth/refresh`, { refreshToken }, {
-                headers: { 'Content-Type': 'application/json', 'Accept-Language': getCurrentLanguage() || 'en' }
-            });
-            const payload = resp.data as ApiResponse<any>;
-            if (isApiResponse(payload) && payload.success) {
-                const data = payload.data as any;
-                if (data.token) localStorage.setItem('authToken', data.token);
-                if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Failed to refresh access token:', error);
-            return false;
-        }
-    }
 
     async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const resp = await this.executeRequest<any>(url, { ...config, method: 'GET' });
