@@ -192,8 +192,7 @@ impl AgentOverlayManager {
             format!("Failed to parse agent/overlay info: {e}")
         })?;
 
-        info
-            .data
+        info.data
             .ok_or_else(|| "No agent/overlay info found".to_string())
     }
 

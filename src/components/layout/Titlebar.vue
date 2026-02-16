@@ -27,11 +27,13 @@ const codename = ref('');
 const commitFull = ref('');
 const commitShort = ref('');
 const commitMessage = ref('');
+const apiUrl = ref('');
 const isVisible = ref(false);
 
 const tooltipContent = computed(() => {
-    const lines = [];
+    const lines: string[] = [];
     if (version.value) lines.push(`Build: v${version.value}${codename.value ? ` (${codename.value})` : ''}`);
+    if (apiUrl.value) lines.push(`Server: ${apiUrl.value}`);
     if (commitFull.value) lines.push(`Commit: ${commitFull.value}`);
     if (commitMessage.value) lines.push(`\nMessage: ${commitMessage.value}`);
     return lines.length > 0 ? lines.join('\n') : 'No version info';
@@ -48,6 +50,14 @@ const fetchVersion = async () => {
         commitMessage.value = data.commitMessage || '';
     } catch (e) {
         console.error('Titlebar: failed to fetch version info', e);
+    }
+
+    try {
+        const s = await invoke('get_api_url');
+        apiUrl.value = typeof s === 'string' ? s : String(s);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+        apiUrl.value = '';
     }
 };
 

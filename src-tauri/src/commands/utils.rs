@@ -3,15 +3,15 @@ use base64::{engine::general_purpose, Engine};
 use crate::commands::clients::{
     get_running_client_ids, get_running_custom_client_ids, stop_client, stop_custom_client,
 };
-use crate::core::utils::discord_rpc;
-use crate::core::utils::globals::{API_VERSION, CODENAME};
-use crate::core::utils::helpers::is_development_enabled;
 use crate::core::storage::accounts::ACCOUNT_MANAGER;
 use crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::FLAGS_MANAGER;
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::discord_rpc;
+use crate::core::utils::globals::{API_VERSION, CODENAME};
+use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -99,9 +99,8 @@ pub async fn change_data_folder(
     }
 
     log_info!("Stopping all running clients before changing data folder");
-    
-    let running: Vec<u32> = get_running_client_ids(state.clone())
-        .await?;
+
+    let running: Vec<u32> = get_running_client_ids(state.clone()).await?;
 
     for id in running {
         log_debug!("Stopping client with ID: {}", id);
@@ -210,7 +209,10 @@ pub async fn change_data_folder(
     }
     if let Ok(mut ccm) = CUSTOM_CLIENT_MANAGER.lock() {
         ccm.custom_clients_path = new_root.join("custom_clients.json");
-        log_debug!("Updated CUSTOM_CLIENT_MANAGER path: {:?}", ccm.custom_clients_path);
+        log_debug!(
+            "Updated CUSTOM_CLIENT_MANAGER path: {:?}",
+            ccm.custom_clients_path
+        );
     }
     if let Ok(mut fm) = FAVORITE_MANAGER.lock() {
         fm.favorites_path = new_root.join("favorites.json");

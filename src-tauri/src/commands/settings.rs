@@ -326,7 +326,7 @@ pub fn is_telemetry_consent_shown() -> Result<bool, String> {
 
 #[tauri::command]
 pub fn set_custom_clients_display(display: String) -> Result<(), String> {
-   let mut flags = FLAGS_MANAGER.lock().unwrap();
+    let mut flags = FLAGS_MANAGER.lock().unwrap();
     flags.set_custom_clients_display(display);
     flags.save_to_disk();
     drop(flags);

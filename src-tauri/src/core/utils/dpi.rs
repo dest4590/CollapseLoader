@@ -223,7 +223,9 @@ fn start_winws_background_inner() -> Result<(), String> {
     }
 
     fn extend_with_game_filter(base: &str, game_filter: &Option<String>) -> String {
-        game_filter.as_ref().map_or_else(|| base.to_string(), |filter| format!("{},{}", base, filter))
+        game_filter
+            .as_ref()
+            .map_or_else(|| base.to_string(), |filter| format!("{},{}", base, filter))
     }
 
     let game_filter = std::env::var("GameFilter")

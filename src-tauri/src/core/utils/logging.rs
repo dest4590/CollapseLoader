@@ -45,7 +45,9 @@ impl Logger {
         }
 
         let mut shorted_tag = {
-            let slice = tag.rfind("collapseloader_lib.").map_or(tag, |pos| &tag[pos + "collapseloader_lib.".len()..]);
+            let slice = tag
+                .rfind("collapseloader_lib.")
+                .map_or(tag, |pos| &tag[pos + "collapseloader_lib.".len()..]);
             slice.replace("collapse.module.collapseloader_lib", "core.init")
         };
 
