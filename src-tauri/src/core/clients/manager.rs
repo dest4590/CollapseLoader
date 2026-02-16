@@ -67,10 +67,12 @@ impl ClientManager {
         }
 
         let clients_task = tokio::task::spawn_blocking(|| {
-            API.as_ref().map_or_else(|| {
-                log_warn!("API instance not available. Attempting to load clients from cache.");
-                Self::load_from_cache("clients.json")
-            }, |api_instance| match api_instance.json::<Vec<Client>>("clients") {
+            API.as_ref().map_or_else(
+                || {
+                    log_warn!("API instance not available. Attempting to load clients from cache.");
+                    Self::load_from_cache("clients.json")
+                },
+                |api_instance| match api_instance.json::<Vec<Client>>("clients") {
                     Ok(clients) => Ok(clients),
                     Err(e) => {
                         log_warn!(
@@ -79,28 +81,49 @@ impl ClientManager {
                         );
                         Self::load_from_cache("clients.json")
                     }
-                })
+                },
+            )
         });
 
         let fabric_clients_task = tokio::task::spawn_blocking(
             || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-                API.as_ref().map_or_else(|| Ok(Vec::new()), |api_instance| api_instance
-                        .json::<Vec<Client>>("fabric-clients")
-                        .or_else(|e| {
-                            log_warn!("Failed to fetch fabric clients: {}", e);
-                            Ok(Vec::new())
-                        }))
+                API.as_ref().map_or_else(
+                    || {
+                        log_warn!("API instance not available. Attempting to load fabric-clients from cache.");
+                        Self::load_from_cache("fabric-clients.json")
+                    },
+                    |api_instance| match api_instance.json::<Vec<Client>>("fabric-clients") {
+                        Ok(clients) => Ok(clients),
+                        Err(e) => {
+                            log_warn!(
+                                "Failed to fetch fabric-clients from API: {}. Attempting to load from cache.",
+                                e
+                            );
+                            Self::load_from_cache("fabric-clients.json")
+                        }
+                    },
+                )
             },
         );
 
         let forge_clients_task = tokio::task::spawn_blocking(
             || -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-                API.as_ref().map_or_else(|| Ok(Vec::new()), |api_instance| api_instance
-                        .json::<Vec<Client>>("forge-clients")
-                        .or_else(|e| {
-                            log_warn!("Failed to fetch forge clients: {}", e);
-                            Ok(Vec::new())
-                        }))
+                API.as_ref().map_or_else(
+                    || {
+                        log_warn!("API instance not available. Attempting to load forge-clients from cache.");
+                        Self::load_from_cache("forge-clients.json")
+                    },
+                    |api_instance| match api_instance.json::<Vec<Client>>("forge-clients") {
+                        Ok(clients) => Ok(clients),
+                        Err(e) => {
+                            log_warn!(
+                                "Failed to fetch forge-clients from API: {}. Attempting to load from cache.",
+                                e
+                            );
+                            Self::load_from_cache("forge-clients.json")
+                        }
+                    },
+                )
             },
         );
 
@@ -169,7 +192,12 @@ impl ClientManager {
     fn load_from_cache(
         filename: &str,
     ) -> Result<Vec<Client>, Box<dyn std::error::Error + Send + Sync>> {
-        let cache_path = DATA.root_dir.lock().unwrap().join(API_CACHE_DIR).join(filename);
+        let cache_path = DATA
+            .root_dir
+            .lock()
+            .unwrap()
+            .join(API_CACHE_DIR)
+            .join(filename);
         if cache_path.exists() {
             let file = File::open(&cache_path)
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)?;
@@ -211,10 +239,9 @@ impl ClientManager {
         };
 
         if minimize_to_tray_on_launch {
-            let running_clients =
-                Client::get_running_clients(&Arc::new(Mutex::new(Self {
-                    clients: self.clients.clone(),
-                })));
+            let running_clients = Client::get_running_clients(&Arc::new(Mutex::new(Self {
+                clients: self.clients.clone(),
+            })));
 
             let running_custom_clients =
                 crate::core::clients::custom_clients::CustomClient::get_running_custom_clients();
