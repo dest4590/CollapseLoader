@@ -64,20 +64,12 @@ impl Data {
     }
 
     pub async fn unzip(&self, file: &str) -> Result<(), String> {
-        let (emit_name, local_name) = if file.starts_with("http://") || file.starts_with("https://")
-        {
-            (
-                file.to_string(),
-                file.rsplit('/').next().unwrap_or(file).to_string(),
-            )
-        } else {
-            (file.to_string(), file.to_string())
-        };
-
-        let zip_path = self.get_local(&local_name);
-        let unzip_path = self.get_local(local_name.trim_end_matches(".zip"));
+        let info = Self::resolve_local_file_info(file);
+        let zip_path = self.get_local(&info.local_file);
+        let unzip_path = self.get_local(info.local_file.strip_suffix(".zip").unwrap_or(&info.local_file));
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
+        let emit_name = info.local_file.clone();
 
         task::spawn_blocking(move || {
             unzip(&zip_path, &unzip_path, &emit_name, app_handle.as_ref())
@@ -113,15 +105,14 @@ impl Data {
     }
 
     fn resolve_local_file_info(file: &str) -> FileInfo {
-        let is_url = file.starts_with("http://") || file.starts_with("https://");
-        let local_file = if is_url {
-            file.rsplit('/').next().unwrap_or(file).to_string()
+        let local_file = if file.starts_with("misc/") {
+            file.strip_prefix("misc/").unwrap().to_string()
         } else {
-            file.to_string()
+            file.rsplit(['/', '\\']).next().unwrap_or(file).to_string()
         };
 
         let file_name = Self::get_filename(&local_file);
-        let is_fabric_client = local_file.starts_with("fabric/") && local_file.ends_with(".jar");
+        let is_fabric_client = (file.starts_with("fabric/") || file.contains("/fabric/jars/")) && local_file.ends_with(".jar");
 
         FileInfo {
             local_file,
@@ -130,12 +121,9 @@ impl Data {
         }
     }
 
-    fn get_destination_path(&self, file: &str, info: &FileInfo) -> PathBuf {
+    fn get_destination_path(&self, _file: &str, info: &FileInfo) -> PathBuf {
         if info.is_fabric_client {
-            let jar_basename = Path::new(file)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(file);
+            let jar_basename = &info.local_file;
             self.root_dir.lock().unwrap()
                 .join(&info.file_name)
                 .join("mods")
@@ -154,10 +142,7 @@ impl Data {
             zip_path.exists() && unzip_path.exists()
         } else if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
-                let jar_basename = Path::new(&info.local_file)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or(&info.local_file);
+                let jar_basename = &info.local_file;
                 let jar_path = self
                     .root_dir.lock().unwrap()
                     .join(&info.file_name)
@@ -177,6 +162,20 @@ impl Data {
     }
 
     async fn prepare_download_dirs(&self, info: &FileInfo) -> Result<(), String> {
+        if let Some(parent) = Path::new(&info.local_file).parent() {
+            if !parent.as_os_str().is_empty() {
+                let parent_path = self.root_dir.lock().unwrap().join(parent);
+                if let Err(e) = tokio_fs::create_dir_all(&parent_path).await {
+                    log_error!(
+                        "Failed to create parent directory {}: {}",
+                        parent_path.display(),
+                        e
+                    );
+                    return Err(format!("Failed to create directory: {e}"));
+                }
+            }
+        }
+
         if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
                 let mods_dir = self.root_dir.lock().unwrap().join(&info.file_name).join("mods");
@@ -235,7 +234,7 @@ impl Data {
         }
 
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "download-start", &file);
+            emit_to_main_window(app_handle, "download-start", &info.local_file);
         }
 
         self.prepare_download_dirs(&info).await?;
@@ -244,10 +243,10 @@ impl Data {
         let dest_path = self.get_destination_path(file, &info);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
-        download_file(&download_url, &dest_path, file, app_handle.as_ref()).await?;
+        download_file(&download_url, &dest_path, &info.local_file, app_handle.as_ref()).await?;
 
         if let Some(handle) = app_handle.as_ref() {
-            emit_to_main_window(handle, "download-complete", &file);
+            emit_to_main_window(handle, "download-complete", &info.local_file);
         }
 
         if Self::has_extension(&info.local_file, "zip") {
@@ -255,7 +254,7 @@ impl Data {
                 log_error!("Failed to extract {}: {}", file, e);
                 if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
                     let err_data = serde_json::json!({
-                        "file": file,
+                        "file": info.local_file,
                         "error": e
                     });
                     emit_to_main_window(app_handle, "unzip-error", err_data);
@@ -314,7 +313,13 @@ impl Data {
 
             let client_target = client_dir.join(name);
             if let Ok(meta) = tokio_fs::symlink_metadata(&client_target).await {
-                let res = if meta.is_dir() {
+                let res = if meta.file_type().is_symlink() {
+                    if meta.is_dir() {
+                        tokio_fs::remove_dir(&client_target).await
+                    } else {
+                        tokio_fs::remove_file(&client_target).await
+                    }
+                } else if meta.is_dir() {
                     tokio_fs::remove_dir_all(&client_target).await
                 } else {
                     tokio_fs::remove_file(&client_target).await
@@ -362,11 +367,14 @@ impl Data {
     }
 
     pub async fn download_to_folder(&self, file: &str, dest_folder: &str) -> Result<(), String> {
+        let info = Self::resolve_local_file_info(file);
         if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "download-start", &file);
+            emit_to_main_window(app_handle, "download-start", &info.local_file);
         }
 
         let download_url = Self::get_download_url(file)?;
+
+        log_debug!("Downloading {} to folder {} from URL: {}", file, dest_folder, download_url);
 
         let dest_dir = self.root_dir.lock().unwrap().join(dest_folder);
         if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
@@ -382,10 +390,10 @@ impl Data {
         let dest_path = dest_dir.join(dest_filename);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
-        download_file(&download_url, &dest_path, file, app_handle.as_ref()).await?;
+        download_file(&download_url, &dest_path, &info.local_file, app_handle.as_ref()).await?;
 
         if let Some(handle) = app_handle.as_ref() {
-            emit_to_main_window(handle, "download-complete", &file);
+            emit_to_main_window(handle, "download-complete", &info.local_file);
         }
 
         Ok(())

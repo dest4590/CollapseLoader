@@ -23,10 +23,10 @@ use crate::core::storage::{
 use crate::core::utils::{
     globals::{
         AGENT_FILE, AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER,
-        ASSETS_ZIP, CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, JDK21_FOLDER, JDK8_FOLDER,
-        JDK8_ZIP, LEGACY_SUFFIX, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FOLDER,
-        LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, LINUX_SUFFIX,
-        MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_ZIP,
+        ASSETS_ZIP, CUSTOM_CLIENTS_FOLDER, FABRIC_DEPS_URL, FILE_EXTENSION, FORGE_DEPS_URL,
+        IS_LINUX, JDK21_FOLDER, JDK8_FOLDER, LEGACY_SUFFIX, LIBRARIES_FABRIC_FOLDER,
+        LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP,
+        LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_ZIP,
         NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
     },
     hashing::calculate_md5_hash,
@@ -294,9 +294,9 @@ impl Client {
 
     fn jdk_zip_name(&self) -> String {
         if self.client_type == ClientType::Forge {
-            JDK8_ZIP.to_string()
+            format!("misc/{JDK8_FOLDER}.zip")
         } else {
-            format!("{JDK21_FOLDER}.zip")
+            format!("misc/{JDK21_FOLDER}.zip")
         }
     }
 
@@ -333,11 +333,14 @@ impl Client {
                 Ok((folder.clone(), folder.join(MODS_FOLDER).join(jar_basename)))
             }
             ClientType::Default => {
+                let jar_basename = Path::new(&self.filename)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or(&self.filename);
                 if self.filename.contains("fabric/") {
-                    let jar_basename = Path::new(&self.filename).file_name().unwrap();
                     Ok((folder.clone(), folder.join(MODS_FOLDER).join(jar_basename)))
                 } else {
-                    Ok((folder.clone(), folder.join(&self.filename)))
+                    Ok((folder.clone(), folder.join(jar_basename)))
                 }
             }
         }
@@ -393,9 +396,17 @@ impl Client {
                 let client_base = Data::get_filename(&self.filename);
                 let mods_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
                 let safe_ver = sanitize_version_for_paths(&self.version);
-                let forge_jar_name = format!("forge_{}.jar", safe_ver);
+                let forge_jar_name =
+                    format!("misc/{MINECRAFT_VERSIONS_FOLDER}/forge_{}.jar", safe_ver);
 
-                DATA.download_to_folder(&self.filename, &mods_folder)
+                let remote_path = if self.filename.contains('/') {
+                    let parts: Vec<&str> = self.filename.split('/').collect();
+                    format!("clients/{}/jars/{}", parts[0], parts[1])
+                } else {
+                    format!("clients/forge/jars/{}", self.filename)
+                };
+
+                DATA.download_to_folder(&remote_path, &mods_folder)
                     .await
                     .map_err(|e| format!("Forge Mod download failed: {e}"))?;
 
@@ -403,7 +414,26 @@ impl Client {
                     .await
                     .map_err(|e| format!("Forge MC Jar download failed: {e}"))
             }
-            _ => DATA.download(&self.filename).await,
+            ClientType::Fabric => {
+                let client_base = Data::get_filename(&self.filename);
+                let mods_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
+                let remote_path = if self.filename.contains('/') {
+                    let parts: Vec<&str> = self.filename.split('/').collect();
+                    format!("clients/{}/jars/{}", parts[0], parts[1])
+                } else {
+                    format!("clients/fabric/jars/{}", self.filename)
+                };
+                DATA.download_to_folder(&remote_path, &mods_folder).await
+            }
+            _ => {
+                let remote_path = if self.filename.contains('/') {
+                    let parts: Vec<&str> = self.filename.split('/').collect();
+                    format!("clients/{}/jars/{}", parts[0], parts[1])
+                } else {
+                    format!("clients/vanilla/jars/{}", self.filename)
+                };
+                DATA.download(&remote_path).await
+            }
         };
 
         if let Err(e) = download_result {
@@ -422,14 +452,7 @@ impl Client {
             return Err(e);
         }
 
-        ClientManager::get_client(manager, self.id, |c| {
-            c.meta.installed = true;
-            c.meta.size = self.size;
-        });
-        log_debug!(
-            "Client '{}' downloaded and installed successfully",
-            self.name
-        );
+        log_debug!("Client '{}' download procedure finished", self.name);
 
         Ok(())
     }
@@ -485,6 +508,76 @@ impl Client {
         Ok(())
     }
 
+    async fn download_dependency(
+        &self,
+        remote_path: &str,
+        local_folder_rel: &str,
+        local_file_abs: &Path,
+        expected_md5: Option<&String>,
+        name_for_logs: &str,
+    ) -> Result<(), String> {
+        let mut need_download = true;
+
+        if local_file_abs.exists() {
+            if let Some(expected) = expected_md5 {
+                let ok = Data::verify_file_md5(local_file_abs, expected)
+                    .await
+                    .map_err(|e| format!("Failed to verify MD5 for {name_for_logs}: {e}"))?;
+                if ok {
+                    need_download = false;
+                } else {
+                    log_warn!(
+                        "MD5 mismatch for {}. Expected: {}. Redownloading...",
+                        name_for_logs,
+                        expected
+                    );
+                    let _ = std::fs::remove_file(local_file_abs);
+                    need_download = true;
+                }
+            } else {
+                need_download = false;
+            }
+        }
+
+        if need_download {
+            log_info!("Downloading dependency: {}", remote_path);
+            DATA.download_to_folder(remote_path, local_folder_rel)
+                .await
+                .map_err(|e| format!("Failed to download dependency {name_for_logs}: {e}"))?;
+
+            if let Some(expected) = expected_md5 {
+                let ok = Data::verify_file_md5(local_file_abs, expected)
+                    .await
+                    .map_err(|e| format!("Failed to verify MD5 for {name_for_logs}: {e}"))?;
+                if !ok {
+                    log_warn!(
+                        "MD5 mismatch after download for {}. Retrying...",
+                        name_for_logs
+                    );
+                    let _ = std::fs::remove_file(local_file_abs);
+                    DATA.download_to_folder(remote_path, local_folder_rel)
+                        .await
+                        .map_err(|e| {
+                            format!("Failed to redownload dependency {name_for_logs}: {e}")
+                        })?;
+
+                    let ok2 = Data::verify_file_md5(local_file_abs, expected)
+                        .await
+                        .map_err(|e| {
+                            format!("Failed to verify MD5 for {name_for_logs} after retry: {e}")
+                        })?;
+                    if !ok2 {
+                        let _ = std::fs::remove_file(local_file_abs);
+                        return Err(format!(
+                            "MD5 mismatch for {name_for_logs} after retry. Aborting."
+                        ));
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     async fn download_fabric_mods(&self) -> Result<(), String> {
         if self.client_type != ClientType::Fabric {
             return Ok(());
@@ -502,73 +595,18 @@ impl Client {
 
             for req in mods {
                 let name = req.name.clone();
-                let expected_md5 = req.md5_hash.clone();
-
                 let mod_basename = name.trim_end_matches(".jar");
                 let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
-                let remote_path = format!("fabric-deps/{mod_basename}.jar");
+                let remote_path = format!("{FABRIC_DEPS_URL}/{mod_basename}.jar");
 
-                let mut need_download = true;
-                if dest.exists() {
-                    if let Some(ref expected) = expected_md5 {
-                        let ok = Data::verify_file_md5(&dest, expected)
-                            .await
-                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
-                        if ok {
-                            need_download = false;
-                        } else {
-                            log_warn!(
-                                "MD5 mismatch for {}. Expected: {}. Redownloading...",
-                                mod_basename,
-                                expected
-                            );
-                            let _ = std::fs::remove_file(&dest);
-                            need_download = true;
-                        }
-                    } else {
-                        need_download = false;
-                    }
-                }
-
-                if need_download {
-                    log_info!("Downloading dependency: {}", remote_path);
-                    DATA.download_to_folder(&remote_path, &mods_folder_rel)
-                        .await
-                        .map_err(|e| {
-                            format!("Failed to download dependency {mod_basename}: {e}")
-                        })?;
-
-                    if let Some(ref expected) = expected_md5 {
-                        let ok = Data::verify_file_md5(&dest, expected)
-                            .await
-                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
-                        if !ok {
-                            log_warn!(
-                                "MD5 mismatch after download for {}. Retrying...",
-                                mod_basename
-                            );
-                            let _ = std::fs::remove_file(&dest);
-                            DATA.download_to_folder(&remote_path, &mods_folder_rel)
-                                .await
-                                .map_err(|e| {
-                                    format!("Failed to redownload dependency {mod_basename}: {e}")
-                                })?;
-
-                            let ok2 =
-                                Data::verify_file_md5(&dest, expected).await.map_err(|e| {
-                                    format!(
-                                        "Failed to verify MD5 for {mod_basename} after retry: {e}"
-                                    )
-                                })?;
-                            if !ok2 {
-                                let _ = std::fs::remove_file(&dest);
-                                return Err(format!(
-                                    "MD5 mismatch for {mod_basename} after retry. Aborting."
-                                ));
-                            }
-                        }
-                    }
-                }
+                self.download_dependency(
+                    &remote_path,
+                    &mods_folder_rel,
+                    &dest,
+                    req.md5_hash.as_ref(),
+                    mod_basename,
+                )
+                .await?;
             }
         }
         Ok(())
@@ -591,73 +629,18 @@ impl Client {
 
             for req in mods {
                 let name = req.name.clone();
-                let expected_md5 = req.md5_hash.clone();
-
                 let mod_basename = name.trim_end_matches(".jar");
                 let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
-                let remote_path = format!("forge-deps/{mod_basename}.jar");
+                let remote_path = format!("{FORGE_DEPS_URL}/{mod_basename}.jar");
 
-                let mut need_download = true;
-                if dest.exists() {
-                    if let Some(ref expected) = expected_md5 {
-                        let ok = Data::verify_file_md5(&dest, expected)
-                            .await
-                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
-                        if ok {
-                            need_download = false;
-                        } else {
-                            log_warn!(
-                                "MD5 mismatch for {}. Expected: {}. Redownloading...",
-                                mod_basename,
-                                expected
-                            );
-                            let _ = std::fs::remove_file(&dest);
-                            need_download = true;
-                        }
-                    } else {
-                        need_download = false;
-                    }
-                }
-
-                if need_download {
-                    log_info!("Downloading dependency: {}", remote_path);
-                    DATA.download_to_folder(&remote_path, &mods_folder_rel)
-                        .await
-                        .map_err(|e| {
-                            format!("Failed to download dependency {mod_basename}: {e}")
-                        })?;
-
-                    if let Some(ref expected) = expected_md5 {
-                        let ok = Data::verify_file_md5(&dest, expected)
-                            .await
-                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
-                        if !ok {
-                            log_warn!(
-                                "MD5 mismatch after download for {}. Retrying...",
-                                mod_basename
-                            );
-                            let _ = std::fs::remove_file(&dest);
-                            DATA.download_to_folder(&remote_path, &mods_folder_rel)
-                                .await
-                                .map_err(|e| {
-                                    format!("Failed to redownload dependency {mod_basename}: {e}")
-                                })?;
-
-                            let ok2 =
-                                Data::verify_file_md5(&dest, expected).await.map_err(|e| {
-                                    format!(
-                                        "Failed to verify MD5 for {mod_basename} after retry: {e}"
-                                    )
-                                })?;
-                            if !ok2 {
-                                let _ = std::fs::remove_file(&dest);
-                                return Err(format!(
-                                    "MD5 mismatch for {mod_basename} after retry. Aborting."
-                                ));
-                            }
-                        }
-                    }
-                }
+                self.download_dependency(
+                    &remote_path,
+                    &mods_folder_rel,
+                    &dest,
+                    req.md5_hash.as_ref(),
+                    mod_basename,
+                )
+                .await?;
             }
         }
         Ok(())
@@ -747,13 +730,18 @@ impl Client {
         }
 
         if self.client_type == ClientType::Fabric || self.client_type == ClientType::Forge {
-            let safe_ver = sanitize_version_for_paths(&self.version);
             let remote = match self.client_type {
                 ClientType::Fabric => {
-                    format!("fabric_{}.jar", safe_ver)
+                    format!(
+                        "misc/{MINECRAFT_VERSIONS_FOLDER}/fabric_{}.jar",
+                        self.version
+                    )
                 }
                 ClientType::Forge => {
-                    format!("forge_{}.jar", safe_ver)
+                    format!(
+                        "misc/{MINECRAFT_VERSIONS_FOLDER}/forge_{}.jar",
+                        self.version
+                    )
                 }
                 _ => unreachable!(),
             };
@@ -766,15 +754,14 @@ impl Client {
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(dest_filename);
 
-            if !local_path.exists() {
-                log_info!(
-                    "MC jar missing, downloading: {} -> {}",
-                    remote,
-                    local_path.display()
-                );
-                DATA.download_to_folder(&remote, MINECRAFT_VERSIONS_FOLDER)
-                    .await?;
-            }
+            self.download_dependency(
+                &remote,
+                MINECRAFT_VERSIONS_FOLDER,
+                &local_path,
+                None,
+                dest_filename,
+            )
+            .await?;
         }
 
         if self.client_type == ClientType::Fabric {
@@ -861,21 +848,24 @@ impl Client {
 
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
         let common_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+      
         if !dir_has_any_jars(&common_dir, true) {
             log_info!("Downloading common Fabric libraries");
             DATA.download(LIBRARIES_FABRIC_ZIP).await?;
         }
 
         let versioned_zip = format!(
-            "{}/{}.zip",
+            "misc/{}/{}.zip",
             LIBRARIES_FABRIC_FOLDER,
             sanitize_version_for_paths(&self.version)
         );
-        let versioned_dir = DATA
-            .root_dir
-            .lock()
-            .unwrap()
-            .join(versioned_zip.replace(".zip", ""));
+
+        let versioned_dir = DATA.root_dir.lock().unwrap().join(
+            versioned_zip
+                .strip_prefix("misc/")
+                .unwrap_or(&versioned_zip)
+                .replace(".zip", ""),
+        );
 
         if !dir_has_any_jars(&versioned_dir, false) {
             log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);
@@ -914,12 +904,10 @@ impl Client {
             ClientType::Fabric => {
                 cp_parts.push(self.get_minecraft_jar_path());
 
-                let v_libs = DATA
-                    .root_dir
-                    .lock()
-                    .unwrap()
-                    .join(LIBRARIES_FABRIC_FOLDER)
-                    .join(sanitize_version_for_paths(&self.version));
+                let v_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER).join(format!(
+                    "{}",
+                    sanitize_version_for_paths(&self.version)
+                ));
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
 
                 let g_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);

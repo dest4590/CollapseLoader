@@ -9,7 +9,7 @@ use tauri::{AppHandle, Manager, State};
 
 use crate::core::{
     clients::custom_clients::CustomClient,
-    storage::{custom_clients::CustomClientUpdate, data::Data},
+    storage::custom_clients::CustomClientUpdate,
     utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
 };
 use crate::core::{
@@ -155,34 +155,7 @@ pub async fn launch_client(
 ) -> Result<(), String> {
     let client = get_client_by_id(id, &state.clients.manager)?;
 
-    let filename_for_if = if client.filename.contains("fabric/") {
-        client.filename.replace("fabric/", "")
-    } else if client.filename.contains("/fabric") {
-        client.filename.replace("/fabric", "")
-    } else {
-        client.filename.clone()
-    };
-
-    const MAIN_SEPARATOR: char = std::path::MAIN_SEPARATOR;
-
-    let file_name = Data::get_filename(&client.filename);
-    let jar_path = match client.client_type {
-        ClientType::Default => {
-            DATA.get_local(&format!("{file_name}{MAIN_SEPARATOR}{}", client.filename))
-        }
-        ClientType::Fabric => DATA.get_local(&format!(
-            "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{filename_for_if}"
-        )),
-        ClientType::Forge => {
-            let jar_basename = std::path::Path::new(&client.filename)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(&client.filename);
-            DATA.get_local(&format!(
-                "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{jar_basename}"
-            ))
-        }
-    };
+    let (_, jar_path) = client.get_launch_paths()?;
 
     if !jar_path.exists() {
         log_warn!(
@@ -841,7 +814,10 @@ pub async fn install_mod_from_url(
 }
 
 #[tauri::command]
-pub async fn list_installed_mods(id: u32, state: State<'_, AppState>) -> Result<Vec<String>, String> {
+pub async fn list_installed_mods(
+    id: u32,
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, String> {
     let client = get_client_by_id(id, &state.clients.manager)?;
 
     let mods_folder = match client.client_type {

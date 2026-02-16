@@ -353,9 +353,14 @@ const handleSearch = (query: string) => {
     }, 150);
 };
 
+const getFileBasename = (filename: string): string => {
+    const idx = filename.lastIndexOf('/');
+    return idx >= 0 ? filename.substring(idx + 1) : filename;
+};
+
 const isAnyClientDownloading = computed(() => {
     if (installationStatus.value.size === 0) return false;
-    const filenames = new Set(clients.value.map(c => c.filename));
+    const filenames = new Set(clients.value.map(c => getFileBasename(c.filename)));
 
     for (const [filename, status] of installationStatus.value.entries()) {
         if (!status.isComplete && filenames.has(filename)) {
@@ -852,6 +857,7 @@ const setupEventListeners = async () => {
         })
     );
 
+
     eventListeners.value.push(
         await listen('download-progress', (event: any) => {
             const data = event.payload as { file: string; percentage: number };
@@ -1019,7 +1025,7 @@ const setupEventListeners = async () => {
 };
 
 const updateClientInstallStatus = (filename: string) => {
-    const client = clients.value.find((c) => c.filename === filename);
+    const client = clients.value.find((c) => getFileBasename(c.filename) === filename);
     if (client) {
         const status = installationStatus.value.get(filename);
         if (status && status.isComplete) {
@@ -1029,7 +1035,7 @@ const updateClientInstallStatus = (filename: string) => {
 };
 
 const markClientAsInstalled = async (filename: string) => {
-    const client = clients.value.find((c) => c.filename === filename);
+    const client = clients.value.find((c) => getFileBasename(c.filename) === filename);
     if (client) {
         client.meta.installed = true;
 
@@ -1046,7 +1052,7 @@ const markClientAsInstalled = async (filename: string) => {
 };
 
 const isClientInstalling = (client: Client): boolean => {
-    const status = installationStatus.value.get(client.filename);
+    const status = installationStatus.value.get(getFileBasename(client.filename));
     return !!status && !status.isComplete;
 };
 
@@ -1176,7 +1182,6 @@ const copyClientLogs = async (client: Client) => {
 const deleteClient = async (client: Client) => {
     try {
         await invoke('delete_client', { id: client.id });
-        await getClients();
         addToast(t('home.deleted_success', { name: client.name }), 'success');
     } catch (err) {
         console.error('Error deleting client:', err);
@@ -1685,11 +1690,11 @@ onBeforeUnmount(() => {
         :style="{ paddingBottom: selectedClients.size > 0 ? '80px' : '0px' }">
         <div v-for="(client, idx) in filteredClients" :key="client.id"
             :class="['client-card-item', { 'slide-in-animate': playClientSlideAnim }]"
-            :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-memo="[
+            :style="playClientSlideAnim ? { animationDelay: `${Math.min(idx * 100, 600)}ms` } : {}" v-bind="[
                 client.id,
                 isClientRunning(client.id),
                 isClientInstalling(client),
-                installationStatus.get(client.filename)?.percentage,
+                installationStatus.get(getFileBasename(client.filename))?.percentage,
                 isClientFavorite(client.id),
                 isClientSelected(client.id),
                 isCtrlPressed,
@@ -1698,7 +1703,7 @@ onBeforeUnmount(() => {
             ]">
             <ClientCard :client="client" :isClientRunning="isClientRunning(client.id)"
                 :isClientInstalling="isClientInstalling(client)"
-                :installationStatus="installationStatus.get(client.filename)"
+                :installationStatus="installationStatus.get(getFileBasename(client.filename))"
                 :isRequirementsInProgress="requirementsInProgress" :isAnyClientDownloading="isAnyClientDownloading"
                 :isFavorite="isClientFavorite(client.id)" :isSelected="isClientSelected(client.id)"
                 :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
