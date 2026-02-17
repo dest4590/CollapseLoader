@@ -329,7 +329,10 @@
     "click": "Click",
     "show_more": "Show More",
     "show_less": "Show Less",
-    "advanced": "Advanced"
+    "advanced": "Advanced",
+    "send_again": "Resend Email",
+    "back_to_login": "Back to Login",
+    "verification_sent": "Verification email sent!"
   },
   "auth": {
     "logout": {
@@ -357,7 +360,16 @@
       "register_button": "Register",
       "login_link": "Already have an account?",
       "registration_failed": "Registration failed. Please try again.",
-      "auto_login_failed": "Registration successful, but automatic login failed. Please log in manually."
+      "auto_login_failed": "Registration successful, but automatic login failed. Please log in manually.",
+      "verification_required": "Email Verification Required",
+      "check_email": "A verification email has been sent to {email}. Please check your inbox and follow the instructions to verify your account."
+    },
+    "verify": {
+      "code_label": "Verification Code",
+      "code_placeholder": "Enter verification code",
+      "verify_button": "Verify Email",
+      "success": "Email verified successfully!",
+      "error": "Invalid or expired verification code"
     }
   },
   "appLogs": {

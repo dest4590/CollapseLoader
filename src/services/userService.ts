@@ -229,6 +229,20 @@ class UserService {
         }
     }
 
+    private stripShowFields(input: any): any {
+        if (input === null || input === undefined) return input;
+        if (Array.isArray(input)) return input.map((v) => this.stripShowFields(v));
+        if (typeof input === 'object') {
+            const out: any = {};
+            for (const k of Object.keys(input)) {
+                if (k === 'show') continue;
+                out[k] = this.stripShowFields((input as any)[k]);
+            }
+            return out;
+        }
+        return input;
+    }
+
     private mapStatus(status: UserStatus | null | undefined): ClientUserStatus {
         const raw = status?.status ?? null;
         const normalized = (raw || '').toUpperCase();
@@ -558,7 +572,16 @@ class UserService {
 
     async setPreference(key: string, value: unknown): Promise<UserPreference> {
         const safeKey = encodeURIComponent(key);
-        return await apiClient.put(`/users/me/preferences/${safeKey}`, { value });
+        let payloadValue: unknown = value;
+        try {
+            if (key === SYNC_SETTINGS_PREF_KEY && value && typeof value === 'object') {
+                payloadValue = this.stripShowFields(value);
+            }
+        } catch (err) {
+            console.warn('Failed to strip show fields from settings payload:', err);
+        }
+
+        return await apiClient.put(`/users/me/preferences/${safeKey}`, { value: payloadValue });
     }
 
     async deletePreference(key: string): Promise<void> {

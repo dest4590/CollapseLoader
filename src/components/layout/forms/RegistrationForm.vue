@@ -1,5 +1,5 @@
 <template>
-    <div class="space-y-4">
+    <div v-if="!showVerificationMessage" class="space-y-4">
         <div class="form-control">
             <input v-model="username" type="text" :placeholder="t('auth.register.username_placeholder')"
                 class="input input-bordered w-full bg-base-100" required :disabled="isRegistering" />
@@ -30,17 +30,25 @@
             </button>
         </div>
     </div>
+    <div v-else class="text-center space-y-4 py-4">
+        <div class="text-4xl">📧</div>
+        <h3 class="text-xl font-bold">{{ t('auth.register.verification_required') }}</h3>
+        <p class="text-sm opacity-70">
+            {{ t('auth.register.check_email', { email: registrationEmail }) }}
+        </p>
+        <button v-if="showCancelButton" @click="emit('cancel')" class="btn btn-ghost">
+            {{ t('common.close') }}
+        </button>
+    </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useToast } from '../../../services/toastService';
-import { userService } from '../../../services/userService';
 import { useI18n } from 'vue-i18n';
 import { apiPost } from '../../../services/apiClient';
 import { getCurrentLanguage } from '../../../i18n';
 import { getApiBaseWithVersion } from '../../../config';
-import { invoke } from '@tauri-apps/api/core';
 
 interface Props {
     showCancelButton?: boolean;
@@ -61,6 +69,8 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 const isRegistering = ref(false);
+const registrationEmail = ref('');
+const showVerificationMessage = ref(false);
 
 const handleRegister = async () => {
     if (password.value !== confirmPassword.value) {
@@ -79,6 +89,7 @@ const handleRegister = async () => {
     }
     try {
         isRegistering.value = true;
+        registrationEmail.value = email.value;
 
         await apiPost(
             `${getApiBaseWithVersion()}/auth/register`,
@@ -95,50 +106,13 @@ const handleRegister = async () => {
             }
         );
 
-        try {
-            const loginResponse = await apiPost(
-                `${getApiBaseWithVersion()}/auth/login`,
-                {
-                    username: username.value,
-                    password: password.value,
-                },
-                {
-                    headers: {
-                        'Accept-Language': getCurrentLanguage() || 'en',
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            console.log('Login response:', loginResponse);
-
-            const authToken = loginResponse.token;
-
-            if (authToken) {
-                localStorage.setItem('authToken', authToken);
-                userService.clearCache();
-                try {
-                    await invoke('update_presence', {
-                        details: 'In Menu',
-                        state: 'Browsing clients',
-                    });
-                } catch (error) {
-                    console.error('Failed to initialize Discord presence:', error);
-                }
-
-                addToast(t('auth.login.success'), 'success');
-                emit('logged-in');
-            } else {
-                console.error('No auth token found in response:', loginResponse);
-                addToast(t('auth.login.no_token'), 'error');
-            }
-        } catch (loginError) {
-            console.error('Auto-login failed:', loginError);
-            emit('registered');
-        }
+        showVerificationMessage.value = true;
+        addToast(t('auth.register.verification_required'), 'info');
+        emit('registered', { username: username.value, email: email.value });
     } catch (error: any) {
         console.error('Registration failed:', error);
-        console.error('Registration error response:', error.response);
+        const errorMsg = error.response?.data?.error || t('auth.register.registration_failed');
+        addToast(errorMsg, 'error');
     } finally {
         isRegistering.value = false;
     }

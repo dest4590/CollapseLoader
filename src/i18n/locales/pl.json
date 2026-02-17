@@ -330,7 +330,9 @@
       "register_button": "Zarejestruj się",
       "login_link": "Masz już konto?",
       "registration_failed": "Rejestracja nie powiodła się. Spróbuj ponownie.",
-      "auto_login_failed": "Rejestracja pomyślna, ale automatyczne logowanie nie powiodło się. Zaloguj się ręcznie."
+      "auto_login_failed": "Rejestracja pomyślna, ale automatyczne logowanie nie powiodło się. Zaloguj się ręcznie.",
+      "verification_required": "Wymagana weryfikacja adresu e-mail",
+      "check_email": "Wiadomość weryfikacyjna została wysłana na adres {email}. Sprawdź swoją skrzynkę odbiorczą i postępuj zgodnie z instrukcjami, aby zweryfikować swoje konto."
     }
   },
   "blockedUsers": {

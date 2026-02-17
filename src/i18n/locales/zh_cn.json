@@ -329,7 +329,10 @@
     "click": "点击",
     "show_more": "显示更多",
     "show_less": "收起",
-    "advanced": "先进的"
+    "advanced": "先进的",
+    "send_again": "重新发送邮件",
+    "back_to_login": "返回登录",
+    "verification_sent": "验证邮件已发送！"
   },
   "auth": {
     "logout": {
@@ -357,7 +360,9 @@
       "register_button": "注册",
       "login_link": "已经有账户？",
       "registration_failed": "注册失败。请重试。",
-      "auto_login_failed": "注册成功，但自动登录失败。请手动登录。"
+      "auto_login_failed": "注册成功，但自动登录失败。请手动登录。",
+      "verification_required": "需要邮箱验证",
+      "check_email": "验证邮件已发送至 {email}。请检查您的收件箱并按照说明进行验证。"
     }
   },
   "appLogs": {
