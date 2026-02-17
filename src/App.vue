@@ -27,12 +27,14 @@ import FriendsView from './views/FriendsView.vue';
 import Home from './views/Home.vue';
 import LoginView from './views/LoginView.vue';
 import RegisterView from './views/RegisterView.vue';
+import VerifyEmailView from './views/VerifyEmailView.vue';
 import Settings from './views/Settings.vue';
 import Customization from './views/Customization.vue';
 import UserProfileView from './views/UserProfileView.vue';
 import News from './views/News.vue';
 import CustomClients from './views/CustomClients.vue';
 import Marketplace from './views/Marketplace.vue';
+import AuthModal from './components/layout/modals/AuthModal.vue';
 import { fetchSettings } from './utils/settings';
 import { getDiscordState } from './utils/discord';
 import { VALID_TABS } from './utils/tabs';
@@ -41,6 +43,7 @@ import Preloader from './components/core/Preloader.vue';
 import { useAppInit } from './composables/useAppInit';
 import type { Client } from './types/ui';
 import notificationSound from './assets/misc/notification.mp3';
+import { userService } from './services/userService';
 
 interface Setting<T> {
     description: string;
@@ -77,6 +80,9 @@ const showDevMenu = ref(false);
 const { addToast } = useToast();
 const isAuthenticated = ref(false);
 const showRegistrationPrompt = ref(false);
+const showAuthModal = ref(false);
+const authModalView = ref<'LOGIN' | 'REGISTER' | 'VERIFY'>('LOGIN');
+const pendingVerifyEmail = ref('');
 const currentUserId = ref<number | null>(null);
 const previousTab = ref<string>('home');
 const news = ref<any[]>([]);
@@ -225,6 +231,7 @@ const views: Record<string, any> = {
     account: AccountView,
     login: LoginView,
     register: RegisterView,
+    verify: VerifyEmailView,
     friends: FriendsView,
     'user-profile': UserProfileView,
     marketplace: Marketplace,
@@ -271,10 +278,49 @@ const hideRegistrationPrompt = () => {
 };
 
 const handleRegisterPrompt = () => {
-    setActiveTab('register');
+    authModalView.value = 'REGISTER';
+    showAuthModal.value = true;
     showRegistrationPrompt.value = false;
     localStorage.setItem('registrationPromptShown', new Date().toISOString());
 };
+
+const pendingVerifyCode = ref('');
+
+const handleShowVerify = (email: string, code?: string) => {
+    console.log('App: handleShowVerify called with email:', email, 'code:', code);
+    pendingVerifyEmail.value = email;
+    if (code) pendingVerifyCode.value = code;
+    console.log('App: Navigating to verify view');
+    setActiveTab('verify');
+};
+
+const handleVerified = (token?: string) => {
+    if (token) {
+        // Auto-login with the token
+        localStorage.setItem('authToken', token);
+        userService.clearCache();
+        addToast(t('auth.verify.success') || 'Email verified! Logging you in...', 'success');
+        handleLoggedIn();
+    } else {
+        addToast(t('auth.verify.success') || 'Email verified! Please log in.', 'success');
+        setActiveTab('login');
+    }
+};
+
+onMounted(async () => {
+    await listen('verify-email', (event: any) => {
+        const { code, email } = event.payload;
+        console.log('Received verification deep link:', code, email);
+        if (code) {
+            pendingVerifyCode.value = code;
+            if (email) pendingVerifyEmail.value = email;
+
+            if (activeTab.value !== 'verify') {
+                setActiveTab('verify');
+            }
+        }
+    });
+});
 
 const { clearUserData } = useUser();
 
@@ -523,8 +569,9 @@ onUnmounted(() => {
                             <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"
                                 @registered="handleRegistered" @change-view="setActiveTab"
                                 @show-user-profile="showUserProfile" @back-to-friends="() => setActiveTab('friends')"
-                                @unread-count-updated="handleUnreadNewsCountUpdated" :key="activeTab"
-                                :is-online="appOnline" :user-id="currentUserId"
+                                @unread-count-updated="handleUnreadNewsCountUpdated" @show-verify="handleShowVerify"
+                                @verified="handleVerified" :key="activeTab" :is-online="appOnline"
+                                :user-id="currentUserId" :email="pendingVerifyEmail" :code="pendingVerifyCode"
                                 v-bind="activeTab === 'home' ? { unreadNewsCount, apiInitialized } : {}" />
                         </div>
                     </transition>
@@ -537,6 +584,7 @@ onUnmounted(() => {
         <GlobalModal />
         <RegisterPromptModal v-model="showRegistrationPrompt" @register="handleRegisterPrompt"
             @cancel="hideRegistrationPrompt" />
+        <AuthModal v-model="showAuthModal" :initial-view="authModalView" @logged-in="handleLoggedIn" />
     </div>
 </template>
 

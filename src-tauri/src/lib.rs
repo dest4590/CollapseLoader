@@ -79,6 +79,7 @@ pub fn handle_startup_error(error: &StartupError) {
 fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.set_focus();
+        let _ = window.show();
     }
 
     log_debug!("Handling deep link URL: {}", url);
@@ -86,6 +87,29 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
     if !should_handle_deep_link(&url) {
         log_debug!("Deep link already handled, skipping: {}", url);
         return;
+    }
+
+    if url.contains("verify") {
+        if let Some(query_part) = url.split("?").nth(1) {
+            let mut code = String::new();
+            let mut email = String::new();
+            
+            for pair in query_part.split('&') {
+                if let Some((key, value)) = pair.split_once('=') {
+                    match key {
+                        "code" => code = value.to_string(),
+                        "email" => email = value.to_string(),
+                        _ => {}
+                    }
+                }
+            }
+            
+            if !code.is_empty() {
+                log_debug!("Emitting verify-email event for code: {}", code);
+                emit_to_main_window(app, "verify-email", serde_json::json!({ "code": code, "email": email }));
+                return;
+            }
+        }
     }
 
     if let Some(client_name) = url.split("client=").nth(1) {

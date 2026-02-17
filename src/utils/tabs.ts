@@ -1,17 +1,18 @@
 export const VALID_TABS = [
-    'home',
-    'custom_clients',
-    'settings',
-    'app_logs',
-    'customization',
-    'about',
-    'account',
-    'login',
-    'register',
-    'friends',
-    'user-profile',
-    'news',
-    'marketplace',
+  "home",
+  "custom_clients",
+  "settings",
+  "app_logs",
+  "customization",
+  "about",
+  "account",
+  "login",
+  "register",
+  "verify",
+  "friends",
+  "user-profile",
+  "news",
+  "marketplace",
 ];
 
-export type TabName = typeof VALID_TABS[number];
+export type TabName = (typeof VALID_TABS)[number];
