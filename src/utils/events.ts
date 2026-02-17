@@ -16,7 +16,6 @@ export function isWinterEvent(): boolean {
     return false;
 }
 
-
 export function isHalloweenEvent(): boolean {
     const now = new Date();
     const month = now.getMonth();
@@ -37,18 +36,18 @@ export function getCurrentEvent(): EventInfo | null {
     if (isHalloweenEvent()) {
         return {
             isActive: true,
-            name: 'halloween',
-            emoji: '🎃',
-            theme: 'spooky',
+            name: "halloween",
+            emoji: "🎃",
+            theme: "spooky",
         };
     }
 
     if (isWinterEvent()) {
         return {
             isActive: true,
-            name: 'winter',
-            emoji: '❄️',
-            theme: 'winter',
+            name: "winter",
+            emoji: "❄️",
+            theme: "winter",
         };
     }
 
@@ -59,31 +58,38 @@ export async function applyCursorForEvent(): Promise<void> {
     const event = getCurrentEvent();
 
     try {
-        if (typeof document !== 'undefined') {
+        if (typeof document !== "undefined") {
             const root = document.documentElement;
-            root.classList.remove('winter-event');
-            root.classList.remove('halloween-cursor');
+            root.classList.remove("winter-event");
+            root.classList.remove("halloween-cursor");
 
-            const existing = document.getElementById('halloween-cursor-style');
-            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+            const existing = document.getElementById("halloween-cursor-style");
+            if (existing && existing.parentNode)
+                existing.parentNode.removeChild(existing);
         }
-    } catch {
-    }
+    } catch {}
 
-    if (event?.name === 'halloween') {
+    if (event?.name === "halloween") {
         try {
-            if (typeof document !== 'undefined') {
+            if (typeof document !== "undefined") {
                 const active = isHalloweenEvent();
-                const styleId = 'halloween-cursor-style';
+                const styleId = "halloween-cursor-style";
 
-                const pointerUrl = new URL('../assets/images/cursores/bat-pointer.png', import.meta.url).href;
-                const cursorUrl = new URL('../assets/images/cursores/bat-cursor.png', import.meta.url).href;
+                const pointerUrl = new URL(
+                    "../assets/images/cursores/bat-pointer.png",
+                    import.meta.url
+                ).href;
+                const cursorUrl = new URL(
+                    "../assets/images/cursores/bat-cursor.png",
+                    import.meta.url
+                ).href;
 
                 const existing = document.getElementById(styleId);
-                if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+                if (existing && existing.parentNode)
+                    existing.parentNode.removeChild(existing);
 
                 if (active) {
-                    const styleEl = document.createElement('style');
+                    const styleEl = document.createElement("style");
                     styleEl.id = styleId;
                     styleEl.textContent = `
                     :root.halloween-cursor,
@@ -102,23 +108,25 @@ export async function applyCursorForEvent(): Promise<void> {
                     
                     `.trim();
                     document.head.appendChild(styleEl);
-                    document.documentElement.classList.add('halloween-cursor');
+                    document.documentElement.classList.add("halloween-cursor");
                 } else {
-                    document.documentElement.classList.remove('halloween-cursor');
+                    document.documentElement.classList.remove(
+                        "halloween-cursor"
+                    );
                 }
             }
         } catch (e) {
-            console.error('Failed to apply halloween cursor:', e);
+            console.error("Failed to apply halloween cursor:", e);
         }
     }
 
-    if (event?.name === 'winter') {
+    if (event?.name === "winter") {
         try {
-            if (typeof document !== 'undefined') {
-                document.documentElement.classList.add('winter-event');
+            if (typeof document !== "undefined") {
+                document.documentElement.classList.add("winter-event");
             }
         } catch (e) {
-            console.error('Failed to apply winter UI:', e);
+            console.error("Failed to apply winter UI:", e);
         }
     }
 }

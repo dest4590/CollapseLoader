@@ -4,102 +4,210 @@
             <div class="alert alert-error max-w-md mx-auto">
                 <span>{{ error }}</span>
             </div>
-            <button @click="$emit('change-view', 'friends')" class="btn btn-primary mt-4">
-                {{ t('userProfile.back_to_friends') }}
+            <button
+                @click="$emit('change-view', 'friends')"
+                class="btn btn-primary mt-4"
+            >
+                {{ t("userProfile.back_to_friends") }}
             </button>
         </div>
 
         <div v-else-if="userProfile" class="grid gap-6">
             <div class="card shadow-md border border-base-300">
                 <div class="card-body">
-                    <div class="flex flex-col md:flex-row md:items-center gap-6">
-                        <UserAvatar :name="displayNickname" size="xl" :show-status="false"
+                    <div
+                        class="flex flex-col md:flex-row md:items-center gap-6"
+                    >
+                        <UserAvatar
+                            :name="displayNickname"
+                            size="xl"
+                            :show-status="false"
                             :is-online="userProfile.status.is_online"
-                            :is-clickable="!isOwnProfile && !!(userProfile.avatar_url)"
-                            :src="userProfile.avatar_url || null" :original-src="userProfile.avatar_url || null"
-                            @click="onAvatarClick" />
+                            :is-clickable="
+                                !isOwnProfile && !!userProfile.avatar_url
+                            "
+                            :src="userProfile.avatar_url || null"
+                            :original-src="userProfile.avatar_url || null"
+                            @click="onAvatarClick"
+                        />
                         <div class="flex-1">
-                            <h1 class="text-2xl font-bold text-primary-focus flex items-center gap-2">
-                                {{ streamer.getDisplayName(userProfile.nickname, userProfile.username) }}
-                                <span v-if="roleBadge && !streamer.enabled.value"
-                                    :class="roleBadge.className + ' text-sm'">{{ roleBadge.text
-                                    }}</span>
+                            <h1
+                                class="text-2xl font-bold text-primary-focus flex items-center gap-2"
+                            >
+                                {{
+                                    streamer.getDisplayName(
+                                        userProfile.nickname,
+                                        userProfile.username
+                                    )
+                                }}
+                                <span
+                                    v-if="roleBadge && !streamer.enabled.value"
+                                    :class="roleBadge.className + ' text-sm'"
+                                    >{{ roleBadge.text }}</span
+                                >
                             </h1>
                             <p class="text-lg text-base-content/70">
-                                @{{ streamer.getDisplayUsername(userProfile.username) }}
+                                @{{
+                                    streamer.getDisplayUsername(
+                                        userProfile.username
+                                    )
+                                }}
                             </p>
 
                             <div>
-                                <div v-if="userProfile.status.current_client" class="flex items-center gap-2">
+                                <div
+                                    v-if="userProfile.status.current_client"
+                                    class="flex items-center gap-2"
+                                >
                                     <Gamepad2 class="w-4 h-4 text-primary" />
-                                    <span class="text-primary">{{ t('userProfile.playing') }}
+                                    <span class="text-primary"
+                                        >{{ t("userProfile.playing") }}
                                         {{
                                             userProfile.status.current_client
+                                        }}</span
+                                    >
 
-                                        }}</span>
-
-                                    <span v-if="userProfile.status.client_version" class="text-base-content/50 text-sm">
-                                        ({{ userProfile.status.client_version }})
+                                    <span
+                                        v-if="userProfile.status.client_version"
+                                        class="text-base-content/50 text-sm"
+                                    >
+                                        ({{
+                                            userProfile.status.client_version
+                                        }})
                                     </span>
-                                    <span v-if="playtimeDuration"
-                                        class="badge badge-sm bg-base-300/50 border-none text-base-content/70 ml-2 py-0 px-2 text-[10px] h-4 flex items-center gap-1">
+                                    <span
+                                        v-if="playtimeDuration"
+                                        class="badge badge-sm bg-base-300/50 border-none text-base-content/70 ml-2 py-0 px-2 text-[10px] h-4 flex items-center gap-1"
+                                    >
                                         <Clock class="w-2.5 h-2.5" />
                                         {{ playtimeDuration }}
                                     </span>
                                 </div>
-                                <div v-else-if="userProfile.status.is_online" class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-success rounded-full"></div>
+                                <div
+                                    v-else-if="userProfile.status.is_online"
+                                    class="flex items-center gap-2"
+                                >
+                                    <div
+                                        class="w-3 h-3 bg-success rounded-full"
+                                    ></div>
                                     <span class="text-success font-medium">{{
-                                        t('userProfile.online')
+                                        t("userProfile.online")
                                     }}</span>
                                 </div>
-                                <div v-else-if="userProfile.status.last_seen" class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
-                                    <span class="text-base-content/70">{{ t('userProfile.last_seen') }}
+                                <div
+                                    v-else-if="userProfile.status.last_seen"
+                                    class="flex items-center gap-2"
+                                >
+                                    <div
+                                        class="w-3 h-3 bg-base-content/30 rounded-full"
+                                    ></div>
+                                    <span class="text-base-content/70"
+                                        >{{ t("userProfile.last_seen") }}
                                         {{
                                             formatLastSeen(
                                                 userProfile.status.last_seen
                                             )
-                                        }}</span>
+                                        }}</span
+                                    >
                                 </div>
                                 <div v-else class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-base-content/30 rounded-full"></div>
+                                    <div
+                                        class="w-3 h-3 bg-base-content/30 rounded-full"
+                                    ></div>
                                     <span class="text-base-content/70">{{
-                                        t('userProfile.offline')
+                                        t("userProfile.offline")
                                     }}</span>
                                 </div>
                             </div>
 
-                            <div v-if="!globalUserStatus.isStreamer.value && userProfile.social_links && userProfile.social_links.length > 0"
-                                class="mt-2 flex items-center gap-3 flex-wrap">
-                                <template v-for="link in userProfile.social_links"
-                                    :key="`${link.platform}:${link.url}`">
-                                    <a v-if="link.platform.toLowerCase() !== 'discord'"
-                                        :href="platformHref(link.platform, link.url)" target="_blank" rel="noreferrer"
-                                        class="group inline-flex items-center">
-                                        <TelegramIcon :size="20" class="w-5 h-5 text-primary"
-                                            v-if="link.platform.toLowerCase() === 'telegram'" />
-                                        <YoutubeIcon :size="20" class="w-5 h-5 text-primary"
-                                            v-else-if="link.platform.toLowerCase() === 'youtube'" />
-                                        <GithubIcon :size="20" class="w-5 h-5 text-primary"
-                                            v-else-if="link.platform.toLowerCase() === 'github'" />
+                            <div
+                                v-if="
+                                    !globalUserStatus.isStreamer.value &&
+                                    userProfile.social_links &&
+                                    userProfile.social_links.length > 0
+                                "
+                                class="mt-2 flex items-center gap-3 flex-wrap"
+                            >
+                                <template
+                                    v-for="link in userProfile.social_links"
+                                    :key="`${link.platform}:${link.url}`"
+                                >
+                                    <a
+                                        v-if="
+                                            link.platform.toLowerCase() !==
+                                            'discord'
+                                        "
+                                        :href="
+                                            platformHref(
+                                                link.platform,
+                                                link.url
+                                            )
+                                        "
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        class="group inline-flex items-center"
+                                    >
+                                        <TelegramIcon
+                                            :size="20"
+                                            class="w-5 h-5 text-primary"
+                                            v-if="
+                                                link.platform.toLowerCase() ===
+                                                'telegram'
+                                            "
+                                        />
+                                        <YoutubeIcon
+                                            :size="20"
+                                            class="w-5 h-5 text-primary"
+                                            v-else-if="
+                                                link.platform.toLowerCase() ===
+                                                'youtube'
+                                            "
+                                        />
+                                        <GithubIcon
+                                            :size="20"
+                                            class="w-5 h-5 text-primary"
+                                            v-else-if="
+                                                link.platform.toLowerCase() ===
+                                                'github'
+                                            "
+                                        />
                                         <span
-                                            class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap">
-                                            {{ platformLabel(link.platform) }} — {{ displayHref(link.platform, link.url)
+                                            class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap"
+                                        >
+                                            {{ platformLabel(link.platform) }} —
+                                            {{
+                                                displayHref(
+                                                    link.platform,
+                                                    link.url
+                                                )
                                             }}
                                         </span>
                                     </a>
-                                    <button v-else @click.stop="copySocialHandle(link)" type="button"
+                                    <button
+                                        v-else
+                                        @click.stop="copySocialHandle(link)"
+                                        type="button"
                                         class="group inline-flex items-center cursor-pointer"
-                                        :title="t('userProfile.copy_username')">
-                                        <DiscordIcon :size="20" class="w-5 h-5 text-primary" />
+                                        :title="t('userProfile.copy_username')"
+                                    >
+                                        <DiscordIcon
+                                            :size="20"
+                                            class="w-5 h-5 text-primary"
+                                        />
                                         <span
-                                            class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap">
-                                            {{ platformLabel(link.platform) }} — {{ displayHandle(link.platform,
-                                                link.url) }}
+                                            class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap"
+                                        >
+                                            {{ platformLabel(link.platform) }} —
+                                            {{
+                                                displayHandle(
+                                                    link.platform,
+                                                    link.url
+                                                )
+                                            }}
                                         </span>
                                         <Copy
-                                            class="w-0 h-4 ml-0 text-primary opacity-0 group-hover:w-4 group-hover:ml-2 group-hover:opacity-100 transition-all duration-200 overflow-hidden" />
+                                            class="w-0 h-4 ml-0 text-primary opacity-0 group-hover:w-4 group-hover:ml-2 group-hover:opacity-100 transition-all duration-200 overflow-hidden"
+                                        />
                                     </button>
                                 </template>
                             </div>
@@ -111,42 +219,86 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body">
-                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                            {{ t('userProfile.profile_information') }}
+                        <h2
+                            class="card-title text-lg font-medium text-primary-focus mb-4"
+                        >
+                            {{ t("userProfile.profile_information") }}
                         </h2>
                         <div class="space-y-3">
-                            <div class="flex justify-between items-center" v-if="!globalUserStatus.isStreamer.value">
+                            <div
+                                class="flex justify-between items-center"
+                                v-if="!globalUserStatus.isStreamer.value"
+                            >
                                 <span class="text-base-content/70">ID:</span>
-                                <span class="font-medium">#{{ userProfile.id }}</span>
+                                <span class="font-medium"
+                                    >#{{ userProfile.id }}</span
+                                >
                             </div>
 
                             <div class="flex justify-between items-center">
-                                <span class="text-base-content/70">{{ t('userProfile.username') }}:</span>
+                                <span class="text-base-content/70"
+                                    >{{ t("userProfile.username") }}:</span
+                                >
                                 <div class="flex items-center">
-                                    <button @click="copyUsername" class="btn btn-ghost btn-xs"
-                                        v-if="!globalUserStatus.isStreamer.value"
-                                        :title="t('userProfile.copy_username')">
+                                    <button
+                                        @click="copyUsername"
+                                        class="btn btn-ghost btn-xs"
+                                        v-if="
+                                            !globalUserStatus.isStreamer.value
+                                        "
+                                        :title="t('userProfile.copy_username')"
+                                    >
                                         <Copy class="w-4 h-4" />
                                     </button>
-                                    <span class="font-medium">{{ displayUsername }}</span>
+                                    <span class="font-medium">{{
+                                        displayUsername
+                                    }}</span>
                                 </div>
                             </div>
 
-                            <div v-if="userProfile.nickname" class="flex justify-between items-center">
-                                <span class="text-base-content/70">{{ t('userProfile.nickname') }}:</span>
-                                <span class="font-medium">{{ displayNickname }}</span>
+                            <div
+                                v-if="userProfile.nickname"
+                                class="flex justify-between items-center"
+                            >
+                                <span class="text-base-content/70"
+                                    >{{ t("userProfile.nickname") }}:</span
+                                >
+                                <span class="font-medium">{{
+                                    displayNickname
+                                }}</span>
                             </div>
 
-                            <div v-if="userProfile.member_since && !globalUserStatus.isStreamer.value"
-                                class="flex justify-between items-center">
-                                <span class="text-base-content/70">{{ t('userProfile.member_since') }}:</span>
-                                <span class="font-medium">{{ formatDate(userProfile.member_since) }}</span>
+                            <div
+                                v-if="
+                                    userProfile.member_since &&
+                                    !globalUserStatus.isStreamer.value
+                                "
+                                class="flex justify-between items-center"
+                            >
+                                <span class="text-base-content/70"
+                                    >{{ t("userProfile.member_since") }}:</span
+                                >
+                                <span class="font-medium">{{
+                                    formatDate(userProfile.member_since)
+                                }}</span>
                             </div>
 
-                            <div v-if="favoriteClientDisplay" class="flex justify-between items-center">
-                                <span class="text-base-content/70">{{ t('userProfile.favorite_client') }}:</span>
+                            <div
+                                v-if="favoriteClientDisplay"
+                                class="flex justify-between items-center"
+                            >
+                                <span class="text-base-content/70"
+                                    >{{
+                                        t("userProfile.favorite_client")
+                                    }}:</span
+                                >
                                 <span class="badge badge-primary">
-                                    {{ favoriteClientDisplay.name }} {{ formatVersion(favoriteClientDisplay.version) }}
+                                    {{ favoriteClientDisplay.name }}
+                                    {{
+                                        formatVersion(
+                                            favoriteClientDisplay.version
+                                        )
+                                    }}
                                 </span>
                             </div>
                         </div>
@@ -155,73 +307,134 @@
 
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body">
-                        <h2 class="card-title text-lg font-medium text-primary-focus mb-4">
-                            {{ t('userProfile.actions') }}
+                        <h2
+                            class="card-title text-lg font-medium text-primary-focus mb-4"
+                        >
+                            {{ t("userProfile.actions") }}
                         </h2>
 
-                        <div v-if="userProfile.friendship_status === 'friends'" class="space-y-3 mt-auto">
+                        <div
+                            v-if="userProfile.friendship_status === 'friends'"
+                            class="space-y-3 mt-auto"
+                        >
                             <div class="alert alert-success">
                                 <UserCheck class="w-5 h-5" />
-                                <span>{{ t('userProfile.friends_with', { name: displayNickname, }) }}</span>
+                                <span>{{
+                                    t("userProfile.friends_with", {
+                                        name: displayNickname,
+                                    })
+                                }}</span>
                             </div>
-                            <button @click="handleBlockUser" class="btn btn-error btn-outline w-full">
+                            <button
+                                @click="handleBlockUser"
+                                class="btn btn-error btn-outline w-full"
+                            >
                                 <Ban class="w-4 h-4 mr-2" />
-                                {{ t('userProfile.block_user') }}
+                                {{ t("userProfile.block_user") }}
                             </button>
-                            <button @click="handleRemoveFriend" class="btn btn-error btn-outline w-full">
+                            <button
+                                @click="handleRemoveFriend"
+                                class="btn btn-error btn-outline w-full"
+                            >
                                 <UserMinus class="w-4 h-4 mr-2" />
-                                {{ t('userProfile.remove_friend') }}
+                                {{ t("userProfile.remove_friend") }}
                             </button>
                         </div>
 
-                        <div v-else-if="userProfile.friendship_status === 'request_sent'" class="space-y-3">
+                        <div
+                            v-else-if="
+                                userProfile.friendship_status === 'request_sent'
+                            "
+                            class="space-y-3"
+                        >
                             <div class="alert alert-warning">
                                 <Clock class="w-5 h-5" />
-                                <span>{{ t('userProfile.friend_request_sent', { name: displayNickname, }) }}</span>
+                                <span>{{
+                                    t("userProfile.friend_request_sent", {
+                                        name: displayNickname,
+                                    })
+                                }}</span>
                             </div>
-                            <button @click="handleCancelFriendRequest" class="btn btn-error btn-outline w-full"
-                                :disabled="sendingRequest">
+                            <button
+                                @click="handleCancelFriendRequest"
+                                class="btn btn-error btn-outline w-full"
+                                :disabled="sendingRequest"
+                            >
                                 <X class="w-4 h-4 mr-2" />
-                                {{ sendingRequest ? t('userProfile.canceling') : t('userProfile.cancel_friend_request')
+                                {{
+                                    sendingRequest
+                                        ? t("userProfile.canceling")
+                                        : t("userProfile.cancel_friend_request")
                                 }}
                             </button>
                         </div>
 
-                        <div v-else-if="userProfile.friendship_status === 'request_received'" class="space-y-3">
+                        <div
+                            v-else-if="
+                                userProfile.friendship_status ===
+                                'request_received'
+                            "
+                            class="space-y-3"
+                        >
                             <div class="alert alert-info">
                                 <UserPlus class="w-5 h-5" />
-                                <span>{{ t('userProfile.friend_request_received', { name: displayNickname, }) }}</span>
+                                <span>{{
+                                    t("userProfile.friend_request_received", {
+                                        name: displayNickname,
+                                    })
+                                }}</span>
                             </div>
                             <div class="flex gap-3">
-                                <button @click="handleRespondToRequest('accept')" class="btn btn-success flex-1">
+                                <button
+                                    @click="handleRespondToRequest('accept')"
+                                    class="btn btn-success flex-1"
+                                >
                                     <Check class="w-4 h-4 mr-2" />
-                                    {{ t('userProfile.accept') }}
+                                    {{ t("userProfile.accept") }}
                                 </button>
-                                <button @click="handleRespondToRequest('reject')"
-                                    class="btn btn-error btn-outline flex-1">
+                                <button
+                                    @click="handleRespondToRequest('reject')"
+                                    class="btn btn-error btn-outline flex-1"
+                                >
                                     <X class="w-4 h-4 mr-2" />
-                                    {{ t('userProfile.decline') }}
+                                    {{ t("userProfile.decline") }}
                                 </button>
                             </div>
                         </div>
 
-                        <div v-else-if="userProfile.friendship_status === 'blocked'" class="alert alert-error">
+                        <div
+                            v-else-if="
+                                userProfile.friendship_status === 'blocked'
+                            "
+                            class="alert alert-error"
+                        >
                             <Ban class="w-5 h-5" />
-                            <span>{{ t('userProfile.user_blocked') }}</span>
+                            <span>{{ t("userProfile.user_blocked") }}</span>
                         </div>
 
                         <div v-else>
                             <div class="space-y-3">
-                                <button @click="handleSendFriendRequest" class="btn btn-primary w-full"
-                                    :disabled="sendingRequest">
+                                <button
+                                    @click="handleSendFriendRequest"
+                                    class="btn btn-primary w-full"
+                                    :disabled="sendingRequest"
+                                >
                                     <UserPlus class="w-4 h-4 mr-2" />
-                                    {{ sendingRequest ? t('userProfile.sending') : t('userProfile.send_friend_request')
+                                    {{
+                                        sendingRequest
+                                            ? t("userProfile.sending")
+                                            : t(
+                                                  "userProfile.send_friend_request"
+                                              )
                                     }}
                                 </button>
-                                <button @click="handleBlockUser" class="btn btn-error btn-outline w-full"
-                                    :disabled="sendingRequest">
+                                <button
+                                    @click="handleBlockUser"
+                                    class="btn btn-error btn-outline w-full"
+                                    :disabled="sendingRequest"
+                                >
                                     <Ban class="w-4 h-4 mr-2" />
-                                    {{ t('userProfile.block_user') }}
+                                    {{ t("userProfile.block_user") }}
                                 </button>
                             </div>
                         </div>
@@ -230,62 +443,119 @@
             </div>
 
             <div class="text-center">
-                <button @click="$emit('change-view', 'friends')" class="btn btn-outline">
+                <button
+                    @click="$emit('change-view', 'friends')"
+                    class="btn btn-outline"
+                >
                     <ArrowLeft class="w-4 h-4 mr-2" />
-                    {{ t('userProfile.back_to_friends') }}
+                    {{ t("userProfile.back_to_friends") }}
                 </button>
             </div>
 
             <div class="mt-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-primary-focus">{{ t('achievements.title') }}</h2>
-                    <span v-if="achievements.length > 0" class="text-sm text-base-content/60">
+                    <h2 class="text-lg font-semibold text-primary-focus">
+                        {{ t("achievements.title") }}
+                    </h2>
+                    <span
+                        v-if="achievements.length > 0"
+                        class="text-sm text-base-content/60"
+                    >
                         {{ unlockedCount }} / {{ achievements.length }}
                     </span>
                 </div>
 
-                <div v-if="loadingAchievements" class="flex justify-center py-4">
+                <div
+                    v-if="loadingAchievements"
+                    class="flex justify-center py-4"
+                >
                     <span class="loading loading-spinner loading-md"></span>
                 </div>
 
                 <div v-else>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <AchievementCard v-for="ach in displayedAchievements" :key="ach.key" :achievement-key="ach.key"
-                            :icon-name="ach.icon" :locked="!isUnlocked(ach.id)" :unlocked-at="getUnlockedAt(ach.id)"
-                            :hidden="ach.hidden" />
+                    <div
+                        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                    >
+                        <AchievementCard
+                            v-for="ach in displayedAchievements"
+                            :key="ach.key"
+                            :achievement-key="ach.key"
+                            :icon-name="ach.icon"
+                            :locked="!isUnlocked(ach.id)"
+                            :unlocked-at="getUnlockedAt(ach.id)"
+                            :hidden="ach.hidden"
+                        />
                     </div>
 
-                    <div v-if="achievements.length > initialDisplayCount" class="flex justify-center mt-4">
-                        <button @click="toggleAchievementsExpand" class="btn btn-ghost btn-sm">
-                            {{ isAchievementsExpanded ? t('common.show_less') : t('common.show_more') }}
-                            <component :is="isAchievementsExpanded ? ChevronUp : ChevronDown" class="w-4 h-4 ml-1" />
+                    <div
+                        v-if="achievements.length > initialDisplayCount"
+                        class="flex justify-center mt-4"
+                    >
+                        <button
+                            @click="toggleAchievementsExpand"
+                            class="btn btn-ghost btn-sm"
+                        >
+                            {{
+                                isAchievementsExpanded
+                                    ? t("common.show_less")
+                                    : t("common.show_more")
+                            }}
+                            <component
+                                :is="
+                                    isAchievementsExpanded
+                                        ? ChevronUp
+                                        : ChevronDown
+                                "
+                                class="w-4 h-4 ml-1"
+                            />
                         </button>
                     </div>
                 </div>
             </div>
             <div class="mt-6" v-if="!globalUserStatus.isStreamer.value">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold text-primary-focus">{{ t('userProfile.presets_title') }}</h2>
-                    <span class="text-sm text-base-content/60">{{ presetsCountLabel }}</span>
+                    <h2 class="text-lg font-semibold text-primary-focus">
+                        {{ t("userProfile.presets_title") }}
+                    </h2>
+                    <span class="text-sm text-base-content/60">{{
+                        presetsCountLabel
+                    }}</span>
                 </div>
 
                 <div class="card">
                     <div class="card-body">
                         <template v-if="presetsLoading">
-                            <div class="flex items-center gap-2 text-base-content/70">
-                                <span class="loading loading-spinner loading-sm"></span>
-                                <span>{{ t('common.loading') }}</span>
+                            <div
+                                class="flex items-center gap-2 text-base-content/70"
+                            >
+                                <span
+                                    class="loading loading-spinner loading-sm"
+                                ></span>
+                                <span>{{ t("common.loading") }}</span>
                             </div>
                         </template>
                         <template v-else>
                             <div v-if="presets && presets.length">
-                                <PresetGallery :key="`presets-${userProfile.id}`" :owner-id="userProfile.id"
-                                    :initial-presets="presets" />
+                                <PresetGallery
+                                    :key="`presets-${userProfile.id}`"
+                                    :owner-id="userProfile.id"
+                                    :initial-presets="presets"
+                                />
                             </div>
-                            <div v-else class="text-center py-8 text-base-content/70">
-                                <p class="mb-3">{{ t('userProfile.no_presets') }}</p>
-                                <button v-if="isOwnProfile" @click="$emit('change-view', 'presets')"
-                                    class="btn btn-primary">{{ t('userProfile.create_preset') }}</button>
+                            <div
+                                v-else
+                                class="text-center py-8 text-base-content/70"
+                            >
+                                <p class="mb-3">
+                                    {{ t("userProfile.no_presets") }}
+                                </p>
+                                <button
+                                    v-if="isOwnProfile"
+                                    @click="$emit('change-view', 'presets')"
+                                    class="btn btn-primary"
+                                >
+                                    {{ t("userProfile.create_preset") }}
+                                </button>
                             </div>
                         </template>
                     </div>
@@ -293,7 +563,7 @@
             </div>
             <div class="mt-6" v-else>
                 <div class="alert alert-info">
-                    <span>{{ t('userProfile.presets_hidden_streamer') }}</span>
+                    <span>{{ t("userProfile.presets_hidden_streamer") }}</span>
                 </div>
             </div>
         </div>
@@ -301,21 +571,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
-import { useToast } from '../services/toastService';
-import { useModal } from '../services/modalService';
-import { userService, type PublicUserProfile } from '../services/userService';
-import { useFriends } from '../composables/useFriends';
-import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
-import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
-import UserAvatar from '../components/ui/UserAvatar.vue';
-import FullscreenAvatarModal from '../components/modals/common/FullscreenAvatarModal.vue';
-import PresetGallery from '../components/presets/PresetGallery.vue';
-import AchievementCard from '../components/features/profile/AchievementCard.vue';
-import DiscordIcon from '../components/ui/icons/DiscordIcon.vue';
-import TelegramIcon from '../components/ui/icons/TelegramIcon.vue';
-import YoutubeIcon from '../components/ui/icons/YoutubeIcon.vue';
-import GithubIcon from '../components/ui/icons/GithubIcon.vue';
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { useToast } from "../services/toastService";
+import { useModal } from "../services/modalService";
+import { userService, type PublicUserProfile } from "../services/userService";
+import { useFriends } from "../composables/useFriends";
+import BlockUnblockConfirmModal from "../components/modals/social/friends/BlockUnblockConfirmModal.vue";
+import RemoveFriendConfirmModal from "../components/modals/social/friends/RemoveFriendConfirmModal.vue";
+import UserAvatar from "../components/ui/UserAvatar.vue";
+import FullscreenAvatarModal from "../components/modals/common/FullscreenAvatarModal.vue";
+import PresetGallery from "../components/presets/PresetGallery.vue";
+import AchievementCard from "../components/features/profile/AchievementCard.vue";
+import DiscordIcon from "../components/ui/icons/DiscordIcon.vue";
+import TelegramIcon from "../components/ui/icons/TelegramIcon.vue";
+import YoutubeIcon from "../components/ui/icons/YoutubeIcon.vue";
+import GithubIcon from "../components/ui/icons/GithubIcon.vue";
 import {
     Gamepad2,
     Clock,
@@ -328,10 +598,10 @@ import {
     ArrowLeft,
     Copy,
     ChevronDown,
-    ChevronUp
-} from 'lucide-vue-next';
-import { globalUserStatus } from '../composables/useUserStatus';
-import { invoke } from '@tauri-apps/api/core';
+    ChevronUp,
+} from "lucide-vue-next";
+import { globalUserStatus } from "../composables/useUserStatus";
+import { invoke } from "@tauri-apps/api/core";
 
 interface Client {
     id: number;
@@ -347,20 +617,24 @@ interface Client {
     downloads: number;
     size: number;
 }
-import { useStreamerMode } from '../composables/useStreamerMode';
-import getRoleBadge from '../utils/roleBadge';
-import { resolveApiAssetUrl } from '../utils/url';
-import { marketplaceService } from '../services/marketplaceService';
-import { useUser } from '../composables/useUser';
-import { achievementService, type Achievement, type UserAchievement } from '../services/achievementService';
-import { useI18n } from 'vue-i18n';
+import { useStreamerMode } from "../composables/useStreamerMode";
+import getRoleBadge from "../utils/roleBadge";
+import { resolveApiAssetUrl } from "../utils/url";
+import { marketplaceService } from "../services/marketplaceService";
+import { useUser } from "../composables/useUser";
+import {
+    achievementService,
+    type Achievement,
+    type UserAchievement,
+} from "../services/achievementService";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     userId?: number;
 }
 
 const props = defineProps<Props>();
-defineEmits(['change-view']);
+defineEmits(["change-view"]);
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -384,15 +658,19 @@ const availableClients = ref<Client[]>([]);
 const { username } = useUser();
 
 const isOwnProfile = computed(() => {
-    return !!userProfile.value && username.value && userProfile.value.username === username.value;
+    return (
+        !!userProfile.value &&
+        username.value &&
+        userProfile.value.username === username.value
+    );
 });
 
-const playtimeDuration = ref('');
+const playtimeDuration = ref("");
 let playtimeInterval: any = null;
 
 const updatePlaytime = () => {
     if (!userProfile.value?.status?.started_at) {
-        playtimeDuration.value = '';
+        playtimeDuration.value = "";
         return;
     }
     const start = new Date(userProfile.value.status.started_at).getTime();
@@ -409,48 +687,52 @@ const updatePlaytime = () => {
     }
 };
 
-watch(() => userProfile.value?.status?.started_at, (newVal) => {
-    if (newVal) {
-        updatePlaytime();
-        if (!playtimeInterval) {
-            playtimeInterval = setInterval(updatePlaytime, 60000);
+watch(
+    () => userProfile.value?.status?.started_at,
+    (newVal) => {
+        if (newVal) {
+            updatePlaytime();
+            if (!playtimeInterval) {
+                playtimeInterval = setInterval(updatePlaytime, 60000);
+            }
+        } else {
+            if (playtimeInterval) {
+                clearInterval(playtimeInterval);
+                playtimeInterval = null;
+            }
+            playtimeDuration.value = "";
         }
-    } else {
-        if (playtimeInterval) {
-            clearInterval(playtimeInterval);
-            playtimeInterval = null;
-        }
-        playtimeDuration.value = '';
-    }
-}, { immediate: true });
+    },
+    { immediate: true }
+);
 
 onUnmounted(() => {
     if (playtimeInterval) clearInterval(playtimeInterval);
 });
 
 const presetsCountLabel = computed(() => {
-    if (presetsLoading.value) return t('common.loading');
+    if (presetsLoading.value) return t("common.loading");
     const count = presets.value ? presets.value.length : 0;
-    return `${count} ${t('userProfile.presets')}`;
+    return `${count} ${t("userProfile.presets")}`;
 });
 
 const displayNickname = computed(() => {
     if (globalUserStatus.isStreamer.value) {
-        return '??????';
+        return "??????";
     }
-    return userProfile.value?.nickname || userProfile.value?.username || 'User';
+    return userProfile.value?.nickname || userProfile.value?.username || "User";
 });
 
 const favoriteClientDisplay = computed(() => {
     if (userProfile.value && (userProfile.value as any).favorite_client_id) {
         const clientId = (userProfile.value as any).favorite_client_id;
-        return availableClients.value.find(c => c.id === clientId) || null;
+        return availableClients.value.find((c) => c.id === clientId) || null;
     }
     return null;
 });
 
 const displayUsername = computed(() => {
-    if (!userProfile.value) return '';
+    if (!userProfile.value) return "";
     return streamer.getDisplayUsername(userProfile.value.username);
 });
 
@@ -472,11 +754,15 @@ const sortedAchievements = computed(() => {
 });
 
 const isUnlocked = (achievementId: number) => {
-    return userAchievements.value.some(ua => ua.achievement.id === achievementId);
+    return userAchievements.value.some(
+        (ua) => ua.achievement.id === achievementId
+    );
 };
 
 const getUnlockedAt = (achievementId: number) => {
-    const ua = userAchievements.value.find(ua => ua.achievement.id === achievementId);
+    const ua = userAchievements.value.find(
+        (ua) => ua.achievement.id === achievementId
+    );
     return ua ? ua.unlockedAt : null;
 };
 
@@ -486,7 +772,7 @@ const loadAchievements = async () => {
     try {
         const [all, user] = await Promise.all([
             achievementService.getAllAchievements(),
-            achievementService.getUserAchievements(props.userId)
+            achievementService.getUserAchievements(props.userId),
         ]);
         achievements.value = all || [];
         userAchievements.value = user || [];
@@ -509,7 +795,7 @@ const toggleAchievementsExpand = () => {
 
 const loadUserProfile = async () => {
     if (!props.userId) {
-        error.value = t('userProfile.no_user_id');
+        error.value = t("userProfile.no_user_id");
         loading.value = false;
         return;
     }
@@ -517,7 +803,10 @@ const loadUserProfile = async () => {
     try {
         loading.value = true;
         error.value = null;
-        userProfile.value = await userService.getUserProfile(props.userId, ['presets', 'achievements']);
+        userProfile.value = await userService.getUserProfile(props.userId, [
+            "presets",
+            "achievements",
+        ]);
 
         if (userProfile.value.presets) {
             presets.value = userProfile.value.presets;
@@ -526,17 +815,18 @@ const loadUserProfile = async () => {
         if (userProfile.value.achievements) {
             userAchievements.value = userProfile.value.achievements;
             if (achievements.value.length === 0) {
-                achievements.value = await achievementService.getAllAchievements();
+                achievements.value =
+                    await achievementService.getAllAchievements();
             }
         }
     } catch (err: any) {
-        console.error('Failed to load user profile:', err);
+        console.error("Failed to load user profile:", err);
         if (err.response?.status === 404) {
-            error.value = t('userProfile.user_not_found');
+            error.value = t("userProfile.user_not_found");
         } else if (err.response?.status === 401) {
-            error.value = t('userProfile.login_required');
+            error.value = t("userProfile.login_required");
         } else {
-            error.value = t('userProfile.profile_load_failed');
+            error.value = t("userProfile.profile_load_failed");
         }
     } finally {
         loading.value = false;
@@ -551,9 +841,11 @@ const loadUserPresets = async () => {
 
     presetsLoading.value = true;
     try {
-        presets.value = await marketplaceService.listPresets({ owner: props.userId });
+        presets.value = await marketplaceService.listPresets({
+            owner: props.userId,
+        });
     } catch (e) {
-        console.error('Failed to load user presets count:', e);
+        console.error("Failed to load user presets count:", e);
         presets.value = [];
     } finally {
         presetsLoading.value = false;
@@ -567,37 +859,44 @@ const handleSendFriendRequest = async () => {
     try {
         await userService.sendFriendRequest(userProfile.value.id);
         addToast(
-            t('userProfile.friend_request_sent_success', {
+            t("userProfile.friend_request_sent_success", {
                 name: userProfile.value.nickname || userProfile.value.username,
             }),
-            'success'
+            "success"
         );
-        userProfile.value.friendship_status = 'request_sent';
+        userProfile.value.friendship_status = "request_sent";
     } catch (error) {
-        console.error('Failed to send friend request:', error);
-        addToast(t('userProfile.friend_request_failed', { error: error }), 'error');
+        console.error("Failed to send friend request:", error);
+        addToast(
+            t("userProfile.friend_request_failed", { error: error }),
+            "error"
+        );
     } finally {
         sendingRequest.value = false;
     }
 };
 
 const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
 };
 
 const formatVersion = (version: string): string => {
-    if (!version) return '';
-    return version.replace(/^V/, '').replace(/_/g, '.');
+    if (!version) return "";
+    return version.replace(/^V/, "").replace(/_/g, ".");
 };
 
 const loadClients = async () => {
     try {
-        const clients = await invoke<Client[]>('get_clients');
-        availableClients.value = clients.filter(c => c.show && c.working);
+        const clients = await invoke<Client[]>("get_clients");
+        availableClients.value = clients.filter((c) => c.show && c.working);
     } catch (error) {
-        console.error('Failed to load clients:', error);
+        console.error("Failed to load clients:", error);
     }
 };
 
@@ -605,35 +904,35 @@ const handleRemoveFriend = async () => {
     if (!userProfile.value) return;
 
     showModal(
-        'remove-friend-confirm',
+        "remove-friend-confirm",
         RemoveFriendConfirmModal,
-        { title: t('userProfile.remove_friend') },
+        { title: t("userProfile.remove_friend") },
         { friend: userProfile.value },
         {
             confirm: async (confirmedFriend: any) => {
                 try {
                     await userService.removeFriend(confirmedFriend.id);
                     addToast(
-                        t('userProfile.friend_removed_success', {
+                        t("userProfile.friend_removed_success", {
                             name:
                                 confirmedFriend.nickname ||
                                 confirmedFriend.username,
                         }),
-                        'success'
+                        "success"
                     );
                     userProfile.value!.friendship_status = null;
                 } catch (error) {
-                    console.error('Failed to remove friend:', error);
-                    addToast(t('userProfile.friend_remove_failed'), 'error');
+                    console.error("Failed to remove friend:", error);
+                    addToast(t("userProfile.friend_remove_failed"), "error");
                 }
-                hideModal('remove-friend-confirm');
+                hideModal("remove-friend-confirm");
             },
-            close: () => hideModal('remove-friend-confirm'),
+            close: () => hideModal("remove-friend-confirm"),
         }
     );
 };
 
-const handleRespondToRequest = async (action: 'accept' | 'reject') => {
+const handleRespondToRequest = async (action: "accept" | "reject") => {
     if (!userProfile.value) return;
 
     try {
@@ -643,7 +942,7 @@ const handleRespondToRequest = async (action: 'accept' | 'reject') => {
         );
 
         if (!request) {
-            addToast(t('userProfile.friend_request_not_found'), 'error');
+            addToast(t("userProfile.friend_request_not_found"), "error");
             return;
         }
 
@@ -651,22 +950,22 @@ const handleRespondToRequest = async (action: 'accept' | 'reject') => {
         try {
             const { loadFriendsData } = useFriends();
             await loadFriendsData(true);
-        } catch { }
+        } catch {}
         addToast(
-            t('userProfile.friend_request_responded', { action }),
-            'success'
+            t("userProfile.friend_request_responded", { action }),
+            "success"
         );
 
-        if (action === 'accept') {
-            userProfile.value.friendship_status = 'friends';
+        if (action === "accept") {
+            userProfile.value.friendship_status = "friends";
         } else {
             userProfile.value.friendship_status = null;
         }
     } catch (error) {
         console.error(`Failed to ${action} friend request:`, error);
         addToast(
-            t('userProfile.friend_request_respond_failed', { action }),
-            'error'
+            t("userProfile.friend_request_respond_failed", { action }),
+            "error"
         );
     }
 };
@@ -675,28 +974,28 @@ const handleBlockUser = async () => {
     if (!userProfile.value) return;
 
     showModal(
-        'block-confirm',
+        "block-confirm",
         BlockUnblockConfirmModal,
-        { title: t('userProfile.block_user') },
-        { user: userProfile.value, action: 'block' },
+        { title: t("userProfile.block_user") },
+        { user: userProfile.value, action: "block" },
         {
             confirm: async (user: any) => {
                 try {
                     await userService.blockUser(user.id);
                     addToast(
-                        t('userProfile.user_blocked_success', {
+                        t("userProfile.user_blocked_success", {
                             name: user.nickname || user.username,
                         }),
-                        'success'
+                        "success"
                     );
-                    userProfile.value!.friendship_status = 'blocked';
+                    userProfile.value!.friendship_status = "blocked";
                 } catch (error) {
-                    console.error('Failed to block user:', error);
-                    addToast(t('userProfile.user_block_failed'), 'error');
+                    console.error("Failed to block user:", error);
+                    addToast(t("userProfile.user_block_failed"), "error");
                 }
-                hideModal('block-confirm');
+                hideModal("block-confirm");
             },
-            close: () => hideModal('block-confirm'),
+            close: () => hideModal("block-confirm"),
         }
     );
 };
@@ -712,16 +1011,16 @@ const handleCancelFriendRequest = async () => {
         );
 
         if (!request) {
-            addToast(t('userProfile.friend_request_not_found'), 'error');
+            addToast(t("userProfile.friend_request_not_found"), "error");
             return;
         }
 
         await userService.cancelFriendRequest(request.id);
-        addToast(t('userProfile.friend_request_canceled'), 'success');
+        addToast(t("userProfile.friend_request_canceled"), "success");
         userProfile.value.friendship_status = null;
     } catch (error) {
-        console.error('Failed to cancel friend request:', error);
-        addToast(t('userProfile.friend_request_cancel_failed'), 'error');
+        console.error("Failed to cancel friend request:", error);
+        addToast(t("userProfile.friend_request_cancel_failed"), "error");
     } finally {
         sendingRequest.value = false;
     }
@@ -735,62 +1034,61 @@ const formatLastSeen = (lastSeen: string): string => {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return t('userProfile.just_now');
+    if (diffMins < 1) return t("userProfile.just_now");
     if (diffMins < 60)
-        return t('userProfile.minutes_ago', {
+        return t("userProfile.minutes_ago", {
             count: diffMins,
-            s: diffMins === 1 ? 'у' : '',
+            s: diffMins === 1 ? "у" : "",
         });
     if (diffHours < 24)
-        return t('userProfile.hours_ago', {
+        return t("userProfile.hours_ago", {
             count: diffHours,
-            s: diffHours === 1 ? '' : 'ов',
+            s: diffHours === 1 ? "" : "ов",
         });
     if (diffDays < 7)
-        return t('userProfile.days_ago', {
+        return t("userProfile.days_ago", {
             count: diffDays,
-            s: diffDays === 1 ? 'ень' : 'я',
+            s: diffDays === 1 ? "ень" : "я",
         });
 
     return date.toLocaleDateString();
 };
 
-
 const platformLabel = (key: string) => {
     const map: Record<string, string> = {
-        discord: 'Discord',
-        telegram: 'Telegram',
-        github: 'GitHub',
-        youtube: 'YouTube',
+        discord: "Discord",
+        telegram: "Telegram",
+        github: "GitHub",
+        youtube: "YouTube",
     };
-    const normalized = (key || '').toLowerCase();
+    const normalized = (key || "").toLowerCase();
     return map[normalized] || key;
 };
 
 const platformHref = (platform: string, handle: string) => {
-    if (!handle) return '#';
-    const h = handle.startsWith('@') ? handle.substring(1) : handle;
-    switch ((platform || '').toLowerCase()) {
-        case 'github':
+    if (!handle) return "#";
+    const h = handle.startsWith("@") ? handle.substring(1) : handle;
+    switch ((platform || "").toLowerCase()) {
+        case "github":
             return `https://github.com/${h}`;
-        case 'telegram':
+        case "telegram":
             return `https://t.me/${h}`;
-        case 'youtube':
+        case "youtube":
             return `https://www.youtube.com/@${h}`;
         default:
-            return '#';
+            return "#";
     }
 };
 
 const displayHref = (platform: string, handle: string) => {
-    if (!handle) return '';
-    const h = handle.startsWith('@') ? handle.substring(1) : handle;
-    switch ((platform || '').toLowerCase()) {
-        case 'github':
+    if (!handle) return "";
+    const h = handle.startsWith("@") ? handle.substring(1) : handle;
+    switch ((platform || "").toLowerCase()) {
+        case "github":
             return `github.com/${h}`;
-        case 'telegram':
+        case "telegram":
             return `t.me/${h}`;
-        case 'youtube':
+        case "youtube":
             return handle;
         default:
             return handle;
@@ -798,55 +1096,61 @@ const displayHref = (platform: string, handle: string) => {
 };
 
 const displayHandle = (_platform: string, handle: string) => {
-    if (!handle) return '';
-    return handle.startsWith('@') ? handle : `@${handle}`;
+    if (!handle) return "";
+    return handle.startsWith("@") ? handle : `@${handle}`;
 };
 
 const copySocialHandle = async (link: any) => {
     try {
         if (!link || !link.url) {
-            addToast(t('userProfile.copy_failed'), 'error');
+            addToast(t("userProfile.copy_failed"), "error");
             return;
         }
-        const raw = link.url.startsWith('@') ? link.url.substring(1) : link.url;
+        const raw = link.url.startsWith("@") ? link.url.substring(1) : link.url;
         await navigator.clipboard.writeText(raw);
         addToast(
-            t('userProfile.copied_username', { name: displayHandle(link.platform, link.url) }) || `${displayHandle(link.platform, link.url)} copied`,
-            'success'
+            t("userProfile.copied_username", {
+                name: displayHandle(link.platform, link.url),
+            }) || `${displayHandle(link.platform, link.url)} copied`,
+            "success"
         );
     } catch (err) {
-        console.error('Failed to copy social handle:', err);
-        addToast(t('userProfile.copy_failed'), 'error');
+        console.error("Failed to copy social handle:", err);
+        addToast(t("userProfile.copy_failed"), "error");
     }
 };
 
 const copyUsername = async () => {
     try {
         if (!userProfile.value) {
-            addToast(t('userProfile.copy_failed'), 'error');
+            addToast(t("userProfile.copy_failed"), "error");
             return;
         }
         await navigator.clipboard.writeText(userProfile.value.username);
         addToast(
-            t('userProfile.copied_username', { name: userProfile.value.username }),
-            'success'
+            t("userProfile.copied_username", {
+                name: userProfile.value.username,
+            }),
+            "success"
         );
     } catch (err) {
-        console.error('Failed to copy username:', err);
-        addToast(t('userProfile.copy_failed'), 'error');
+        console.error("Failed to copy username:", err);
+        addToast(t("userProfile.copy_failed"), "error");
     }
 };
 
 const onAvatarClick = () => {
-    const resolvedAvatarUrl = resolveApiAssetUrl(userProfile.value?.avatar_url || null);
+    const resolvedAvatarUrl = resolveApiAssetUrl(
+        userProfile.value?.avatar_url || null
+    );
     if (!resolvedAvatarUrl) return;
     showModal(
-        'avatar-fullscreen',
+        "avatar-fullscreen",
         FullscreenAvatarModal,
-        { contentClass: 'full' },
+        { contentClass: "full" },
         { src: resolvedAvatarUrl, alt: displayNickname.value },
         {
-            close: () => hideModal('avatar-fullscreen'),
+            close: () => hideModal("avatar-fullscreen"),
         }
     );
 };

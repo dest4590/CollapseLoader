@@ -1,31 +1,31 @@
 <template>
     <div>
         <p class="text-sm text-base-content/70 mb-4">
-            {{ $t('modals.change_password_confirm.message') }}
+            {{ $t("modals.change_password_confirm.message") }}
         </p>
 
         <div class="alert alert-warning mb-4">
             <AlertTriangle class="w-5 h-5" />
             <span class="text-sm">{{
-                $t('modals.change_password_confirm.warning')
-                }}</span>
+                $t("modals.change_password_confirm.warning")
+            }}</span>
         </div>
 
         <div class="flex justify-end space-x-2 mt-6">
             <button @click="confirmPasswordChange" class="btn btn-primary">
                 <Check class="w-4 h-4 mr-2" />
-                {{ $t('modals.change_password_confirm.yes_change') }}
+                {{ $t("modals.change_password_confirm.yes_change") }}
             </button>
             <button @click="$emit('close')" class="btn btn-outline">
                 <X class="w-4 h-4 mr-2" />
-                {{ $t('common.cancel') }}
+                {{ $t("common.cancel") }}
             </button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { AlertTriangle, Check, X } from 'lucide-vue-next';
+import { AlertTriangle, Check, X } from "lucide-vue-next";
 
 interface Props {
     currentPassword: string;
@@ -33,10 +33,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['close', 'confirm']);
+const emit = defineEmits(["close", "confirm"]);
 
 const confirmPasswordChange = () => {
-    emit('confirm', {
+    emit("confirm", {
         currentPassword: props.currentPassword,
         newPassword: props.newPassword,
     });

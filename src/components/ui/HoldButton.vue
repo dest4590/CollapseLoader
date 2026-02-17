@@ -1,22 +1,34 @@
 <!-- BUTTON FROM DAISYUI THEME GENERATOR -->
 <!-- https://github.com/saadeghi/daisyui/blob/b4196cce349e1b09e1eeca01a180ed5bcabe2d01/packages/docs/src/routes/(routes)/theme-generator/%2Bpage.svelte#L545 -->
 <template>
-    <button ref="btnElement" class="btn btn-neutral btn-lg group" @mousedown="handleMouseDown"
-        @mouseup="handleMouseUpOrLeave" @mouseleave="handleMouseUpOrLeave" @blur="handleMouseUpOrLeave"
-        @touchstart.prevent="handleMouseDown" @touchend="handleMouseUpOrLeave" @keydown="handleKeyDown"
-        @keyup="handleKeyUp" @click="onClick">
-        <Gamepad2 ref="svgElement" class="w-7 h-7  transition-transform duration-300 ease-in-out" />
-        <span class="font-normal text-lg">{{ $t('hold_button.label') }}</span>
+    <button
+        ref="btnElement"
+        class="btn btn-neutral btn-lg group"
+        @mousedown="handleMouseDown"
+        @mouseup="handleMouseUpOrLeave"
+        @mouseleave="handleMouseUpOrLeave"
+        @blur="handleMouseUpOrLeave"
+        @touchstart.prevent="handleMouseDown"
+        @touchend="handleMouseUpOrLeave"
+        @keydown="handleKeyDown"
+        @keyup="handleKeyUp"
+        @click="onClick"
+    >
+        <Gamepad2
+            ref="svgElement"
+            class="w-7 h-7 transition-transform duration-300 ease-in-out"
+        />
+        <span class="font-normal text-lg">{{ $t("hold_button.label") }}</span>
     </button>
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue';
-import { Gamepad2 } from 'lucide-vue-next';
-import { useToast } from '../../services/toastService';
-import { useI18n } from 'vue-i18n';
+import { ref, onUnmounted } from "vue";
+import { Gamepad2 } from "lucide-vue-next";
+import { useToast } from "../../services/toastService";
+import { useI18n } from "vue-i18n";
 
-const emit = defineEmits(['start']);
+const emit = defineEmits(["start"]);
 const { addToast } = useToast();
 const { t } = useI18n();
 
@@ -30,16 +42,12 @@ let holdTriggered = false;
 
 const onClick = () => {
     if (!holdTriggered) {
-        addToast(
-            t('hold_button.info_message'),
-            'info',
-            3000
-        );
+        addToast(t("hold_button.info_message"), "info", 3000);
         try {
-            localStorage.setItem('holdButton_shown_info', '1');
-        } catch { }
+            localStorage.setItem("holdButton_shown_info", "1");
+        } catch {}
     }
-}
+};
 
 const handleMouseDown = () => {
     if (holdTimeout || holdInterval) return;
@@ -48,10 +56,11 @@ const handleMouseDown = () => {
     holdTriggered = false;
 
     if (btnElement.value && svgElement.value) {
-        svgElement.value.style.transition = 'rotate 3s linear';
-        btnElement.value.style.transition = 'box-shadow 3s ease-out';
+        svgElement.value.style.transition = "rotate 3s linear";
+        btnElement.value.style.transition = "box-shadow 3s ease-out";
 
-        btnElement.value.style.boxShadow = '0 0 0 -0.1rem color-mix(in oklab, var(--color-base-content) 30%, transparent) inset';
+        btnElement.value.style.boxShadow =
+            "0 0 0 -0.1rem color-mix(in oklab, var(--color-base-content) 30%, transparent) inset";
 
         holdInterval = setInterval(() => {
             const elapsedTime = Date.now() - startTime;
@@ -59,7 +68,7 @@ const handleMouseDown = () => {
             const boxShadowOffset = -2 * (elapsedTime / 600) - 3.5;
 
             if (rotation >= 90) {
-                svgElement.value.style.rotate = '90deg';
+                svgElement.value.style.rotate = "90deg";
                 clearInterval(holdInterval);
                 holdInterval = null;
             } else {
@@ -71,7 +80,7 @@ const handleMouseDown = () => {
 
     holdTimeout = setTimeout(() => {
         holdTriggered = true;
-        emit('start');
+        emit("start");
 
         handleMouseUpOrLeave();
     }, 3000);
@@ -84,24 +93,28 @@ const handleMouseUpOrLeave = () => {
     holdInterval = null;
 
     if (svgElement.value) {
-        svgElement.value.style.removeProperty('transition');
-        svgElement.value.style.removeProperty('rotate');
+        svgElement.value.style.removeProperty("transition");
+        svgElement.value.style.removeProperty("rotate");
     }
     if (btnElement.value) {
-        btnElement.value.style.removeProperty('transition');
-        btnElement.value.style.removeProperty('box-shadow');
+        btnElement.value.style.removeProperty("transition");
+        btnElement.value.style.removeProperty("box-shadow");
     }
 };
 
 const handleKeyDown = (event) => {
-    if ((event.key === 'Enter' || event.key === ' ') && !holdTimeout && !holdInterval) {
+    if (
+        (event.key === "Enter" || event.key === " ") &&
+        !holdTimeout &&
+        !holdInterval
+    ) {
         event.preventDefault();
         handleMouseDown();
     }
 };
 
 const handleKeyUp = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
         handleMouseUpOrLeave();
     }
 };
@@ -113,8 +126,11 @@ onUnmounted(() => {
 
 <style scoped>
 .start-btn {
-    background-image:
-        radial-gradient(ellipse at 50% 270%, #00ff4747, transparent 60%),
+    background-image: radial-gradient(
+            ellipse at 50% 270%,
+            #00ff4747,
+            transparent 60%
+        ),
         radial-gradient(ellipse at 20% 150%, #00ff8847, transparent 60%),
         radial-gradient(ellipse at 70% 200%, #22ff0047, transparent 60%);
 }

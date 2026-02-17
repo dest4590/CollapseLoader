@@ -1,25 +1,34 @@
 <template>
     <transition name="modal-fade">
         <div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
-            <div v-if="showContent" :class="[
-                'modal-content bg-base-200 rounded-lg shadow-2xl w-full flex flex-col max-h-[90vh] border border-base-content/5',
-                sizeClasses[size || 'md'],
-                contentClass
-            ]">
-                <div class="flex justify-between items-center p-4 border-b border-base-content/10 shrink-0">
+            <div
+                v-if="showContent"
+                :class="[
+                    'modal-content bg-base-200 rounded-lg shadow-2xl w-full flex flex-col max-h-[90vh] border border-base-content/5',
+                    sizeClasses[size || 'md'],
+                    contentClass,
+                ]"
+            >
+                <div
+                    class="flex justify-between items-center p-4 border-b border-base-content/10 shrink-0"
+                >
                     <slot name="header">
                         <h2 class="font-bold text-lg text-primary">
                             {{ title }}
                         </h2>
                     </slot>
-                    <button @click="closeModal"
-                        class="btn btn-ghost btn-sm btn-square text-lg opacity-70 hover:opacity-100 transition-opacity">
+                    <button
+                        @click="closeModal"
+                        class="btn btn-ghost btn-sm btn-square text-lg opacity-70 hover:opacity-100 transition-opacity"
+                    >
                         <span class="sr-only">Close</span>
                         ×
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-4 custom-scrollbar">
+                <div
+                    class="flex-1 overflow-y-auto overflow-x-hidden min-h-0 p-4 custom-scrollbar"
+                >
                     <slot name="body"></slot>
                 </div>
             </div>
@@ -28,43 +37,43 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onUnmounted, ref } from 'vue';
-import { lockScroll, unlockScroll } from '../../utils/scrollLock';
+import { computed, watch, onUnmounted, ref } from "vue";
+import { lockScroll, unlockScroll } from "../../utils/scrollLock";
 
 const props = defineProps<{
     modelValue: boolean;
     title?: string;
     contentClass?: string;
-    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    size?: "sm" | "md" | "lg" | "xl" | "full";
 }>();
 
-const emit = defineEmits(['update:modelValue', 'close']);
+const emit = defineEmits(["update:modelValue", "close"]);
 
 const showContent = ref(false);
 
 const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-2xl',
-    lg: 'max-w-4xl',
-    xl: 'max-w-6xl',
-    full: 'max-w-full h-full m-4',
+    sm: "max-w-md",
+    md: "max-w-2xl",
+    lg: "max-w-4xl",
+    xl: "max-w-6xl",
+    full: "max-w-full h-full m-4",
 };
 
 const isOpen = computed({
     get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value),
+    set: (value) => emit("update:modelValue", value),
 });
 
 const closeModal = () => {
     showContent.value = false;
     setTimeout(() => {
         isOpen.value = false;
-        emit('close');
+        emit("close");
     }, 250);
 };
 
 const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isOpen.value) {
+    if (e.key === "Escape" && isOpen.value) {
         closeModal();
     }
 };
@@ -74,13 +83,13 @@ watch(
     (newVal) => {
         if (newVal) {
             lockScroll();
-            document.addEventListener('keydown', handleEscape);
+            document.addEventListener("keydown", handleEscape);
             setTimeout(() => {
                 showContent.value = true;
             }, 50);
         } else {
             unlockScroll();
-            document.removeEventListener('keydown', handleEscape);
+            document.removeEventListener("keydown", handleEscape);
             showContent.value = false;
         }
     },
@@ -88,7 +97,7 @@ watch(
 );
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleEscape);
+    document.removeEventListener("keydown", handleEscape);
     if (isOpen.value) {
         unlockScroll();
     }

@@ -1,4 +1,4 @@
-import type { CreatePresetInput, MarketplaceTheme } from '../types/presets';
+import type { CreatePresetInput, MarketplaceTheme } from "../types/presets";
 
 export function buildPresetCreatePayload(
     name: string,
@@ -8,7 +8,7 @@ export function buildPresetCreatePayload(
     return {
         name,
         description,
-        customCSS: theme.customCSS ?? '',
+        customCSS: theme.customCSS ?? "",
         enableCustomCSS: theme.enableCustomCSS ?? false,
         base100: theme.base100,
         base200: theme.base200,

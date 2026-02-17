@@ -1,8 +1,12 @@
-import { ref, type Ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { ThemePreset, CreatePresetInput, UpdatePresetInput } from '../types/presets';
-import { presetService } from '../services/presetService';
-import { useToast } from '../services/toastService';
+import { ref, type Ref } from "vue";
+import { useI18n } from "vue-i18n";
+import type {
+    ThemePreset,
+    CreatePresetInput,
+    UpdatePresetInput,
+} from "../types/presets";
+import { presetService } from "../services/presetService";
+import { useToast } from "../services/toastService";
 
 const presets: Ref<ThemePreset[]> = ref([]);
 const loading = ref(false);
@@ -18,70 +22,115 @@ export function usePresets() {
             error.value = null;
             presets.value = await presetService.getAllPresets();
         } catch (err) {
-            error.value = err instanceof Error ? err.message : t('theme.presets.messages.load_error');
-            addToast(t('theme.presets.messages.load_error'), 'error');
+            error.value =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.load_error");
+            addToast(t("theme.presets.messages.load_error"), "error");
         } finally {
             loading.value = false;
         }
     };
 
-    const createPreset = async (input: CreatePresetInput): Promise<ThemePreset | null> => {
+    const createPreset = async (
+        input: CreatePresetInput
+    ): Promise<ThemePreset | null> => {
         try {
             const preset = await presetService.createPreset(input);
             presets.value.push(preset);
-            addToast(t('theme.presets.messages.create_success', { name: preset.name }), 'success');
+            addToast(
+                t("theme.presets.messages.create_success", {
+                    name: preset.name,
+                }),
+                "success"
+            );
             return preset;
         } catch (err) {
             console.log("Failed to create preset:", err);
-            const message = err instanceof Error ? err.message : t('theme.presets.messages.create_error');
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.create_error");
             error.value = message;
-            addToast(message, 'error');
+            addToast(message, "error");
             return null;
         }
     };
 
-    const updatePreset = async (input: UpdatePresetInput): Promise<ThemePreset | null> => {
+    const updatePreset = async (
+        input: UpdatePresetInput
+    ): Promise<ThemePreset | null> => {
         try {
             const updatedPreset = await presetService.updatePreset(input);
-            const index = presets.value.findIndex(p => p.id === input.id);
+            const index = presets.value.findIndex((p) => p.id === input.id);
             if (index !== -1) {
                 presets.value[index] = updatedPreset;
             }
-            addToast(t('theme.presets.messages.update_success', { name: updatedPreset.name }), 'success');
+            addToast(
+                t("theme.presets.messages.update_success", {
+                    name: updatedPreset.name,
+                }),
+                "success"
+            );
             return updatedPreset;
         } catch (err) {
-            const message = err instanceof Error ? err.message : t('theme.presets.messages.update_error');
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.update_error");
             error.value = message;
-            addToast(message, 'error');
+            addToast(message, "error");
             return null;
         }
     };
 
     const deletePreset = async (id: string): Promise<boolean> => {
         try {
-            const preset = presets.value.find(p => p.id === id);
+            const preset = presets.value.find((p) => p.id === id);
             await presetService.deletePreset(id);
-            presets.value = presets.value.filter(p => p.id !== id);
-            addToast(t('theme.presets.messages.delete_success', { name: preset?.name || 'Unknown' }), 'success');
+            presets.value = presets.value.filter((p) => p.id !== id);
+            addToast(
+                t("theme.presets.messages.delete_success", {
+                    name: preset?.name || "Unknown",
+                }),
+                "success"
+            );
             return true;
         } catch (err) {
-            const message = err instanceof Error ? err.message : t('theme.presets.messages.delete_error');
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.delete_error");
             error.value = message;
-            addToast(message, 'error');
+            addToast(message, "error");
             return false;
         }
     };
 
-    const duplicatePreset = async (id: string, newName: string): Promise<ThemePreset | null> => {
+    const duplicatePreset = async (
+        id: string,
+        newName: string
+    ): Promise<ThemePreset | null> => {
         try {
-            const duplicatedPreset = await presetService.duplicatePreset(id, newName);
+            const duplicatedPreset = await presetService.duplicatePreset(
+                id,
+                newName
+            );
             presets.value.push(duplicatedPreset);
-            addToast(t('theme.presets.messages.duplicate_success', { name: duplicatedPreset.name }), 'success');
+            addToast(
+                t("theme.presets.messages.duplicate_success", {
+                    name: duplicatedPreset.name,
+                }),
+                "success"
+            );
             return duplicatedPreset;
         } catch (err) {
-            const message = err instanceof Error ? err.message : t('theme.presets.messages.duplicate_error');
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.duplicate_error");
             error.value = message;
-            addToast(message, 'error');
+            addToast(message, "error");
             return null;
         }
     };
@@ -89,40 +138,59 @@ export function usePresets() {
     const applyPreset = (preset: ThemePreset): void => {
         try {
             presetService.applyPresetToTheme(preset);
-            addToast(t('theme.presets.messages.apply_success', { name: preset.name }), 'success');
+            addToast(
+                t("theme.presets.messages.apply_success", {
+                    name: preset.name,
+                }),
+                "success"
+            );
         } catch (err) {
-            const message = err instanceof Error ? err.message : t('theme.presets.messages.apply_error');
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.apply_error");
             error.value = message;
-            addToast(message, 'error');
+            addToast(message, "error");
         }
     };
 
-    const saveCurrentAsPreset = async (name: string, description?: string): Promise<ThemePreset | null> => {
-        const input = presetService.createPresetFromCurrentSettings(name, description);
+    const saveCurrentAsPreset = async (
+        name: string,
+        description?: string
+    ): Promise<ThemePreset | null> => {
+        const input = presetService.createPresetFromCurrentSettings(
+            name,
+            description
+        );
         return await createPreset(input);
     };
 
     const getPresetById = (id: string): ThemePreset | undefined => {
-        return presets.value.find(p => p.id === id);
+        return presets.value.find((p) => p.id === id);
     };
 
     const exportPreset = (preset: ThemePreset): string => {
         return JSON.stringify(preset, null, 2);
     };
 
-    const importPresetFromJSON = async (jsonString: string): Promise<ThemePreset | null> => {
+    const importPresetFromJSON = async (
+        jsonString: string
+    ): Promise<ThemePreset | null> => {
         try {
             const presetData = JSON.parse(jsonString);
 
             if (!presetData.name) {
-                throw new Error(t('theme.presets.messages.import_no_name'));
+                throw new Error(t("theme.presets.messages.import_no_name"));
             }
 
             const input: CreatePresetInput = {
-                name: presetData.name + ' (Imported)',
+                name: presetData.name + " (Imported)",
                 description: presetData.description,
-                customCSS: presetData.custom_css || presetData.customCSS || '',
-                enableCustomCSS: presetData.enable_custom_css ?? presetData.enableCustomCSS ?? false,
+                customCSS: presetData.custom_css || presetData.customCSS || "",
+                enableCustomCSS:
+                    presetData.enable_custom_css ??
+                    presetData.enableCustomCSS ??
+                    false,
                 primary: presetData.primary || presetData.primaryColorOverride,
 
                 base100: presetData.base100,
@@ -130,28 +198,38 @@ export function usePresets() {
                 base300: presetData.base300,
                 baseContent: presetData.base_content || presetData.baseContent,
 
-                primaryContent: presetData.primary_content || presetData.primaryContent,
+                primaryContent:
+                    presetData.primary_content || presetData.primaryContent,
                 secondary: presetData.secondary,
-                secondaryContent: presetData.secondary_content || presetData.secondaryContent,
+                secondaryContent:
+                    presetData.secondary_content || presetData.secondaryContent,
                 accent: presetData.accent,
-                accentContent: presetData.accent_content || presetData.accentContent,
+                accentContent:
+                    presetData.accent_content || presetData.accentContent,
                 neutral: presetData.neutral,
-                neutralContent: presetData.neutral_content || presetData.neutralContent,
+                neutralContent:
+                    presetData.neutral_content || presetData.neutralContent,
                 info: presetData.info,
                 infoContent: presetData.info_content || presetData.infoContent,
                 success: presetData.success,
-                successContent: presetData.success_content || presetData.successContent,
+                successContent:
+                    presetData.success_content || presetData.successContent,
                 warning: presetData.warning,
-                warningContent: presetData.warning_content || presetData.warningContent,
+                warningContent:
+                    presetData.warning_content || presetData.warningContent,
                 error: presetData.error,
-                errorContent: presetData.error_content || presetData.errorContent,
+                errorContent:
+                    presetData.error_content || presetData.errorContent,
             };
 
             return await createPreset(input);
         } catch (err) {
-            const message = err instanceof Error ? err.message : t('theme.presets.messages.import_error');
+            const message =
+                err instanceof Error
+                    ? err.message
+                    : t("theme.presets.messages.import_error");
             error.value = message;
-            addToast(message, 'error');
+            addToast(message, "error");
             return null;
         }
     };
@@ -169,6 +247,6 @@ export function usePresets() {
         saveCurrentAsPreset,
         getPresetById,
         exportPreset,
-        importPresetFromJSON
+        importPresetFromJSON,
     };
 }

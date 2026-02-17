@@ -37,12 +37,12 @@ export interface CreatePresetInput {
     description?: string;
     customCSS: string;
     enableCustomCSS: boolean;
-    
+
     base100?: string;
     base200?: string;
     base300?: string;
     baseContent?: string;
-    
+
     primary?: string;
     primaryContent?: string;
     secondary?: string;

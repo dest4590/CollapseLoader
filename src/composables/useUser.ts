@@ -1,5 +1,9 @@
-import { reactive, computed, ref, watch } from 'vue';
-import { userService, type UserProfile, type UserInfo } from '../services/userService';
+import { reactive, computed, ref, watch } from "vue";
+import {
+    userService,
+    type UserProfile,
+    type UserInfo,
+} from "../services/userService";
 
 interface GlobalUserState {
     profile: UserProfile | null;
@@ -14,23 +18,23 @@ const globalUserState = reactive<GlobalUserState>({
     info: null,
     isLoading: false,
     isLoaded: false,
-    lastUpdated: null
+    lastUpdated: null,
 });
 
-const authToken = ref(localStorage.getItem('authToken'));
+const authToken = ref(localStorage.getItem("authToken"));
 const isAuthenticated = computed(() => !!authToken.value);
 
 let authWatcherAttached = false;
 
-window.addEventListener('storage', (event) => {
-    if (event.key === 'authToken') {
+window.addEventListener("storage", (event) => {
+    if (event.key === "authToken") {
         authToken.value = event.newValue;
     }
 });
 
 const originalSetItem = localStorage.setItem;
 localStorage.setItem = function (key: string, value: string) {
-    if (key === 'authToken') {
+    if (key === "authToken") {
         authToken.value = value;
     }
     originalSetItem.apply(this, [key, value]);
@@ -38,20 +42,24 @@ localStorage.setItem = function (key: string, value: string) {
 
 const originalRemoveItem = localStorage.removeItem;
 localStorage.removeItem = function (key: string) {
-    if (key === 'authToken') {
+    if (key === "authToken") {
         authToken.value = null;
     }
     originalRemoveItem.apply(this, [key]);
 };
 
 const displayName = computed(() => {
-    if (!globalUserState.info && !globalUserState.profile) return '';
-    return globalUserState.profile?.nickname || globalUserState.info?.username || '';
+    if (!globalUserState.info && !globalUserState.profile) return "";
+    return (
+        globalUserState.profile?.nickname ||
+        globalUserState.info?.username ||
+        ""
+    );
 });
 
-const username = computed(() => globalUserState.info?.username || '');
-const email = computed(() => globalUserState.info?.email || '');
-const nickname = computed(() => globalUserState.profile?.nickname || '');
+const username = computed(() => globalUserState.info?.username || "");
+const email = computed(() => globalUserState.info?.email || "");
+const nickname = computed(() => globalUserState.profile?.nickname || "");
 
 const loadUserData = async (forceRefresh = false): Promise<void> => {
     if (!isAuthenticated.value) {
@@ -77,9 +85,9 @@ const loadUserData = async (forceRefresh = false): Promise<void> => {
         globalUserState.lastUpdated = new Date().toISOString();
         globalUserState.isLoaded = true;
 
-        console.log('Global user data loaded successfully');
+        console.log("Global user data loaded successfully");
     } catch (error) {
-        console.error('Failed to load global user data:', error);
+        console.error("Failed to load global user data:", error);
     } finally {
         globalUserState.isLoading = false;
     }
@@ -96,7 +104,7 @@ const updateUserProfile = async (newNickname: string): Promise<boolean> => {
 
         return result.success;
     } catch (error) {
-        console.error('Failed to update user profile:', error);
+        console.error("Failed to update user profile:", error);
         return false;
     }
 };
@@ -122,7 +130,7 @@ const refreshUserData = (): Promise<void> => {
 };
 
 const logout = (): void => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem("authToken");
     userService.clearCache();
     clearUserData();
 };
@@ -163,6 +171,6 @@ export function useUser() {
         clearUserData,
         hydrateUser,
         refreshUserData,
-        logout
+        logout,
     };
 }

@@ -1,4 +1,4 @@
-import { getApiUrl } from '../config';
+import { getApiUrl } from "../config";
 
 const ABSOLUTE_URL_REGEX = /^[a-z][a-z0-9+.-]*:/i;
 
@@ -9,7 +9,7 @@ export function resolveApiAssetUrl(url?: string | null): string | undefined {
     const baseUrl = getApiUrl();
     if (!baseUrl) return url;
 
-    if (url.startsWith('/')) {
+    if (url.startsWith("/")) {
         return `${baseUrl}${url}`;
     }
 

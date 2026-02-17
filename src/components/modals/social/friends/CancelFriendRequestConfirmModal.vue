@@ -2,7 +2,7 @@
     <div>
         <p class="text-sm text-base-content/70">
             {{
-                $t('modals.cancel_friend_request_confirm.message', {
+                $t("modals.cancel_friend_request_confirm.message", {
                     displayName,
                 })
             }}
@@ -11,20 +11,20 @@
         <div class="flex justify-end space-x-2 mt-6">
             <button @click="confirmAction" class="btn btn-error">
                 <X class="w-4 h-4 mr-2" />
-                {{ $t('modals.cancel_friend_request_confirm.yes_cancel') }}
+                {{ $t("modals.cancel_friend_request_confirm.yes_cancel") }}
             </button>
             <button @click="$emit('close')" class="btn btn-outline">
                 <ArrowLeft class="w-4 h-4 mr-2" />
-                {{ $t('modals.cancel_friend_request_confirm.keep_request') }}
+                {{ $t("modals.cancel_friend_request_confirm.keep_request") }}
             </button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { X, ArrowLeft } from 'lucide-vue-next';
-import { globalUserStatus } from '../../../../composables/useUserStatus';
+import { computed } from "vue";
+import { X, ArrowLeft } from "lucide-vue-next";
+import { globalUserStatus } from "../../../../composables/useUserStatus";
 
 interface User {
     id: number;
@@ -37,12 +37,16 @@ const props = defineProps<{
     requestId: number;
 }>();
 
-const emit = defineEmits(['close', 'confirm']);
+const emit = defineEmits(["close", "confirm"]);
 
-const displayName = computed(() => globalUserStatus.isStreamer.value ? '??' : (props.user.nickname || props.user.username));
+const displayName = computed(() =>
+    globalUserStatus.isStreamer.value
+        ? "??"
+        : props.user.nickname || props.user.username
+);
 
 const confirmAction = () => {
-    emit('confirm', props.requestId);
-    emit('close');
+    emit("confirm", props.requestId);
+    emit("close");
 };
 </script>

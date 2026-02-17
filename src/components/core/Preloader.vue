@@ -4,8 +4,8 @@
     <BootLogs v-if="isDev" :current-progress="currentProgress / totalSteps" :loading-state="loadingState" />
 
     <div class="flex flex-col items-center justify-center h-full w-screen relative z-10">
-      <div v-if="!halloweenActive" class="w-48 h-48 lottie-animate">
-        <Vue3Lottie :animation-data="preloader" :height="200" :width="200" />
+      <div v-if="!halloweenActive" class="w-48 h-48">
+        <img src="../../assets/images/logo.svg" class="w-full h-full object-contain" />
       </div>
       <div v-else class="w-48 h-48">
         <img src="../../assets/misc/ghosts.gif" />
@@ -37,8 +37,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
-import { Vue3Lottie } from 'vue3-lottie';
-import preloader from '../../assets/misc/preloader.json';
 import BootLogs from './BootLogs.vue';
 
 const props = defineProps({

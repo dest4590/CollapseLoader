@@ -1,40 +1,64 @@
 <template>
-
     <div class="p-6 space-y-4">
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t('theme.presets.import_modal.method_label') }}</span>
+                <span class="label-text">{{
+                    $t("theme.presets.import_modal.method_label")
+                }}</span>
             </label>
             <div class="tabs tabs-boxed">
-                <button @click="importMethod = 'file'" class="tab" :class="{ 'tab-active': importMethod === 'file' }">
+                <button
+                    @click="importMethod = 'file'"
+                    class="tab"
+                    :class="{ 'tab-active': importMethod === 'file' }"
+                >
                     <Upload class="w-4 h-4 mr-2" />
-                    {{ $t('theme.presets.import_modal.method_file') }}
+                    {{ $t("theme.presets.import_modal.method_file") }}
                 </button>
-                <button @click="importMethod = 'json'" class="tab" :class="{ 'tab-active': importMethod === 'json' }">
+                <button
+                    @click="importMethod = 'json'"
+                    class="tab"
+                    :class="{ 'tab-active': importMethod === 'json' }"
+                >
                     <FileText class="w-4 h-4 mr-2" />
-                    {{ $t('theme.presets.import_modal.method_json') }}
+                    {{ $t("theme.presets.import_modal.method_json") }}
                 </button>
             </div>
         </div>
 
         <div v-if="importMethod === 'file'" class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t('theme.presets.import_modal.file_label') }}</span>
+                <span class="label-text">{{
+                    $t("theme.presets.import_modal.file_label")
+                }}</span>
             </label>
-            <input ref="fileInput" type="file" accept=".json" @change="handleFileChange"
-                class="file-input file-input-bordered w-full" />
+            <input
+                ref="fileInput"
+                type="file"
+                accept=".json"
+                @change="handleFileChange"
+                class="file-input file-input-bordered w-full"
+            />
             <label class="label">
-                <span class="label-text-alt">{{ $t('theme.presets.import_modal.file_help') }}</span>
+                <span class="label-text-alt">{{
+                    $t("theme.presets.import_modal.file_help")
+                }}</span>
             </label>
         </div>
 
         <div v-if="importMethod === 'json'" class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t('theme.presets.import_modal.json_label') }}</span>
+                <span class="label-text">{{
+                    $t("theme.presets.import_modal.json_label")
+                }}</span>
             </label>
-            <textarea v-model="jsonInput" :placeholder="$t('theme.presets.import_modal.json_placeholder')"
-                class="textarea textarea-bordered w-full h-32" :class="{ 'textarea-error': error }"
-                @input="error = ''"></textarea>
+            <textarea
+                v-model="jsonInput"
+                :placeholder="$t('theme.presets.import_modal.json_placeholder')"
+                class="textarea textarea-bordered w-full h-32"
+                :class="{ 'textarea-error': error }"
+                @input="error = ''"
+            ></textarea>
             <label v-if="error" class="label">
                 <span class="label-text-alt text-error">{{ error }}</span>
             </label>
@@ -42,13 +66,27 @@
 
         <div v-if="previewData" class="card bg-base-200 border border-base-300">
             <div class="card-body p-4">
-                <h4 class="card-title text-sm">{{ $t('theme.presets.import_modal.preview_title') }}</h4>
+                <h4 class="card-title text-sm">
+                    {{ $t("theme.presets.import_modal.preview_title") }}
+                </h4>
                 <div class="text-sm space-y-1">
-                    <div><strong>{{ $t('theme.presets.import_modal.preview_name') }}:</strong> {{ previewData.name }}
+                    <div>
+                        <strong
+                            >{{
+                                $t("theme.presets.import_modal.preview_name")
+                            }}:</strong
+                        >
+                        {{ previewData.name }}
                     </div>
                     <div v-if="previewData.description">
-                        <strong>{{ $t('theme.presets.import_modal.preview_description') }}:</strong> {{
-                            previewData.description }}
+                        <strong
+                            >{{
+                                $t(
+                                    "theme.presets.import_modal.preview_description"
+                                )
+                            }}:</strong
+                        >
+                        {{ previewData.description }}
                     </div>
                 </div>
             </div>
@@ -56,43 +94,50 @@
     </div>
 
     <div class="flex gap-3 p-6 border-t border-base-300">
-        <button @click="importPreset" class="btn btn-primary flex-1" :class="{ 'loading': importing }"
-            :disabled="importing || !canImport">
+        <button
+            @click="importPreset"
+            class="btn btn-primary flex-1"
+            :class="{ loading: importing }"
+            :disabled="importing || !canImport"
+        >
             <Upload class="w-4 h-4 mr-2" v-if="!importing" />
-            {{ importing ? $t('theme.presets.import_modal.importing') : $t('theme.presets.import_modal.import_button')
+            {{
+                importing
+                    ? $t("theme.presets.import_modal.importing")
+                    : $t("theme.presets.import_modal.import_button")
             }}
         </button>
         <button @click="close" class="btn btn-ghost flex-1">
-            {{ $t('theme.presets.import_modal.cancel') }}
+            {{ $t("theme.presets.import_modal.cancel") }}
         </button>
     </div>
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {FileText, Upload} from 'lucide-vue-next';
-import {usePresets} from '../../../../composables/usePresets';
+import { computed, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { FileText, Upload } from "lucide-vue-next";
+import { usePresets } from "../../../../composables/usePresets";
 
 const { t } = useI18n();
 
 interface Emits {
-    (e: 'close'): void;
-    (e: 'import'): void;
+    (e: "close"): void;
+    (e: "import"): void;
 }
 
 const emit = defineEmits<Emits>();
 
 const { importPresetFromJSON } = usePresets();
 
-const importMethod = ref<'file' | 'json'>('file');
-const jsonInput = ref('');
-const error = ref('');
+const importMethod = ref<"file" | "json">("file");
+const jsonInput = ref("");
+const error = ref("");
 const importing = ref(false);
 const previewData = ref<any>(null);
 
 const canImport = computed(() => {
-    if (importMethod.value === 'file') {
+    if (importMethod.value === "file") {
         return previewData.value !== null;
     }
     return jsonInput.value.trim().length > 0 && !error.value;
@@ -110,10 +155,10 @@ const handleFileChange = async (event: Event) => {
     try {
         const text = await file.text();
         previewData.value = JSON.parse(text);
-        error.value = '';
+        error.value = "";
     } catch (e) {
-        console.error('Failed to parse preset file:', e);
-        error.value = t('theme.presets.import_modal.error_invalid_file');
+        console.error("Failed to parse preset file:", e);
+        error.value = t("theme.presets.import_modal.error_invalid_file");
         previewData.value = null;
     }
 };
@@ -122,12 +167,15 @@ const validateJSON = (jsonString: string) => {
     try {
         const data = JSON.parse(jsonString);
         if (!data.name) {
-            throw new Error(t('theme.presets.import_modal.error_no_name'));
+            throw new Error(t("theme.presets.import_modal.error_no_name"));
         }
         previewData.value = data;
-        error.value = '';
+        error.value = "";
     } catch (err) {
-        error.value = err instanceof Error ? err.message : t('theme.presets.import_modal.error_invalid_json');
+        error.value =
+            err instanceof Error
+                ? err.message
+                : t("theme.presets.import_modal.error_invalid_json");
         previewData.value = null;
     }
 };
@@ -140,7 +188,7 @@ const importPreset = async () => {
 
         let jsonData;
 
-        if (importMethod.value === 'file' && previewData.value) {
+        if (importMethod.value === "file" && previewData.value) {
             jsonData = JSON.stringify(previewData.value);
         } else {
             jsonData = jsonInput.value.trim();
@@ -148,7 +196,7 @@ const importPreset = async () => {
 
         const result = await importPresetFromJSON(jsonData);
         if (result) {
-            emit('import');
+            emit("import");
             close();
         }
     } finally {
@@ -157,11 +205,11 @@ const importPreset = async () => {
 };
 
 const close = () => {
-    emit('close');
+    emit("close");
 };
 
 watch(jsonInput, (newValue) => {
-    if (importMethod.value === 'json' && newValue.trim()) {
+    if (importMethod.value === "json" && newValue.trim()) {
         validateJSON(newValue);
     } else {
         previewData.value = null;
@@ -170,6 +218,6 @@ watch(jsonInput, (newValue) => {
 
 watch(importMethod, () => {
     previewData.value = null;
-    error.value = '';
+    error.value = "";
 });
 </script>

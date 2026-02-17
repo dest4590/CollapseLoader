@@ -1,75 +1,144 @@
 <template>
-    <div class="header flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+    <div
+        class="header flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6"
+    >
         <div class="title-row flex items-center gap-3">
             <h1 class="text-2xl font-semibold text-primary-focus">
-                {{ t('friends.title', { count: friends.length }) }}
+                {{ t("friends.title", { count: friends.length }) }}
             </h1>
         </div>
 
         <div class="controls flex items-center gap-2">
-            <button @click="showAddFriendModal" class="btn btn-primary btn-sm flex items-center gap-2">
+            <button
+                @click="showAddFriendModal"
+                class="btn btn-primary btn-sm flex items-center gap-2"
+            >
                 <UserPlus class="w-4 h-4" />
-                {{ t('friends.addFriend') }}
+                {{ t("friends.addFriend") }}
             </button>
         </div>
     </div>
 
-    <InlineIRCChat class="mb-6" @show-user-profile="$emit('show-user-profile', $event)" />
+    <InlineIRCChat
+        class="mb-6"
+        @show-user-profile="$emit('show-user-profile', $event)"
+    />
 
-    <div v-if="friendRequests.received.length > 0 || friendRequests.sent.length > 0 || blockedUsers.length > 0"
-        class="mb-6">
+    <div
+        v-if="
+            friendRequests.received.length > 0 ||
+            friendRequests.sent.length > 0 ||
+            blockedUsers.length > 0
+        "
+        class="mb-6"
+    >
         <div class="grid gap-4 lg:grid-cols-3 items-stretch">
-            <div v-if="friendRequests.received.length > 0" class="requests-panel">
-                <div class="panel-header flex items-center justify-between mb-2">
-                    <h3 class="text-md font-medium text-info">{{ t('friends.receivedRequests') }}</h3>
-                    <span class="text-sm text-base-content/60">{{ friendRequests.received.length }}</span>
+            <div
+                v-if="friendRequests.received.length > 0"
+                class="requests-panel"
+            >
+                <div
+                    class="panel-header flex items-center justify-between mb-2"
+                >
+                    <h3 class="text-md font-medium text-info">
+                        {{ t("friends.receivedRequests") }}
+                    </h3>
+                    <span class="text-sm text-base-content/60">{{
+                        friendRequests.received.length
+                    }}</span>
                 </div>
-                <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
-                    <FriendRequestCard v-for="request in friendRequests.received" :key="request.id"
-                        :user="request.requester" :request-id="request.id" type="received"
-                        @accept="respondToRequest($event, 'accept')" @reject="respondToRequest($event, 'reject')"
-                        @view-profile="$emit('show-user-profile', $event)" />
+                <div
+                    class="requests-list grid gap-2 auto-rows-fr items-stretch"
+                >
+                    <FriendRequestCard
+                        v-for="request in friendRequests.received"
+                        :key="request.id"
+                        :user="request.requester"
+                        :request-id="request.id"
+                        type="received"
+                        @accept="respondToRequest($event, 'accept')"
+                        @reject="respondToRequest($event, 'reject')"
+                        @view-profile="$emit('show-user-profile', $event)"
+                    />
                 </div>
             </div>
 
             <div v-if="friendRequests.sent.length > 0" class="requests-panel">
-                <div class="panel-header flex items-center justify-between mb-2">
-                    <h3 class="text-md font-medium text-warning">{{ t('friends.sentRequests') }}</h3>
-                    <span class="text-sm text-base-content/60">{{ friendRequests.sent.length }}</span>
+                <div
+                    class="panel-header flex items-center justify-between mb-2"
+                >
+                    <h3 class="text-md font-medium text-warning">
+                        {{ t("friends.sentRequests") }}
+                    </h3>
+                    <span class="text-sm text-base-content/60">{{
+                        friendRequests.sent.length
+                    }}</span>
                 </div>
-                <div class="requests-list grid gap-2 auto-rows-fr items-stretch">
-                    <FriendRequestCard v-for="request in friendRequests.sent" :key="request.id"
-                        :user="request.addressee" :request-id="request.id" type="sent" @cancel="cancelRequest"
-                        @view-profile="$emit('show-user-profile', $event)" />
+                <div
+                    class="requests-list grid gap-2 auto-rows-fr items-stretch"
+                >
+                    <FriendRequestCard
+                        v-for="request in friendRequests.sent"
+                        :key="request.id"
+                        :user="request.addressee"
+                        :request-id="request.id"
+                        type="sent"
+                        @cancel="cancelRequest"
+                        @view-profile="$emit('show-user-profile', $event)"
+                    />
                 </div>
             </div>
 
             <div v-if="blockedUsers.length > 0" class="requests-panel">
-                <div class="panel-header flex items-center justify-between mb-2">
-                    <h3 class="text-md font-medium text-error">{{ t('blockedUsers.title', { count: '' }).replace('()',
-                        '').trim() }}</h3>
-                    <span class="text-sm text-base-content/60">{{ blockedUsers.length }}</span>
+                <div
+                    class="panel-header flex items-center justify-between mb-2"
+                >
+                    <h3 class="text-md font-medium text-error">
+                        {{
+                            t("blockedUsers.title", { count: "" })
+                                .replace("()", "")
+                                .trim()
+                        }}
+                    </h3>
+                    <span class="text-sm text-base-content/60">{{
+                        blockedUsers.length
+                    }}</span>
                 </div>
                 <div class="requests-list space-y-2">
-                    <div v-for="user in blockedUsers" :key="user.id"
-                        class="flex items-center justify-between p-2 bg-base-200/50 rounded-lg border border-base-300/50">
+                    <div
+                        v-for="user in blockedUsers"
+                        :key="user.id"
+                        class="flex items-center justify-between p-2 bg-base-200/50 rounded-lg border border-base-300/50"
+                    >
                         <div class="flex items-center gap-2">
-                            <div @click="$emit('show-user-profile', user.id)" class="avatar-click-area cursor-pointer">
-                                <UserAvatar :name="getDisplayNickname(user)" size="sm" />
+                            <div
+                                @click="$emit('show-user-profile', user.id)"
+                                class="avatar-click-area cursor-pointer"
+                            >
+                                <UserAvatar
+                                    :name="getDisplayNickname(user)"
+                                    size="sm"
+                                />
                             </div>
                             <div class="min-w-0">
-                                <p class="font-medium text-sm truncate max-w-25">
+                                <p
+                                    class="font-medium text-sm truncate max-w-25"
+                                >
                                     {{ getDisplayNickname(user) }}
                                 </p>
-                                <p class="text-[10px] text-base-content/50 truncate max-w-25">
+                                <p
+                                    class="text-[10px] text-base-content/50 truncate max-w-25"
+                                >
                                     @{{ getDisplayUsername(user) }}
                                 </p>
                             </div>
                         </div>
-                        <button @click="unblockUser(user)"
-                            class="btn btn-error btn-outline btn-xs gap-1 hover:btn-error">
+                        <button
+                            @click="unblockUser(user)"
+                            class="btn btn-error btn-outline btn-xs gap-1 hover:btn-error"
+                        >
                             <UserCheck class="w-3 h-3" />
-                            {{ t('common.unblock') }}
+                            {{ t("common.unblock") }}
                         </button>
                     </div>
                 </div>
@@ -78,34 +147,50 @@
     </div>
 
     <div>
-        <div v-if="friends.length === 0" class="text-center py-8 text-base-content/70">
+        <div
+            v-if="friends.length === 0"
+            class="text-center py-8 text-base-content/70"
+        >
             <Users class="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>{{ t('friends.noFriends') }}</p>
+            <p>{{ t("friends.noFriends") }}</p>
         </div>
 
-        <div v-else class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            <FriendCard v-for="friend in friends" :key="friend.id" :friend="friend" @remove-friend="removeFriend"
-                @block-friend="blockFriend" @view-profile="$emit('show-user-profile', $event)" />
+        <div
+            v-else
+            class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        >
+            <FriendCard
+                v-for="friend in friends"
+                :key="friend.id"
+                :friend="friend"
+                @remove-friend="removeFriend"
+                @block-friend="blockFriend"
+                @view-profile="$emit('show-user-profile', $event)"
+            />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { useToast } from '../services/toastService';
-import { useModal } from '../services/modalService';
-import { useI18n } from 'vue-i18n';
-import { type Friend, userService, type UserStatus, } from '../services/userService';
-import { useFriends } from '../composables/useFriends';
-import AddFriendModal from '../components/modals/social/friends/AddFriendModal.vue';
-import BlockUnblockConfirmModal from '../components/modals/social/friends/BlockUnblockConfirmModal.vue';
-import RemoveFriendConfirmModal from '../components/modals/social/friends/RemoveFriendConfirmModal.vue';
-import FriendCard from '../components/features/friends/FriendCard.vue';
-import FriendRequestCard from '../components/features/friends/FriendRequestCard.vue';
-import UserAvatar from '../components/ui/UserAvatar.vue';
-import InlineIRCChat from '../components/features/social/InlineIRCChat.vue';
-import { UserCheck, UserPlus, Users } from 'lucide-vue-next';
-import { useStreamerMode } from '../composables/useStreamerMode';
+import { onMounted, onUnmounted, ref } from "vue";
+import { useToast } from "../services/toastService";
+import { useModal } from "../services/modalService";
+import { useI18n } from "vue-i18n";
+import {
+    type Friend,
+    userService,
+    type UserStatus,
+} from "../services/userService";
+import { useFriends } from "../composables/useFriends";
+import AddFriendModal from "../components/modals/social/friends/AddFriendModal.vue";
+import BlockUnblockConfirmModal from "../components/modals/social/friends/BlockUnblockConfirmModal.vue";
+import RemoveFriendConfirmModal from "../components/modals/social/friends/RemoveFriendConfirmModal.vue";
+import FriendCard from "../components/features/friends/FriendCard.vue";
+import FriendRequestCard from "../components/features/friends/FriendRequestCard.vue";
+import UserAvatar from "../components/ui/UserAvatar.vue";
+import InlineIRCChat from "../components/features/social/InlineIRCChat.vue";
+import { UserCheck, UserPlus, Users } from "lucide-vue-next";
+import { useStreamerMode } from "../composables/useStreamerMode";
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -117,13 +202,13 @@ defineProps<{
 }>();
 
 const emit = defineEmits([
-    'show-user-profile',
-    'logged-out',
-    'logged-in',
-    'registered',
-    'change-view',
-    'back-to-friends',
-    'unreadCountUpdated',
+    "show-user-profile",
+    "logged-out",
+    "logged-in",
+    "registered",
+    "change-view",
+    "back-to-friends",
+    "unreadCountUpdated",
 ]);
 
 const { friends, friendRequests, loadFriendsData, updateFriendStatuses } =
@@ -158,9 +243,9 @@ onMounted(async () => {
         FULL_DATA_UPDATE_INTERVAL
     );
 
-    window.addEventListener('friend-request-received', handleRefreshEvent);
-    window.addEventListener('friend-request-accepted', handleRefreshEvent);
-    window.addEventListener('friend-request-canceled', handleRefreshEvent);
+    window.addEventListener("friend-request-received", handleRefreshEvent);
+    window.addEventListener("friend-request-accepted", handleRefreshEvent);
+    window.addEventListener("friend-request-canceled", handleRefreshEvent);
 });
 
 onUnmounted(() => {
@@ -170,9 +255,9 @@ onUnmounted(() => {
     if (fullDataRefreshInterval) {
         clearInterval(fullDataRefreshInterval);
     }
-    window.removeEventListener('friend-request-received', handleRefreshEvent);
-    window.removeEventListener('friend-request-accepted', handleRefreshEvent);
-    window.removeEventListener('friend-request-canceled', handleRefreshEvent);
+    window.removeEventListener("friend-request-received", handleRefreshEvent);
+    window.removeEventListener("friend-request-accepted", handleRefreshEvent);
+    window.removeEventListener("friend-request-canceled", handleRefreshEvent);
 });
 
 const handleRefreshEvent = () => {
@@ -191,8 +276,8 @@ const loadFriendsAndStatus = async (forceReload = false) => {
 
         currentUserStatus.value = await userService.getUserStatus();
     } catch (error) {
-        console.error('Failed to load friends data:', error);
-        addToast(t('friends.load_failed'), 'error');
+        console.error("Failed to load friends data:", error);
+        addToast(t("friends.load_failed"), "error");
     }
 };
 
@@ -202,7 +287,7 @@ const updateStatuses = async () => {
 
         currentUserStatus.value = await userService.getUserStatus();
     } catch (error) {
-        console.error('Failed to update friend statuses:', error);
+        console.error("Failed to update friend statuses:", error);
     }
 };
 
@@ -210,140 +295,152 @@ const loadBlockedUsers = async () => {
     try {
         blockedUsers.value = await userService.getBlockedUsers();
     } catch (error) {
-        console.error('Failed to load blocked users:', error);
+        console.error("Failed to load blocked users:", error);
     }
 };
 
 const showAddFriendModal = () => {
     showModal(
-        'add-friend',
+        "add-friend",
         AddFriendModal,
-        { title: t('friends.addFriend') },
+        { title: t("friends.addFriend") },
         {},
         {
-            'friend-added': async () => {
+            "friend-added": async () => {
                 await loadFriendsData();
-                hideModal('add-friend');
+                hideModal("add-friend");
             },
-            'view-profile': (userId: number) => {
-                hideModal('add-friend');
-                emit('show-user-profile', userId);
+            "view-profile": (userId: number) => {
+                hideModal("add-friend");
+                emit("show-user-profile", userId);
             },
-            close: () => hideModal('add-friend'),
+            close: () => hideModal("add-friend"),
         }
     );
 };
 
 const respondToRequest = async (
     requestId: number,
-    action: 'accept' | 'reject'
+    action: "accept" | "reject"
 ) => {
     try {
         await userService.respondToFriendRequest(requestId, action);
         addToast(
-            action === 'accept'
-                ? t('friends.request_accepted')
-                : t('friends.request_rejected'),
-            'success'
+            action === "accept"
+                ? t("friends.request_accepted")
+                : t("friends.request_rejected"),
+            "success"
         );
         await loadFriendsData(true);
     } catch (error) {
         console.error(`Failed to ${action} friend request:`, error);
-        addToast(t('friends.request_failed', { action }), 'error');
+        addToast(t("friends.request_failed", { action }), "error");
     }
 };
 
 const cancelRequest = async (requestId: number) => {
     try {
         await userService.cancelFriendRequest(requestId);
-        addToast(t('friends.request_canceled'), 'success');
+        addToast(t("friends.request_canceled"), "success");
         await loadFriendsData(true);
     } catch (error) {
-        console.error('Failed to cancel friend request:', error);
-        addToast(t('friends.request_failed', { action: 'cancel' }), 'error');
+        console.error("Failed to cancel friend request:", error);
+        addToast(t("friends.request_failed", { action: "cancel" }), "error");
     }
 };
 
 const removeFriend = async (friend: Friend) => {
     showModal(
-        'remove-friend-confirm',
+        "remove-friend-confirm",
         RemoveFriendConfirmModal,
-        { title: t('userProfile.remove_friend') },
+        { title: t("userProfile.remove_friend") },
         { friend: friend },
         {
             confirm: async (confirmedFriend: Friend) => {
                 try {
                     await userService.removeFriend(confirmedFriend.id);
                     addToast(
-                        t('friends.remove_success', {
-                            name: streamer.getDisplayName(confirmedFriend.nickname, confirmedFriend.username),
+                        t("friends.remove_success", {
+                            name: streamer.getDisplayName(
+                                confirmedFriend.nickname,
+                                confirmedFriend.username
+                            ),
                         }),
-                        'success'
+                        "success"
                     );
                     await loadFriendsData(true);
                 } catch (error) {
-                    console.error('Failed to remove friend:', error);
-                    addToast(t('friends.remove_failed'), 'error');
+                    console.error("Failed to remove friend:", error);
+                    addToast(t("friends.remove_failed"), "error");
                 }
-                hideModal('remove-friend-confirm');
+                hideModal("remove-friend-confirm");
             },
-            close: () => hideModal('remove-friend-confirm'),
+            close: () => hideModal("remove-friend-confirm"),
         }
     );
 };
 
 const blockFriend = async (friend: Friend) => {
     showModal(
-        'block-confirm',
+        "block-confirm",
         BlockUnblockConfirmModal,
-        { title: t('userProfile.block_user') },
-        { user: friend, action: 'block' },
+        { title: t("userProfile.block_user") },
+        { user: friend, action: "block" },
         {
             confirm: async (user: Friend) => {
                 try {
                     await userService.blockUser(user.id);
                     addToast(
-                        t('friends.block_success', {
-                            name: streamer.getDisplayName(user.nickname, user.username),
+                        t("friends.block_success", {
+                            name: streamer.getDisplayName(
+                                user.nickname,
+                                user.username
+                            ),
                         }),
-                        'success'
+                        "success"
                     );
-                    await Promise.all([loadFriendsData(true), loadBlockedUsers()]);
+                    await Promise.all([
+                        loadFriendsData(true),
+                        loadBlockedUsers(),
+                    ]);
                 } catch (error) {
-                    console.error('Failed to block user:', error);
-                    addToast(t('friends.block_failed'), 'error');
+                    console.error("Failed to block user:", error);
+                    addToast(t("friends.block_failed"), "error");
                 }
-                hideModal('block-confirm');
+                hideModal("block-confirm");
             },
-            close: () => hideModal('block-confirm'),
+            close: () => hideModal("block-confirm"),
         }
     );
 };
 
 const unblockUser = async (user: Friend) => {
     showModal(
-        'unblock-confirm',
+        "unblock-confirm",
         BlockUnblockConfirmModal,
-        { title: t('userProfile.unblock_user') },
-        { user: user, action: 'unblock' },
+        { title: t("userProfile.unblock_user") },
+        { user: user, action: "unblock" },
         {
             confirm: async (confirmedUser: Friend) => {
                 try {
                     await userService.unblockUser(confirmedUser.id);
                     addToast(
-                        t('friends.unblock_success', {
-                            name: streamer.getDisplayName(confirmedUser.nickname, confirmedUser.username),
+                        t("friends.unblock_success", {
+                            name: streamer.getDisplayName(
+                                confirmedUser.nickname,
+                                confirmedUser.username
+                            ),
                         }),
-                        'success'
+                        "success"
                     );
                     await loadBlockedUsers();
                 } catch (error) {
-                    console.error('Failed to unblock user:', error);
-                    addToast(t('friends.unblock_failed'), 'error');
+                    console.error("Failed to unblock user:", error);
+                    addToast(t("friends.unblock_failed"), "error");
                 }
-                hideModal('unblock-confirm');
+                hideModal("unblock-confirm");
             },
-            close: () => hideModal('unblock-confirm'),
+            close: () => hideModal("unblock-confirm"),
         }
     );
 };

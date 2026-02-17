@@ -1,5 +1,5 @@
-import { reactive, ref, watch } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
+import { reactive, ref, watch } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface Setting<T> {
     value: T;
@@ -27,17 +27,17 @@ class SettingsService {
     async loadSettings(): Promise<void> {
         this.isLoading.value = true;
         try {
-            const loaded = await invoke<SettingsMap>('get_settings');
+            const loaded = await invoke<SettingsMap>("get_settings");
             Object.keys(this.settings).forEach((k) => delete this.settings[k]);
             Object.entries(loaded || {}).forEach(([k, v]) => {
-                if (v && typeof v === 'object' && 'value' in v && 'show' in v) {
+                if (v && typeof v === "object" && "value" in v && "show" in v) {
                     this.settings[k] = v;
                 } else {
                     this.settings[k] = { value: v, show: true };
                 }
             });
         } catch (err) {
-            console.error('Failed to load settings:', err);
+            console.error("Failed to load settings:", err);
             throw err;
         } finally {
             this.isLoading.value = false;
@@ -48,9 +48,9 @@ class SettingsService {
         this.isSaving.value = true;
         try {
             const payload = settingsArg ?? this.settings;
-            await invoke('save_settings', { inputSettings: payload });
+            await invoke("save_settings", { inputSettings: payload });
         } catch (err) {
-            console.error('Failed to save settings:', err);
+            console.error("Failed to save settings:", err);
             throw err;
         } finally {
             this.isSaving.value = false;
@@ -59,13 +59,13 @@ class SettingsService {
 
     async loadFlags(): Promise<void> {
         try {
-            const loaded = await invoke<FlagsMap>('get_flags');
+            const loaded = await invoke<FlagsMap>("get_flags");
             Object.keys(this.flags).forEach((k) => delete this.flags[k]);
             Object.entries(loaded || {}).forEach(([k, v]) => {
                 this.flags[k] = v;
             });
         } catch (err) {
-            console.error('Failed to load flags:', err);
+            console.error("Failed to load flags:", err);
             throw err;
         }
     }
@@ -78,7 +78,11 @@ class SettingsService {
         this.settings[key].value = value;
     }
 
-    async editSetting(key: string, value: any, show: boolean = true): Promise<void> {
+    async editSetting(
+        key: string,
+        value: any,
+        show: boolean = true
+    ): Promise<void> {
         this.isEditing.value = true;
         try {
             if (this.settings[key]) {
@@ -121,7 +125,7 @@ class SettingsService {
                     try {
                         await this.saveSettings();
                     } catch (e) {
-                        console.error('Auto-save failed', e);
+                        console.error("Auto-save failed", e);
                     }
                 }, 500) as unknown as number;
             },

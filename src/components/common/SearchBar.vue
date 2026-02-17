@@ -1,18 +1,37 @@
 <template>
     <div class="search-container group">
         <div class="relative">
-            <input ref="inputRef" type="text"
+            <input
+                ref="inputRef"
+                type="text"
                 class="input input-bordered w-full pl-10 pr-12 transition-all duration-300 z-10 relative bg-base-200/50"
-                :placeholder="t('home.search_placeholder')" v-model="searchTerm" @input="onSearch" />
-            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-20 transition-colors duration-300"
-                :class="{ 'text-primary': isFocused || searchTerm }">
-                <Search class="w-5 h-5" :class="[isFocused || searchTerm ? 'text-primary' : 'text-base-content/50']" />
+                :placeholder="t('home.search_placeholder')"
+                v-model="searchTerm"
+                @input="onSearch"
+            />
+            <div
+                class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-20 transition-colors duration-300"
+                :class="{ 'text-primary': isFocused || searchTerm }"
+            >
+                <Search
+                    class="w-5 h-5"
+                    :class="[
+                        isFocused || searchTerm
+                            ? 'text-primary'
+                            : 'text-base-content/50',
+                    ]"
+                />
             </div>
 
-            <div class="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex items-center gap-2">
+            <div
+                class="absolute right-3 top-1/2 -translate-y-1/2 z-20 flex items-center gap-2"
+            >
                 <Transition name="scale">
-                    <button v-if="searchTerm" @click="clearSearch"
-                        class="btn btn-circle btn-ghost btn-xs hover:bg-base-content/10">
+                    <button
+                        v-if="searchTerm"
+                        @click="clearSearch"
+                        class="btn btn-circle btn-ghost btn-xs hover:bg-base-content/10"
+                    >
                         <X class="w-4 h-4 text-base-content/70" />
                     </button>
                 </Transition>
@@ -22,27 +41,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import { Search, X } from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { Search, X } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
     initialValue?: string;
 }>();
 
-const emit = defineEmits(['search']);
+const emit = defineEmits(["search"]);
 
 const { t } = useI18n();
-const searchTerm = ref(props.initialValue || '');
+const searchTerm = ref(props.initialValue || "");
 const inputRef = ref<HTMLInputElement | null>(null);
 const isFocused = ref(false);
 
 const onSearch = () => {
-    emit('search', searchTerm.value);
+    emit("search", searchTerm.value);
 };
 
 const clearSearch = () => {
-    searchTerm.value = '';
+    searchTerm.value = "";
     onSearch();
     inputRef.value?.focus();
 };
@@ -62,19 +81,22 @@ watch(
     }
 );
 
-const handleFocus = () => { isFocused.value = true; };
-const handleBlur = () => { isFocused.value = false; };
+const handleFocus = () => {
+    isFocused.value = true;
+};
+const handleBlur = () => {
+    isFocused.value = false;
+};
 
 onMounted(() => {
-    inputRef.value?.addEventListener('focus', handleFocus);
-    inputRef.value?.addEventListener('blur', handleBlur);
+    inputRef.value?.addEventListener("focus", handleFocus);
+    inputRef.value?.addEventListener("blur", handleBlur);
 });
 
 onBeforeUnmount(() => {
-    inputRef.value?.removeEventListener('focus', handleFocus);
-    inputRef.value?.removeEventListener('blur', handleBlur);
+    inputRef.value?.removeEventListener("focus", handleFocus);
+    inputRef.value?.removeEventListener("blur", handleBlur);
 });
-
 </script>
 
 <style scoped>

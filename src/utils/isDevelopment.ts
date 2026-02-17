@@ -2,10 +2,10 @@ import { invoke } from "@tauri-apps/api/core";
 
 async function tryInvokeIsDevelopment(): Promise<boolean> {
     try {
-        const result = await invoke('is_development');
+        const result = await invoke("is_development");
         return Boolean(result);
     } catch (e) {
-        console.warn('isDevelopment check failed:', e);
+        console.warn("isDevelopment check failed:", e);
         return false;
     }
 }

@@ -1,15 +1,20 @@
 <template>
     <div class="toast-container" :class="positionClass">
         <transition-group name="toast-list" tag="div">
-            <ToastNotification v-for="toast in toasts" :key="toast.id" :toast="toast" @close="removeToast" />
+            <ToastNotification
+                v-for="toast in toasts"
+                :key="toast.id"
+                :toast="toast"
+                @close="removeToast"
+            />
         </transition-group>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import ToastNotification from './ToastNotification.vue';
-import { useToast } from '../../services/toastService';
+import { computed } from "vue";
+import ToastNotification from "./ToastNotification.vue";
+import { useToast } from "../../services/toastService";
 
 const { toasts, removeToast, toastPosition } = useToast();
 

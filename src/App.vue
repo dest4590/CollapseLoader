@@ -1,49 +1,49 @@
 <script setup lang="ts">
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { router } from './services/router';
-import { useI18n } from 'vue-i18n';
-import GlobalModal from './components/modals/GlobalModal.vue';
-import DevMenuModal from './components/core/DevMenuModal.vue';
-import InitialSetupModals from './components/core/InitialSetupModals.vue';
-import DownloadProgress from './components/features/download/DownloadProgress.vue';
-import Sidebar from './components/layout/Sidebar.vue';
-import Titlebar from './components/layout/Titlebar.vue';
-import RegisterPromptModal from './components/modals/social/account/RegisterPromptModal.vue';
-import ToastContainer from './components/notifications/ToastContainer.vue';
-import { useUser } from './composables/useUser';
-import { globalUserStatus } from './composables/useUserStatus';
-import { syncService } from './services/syncService';
-import { settingsService } from './services/settingsService';
-import { useToast } from './services/toastService';
-import { themeService } from './services/themeService';
-import { updaterService } from './services/updaterService';
-import { webSocketService } from './services/webSocketService';
-import About from './views/About.vue';
-import AccountView from './views/AccountView.vue';
-import AppLogs from './views/AppLogs.vue';
-import FriendsView from './views/FriendsView.vue';
-import Home from './views/Home.vue';
-import LoginView from './views/LoginView.vue';
-import RegisterView from './views/RegisterView.vue';
-import VerifyEmailView from './views/VerifyEmailView.vue';
-import Settings from './views/Settings.vue';
-import Customization from './views/Customization.vue';
-import UserProfileView from './views/UserProfileView.vue';
-import News from './views/News.vue';
-import CustomClients from './views/CustomClients.vue';
-import Marketplace from './views/Marketplace.vue';
-import AuthModal from './components/layout/modals/AuthModal.vue';
-import { fetchSettings } from './utils/settings';
-import { getDiscordState } from './utils/discord';
-import { VALID_TABS } from './utils/tabs';
-import { getIsDevelopment } from './utils/isDevelopment';
-import Preloader from './components/core/Preloader.vue';
-import { useAppInit } from './composables/useAppInit';
-import type { Client } from './types/ui';
-import notificationSound from './assets/misc/notification.mp3';
-import { userService } from './services/userService';
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { router } from "./services/router";
+import { useI18n } from "vue-i18n";
+import GlobalModal from "./components/modals/GlobalModal.vue";
+import DevMenuModal from "./components/core/DevMenuModal.vue";
+import InitialSetupModals from "./components/core/InitialSetupModals.vue";
+import DownloadProgress from "./components/features/download/DownloadProgress.vue";
+import Sidebar from "./components/layout/Sidebar.vue";
+import Titlebar from "./components/layout/Titlebar.vue";
+import RegisterPromptModal from "./components/modals/social/account/RegisterPromptModal.vue";
+import ToastContainer from "./components/notifications/ToastContainer.vue";
+import { useUser } from "./composables/useUser";
+import { globalUserStatus } from "./composables/useUserStatus";
+import { syncService } from "./services/syncService";
+import { settingsService } from "./services/settingsService";
+import { useToast } from "./services/toastService";
+import { themeService } from "./services/themeService";
+import { updaterService } from "./services/updaterService";
+import { webSocketService } from "./services/webSocketService";
+import About from "./views/About.vue";
+import AccountView from "./views/AccountView.vue";
+import AppLogs from "./views/AppLogs.vue";
+import FriendsView from "./views/FriendsView.vue";
+import Home from "./views/Home.vue";
+import LoginView from "./views/LoginView.vue";
+import RegisterView from "./views/RegisterView.vue";
+import VerifyEmailView from "./views/VerifyEmailView.vue";
+import Settings from "./views/Settings.vue";
+import Customization from "./views/Customization.vue";
+import UserProfileView from "./views/UserProfileView.vue";
+import News from "./views/News.vue";
+import CustomClients from "./views/CustomClients.vue";
+import Marketplace from "./views/Marketplace.vue";
+import AuthModal from "./components/layout/modals/AuthModal.vue";
+import { fetchSettings } from "./utils/settings";
+import { getDiscordState } from "./utils/discord";
+import { VALID_TABS } from "./utils/tabs";
+import { getIsDevelopment } from "./utils/isDevelopment";
+import Preloader from "./components/core/Preloader.vue";
+import { useAppInit } from "./composables/useAppInit";
+import type { Client } from "./types/ui";
+import notificationSound from "./assets/misc/notification.mp3";
+import { userService } from "./services/userService";
 
 interface Setting<T> {
     description: string;
@@ -71,7 +71,7 @@ const {
     apiInitialized,
     contentVisible,
     initApp,
-    initializeUserDataWrapper
+    initializeUserDataWrapper,
 } = useAppInit();
 const appOnline = computed(() => isOnline?.value ?? true);
 
@@ -81,36 +81,43 @@ const { addToast } = useToast();
 const isAuthenticated = ref(false);
 const showRegistrationPrompt = ref(false);
 const showAuthModal = ref(false);
-const authModalView = ref<'LOGIN' | 'REGISTER' | 'VERIFY'>('LOGIN');
-const pendingVerifyEmail = ref('');
+const authModalView = ref<"LOGIN" | "REGISTER" | "VERIFY">("LOGIN");
+const pendingVerifyEmail = ref("");
 const currentUserId = ref<number | null>(null);
-const previousTab = ref<string>('home');
+const previousTab = ref<string>("home");
 const news = ref<any[]>([]);
 const unreadNewsCount = ref(0);
 const isDev = ref(false);
 
-const sidebarPosition = ref(localStorage.getItem('sidebarPosition') as 'left' | 'right' | 'top' | 'bottom' || 'left');
+const sidebarPosition = ref(
+    (localStorage.getItem("sidebarPosition") as
+        | "left"
+        | "right"
+        | "top"
+        | "bottom") || "left"
+);
 
-const updateSidebarPosition = (newPosition: 'left' | 'right' | 'top' | 'bottom') => {
+const updateSidebarPosition = (
+    newPosition: "left" | "right" | "top" | "bottom"
+) => {
     sidebarPosition.value = newPosition;
-    localStorage.setItem('sidebarPosition', newPosition);
+    localStorage.setItem("sidebarPosition", newPosition);
 };
 
 const mainClasses = computed(() => {
-    const base = 'w-full p-6 pb-8 bg-base-200 overflow-y-auto overflow-x-hidden flex-1';
+    const base =
+        "w-full p-6 pb-8 bg-base-200 overflow-y-auto overflow-x-hidden flex-1";
     const pos = sidebarPosition.value;
 
-    if (pos === 'left') return `${base} ml-20`;
-    if (pos === 'right') return `${base} mr-20`;
-    if (pos === 'top') return `${base} mt-20`;
-    if (pos === 'bottom') return `${base} mb-20`;
+    if (pos === "left") return `${base} ml-20`;
+    if (pos === "right") return `${base} mr-20`;
+    if (pos === "top") return `${base} mt-20`;
+    if (pos === "bottom") return `${base} mb-20`;
 
     return base;
 });
 
-const {
-    stopStatusSync
-} = globalUserStatus;
+const { stopStatusSync } = globalUserStatus;
 
 const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
@@ -119,7 +126,7 @@ const handleUnreadNewsCountUpdated = (count: number) => {
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
     previousTab.value = router.currentRoute.value;
-    if (opts && Object.prototype.hasOwnProperty.call(opts, 'userId')) {
+    if (opts && Object.prototype.hasOwnProperty.call(opts, "userId")) {
         currentUserId.value = opts!.userId ?? null;
     } else {
         currentUserId.value = null;
@@ -130,20 +137,19 @@ const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
 const showUserProfile = (userId: number) => {
     previousTab.value = router.currentRoute.value;
 
-    setActiveTab('user-profile', { userId });
+    setActiveTab("user-profile", { userId });
 };
 
-
 const checkAuthStatus = () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     isAuthenticated.value = !!token;
 };
 
 const handleFirstRunAccepted = async () => {
     try {
-        await invoke('mark_first_run_shown');
+        await invoke("mark_first_run_shown");
         showFirstRunInfo.value = false;
-        const flags = await invoke<Flags>('get_flags');
+        const flags = await invoke<Flags>("get_flags");
         if (!flags.disclaimer_shown.value) {
             showInitialDisclaimer.value = true;
         } else {
@@ -156,14 +162,14 @@ const handleFirstRunAccepted = async () => {
             }
         }
     } catch (error) {
-        console.error('Failed to mark first run as shown:', error);
-        addToast(t('toast.settings.first_run_save_failed', { error }), 'error');
+        console.error("Failed to mark first run as shown:", error);
+        addToast(t("toast.settings.first_run_save_failed", { error }), "error");
     }
 };
 
 const handleDisclaimerAccepted = async () => {
     try {
-        await invoke('mark_disclaimer_shown');
+        await invoke("mark_disclaimer_shown");
         showInitialDisclaimer.value = false;
         if (showPreloader.value) showPreloader.value = false;
 
@@ -173,17 +179,17 @@ const handleDisclaimerAccepted = async () => {
             }, 500);
         }
     } catch (error) {
-        console.error('Failed to mark disclaimer as shown:', error);
+        console.error("Failed to mark disclaimer as shown:", error);
         addToast(
-            t('toast.settings.disclaimer_save_failed', { error }),
-            'error'
+            t("toast.settings.disclaimer_save_failed", { error }),
+            "error"
         );
     }
 };
 
 const handleOpenDevMenu = () => {
     showDevMenu.value = true;
-    addToast(t('toast.dev.menu_opened'), 'info');
+    addToast(t("toast.dev.menu_opened"), "info");
 };
 
 const closeDevMenu = () => {
@@ -192,8 +198,8 @@ const closeDevMenu = () => {
 
 const handleLoggedOut = () => {
     isAuthenticated.value = false;
-    localStorage.removeItem('authToken');
-    setActiveTab('login');
+    localStorage.removeItem("authToken");
+    setActiveTab("login");
     syncService.destroy();
 
     clearUserData();
@@ -204,7 +210,7 @@ const handleLoggedOut = () => {
 
 const handleLoggedIn = async () => {
     isAuthenticated.value = true;
-    setActiveTab('home');
+    setActiveTab("home");
 
     await initializeUserDataWrapper(isAuthenticated.value);
 
@@ -216,8 +222,8 @@ const handleLoggedIn = async () => {
 };
 
 const handleRegistered = () => {
-    setActiveTab('login');
-    addToast(t('toast.auth.registration_success'), 'success');
+    setActiveTab("login");
+    addToast(t("toast.auth.registration_success"), "success");
 };
 
 const views: Record<string, any> = {
@@ -233,7 +239,7 @@ const views: Record<string, any> = {
     register: RegisterView,
     verify: VerifyEmailView,
     friends: FriendsView,
-    'user-profile': UserProfileView,
+    "user-profile": UserProfileView,
     marketplace: Marketplace,
 };
 
@@ -243,18 +249,20 @@ const updateDiscordRPC = async (tab?: string) => {
     try {
         const settings = await fetchSettings();
         if (!settings?.discord_rpc_enabled?.value) {
-            console.log('Discord RPC is disabled in settings, skipping update');
+            console.log("Discord RPC is disabled in settings, skipping update");
             return;
         }
 
         const currentTab = tab || activeTab.value;
-        const details = t('discord.details.in_menu');
+        const details = t("discord.details.in_menu");
         const state = getDiscordState(currentTab, (k: string) => t(k));
 
-        await invoke('update_presence', { details, state });
-        console.log(`Discord RPC updated for tab: ${currentTab} - ${details}: ${state}`);
+        await invoke("update_presence", { details, state });
+        console.log(
+            `Discord RPC updated for tab: ${currentTab} - ${details}: ${state}`
+        );
     } catch (error) {
-        console.error('Failed to update Discord RPC:', error);
+        console.error("Failed to update Discord RPC:", error);
     }
 };
 
@@ -274,49 +282,59 @@ watch(locale, async () => {
 
 const hideRegistrationPrompt = () => {
     showRegistrationPrompt.value = false;
-    localStorage.setItem('registrationPromptShown', new Date().toISOString());
+    localStorage.setItem("registrationPromptShown", new Date().toISOString());
 };
 
 const handleRegisterPrompt = () => {
-    authModalView.value = 'REGISTER';
+    authModalView.value = "REGISTER";
     showAuthModal.value = true;
     showRegistrationPrompt.value = false;
-    localStorage.setItem('registrationPromptShown', new Date().toISOString());
+    localStorage.setItem("registrationPromptShown", new Date().toISOString());
 };
 
-const pendingVerifyCode = ref('');
+const pendingVerifyCode = ref("");
 
 const handleShowVerify = (email: string, code?: string) => {
-    console.log('App: handleShowVerify called with email:', email, 'code:', code);
+    console.log(
+        "App: handleShowVerify called with email:",
+        email,
+        "code:",
+        code
+    );
     pendingVerifyEmail.value = email;
     if (code) pendingVerifyCode.value = code;
-    console.log('App: Navigating to verify view');
-    setActiveTab('verify');
+    console.log("App: Navigating to verify view");
+    setActiveTab("verify");
 };
 
 const handleVerified = (token?: string) => {
     if (token) {
-        // Auto-login with the token
-        localStorage.setItem('authToken', token);
+        localStorage.setItem("authToken", token);
         userService.clearCache();
-        addToast(t('auth.verify.success') || 'Email verified! Logging you in...', 'success');
+        addToast(
+            t("auth.verify.success") || "Email verified! Logging you in...",
+            "success"
+        );
         handleLoggedIn();
     } else {
-        addToast(t('auth.verify.success') || 'Email verified! Please log in.', 'success');
-        setActiveTab('login');
+        addToast(
+            t("auth.verify.success") || "Email verified! Please log in.",
+            "success"
+        );
+        setActiveTab("login");
     }
 };
 
 onMounted(async () => {
-    await listen('verify-email', (event: any) => {
+    await listen("verify-email", (event: any) => {
         const { code, email } = event.payload;
-        console.log('Received verification deep link:', code, email);
+        console.log("Received verification deep link:", code, email);
         if (code) {
             pendingVerifyCode.value = code;
             if (email) pendingVerifyEmail.value = email;
 
-            if (activeTab.value !== 'verify') {
-                setActiveTab('verify');
+            if (activeTab.value !== "verify") {
+                setActiveTab("verify");
             }
         }
     });
@@ -324,28 +342,27 @@ onMounted(async () => {
 
 const { clearUserData } = useUser();
 
-
 const getTransitionName = () => {
     const tabOrder = [
-        'home',
-        'custom_clients',
-        'friends',
-        'settings',
-        'customization',
-        'app_logs',
-        'account',
-        'login',
-        'register',
-        'about',
+        "home",
+        "custom_clients",
+        "friends",
+        "settings",
+        "customization",
+        "app_logs",
+        "account",
+        "login",
+        "register",
+        "about",
     ];
     const currentIndex = tabOrder.indexOf(activeTab.value);
     const previousIndex = tabOrder.indexOf(previousTab.value);
 
     return currentIndex > previousIndex
-        ? 'slide-down'
+        ? "slide-down"
         : currentIndex < previousIndex
-            ? 'slide-up'
-            : 'fade-slide';
+          ? "slide-up"
+          : "fade-slide";
 };
 
 onMounted(() => {
@@ -357,35 +374,36 @@ onMounted(() => {
         isDev.value = await getIsDevelopment();
     })();
 
-    listen('launch-client', async (event) => {
+    listen("launch-client", async (event) => {
         const clientId = Number(event.payload);
 
         if (clientId) {
-            const clients = await invoke<Client[]>('get_clients')
-            const target = clients.find(c => c.id === clientId)
+            const clients = await invoke<Client[]>("get_clients");
+            const target = clients.find((c) => c.id === clientId);
 
             addToast(
-                t('home.launching', { client: target?.name || 'Client' }),
-                'info',
+                t("home.launching", { client: target?.name || "Client" }),
+                "info",
                 2000
             );
 
             if (target) {
                 try {
-                    const userToken = localStorage.getItem('authToken') || 'null';
+                    const userToken =
+                        localStorage.getItem("authToken") || "null";
 
-                    await invoke('launch_client', {
+                    await invoke("launch_client", {
                         id: target.id,
-                        userToken
-                    })
+                        userToken,
+                    });
                 } catch (e) {
-                    console.error('Cannot start client from deeplink', e)
+                    console.error("Cannot start client from deeplink", e);
                 }
             }
         }
-    })
+    });
 
-    listen('client-launched', async (event) => {
+    listen("client-launched", async (event) => {
         const payload = event.payload as {
             id: number;
             name: string;
@@ -394,23 +412,25 @@ onMounted(() => {
         console.log(`Client ${payload.name} launched, updating status...`);
 
         try {
-            globalUserStatus.setPlayingClient(`${payload.name} (${payload.version || 'unknown version'})`);
+            globalUserStatus.setPlayingClient(
+                `${payload.name} (${payload.version || "unknown version"})`
+            );
             await settingsService.loadSettings();
             const settings = settingsService.getSettings() as any;
             if (settings.discord_rpc_enabled?.value) {
-                await invoke('update_presence', {
-                    details: t('discord.details.in_game'),
+                await invoke("update_presence", {
+                    details: t("discord.details.in_game"),
                     state: payload.name,
                 }).catch((error) => {
-                    console.error('Failed to update Discord presence:', error);
+                    console.error("Failed to update Discord presence:", error);
                 });
             }
         } catch (error) {
-            console.error('Failed to update playing status:', error);
+            console.error("Failed to update playing status:", error);
         }
     });
 
-    listen('client-exited', async (event) => {
+    listen("client-exited", async (event) => {
         const payload = event.payload as {
             id: number;
             name: string;
@@ -423,38 +443,38 @@ onMounted(() => {
             await settingsService.loadSettings();
             const settings = settingsService.getSettings() as any;
             if (settings.discord_rpc_enabled?.value) {
-                await invoke('update_presence', {
-                    details: t('discord.details.in_menu'),
-                    state: t('discord.states.browsing_clients'),
+                await invoke("update_presence", {
+                    details: t("discord.details.in_menu"),
+                    state: t("discord.states.browsing_clients"),
                 }).catch((error) => {
-                    console.error('Failed to reset Discord presence:', error);
+                    console.error("Failed to reset Discord presence:", error);
                 });
             }
         } catch (error) {
-            console.error('Failed to update online status:', error);
+            console.error("Failed to update online status:", error);
         }
     });
 
-    listen('update-user-status', async (event) => {
+    listen("update-user-status", async (event) => {
         const payload = event.payload as {
             status: string;
             currentClient: string | null;
         };
 
-        console.log('Received status update event from backend:', payload);
-        console.log('Backend status event ignored to prevent conflicts');
+        console.log("Received status update event from backend:", payload);
+        console.log("Backend status event ignored to prevent conflicts");
     });
 
-    listen('toast-error', (event) => {
+    listen("toast-error", (event) => {
         console.log(event);
 
         let message: string;
         message = String(event.payload);
 
-        addToast(message, 'error');
+        addToast(message, "error");
     });
 
-    window.addEventListener('beforeunload', () => {
+    window.addEventListener("beforeunload", () => {
         if (globalUserStatus.isAuthenticated.value) {
             globalUserStatus.setOffline();
         }
@@ -462,117 +482,191 @@ onMounted(() => {
 
     const emergencyHandler = (e: KeyboardEvent) => {
         try {
-            if (e.ctrlKey && e.shiftKey && (e.key === 'Home' || e.code === 'Home')) {
+            if (
+                e.ctrlKey &&
+                e.shiftKey &&
+                (e.key === "Home" || e.code === "Home")
+            ) {
                 const active = document.activeElement as HTMLElement | null;
-                const isTyping = !!active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
+                const isTyping =
+                    !!active &&
+                    (active.tagName === "INPUT" ||
+                        active.tagName === "TEXTAREA" ||
+                        active.isContentEditable);
                 if (isTyping) return;
 
-                console.warn('Emergency theme reset triggered via Ctrl+Shift+Home');
+                console.warn(
+                    "Emergency theme reset triggered via Ctrl+Shift+Home"
+                );
                 themeService.emergencyReset();
 
                 addToast(
-                    t('toast.theme.emergency_reset_done', {
-                        action: t('toast.theme.emergency_reset_toggle_instruction')
+                    t("toast.theme.emergency_reset_done", {
+                        action: t(
+                            "toast.theme.emergency_reset_toggle_instruction"
+                        ),
                     }),
-                    'info',
+                    "info",
                     8000
                 );
             }
         } catch (err) {
-            console.error('Error during emergency theme reset:', err);
+            console.error("Error during emergency theme reset:", err);
         }
     };
 
-    window.addEventListener('keydown', emergencyHandler);
+    window.addEventListener("keydown", emergencyHandler);
 
-    window.addEventListener('achievement-unlocked', (event: any) => {
+    window.addEventListener("achievement-unlocked", (event: any) => {
         const { key } = event.detail;
         const name = t(`achievements.list.${key}.name`);
         const description = t(`achievements.list.${key}.description`);
         addToast(
-            `${t('achievements.unlocked_title', { name })}\n${description}`,
-            'success',
+            `${t("achievements.unlocked_title", { name })}\n${description}`,
+            "success",
             9000
         );
     });
 
-    window.addEventListener('friend-request-received', (event: any) => {
+    window.addEventListener("friend-request-received", (event: any) => {
         const { sender, nickname } = event.detail;
         const displayName = nickname || sender;
         const audio = new Audio(notificationSound);
-        audio.play().catch(e => console.error('Failed to play notification sound:', e));
+        audio
+            .play()
+            .catch((e) =>
+                console.error("Failed to play notification sound:", e)
+            );
         addToast(
-            t('notifications.friend_request_received.message', { name: displayName }),
-            'info',
+            t("notifications.friend_request_received.message", {
+                name: displayName,
+            }),
+            "info",
             15000
         );
     });
 
-    window.addEventListener('friend-request-accepted', (event: any) => {
+    window.addEventListener("friend-request-accepted", (event: any) => {
         const { sender, nickname } = event.detail;
         const displayName = nickname || sender;
         const audio = new Audio(notificationSound);
-        audio.play().catch(e => console.error('Failed to play notification sound:', e));
+        audio
+            .play()
+            .catch((e) =>
+                console.error("Failed to play notification sound:", e)
+            );
         addToast(
-            t('notifications.friend_request_accepted.message', { name: displayName }),
-            'success',
+            t("notifications.friend_request_accepted.message", {
+                name: displayName,
+            }),
+            "success",
             15000
         );
     });
 
     onUnmounted(() => {
-        window.removeEventListener('keydown', emergencyHandler);
+        window.removeEventListener("keydown", emergencyHandler);
     });
 });
 
 onUnmounted(() => {
-    console.log('App unmounting, stopping systems...');
+    console.log("App unmounting, stopping systems...");
     stopStatusSync();
     updaterService.stopPeriodicCheck();
-    window.removeEventListener('beforeunload', () => {
-    });
-    console.log('Status sync stopped');
+    window.removeEventListener("beforeunload", () => {});
+    console.log("Status sync stopped");
 });
 </script>
 
 <template>
-    <div :style="{
-        '--sidebar-bottom-height': sidebarPosition === 'bottom' ? '80px' : '0px',
-        '--sidebar-top-height': sidebarPosition === 'top' ? '80px' : '0px',
-        '--toast-bottom-offset': sidebarPosition === 'bottom' ? 'calc(1rem + 80px)' : '1rem',
-        '--toast-top-offset': sidebarPosition === 'top' ? 'calc(4rem + 80px)' : '4rem',
-        '--toast-left-offset': sidebarPosition === 'left' ? 'calc(1rem + 80px)' : '1rem',
-        '--toast-right-offset': sidebarPosition === 'right' ? 'calc(1rem + 80px)' : '1rem'
-    }">
-        <Preloader v-model:show="showPreloader" :is-dev="isDev" :loading-state="loadingState"
-            :current-progress="currentProgress" :total-steps="totalSteps" :halloween-active="halloweenActive"
-            :current-theme="currentTheme" />
+    <div
+        :style="{
+            '--sidebar-bottom-height':
+                sidebarPosition === 'bottom' ? '80px' : '0px',
+            '--sidebar-top-height': sidebarPosition === 'top' ? '80px' : '0px',
+            '--toast-bottom-offset':
+                sidebarPosition === 'bottom' ? 'calc(1rem + 80px)' : '1rem',
+            '--toast-top-offset':
+                sidebarPosition === 'top' ? 'calc(4rem + 80px)' : '4rem',
+            '--toast-left-offset':
+                sidebarPosition === 'left' ? 'calc(1rem + 80px)' : '1rem',
+            '--toast-right-offset':
+                sidebarPosition === 'right' ? 'calc(1rem + 80px)' : '1rem',
+        }"
+    >
+        <Preloader
+            v-model:show="showPreloader"
+            :is-dev="isDev"
+            :loading-state="loadingState"
+            :current-progress="currentProgress"
+            :total-steps="totalSteps"
+            :halloween-active="halloweenActive"
+            :current-theme="currentTheme"
+        />
 
-        <InitialSetupModals :show-first-run="showFirstRunInfo" :show-disclaimer="showInitialDisclaimer"
-            :current-theme="currentTheme" @first-run-accepted="handleFirstRunAccepted"
-            @disclaimer-accepted="handleDisclaimerAccepted" @auto-login="handleLoggedIn" />
+        <InitialSetupModals
+            :show-first-run="showFirstRunInfo"
+            :show-disclaimer="showInitialDisclaimer"
+            :current-theme="currentTheme"
+            @first-run-accepted="handleFirstRunAccepted"
+            @disclaimer-accepted="handleDisclaimerAccepted"
+            @auto-login="handleLoggedIn"
+        />
 
-        <DevMenuModal :show-dev-menu="showDevMenu" :registerPrompt="showRegistrationPrompt" @close="closeDevMenu" />
+        <DevMenuModal
+            :show-dev-menu="showDevMenu"
+            :registerPrompt="showRegistrationPrompt"
+            @close="closeDevMenu"
+        />
 
-        <div class="flex h-screen flex-col overflow-hidden"
-            v-if="!showInitialDisclaimer && !showFirstRunInfo && contentVisible">
+        <div
+            class="flex h-screen flex-col overflow-hidden"
+            v-if="!showInitialDisclaimer && !showFirstRunInfo && contentVisible"
+        >
             <Titlebar />
 
             <div class="flex-1 flex overflow-hidden relative pt-10">
-                <Sidebar :activeTab="activeTab" @changeTab="setActiveTab" @open-dev-menu="handleOpenDevMenu"
-                    :is-online="appOnline" :is-authenticated="isAuthenticated" :position="sidebarPosition"
-                    @update:position="updateSidebarPosition" />
+                <Sidebar
+                    :activeTab="activeTab"
+                    @changeTab="setActiveTab"
+                    @open-dev-menu="handleOpenDevMenu"
+                    :is-online="appOnline"
+                    :is-authenticated="isAuthenticated"
+                    :position="sidebarPosition"
+                    @update:position="updateSidebarPosition"
+                />
 
                 <main :class="[mainClasses, 'main-content']">
-                    <transition :name="getTransitionName()" mode="out-in" appear>
+                    <transition
+                        :name="getTransitionName()"
+                        mode="out-in"
+                        appear
+                    >
                         <div :key="activeTab + (currentUserId || '')">
-                            <component :is="currentView" @logged-out="handleLoggedOut" @logged-in="handleLoggedIn"
-                                @registered="handleRegistered" @change-view="setActiveTab"
-                                @show-user-profile="showUserProfile" @back-to-friends="() => setActiveTab('friends')"
-                                @unread-count-updated="handleUnreadNewsCountUpdated" @show-verify="handleShowVerify"
-                                @verified="handleVerified" :key="activeTab" :is-online="appOnline"
-                                :user-id="currentUserId" :email="pendingVerifyEmail" :code="pendingVerifyCode"
-                                v-bind="activeTab === 'home' ? { unreadNewsCount, apiInitialized } : {}" />
+                            <component
+                                :is="currentView"
+                                @logged-out="handleLoggedOut"
+                                @logged-in="handleLoggedIn"
+                                @registered="handleRegistered"
+                                @change-view="setActiveTab"
+                                @show-user-profile="showUserProfile"
+                                @back-to-friends="() => setActiveTab('friends')"
+                                @unread-count-updated="
+                                    handleUnreadNewsCountUpdated
+                                "
+                                @show-verify="handleShowVerify"
+                                @verified="handleVerified"
+                                :key="activeTab"
+                                :is-online="appOnline"
+                                :user-id="currentUserId"
+                                :email="pendingVerifyEmail"
+                                :code="pendingVerifyCode"
+                                v-bind="
+                                    activeTab === 'home'
+                                        ? { unreadNewsCount, apiInitialized }
+                                        : {}
+                                "
+                            />
                         </div>
                     </transition>
                 </main>
@@ -582,12 +676,18 @@ onUnmounted(() => {
         <DownloadProgress />
         <ToastContainer />
         <GlobalModal />
-        <RegisterPromptModal v-model="showRegistrationPrompt" @register="handleRegisterPrompt"
-            @cancel="hideRegistrationPrompt" />
-        <AuthModal v-model="showAuthModal" :initial-view="authModalView" @logged-in="handleLoggedIn" />
+        <RegisterPromptModal
+            v-model="showRegistrationPrompt"
+            @register="handleRegisterPrompt"
+            @cancel="hideRegistrationPrompt"
+        />
+        <AuthModal
+            v-model="showAuthModal"
+            :initial-view="authModalView"
+            @logged-in="handleLoggedIn"
+        />
     </div>
 </template>
-
 
 <style scoped>
 .loading-status {
@@ -639,7 +739,6 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(-30px);
 }
-
 
 .slide-up-appear-active,
 .slide-down-appear-active,

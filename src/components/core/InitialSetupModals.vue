@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { openUrl } from '@tauri-apps/plugin-opener';
-import { useToast } from '../../services/toastService';
-import { useI18n } from 'vue-i18n';
-import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
-import i18n from '../../i18n';
-import HoldButton from '../ui/HoldButton.vue';
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { useToast } from "../../services/toastService";
+import { useI18n } from "vue-i18n";
+import { ref, watch, onMounted, onUnmounted, computed } from "vue";
+import i18n from "../../i18n";
+import HoldButton from "../ui/HoldButton.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
     getCurrentLanguage,
-} from '../../i18n';
+} from "../../i18n";
 import {
     Languages,
     MemoryStick,
@@ -19,10 +19,10 @@ import {
     Handshake,
     Headset,
     NotebookPen,
-    HeartHandshake
-} from 'lucide-vue-next';
-import AnimatedSlider from '../ui/AnimatedSlider.vue';
-import { invoke } from '@tauri-apps/api/core';
+    HeartHandshake,
+} from "lucide-vue-next";
+import AnimatedSlider from "../ui/AnimatedSlider.vue";
+import { invoke } from "@tauri-apps/api/core";
 
 const props = defineProps({
     showFirstRun: Boolean,
@@ -31,15 +31,15 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-    'firstRunAccepted',
-    'disclaimerAccepted',
-    'auto-login',
+    "firstRunAccepted",
+    "disclaimerAccepted",
+    "auto-login",
 ]);
 const { t } = useI18n();
 const { addToast } = useToast();
 
-const availableThemes = ref(['dark', 'light']);
-const selectedTheme = ref(props.currentTheme || 'dark');
+const availableThemes = ref(["dark", "light"]);
+const selectedTheme = ref(props.currentTheme || "dark");
 
 const currentTutorialStep = ref(1);
 const totalTutorialSteps = 5;
@@ -55,8 +55,19 @@ const tooltipInterval = ref<number | null>(null);
 
 const resolveKeyForLocale = (key: string, locale: string) => {
     try {
-        const messages = i18n.global.getLocaleMessage(locale) as Record<string, any>;
-        return key.split('.').reduce((obj: any, part: string) => (obj && obj[part] !== undefined) ? obj[part] : null, messages) || null;
+        const messages = i18n.global.getLocaleMessage(locale) as Record<
+            string,
+            any
+        >;
+        return (
+            key
+                .split(".")
+                .reduce(
+                    (obj: any, part: string) =>
+                        obj && obj[part] !== undefined ? obj[part] : null,
+                    messages
+                ) || null
+        );
     } catch {
         return null;
     }
@@ -64,25 +75,26 @@ const resolveKeyForLocale = (key: string, locale: string) => {
 
 const tooltipDisplayText = computed(() => {
     const lang = availableLanguages.value[tooltipIndex.value];
-    if (!lang) return t('modals.initial_setup.language_here');
-    const resolved = resolveKeyForLocale('modals.initial_setup.language_here', lang.code);
-    if (typeof resolved === 'string' && resolved.length > 0) return resolved;
-    return lang.nativeName || t('modals.initial_setup.language_here');
+    if (!lang) return t("modals.initial_setup.language_here");
+    const resolved = resolveKeyForLocale(
+        "modals.initial_setup.language_here",
+        lang.code
+    );
+    if (typeof resolved === "string" && resolved.length > 0) return resolved;
+    return lang.nativeName || t("modals.initial_setup.language_here");
 });
 
-
 const ramOptions = [
-    { mb: 2048, label: '2 GB' },
-    { mb: 4096, label: '4 GB' },
-    { mb: 6144, label: '6 GB' },
-    { mb: 8192, label: '8 GB' },
-    { mb: 16384, label: '16 GB' },
-    { mb: 32768, label: '32 GB' },
+    { mb: 2048, label: "2 GB" },
+    { mb: 4096, label: "4 GB" },
+    { mb: 6144, label: "6 GB" },
+    { mb: 8192, label: "8 GB" },
+    { mb: 16384, label: "16 GB" },
+    { mb: 32768, label: "32 GB" },
 ];
 const ramOptionIndex = ref(0);
 const systemMemory = ref<number | null>(null);
 const showRamWarning = ref(false);
-
 
 const selectedRamMb = computed(() => ramOptions[ramOptionIndex.value]?.mb || 0);
 
@@ -103,7 +115,7 @@ const goToStep = async (step: number) => {
             try {
                 await saveRamSettings();
             } catch (error) {
-                console.error('Failed to auto-save RAM settings:', error);
+                console.error("Failed to auto-save RAM settings:", error);
             }
         }
         currentTutorialStep.value = step;
@@ -120,52 +132,52 @@ watch(
 );
 
 const acceptFirstRun = () => {
-    emit('firstRunAccepted');
+    emit("firstRunAccepted");
 };
 
 const acceptDisclaimer = () => {
-    emit('disclaimerAccepted');
+    emit("disclaimerAccepted");
 };
 
 const openTelegram = async () => {
     try {
-        await openUrl('https://t.me/CollapseLoader');
+        await openUrl("https://t.me/CollapseLoader");
     } catch (error) {
-        console.error('Failed to open telegram:', error);
-        addToast(t('about.open_failed', { platform: 'Telegram' }), 'error');
+        console.error("Failed to open telegram:", error);
+        addToast(t("about.open_failed", { platform: "Telegram" }), "error");
     }
 };
 
 const openDiscord = async () => {
     try {
-        await openUrl('https://collapseloader.org/discord/');
+        await openUrl("https://collapseloader.org/discord/");
     } catch (error) {
-        console.error('Failed to open discord:', error);
-        addToast(t('about.open_failed', { platform: 'Discord' }), 'error');
+        console.error("Failed to open discord:", error);
+        addToast(t("about.open_failed", { platform: "Discord" }), "error");
     }
 };
 
 const handleLanguageChange = async (languageCode: string) => {
     try {
-        selectedLanguage.value = languageCode as 'en' | 'ru';
+        selectedLanguage.value = languageCode as "en" | "ru";
         await changeLanguage(languageCode);
-        addToast(t('modals.initial_setup.language_changed'), 'success');
+        addToast(t("modals.initial_setup.language_changed"), "success");
     } catch (error) {
-        console.error('Failed to change language:', error);
-        addToast(t('modals.initial_setup.language_change_failed'), 'error');
+        console.error("Failed to change language:", error);
+        addToast(t("modals.initial_setup.language_change_failed"), "error");
     }
 };
 
-const handleSliderChange = () => { };
+const handleSliderChange = () => {};
 
-import { settingsService } from '../../services/settingsService';
+import { settingsService } from "../../services/settingsService";
 
 const saveRamSettings = async () => {
     try {
         const ramValue = ramOptions[ramOptionIndex.value].mb;
-        await settingsService.editSetting('ram', ramValue);
+        await settingsService.editSetting("ram", ramValue);
     } catch (error) {
-        console.error('Failed to save RAM settings:', error);
+        console.error("Failed to save RAM settings:", error);
     }
 };
 
@@ -173,7 +185,6 @@ const stopLanguageCycling = () => {
     showLanguageTooltip.value = false;
     animateLanguage.value = false;
 };
-
 
 onMounted(async () => {
     if (tutorialContentWrapper.value) {
@@ -188,7 +199,6 @@ onMounted(async () => {
         }, 500);
     }, 5000);
 
-
     setTimeout(() => {
         showLanguageTooltip.value = false;
 
@@ -197,24 +207,26 @@ onMounted(async () => {
         }, 500);
     }, 10000);
 
-    watch(
-        showLanguageTooltip,
-        (val) => {
-            if (tooltipInterval.value !== null) {
-                clearInterval(tooltipInterval.value);
-                tooltipInterval.value = null;
-            }
+    watch(showLanguageTooltip, (val) => {
+        if (tooltipInterval.value !== null) {
+            clearInterval(tooltipInterval.value);
+            tooltipInterval.value = null;
+        }
 
-            if (val && availableLanguages.value && availableLanguages.value.length > 0) {
-                tooltipIndex.value = 0;
-                tooltipInterval.value = window.setInterval(() => {
-                    tooltipIndex.value = (tooltipIndex.value + 1) % availableLanguages.value.length;
-                }, 1600);
-            } else {
-                tooltipIndex.value = 0;
-            }
-        },
-    );
+        if (
+            val &&
+            availableLanguages.value &&
+            availableLanguages.value.length > 0
+        ) {
+            tooltipIndex.value = 0;
+            tooltipInterval.value = window.setInterval(() => {
+                tooltipIndex.value =
+                    (tooltipIndex.value + 1) % availableLanguages.value.length;
+            }, 1600);
+        } else {
+            tooltipIndex.value = 0;
+        }
+    });
 
     onUnmounted(() => {
         if (tooltipInterval.value !== null) {
@@ -224,10 +236,10 @@ onMounted(async () => {
     });
 
     try {
-        const memoryBytes = await invoke<number>('get_system_memory');
+        const memoryBytes = await invoke<number>("get_system_memory");
         systemMemory.value = Math.floor(memoryBytes / (1024 * 1024));
     } catch (error) {
-        console.error('Failed to get system memory:', error);
+        console.error("Failed to get system memory:", error);
         systemMemory.value = null;
     }
 });
@@ -235,160 +247,334 @@ onMounted(async () => {
 
 <template>
     <transition name="modal-fade">
-        <div v-if="showFirstRun"
-            class="fixed inset-0 bg-linear-to-br from-black/90 to-black/95 flex items-center justify-center z-1500 backdrop-blur-sm">
+        <div
+            v-if="showFirstRun"
+            class="fixed inset-0 bg-linear-to-br from-black/90 to-black/95 flex items-center justify-center z-1500 backdrop-blur-sm"
+        >
             <transition name="modal-scale">
-                <div v-if="showFirstRun"
-                    class="bg-base-100 rounded-xl shadow-2xl w-full h-full max-w-none max-h-none modal-container">
+                <div
+                    v-if="showFirstRun"
+                    class="bg-base-100 rounded-xl shadow-2xl w-full h-full max-w-none max-h-none modal-container"
+                >
                     <div class="flex flex-col h-full">
-                        <div class="bg-primary/5 px-8 py-3 border-b border-base-300 shrink-0">
+                        <div
+                            class="bg-primary/5 px-8 py-3 border-b border-base-300 shrink-0"
+                        >
                             <div class="flex items-center justify-between">
                                 <transition name="step-title" mode="out-in">
-                                    <div v-if="currentTutorialStep === 1" key="step1" class="flex items-center gap-2">
-                                        <DoorOpen class="w-10 h-10 text-primary mr-2" />
+                                    <div
+                                        v-if="currentTutorialStep === 1"
+                                        key="step1"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <DoorOpen
+                                            class="w-10 h-10 text-primary mr-2"
+                                        />
                                         <div class="flex flex-col">
-                                            <h3 class="text-2xl font-bold text-primary">
-                                                {{ t('modals.initial_setup.welcome.title') }}
+                                            <h3
+                                                class="text-2xl font-bold text-primary"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.welcome.title"
+                                                    )
+                                                }}
                                             </h3>
-                                            <p class="text-sm text-base-content/70">
-                                                {{ t('modals.initial_setup.welcome.subtitle') }}
+                                            <p
+                                                class="text-sm text-base-content/70"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.welcome.subtitle"
+                                                    )
+                                                }}
                                             </p>
                                         </div>
                                     </div>
-                                    <div v-else-if="currentTutorialStep === 2" key="step2"
-                                        class="flex items-center gap-2">
-                                        <MemoryStick class="w-10 h-10 text-primary mr-2" />
+                                    <div
+                                        v-else-if="currentTutorialStep === 2"
+                                        key="step2"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <MemoryStick
+                                            class="w-10 h-10 text-primary mr-2"
+                                        />
                                         <div class="flex flex-col">
-                                            <h3 class="text-2xl font-bold text-primary">
-                                                {{ t('modals.initial_setup.ram.title') }}
+                                            <h3
+                                                class="text-2xl font-bold text-primary"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.ram.title"
+                                                    )
+                                                }}
                                             </h3>
-                                            <p class="text-sm text-base-content/70">
-                                                {{ t('modals.initial_setup.ram.subtitle') }}
+                                            <p
+                                                class="text-sm text-base-content/70"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.ram.subtitle"
+                                                    )
+                                                }}
                                             </p>
                                         </div>
                                     </div>
-                                    <div v-else-if="currentTutorialStep === 3" key="step3"
-                                        class="flex items-center gap-2">
-                                        <ChartNoAxesCombined class="w-10 h-10 text-primary mr-2" />
+                                    <div
+                                        v-else-if="currentTutorialStep === 3"
+                                        key="step3"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <ChartNoAxesCombined
+                                            class="w-10 h-10 text-primary mr-2"
+                                        />
                                         <div class="flex flex-col">
-                                            <h3 class="text-2xl font-bold text-primary">
-                                                {{ t('modals.initial_setup.telemetry.title') }}
+                                            <h3
+                                                class="text-2xl font-bold text-primary"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.telemetry.title"
+                                                    )
+                                                }}
                                             </h3>
-                                            <p class="text-sm text-base-content/70">
-                                                {{ t('modals.initial_setup.telemetry.subtitle') }}
+                                            <p
+                                                class="text-sm text-base-content/70"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.telemetry.subtitle"
+                                                    )
+                                                }}
                                             </p>
                                         </div>
                                     </div>
-                                    <div v-else-if="currentTutorialStep === 4" key="step4"
-                                        class="flex items-center gap-2">
-                                        <Headset class="w-10 h-10 text-primary mr-2" />
+                                    <div
+                                        v-else-if="currentTutorialStep === 4"
+                                        key="step4"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <Headset
+                                            class="w-10 h-10 text-primary mr-2"
+                                        />
                                         <div class="flex flex-col">
-                                            <h3 class="text-2xl font-bold text-primary">
-                                                {{ t('modals.initial_setup.feedback.title') }}
+                                            <h3
+                                                class="text-2xl font-bold text-primary"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.feedback.title"
+                                                    )
+                                                }}
                                             </h3>
-                                            <p class="text-sm text-base-content/70">
-                                                {{ t('modals.initial_setup.feedback.subtitle') }}
+                                            <p
+                                                class="text-sm text-base-content/70"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.feedback.subtitle"
+                                                    )
+                                                }}
                                             </p>
                                         </div>
                                     </div>
-                                    <div v-else-if="currentTutorialStep === 5" key="step5"
-                                        class="flex items-center gap-2">
-                                        <Handshake class="w-10 h-10 text-primary mr-2" />
+                                    <div
+                                        v-else-if="currentTutorialStep === 5"
+                                        key="step5"
+                                        class="flex items-center gap-2"
+                                    >
+                                        <Handshake
+                                            class="w-10 h-10 text-primary mr-2"
+                                        />
                                         <div class="flex flex-col">
-                                            <h3 class="text-2xl font-bold text-primary">
-                                                {{ t('modals.initial_setup.appreciation.title') }}
+                                            <h3
+                                                class="text-2xl font-bold text-primary"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.appreciation.title"
+                                                    )
+                                                }}
                                             </h3>
-                                            <p class="text-sm text-base-content/70">
-                                                {{ t('modals.initial_setup.appreciation.subtitle') }}
+                                            <p
+                                                class="text-sm text-base-content/70"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.appreciation.subtitle"
+                                                    )
+                                                }}
                                             </p>
                                         </div>
                                     </div>
                                 </transition>
-                                <div class="flex items-center gap-3 ml-auto animate-slide-in-right transition-all duration-300"
-                                    :class="{ 'mr-9': animateLanguage }">
+                                <div
+                                    class="flex items-center gap-3 ml-auto animate-slide-in-right transition-all duration-300"
+                                    :class="{ 'mr-9': animateLanguage }"
+                                >
                                     <Languages class="w-5 h-5 text-primary" />
-                                    <select v-model="selectedLanguage" @change="
-                                        handleLanguageChange(
-                                            selectedLanguage
-                                        )
-                                        " @click="stopLanguageCycling"
-                                        class="select select-bordered select-sm bg-base-100 min-w-0 w-auto transition-all duration-300 hover:scale-105">
-                                        <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
+                                    <select
+                                        v-model="selectedLanguage"
+                                        @change="
+                                            handleLanguageChange(
+                                                selectedLanguage
+                                            )
+                                        "
+                                        @click="stopLanguageCycling"
+                                        class="select select-bordered select-sm bg-base-100 min-w-0 w-auto transition-all duration-300 hover:scale-105"
+                                    >
+                                        <option
+                                            v-for="lang in availableLanguages"
+                                            :key="lang.code"
+                                            :value="lang.code"
+                                        >
                                             {{ lang.nativeName }}
                                         </option>
-
                                     </select>
                                 </div>
 
-                                <div class="absolute right-1 mr-5 -mb-16 flex items-center justify-center">
-                                    <transition name="tooltip-text" mode="out-in">
-                                        <div v-if="showLanguageTooltip" :key="tooltipIndex"
-                                            class="bg-base-100 text-sm text-base-content/80 rounded-md px-3 py-1 shadow-lg mt-2">
-                                            <span class="block animate-fade-in-up">{{ tooltipDisplayText }}</span>
+                                <div
+                                    class="absolute right-1 mr-5 -mb-16 flex items-center justify-center"
+                                >
+                                    <transition
+                                        name="tooltip-text"
+                                        mode="out-in"
+                                    >
+                                        <div
+                                            v-if="showLanguageTooltip"
+                                            :key="tooltipIndex"
+                                            class="bg-base-100 text-sm text-base-content/80 rounded-md px-3 py-1 shadow-lg mt-2"
+                                        >
+                                            <span
+                                                class="block animate-fade-in-up"
+                                                >{{ tooltipDisplayText }}</span
+                                            >
                                         </div>
                                     </transition>
                                 </div>
                             </div>
                         </div>
 
-                        <div ref="tutorialContentWrapper" class="tutorial-content-wrapper grow">
+                        <div
+                            ref="tutorialContentWrapper"
+                            class="tutorial-content-wrapper grow"
+                        >
                             <div class="tutorial-content">
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 1" key="step1" class="step-content">
-                                        <div class="text-center max-w-xl mx-auto">
-                                            <img src="../../assets/images/logo.svg" class="w-24 h-24 mx-auto mb-4" />
+                                    <div
+                                        v-if="currentTutorialStep === 1"
+                                        key="step1"
+                                        class="step-content"
+                                    >
+                                        <div
+                                            class="text-center max-w-xl mx-auto"
+                                        >
+                                            <img
+                                                src="../../assets/images/logo.svg"
+                                                class="w-24 h-24 mx-auto mb-4"
+                                            />
                                             <p
-                                                class="text-lg text-base-content/70 mb-4 animate-fade-in-up animation-delay-200">
-                                                {{ t('modals.initial_setup.welcome.description') }}
+                                                class="text-lg text-base-content/70 mb-4 animate-fade-in-up animation-delay-200"
+                                            >
+                                                {{
+                                                    t(
+                                                        "modals.initial_setup.welcome.description"
+                                                    )
+                                                }}
                                             </p>
 
                                             <ul
-                                                class="text-sm text-base-content/70 mb-4 space-y-2 text-left mx-auto max-w-md">
+                                                class="text-sm text-base-content/70 mb-4 space-y-2 text-left mx-auto max-w-md"
+                                            >
                                                 <li class="flex items-start">
-                                                    <span class="text-primary mr-2">•</span>
-                                                    {{ t('modals.initial_setup.welcome.features.fast_startup') }}
+                                                    <span
+                                                        class="text-primary mr-2"
+                                                        >•</span
+                                                    >
+                                                    {{
+                                                        t(
+                                                            "modals.initial_setup.welcome.features.fast_startup"
+                                                        )
+                                                    }}
                                                 </li>
                                                 <li class="flex items-start">
-                                                    <span class="text-primary mr-2">•</span>
-                                                    {{ t('modals.initial_setup.welcome.features.secure_clients') }}
+                                                    <span
+                                                        class="text-primary mr-2"
+                                                        >•</span
+                                                    >
+                                                    {{
+                                                        t(
+                                                            "modals.initial_setup.welcome.features.secure_clients"
+                                                        )
+                                                    }}
                                                 </li>
                                                 <li class="flex items-start">
-                                                    <span class="text-primary mr-2">•</span>
-                                                    {{ t('modals.initial_setup.welcome.features.auto_updates') }}
+                                                    <span
+                                                        class="text-primary mr-2"
+                                                        >•</span
+                                                    >
+                                                    {{
+                                                        t(
+                                                            "modals.initial_setup.welcome.features.auto_updates"
+                                                        )
+                                                    }}
                                                 </li>
                                             </ul>
                                         </div>
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 2" key="step3" class="step-content">
+                                    <div
+                                        v-if="currentTutorialStep === 2"
+                                        key="step3"
+                                        class="step-content"
+                                    >
                                         <div class="text-center">
-                                            <Cpu class="w-16 h-16 mx-auto mb-4 text-primary" />
+                                            <Cpu
+                                                class="w-16 h-16 mx-auto mb-4 text-primary"
+                                            />
                                             <p
-                                                class="text-lg text-base-content/70 mb-6 animate-fade-in-up animation-delay-200">
+                                                class="text-lg text-base-content/70 mb-6 animate-fade-in-up animation-delay-200"
+                                            >
                                                 {{
                                                     t(
-                                                        'modals.initial_setup.ram.description'
+                                                        "modals.initial_setup.ram.description"
                                                     )
                                                 }}
                                             </p>
 
                                             <div
-                                                class="space-y-4 animate-fade-in-up animation-delay-400 max-w-xl mx-auto">
-                                                <div class="flex items-center gap-4">
-                                                    <AnimatedSlider v-model="ramOptionIndex" :min="0" :max="ramOptions.length -
-                                                        1
-                                                        " @update:modelValue="
+                                                class="space-y-4 animate-fade-in-up animation-delay-400 max-w-xl mx-auto"
+                                            >
+                                                <div
+                                                    class="flex items-center gap-4"
+                                                >
+                                                    <AnimatedSlider
+                                                        v-model="ramOptionIndex"
+                                                        :min="0"
+                                                        :max="
+                                                            ramOptions.length -
+                                                            1
+                                                        "
+                                                        @update:modelValue="
                                                             handleSliderChange
-                                                        " class="grow" />
+                                                        "
+                                                        class="grow"
+                                                    />
                                                     <div
-                                                        class="flex items-center gap-2 rounded-lg p-3 bg-base-200 min-w-fit shadow-md">
-                                                        <span class="text-lg font-bold">{{
-                                                            ramOptions[
-                                                                ramOptionIndex
-                                                            ].label
-                                                        }}</span>
-                                                        <div class="badge badge-primary">
+                                                        class="flex items-center gap-2 rounded-lg p-3 bg-base-200 min-w-fit shadow-md"
+                                                    >
+                                                        <span
+                                                            class="text-lg font-bold"
+                                                            >{{
+                                                                ramOptions[
+                                                                    ramOptionIndex
+                                                                ].label
+                                                            }}</span
+                                                        >
+                                                        <div
+                                                            class="badge badge-primary"
+                                                        >
                                                             {{
                                                                 ramOptions[
                                                                     ramOptionIndex
@@ -398,56 +584,88 @@ onMounted(async () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div v-if="showRamWarning" class="alert alert-warning mt-4">
-                                                    <span>{{ t('modals.initial_setup.ram.warning', { selectedRamMb })
-                                                        }}</span>
+                                                <div
+                                                    v-if="showRamWarning"
+                                                    class="alert alert-warning mt-4"
+                                                >
+                                                    <span>{{
+                                                        t(
+                                                            "modals.initial_setup.ram.warning",
+                                                            { selectedRamMb }
+                                                        )
+                                                    }}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 3" key="step3" class="step-content">
+                                    <div
+                                        v-if="currentTutorialStep === 3"
+                                        key="step3"
+                                        class="step-content"
+                                    >
                                         <div class="text-center">
                                             <p
-                                                class="text-base text-base-content/70 mb-6 animate-fade-in-up animation-delay-200 max-w-lg mx-auto">
+                                                class="text-base text-base-content/70 mb-6 animate-fade-in-up animation-delay-200 max-w-lg mx-auto"
+                                            >
                                                 {{
                                                     t(
-                                                        'modals.initial_setup.telemetry.description'
+                                                        "modals.initial_setup.telemetry.description"
                                                     )
                                                 }}
                                             </p>
                                             <div
-                                                class="bg-base-200 rounded-lg p-4 space-y-3 mb-6 max-w-xl mx-auto text-left">
-                                                <h4 class="font-semibold text-primary text-center">
+                                                class="bg-base-200 rounded-lg p-4 space-y-3 mb-6 max-w-xl mx-auto text-left"
+                                            >
+                                                <h4
+                                                    class="font-semibold text-primary text-center"
+                                                >
                                                     {{
                                                         t(
-                                                            'modals.initial_setup.telemetry.data_collected_title'
+                                                            "modals.initial_setup.telemetry.data_collected_title"
                                                         )
                                                     }}
                                                 </h4>
-                                                <ul class="text-sm text-base-content/70 space-y-2">
-                                                    <li class="flex items-start">
-                                                        <span class="text-primary mr-2">•</span>
+                                                <ul
+                                                    class="text-sm text-base-content/70 space-y-2"
+                                                >
+                                                    <li
+                                                        class="flex items-start"
+                                                    >
+                                                        <span
+                                                            class="text-primary mr-2"
+                                                            >•</span
+                                                        >
                                                         {{
                                                             t(
-                                                                'modals.initial_setup.telemetry.data_collected.performance'
+                                                                "modals.initial_setup.telemetry.data_collected.performance"
                                                             )
                                                         }}
                                                     </li>
-                                                    <li class="flex items-start">
-                                                        <span class="text-primary mr-2">•</span>
+                                                    <li
+                                                        class="flex items-start"
+                                                    >
+                                                        <span
+                                                            class="text-primary mr-2"
+                                                            >•</span
+                                                        >
                                                         {{
                                                             t(
-                                                                'modals.initial_setup.telemetry.data_collected.usage_patterns'
+                                                                "modals.initial_setup.telemetry.data_collected.usage_patterns"
                                                             )
                                                         }}
                                                     </li>
-                                                    <li class="flex items-start">
-                                                        <span class="text-primary mr-2">•</span>
+                                                    <li
+                                                        class="flex items-start"
+                                                    >
+                                                        <span
+                                                            class="text-primary mr-2"
+                                                            >•</span
+                                                        >
                                                         {{
                                                             t(
-                                                                'modals.initial_setup.telemetry.data_collected.crash_reports'
+                                                                "modals.initial_setup.telemetry.data_collected.crash_reports"
                                                             )
                                                         }}
                                                     </li>
@@ -457,40 +675,57 @@ onMounted(async () => {
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 4" key="step5" class="step-content">
+                                    <div
+                                        v-if="currentTutorialStep === 4"
+                                        key="step5"
+                                        class="step-content"
+                                    >
                                         <div class="text-center">
-                                            <DoorOpen class="w-16 h-16 mx-auto mb-4 text-primary" />
+                                            <DoorOpen
+                                                class="w-16 h-16 mx-auto mb-4 text-primary"
+                                            />
 
                                             <p
-                                                class="text-lg text-base-content/70 mb-2 animate-fade-in-up animation-delay-200">
+                                                class="text-lg text-base-content/70 mb-2 animate-fade-in-up animation-delay-200"
+                                            >
                                                 {{
                                                     t(
-                                                        'modals.initial_setup.feedback.description'
+                                                        "modals.initial_setup.feedback.description"
                                                     )
                                                 }}
                                             </p>
 
                                             <p
-                                                class="text-sm text-base-content/70 mb-5 animate-fade-in-up animation-delay-300">
+                                                class="text-sm text-base-content/70 mb-5 animate-fade-in-up animation-delay-300"
+                                            >
                                                 {{
                                                     t(
-                                                        'modals.initial_setup.feedback.optional'
+                                                        "modals.initial_setup.feedback.optional"
                                                     )
                                                 }}
                                             </p>
 
                                             <div
-                                                class="flex gap-4 justify-center animate-fade-in-up animation-delay-400">
-                                                <button @click="openTelegram"
-                                                    class="btn btn-ghost bg-info text-white hover:scale-110 transition-transform duration-300">
-                                                    <img src="@/assets/icons/telegram.svg"
-                                                        class="w-6 h-6 mr-2 telegram-icon" />
+                                                class="flex gap-4 justify-center animate-fade-in-up animation-delay-400"
+                                            >
+                                                <button
+                                                    @click="openTelegram"
+                                                    class="btn btn-ghost bg-info text-white hover:scale-110 transition-transform duration-300"
+                                                >
+                                                    <img
+                                                        src="@/assets/icons/telegram.svg"
+                                                        class="w-6 h-6 mr-2 telegram-icon"
+                                                    />
                                                     Telegram
                                                 </button>
-                                                <button @click="openDiscord"
-                                                    class="btn btn-ghost bg-indigo-500 text-white hover:scale-110 transition-transform duration-300">
-                                                    <img src="@/assets/icons/discord.svg"
-                                                        class="w-6 h-6 mr-2 discord-icon" />
+                                                <button
+                                                    @click="openDiscord"
+                                                    class="btn btn-ghost bg-indigo-500 text-white hover:scale-110 transition-transform duration-300"
+                                                >
+                                                    <img
+                                                        src="@/assets/icons/discord.svg"
+                                                        class="w-6 h-6 mr-2 discord-icon"
+                                                    />
                                                     Discord
                                                 </button>
                                             </div>
@@ -498,49 +733,76 @@ onMounted(async () => {
                                     </div>
                                 </transition>
                                 <transition name="step-height" mode="out-in">
-                                    <div v-if="currentTutorialStep === 5" key="step6" class="step-content">
+                                    <div
+                                        v-if="currentTutorialStep === 5"
+                                        key="step6"
+                                        class="step-content"
+                                    >
                                         <div class="text-center">
-                                            <HeartHandshake class="w-16 h-16 mx-auto mb-4 text-primary" />
+                                            <HeartHandshake
+                                                class="w-16 h-16 mx-auto mb-4 text-primary"
+                                            />
                                             <p
-                                                class="text-lg text-base-content/70 animate-fade-in-up animation-delay-200">
+                                                class="text-lg text-base-content/70 animate-fade-in-up animation-delay-200"
+                                            >
                                                 {{
                                                     t(
-                                                        'modals.initial_setup.appreciation.description'
+                                                        "modals.initial_setup.appreciation.description"
                                                     )
                                                 }}
                                             </p>
 
-                                            <HoldButton @start="acceptFirstRun" class="mt-5" />
+                                            <HoldButton
+                                                @start="acceptFirstRun"
+                                                class="mt-5"
+                                            />
                                         </div>
                                     </div>
                                 </transition>
                             </div>
                         </div>
 
-                        <div class="bg-primary/5 px-8 py-4 border-t border-base-300 animate-slide-up shrink-0">
-                            <div class="flex items-center justify-between max-w-4xl mx-auto">
+                        <div
+                            class="bg-primary/5 px-8 py-4 border-t border-base-300 animate-slide-up shrink-0"
+                        >
+                            <div
+                                class="flex items-center justify-between max-w-4xl mx-auto"
+                            >
                                 <div class="flex items-center space-x-3">
-                                    <button v-for="step in totalTutorialSteps" :key="step" @click="goToStep(step)"
+                                    <button
+                                        v-for="step in totalTutorialSteps"
+                                        :key="step"
+                                        @click="goToStep(step)"
                                         class="w-3 h-3 rounded-full transition-all cursor-pointer duration-500 hover:scale-150"
-                                        :class="step === currentTutorialStep
-                                            ? 'bg-primary shadow-lg'
-                                            : 'bg-base-content/30 hover:bg-base-content/50'
-                                            "></button>
+                                        :class="
+                                            step === currentTutorialStep
+                                                ? 'bg-primary shadow-lg'
+                                                : 'bg-base-content/30 hover:bg-base-content/50'
+                                        "
+                                    ></button>
                                 </div>
 
                                 <div class="flex gap-3">
-                                    <button v-if="currentTutorialStep > 1" @click="
-                                        goToStep(currentTutorialStep - 1)
-                                        " class="btn btn-sm btn-outline hover:scale-105 transition-all duration-300">
-                                        {{ t('common.previous') }}
+                                    <button
+                                        v-if="currentTutorialStep > 1"
+                                        @click="
+                                            goToStep(currentTutorialStep - 1)
+                                        "
+                                        class="btn btn-sm btn-outline hover:scale-105 transition-all duration-300"
+                                    >
+                                        {{ t("common.previous") }}
                                     </button>
-                                    <button v-if="
-                                        currentTutorialStep <
-                                        totalTutorialSteps
-                                    " @click="
-                                        goToStep(currentTutorialStep + 1)
-                                        " class="btn btn-sm btn-primary hover:scale-105 transition-all duration-300">
-                                        {{ t('common.next') }}
+                                    <button
+                                        v-if="
+                                            currentTutorialStep <
+                                            totalTutorialSteps
+                                        "
+                                        @click="
+                                            goToStep(currentTutorialStep + 1)
+                                        "
+                                        class="btn btn-sm btn-primary hover:scale-105 transition-all duration-300"
+                                    >
+                                        {{ t("common.next") }}
                                     </button>
                                 </div>
                             </div>
@@ -552,45 +814,64 @@ onMounted(async () => {
     </transition>
 
     <transition name="modal-fade">
-        <div v-if="showDisclaimer"
-            class="fixed inset-0 bg-linear-to-br from-black/90 to-black/95 flex items-center justify-center z-1500 backdrop-blur-sm">
+        <div
+            v-if="showDisclaimer"
+            class="fixed inset-0 bg-linear-to-br from-black/90 to-black/95 flex items-center justify-center z-1500 backdrop-blur-sm"
+        >
             <transition name="modal-scale">
-                <div class="bg-base-100 rounded-xl shadow-2xl w-full h-full max-w-none max-h-none modal-container">
+                <div
+                    class="bg-base-100 rounded-xl shadow-2xl w-full h-full max-w-none max-h-none modal-container"
+                >
                     <div class="flex flex-col h-full">
-                        <div class="bg-error/10 px-8 py-6 border-b border-error/20 shrink-0">
-                            <h2 class="text-xl font-bold text-error animate-slide-in-left">
-                                <NotebookPen class="inline w-6 h-6 mr-2 text-error" />
-                                {{ t('modals.initial_setup.disclaimer.title') }}
+                        <div
+                            class="bg-error/10 px-8 py-6 border-b border-error/20 shrink-0"
+                        >
+                            <h2
+                                class="text-xl font-bold text-error animate-slide-in-left"
+                            >
+                                <NotebookPen
+                                    class="inline w-6 h-6 mr-2 text-error"
+                                />
+                                {{ t("modals.initial_setup.disclaimer.title") }}
                             </h2>
                         </div>
 
                         <div
-                            class="disclaimer-content grow flex items-center justify-center px-8 py-8 animate-fade-in-up animation-delay-200">
-                            <div class="space-y-4 max-w-2xl mx-auto text-center">
+                            class="disclaimer-content grow flex items-center justify-center px-8 py-8 animate-fade-in-up animation-delay-200"
+                        >
+                            <div
+                                class="space-y-4 max-w-2xl mx-auto text-center"
+                            >
                                 <p class="text-base text-base-content/80 mb-4">
                                     {{
                                         t(
-                                            'modals.initial_setup.disclaimer.responsibility'
+                                            "modals.initial_setup.disclaimer.responsibility"
                                         )
                                     }}
                                 </p>
                                 <p class="text-base font-semibold text-warning">
                                     {{
                                         t(
-                                            'modals.initial_setup.disclaimer.acknowledgment'
+                                            "modals.initial_setup.disclaimer.acknowledgment"
                                         )
                                     }}
                                 </p>
                             </div>
                         </div>
 
-                        <div class="animate-slide-up animation-delay-400 shrink-0">
-                            <div class="bg-base-200 px-8 py-4 border-t border-base-300">
-                                <button @click="acceptDisclaimer"
-                                    class="btn btn-error w-full hover:scale-105 transition-all duration-300">
+                        <div
+                            class="animate-slide-up animation-delay-400 shrink-0"
+                        >
+                            <div
+                                class="bg-base-200 px-8 py-4 border-t border-base-300"
+                            >
+                                <button
+                                    @click="acceptDisclaimer"
+                                    class="btn btn-error w-full hover:scale-105 transition-all duration-300"
+                                >
                                     {{
                                         t(
-                                            'modals.initial_setup.disclaimer.accept'
+                                            "modals.initial_setup.disclaimer.accept"
                                         )
                                     }}
                                 </button>
@@ -780,13 +1061,13 @@ onMounted(async () => {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-button[class*='w-2 h-2'] {
+button[class*="w-2 h-2"] {
     position: relative;
     overflow: hidden;
 }
 
-button[class*='w-2 h-2']:before {
-    content: '';
+button[class*="w-2 h-2"]:before {
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -798,7 +1079,7 @@ button[class*='w-2 h-2']:before {
     transition: all 0.3s ease;
 }
 
-button[class*='w-2 h-2']:hover:before {
+button[class*="w-2 h-2"]:hover:before {
     width: 200%;
     height: 200%;
 }
@@ -840,7 +1121,6 @@ button[class*='w-2 h-2']:hover:before {
     }
 }
 
-
 @media (max-width: 768px) {
     .step-content {
         padding: 1rem;
@@ -851,13 +1131,15 @@ button[class*='w-2 h-2']:hover:before {
     }
 }
 
-html[data-theme='dark'] .telegram-icon,
-html[data-theme='dark'] .discord-icon {
-    filter: invert(100%) sepia(15%) saturate(1%) hue-rotate(282deg) brightness(102%) contrast(101%);
+html[data-theme="dark"] .telegram-icon,
+html[data-theme="dark"] .discord-icon {
+    filter: invert(100%) sepia(15%) saturate(1%) hue-rotate(282deg)
+        brightness(102%) contrast(101%);
 }
 
-html[data-theme='light'] .telegram-icon,
-html[data-theme='light'] .discord-icon {
-    filter: invert(0%) sepia(15%) saturate(17%) hue-rotate(253deg) brightness(95%) contrast(103%);
+html[data-theme="light"] .telegram-icon,
+html[data-theme="light"] .discord-icon {
+    filter: invert(0%) sepia(15%) saturate(17%) hue-rotate(253deg)
+        brightness(95%) contrast(103%);
 }
 </style>

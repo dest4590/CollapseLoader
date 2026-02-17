@@ -1,27 +1,38 @@
 <template>
-    <div class="sync-status-widget" :class="{ offline: !syncState.isOnline, unauthenticated: !isAuthenticated }">
+    <div
+        class="sync-status-widget"
+        :class="{
+            offline: !syncState.isOnline,
+            unauthenticated: !isAuthenticated,
+        }"
+    >
         <div class="flex items-center gap-2 text-xs">
             <div class="flex items-center gap-1">
-                <div class="w-2 h-2 rounded-full mr-2" :class="{
-                    'bg-success animate-pulse':
-                        syncState.isOnline && !syncState.isSyncing,
-                    'bg-error': !syncState.isOnline,
-                    'bg-warning animate-spin': syncState.isSyncing,
-                    'bg-warning': !isAuthenticated
-                }"></div>
+                <div
+                    class="w-2 h-2 rounded-full mr-2"
+                    :class="{
+                        'bg-success animate-pulse':
+                            syncState.isOnline && !syncState.isSyncing,
+                        'bg-error': !syncState.isOnline,
+                        'bg-warning animate-spin': syncState.isSyncing,
+                        'bg-warning': !isAuthenticated,
+                    }"
+                ></div>
                 <span class="font-medium">
                     {{
                         isAuthenticated
-                            ? (syncState.isOnline
-                                ? (syncState.isSyncing ? t('settings.syncing') : t('time.online'))
-                                : t('time.offline'))
-                            : t('settings.not_signed_in')
+                            ? syncState.isOnline
+                                ? syncState.isSyncing
+                                    ? t("settings.syncing")
+                                    : t("time.online")
+                                : t("time.offline")
+                            : t("settings.not_signed_in")
                     }}
                 </span>
             </div>
 
             <div v-if="syncState.lastSyncTime" class="text-base-content/60">
-                {{ t('sync.last_sync') }}:
+                {{ t("sync.last_sync") }}:
                 {{ formatSyncTime(syncState.lastSyncTime) }}
             </div>
         </div>
@@ -29,10 +40,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { syncService, type SyncServiceState } from '../../services/syncService';
-import { useI18n } from 'vue-i18n';
-import { globalUserStatus } from '../../composables/useUserStatus';
+import { ref, onMounted, onUnmounted } from "vue";
+import { syncService, type SyncServiceState } from "../../services/syncService";
+import { useI18n } from "vue-i18n";
+import { globalUserStatus } from "../../composables/useUserStatus";
 
 const { t } = useI18n();
 const isAuthenticated = globalUserStatus.isAuthenticated;
@@ -45,14 +56,14 @@ const formatSyncTime = (timestamp: string): string => {
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
 
-    if (diffMins < 1) return t('userProfile.just_now');
-    if (diffMins < 60) return t('sync.minutes_ago', { count: diffMins });
+    if (diffMins < 1) return t("userProfile.just_now");
+    if (diffMins < 60) return t("sync.minutes_ago", { count: diffMins });
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return t('sync.hours_ago', { count: diffHours });
+    if (diffHours < 24) return t("sync.hours_ago", { count: diffHours });
 
     const diffDays = Math.floor(diffHours / 24);
-    return t('sync.days_ago', { count: diffDays });
+    return t("sync.days_ago", { count: diffDays });
 };
 
 onMounted(async () => {
@@ -120,7 +131,11 @@ onUnmounted(() => {
 .progress-indeterminate {
     width: 30%;
     height: 100%;
-    background: linear-gradient(90deg, rgba(59, 130, 246, 0.95), rgba(99, 102, 241, 0.9));
+    background: linear-gradient(
+        90deg,
+        rgba(59, 130, 246, 0.95),
+        rgba(99, 102, 241, 0.9)
+    );
     animation: progressIndeterminate 1.1s infinite linear;
 }
 

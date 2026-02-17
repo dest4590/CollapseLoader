@@ -1,5 +1,11 @@
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
-export type ToastPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center' | 'top-center';
+export type ToastType = "success" | "error" | "info" | "warning";
+export type ToastPosition =
+    | "bottom-right"
+    | "bottom-left"
+    | "top-right"
+    | "top-left"
+    | "bottom-center"
+    | "top-center";
 
 export interface ToastMessage {
     id: number;

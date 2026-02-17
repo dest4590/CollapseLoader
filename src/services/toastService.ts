@@ -1,21 +1,33 @@
-import { ref } from 'vue';
-import type { ToastMessage, ToastType } from '../types/toast';
+import { ref } from "vue";
+import type { ToastMessage, ToastType } from "../types/toast";
 
 const toasts = ref<ToastMessage[]>([]);
 let nextId = 0;
 let DUPLICATE_THRESHOLD = 2000;
 
-export type ToastPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'bottom-center' | 'top-center';
+export type ToastPosition =
+    | "bottom-right"
+    | "bottom-left"
+    | "top-right"
+    | "top-left"
+    | "bottom-center"
+    | "top-center";
 
-const toastPosition = ref<ToastPosition>('bottom-right');
+const toastPosition = ref<ToastPosition>("bottom-right");
 
-function addToast(message: string, type: ToastType, duration: number = 5000, action?: { label: string; url: string }) {
+function addToast(
+    message: string,
+    type: ToastType,
+    duration: number = 5000,
+    action?: { label: string; url: string }
+) {
     const now = Date.now();
-    const existingToast = toasts.value.find(toast =>
-        toast.message === message &&
-        toast.type === type &&
-        toast.startTime &&
-        (now - toast.startTime) < DUPLICATE_THRESHOLD
+    const existingToast = toasts.value.find(
+        (toast) =>
+            toast.message === message &&
+            toast.type === type &&
+            toast.startTime &&
+            now - toast.startTime < DUPLICATE_THRESHOLD
     );
 
     if (existingToast) {
@@ -42,12 +54,12 @@ function addToast(message: string, type: ToastType, duration: number = 5000, act
         type,
         duration,
         remainingDuration: duration,
-        count: 1
+        count: 1,
     } as ToastMessage;
 
     if (action) {
         toast.action = action;
-    };
+    }
 
     toasts.value.push(toast);
 
@@ -66,7 +78,7 @@ function startToastTimer(toast: ToastMessage) {
 }
 
 function removeToast(id: number) {
-    const toast = toasts.value.find(t => t.id === id);
+    const toast = toasts.value.find((t) => t.id === id);
     if (toast?.timeoutId) {
         clearTimeout(toast.timeoutId);
     }
@@ -74,17 +86,20 @@ function removeToast(id: number) {
 }
 
 function pauseToast(id: number) {
-    const toast = toasts.value.find(t => t.id === id);
+    const toast = toasts.value.find((t) => t.id === id);
     if (toast?.timeoutId && toast.startTime) {
         clearTimeout(toast.timeoutId);
         const elapsed = Date.now() - toast.startTime;
-        toast.remainingDuration = Math.max(0, (toast.remainingDuration || 0) - elapsed);
+        toast.remainingDuration = Math.max(
+            0,
+            (toast.remainingDuration || 0) - elapsed
+        );
         toast.timeoutId = undefined;
     }
 }
 
 function resumeToast(id: number) {
-    const toast = toasts.value.find(t => t.id === id);
+    const toast = toasts.value.find((t) => t.id === id);
     if (toast && toast.remainingDuration && toast.remainingDuration > 0) {
         startToastTimer(toast);
     }
@@ -103,17 +118,27 @@ function setDuplicateThreshold(threshold: number) {
 
 function setToastPosition(position: ToastPosition) {
     toastPosition.value = position;
-    localStorage.setItem('toastPosition', position);
+    localStorage.setItem("toastPosition", position);
 }
 
 function getToastPosition(): ToastPosition {
-    const stored = localStorage.getItem('toastPosition');
-    if (stored && ['bottom-right', 'bottom-left', 'top-right', 'top-left', 'bottom-center', 'top-center'].includes(stored)) {
+    const stored = localStorage.getItem("toastPosition");
+    if (
+        stored &&
+        [
+            "bottom-right",
+            "bottom-left",
+            "top-right",
+            "top-left",
+            "bottom-center",
+            "top-center",
+        ].includes(stored)
+    ) {
         toastPosition.value = stored as ToastPosition;
         return stored as ToastPosition;
     }
-    toastPosition.value = 'bottom-right';
-    return 'bottom-right';
+    toastPosition.value = "bottom-right";
+    return "bottom-right";
 }
 
 export function useToast() {

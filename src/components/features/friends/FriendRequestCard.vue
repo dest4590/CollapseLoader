@@ -1,12 +1,19 @@
 <template>
-    <div class="card bg-base-200 shadow-sm border border-base-300 h-full flex flex-col">
+    <div
+        class="card bg-base-200 shadow-sm border border-base-300 h-full flex flex-col"
+    >
         <div class="card-body p-4 flex-1 flex items-center">
             <div class="flex items-center justify-between w-full">
                 <div class="flex items-center gap-3">
                     <div @click="$emit('viewProfile', user.id)">
-                        <UserAvatar :name="displayNickname" :is-clickable="true"
+                        <UserAvatar
+                            :name="displayNickname"
+                            :is-clickable="true"
                             :src="(props.user as any).avatar_url || null"
-                            :original-src="(props.user as any).avatar_url || null" />
+                            :original-src="
+                                (props.user as any).avatar_url || null
+                            "
+                        />
                     </div>
                     <div class="min-h-14">
                         <p class="font-medium">{{ displayNickname }}</p>
@@ -16,17 +23,29 @@
                     </div>
                 </div>
                 <div v-if="type === 'received'" class="flex gap-2 items-center">
-                    <button @click="$emit('accept', requestId)" class="btn btn-success btn-sm">
+                    <button
+                        @click="$emit('accept', requestId)"
+                        class="btn btn-success btn-sm"
+                    >
                         <Check class="w-4 h-4" />
                     </button>
-                    <button @click="$emit('reject', requestId)" class="btn btn-error btn-sm">
+                    <button
+                        @click="$emit('reject', requestId)"
+                        class="btn btn-error btn-sm"
+                    >
                         <X class="w-4 h-4" />
                     </button>
                 </div>
-                <div v-else-if="type === 'sent'" class="flex gap-2 items-center">
-                    <button @click="confirmCancel" class="btn btn-error btn-outline btn-sm">
+                <div
+                    v-else-if="type === 'sent'"
+                    class="flex gap-2 items-center"
+                >
+                    <button
+                        @click="confirmCancel"
+                        class="btn btn-error btn-outline btn-sm"
+                    >
                         <X class="w-4 h-4" />
-                        {{ t('common.cancel') }}
+                        {{ t("common.cancel") }}
                     </button>
                 </div>
             </div>
@@ -35,14 +54,14 @@
 </template>
 
 <script setup lang="ts">
-import { Check, X } from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
-import { useModal } from '../../../services/modalService';
-import UserAvatar from '../../ui/UserAvatar.vue';
-import CancelFriendRequestConfirmModal from '../../modals/social/friends/CancelFriendRequestConfirmModal.vue';
-import type { Friend } from '../../../services/userService';
-import { useStreamerMode } from '../../../composables/useStreamerMode';
-import { computed } from 'vue';
+import { Check, X } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
+import { useModal } from "../../../services/modalService";
+import UserAvatar from "../../ui/UserAvatar.vue";
+import CancelFriendRequestConfirmModal from "../../modals/social/friends/CancelFriendRequestConfirmModal.vue";
+import type { Friend } from "../../../services/userService";
+import { useStreamerMode } from "../../../composables/useStreamerMode";
+import { computed } from "vue";
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
@@ -51,7 +70,7 @@ const streamer = useStreamerMode();
 const props = defineProps<{
     user: Friend;
     requestId: number;
-    type: 'received' | 'sent';
+    type: "received" | "sent";
 }>();
 
 const emit = defineEmits<{
@@ -71,16 +90,16 @@ const displayUsername = computed(() => {
 
 const confirmCancel = () => {
     showModal(
-        'cancel-friend-request-confirm',
+        "cancel-friend-request-confirm",
         CancelFriendRequestConfirmModal,
-        { title: t('friends.cancel_friend_request') },
+        { title: t("friends.cancel_friend_request") },
         { user: props.user, requestId: props.requestId },
         {
             confirm: (requestId: number) => {
-                emit('cancel', requestId);
-                hideModal('cancel-friend-request-confirm');
+                emit("cancel", requestId);
+                hideModal("cancel-friend-request-confirm");
             },
-            close: () => hideModal('cancel-friend-request-confirm'),
+            close: () => hideModal("cancel-friend-request-confirm"),
         }
     );
 };

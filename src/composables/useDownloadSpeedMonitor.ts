@@ -1,7 +1,7 @@
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useModal } from '../services/modalService';
-import SlowDownloadWarningModal from '../components/modals/common/SlowDownloadWarningModal.vue';
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useModal } from "../services/modalService";
+import SlowDownloadWarningModal from "../components/modals/common/SlowDownloadWarningModal.vue";
 
 export interface DownloadSpeedConfig {
     slowSpeedThreshold?: number;
@@ -69,7 +69,10 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
         const now = Date.now();
         const timeSinceLastProgress = now - lastProgressTime.value;
 
-        if (lastProgressTime.value > 0 && timeSinceLastProgress >= stalledTimeout) {
+        if (
+            lastProgressTime.value > 0 &&
+            timeSinceLastProgress >= stalledTimeout
+        ) {
             showStalledWarningModal();
         }
     };
@@ -77,17 +80,17 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
     const showSlowWarningModal = () => {
         slowSpeedWarningShown.value = true;
         showModal(
-            'slow-download-warning',
+            "slow-download-warning",
             SlowDownloadWarningModal,
             {
-                title: t('modals.slow_download.modal_title'),
+                title: t("modals.slow_download.modal_title"),
             },
             {
                 currentSpeed: currentSpeed.value,
                 isStalled: false,
             },
             {
-                close: () => hideModal('slow-download-warning'),
+                close: () => hideModal("slow-download-warning"),
             }
         );
     };
@@ -95,17 +98,17 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
     const showStalledWarningModal = () => {
         stalledWarningShown.value = true;
         showModal(
-            'slow-download-warning',
+            "slow-download-warning",
             SlowDownloadWarningModal,
             {
-                title: t('modals.slow_download.stalled_modal_title'),
+                title: t("modals.slow_download.stalled_modal_title"),
             },
             {
                 currentSpeed: 0,
                 isStalled: true,
             },
             {
-                close: () => hideModal('slow-download-warning'),
+                close: () => hideModal("slow-download-warning"),
             }
         );
     };

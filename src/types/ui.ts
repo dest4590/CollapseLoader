@@ -47,7 +47,6 @@ export interface ClientDetails {
         created_at: string;
         content: string;
     }>;
-
 }
 
 export interface ClientComment {

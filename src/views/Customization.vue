@@ -1,53 +1,83 @@
 <template>
     <div class="container mx-auto mt-4">
         <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6">
+            <div
+                class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6"
+            >
                 <h2 class="card-title flex items-center gap-2">
                     <SunMoon class="w-5 h-5 text-primary" />
-                    {{ t('theme.select_theme') }}
+                    {{ t("theme.select_theme") }}
                 </h2>
-                <p class="text-base-content/70 mb-4">{{ t('theme.description') }}</p>
+                <p class="text-base-content/70 mb-4">
+                    {{ t("theme.description") }}
+                </p>
 
                 <div class="flex flex-col gap-4">
-                    <button v-for="theme in themes" :key="theme" @click="changeTheme(theme)"
-                        class="btn border flex items-center justify-between px-6 py-3" :class="{
-                            'border-primary/50 bg-primary/10': selectedTheme === theme,
-                            'border-base-content/10': selectedTheme !== theme
-                        }">
+                    <button
+                        v-for="theme in themes"
+                        :key="theme"
+                        @click="changeTheme(theme)"
+                        class="btn border flex items-center justify-between px-6 py-3"
+                        :class="{
+                            'border-primary/50 bg-primary/10':
+                                selectedTheme === theme,
+                            'border-base-content/10': selectedTheme !== theme,
+                        }"
+                    >
                         <div class="flex items-center gap-2">
-                            <Sun v-if="theme === 'light'" class="w-5 h-5 text-amber-400" />
+                            <Sun
+                                v-if="theme === 'light'"
+                                class="w-5 h-5 text-amber-400"
+                            />
                             <Moon v-else class="w-5 h-5 text-indigo-400" />
-                            <span class="font-medium capitalize">{{ t(`theme.${theme}`) }}</span>
+                            <span class="font-medium capitalize">{{
+                                t(`theme.${theme}`)
+                            }}</span>
                         </div>
-                        <div v-if="selectedTheme === theme" class="badge badge-primary">
-                            {{ t('theme.selected') }}
+                        <div
+                            v-if="selectedTheme === theme"
+                            class="badge badge-primary"
+                        >
+                            {{ t("theme.selected") }}
                         </div>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="card bg-base-200 shadow-md border border-base-300 mb-6 mt-6">
+        <div
+            class="card bg-base-200 shadow-md border border-base-300 mb-6 mt-6"
+        >
             <div class="card-body">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div
+                    class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+                >
                     <h1 class="card-title text-2xl flex items-center gap-3">
                         <Save class="w-6 h-6 text-primary" />
-                        {{ t('theme.preset') }}
+                        {{ t("theme.preset") }}
                     </h1>
 
                     <div class="flex flex-wrap items-center gap-2 justify-end">
                         <div class="flex gap-2 flex-wrap">
-                            <button class="btn btn-accent btn-sm flex items-center gap-2"
-                                @click="$emit('change-view', 'marketplace')">
+                            <button
+                                class="btn btn-accent btn-sm flex items-center gap-2"
+                                @click="$emit('change-view', 'marketplace')"
+                            >
                                 <Store class="w-4 h-4" />
-                                <span class="hidden sm:inline">{{ t('marketplace.open_marketplace') }}</span>
+                                <span class="hidden sm:inline">{{
+                                    t("marketplace.open_marketplace")
+                                }}</span>
                             </button>
 
-                            <button class="btn btn-outline btn-sm flex items-center gap-2" @click="resetStyles">
+                            <button
+                                class="btn btn-outline btn-sm flex items-center gap-2"
+                                @click="resetStyles"
+                            >
                                 <RotateCcw class="w-4 h-4" />
-                                <span class="hidden sm:inline">{{ t('theme.reset_button') }}</span>
+                                <span class="hidden sm:inline">{{
+                                    t("theme.reset_button")
+                                }}</span>
                             </button>
-
                         </div>
                     </div>
                 </div>
@@ -65,231 +95,522 @@
                 <div class="card-body p-6">
                     <h2 class="card-title flex items-center gap-2">
                         <Palette class="w-6 h-6 text-primary" />
-                        {{ t('theme.colors') }}
+                        {{ t("theme.colors") }}
                     </h2>
 
                     <div class="mb-8">
-                        <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('theme.base_colors') }}</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <h3
+                            class="text-xl font-semibold mb-4 text-base-content"
+                        >
+                            {{ t("theme.base_colors") }}
+                        </h3>
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                        >
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.base100')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.base100") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base100"
-                                    @input="handleColorInput('base100', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'base100',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.base200')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.base200") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base200"
-                                    @input="handleColorInput('base200', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'base200',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.base300')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.base300") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="base300"
-                                    @input="handleColorInput('base300', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'base300',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.base_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.base_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="baseContent"
-                                    @input="handleColorInput('baseContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'baseContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                         </div>
                     </div>
 
                     <div class="mb-8">
-                        <h3 class="text-xl font-semibold mb-4 text-base-content">{{
-                            t('theme.primary_secondary_accent') }}</h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        <h3
+                            class="text-xl font-semibold mb-4 text-base-content"
+                        >
+                            {{ t("theme.primary_secondary_accent") }}
+                        </h3>
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
+                        >
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.primary') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.primary") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="primaryColor"
-                                    @input="handleColorInput('primaryColorOverride', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'primaryColorOverride',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.primary_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.primary_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="primaryContent"
-                                    @input="handleColorInput('primaryContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'primaryContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.secondary')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.secondary") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="secondary"
-                                    @input="handleColorInput('secondary', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'secondary',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.secondary_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.secondary_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="secondaryContent"
-                                    @input="handleColorInput('secondaryContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'secondaryContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.accent')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.accent") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="accent"
-                                    @input="handleColorInput('accent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'accent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.accent_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.accent_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="accentContent"
-                                    @input="handleColorInput('accentContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'accentContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('theme.semantic_colors') }}
+                        <h3
+                            class="text-xl font-semibold mb-4 text-base-content"
+                        >
+                            {{ t("theme.semantic_colors") }}
                         </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+                        >
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.neutral')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.neutral") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="neutral"
-                                    @input="handleColorInput('neutral', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'neutral',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.neutral_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.neutral_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="neutralContent"
-                                    @input="handleColorInput('neutralContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'neutralContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.info')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.info") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="info"
-                                    @input="handleColorInput('info', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'info',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.info_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.info_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="infoContent"
-                                    @input="handleColorInput('infoContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'infoContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.success')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.success") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="success"
-                                    @input="handleColorInput('success', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'success',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.success_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.success_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="successContent"
-                                    @input="handleColorInput('successContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'successContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.warning')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.warning") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="warning"
-                                    @input="handleColorInput('warning', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'warning',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.warning_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.warning_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="warningContent"
-                                    @input="handleColorInput('warningContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'warningContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{ t('theme.error')
-                                    }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.error") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="error"
-                                    @input="handleColorInput('error', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'error',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                             <div class="form-control">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('theme.error_content') }}</label>
-                                <input type="color"
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{ t("theme.error_content") }}</label
+                                >
+                                <input
+                                    type="color"
                                     class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
                                     :value="errorContent"
-                                    @input="handleColorInput('errorContent', ($event.target as HTMLInputElement).value)" />
+                                    @input="
+                                        handleColorInput(
+                                            'errorContent',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-8">
-                        <h3 class="text-xl font-semibold mb-4 text-base-content">{{ t('customization.background_title')
-                        }}</h3>
+                        <h3
+                            class="text-xl font-semibold mb-4 text-base-content"
+                        >
+                            {{ t("customization.background_title") }}
+                        </h3>
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <div class="lg:col-span-12">
-                                <label class="label text-sm font-medium text-base-content">{{
-                                    t('customization.background_image') }}</label>
+                                <label
+                                    class="label text-sm font-medium text-base-content"
+                                    >{{
+                                        t("customization.background_image")
+                                    }}</label
+                                >
                                 <div class="relative">
-                                    <input type="text" class="input input-bordered w-full pr-10"
+                                    <input
+                                        type="text"
+                                        class="input input-bordered w-full pr-10"
                                         :value="backgroundImage"
-                                        :placeholder="t('customization.background_image_placeholder')"
-                                        @input="handleBackgroundInput('backgroundImage', ($event.target as HTMLInputElement).value)" />
-                                    <button v-if="backgroundImage"
+                                        :placeholder="
+                                            t(
+                                                'customization.background_image_placeholder'
+                                            )
+                                        "
+                                        @input="
+                                            handleBackgroundInput(
+                                                'backgroundImage',
+                                                (
+                                                    $event.target as HTMLInputElement
+                                                ).value
+                                            )
+                                        "
+                                    />
+                                    <button
+                                        v-if="backgroundImage"
                                         class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost"
-                                        @click="handleBackgroundInput('backgroundImage', '')">
+                                        @click="
+                                            handleBackgroundInput(
+                                                'backgroundImage',
+                                                ''
+                                            )
+                                        "
+                                    >
                                         &times;
                                     </button>
                                 </div>
-                                <p class="text-xs text-base-content/50 mt-1">{{ t('customization.background_image_help')
-                                }}</p>
+                                <p class="text-xs text-base-content/50 mt-1">
+                                    {{
+                                        t("customization.background_image_help")
+                                    }}
+                                </p>
                             </div>
 
                             <div class="lg:col-span-6">
                                 <div class="flex justify-between mb-2">
-                                    <label class="text-sm font-medium text-base-content">{{
-                                        t('customization.background_blur') }}</label>
-                                    <span class="text-xs font-mono">{{ backgroundBlur ?? 0 }}px</span>
+                                    <label
+                                        class="text-sm font-medium text-base-content"
+                                        >{{
+                                            t("customization.background_blur")
+                                        }}</label
+                                    >
+                                    <span class="text-xs font-mono"
+                                        >{{ backgroundBlur ?? 0 }}px</span
+                                    >
                                 </div>
-                                <input type="range" min="0" max="20" step="1" class="range range-primary range-sm"
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="20"
+                                    step="1"
+                                    class="range range-primary range-sm"
                                     :value="backgroundBlur ?? 0"
-                                    @input="handleBackgroundInput('backgroundBlur', Number(($event.target as HTMLInputElement).value))" />
+                                    @input="
+                                        handleBackgroundInput(
+                                            'backgroundBlur',
+                                            Number(
+                                                (
+                                                    $event.target as HTMLInputElement
+                                                ).value
+                                            )
+                                        )
+                                    "
+                                />
                             </div>
 
                             <div class="lg:col-span-6">
                                 <div class="flex justify-between mb-2">
-                                    <label class="text-sm font-medium text-base-content">{{
-                                        t('customization.background_opacity') }}</label>
-                                    <span class="text-xs font-mono">{{ backgroundOpacity ?? 100 }}%</span>
+                                    <label
+                                        class="text-sm font-medium text-base-content"
+                                        >{{
+                                            t(
+                                                "customization.background_opacity"
+                                            )
+                                        }}</label
+                                    >
+                                    <span class="text-xs font-mono"
+                                        >{{ backgroundOpacity ?? 100 }}%</span
+                                    >
                                 </div>
-                                <input type="range" min="0" max="100" step="1" class="range range-primary range-sm"
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    class="range range-primary range-sm"
                                     :value="backgroundOpacity ?? 100"
-                                    @input="handleBackgroundInput('backgroundOpacity', Number(($event.target as HTMLInputElement).value))" />
+                                    @input="
+                                        handleBackgroundInput(
+                                            'backgroundOpacity',
+                                            Number(
+                                                (
+                                                    $event.target as HTMLInputElement
+                                                ).value
+                                            )
+                                        )
+                                    "
+                                />
                             </div>
                         </div>
                     </div>
@@ -298,100 +619,186 @@
 
             <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
                 <div class="card-body">
-                    <div @click="toggleExpertMode" class="cursor-pointer flex items-center justify-between">
+                    <div
+                        @click="toggleExpertMode"
+                        class="cursor-pointer flex items-center justify-between"
+                    >
                         <h2 class="card-title flex items-center gap-2">
                             <Code class="w-5 h-5 text-primary" />
-                            {{ t('theme.expert_css_title') }}
+                            {{ t("theme.expert_css_title") }}
                         </h2>
                         <button class="btn btn-sm btn-ghost">
-                            <ChevronDown v-if="!showExpertOptions" class="w-5 h-5" />
+                            <ChevronDown
+                                v-if="!showExpertOptions"
+                                class="w-5 h-5"
+                            />
                             <ChevronUp v-else class="w-5 h-5" />
-                            {{ showExpertOptions ? t('theme.hide_expert') : t('theme.show_expert') }}
+                            {{
+                                showExpertOptions
+                                    ? t("theme.hide_expert")
+                                    : t("theme.show_expert")
+                            }}
                         </button>
                     </div>
 
-                    <transition name="expert-fade" @before-enter="expertAnimationActive = true"
-                        @after-leave="expertAnimationActive = false">
+                    <transition
+                        name="expert-fade"
+                        @before-enter="expertAnimationActive = true"
+                        @after-leave="expertAnimationActive = false"
+                    >
                         <div v-if="showExpertOptions" class="mt-4">
-                            <div class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
+                            <div
+                                class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4"
+                            >
                                 <div class="flex items-start gap-2">
-                                    <HelpCircle class="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                                    <HelpCircle
+                                        class="w-5 h-5 text-warning shrink-0 mt-0.5"
+                                    />
                                     <p class="text-sm text-warning">
-                                        {{ t('theme.expert_warning') }}
+                                        {{ t("theme.expert_warning") }}
                                     </p>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between mb-2">
                                 <label class="flex items-center gap-2">
-                                    <input type="checkbox" class="checkbox" v-model="enableCustomCSS"
-                                        @change="handleEnableCustomCSS(($event.target as HTMLInputElement)?.checked ?? false)" />
-                                    <span>{{ t('theme.enable_custom_css') }}</span>
+                                    <input
+                                        type="checkbox"
+                                        class="checkbox"
+                                        v-model="enableCustomCSS"
+                                        @change="
+                                            handleEnableCustomCSS(
+                                                (
+                                                    $event.target as HTMLInputElement
+                                                )?.checked ?? false
+                                            )
+                                        "
+                                    />
+                                    <span>{{
+                                        t("theme.enable_custom_css")
+                                    }}</span>
                                 </label>
                             </div>
                             <div class="flex flex-col gap-2 mb-4">
-                                <label class="font-medium mb-1">{{ t('theme.available_classes_label') }}</label>
+                                <label class="font-medium mb-1">{{
+                                    t("theme.available_classes_label")
+                                }}</label>
                                 <div class="flex flex-wrap gap-2">
                                     <span
                                         class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                        :data-tip="t('theme.tooltip_client_card')" @click="addExample('.client-card')">
+                                        :data-tip="
+                                            t('theme.tooltip_client_card')
+                                        "
+                                        @click="addExample('.client-card')"
+                                    >
                                         client-card
                                     </span>
                                     <span
                                         class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                        :data-tip="t('theme.tooltip_sidebar_btn')" @click="addExample('.sidebar-btn')">
+                                        :data-tip="
+                                            t('theme.tooltip_sidebar_btn')
+                                        "
+                                        @click="addExample('.sidebar-btn')"
+                                    >
                                         sidebar-btn
                                     </span>
                                     <span
                                         class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                        :data-tip="t('theme.tooltip_launch_download_btn')"
-                                        @click="addExample('.launch-btn, .download-btn')">
+                                        :data-tip="
+                                            t(
+                                                'theme.tooltip_launch_download_btn'
+                                            )
+                                        "
+                                        @click="
+                                            addExample(
+                                                '.launch-btn, .download-btn'
+                                            )
+                                        "
+                                    >
                                         download-btn | launch-btn
                                     </span>
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                            <div
+                                class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4"
+                            >
                                 <div>
-                                    <label class="block mb-2 font-medium">{{ t('theme.custom_css_label')
-                                        }}</label>
-                                    <VueMonacoEditor v-model:value="customCSS" language="css"
-                                        :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{
+                                    <label class="block mb-2 font-medium">{{
+                                        t("theme.custom_css_label")
+                                    }}</label>
+                                    <VueMonacoEditor
+                                        v-model:value="customCSS"
+                                        language="css"
+                                        :theme="
+                                            selectedTheme === 'dark'
+                                                ? 'vs-dark'
+                                                : 'vs'
+                                        "
+                                        :options="{
                                             readOnly: !enableCustomCSS,
                                             minimap: { enabled: false },
                                             fontSize: 14,
                                             lineNumbers: 'on',
                                             wordWrap: 'on',
                                             automaticLayout: true,
-                                            scrollBeyondLastLine: false
+                                            scrollBeyondLastLine: false,
                                         }"
-                                        style="height: 300px; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);" />
+                                        style="
+                                            height: 300px;
+                                            border-radius: 0.5rem;
+                                            border: 1px solid
+                                                rgba(255, 255, 255, 0.1);
+                                        "
+                                    />
                                 </div>
                             </div>
                             <div class="flex gap-2 mt-4">
-                                <button class="btn btn-primary btn-sm flex items-center gap-2" @click="openExportModal">
+                                <button
+                                    class="btn btn-primary btn-sm flex items-center gap-2"
+                                    @click="openExportModal"
+                                >
                                     <ClipboardCopy class="w-4 h-4" />
-                                    {{ t('theme.export_css_btn') }}
+                                    {{ t("theme.export_css_btn") }}
                                 </button>
-                                <button class="btn btn-secondary btn-sm flex items-center gap-2"
-                                    @click="openImportModal">
+                                <button
+                                    class="btn btn-secondary btn-sm flex items-center gap-2"
+                                    @click="openImportModal"
+                                >
                                     <ClipboardPaste class="w-4 h-4" />
-                                    {{ t('theme.import_css_btn') }}
+                                    {{ t("theme.import_css_btn") }}
                                 </button>
                             </div>
                             <div class="mt-6">
-                                <h3 class="font-medium text-sm mb-3">{{ t('theme.css_examples_title') }}</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div v-for="(example, index) in cssExamples" :key="index"
-                                        class="card shadow-md border border-base-300">
+                                <h3 class="font-medium text-sm mb-3">
+                                    {{ t("theme.css_examples_title") }}
+                                </h3>
+                                <div
+                                    class="grid grid-cols-1 md:grid-cols-3 gap-4"
+                                >
+                                    <div
+                                        v-for="(example, index) in cssExamples"
+                                        :key="index"
+                                        class="card shadow-md border border-base-300"
+                                    >
                                         <div class="card-body p-4">
-                                            <h4 class="card-title text-sm">{{ example.title }}</h4>
+                                            <h4 class="card-title text-sm">
+                                                {{ example.title }}
+                                            </h4>
                                             <pre
-                                                class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"><code>{{ example.code }}</code></pre>
-                                            <button @click="insertExample(example.code)"
-                                                class="btn btn-xs btn-primary mt-2" :disabled="!enableCustomCSS">
-                                                <ClipboardPaste class="w-4 h-4" />
-                                                {{ t('theme.insert_example') }}
+                                                class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"
+                                            ><code>{{ example.code }}</code></pre>
+                                            <button
+                                                @click="
+                                                    insertExample(example.code)
+                                                "
+                                                class="btn btn-xs btn-primary mt-2"
+                                                :disabled="!enableCustomCSS"
+                                            >
+                                                <ClipboardPaste
+                                                    class="w-4 h-4"
+                                                />
+                                                {{ t("theme.insert_example") }}
                                             </button>
                                         </div>
                                     </div>
@@ -406,14 +813,21 @@
 </template>
 
 <script setup lang="ts">
-defineEmits(['change-view']);
-import { ref, onMounted, onUnmounted, watch, toRefs } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { ClipboardCopy, ClipboardPaste, Palette, Save, Store, SunMoon } from 'lucide-vue-next';
-import { useToast } from '../services/toastService';
-import { settingsService } from '../services/settingsService';
-import { themeService } from '../services/themeService';
-import PresetManager from '../components/features/PresetManager.vue';
+defineEmits(["change-view"]);
+import { ref, onMounted, onUnmounted, watch, toRefs } from "vue";
+import { useI18n } from "vue-i18n";
+import {
+    ClipboardCopy,
+    ClipboardPaste,
+    Palette,
+    Save,
+    Store,
+    SunMoon,
+} from "lucide-vue-next";
+import { useToast } from "../services/toastService";
+import { settingsService } from "../services/settingsService";
+import { themeService } from "../services/themeService";
+import PresetManager from "../components/features/PresetManager.vue";
 import {
     Moon,
     Sun,
@@ -422,18 +836,20 @@ import {
     HelpCircle,
     ChevronDown,
     ChevronUp,
-} from 'lucide-vue-next';
-import { VueMonacoEditor } from '@guolao/vue-monaco-editor'
-import ImportExportCssModal from '../components/modals/social/presets/ImportExportCssModal.vue';
-import { useModal } from '../services/modalService';
+} from "lucide-vue-next";
+import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
+import ImportExportCssModal from "../components/modals/social/presets/ImportExportCssModal.vue";
+import { useModal } from "../services/modalService";
 
 const i18n = useI18n();
 const { t } = i18n;
 const { addToast } = useToast();
 const { showModal } = useModal();
 
-const themes = ['dark', 'light'];
-const selectedTheme = ref(document.documentElement.getAttribute('data-theme') || 'dark');
+const themes = ["dark", "light"];
+const selectedTheme = ref(
+    document.documentElement.getAttribute("data-theme") || "dark"
+);
 const showExpertOptions = ref(false);
 const expertAnimationActive = ref(false);
 
@@ -462,21 +878,25 @@ const {
     errorContent,
     backgroundImage,
     backgroundBlur,
-    backgroundOpacity
+    backgroundOpacity,
 } = toRefs(themeService.presetSettings);
 
-watch(themeService.presetSettings, () => {
-    themeService.saveCardSettings();
-}, { deep: true });
+watch(
+    themeService.presetSettings,
+    () => {
+        themeService.saveCardSettings();
+    },
+    { deep: true }
+);
 
 const cssExamples = [
     {
-        title: t('theme.example_1'),
+        title: t("theme.example_1"),
         code: `.client-card {
   backdrop-filter: blur(5px);
   background-color: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}`
+}`,
     },
 ];
 
@@ -500,7 +920,7 @@ const _colorRefs: Record<string, any> = {
     warning,
     warningContent,
     error,
-    errorContent
+    errorContent,
 };
 
 const handleColorInput = (settingKey: string, color: string): void => {
@@ -514,11 +934,11 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
     const refs: Record<string, any> = {
         backgroundImage,
         backgroundBlur,
-        backgroundOpacity
+        backgroundOpacity,
     };
     const r = refs[settingKey];
     if (r) {
-        if (settingKey === 'backgroundImage') {
+        if (settingKey === "backgroundImage") {
             r.value = value && value.trim().length > 0 ? value : null;
         } else {
             r.value = value;
@@ -529,17 +949,16 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
 const changeTheme = async (theme: string) => {
     try {
         selectedTheme.value = theme;
-        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute("data-theme", theme);
 
-        await settingsService.editSetting('theme', theme, false);
+        await settingsService.editSetting("theme", theme, false);
 
-        addToast(t('theme.change_success'), 'success');
+        addToast(t("theme.change_success"), "success");
     } catch (error) {
-        console.error('Failed to save theme:', error);
-        addToast(t('theme.save_failed', { error }), 'error');
+        console.error("Failed to save theme:", error);
+        addToast(t("theme.save_failed", { error }), "error");
     }
 };
-
 
 const toggleExpertMode = () => {
     expertAnimationActive.value = true;
@@ -556,7 +975,7 @@ const handleEnableCustomCSS = (val: boolean) => {
 
 const insertExample = (code: string) => {
     if (!enableCustomCSS.value) {
-        addToast(t('theme.enable_custom_css_first'), 'warning');
+        addToast(t("theme.enable_custom_css_first"), "warning");
         return;
     }
 
@@ -564,12 +983,12 @@ const insertExample = (code: string) => {
         ? `${customCSS.value.trim()}\n\n${code}`
         : code;
 
-    addToast(t('theme.example_inserted'), 'success');
+    addToast(t("theme.example_inserted"), "success");
 };
 
 const addExample = (className: string) => {
     if (!enableCustomCSS.value) {
-        addToast(t('theme.enable_custom_css_first'), 'warning');
+        addToast(t("theme.enable_custom_css_first"), "warning");
         return;
     }
 
@@ -580,7 +999,7 @@ const addExample = (className: string) => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+    if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
         themeService.saveCardSettings();
     }
@@ -592,39 +1011,40 @@ const resetStyles = () => {
 
 const openExportModal = async () => {
     showModal(
-        'export-css',
+        "export-css",
         ImportExportCssModal,
-        { title: t('theme.export_css_title') },
-        { mode: 'export', css: customCSS.value },
+        { title: t("theme.export_css_title") },
+        { mode: "export", css: customCSS.value },
         {}
     );
 };
 
 const openImportModal = () => {
     showModal(
-        'import-css',
+        "import-css",
         ImportExportCssModal,
-        { title: t('theme.import_css_title') },
-        { mode: 'import' },
+        { title: t("theme.import_css_title") },
+        { mode: "import" },
         {
             import: (css: string) => {
-                if (/script|@import|url\(|expression|<|>|javascript:/i.test(css)) {
-                    addToast(t('theme.import_invalid'), 'error');
+                if (
+                    /script|@import|url\(|expression|<|>|javascript:/i.test(css)
+                ) {
+                    addToast(t("theme.import_invalid"), "error");
                     return;
                 }
                 customCSS.value = css;
-            }
+            },
         }
     );
 };
 
-
 onMounted(() => {
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener("keydown", handleKeyDown);
 });
 </script>
 
@@ -654,9 +1074,10 @@ onUnmounted(() => {
 
 .expert-fade-enter-active,
 .expert-fade-leave-active {
-    transition: opacity 0.3s cubic-bezier(.4, 0, .2, 1),
-        transform 0.3s cubic-bezier(.4, 0, .2, 1),
-        max-height 0.3s cubic-bezier(.4, 0, .2, 1);
+    transition:
+        opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     max-height: 2000px;
 }
@@ -669,7 +1090,7 @@ onUnmounted(() => {
 }
 
 textarea.textarea-bordered {
-    font-family: 'Fira Code', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "Fira Code", "Menlo", "Monaco", "Courier New", monospace;
     line-height: 1.5;
     tab-size: 2;
 }

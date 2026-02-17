@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::RngExt;
 use std::sync::{Arc, Mutex};
 use std::{fs::File, io::BufReader};
 use tauri::{AppHandle, Manager};

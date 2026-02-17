@@ -4,184 +4,196 @@ import { getCurrentLanguage } from "../i18n";
 import { useToast } from "./toastService";
 
 export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error: string | null;
-  timestamp: number | string;
+    success: boolean;
+    data: T;
+    error: string | null;
+    timestamp: number | string;
 }
 
 const isApiResponse = (value: any): value is ApiResponse<any> => {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    typeof value.success === "boolean" &&
-    "data" in value &&
-    "timestamp" in value
-  );
+    return (
+        !!value &&
+        typeof value === "object" &&
+        typeof value.success === "boolean" &&
+        "data" in value &&
+        "timestamp" in value
+    );
 };
 
 export class ApiResponseError extends Error {
-  response: { status: number; data: ApiResponse<any> };
+    response: { status: number; data: ApiResponse<any> };
 
-  constructor(resp: ApiResponse<any>) {
-    super(resp?.error || "Request failed");
-    this.name = "ApiResponseError";
-    this.response = { status: 200, data: resp };
-  }
+    constructor(resp: ApiResponse<any>) {
+        super(resp?.error || "Request failed");
+        this.name = "ApiResponseError";
+        this.response = { status: 200, data: resp };
+    }
 }
 
 class ApiClient {
-  private client = axios.create({
-    baseURL: "",
-  });
-
-  constructor() {
-    this.setupInterceptors();
-  }
-
-  private setupInterceptors() {
-    this.client.interceptors.request.use(async (config) => {
-      await ensureApiUrl();
-      const baseUrl = getApiBaseWithVersion();
-
-      if (config.url?.startsWith("/")) {
-        config.url = `${baseUrl}${config.url}`;
-      }
-
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        config.headers = config.headers || {};
-        config.headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      config.headers = config.headers || {};
-      config.headers["Accept-Language"] = getCurrentLanguage() || "en";
-
-      return config;
+    private client = axios.create({
+        baseURL: "",
     });
 
-    this.client.interceptors.response.use(
-      (response) => response,
-      async (error: AxiosError) => {
-        const { addToast } = useToast();
+    constructor() {
+        this.setupInterceptors();
+    }
 
-        const originalRequest: any = error.config;
-        if (error.response?.status === 401 && !originalRequest?._retry) {
-          originalRequest._retry = true;
+    private setupInterceptors() {
+        this.client.interceptors.request.use(async (config) => {
+            await ensureApiUrl();
+            const baseUrl = getApiBaseWithVersion();
 
-          const ok = await this.refreshingPromise;
-          this.refreshingPromise = null;
-          if (ok) {
+            if (config.url?.startsWith("/")) {
+                config.url = `${baseUrl}${config.url}`;
+            }
+
             const token = localStorage.getItem("authToken");
             if (token) {
-              originalRequest.headers = originalRequest.headers || {};
-              originalRequest.headers["Authorization"] = `Bearer ${token}`;
+                config.headers = config.headers || {};
+                config.headers["Authorization"] = `Bearer ${token}`;
             }
-            return this.client.request(originalRequest);
-          } else {
-            localStorage.removeItem("authToken");
-            return Promise.reject(error);
-          }
-        }
 
-        let errorMessage = "An unexpected error occurred";
+            config.headers = config.headers || {};
+            config.headers["Accept-Language"] = getCurrentLanguage() || "en";
 
-        if (error.response?.data && isApiResponse(error.response.data)) {
-          errorMessage =
-            (error.response.data as ApiResponse<any>).error || errorMessage;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
+            return config;
+        });
 
-        if (error.config?.headers?.["X-Skip-Toast"] === "true") {
-          return Promise.reject(error);
-        }
+        this.client.interceptors.response.use(
+            (response) => response,
+            async (error: AxiosError) => {
+                const { addToast } = useToast();
 
-        addToast(errorMessage, "error");
-        return Promise.reject(error);
-      },
-    );
+                const originalRequest: any = error.config;
+                if (
+                    error.response?.status === 401 &&
+                    !originalRequest?._retry
+                ) {
+                    originalRequest._retry = true;
 
-    this.refreshingPromise = null;
-  }
+                    const ok = await this.refreshingPromise;
+                    this.refreshingPromise = null;
+                    if (ok) {
+                        const token = localStorage.getItem("authToken");
+                        if (token) {
+                            originalRequest.headers =
+                                originalRequest.headers || {};
+                            originalRequest.headers["Authorization"] =
+                                `Bearer ${token}`;
+                        }
+                        return this.client.request(originalRequest);
+                    } else {
+                        localStorage.removeItem("authToken");
+                        return Promise.reject(error);
+                    }
+                }
 
-  private refreshingPromise: Promise<boolean> | null = null;
+                let errorMessage = "An unexpected error occurred";
 
-  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const resp = await this.executeRequest<any>(url, {
-      ...config,
-      method: "GET",
-    });
-    return this.unwrapResponse<T>(resp.data, config);
-  }
+                if (
+                    error.response?.data &&
+                    isApiResponse(error.response.data)
+                ) {
+                    errorMessage =
+                        (error.response.data as ApiResponse<any>).error ||
+                        errorMessage;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
 
-  async post<T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
-    const resp = await this.executeRequest<any>(url, {
-      ...config,
-      method: "POST",
-      data,
-    });
-    return this.unwrapResponse<T>(resp.data, config);
-  }
+                if (error.config?.headers?.["X-Skip-Toast"] === "true") {
+                    return Promise.reject(error);
+                }
 
-  async put<T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
-    const resp = await this.executeRequest<any>(url, {
-      ...config,
-      method: "PUT",
-      data,
-    });
-    return this.unwrapResponse<T>(resp.data, config);
-  }
+                addToast(errorMessage, "error");
+                return Promise.reject(error);
+            }
+        );
 
-  async patch<T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
-    const resp = await this.executeRequest<any>(url, {
-      ...config,
-      method: "PATCH",
-      data,
-    });
-    return this.unwrapResponse<T>(resp.data, config);
-  }
-
-  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const resp = await this.executeRequest<any>(url, {
-      ...config,
-      method: "DELETE",
-    });
-    return this.unwrapResponse<T>(resp.data, config);
-  }
-
-  private async executeRequest<T>(
-    url: string,
-    config: AxiosRequestConfig,
-  ): Promise<AxiosResponse<T>> {
-    return await this.client.request<T>({ url, ...config });
-  }
-
-  private unwrapResponse<T>(payload: any, config?: AxiosRequestConfig): T {
-    if (isApiResponse(payload)) {
-      if (!payload.success) {
-        if (config?.headers?.["X-Skip-Toast"] !== "true") {
-          const { addToast } = useToast();
-          addToast(payload.error || "Request failed", "error");
-        }
-        throw new ApiResponseError(payload);
-      }
-      return payload.data as T;
+        this.refreshingPromise = null;
     }
-    return payload as T;
-  }
+
+    private refreshingPromise: Promise<boolean> | null = null;
+
+    async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
+        const resp = await this.executeRequest<any>(url, {
+            ...config,
+            method: "GET",
+        });
+        return this.unwrapResponse<T>(resp.data, config);
+    }
+
+    async post<T = any>(
+        url: string,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): Promise<T> {
+        const resp = await this.executeRequest<any>(url, {
+            ...config,
+            method: "POST",
+            data,
+        });
+        return this.unwrapResponse<T>(resp.data, config);
+    }
+
+    async put<T = any>(
+        url: string,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): Promise<T> {
+        const resp = await this.executeRequest<any>(url, {
+            ...config,
+            method: "PUT",
+            data,
+        });
+        return this.unwrapResponse<T>(resp.data, config);
+    }
+
+    async patch<T = any>(
+        url: string,
+        data?: any,
+        config?: AxiosRequestConfig
+    ): Promise<T> {
+        const resp = await this.executeRequest<any>(url, {
+            ...config,
+            method: "PATCH",
+            data,
+        });
+        return this.unwrapResponse<T>(resp.data, config);
+    }
+
+    async delete<T = any>(
+        url: string,
+        config?: AxiosRequestConfig
+    ): Promise<T> {
+        const resp = await this.executeRequest<any>(url, {
+            ...config,
+            method: "DELETE",
+        });
+        return this.unwrapResponse<T>(resp.data, config);
+    }
+
+    private async executeRequest<T>(
+        url: string,
+        config: AxiosRequestConfig
+    ): Promise<AxiosResponse<T>> {
+        return await this.client.request<T>({ url, ...config });
+    }
+
+    private unwrapResponse<T>(payload: any, config?: AxiosRequestConfig): T {
+        if (isApiResponse(payload)) {
+            if (!payload.success) {
+                if (config?.headers?.["X-Skip-Toast"] !== "true") {
+                    const { addToast } = useToast();
+                    addToast(payload.error || "Request failed", "error");
+                }
+                throw new ApiResponseError(payload);
+            }
+            return payload.data as T;
+        }
+        return payload as T;
+    }
 }
 
 export const apiClient = new ApiClient();

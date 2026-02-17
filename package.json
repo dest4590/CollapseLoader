@@ -12,7 +12,8 @@
         "tauri:dev": "tauri dev",
         "check": "vue-tsc --noEmit",
         "lint": "eslint --ext .ts,.tsx,.vue src",
-        "lint:fix": "eslint --ext .ts,.tsx,.vue src --fix"
+        "lint:fix": "eslint --ext .ts,.tsx,.vue src --fix",
+        "format": "prettier --write \"src/**/*\""
     },
     "dependencies": {
         "@guolao/vue-monaco-editor": "1.6.0",
@@ -25,21 +26,21 @@
         "axios": "1.13.5",
         "daisyui": "5.5.18",
         "gsap": "3.14.2",
-        "lucide-vue-next": "0.563.0",
+        "lucide-vue-next": "0.574.0",
         "monaco-editor": "^0.55.1",
         "vue": "3.5.28",
-        "vue-i18n": "11.2.8",
-        "vue3-lottie": "3.3.1"
+        "vue-i18n": "11.2.8"
     },
     "devDependencies": {
         "@tailwindcss/vite": "4.1.18",
         "@tauri-apps/cli": "2.10.0",
         "@types/node": "25.2.3",
-        "@typescript-eslint/eslint-plugin": "8.55.0",
-        "@typescript-eslint/parser": "8.55.0",
+        "@typescript-eslint/eslint-plugin": "8.56.0",
+        "@typescript-eslint/parser": "8.56.0",
         "@vitejs/plugin-vue": "6.0.4",
-        "eslint": "^9.39.2",
-        "eslint-plugin-vue": "10.7.0",
+        "eslint": "^10.0.0",
+        "eslint-plugin-vue": "10.8.0",
+        "prettier": "3.8.1",
         "tailwindcss": "4.1.18",
         "typescript": "5.9.3",
         "vite": "7.3.1",

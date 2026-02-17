@@ -1,5 +1,7 @@
-import { Client } from '@stomp/stompjs';
-import { getApiUrl } from '../config';
+import { Client } from "@stomp/stompjs";
+import { getApiUrl } from "../config";
+import { updaterService } from "./updaterService";
+import i18n from "../i18n";
 
 class WebSocketService {
     private client: Client | null = null;
@@ -13,29 +15,32 @@ class WebSocketService {
         this.client = new Client({
             brokerURL: this.getBrokerUrl(),
             connectHeaders: {
-                Authorization: `Bearer ${localStorage.getItem('authToken')}` || '',
+                Authorization:
+                    `Bearer ${localStorage.getItem("authToken")}` || "",
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
             onConnect: () => {
                 this.connected = true;
-                console.log('Connected to WebSocket');
+                console.log("Connected to WebSocket");
                 this.subscribeToUserAchievements();
                 this.subscribeToFriendNotifications();
                 this.subscribeToCommands();
             },
             onDisconnect: () => {
                 this.connected = false;
-                console.log('Disconnected from WebSocket');
+                console.log("Disconnected from WebSocket");
             },
             onStompError: (frame) => {
-                console.error('Broker reported error: ' + frame.headers['message']);
-                console.error('Additional details: ' + frame.body);
+                console.error(
+                    "Broker reported error: " + frame.headers["message"]
+                );
+                console.error("Additional details: " + frame.body);
             },
             onWebSocketClose: () => {
                 this.connected = false;
-                console.log('WebSocket connection closed');
+                console.log("WebSocket connection closed");
             },
         });
     }
@@ -44,13 +49,13 @@ class WebSocketService {
         const baseUrl = getApiUrl();
 
         if (!baseUrl) {
-            throw new Error('API URL is not initialized');
+            throw new Error("API URL is not initialized");
         }
 
         const url = new URL(baseUrl);
 
-        url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-        url.pathname = '/ws';
+        url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+        url.pathname = "/ws";
 
         return url.toString();
     }
@@ -70,11 +75,13 @@ class WebSocketService {
 
     private subscribeToUserAchievements() {
         if (!this.client) {
-            console.error('Cannot subscribe: WebSocket client is not initialized');
+            console.error(
+                "Cannot subscribe: WebSocket client is not initialized"
+            );
             return;
         }
 
-        this.client.subscribe('/user/queue/achievements', (message) => {
+        this.client.subscribe("/user/queue/achievements", (message) => {
             if (message.body) {
                 const achievement = JSON.parse(message.body);
                 this.handleAchievementUnlock(achievement);
@@ -84,11 +91,13 @@ class WebSocketService {
 
     private subscribeToFriendNotifications() {
         if (!this.client) {
-            console.error('Cannot subscribe: WebSocket client is not initialized');
+            console.error(
+                "Cannot subscribe: WebSocket client is not initialized"
+            );
             return;
         }
 
-        this.client.subscribe('/user/queue/friends', (message) => {
+        this.client.subscribe("/user/queue/friends", (message) => {
             if (message.body) {
                 const data = JSON.parse(message.body);
                 this.handleFriendNotification(data);
@@ -97,11 +106,14 @@ class WebSocketService {
     }
 
     private handleFriendNotification(data: any) {
-        let eventType = '';
-        if (data.type === 'REQUEST_RECEIVED') {
-            eventType = 'friend-request-received';
-        } else if (data.type === 'REQUEST_ACCEPTED' || data.type === 'FRIEND_ADDED') {
-            eventType = 'friend-request-accepted';
+        let eventType = "";
+        if (data.type === "REQUEST_RECEIVED") {
+            eventType = "friend-request-received";
+        } else if (
+            data.type === "REQUEST_ACCEPTED" ||
+            data.type === "FRIEND_ADDED"
+        ) {
+            eventType = "friend-request-accepted";
         }
 
         if (eventType) {
@@ -111,17 +123,21 @@ class WebSocketService {
     }
 
     private handleAchievementUnlock(achievement: any) {
-        const event = new CustomEvent('achievement-unlocked', { detail: achievement });
+        const event = new CustomEvent("achievement-unlocked", {
+            detail: achievement,
+        });
         window.dispatchEvent(event);
     }
 
     private subscribeToCommands() {
         if (!this.client) {
-            console.error('Cannot subscribe: WebSocket client is not initialized');
+            console.error(
+                "Cannot subscribe: WebSocket client is not initialized"
+            );
             return;
         }
 
-        this.client.subscribe('/topic/commands', (message) => {
+        this.client.subscribe("/topic/commands", (message) => {
             if (message.body) {
                 const data = JSON.parse(message.body);
                 this.handleCommand(data);
@@ -130,9 +146,7 @@ class WebSocketService {
     }
 
     private async handleCommand(data: any) {
-        if (data.command === 'CHECK_FOR_UPDATES') {
-            const { updaterService } = await import('./updaterService');
-            const i18n = (await import('../i18n')).default;
+        if (data.command === "CHECK_FOR_UPDATES") {
             const t = i18n.global.t;
             await updaterService.checkForUpdates(false, t);
         }

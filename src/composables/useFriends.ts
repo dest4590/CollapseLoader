@@ -1,5 +1,9 @@
-import { ref, computed, reactive, watch } from 'vue';
-import { userService, type Friend, type FriendRequest } from '../services/userService';
+import { ref, computed, reactive, watch } from "vue";
+import {
+    userService,
+    type Friend,
+    type FriendRequest,
+} from "../services/userService";
 
 interface GlobalFriendsState {
     friends: Friend[];
@@ -18,28 +22,27 @@ const globalFriendsState = reactive<GlobalFriendsState>({
     isLoading: false,
     isLoaded: false,
     lastUpdated: null,
-    lastStatusUpdate: 0
+    lastStatusUpdate: 0,
 });
 
 const isStatusLoading = ref(false);
-const statusUpdateInterval: { current: NodeJS.Timeout | null } = { current: null };
+const statusUpdateInterval: { current: NodeJS.Timeout | null } = {
+    current: null,
+};
 const STATUS_UPDATE_INTERVAL = 45000;
 
-const isAuthenticated = computed(() => !!localStorage.getItem('authToken'));
+const isAuthenticated = computed(() => !!localStorage.getItem("authToken"));
 
 export function useFriends() {
-
     const onlineFriends = computed(() =>
-        globalFriendsState.friends.filter(friend =>
-            friend.status.is_online
-        )
+        globalFriendsState.friends.filter((friend) => friend.status.is_online)
     );
 
     const onlineFriendsCount = computed(() => onlineFriends.value.length);
 
     const friendRequests = computed(() => ({
         sent: globalFriendsState.sentRequests,
-        received: globalFriendsState.receivedRequests
+        received: globalFriendsState.receivedRequests,
     }));
 
     const loadFriendsData = async (forceRefresh = false): Promise<void> => {
@@ -49,25 +52,29 @@ export function useFriends() {
         }
 
         if (globalFriendsState.isLoading && !forceRefresh) {
-            console.log('Friends data loading already in progress');
+            console.log("Friends data loading already in progress");
             return;
         }
 
-        if (globalFriendsState.isLoaded && !forceRefresh &&
+        if (
+            globalFriendsState.isLoaded &&
+            !forceRefresh &&
             globalFriendsState.lastUpdated &&
-            Date.now() - new Date(globalFriendsState.lastUpdated).getTime() < 30000) {
+            Date.now() - new Date(globalFriendsState.lastUpdated).getTime() <
+                30000
+        ) {
             return;
         }
 
         if (forceRefresh) {
-            console.log('Force refreshing friends data...');
+            console.log("Force refreshing friends data...");
         }
 
         globalFriendsState.isLoading = true;
         const startTime = Date.now();
 
         try {
-            console.log('Loading friends data via batch endpoint...');
+            console.log("Loading friends data via batch endpoint...");
 
             const batchData = await userService.getFriendsBatch();
 
@@ -75,12 +82,13 @@ export function useFriends() {
             console.log(`Batch friends data loaded in ${responseTime}ms:`, {
                 friends: batchData.friends?.length || 0,
                 sentRequests: batchData.requests?.sent?.length || 0,
-                receivedRequests: batchData.requests?.received?.length || 0
+                receivedRequests: batchData.requests?.received?.length || 0,
             });
 
             globalFriendsState.friends = batchData.friends || [];
             globalFriendsState.sentRequests = batchData.requests?.sent || [];
-            globalFriendsState.receivedRequests = batchData.requests?.received || [];
+            globalFriendsState.receivedRequests =
+                batchData.requests?.received || [];
             globalFriendsState.lastUpdated = new Date().toISOString();
             globalFriendsState.isLoaded = true;
 
@@ -88,9 +96,12 @@ export function useFriends() {
                 startStatusUpdates();
             }
 
-            console.log('Friends data loaded successfully');
+            console.log("Friends data loaded successfully");
         } catch (error) {
-            console.error('Failed to load friends data via batch endpoint:', error);
+            console.error(
+                "Failed to load friends data via batch endpoint:",
+                error
+            );
         } finally {
             globalFriendsState.isLoading = false;
         }
@@ -112,15 +123,19 @@ export function useFriends() {
                 updatedById.set(f.id, f);
             }
 
-            globalFriendsState.friends.forEach(friend => {
+            globalFriendsState.friends.forEach((friend) => {
                 const updatedFriend = updatedById.get(friend.id);
                 if (!updatedFriend) return;
 
                 const oldOnlineStatus = friend.status.is_online;
                 const oldClient = friend.status.current_client;
 
-                const oldUpdatedAt = friend.status.updated_at ? new Date(friend.status.updated_at).getTime() : null;
-                const newUpdatedAt = updatedFriend.status.updated_at ? new Date(updatedFriend.status.updated_at).getTime() : null;
+                const oldUpdatedAt = friend.status.updated_at
+                    ? new Date(friend.status.updated_at).getTime()
+                    : null;
+                const newUpdatedAt = updatedFriend.status.updated_at
+                    ? new Date(updatedFriend.status.updated_at).getTime()
+                    : null;
 
                 const shouldUpdate =
                     oldUpdatedAt === null ||
@@ -133,12 +148,15 @@ export function useFriends() {
 
                 friend.status.is_online = updatedFriend.status.is_online;
                 friend.status.last_seen = updatedFriend.status.last_seen;
-                friend.status.current_client = updatedFriend.status.current_client;
+                friend.status.current_client =
+                    updatedFriend.status.current_client;
                 friend.status.updated_at = updatedFriend.status.updated_at;
                 friend.status.raw_status = updatedFriend.status.raw_status;
 
-                if (oldOnlineStatus !== updatedFriend.status.is_online ||
-                    oldClient !== updatedFriend.status.current_client) {
+                if (
+                    oldOnlineStatus !== updatedFriend.status.is_online ||
+                    oldClient !== updatedFriend.status.current_client
+                ) {
                     hasChanges = true;
                 }
             });
@@ -146,9 +164,11 @@ export function useFriends() {
             const responseTime = Date.now() - startTime;
             globalFriendsState.lastStatusUpdate = Date.now();
 
-            console.log(`Friend statuses updated in ${responseTime}ms (${hasChanges ? 'with changes' : 'no changes'})`);
+            console.log(
+                `Friend statuses updated in ${responseTime}ms (${hasChanges ? "with changes" : "no changes"})`
+            );
         } catch (error) {
-            console.error('Failed to update friend statuses:', error);
+            console.error("Failed to update friend statuses:", error);
             hasChanges = false;
         } finally {
             isStatusLoading.value = false;
@@ -157,18 +177,20 @@ export function useFriends() {
         return hasChanges;
     };
 
-
     const startStatusUpdates = (): void => {
         if (statusUpdateInterval.current) {
             clearInterval(statusUpdateInterval.current);
         }
 
         const runStatusUpdate = async () => {
-            if (document && document.visibilityState === 'hidden') {
+            if (document && document.visibilityState === "hidden") {
                 return;
             }
 
-            if (!isAuthenticated.value || globalFriendsState.friends.length === 0) {
+            if (
+                !isAuthenticated.value ||
+                globalFriendsState.friends.length === 0
+            ) {
                 return;
             }
 
@@ -176,20 +198,24 @@ export function useFriends() {
         };
 
         runStatusUpdate().then(
-            () => console.log('Status updates started successfully'),
-            error => console.error('Failed to start status updates:', error)
+            () => console.log("Status updates started successfully"),
+            (error) => console.error("Failed to start status updates:", error)
         );
 
-        statusUpdateInterval.current = setInterval(runStatusUpdate, STATUS_UPDATE_INTERVAL);
+        statusUpdateInterval.current = setInterval(
+            runStatusUpdate,
+            STATUS_UPDATE_INTERVAL
+        );
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                runStatusUpdate().catch(() => {
-                });
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                runStatusUpdate().catch(() => {});
             }
         });
 
-        console.log(`Started status updates with ${STATUS_UPDATE_INTERVAL}ms interval`);
+        console.log(
+            `Started status updates with ${STATUS_UPDATE_INTERVAL}ms interval`
+        );
     };
 
     const searchUsers = async (query: string): Promise<any[]> => {
@@ -200,11 +226,10 @@ export function useFriends() {
         try {
             return await userService.searchUsers(query);
         } catch (error) {
-            console.error('Failed to search users:', error);
+            console.error("Failed to search users:", error);
             return [];
         }
     };
-
 
     const sendFriendRequest = async (userId: number): Promise<boolean> => {
         try {
@@ -214,30 +239,40 @@ export function useFriends() {
             console.log(`Friend request sent to ${userId}`);
             return true;
         } catch (error) {
-            console.error('Failed to send friend request:', error);
+            console.error("Failed to send friend request:", error);
             return false;
         }
     };
 
-    const respondToFriendRequest = async (requestId: number, action: 'accept' | 'reject'): Promise<boolean> => {
+    const respondToFriendRequest = async (
+        requestId: number,
+        action: "accept" | "reject"
+    ): Promise<boolean> => {
         try {
             await userService.respondToFriendRequest(requestId, action);
 
-            const request = globalFriendsState.receivedRequests.find(req => req.id === requestId);
+            const request = globalFriendsState.receivedRequests.find(
+                (req) => req.id === requestId
+            );
             if (request) {
-                if (action === 'accept') {
-                    if (!globalFriendsState.friends.some(f => f.id === request.requester.id)) {
+                if (action === "accept") {
+                    if (
+                        !globalFriendsState.friends.some(
+                            (f) => f.id === request.requester.id
+                        )
+                    ) {
                         globalFriendsState.friends.push({
                             id: request.requester.id,
                             username: request.requester.username,
                             nickname: request.requester.nickname,
                             avatar_url: request.requester.avatar_url,
-                            status: request.requester.status
+                            status: request.requester.status,
                         });
                     }
                 }
 
-                const index = globalFriendsState.receivedRequests.indexOf(request);
+                const index =
+                    globalFriendsState.receivedRequests.indexOf(request);
                 if (index > -1) {
                     globalFriendsState.receivedRequests.splice(index, 1);
                 }
@@ -251,32 +286,33 @@ export function useFriends() {
         }
     };
 
-
     const removeFriend = async (userId: number): Promise<boolean> => {
         try {
             await userService.removeFriend(userId);
 
-            const index = globalFriendsState.friends.findIndex(friend => friend.id === userId);
+            const index = globalFriendsState.friends.findIndex(
+                (friend) => friend.id === userId
+            );
             if (index > -1) {
                 globalFriendsState.friends.splice(index, 1);
             }
 
-            console.log('Friend removed');
+            console.log("Friend removed");
             return true;
         } catch (error) {
-            console.error('Failed to remove friend:', error);
+            console.error("Failed to remove friend:", error);
             return false;
         }
     };
 
     const getOnlineFriends = (): Friend[] => {
-        return globalFriendsState.friends.filter(friend =>
-            friend.status.is_online
+        return globalFriendsState.friends.filter(
+            (friend) => friend.status.is_online
         );
     };
 
     const refreshFriendsData = async (): Promise<void> => {
-        console.log('Force refreshing friends data...');
+        console.log("Force refreshing friends data...");
         await loadFriendsData(true);
     };
 
@@ -295,10 +331,19 @@ export function useFriends() {
         }
     };
 
-    const hydrateFriends = (data: { friends: any[]; requests: { sent: any[]; received: any[]; blocked: any[] } }) => {
-        globalFriendsState.friends = (data.friends || []).map((f: any) => userService.mapFriend(f));
-        globalFriendsState.sentRequests = (data.requests?.sent || []).map((r: any) => userService.mapFriendRequest(r));
-        globalFriendsState.receivedRequests = (data.requests?.received || []).map((r: any) => userService.mapFriendRequest(r));
+    const hydrateFriends = (data: {
+        friends: any[];
+        requests: { sent: any[]; received: any[]; blocked: any[] };
+    }) => {
+        globalFriendsState.friends = (data.friends || []).map((f: any) =>
+            userService.mapFriend(f)
+        );
+        globalFriendsState.sentRequests = (data.requests?.sent || []).map(
+            (r: any) => userService.mapFriendRequest(r)
+        );
+        globalFriendsState.receivedRequests = (
+            data.requests?.received || []
+        ).map((r: any) => userService.mapFriendRequest(r));
         globalFriendsState.isLoading = false;
         globalFriendsState.isLoaded = true;
         globalFriendsState.lastUpdated = new Date().toISOString();
@@ -308,12 +353,11 @@ export function useFriends() {
         }
     };
 
-
     const stopStatusUpdates = (): void => {
         if (statusUpdateInterval.current) {
             clearInterval(statusUpdateInterval.current);
             statusUpdateInterval.current = null;
-            console.log('Stopped status updates');
+            console.log("Stopped status updates");
         }
     };
 
@@ -353,7 +397,7 @@ export function useFriends() {
         startStatusUpdates,
         stopStatusUpdates,
 
-        lastStatusUpdate: computed(() => globalFriendsState.lastStatusUpdate)
+        lastStatusUpdate: computed(() => globalFriendsState.lastStatusUpdate),
     };
 }
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { listen } from '@tauri-apps/api/event';
-import { useI18n } from 'vue-i18n';
-import { useDownloadSpeedMonitor } from '../../../composables/useDownloadSpeedMonitor';
+import { ref, onMounted, onUnmounted } from "vue";
+import { listen } from "@tauri-apps/api/event";
+import { useI18n } from "vue-i18n";
+import { useDownloadSpeedMonitor } from "../../../composables/useDownloadSpeedMonitor";
 
 const { t } = useI18n();
 const downloadMonitor = useDownloadSpeedMonitor();
@@ -19,17 +19,17 @@ interface ProgressEvent {
 
 const isVisible = ref(false);
 const percentage = ref(0);
-const currentFile = ref('');
-const currentAction = ref('Downloading');
+const currentFile = ref("");
+const currentAction = ref("Downloading");
 const listeners = ref<any[]>([]);
 const activeDownloads = ref<Set<string>>(new Set());
 
 const isEssentialFile = (filename: string): boolean => {
-    return filename.endsWith('.zip');
+    return filename.endsWith(".zip");
 };
 
 const isClientFile = (filename: string): boolean => {
-    return filename.endsWith('.jar');
+    return filename.endsWith(".jar");
 };
 
 const shouldShowProgress = (filename: string): boolean => {
@@ -38,14 +38,14 @@ const shouldShowProgress = (filename: string): boolean => {
 
 onMounted(async () => {
     listeners.value.push(
-        await listen('download-start', (event: any) => {
+        await listen("download-start", (event: any) => {
             const filename = event.payload as string;
             downloadMonitor.startMonitoring();
 
             if (shouldShowProgress(filename)) {
                 activeDownloads.value.add(filename);
                 currentFile.value = filename;
-                currentAction.value = t('installation.downloading');
+                currentAction.value = t("installation.downloading");
                 percentage.value = 0;
                 isVisible.value = true;
             }
@@ -53,7 +53,7 @@ onMounted(async () => {
     );
 
     listeners.value.push(
-        await listen('download-progress', (event: any) => {
+        await listen("download-progress", (event: any) => {
             const data = event.payload as ProgressEvent;
 
             if (data.downloaded !== undefined) {
@@ -65,7 +65,7 @@ onMounted(async () => {
                 activeDownloads.value.has(data.file)
             ) {
                 currentFile.value = data.file;
-                currentAction.value = t('installation.downloading');
+                currentAction.value = t("installation.downloading");
                 percentage.value = data.percentage;
                 isVisible.value = true;
             }
@@ -73,12 +73,12 @@ onMounted(async () => {
     );
 
     listeners.value.push(
-        await listen('download-complete', (event: any) => {
+        await listen("download-complete", (event: any) => {
             const filename = event.payload as string;
             downloadMonitor.stopMonitoring();
 
             if (shouldShowProgress(filename)) {
-                if (!filename.endsWith('.zip')) {
+                if (!filename.endsWith(".zip")) {
                     activeDownloads.value.delete(filename);
                     if (activeDownloads.value.size === 0) {
                         isVisible.value = false;
@@ -89,14 +89,14 @@ onMounted(async () => {
     );
 
     listeners.value.push(
-        await listen('unzip-start', (event: any) => {
+        await listen("unzip-start", (event: any) => {
             const filename = event.payload as string;
             if (
                 shouldShowProgress(filename) &&
                 activeDownloads.value.has(filename)
             ) {
                 currentFile.value = filename;
-                currentAction.value = t('installation.extracting');
+                currentAction.value = t("installation.extracting");
                 percentage.value = 0;
                 isVisible.value = true;
             }
@@ -104,21 +104,21 @@ onMounted(async () => {
     );
 
     listeners.value.push(
-        await listen('unzip-progress', (event: any) => {
+        await listen("unzip-progress", (event: any) => {
             const data = event.payload as ProgressEvent;
             if (
                 shouldShowProgress(data.file) &&
                 activeDownloads.value.has(data.file)
             ) {
                 currentFile.value = data.file;
-                currentAction.value = t('installation.extracting');
+                currentAction.value = t("installation.extracting");
                 percentage.value = data.percentage;
             }
         })
     );
 
     listeners.value.push(
-        await listen('unzip-complete', (event: any) => {
+        await listen("unzip-complete", (event: any) => {
             const filename = event.payload as string;
             if (shouldShowProgress(filename)) {
                 activeDownloads.value.delete(filename);
@@ -130,7 +130,7 @@ onMounted(async () => {
     );
 
     listeners.value.push(
-        await listen('requirements-status', (event: any) => {
+        await listen("requirements-status", (event: any) => {
             const isDownloading = event.payload as boolean;
             if (!isDownloading) {
                 activeDownloads.value.clear();
@@ -155,7 +155,10 @@ onUnmounted(() => {
                 <span>{{ percentage }}%</span>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar" :style="{ width: `${percentage}%` }"></div>
+                <div
+                    class="progress-bar"
+                    :style="{ width: `${percentage}%` }"
+                ></div>
             </div>
         </div>
     </Transition>

@@ -1,10 +1,13 @@
-import { invoke } from '@tauri-apps/api/core';
-import { userService, type SyncData, type UserInitData } from './userService';
-import { settingsService } from './settingsService';
-import { globalUserStatus } from '../composables/useUserStatus';
+import { invoke } from "@tauri-apps/api/core";
+import { userService, type SyncData, type UserInitData } from "./userService";
+import { settingsService } from "./settingsService";
+import { globalUserStatus } from "../composables/useUserStatus";
 
 export type ToastFunction = (message: string, type: string) => void;
-export type TranslateFunction = (key: string, params?: Record<string, any>) => string;
+export type TranslateFunction = (
+    key: string,
+    params?: Record<string, any>
+) => string;
 
 interface SyncServiceState {
     isOnline: boolean;
@@ -20,24 +23,24 @@ class SyncService {
         isSyncing: false,
         lastSyncTime: null,
         hasCloudData: false,
-        autoSyncEnabled: true
+        autoSyncEnabled: true,
     };
 
     private listeners: ((state: SyncServiceState) => void)[] = [];
     private autoSyncInterval: number | null = null;
 
     constructor() {
-        window.addEventListener('online', () => {
+        window.addEventListener("online", () => {
             this.state.isOnline = true;
             this.notifyListeners();
             if (this.state.autoSyncEnabled && this.isAuthenticated()) {
-                this.autoSync().then(r => {
-                    console.log('Auto-sync completed:', r);
+                this.autoSync().then((r) => {
+                    console.log("Auto-sync completed:", r);
                 });
             }
         });
 
-        window.addEventListener('offline', () => {
+        window.addEventListener("offline", () => {
             this.state.isOnline = false;
             this.notifyListeners();
         });
@@ -48,31 +51,39 @@ class SyncService {
     subscribe(listener: (state: SyncServiceState) => void) {
         this.listeners.push(listener);
         return () => {
-            this.listeners = this.listeners.filter(l => l !== listener);
+            this.listeners = this.listeners.filter((l) => l !== listener);
         };
     }
 
     private notifyListeners() {
-        this.listeners.forEach(listener => listener({ ...this.state }));
+        this.listeners.forEach((listener) => listener({ ...this.state }));
     }
 
     private startAutoSync() {
         if (this.autoSyncInterval) return;
 
-        this.autoSyncInterval = setInterval(() => {
-            if (this.state.isOnline && this.state.autoSyncEnabled && !this.state.isSyncing && this.isAuthenticated()) {
-                this.autoSync().then(r => {
-                    console.log('Auto-sync completed:', r);
-                });
-            }
-        }, 5 * 60 * 1000) as unknown as number;
+        this.autoSyncInterval = setInterval(
+            () => {
+                if (
+                    this.state.isOnline &&
+                    this.state.autoSyncEnabled &&
+                    !this.state.isSyncing &&
+                    this.isAuthenticated()
+                ) {
+                    this.autoSync().then((r) => {
+                        console.log("Auto-sync completed:", r);
+                    });
+                }
+            },
+            5 * 60 * 1000
+        ) as unknown as number;
     }
 
     private isAuthenticated(): boolean {
         try {
             return !!globalUserStatus?.isAuthenticated?.value;
         } catch (e) {
-            console.error('Error checking authentication status:', e);
+            console.error("Error checking authentication status:", e);
             return false;
         }
     }
@@ -82,7 +93,7 @@ class SyncService {
             await this.downloadFromCloud();
             await this.uploadToCloud();
         } catch (error) {
-            console.warn('Auto-sync failed:', error);
+            console.warn("Auto-sync failed:", error);
         }
     }
 
@@ -98,7 +109,7 @@ class SyncService {
             }
             this.notifyListeners();
         } catch (error) {
-            console.error('Failed to get sync status:', error);
+            console.error("Failed to get sync status:", error);
         }
     }
 
@@ -106,9 +117,14 @@ class SyncService {
         if (!this.state.isOnline) return;
 
         try {
-            const settingsPref = data.preferences.find((p) => p.key === 'collapseloader.settings') || null;
+            const settingsPref =
+                data.preferences.find(
+                    (p) => p.key === "collapseloader.settings"
+                ) || null;
 
-            const maxIsoTimestamp = (timestamps: Array<string | null | undefined>): string | null => {
+            const maxIsoTimestamp = (
+                timestamps: Array<string | null | undefined>
+            ): string | null => {
                 let max: number | null = null;
                 let maxIso: string | null = null;
                 for (const ts of timestamps) {
@@ -130,21 +146,26 @@ class SyncService {
             ]);
 
             this.state.lastSyncTime = lastSync;
-            this.state.hasCloudData = !!settingsPref || data.favorites.length > 0 || data.accounts.length > 0;
+            this.state.hasCloudData =
+                !!settingsPref ||
+                data.favorites.length > 0 ||
+                data.accounts.length > 0;
             this.notifyListeners();
         } catch (error) {
-            console.error('Failed to hydrate sync status:', error);
+            console.error("Failed to hydrate sync status:", error);
         }
     }
 
     async checkAndRestoreOnStartup(): Promise<void> {
         if (!this.state.isOnline) {
-            console.log('Offline - skipping startup sync check');
+            console.log("Offline - skipping startup sync check");
             return;
         }
 
         if (!this.isAuthenticated()) {
-            console.log('User not authenticated - skipping startup sync restore');
+            console.log(
+                "User not authenticated - skipping startup sync restore"
+            );
             return;
         }
 
@@ -152,18 +173,22 @@ class SyncService {
             await this.initializeSyncStatus();
 
             if (!this.state.hasCloudData) {
-                console.log('No cloud data available - skipping startup restore');
+                console.log(
+                    "No cloud data available - skipping startup restore"
+                );
                 return;
             }
 
-            console.log('Checking for startup sync restoration...');
+            console.log("Checking for startup sync restoration...");
 
             await this.downloadFromCloud();
 
-            console.log('Startup sync restoration completed');
-
+            console.log("Startup sync restoration completed");
         } catch (error) {
-            console.warn('Failed to check/restore synced data on startup:', error);
+            console.warn(
+                "Failed to check/restore synced data on startup:",
+                error
+            );
         }
     }
 
@@ -178,14 +203,14 @@ class SyncService {
             await settingsService.loadSettings();
             const settings = settingsService.getSettings();
             const [favorites, accounts] = await Promise.all([
-                invoke<number[]>('get_favorite_clients'),
-                invoke<any[]>('get_accounts')
+                invoke<number[]>("get_favorite_clients"),
+                invoke<any[]>("get_accounts"),
             ]);
 
             const syncData: SyncData = {
                 settings_data: settings,
                 favorites_data: favorites,
-                accounts_data: accounts
+                accounts_data: accounts,
             };
 
             await userService.syncToCloud(syncData);
@@ -193,14 +218,15 @@ class SyncService {
             const status = await userService.getSyncStatus();
 
             if (status) {
-                this.state.lastSyncTime = status.last_sync_timestamp || new Date().toISOString();
+                this.state.lastSyncTime =
+                    status.last_sync_timestamp || new Date().toISOString();
             }
 
             this.state.hasCloudData = true;
 
             return true;
         } catch (error) {
-            console.error('Failed to upload to cloud:', error);
+            console.error("Failed to upload to cloud:", error);
             throw error;
         } finally {
             this.state.isSyncing = false;
@@ -216,68 +242,103 @@ class SyncService {
         if (!this.state.hasCloudData) return;
 
         try {
-            const syncData = userService.formatSyncData(data.preferences, data.favorites, data.accounts);
+            const syncData = userService.formatSyncData(
+                data.preferences,
+                data.favorites,
+                data.accounts
+            );
             await this.restoreData(syncData);
         } catch (error) {
-            console.error('Failed to restore from init data:', error);
+            console.error("Failed to restore from init data:", error);
         }
     }
 
     private async restoreData(cloudData: SyncData): Promise<boolean> {
         if (!cloudData) return false;
 
-        if (cloudData.settings_data && Object.keys(cloudData.settings_data).length > 0) {
+        if (
+            cloudData.settings_data &&
+            Object.keys(cloudData.settings_data).length > 0
+        ) {
             await settingsService.loadSettings();
             const currentSettings = settingsService.getSettings();
-            const mergedSettings = { ...currentSettings, ...cloudData.settings_data };
+            const mergedSettings = {
+                ...currentSettings,
+                ...cloudData.settings_data,
+            };
             await settingsService.saveSettings(mergedSettings as any);
         }
 
-        if (cloudData.favorites_data && Array.isArray(cloudData.favorites_data)) {
+        if (
+            cloudData.favorites_data &&
+            Array.isArray(cloudData.favorites_data)
+        ) {
             try {
-                const currentFavorites = await invoke<number[]>('get_favorite_clients');
+                const currentFavorites = await invoke<number[]>(
+                    "get_favorite_clients"
+                );
                 const favoritesChanged =
-                    cloudData.favorites_data.length !== currentFavorites.length ||
-                    !cloudData.favorites_data.every((id: number) => currentFavorites.includes(id));
+                    cloudData.favorites_data.length !==
+                        currentFavorites.length ||
+                    !cloudData.favorites_data.every((id: number) =>
+                        currentFavorites.includes(id)
+                    );
 
                 if (favoritesChanged) {
-                    await invoke('set_all_favorites', { clientIds: cloudData.favorites_data });
+                    await invoke("set_all_favorites", {
+                        clientIds: cloudData.favorites_data,
+                    });
                 }
             } catch (e) {
-                console.warn('Failed to set all favorites, falling back to loop', e);
-                const currentFavorites = await invoke<number[]>('get_favorite_clients');
+                console.warn(
+                    "Failed to set all favorites, falling back to loop",
+                    e
+                );
+                const currentFavorites = await invoke<number[]>(
+                    "get_favorite_clients"
+                );
                 for (const clientId of currentFavorites) {
-                    await invoke('remove_favorite_client', { clientId });
+                    await invoke("remove_favorite_client", { clientId });
                 }
                 for (const clientId of cloudData.favorites_data) {
-                    await invoke('add_favorite_client', { clientId });
+                    await invoke("add_favorite_client", { clientId });
                 }
             }
         }
 
         if (cloudData.accounts_data && Array.isArray(cloudData.accounts_data)) {
             try {
-                const localAccounts = await invoke<any[]>('get_accounts');
-                const localUsernames = new Set(localAccounts.map((acc: any) => acc.username));
+                const localAccounts = await invoke<any[]>("get_accounts");
+                const localUsernames = new Set(
+                    localAccounts.map((acc: any) => acc.username)
+                );
 
                 for (const cloudAccount of cloudData.accounts_data) {
-                    if (cloudAccount.username && !localUsernames.has(cloudAccount.username)) {
+                    if (
+                        cloudAccount.username &&
+                        !localUsernames.has(cloudAccount.username)
+                    ) {
                         try {
-                            await invoke('add_account', {
+                            await invoke("add_account", {
                                 username: cloudAccount.username,
-                                tags: cloudAccount.tags || ['cloud-sync']
+                                tags: cloudAccount.tags || ["cloud-sync"],
                             });
                         } catch (error) {
-                            console.warn('Failed to add cloud account:', cloudAccount.username, error);
+                            console.warn(
+                                "Failed to add cloud account:",
+                                cloudAccount.username,
+                                error
+                            );
                         }
                     }
                 }
             } catch (error) {
-                console.warn('Failed to sync accounts from cloud:', error);
+                console.warn("Failed to sync accounts from cloud:", error);
             }
         }
 
-        this.state.lastSyncTime = cloudData.last_sync_timestamp || new Date().toISOString();
+        this.state.lastSyncTime =
+            cloudData.last_sync_timestamp || new Date().toISOString();
         this.state.hasCloudData = true;
 
         return true;
@@ -297,7 +358,7 @@ class SyncService {
 
             return await this.restoreData(cloudData);
         } catch (error) {
-            console.error('Failed to download from cloud:', error);
+            console.error("Failed to download from cloud:", error);
             throw error;
         } finally {
             this.state.isSyncing = false;
@@ -309,39 +370,39 @@ class SyncService {
         addToast: ToastFunction,
         t: TranslateFunction
     ): Promise<void> {
-        if (typeof addToast !== 'function') {
-            console.error('addToast is not a function:', addToast);
+        if (typeof addToast !== "function") {
+            console.error("addToast is not a function:", addToast);
             return;
         }
 
-        if (typeof t !== 'function') {
-            console.error('t (translation function) is not a function:', t);
+        if (typeof t !== "function") {
+            console.error("t (translation function) is not a function:", t);
             return;
         }
 
         if (!this.isAuthenticated()) {
-            addToast(t('toast.sync.login_required'), 'error');
+            addToast(t("toast.sync.login_required"), "error");
             return;
         }
 
         if (!this.state.isOnline) {
-            addToast(t('toast.sync.offline_error'), 'error');
+            addToast(t("toast.sync.offline_error"), "error");
             return;
         }
 
         if (this.state.isSyncing) {
-            addToast(t('toast.sync.already_in_progress'), 'info');
+            addToast(t("toast.sync.already_in_progress"), "info");
             return;
         }
 
         try {
-            addToast(t('toast.sync.syncing'), 'info');
+            addToast(t("toast.sync.syncing"), "info");
 
             await this.downloadFromCloud();
             await this.uploadToCloud();
-            addToast(t('toast.sync.success'), 'success');
+            addToast(t("toast.sync.success"), "success");
         } catch (error) {
-            addToast(t('toast.sync.failed', { error }), 'error');
+            addToast(t("toast.sync.failed", { error }), "error");
         }
     }
 

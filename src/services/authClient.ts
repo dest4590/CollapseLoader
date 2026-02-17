@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import { apiClient } from "./apiClient";
 
 export const apiGet = apiClient.get.bind(apiClient);
 export const apiPost = apiClient.post.bind(apiClient);

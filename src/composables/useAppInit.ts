@@ -1,22 +1,22 @@
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import { bootLogService } from '../services/bootLogService';
-import { applyLanguageOnStartup, applyThemeOnStartup } from '../utils/settings';
-import { applyCursorForEvent, isHalloweenEvent } from '../utils/events';
-import { useToast } from '../services/toastService';
-import { globalUserStatus } from './useUserStatus';
-import { useUser } from './useUser';
-import { userService } from '../services/userService';
-import { globalFriends } from './useFriends';
-import { updaterService } from '../services/updaterService';
-import { syncService } from '../services/syncService';
-import { getCurrentLanguage } from '../i18n';
-import { useModal } from '../services/modalService';
-import ClientCrashModal from '../components/modals/clients/ClientCrashModal.vue';
-import { apiGet } from '../services/apiClient';
-import { webSocketService } from '../services/webSocketService';
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { bootLogService } from "../services/bootLogService";
+import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
+import { applyCursorForEvent, isHalloweenEvent } from "../utils/events";
+import { useToast } from "../services/toastService";
+import { globalUserStatus } from "./useUserStatus";
+import { useUser } from "./useUser";
+import { userService } from "../services/userService";
+import { globalFriends } from "./useFriends";
+import { updaterService } from "../services/updaterService";
+import { syncService } from "../services/syncService";
+import { getCurrentLanguage } from "../i18n";
+import { useModal } from "../services/modalService";
+import ClientCrashModal from "../components/modals/clients/ClientCrashModal.vue";
+import { apiGet } from "../services/apiClient";
+import { webSocketService } from "../services/webSocketService";
 
 interface Flags {
     disclaimer_shown: { value: boolean };
@@ -34,10 +34,10 @@ export function useAppInit() {
 
     const showPreloader = ref(true);
     const contentVisible = ref(false);
-    const loadingState = ref(t('preloader.initializing'));
+    const loadingState = ref(t("preloader.initializing"));
     const loadingStates = [
-        t('preloader.initializing'),
-        t('preloader.connecting_servers'),
+        t("preloader.initializing"),
+        t("preloader.connecting_servers"),
     ];
     const currentProgress = ref(0);
     const totalSteps = ref(4);
@@ -46,7 +46,7 @@ export function useAppInit() {
     const showFirstRunInfo = ref(false);
     const showInitialDisclaimer = ref(false);
     const halloweenActive = ref(isHalloweenEvent());
-    const currentTheme = ref('dark');
+    const currentTheme = ref("dark");
     const apiInitialized = ref(false);
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
@@ -71,27 +71,35 @@ export function useAppInit() {
             initializeStatusSystem();
 
             await syncService.restoreFromInitData(initData);
-
         } catch (error) {
-            console.error('Failed to initialize user data (consolidated), falling back:', error);
+            console.error(
+                "Failed to initialize user data (consolidated), falling back:",
+                error
+            );
             try {
                 await loadUserData();
                 initializeStatusSystem();
                 await loadFriendsData();
                 await syncService.checkAndRestoreOnStartup();
             } catch (fallbackError) {
-                console.error('Fallback initialization also failed:', fallbackError);
+                console.error(
+                    "Fallback initialization also failed:",
+                    fallbackError
+                );
             }
         }
     };
 
-    const fetchNewsAndUpdateUnreadCount = async (news: any, unreadNewsCount: any) => {
+    const fetchNewsAndUpdateUnreadCount = async (
+        news: any,
+        unreadNewsCount: any
+    ) => {
         try {
-            const currentLanguage = getCurrentLanguage() || 'en';
-            const response = await apiGet('/news/', {
+            const currentLanguage = getCurrentLanguage() || "en";
+            const response = await apiGet("/news/", {
                 headers: {
-                    'Accept-Language': currentLanguage,
-                    'Content-Type': 'application/json',
+                    "Accept-Language": currentLanguage,
+                    "Content-Type": "application/json",
                 },
             });
             const allNews = response as any[];
@@ -101,23 +109,34 @@ export function useAppInit() {
 
             const getNewsUniqueId = (article: any) =>
                 `news_${article.language}_${article.id}`;
-            const readNews = JSON.parse(localStorage.getItem('readNews') || '[]');
+            const readNews = JSON.parse(
+                localStorage.getItem("readNews") || "[]"
+            );
             unreadNewsCount.value = news.value.filter(
                 (article: any) => !readNews.includes(getNewsUniqueId(article))
             ).length;
         } catch (e) {
-            console.error('Failed to fetch news:', e);
+            console.error("Failed to fetch news:", e);
             unreadNewsCount.value = 0;
         }
     };
 
-    const initApp = async (isAuthenticated: any, checkAuthStatus: () => void, news: any, unreadNewsCount: any) => {
+    const initApp = async (
+        isAuthenticated: any,
+        checkAuthStatus: () => void,
+        news: any,
+        unreadNewsCount: any
+    ) => {
         bootLogService.start();
         bootLogService.systemInit();
 
-        const rpcTask = invoke('initialize_rpc').catch((error) => {
-            console.error('Failed to initialize Discord RPC:', error);
-            bootLogService.addCustomLog('WARN', 'rpc', `Discord RPC init failed: ${String(error)}`);
+        const rpcTask = invoke("initialize_rpc").catch((error) => {
+            console.error("Failed to initialize Discord RPC:", error);
+            bootLogService.addCustomLog(
+                "WARN",
+                "rpc",
+                `Discord RPC init failed: ${String(error)}`
+            );
         });
 
         const themeTask = applyThemeOnStartup().then(() => {
@@ -125,7 +144,9 @@ export function useAppInit() {
         });
 
         const languageTask = applyLanguageOnStartup().then(() => {
-            bootLogService.languageApplied(locale.value || getCurrentLanguage() || 'en');
+            bootLogService.languageApplied(
+                locale.value || getCurrentLanguage() || "en"
+            );
         });
 
         const cursorTask = applyCursorForEvent().then(() => {
@@ -144,22 +165,22 @@ export function useAppInit() {
 
         bootLogService.eventListenersInit();
 
-        await listen('client-crashed', (event) => {
+        await listen("client-crashed", (event) => {
             const payload = event.payload as {
                 id: number;
                 name: string;
                 error?: string;
             };
             addToast(
-                t('toast.client.crashed', {
+                t("toast.client.crashed", {
                     name: payload.name,
-                    error: payload.error || '',
+                    error: payload.error || "",
                 }),
-                'error'
+                "error"
             );
         });
 
-        await listen('client-crash-details', (event) => {
+        await listen("client-crash-details", (event) => {
             const payload = event.payload as {
                 id: number;
                 name: string;
@@ -170,8 +191,10 @@ export function useAppInit() {
                 `client-crash-${payload.id}`,
                 ClientCrashModal,
                 {
-                    title: t('modal.client_crash.title', { name: payload.name }),
-                    contentClass: 'wide',
+                    title: t("modal.client_crash.title", {
+                        name: payload.name,
+                    }),
+                    contentClass: "wide",
                 },
                 {
                     clientName: payload.name,
@@ -193,9 +216,10 @@ export function useAppInit() {
                 cdn_online?: boolean;
                 api_online?: boolean;
                 auth_online?: boolean;
-            }>('get_server_connectivity_status');
+            }>("get_server_connectivity_status");
             const cdnOnline = connectivity.cdn_online ?? false;
-            const apiOnline = connectivity.api_online ?? connectivity.auth_online ?? false;
+            const apiOnline =
+                connectivity.api_online ?? connectivity.auth_online ?? false;
             isOnline.value = Boolean(cdnOnline && apiOnline);
 
             if (cdnOnline) bootLogService.cdnOnline();
@@ -205,21 +229,25 @@ export function useAppInit() {
             else bootLogService.webApiOffline();
 
             if (!isOnline.value) {
-                let offlineMessage = t('toast.server.offline_base');
+                let offlineMessage = t("toast.server.offline_base");
                 if (!cdnOnline && !apiOnline) {
-                    offlineMessage += t('toast.server.cdn_and_api_offline');
+                    offlineMessage += t("toast.server.cdn_and_api_offline");
                 } else if (!cdnOnline) {
-                    offlineMessage += t('toast.server.cdn_offline');
+                    offlineMessage += t("toast.server.cdn_offline");
                 } else {
-                    offlineMessage += t('toast.server.api_offline');
+                    offlineMessage += t("toast.server.api_offline");
                 }
-                addToast(offlineMessage, 'warning');
+                addToast(offlineMessage, "warning");
             }
         } catch (error) {
-            console.error('Failed to get server connectivity status:', error);
+            console.error("Failed to get server connectivity status:", error);
             isOnline.value = false;
-            addToast(t('toast.server.offline'), 'error');
-            bootLogService.addCustomLog('ERROR', 'network', `Connectivity check failed: ${String(error)}`);
+            addToast(t("toast.server.offline"), "error");
+            bootLogService.addCustomLog(
+                "ERROR",
+                "network",
+                `Connectivity check failed: ${String(error)}`
+            );
         }
 
         loadingState.value = loadingStates[1];
@@ -227,12 +255,12 @@ export function useAppInit() {
 
         try {
             bootLogService.apiInit();
-            await invoke('initialize_api');
+            await invoke("initialize_api");
             apiInitialized.value = true;
             bootLogService.apiInitSuccess();
         } catch (error) {
-            console.error('Failed to initialize API:', error);
-            addToast(t('toast.server.api_init_failed', { error }), 'error');
+            console.error("Failed to initialize API:", error);
+            addToast(t("toast.server.api_init_failed", { error }), "error");
             bootLogService.apiInitFailed();
         }
 
@@ -252,14 +280,17 @@ export function useAppInit() {
 
                 webSocketService.connect();
             } catch (error) {
-                console.error('Failed to initialize user data on startup:', error);
+                console.error(
+                    "Failed to initialize user data on startup:",
+                    error
+                );
                 bootLogService.userDataFailed();
             }
         }
 
         currentProgress.value = 3;
 
-        const flagsTask = invoke<Flags>('get_flags')
+        const flagsTask = invoke<Flags>("get_flags")
             .then((currentFlags) => {
                 if (currentFlags.first_run.value) {
                     showFirstRunInfo.value = true;
@@ -270,35 +301,44 @@ export function useAppInit() {
                 bootLogService.flagsLoaded();
             })
             .catch((error) => {
-                console.error('Failed to load flags for initial modals:', error);
-                addToast(t('toast.settings.flags_load_failed', { error }), 'error');
+                console.error(
+                    "Failed to load flags for initial modals:",
+                    error
+                );
+                addToast(
+                    t("toast.settings.flags_load_failed", { error }),
+                    "error"
+                );
                 initialModalsLoaded.value = true;
                 bootLogService.flagsLoadFailed();
             });
 
-
-        fetchNewsAndUpdateUnreadCount(news, unreadNewsCount).catch(console.error);
+        fetchNewsAndUpdateUnreadCount(news, unreadNewsCount).catch(
+            console.error
+        );
 
         await flagsTask;
+
+        //await new Promise((resolve) => setTimeout(resolve, 5000));
 
         updaterService.startPeriodicCheck(t);
 
         currentProgress.value = 4;
-        loadingState.value = t('preloader.ready');
+        loadingState.value = t("preloader.ready");
 
         const preloaderElement = document.querySelector(
-            '#preloader'
+            "#preloader"
         ) as HTMLElement;
         if (preloaderElement) {
-            preloaderElement.style.opacity = '0';
-            preloaderElement.classList.add('animate-out');
+            preloaderElement.style.opacity = "0";
+            preloaderElement.classList.add("animate-out");
 
             setTimeout(() => {
                 showPreloader.value = false;
                 try {
-                    document.documentElement.classList.add('app-ready');
+                    document.documentElement.classList.add("app-ready");
                 } catch (e) {
-                    console.error('Failed to add app-ready class:', e);
+                    console.error("Failed to add app-ready class:", e);
                 }
                 setTimeout(() => {
                     contentVisible.value = true;
@@ -306,7 +346,7 @@ export function useAppInit() {
                     try {
                         bootLogService.clear();
                     } catch (e) {
-                        console.error('Failed to clear boot logs:', e);
+                        console.error("Failed to clear boot logs:", e);
                     }
                 }, 80);
             }, 800);
@@ -329,6 +369,6 @@ export function useAppInit() {
         currentTheme,
         apiInitialized,
         initApp,
-        initializeUserDataWrapper
+        initializeUserDataWrapper,
     };
 }
