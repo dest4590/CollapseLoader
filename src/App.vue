@@ -654,17 +654,28 @@ onUnmounted(() => {
                                 @unread-count-updated="
                                     handleUnreadNewsCountUpdated
                                 "
-                                @show-verify="handleShowVerify"
-                                @verified="handleVerified"
                                 :key="activeTab"
                                 :is-online="appOnline"
                                 :user-id="currentUserId"
-                                :email="pendingVerifyEmail"
-                                :code="pendingVerifyCode"
-                                v-bind="
-                                    activeTab === 'home'
-                                        ? { unreadNewsCount, apiInitialized }
+                                v-on="
+                                    activeTab === 'login' ||
+                                    activeTab === 'register' ||
+                                    activeTab === 'verify'
+                                        ? {
+                                              'show-verify': handleShowVerify,
+                                              verified: handleVerified,
+                                          }
                                         : {}
+                                "
+                                v-bind="
+                                    activeTab === 'verify'
+                                        ? {
+                                              email: pendingVerifyEmail,
+                                              code: pendingVerifyCode,
+                                          }
+                                        : activeTab === 'home'
+                                          ? { unreadNewsCount, apiInitialized }
+                                          : {}
                                 "
                             />
                         </div>

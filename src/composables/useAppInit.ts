@@ -207,6 +207,8 @@ export function useAppInit() {
 
         bootLogService.eventListenersReady();
 
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         loadingState.value = loadingStates[0];
         currentProgress.value = 1;
 
@@ -288,6 +290,8 @@ export function useAppInit() {
             }
         }
 
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         currentProgress.value = 3;
 
         const flagsTask = invoke<Flags>("get_flags")
@@ -319,7 +323,7 @@ export function useAppInit() {
 
         await flagsTask;
 
-        //await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         updaterService.startPeriodicCheck(t);
 
