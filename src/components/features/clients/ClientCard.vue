@@ -100,6 +100,8 @@ const isLoadingMyRating = ref(false);
 
 const { isAuthenticated } = useUser();
 
+let expansionLock = false;
+
 const MAX_COMMENT_LENGTH = 500;
 const canComment = computed(() => !!currentUser.value);
 const canRate = computed(() => isAuthenticated.value);
@@ -557,7 +559,6 @@ const removeRating = async () => {
 
         await apiDelete(getRatingEndpoint());
 
-        // Re-fetch client details (rating_avg/rating_count) when available
         try {
             if (clientDetails.value) {
                 const updated = await invoke<ClientDetails>(
@@ -594,6 +595,9 @@ const expandCard = async () => {
     if (props.isAnyCardExpanded) return;
     if (props.client.meta.is_custom) return;
 
+    if (expansionLock) return;
+    expansionLock = true;
+
     isAnimating.value = true;
 
     if (!clientDetails.value && !isLoadingDetails.value) {
@@ -606,6 +610,7 @@ const expandCard = async () => {
         } catch (error) {
             console.error("Failed to fetch client details:", error);
             isAnimating.value = false;
+            expansionLock = false;
             return;
         } finally {
             isLoadingDetails.value = false;
@@ -811,6 +816,7 @@ const collapseCard = () => {
             isExpanded.value = false;
             isAnimating.value = false;
             isCollapsing.value = false;
+            expansionLock = false;
             emit("expanded-state-changed", props.client.id, false);
         },
     });
@@ -1220,6 +1226,7 @@ const cleanupExpandedCard = () => {
     }
 
     isExpanded.value = false;
+    expansionLock = false;
     emit("expanded-state-changed", props.client.id, false);
 };
 
