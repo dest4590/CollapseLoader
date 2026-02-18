@@ -3,15 +3,11 @@
         id="preloader"
         v-if="visible"
         :class="{ 'animate-out': animateOut }"
-        role="status"
-        aria-live="polite"
-        :aria-label="loadingState"
-        :aria-busy="visible"
         class="fixed inset-0 bg-base-300 flex items-center justify-center"
     >
         <BootLogs
             v-if="isDev"
-            :current-progress="currentProgress / totalSteps"
+            :current-progress="currentProgress / 100"
             :loading-state="loadingState"
         />
 
@@ -25,7 +21,6 @@
             >
                 <canvas ref="matrixCanvas" class="matrix-canvas"></canvas>
             </div>
-
             <div v-else class="w-48 h-48 mb-8">
                 <img
                     src="../../assets/misc/ghosts.gif"
@@ -33,48 +28,44 @@
                 />
             </div>
 
-            <span class="sr-only">{{ loadingState }}</span>
-
             <div class="loading-status mt-2">
-                <transition name="slide-fade" mode="out-in">
-                    <span
-                        :key="loadingState"
-                        class="text-lg font-bold tracking-wider uppercase text-white"
-                        :class="{ invert: currentTheme === 'light' }"
-                    >
-                        {{ loadingState }}
-                    </span>
-                </transition>
+                <OdometerText
+                    :text="loadingState"
+                    :stagger="15"
+                    :duration="500"
+                    class="text-lg font-bold tracking-wider uppercase font-mono"
+                    :class="{
+                        'text-gray-800': currentTheme === 'light',
+                        'text-white': currentTheme !== 'light',
+                    }"
+                />
             </div>
 
             <div
-                class="w-96 progress-container mt-6"
+                class="w-96 progress-container mt-6 relative"
                 :class="{ invert: currentTheme === 'light' }"
-                role="progressbar"
-                :aria-valuenow="animatedProgressRounded"
-                aria-valuemin="0"
-                aria-valuemax="100"
-                :aria-valuetext="`${animatedProgressRounded}%`"
             >
                 <div
-                    class="bg-gray-900 rounded-sm h-1 overflow-hidden progress-track relative"
+                    class="bg-white/5 border border-white/10 rounded-full h-1.5 overflow-hidden progress-track relative shadow-inner"
                 >
                     <div
-                        class="bg-white h-full progress-fill shadow-[0_0_15px_rgba(255,255,255,0.7)]"
-                        :style="{
-                            transform: `scaleX(${animatedProgress / 100})`,
-                            transformOrigin: 'left',
-                        }"
-                    ></div>
-                </div>
-                <div
-                    class="flex justify-between mt-2 text-xs font-mono text-gray-500"
-                >
-                    <span>LOADING</span>
-                    <span
-                        :class="['percentage-number', { bump: percentageBump }]"
+                        class="bg-white h-full progress-fill relative"
+                        :style="{ width: `${displayProgress}%` }"
                     >
-                        {{ animatedProgressRounded }}%
+                        <div
+                            class="absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent"
+                        ></div>
+                    </div>
+                </div>
+
+                <div
+                    class="flex justify-between mt-3 text-[10px] font-mono tracking-[0.2em] text-gray-500"
+                >
+                    <span class="opacity-70">{{
+                        $t("preloader.initializing_progress")
+                    }}</span>
+                    <span class="percentage-number font-bold text-gray-400">
+                        {{ Math.round(displayProgress) }}%
                     </span>
                 </div>
             </div>
@@ -92,16 +83,44 @@ import {
     nextTick,
 } from "vue";
 import BootLogs from "./BootLogs.vue";
+import OdometerText from "./OdometerText.vue";
 
 const props = defineProps({
     show: { type: Boolean, required: true },
     isDev: { type: Boolean, default: false },
     loadingState: { type: String, required: true },
     currentProgress: { type: Number, required: true },
-    totalSteps: { type: Number, required: true },
     halloweenActive: { type: Boolean, default: false },
     currentTheme: { type: String, default: "dark" },
 });
+
+const displayProgress = ref(0);
+
+let _progressRaf: number | null = null;
+const LERP_FACTOR = 0.12;
+const LERP_EPS = 0.05;
+
+const stepProgress = () => {
+    const target = props.currentProgress;
+    const current = displayProgress.value;
+    const next = current + (target - current) * LERP_FACTOR;
+    displayProgress.value = Math.abs(target - next) < LERP_EPS ? target : next;
+
+    if (displayProgress.value !== target) {
+        _progressRaf = requestAnimationFrame(stepProgress);
+    } else {
+        _progressRaf = null;
+    }
+};
+
+watch(
+    () => props.currentProgress,
+    () => {
+        if (_progressRaf) cancelAnimationFrame(_progressRaf);
+        _progressRaf = requestAnimationFrame(stepProgress);
+    },
+    { immediate: true }
+);
 
 const svgString = `
 <svg xmlns="http://www.w3.org/2000/svg" width="435" height="365" fill="none" viewBox="0 0 435 365">
@@ -128,46 +147,6 @@ const maskStyle = computed(() => {
     };
 });
 
-const progressPercent = computed(() =>
-    Math.min(
-        100,
-        Math.max(0, (props.currentProgress / (props.totalSteps || 1)) * 100)
-    )
-);
-const animatedProgress = ref(progressPercent.value);
-const animatedProgressRounded = computed(() =>
-    Math.round(animatedProgress.value)
-);
-
-let _progressRaf: number | null = null;
-const animateTo = (target: number) => {
-    if (_progressRaf) cancelAnimationFrame(_progressRaf);
-    const step = () => {
-        const current = animatedProgress.value;
-        const delta = target - current;
-        const ease = 0.12;
-        const snapThreshold = 0.1;
-        animatedProgress.value =
-            Math.abs(delta) < snapThreshold ? target : current + delta * ease;
-        if (Math.abs(delta) >= snapThreshold) {
-            _progressRaf = requestAnimationFrame(step);
-        } else {
-            _progressRaf = null;
-        }
-    };
-    if (!Number.isFinite(animatedProgress.value)) animatedProgress.value = 0;
-    _progressRaf = requestAnimationFrame(step);
-};
-watch(progressPercent, (newVal) => animateTo(newVal));
-
-const percentageBump = ref(false);
-let _bumpTimer: number | null = null;
-watch(animatedProgressRounded, () => {
-    percentageBump.value = true;
-    if (_bumpTimer) window.clearTimeout(_bumpTimer);
-    _bumpTimer = window.setTimeout(() => (percentageBump.value = false), 150);
-});
-
 const matrixCanvas = ref<HTMLCanvasElement | null>(null);
 let _matrixInterval: number | null = null;
 
@@ -179,7 +158,6 @@ const initMatrix = () => {
 
     const width = 217.5;
     const height = 182.5;
-
     canvas.width = width * 2;
     canvas.height = height * 2;
     ctx.scale(2, 2);
@@ -187,20 +165,18 @@ const initMatrix = () => {
     const fontSize = 7;
     const columns = Math.ceil(width / fontSize);
     const drops: number[] = [];
-
-    for (let x = 0; x < columns; x++) {
-        drops[x] = Math.random() * -50;
-    }
-
+    for (let x = 0; x < columns; x++) drops[x] = Math.random() * -50;
     const chars = "01XYZ_<>[]!@#";
 
     const draw = () => {
-        const progress = animatedProgress.value;
+        if (props.currentTheme === "light") {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        } else {
+            ctx.fillStyle = "rgba(255, 255, 255, 1)";
+        }
 
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = `bold ${fontSize}px monospace`;
-
-        if (progress > 85) {
+        ctx.font = `${fontSize}px monospace`;
+        if (displayProgress.value > 50) {
             ctx.shadowColor = "white";
             ctx.shadowBlur = 8;
         }
@@ -209,12 +185,8 @@ const initMatrix = () => {
             const text = chars[Math.floor(Math.random() * chars.length)];
             const x = i * fontSize;
             const y = drops[i] * fontSize;
-
             ctx.fillText(text, x, y);
-
-            if (y > height && Math.random() > 0.95) {
-                drops[i] = 0;
-            }
+            if (y > height && Math.random() > 0.95) drops[i] = 0;
             drops[i] += 1.8;
         }
     };
@@ -222,17 +194,6 @@ const initMatrix = () => {
     if (_matrixInterval) clearInterval(_matrixInterval);
     _matrixInterval = window.setInterval(draw, 16);
 };
-
-onMounted(() => {
-    if (!props.halloweenActive) nextTick(() => initMatrix());
-});
-
-watch(
-    () => props.halloweenActive,
-    (val) => {
-        if (!val) nextTick(() => initMatrix());
-    }
-);
 
 const visible = ref(props.show);
 const animateOut = ref(false);
@@ -255,10 +216,18 @@ watch(
     }
 );
 
+onMounted(() => {
+    if (!props.halloweenActive) nextTick(() => initMatrix());
+});
+watch(
+    () => props.halloweenActive,
+    (val) => {
+        if (!val) nextTick(() => initMatrix());
+    }
+);
 onBeforeUnmount(() => {
-    if (_progressRaf) cancelAnimationFrame(_progressRaf);
-    if (_bumpTimer) window.clearTimeout(_bumpTimer);
     if (_matrixInterval) clearInterval(_matrixInterval);
+    if (_progressRaf) cancelAnimationFrame(_progressRaf);
 });
 </script>
 
@@ -271,8 +240,12 @@ onBeforeUnmount(() => {
     top: 0;
     background-color: #050505;
     z-index: 1337;
-    transition: opacity 0.3s ease; /* Быстрее затухание */
+    transition: opacity 0.3s ease;
     color: white;
+}
+
+[data-theme="light"] #preloader {
+    background-color: #f0f0f0;
 }
 
 #preloader.animate-out {
@@ -284,7 +257,7 @@ onBeforeUnmount(() => {
     width: 217.5px;
     height: 182.5px;
     position: relative;
-    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.15));
 }
 
 .matrix-canvas {
@@ -292,30 +265,14 @@ onBeforeUnmount(() => {
     height: 100%;
     display: block;
 }
-
 .invert {
     filter: invert(1);
 }
 
-.bump {
-    animation: bump 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-@keyframes bump {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.08);
-        color: #fff;
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
 .progress-fill {
-    will-change: transform;
-    transition: none;
+    transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow:
+        0 0 12px rgba(255, 255, 255, 0.6),
+        0 0 4px rgba(255, 255, 255, 0.8);
 }
 </style>

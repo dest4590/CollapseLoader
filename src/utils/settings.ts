@@ -52,4 +52,6 @@ export const applyThemeOnStartup = async () => {
     } catch (e) {
         console.error("Failed to load theme settings in service:", e);
     }
+
+    return chosenTheme;
 };

@@ -24,6 +24,8 @@ interface Flags {
     optional_analytics: { value: boolean };
 }
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export function useAppInit() {
     const { t, locale } = useI18n();
     const { addToast } = useToast();
@@ -34,13 +36,16 @@ export function useAppInit() {
 
     const showPreloader = ref(true);
     const contentVisible = ref(false);
-    const loadingState = ref(t("preloader.initializing"));
+
     const loadingStates = [
         t("preloader.initializing"),
         t("preloader.connecting_servers"),
+        t("preloader.loading_user_data"),
     ];
+
+    const loadingState = ref(loadingStates[0]); 
+
     const currentProgress = ref(0);
-    const totalSteps = ref(4);
     const isOnline = ref(true);
     const initialModalsLoaded = ref(false);
     const showFirstRunInfo = ref(false);
@@ -51,10 +56,8 @@ export function useAppInit() {
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
         if (!isAuthenticated || !isOnline.value) return;
-
         try {
             const initData = await userService.initializeUserFull();
-
             const userInfo = {
                 id: initData.user.id,
                 username: initData.user.username,
@@ -65,27 +68,18 @@ export function useAppInit() {
                 last_login_at: initData.user.last_login_at ?? null,
             };
             hydrateUser(initData.user.profile, userInfo);
-
             hydrateFriends(initData.friends);
-
             initializeStatusSystem();
-
             await syncService.restoreFromInitData(initData);
         } catch (error) {
-            console.error(
-                "Failed to initialize user data (consolidated), falling back:",
-                error
-            );
+            console.error("Init fallback:", error);
             try {
                 await loadUserData();
                 initializeStatusSystem();
                 await loadFriendsData();
                 await syncService.checkAndRestoreOnStartup();
             } catch (fallbackError) {
-                console.error(
-                    "Fallback initialization also failed:",
-                    fallbackError
-                );
+                console.error(fallbackError);
             }
         }
     };
@@ -104,42 +98,38 @@ export function useAppInit() {
             });
             const allNews = response as any[];
             news.value = allNews.filter(
-                (article: any) => article.language === currentLanguage
+                (a: any) => a.language === currentLanguage
             );
-
-            const getNewsUniqueId = (article: any) =>
-                `news_${article.language}_${article.id}`;
+            const getNewsUniqueId = (a: any) => `news_${a.language}_${a.id}`;
             const readNews = JSON.parse(
                 localStorage.getItem("readNews") || "[]"
             );
             unreadNewsCount.value = news.value.filter(
-                (article: any) => !readNews.includes(getNewsUniqueId(article))
+                (a: any) => !readNews.includes(getNewsUniqueId(a))
             ).length;
         } catch (e) {
-            console.error("Failed to fetch news:", e);
             unreadNewsCount.value = 0;
         }
     };
 
     const initApp = async (
         isAuthenticated: any,
-        checkAuthStatus: () => void,
+        checkApiStatus: () => void,
         news: any,
         unreadNewsCount: any
     ) => {
         bootLogService.start();
         bootLogService.systemInit();
 
-        const rpcTask = invoke("initialize_rpc").catch((error) => {
-            console.error("Failed to initialize Discord RPC:", error);
-            bootLogService.addCustomLog(
-                "WARN",
-                "rpc",
-                `Discord RPC init failed: ${String(error)}`
-            );
-        });
+        loadingState.value = loadingStates[0];
+        currentProgress.value = 5;
 
-        const themeTask = applyThemeOnStartup().then(() => {
+        const rpcTask = invoke("initialize_rpc").catch((e) =>
+            bootLogService.addCustomLog("WARN", "rpc", String(e))
+        );
+
+        const themeTask = applyThemeOnStartup().then((theme) => {
+            currentTheme.value = (theme as string) || "dark";
             bootLogService.themeApplied(currentTheme.value);
         });
 
@@ -149,71 +139,53 @@ export function useAppInit() {
             );
         });
 
-        const cursorTask = applyCursorForEvent().then(() => {
-            bootLogService.cursorApplied();
-        });
+        const cursorTask = applyCursorForEvent().then(() =>
+            bootLogService.cursorApplied()
+        );
 
         await Promise.all([rpcTask, themeTask, languageTask, cursorTask]);
 
         const { getToastPosition } = useToast();
         getToastPosition();
-        bootLogService.toastSystemReady();
-
-        showPreloader.value = true;
-        currentProgress.value = 0;
-        totalSteps.value = 4;
 
         bootLogService.eventListenersInit();
 
-        await listen("client-crashed", (event) => {
-            const payload = event.payload as {
-                id: number;
-                name: string;
-                error?: string;
-            };
+        await listen("client-crashed", (event: any) => {
             addToast(
                 t("toast.client.crashed", {
-                    name: payload.name,
-                    error: payload.error || "",
+                    name: event.payload.name,
+                    error: event.payload.error || "",
                 }),
                 "error"
             );
         });
 
-        await listen("client-crash-details", (event) => {
-            const payload = event.payload as {
-                id: number;
-                name: string;
-                logs: string[];
-                error?: string;
-            };
+        await listen("client-crash-details", (event: any) => {
             showModal(
-                `client-crash-${payload.id}`,
+                `client-crash-${event.payload.id}`,
                 ClientCrashModal,
                 {
                     title: t("modal.client_crash.title", {
-                        name: payload.name,
+                        name: event.payload.name,
                     }),
                     contentClass: "wide",
                 },
                 {
-                    clientName: payload.name,
-                    clientId: payload.id,
-                    logs: payload.logs,
-                    error: payload.error,
+                    clientName: event.payload.name,
+                    clientId: event.payload.id,
+                    logs: event.payload.logs,
+                    error: event.payload.error,
                 }
             );
         });
 
-        bootLogService.eventListenersReady();
+        currentProgress.value = 25;
 
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await wait(1000);
 
-        loadingState.value = loadingStates[0];
-        currentProgress.value = 1;
+        loadingState.value = loadingStates[1];
 
         try {
-            bootLogService.serverConnectivityCheck();
             const connectivity = await invoke<{
                 cdn_online?: boolean;
                 api_online?: boolean;
@@ -226,137 +198,71 @@ export function useAppInit() {
 
             if (cdnOnline) bootLogService.cdnOnline();
             else bootLogService.cdnOffline();
-
             if (apiOnline) bootLogService.webApiOnline();
             else bootLogService.webApiOffline();
 
-            if (!isOnline.value) {
-                let offlineMessage = t("toast.server.offline_base");
-                if (!cdnOnline && !apiOnline) {
-                    offlineMessage += t("toast.server.cdn_and_api_offline");
-                } else if (!cdnOnline) {
-                    offlineMessage += t("toast.server.cdn_offline");
-                } else {
-                    offlineMessage += t("toast.server.api_offline");
-                }
-                addToast(offlineMessage, "warning");
-            }
+            if (!isOnline.value) addToast(t("toast.server.offline"), "error");
         } catch (error) {
-            console.error("Failed to get server connectivity status:", error);
             isOnline.value = false;
-            addToast(t("toast.server.offline"), "error");
-            bootLogService.addCustomLog(
-                "ERROR",
-                "network",
-                `Connectivity check failed: ${String(error)}`
-            );
         }
 
-        loadingState.value = loadingStates[1];
-        currentProgress.value = 2;
-
         try {
-            bootLogService.apiInit();
             await invoke("initialize_api");
             apiInitialized.value = true;
             bootLogService.apiInitSuccess();
         } catch (error) {
-            console.error("Failed to initialize API:", error);
-            addToast(t("toast.server.api_init_failed", { error }), "error");
             bootLogService.apiInitFailed();
         }
 
+        currentProgress.value = 50;
+        await wait(500);
+
+        loadingState.value = loadingStates[2];
+
         bootLogService.authCheck();
-        checkAuthStatus();
-        if (isAuthenticated.value) bootLogService.authSuccess();
-        else bootLogService.authSkipped();
+        checkApiStatus();
 
-        if (isAuthenticated.value && isOnline.value) {
-            try {
-                bootLogService.userDataInit();
+        if (isAuthenticated.value) {
+            bootLogService.authSuccess();
+            if (isOnline.value) {
                 await initializeUserDataWrapper(isAuthenticated.value);
-                bootLogService.userDataSuccess();
-
-                bootLogService.syncInit();
                 bootLogService.syncReady();
-
                 webSocketService.connect();
-            } catch (error) {
-                console.error(
-                    "Failed to initialize user data on startup:",
-                    error
-                );
-                bootLogService.userDataFailed();
             }
+        } else {
+            bootLogService.authSkipped();
         }
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        currentProgress.value = 3;
 
         const flagsTask = invoke<Flags>("get_flags")
             .then((currentFlags) => {
-                if (currentFlags.first_run.value) {
-                    showFirstRunInfo.value = true;
-                } else if (!currentFlags.disclaimer_shown.value) {
+                if (currentFlags.first_run.value) showFirstRunInfo.value = true;
+                else if (!currentFlags.disclaimer_shown.value)
                     showInitialDisclaimer.value = true;
-                }
                 initialModalsLoaded.value = true;
-                bootLogService.flagsLoaded();
             })
-            .catch((error) => {
-                console.error(
-                    "Failed to load flags for initial modals:",
-                    error
-                );
-                addToast(
-                    t("toast.settings.flags_load_failed", { error }),
-                    "error"
-                );
+            .catch(() => {
                 initialModalsLoaded.value = true;
-                bootLogService.flagsLoadFailed();
             });
 
-        fetchNewsAndUpdateUnreadCount(news, unreadNewsCount).catch(
-            console.error
-        );
-
+        fetchNewsAndUpdateUnreadCount(news, unreadNewsCount);
         await flagsTask;
-
-        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         updaterService.startPeriodicCheck(t);
 
-        currentProgress.value = 4;
-        loadingState.value = t("preloader.ready");
+        loadingState.value = loadingStates[3] ?? loadingStates[2] ?? "";
+        currentProgress.value = 100;
 
-        const preloaderElement = document.querySelector(
-            "#preloader"
-        ) as HTMLElement;
-        if (preloaderElement) {
-            preloaderElement.style.opacity = "0";
-            preloaderElement.classList.add("animate-out");
+        await wait(1000);
 
-            setTimeout(() => {
-                showPreloader.value = false;
-                try {
-                    document.documentElement.classList.add("app-ready");
-                } catch (e) {
-                    console.error("Failed to add app-ready class:", e);
-                }
-                setTimeout(() => {
-                    contentVisible.value = true;
-                    bootLogService.systemReady();
-                    try {
-                        bootLogService.clear();
-                    } catch (e) {
-                        console.error("Failed to clear boot logs:", e);
-                    }
-                }, 80);
-            }, 800);
-        } else {
-            showPreloader.value = false;
-        }
+        showPreloader.value = false;
+
+        await wait(500);
+
+        document.documentElement.classList.add("app-ready");
+        setTimeout(() => {
+            contentVisible.value = true;
+            bootLogService.clear();
+        }, 80);
     };
 
     return {
@@ -364,7 +270,6 @@ export function useAppInit() {
         contentVisible,
         loadingState,
         currentProgress,
-        totalSteps,
         isOnline,
         initialModalsLoaded,
         showFirstRunInfo,

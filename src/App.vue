@@ -62,7 +62,6 @@ const {
     showPreloader,
     loadingState,
     currentProgress,
-    totalSteps,
     isOnline,
     showFirstRunInfo,
     showInitialDisclaimer,
@@ -73,6 +72,7 @@ const {
     initApp,
     initializeUserDataWrapper,
 } = useAppInit();
+
 const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
@@ -303,7 +303,7 @@ const handleShowVerify = (email: string, code?: string) => {
     );
     pendingVerifyEmail.value = email;
     if (code) pendingVerifyCode.value = code;
-    console.log("App: Navigating to verify view");
+
     setActiveTab("verify");
 };
 
@@ -599,7 +599,6 @@ onUnmounted(() => {
             :is-dev="isDev"
             :loading-state="loadingState"
             :current-progress="currentProgress"
-            :total-steps="totalSteps"
             :halloween-active="halloweenActive"
             :current-theme="currentTheme"
         />
