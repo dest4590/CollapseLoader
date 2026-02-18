@@ -95,6 +95,13 @@
                                 {{ t("userProfile.block_user") }}
                             </a>
                         </li>
+                        <div class="divider my-0"></div>
+                        <li>
+                            <a @click="handleReportUser" class="text-warning">
+                                <AlertTriangle class="w-4 h-4" />
+                                {{ t("userProfile.report_user") }}
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -109,11 +116,14 @@ import {
     MoreVertical,
     UserMinus,
     Shield,
+    AlertTriangle,
 } from "lucide-vue-next";
 import UserAvatar from "../../ui/UserAvatar.vue";
 import type { Friend } from "../../../services/userService";
 import { useI18n } from "vue-i18n";
 import { useStreamerMode } from "../../../composables/useStreamerMode";
+import { useModal } from "../../../services/modalService";
+import ReportModal from "../../modals/common/ReportModal.vue";
 import { computed, ref, onUnmounted, watch } from "vue";
 
 const props = defineProps<{
@@ -128,6 +138,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const streamer = useStreamerMode();
+const { showModal, hideModal } = useModal();
 
 const displayNickname = computed(() => {
     return streamer.getDisplayName(
@@ -181,6 +192,21 @@ const handleBlockFriend = () => {
 
 const handleViewProfile = () => {
     emit("viewProfile", props.friend.id);
+};
+
+const handleReportUser = () => {
+    showModal(
+        "report-user",
+        ReportModal,
+        { size: "md" },
+        {
+            userId: props.friend.id,
+            username: props.friend.nickname || props.friend.username,
+        },
+        {
+            close: () => hideModal("report-user"),
+        }
+    );
 };
 
 const playtimeDuration = ref("");

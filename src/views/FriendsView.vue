@@ -58,6 +58,7 @@
                         type="received"
                         @accept="respondToRequest($event, 'accept')"
                         @reject="respondToRequest($event, 'reject')"
+                        @report="reportUser"
                         @view-profile="$emit('show-user-profile', $event)"
                     />
                 </div>
@@ -185,6 +186,7 @@ import { useFriends } from "../composables/useFriends";
 import AddFriendModal from "../components/modals/social/friends/AddFriendModal.vue";
 import BlockUnblockConfirmModal from "../components/modals/social/friends/BlockUnblockConfirmModal.vue";
 import RemoveFriendConfirmModal from "../components/modals/social/friends/RemoveFriendConfirmModal.vue";
+import ReportModal from "../components/modals/common/ReportModal.vue";
 import FriendCard from "../components/features/friends/FriendCard.vue";
 import FriendRequestCard from "../components/features/friends/FriendRequestCard.vue";
 import UserAvatar from "../components/ui/UserAvatar.vue";
@@ -410,6 +412,26 @@ const blockFriend = async (friend: Friend) => {
                 hideModal("block-confirm");
             },
             close: () => hideModal("block-confirm"),
+        }
+    );
+};
+
+const reportUser = (user: Friend) => {
+    showModal(
+        "report-user",
+        ReportModal,
+        {
+            title: t("reports.report_user"),
+        },
+        {
+            userId: user.id,
+            username: user.nickname || user.username,
+        },
+        {
+            success: () => {
+                hideModal("report-user");
+            },
+            close: () => hideModal("report-user"),
         }
     );
 };

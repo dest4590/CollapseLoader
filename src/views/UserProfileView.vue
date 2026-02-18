@@ -438,6 +438,19 @@
                                 </button>
                             </div>
                         </div>
+
+                        <div
+                            v-if="!isOwnProfile"
+                            class="mt-4 pt-4 border-t border-base-300"
+                        >
+                            <button
+                                @click="handleReportUser"
+                                class="btn btn-ghost btn-outline btn-error btn-sm w-full"
+                            >
+                                <Flag class="w-4 h-4 mr-2" />
+                                {{ t("reports.report_user") }}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -578,6 +591,7 @@ import { userService, type PublicUserProfile } from "../services/userService";
 import { useFriends } from "../composables/useFriends";
 import BlockUnblockConfirmModal from "../components/modals/social/friends/BlockUnblockConfirmModal.vue";
 import RemoveFriendConfirmModal from "../components/modals/social/friends/RemoveFriendConfirmModal.vue";
+import ReportModal from "../components/modals/common/ReportModal.vue";
 import UserAvatar from "../components/ui/UserAvatar.vue";
 import FullscreenAvatarModal from "../components/modals/common/FullscreenAvatarModal.vue";
 import PresetGallery from "../components/presets/PresetGallery.vue";
@@ -595,6 +609,7 @@ import {
     Check,
     X,
     Ban,
+    Flag,
     ArrowLeft,
     Copy,
     ChevronDown,
@@ -996,6 +1011,23 @@ const handleBlockUser = async () => {
                 hideModal("block-confirm");
             },
             close: () => hideModal("block-confirm"),
+        }
+    );
+};
+
+const handleReportUser = () => {
+    if (!userProfile.value) return;
+
+    showModal(
+        "report-user",
+        ReportModal,
+        { title: t("reports.report_user") },
+        {
+            userId: userProfile.value.id,
+            username: userProfile.value.nickname || userProfile.value.username,
+        },
+        {
+            close: () => hideModal("report-user"),
         }
     );
 };

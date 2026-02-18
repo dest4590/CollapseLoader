@@ -35,6 +35,13 @@
                     >
                         <X class="w-4 h-4" />
                     </button>
+                    <button
+                        @click="$emit('report', user)"
+                        class="btn btn-warning btn-outline btn-sm"
+                        :title="t('reports.report_user')"
+                    >
+                        <Flag class="w-4 h-4" />
+                    </button>
                 </div>
                 <div
                     v-else-if="type === 'sent'"
@@ -54,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, X } from "lucide-vue-next";
+import { Check, Flag, X } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import { useModal } from "../../../services/modalService";
 import UserAvatar from "../../ui/UserAvatar.vue";
@@ -78,6 +85,7 @@ const emit = defineEmits<{
     reject: [requestId: number];
     viewProfile: [userId: number];
     cancel: [requestId: number];
+    report: [user: Friend];
 }>();
 
 const displayNickname = computed(() => {
