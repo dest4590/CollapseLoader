@@ -81,7 +81,7 @@ macro_rules! define_settings {
                         $(
                             $field: Setting {
                                 value: input.$field.value,
-                                show: input.$field.show,
+                                show: $show_val,
                             },
                         )*
                         config_path,
@@ -92,6 +92,9 @@ macro_rules! define_settings {
                     // update config_path here, because value is computed at runtime
                     let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
                     loaded.config_path = path;
+                    $(
+                        loaded.$field.show = $show_val;
+                    )*
                     loaded
                 }
             }

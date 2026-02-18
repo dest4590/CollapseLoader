@@ -262,11 +262,19 @@ class SyncService {
         ) {
             await settingsService.loadSettings();
             const currentSettings = settingsService.getSettings();
-            const mergedSettings = {
-                ...currentSettings,
-                ...cloudData.settings_data,
-            };
+
+            const mergedSettings = { ...currentSettings };
+            
+            for (const key in cloudData.settings_data) {
+                if (mergedSettings[key]) {
+                    mergedSettings[key].value = cloudData.settings_data[key].value;
+                } else {
+                    mergedSettings[key] = cloudData.settings_data[key];
+                }
+            }
+
             await settingsService.saveSettings(mergedSettings as any);
+            await settingsService.loadSettings();
         }
 
         if (
@@ -279,7 +287,7 @@ class SyncService {
                 );
                 const favoritesChanged =
                     cloudData.favorites_data.length !==
-                        currentFavorites.length ||
+                    currentFavorites.length ||
                     !cloudData.favorites_data.every((id: number) =>
                         currentFavorites.includes(id)
                     );
