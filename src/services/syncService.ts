@@ -264,10 +264,11 @@ class SyncService {
             const currentSettings = settingsService.getSettings();
 
             const mergedSettings = { ...currentSettings };
-            
+
             for (const key in cloudData.settings_data) {
                 if (mergedSettings[key]) {
-                    mergedSettings[key].value = cloudData.settings_data[key].value;
+                    mergedSettings[key].value =
+                        cloudData.settings_data[key].value;
                 } else {
                     mergedSettings[key] = cloudData.settings_data[key];
                 }
@@ -287,7 +288,7 @@ class SyncService {
                 );
                 const favoritesChanged =
                     cloudData.favorites_data.length !==
-                    currentFavorites.length ||
+                        currentFavorites.length ||
                     !cloudData.favorites_data.every((id: number) =>
                         currentFavorites.includes(id)
                     );

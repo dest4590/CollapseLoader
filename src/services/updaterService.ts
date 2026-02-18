@@ -157,7 +157,7 @@ class UpdaterService {
         }
 
         setTimeout(() => {
-            this.checkForUpdates(false, t)
+            this.checkForUpdates(false, t);
         }, 10000);
 
         this.checkInterval = window.setInterval(() => {

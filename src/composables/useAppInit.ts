@@ -43,7 +43,7 @@ export function useAppInit() {
         t("preloader.loading_user_data"),
     ];
 
-    const loadingState = ref(loadingStates[0]); 
+    const loadingState = ref(loadingStates[0]);
 
     const currentProgress = ref(0);
     const isOnline = ref(true);

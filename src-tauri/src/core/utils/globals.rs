@@ -98,7 +98,7 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
         }
     }
     vec![
-        Server::new("https://cdn.collapseloader.org/"),
+        Server::new("https://atlas.collapseloader.org/uploads/"),
         Server::new("http://141.148.224.27/cdn/"),
     ]
 });

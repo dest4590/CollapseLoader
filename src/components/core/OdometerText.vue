@@ -149,7 +149,8 @@ watch(
 <style scoped>
 .odometer-container {
     display: inline-flex;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    font-family:
+        ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
         "Liberation Mono", monospace;
     font-variant-numeric: tabular-nums;
     line-height: 1.5;

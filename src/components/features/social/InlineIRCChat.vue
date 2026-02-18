@@ -148,11 +148,11 @@
                                 ]"
                                 @contextmenu.prevent="
                                     part.isName &&
-                                        openContextMenu(
-                                            $event,
-                                            part.text,
-                                            extractDisplayName(msg.content)
-                                        )
+                                    openContextMenu(
+                                        $event,
+                                        part.text,
+                                        extractDisplayName(msg.content)
+                                    )
                                 "
                                 >{{ part.text }}</span
                             >

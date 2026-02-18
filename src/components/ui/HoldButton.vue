@@ -126,11 +126,8 @@ onUnmounted(() => {
 
 <style scoped>
 .start-btn {
-    background-image: radial-gradient(
-            ellipse at 50% 270%,
-            #00ff4747,
-            transparent 60%
-        ),
+    background-image:
+        radial-gradient(ellipse at 50% 270%, #00ff4747, transparent 60%),
         radial-gradient(ellipse at 20% 150%, #00ff8847, transparent 60%),
         radial-gradient(ellipse at 70% 200%, #22ff0047, transparent 60%);
 }
