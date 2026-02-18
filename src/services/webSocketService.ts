@@ -27,6 +27,7 @@ class WebSocketService {
                 this.subscribeToUserAchievements();
                 this.subscribeToFriendNotifications();
                 this.subscribeToCommands();
+                this.subscribeToOnlineCount();
             },
             onDisconnect: () => {
                 this.connected = false;
@@ -150,6 +151,22 @@ class WebSocketService {
             const t = i18n.global.t;
             await updaterService.checkForUpdates(false, t);
         }
+    }
+
+    private subscribeToOnlineCount() {
+        if (!this.client) {
+            return;
+        }
+
+        this.client.subscribe("/topic/online-count", (message) => {
+            if (message.body) {
+                const data = JSON.parse(message.body);
+                const event = new CustomEvent("online-count-updated", {
+                    detail: data,
+                });
+                window.dispatchEvent(event);
+            }
+        });
     }
 }
 
