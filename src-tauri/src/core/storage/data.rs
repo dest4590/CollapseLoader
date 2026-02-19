@@ -42,7 +42,9 @@ impl Data {
             log_info!("Created root data directory: {}", root_dir.display());
         }
 
-        Self { root_dir: Mutex::new(root_dir) }
+        Self {
+            root_dir: Mutex::new(root_dir),
+        }
     }
 
     pub fn has_extension(file_path: &str, extension: &str) -> bool {
@@ -66,7 +68,11 @@ impl Data {
     pub async fn unzip(&self, file: &str) -> Result<(), String> {
         let info = Self::resolve_local_file_info(file);
         let zip_path = self.get_local(&info.local_file);
-        let unzip_path = self.get_local(info.local_file.strip_suffix(".zip").unwrap_or(&info.local_file));
+        let unzip_path = self.get_local(
+            info.local_file
+                .strip_suffix(".zip")
+                .unwrap_or(&info.local_file),
+        );
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         let emit_name = info.local_file.clone();
@@ -112,7 +118,8 @@ impl Data {
         };
 
         let file_name = Self::get_filename(&local_file);
-        let is_fabric_client = (file.starts_with("fabric/") || file.contains("/fabric/jars/")) && local_file.ends_with(".jar");
+        let is_fabric_client = (file.starts_with("fabric/") || file.contains("/fabric/jars/"))
+            && local_file.ends_with(".jar");
 
         FileInfo {
             local_file,
@@ -124,12 +131,18 @@ impl Data {
     fn get_destination_path(&self, _file: &str, info: &FileInfo) -> PathBuf {
         if info.is_fabric_client {
             let jar_basename = &info.local_file;
-            self.root_dir.lock().unwrap()
+            self.root_dir
+                .lock()
+                .unwrap()
                 .join(&info.file_name)
                 .join("mods")
                 .join(jar_basename)
         } else if Self::has_extension(&info.local_file, "jar") {
-            self.root_dir.lock().unwrap().join(&info.file_name).join(&info.local_file)
+            self.root_dir
+                .lock()
+                .unwrap()
+                .join(&info.file_name)
+                .join(&info.local_file)
         } else {
             self.root_dir.lock().unwrap().join(&info.local_file)
         }
@@ -138,13 +151,19 @@ impl Data {
     fn should_skip_download(&self, info: &FileInfo) -> bool {
         if Self::has_extension(&info.local_file, "zip") {
             let zip_path = self.root_dir.lock().unwrap().join(&info.local_file);
-            let unzip_path = self.root_dir.lock().unwrap().join(info.local_file.trim_end_matches(".zip"));
+            let unzip_path = self
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(info.local_file.trim_end_matches(".zip"));
             zip_path.exists() && unzip_path.exists()
         } else if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
                 let jar_basename = &info.local_file;
                 let jar_path = self
-                    .root_dir.lock().unwrap()
+                    .root_dir
+                    .lock()
+                    .unwrap()
                     .join(&info.file_name)
                     .join("mods")
                     .join(jar_basename);
@@ -178,7 +197,12 @@ impl Data {
 
         if Self::has_extension(&info.local_file, "jar") {
             if info.is_fabric_client {
-                let mods_dir = self.root_dir.lock().unwrap().join(&info.file_name).join("mods");
+                let mods_dir = self
+                    .root_dir
+                    .lock()
+                    .unwrap()
+                    .join(&info.file_name)
+                    .join("mods");
                 if let Err(e) = tokio_fs::create_dir_all(&mods_dir).await {
                     log_error!(
                         "Failed to create fabric mods directory {}: {}",
@@ -209,19 +233,30 @@ impl Data {
         Ok(())
     }
 
-    fn get_download_url(file: &str) -> Result<String, String> {
+    fn get_download_urls(file: &str) -> Result<Vec<String>, String> {
         let is_url = file.starts_with("http://") || file.starts_with("https://");
         if is_url {
-            Ok(file.to_string())
+            Ok(vec![file.to_string()])
         } else {
-            let cdn_url = SERVERS.selected_cdn.read().unwrap().as_ref().map_or_else(
-                || {
-                    log_error!("No CDN server available for download");
-                    Err("No CDN server available for download.".to_string())
-                },
-                |server| Ok(server.url.clone()),
-            )?;
-            Ok(format!("{cdn_url}{file}"))
+            let mut urls = Vec::new();
+
+            if let Some(selected) = SERVERS.selected_cdn.read().unwrap().as_ref() {
+                urls.push(format!("{}{}", selected.url, file));
+            }
+
+            for cdn in &SERVERS.cdns {
+                let url = format!("{}{}", cdn.url, file);
+                if !urls.contains(&url) {
+                    urls.push(url);
+                }
+            }
+
+            if urls.is_empty() {
+                log_error!("No CDN server available for download");
+                return Err("No CDN server available for download.".to_string());
+            }
+
+            Ok(urls)
         }
     }
 
@@ -239,11 +274,17 @@ impl Data {
 
         self.prepare_download_dirs(&info).await?;
 
-        let download_url = Self::get_download_url(file)?;
+        let download_urls = Self::get_download_urls(file)?;
         let dest_path = self.get_destination_path(file, &info);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
-        download_file(&download_url, &dest_path, &info.local_file, app_handle.as_ref()).await?;
+        download_file(
+            &download_urls,
+            &dest_path,
+            &info.local_file,
+            app_handle.as_ref(),
+        )
+        .await?;
 
         if let Some(handle) = app_handle.as_ref() {
             emit_to_main_window(handle, "download-complete", &info.local_file);
@@ -349,7 +390,11 @@ impl Data {
         Ok(())
     }
 
-    fn create_symlink(src: &std::path::Path, dst: &std::path::Path, is_dir: bool) -> Result<(), String> {
+    fn create_symlink(
+        src: &std::path::Path,
+        dst: &std::path::Path,
+        is_dir: bool,
+    ) -> Result<(), String> {
         #[cfg(target_family = "unix")]
         {
             std::os::unix::fs::symlink(src, dst).map_err(|e| e.to_string())
@@ -372,9 +417,14 @@ impl Data {
             emit_to_main_window(app_handle, "download-start", &info.local_file);
         }
 
-        let download_url = Self::get_download_url(file)?;
+        let download_urls = Self::get_download_urls(file)?;
 
-        log_debug!("Downloading {} to folder {} from URL: {}", file, dest_folder, download_url);
+        log_debug!(
+            "Downloading {} to folder {} from URLs: {:?}",
+            file,
+            dest_folder,
+            download_urls
+        );
 
         let dest_dir = self.root_dir.lock().unwrap().join(dest_folder);
         if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
@@ -390,7 +440,13 @@ impl Data {
         let dest_path = dest_dir.join(dest_filename);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
-        download_file(&download_url, &dest_path, &info.local_file, app_handle.as_ref()).await?;
+        download_file(
+            &download_urls,
+            &dest_path,
+            &info.local_file,
+            app_handle.as_ref(),
+        )
+        .await?;
 
         if let Some(handle) = app_handle.as_ref() {
             emit_to_main_window(handle, "download-complete", &info.local_file);
@@ -399,10 +455,7 @@ impl Data {
         Ok(())
     }
 
-    pub async fn verify_file_md5(
-        path: &Path,
-        expected: &str,
-    ) -> Result<bool, String> {
+    pub async fn verify_file_md5(path: &Path, expected: &str) -> Result<bool, String> {
         let path = path.to_path_buf();
         let expected = expected.to_lowercase();
         let calc = tokio::task::spawn_blocking(move || {
