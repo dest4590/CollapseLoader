@@ -144,8 +144,6 @@ export interface UserFavorite {
 
 export interface UserExternalAccount {
     id: number;
-    provider: string;
-    external_id: string;
     display_name: string | null;
     metadata: unknown | null;
     created_at: string;
@@ -194,7 +192,6 @@ const CACHE_EXPIRY_HOURS = 24;
 
 const SYNC_SETTINGS_PREF_KEY = "collapseloader.settings";
 const SYNC_FAVORITE_TYPE = "client";
-const SYNC_ACCOUNT_PROVIDER = "collapseloader";
 
 class UserService {
     private getCachedData(): CachedUserData | null {
@@ -787,25 +784,20 @@ class UserService {
                     typeof acc.username === "string" && acc.username.length > 0
             );
 
-        const localAccountIds = new Set(localAccounts.map((a) => a.username));
-        const remoteManagedAccounts = remoteAccounts.filter(
-            (a) => a.provider === SYNC_ACCOUNT_PROVIDER
-        );
+        const localAccountNames = new Set(localAccounts.map((a) => a.username));
 
         await Promise.all(
-            remoteManagedAccounts
-                .filter((a) => !localAccountIds.has(a.external_id))
+            remoteAccounts
+                .filter((a) => a.display_name && !localAccountNames.has(a.display_name))
                 .map((a) => this.deleteExternalAccount(a.id))
         );
 
-        const remoteAccountIds = new Set(
-            remoteManagedAccounts.map((a) => a.external_id)
+        const remoteAccountNames = new Set(
+            remoteAccounts.map((a) => a.display_name).filter(Boolean) as string[]
         );
         for (const acc of localAccounts) {
-            if (remoteAccountIds.has(acc.username)) continue;
+            if (remoteAccountNames.has(acc.username)) continue;
             await this.addExternalAccount({
-                provider: SYNC_ACCOUNT_PROVIDER,
-                external_id: acc.username,
                 display_name: acc.username,
                 metadata: { tags: acc.tags || [] },
             });
@@ -826,14 +818,13 @@ class UserService {
             .filter((n) => Number.isFinite(n));
 
         const accounts_data = (accounts || [])
-            .filter((a) => a.provider === SYNC_ACCOUNT_PROVIDER)
             .map((a) => {
                 const meta: any =
                     a.metadata && typeof a.metadata === "object"
                         ? a.metadata
                         : {};
                 return {
-                    username: a.external_id,
+                    username: a.display_name,
                     tags: Array.isArray(meta.tags) ? meta.tags : ["cloud-sync"],
                 };
             });

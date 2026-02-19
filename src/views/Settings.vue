@@ -70,7 +70,6 @@ const accounts = ref<Account[]>([]);
 const remoteAccounts = ref<UserExternalAccount[]>([]);
 const remoteAccountsLoading = ref(false);
 const isAccountSyncing = ref(false);
-const ACCOUNT_SYNC_PROVIDER = "collapseloader";
 const activeTab = ref<"general" | "sync" | "accounts">("general");
 const loading = ref(true);
 const isRefreshing = ref(false);
@@ -210,9 +209,7 @@ const loadRemoteAccounts = async () => {
     remoteAccountsLoading.value = true;
     try {
         const fetchedAccounts = await userService.getExternalAccounts();
-        remoteAccounts.value = fetchedAccounts.filter(
-            (account) => account.provider === ACCOUNT_SYNC_PROVIDER
-        );
+        remoteAccounts.value = fetchedAccounts;
     } catch (error) {
         console.error("Failed to load remote accounts:", error);
         addToast(t("settings.load_remote_accounts_failed", { error }), "error");
@@ -234,19 +231,17 @@ const syncLocalAccountsToCloud = async () => {
             userService.getExternalAccounts(),
         ]);
 
-        const cloudAccounts = externalAccounts.filter(
-            (account) => account.provider === ACCOUNT_SYNC_PROVIDER
-        );
+        const cloudAccounts = externalAccounts;
         const localUsernames = new Set(
             localAccounts.map((account) => account.username)
         );
         const cloudUsernameMap = new Map(
-            cloudAccounts.map((account) => [account.external_id, account])
+            cloudAccounts.map((account) => [account.display_name, account])
         );
 
         await Promise.allSettled(
             cloudAccounts
-                .filter((account) => !localUsernames.has(account.external_id))
+                .filter((account) => account.display_name && !localUsernames.has(account.display_name))
                 .map((account) => userService.deleteExternalAccount(account.id))
         );
 
@@ -254,8 +249,6 @@ const syncLocalAccountsToCloud = async () => {
             if (!cloudUsernameMap.has(localAccount.username)) {
                 try {
                     await userService.addExternalAccount({
-                        provider: ACCOUNT_SYNC_PROVIDER,
-                        external_id: localAccount.username,
                         display_name: localAccount.username,
                         metadata: { tags: localAccount.tags || [] },
                     });
@@ -291,9 +284,7 @@ const syncLocalAccountsFromCloud = async () => {
     isAccountSyncing.value = true;
     try {
         const externalAccounts = await userService.getExternalAccounts();
-        const cloudAccounts = externalAccounts.filter(
-            (account) => account.provider === ACCOUNT_SYNC_PROVIDER
-        );
+        const cloudAccounts = externalAccounts;
 
         if (cloudAccounts.length === 0) {
             addToast(t("settings.remote_accounts_empty"), "info");
@@ -306,9 +297,9 @@ const syncLocalAccountsFromCloud = async () => {
         );
 
         for (const cloudAccount of cloudAccounts) {
-            if (!localUsernames.has(cloudAccount.external_id)) {
+            if (cloudAccount.display_name && !localUsernames.has(cloudAccount.display_name)) {
                 await invoke("add_account", {
-                    username: cloudAccount.external_id,
+                    username: cloudAccount.display_name,
                     tags: Array.isArray((cloudAccount.metadata as any)?.tags)
                         ? (cloudAccount.metadata as any).tags
                         : ["cloud-sync"],
@@ -1356,14 +1347,8 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                             :key="account.id"
                                         >
                                             <span class="font-semibold">{{
-                                                account.display_name ||
-                                                account.external_id
+                                                account.display_name
                                             }}</span>
-                                            <span
-                                                class="text-xs text-base-content/50 ml-1"
-                                            >
-                                                ({{ account.external_id }})
-                                            </span>
                                         </li>
                                         <li
                                             v-if="remoteAccounts.length > 3"
