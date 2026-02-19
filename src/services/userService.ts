@@ -108,6 +108,7 @@ export interface SearchUser {
     id: number;
     username: string;
     nickname: string | null;
+    avatar_url: string | null;
     friendship_status: FriendshipStatus;
 }
 
@@ -537,7 +538,8 @@ class UserService {
             id: u.id,
             username: u.username,
             nickname: u.nickname ?? null,
-            friendship_status: (u.friendship ?? null) as FriendshipStatus,
+            avatar_url: u.avatar_url ?? null,
+            friendship_status: (u.friendship_status ?? null) as FriendshipStatus,
         }));
     }
 

@@ -115,7 +115,7 @@
                                 />
                             </div>
 
-                            <PresetColorPreview :preset="p" class="!mt-0" />
+                            <PresetColorPreview :preset="p" class="mt-0!" />
 
                             <p
                                 class="text-[11px] text-base-content/50 line-clamp-2 mt-2 leading-snug min-h-8"
@@ -125,11 +125,9 @@
                             </p>
                             <div v-else class="min-h-8"></div>
 
-                            <div
-                                class="mt-auto pt-3 flex items-center gap-4 text-white/20"
-                            >
+                            <div class="mt-auto pt-3 flex items-center gap-4">
                                 <span
-                                    class="flex items-center gap-1.5 hover:text-white/40 transition-colors"
+                                    class="flex items-center gap-1.5 transition-colors"
                                 >
                                     <ThumbsUp class="w-3.5 h-3.5" />
                                     <span class="text-[11px] font-bold">{{
@@ -137,7 +135,7 @@
                                     }}</span>
                                 </span>
                                 <span
-                                    class="flex items-center gap-1.5 hover:text-white/40 transition-colors"
+                                    class="flex items-center gap-1.5 transition-colors"
                                 >
                                     <Download class="w-3.5 h-3.5" />
                                     <span class="text-[11px] font-bold">{{
@@ -145,7 +143,7 @@
                                     }}</span>
                                 </span>
                                 <span
-                                    class="flex items-center gap-1.5 hover:text-white/40 transition-colors"
+                                    class="flex items-center gap-1.5 transition-colors"
                                 >
                                     <MessageSquare class="w-3.5 h-3.5" />
                                     <span class="text-[11px] font-bold">{{
@@ -163,7 +161,7 @@
                                     >
                                         <button
                                             tabindex="0"
-                                            class="btn btn-circle btn-xs btn-ghost hover:bg-white/10"
+                                            class="btn btn-circle btn-xs btn-ghost"
                                             @click.stop
                                         >
                                             <MoreVertical
@@ -172,7 +170,7 @@
                                         </button>
                                         <ul
                                             tabindex="0"
-                                            class="dropdown-content z-10 menu p-1 shadow-2xl bg-[#1a1a1a] rounded-xl w-48 border border-white/10 mb-2"
+                                            class="dropdown-content bg-base-200 z-10 menu p-1 shadow-2xl rounded-xl w-48 border border-white/10 mb-2"
                                         >
                                             <li>
                                                 <a
@@ -223,21 +221,19 @@
                                 </template>
 
                                 <button
-                                    class="btn btn-circle btn-xs btn-primary bg-white hover:bg-white/90 border-none group/apply"
+                                    class="btn btn-circle btn-xs btn-primary border-none group/apply"
                                     @click.stop="apply(p)"
                                 >
-                                    <Play
-                                        class="w-3.5 h-3.5 text-black fill-black"
-                                    />
+                                    <PaintBucket class="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                    class="btn btn-circle btn-xs bg-white/10 hover:bg-white/20 border-none"
+                                    class="btn btn-circle btn-xs border-none"
                                     @click.stop="download(p)"
                                 >
-                                    <Download class="w-3.5 h-3.5 text-white" />
+                                    <Download class="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                    class="btn btn-circle btn-xs bg-white/10 hover:bg-white/20 border-none"
+                                    class="btn btn-circle btn-xs border-none"
                                     :class="{
                                         'bg-primary/20 text-primary': p.liked,
                                     }"
@@ -280,13 +276,13 @@ import {
     ThumbsUp,
     MessageSquare,
     Search,
-    Play,
     MoreVertical,
     Edit,
     Trash2,
     Eye,
     EyeOff,
     Image,
+    PaintBucket,
 } from "lucide-vue-next";
 import { buildPresetCreatePayload } from "../../utils/presetPayload";
 import PresetColorPreview from "./PresetColorPreview.vue";
@@ -308,7 +304,6 @@ export default defineComponent({
         ThumbsUp,
         MessageSquare,
         Search,
-        Play,
         MoreVertical,
         Edit,
         Trash2,
@@ -316,6 +311,7 @@ export default defineComponent({
         EyeOff,
         PresetColorPreview,
         Image,
+        PaintBucket,
     },
     props: {
         ownerId: { type: Number, required: false },
@@ -355,8 +351,12 @@ export default defineComponent({
                 }
 
                 const params: any = {};
-                if (props.ownerId) params.owner = props.ownerId;
+                
+                if (props.ownerId !== undefined && props.ownerId !== null)
+                    params.owner = Number(props.ownerId);
+                
                 if (search.value.trim()) params.q = search.value.trim();
+                
                 params.sort = sortBy.value;
 
                 const data = await marketplaceService.listPresets(params);

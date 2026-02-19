@@ -1,10 +1,25 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import path from 'path';
 
-const host = process.env.TAURI_DEV_HOST;
+const host: string | undefined = process.env.TAURI_DEV_HOST;
 
+interface HmrConfig {
+  protocol: string;
+  host: string | undefined;
+  port: number;
+}
+
+interface ServerConfig {
+  port: number;
+  strictPort: boolean;
+  host: string | boolean;
+  hmr: HmrConfig | undefined;
+  watch: {
+    ignored: string[];
+  };
+}
 export default defineConfig(async () => ({
   plugins: [vue(), tailwindcss()],
 
@@ -14,27 +29,16 @@ export default defineConfig(async () => ({
     },
   },
 
-  vue: {
-    template: {
-      compilerOptions: {
-        isCustomElement: (tag) => tag === 'lottie-player',
-      },
-    },
-  },
-
   build: {
     rollupOptions: {
-      onwarn(warning, warn) {
-        if (warning.code === 'EVAL' && warning.id?.includes('lottie-web')) {
-          return;
-        }
+      onwarn(warning: any, warn: (warning: any) => void): void {
         if (warning.code === 'EMPTY_BUNDLE') {
           return;
         }
         warn(warning);
       },
       output: {
-        manualChunks(id) {
+        manualChunks(id: string): string | undefined {
           if (id.includes('node_modules')) {
             if (id.includes('monaco-editor')) {
               return 'vendor-monaco';
@@ -48,7 +52,7 @@ export default defineConfig(async () => ({
             if (id.includes('lucide-vue-next')) {
               return 'vendor-icons';
             }
-            if (id.includes('lottie') || id.includes('gsap') || id.includes('axios')) {
+            if (id.includes('gsap') || id.includes('axios')) {
               return 'vendor-utils';
             }
           }
@@ -73,5 +77,5 @@ export default defineConfig(async () => ({
     watch: {
       ignored: ["**/src-tauri/**"],
     },
-  }
+  } as ServerConfig
 }));

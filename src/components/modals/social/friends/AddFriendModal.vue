@@ -36,9 +36,8 @@
                                     <UserAvatar
                                         :name="getDisplayNickname(user)"
                                         :is-clickable="true"
-                                        :src="(user as any).avatar_url || null"
-                                        :original-src="
-                                            (user as any).avatar_url || null
+                                        :src="user.avatar_url || null"
+                                        :original-src="user.avatar_url || null"
                                         "
                                     />
                                 </div>
@@ -56,71 +55,36 @@
 
                             <div class="shrink-0">
                                 <button
-                                    v-if="user.friendship_status === null"
-                                    @click="
-                                        sendFriendRequest(
-                                            user.username,
-                                            user.id
-                                        )
-                                    "
+                                    @click="sendFriendRequest(user.username, user.id)"
                                     class="btn btn-primary btn-sm"
-                                    :disabled="sendingRequest"
-                                >
-                                    <UserPlus class="w-4 h-4 mr-1" />
-                                    <span class="hidden sm:inline">{{
-                                        t("modals.add_friend.add_friend")
-                                    }}</span>
-                                </button>
-
-                                <div
-                                    v-else-if="
+                                    :disabled="
+                                        sendingRequest ||
                                         user.friendship_status === 'friends'
                                     "
-                                    class="badge badge-success"
                                 >
-                                    <span class="hidden sm:inline">{{
-                                        t("modals.add_friend.already_friends")
-                                    }}</span>
-                                    <span class="sm:hidden">✓</span>
-                                </div>
+                                    <UserPlus class="w-4 h-4 mr-1" />
+                                    <span class="hidden sm:inline">
+                                        {{ getFriendButtonLabel(user) }}
+                                    </span>
+                                </button>
 
-                                <div
-                                    v-else-if="
-                                        user.friendship_status ===
-                                        'request_sent'
-                                    "
-                                    class="badge badge-warning"
-                                >
-                                    <span class="hidden sm:inline">{{
-                                        t("modals.add_friend.request_sent")
-                                    }}</span>
-                                    <span class="sm:hidden">⏳</span>
-                                </div>
+                                <template v-if="user.friendship_status === 'request_sent'">
+                                    <div class="badge badge-warning ml-2 hidden sm:inline-block">
+                                        {{ t('modals.add_friend.request_sent') }}
+                                    </div>
+                                </template>
 
-                                <div
-                                    v-else-if="
-                                        user.friendship_status ===
-                                        'request_received'
-                                    "
-                                    class="badge badge-info"
-                                >
-                                    <span class="hidden sm:inline">{{
-                                        t("modals.add_friend.request_received")
-                                    }}</span>
-                                    <span class="sm:hidden">📨</span>
-                                </div>
+                                <template v-else-if="user.friendship_status === 'request_received'">
+                                    <div class="badge badge-info ml-2 hidden sm:inline-block">
+                                        {{ t('modals.add_friend.request_received') }}
+                                    </div>
+                                </template>
 
-                                <div
-                                    v-else-if="
-                                        user.friendship_status === 'blocked'
-                                    "
-                                    class="badge badge-error"
-                                >
-                                    <span class="hidden sm:inline">{{
-                                        t("modals.add_friend.blocked")
-                                    }}</span>
-                                    <span class="sm:hidden">🚫</span>
-                                </div>
+                                <template v-else-if="user.friendship_status === 'blocked'">
+                                    <div class="badge badge-error ml-2 hidden sm:inline-block">
+                                        {{ t('modals.add_friend.blocked') }}
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -184,6 +148,22 @@ const getDisplayUsername = (user: SearchUser) => {
     return streamer.getDisplayUsername(user.username);
 };
 
+const getFriendButtonLabel = (user: SearchUser) => {
+    if (!user || !user.friendship_status) return t("modals.add_friend.add_friend");
+    switch (user.friendship_status) {
+        case "friends":
+            return t("modals.add_friend.already_friends");
+        case "request_sent":
+            return t("modals.add_friend.request_sent");
+        case "request_received":
+            return t("modals.add_friend.request_received");
+        case "blocked":
+            return t("modals.add_friend.blocked");
+        default:
+            return t("modals.add_friend.add_friend");
+    }
+};
+
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const handleSearch = () => {
@@ -235,7 +215,6 @@ const sendFriendRequest = async (username: string, userId: number) => {
         emit("friend-added");
     } catch (error) {
         console.error("Failed to send friend request:", error);
-        addToast(t("toast.friends.request_send_failed"), "error");
     } finally {
         sendingRequest.value = false;
     }
