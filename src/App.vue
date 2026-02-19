@@ -295,12 +295,6 @@ const handleRegisterPrompt = () => {
 const pendingVerifyCode = ref("");
 
 const handleShowVerify = (email: string, code?: string) => {
-    console.log(
-        "App: handleShowVerify called with email:",
-        email,
-        "code:",
-        code
-    );
     pendingVerifyEmail.value = email;
     if (code) pendingVerifyCode.value = code;
 

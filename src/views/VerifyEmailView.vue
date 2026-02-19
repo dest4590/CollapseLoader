@@ -1,8 +1,6 @@
 <template>
     <div class="flex items-center justify-center min-h-screen p-6">
-        <div
-            class="w-full max-w-md space-y-8 bg-base-200 p-8 rounded-2xl shadow-xl"
-        >
+        <div class="w-full max-w-md space-y-8">
             <div class="text-center space-y-4">
                 <div class="flex justify-center">
                     <div class="p-4 bg-primary/10 rounded-full">
@@ -76,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Mail } from "lucide-vue-next";
 import { apiPost, apiGet } from "../services/apiClient";
@@ -118,7 +116,6 @@ const handleVerify = async () => {
         );
         addToast(t("auth.verify.success"), "success");
 
-        // Emit token for auto-login
         if (response.token) {
             emit("verified", response.token);
         } else {
@@ -145,4 +142,8 @@ const handleResend = async () => {
         isResending.value = false;
     }
 };
+
+onMounted(async () => {
+    await handleResend();
+});
 </script>
