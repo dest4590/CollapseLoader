@@ -369,29 +369,53 @@ onMounted(() => {
     })();
 
     listen("launch-client", async (event) => {
-        const clientId = Number(event.payload);
+        const { id, was_already_running } = event.payload as {
+            id: string;
+            was_already_running: boolean;
+        };
+        const clientId = Number(id);
 
         if (clientId) {
             const clients = await invoke<Client[]>("get_clients");
             const target = clients.find((c) => c.id === clientId);
-
-            addToast(
-                t("home.launching", { client: target?.name || "Client" }),
-                "info",
-                2000
-            );
 
             if (target) {
                 try {
                     const userToken =
                         localStorage.getItem("authToken") || "null";
 
+                    if (!target.meta.installed) {
+                        addToast(
+                            t("home.starting_download", { name: target.name }),
+                            "info",
+                            3000
+                        );
+                        await invoke("download_client_only", {
+                            id: target.id,
+                        });
+                        target.meta.installed = true;
+                    }
+
+                    addToast(
+                        t("home.launching", { client: target.name }),
+                        "info",
+                        2000
+                    );
+
                     await invoke("launch_client", {
                         id: target.id,
                         userToken,
                     });
+
+                    if (!was_already_running) {
+                        const { getCurrentWindow } = await import(
+                            "@tauri-apps/api/window"
+                        );
+                        await getCurrentWindow().minimize();
+                    }
                 } catch (e) {
                     console.error("Cannot start client from deeplink", e);
+                    addToast(String(e), "error", 5000);
                 }
             }
         }

@@ -5,6 +5,7 @@ use crate::core::utils::discord_rpc;
 use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
@@ -76,15 +77,21 @@ pub fn handle_startup_error(error: &StartupError) {
     error.show_and_exit();
 }
 
-fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.set_focus();
-        let _ = window.show();
+fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running: bool) {
+    if was_already_running {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.set_focus();
+            let _ = window.show();
+        }
     }
 
-    log_debug!("Handling deep link URL: {}", url);
+    log_debug!(
+        "Handling deep link URL: {} (already running: {})",
+        url,
+        was_already_running
+    );
 
-    if !should_handle_deep_link(&url) {
+    if !should_handle_deep_link(&url) && was_already_running {
         log_debug!("Deep link already handled, skipping: {}", url);
         return;
     }
@@ -93,7 +100,7 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
         if let Some(query_part) = url.split("?").nth(1) {
             let mut code = String::new();
             let mut email = String::new();
-            
+
             for pair in query_part.split('&') {
                 if let Some((key, value)) = pair.split_once('=') {
                     match key {
@@ -103,10 +110,14 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
                     }
                 }
             }
-            
+
             if !code.is_empty() {
                 log_debug!("Emitting verify-email event for code: {}", code);
-                emit_to_main_window(app, "verify-email", serde_json::json!({ "code": code, "email": email }));
+                emit_to_main_window(
+                    app,
+                    "verify-email",
+                    serde_json::json!({ "code": code, "email": email }),
+                );
                 return;
             }
         }
@@ -115,21 +126,32 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String) {
     if let Some(client_name) = url.split("client=").nth(1) {
         let client_name = client_name.split('&').next().unwrap_or("");
         log_debug!("Launching client from deep link: {}", client_name);
-        emit_to_main_window(app, "launch-client", client_name);
+        emit_to_main_window(
+            app,
+            "launch-client",
+            serde_json::json!({
+                "id": client_name,
+                "was_already_running": was_already_running
+            }),
+        );
     }
 }
 
 fn should_handle_deep_link(url: &str) -> bool {
-    static LAST_HANDLED_URL: OnceLock<Mutex<Option<String>>> = OnceLock::new();
-    let last_url = LAST_HANDLED_URL.get_or_init(|| Mutex::new(None));
-    let mut guard = last_url.lock().unwrap();
+    static LAST_HANDLED: OnceLock<Mutex<Option<(String, Instant)>>> = OnceLock::new();
+    let last = LAST_HANDLED.get_or_init(|| Mutex::new(None));
+    let mut guard = last.lock().unwrap();
     let normalized = url.trim().to_string();
 
-    if guard.as_ref() == Some(&normalized) {
-        return false;
+    if let Some((ref prev, prev_time)) = guard.as_ref() {
+        if prev == &normalized {
+            if prev_time.elapsed() < Duration::from_secs(2) {
+                return false;
+            }
+        }
     }
 
-    *guard = Some(normalized);
+    *guard = Some((normalized, Instant::now()));
     true
 }
 
@@ -143,8 +165,8 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-            if args.len() > 1 {
-                handle_deep_link_url(app, args[1].clone());
+            if let Some(url) = args.iter().find(|a| a.starts_with("collapseloader://")) {
+                handle_deep_link_url(app, url.clone(), true);
             }
         }))
         .manage(AppState::new(Arc::new(
@@ -235,7 +257,7 @@ pub fn run() {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let handle = app.handle().clone();
                 app.deep_link().on_open_url(move |event| {
-                    handle_deep_link_url(&handle, event.urls()[0].to_string());
+                    handle_deep_link_url(&handle, event.urls()[0].to_string(), true);
                 });
                 app.deep_link().register_all()?;
             }
@@ -246,7 +268,7 @@ pub fn run() {
                 let url_clone = url.clone();
                 spawn(async move {
                     tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
-                    handle_deep_link_url(&handle, url_clone);
+                    handle_deep_link_url(&handle, url_clone, false);
                 });
             }
 
