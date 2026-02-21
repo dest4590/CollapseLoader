@@ -10,6 +10,8 @@ pub fn get_jps_path() -> std::path::PathBuf {
     for folder in JDK_FOLDERS.iter() {
         let path = DATA
             .root_dir
+            .lock()
+            .unwrap()
             .join(folder)
             .join("bin")
             .join("jps".to_owned() + FILE_EXTENSION);
@@ -19,6 +21,8 @@ pub fn get_jps_path() -> std::path::PathBuf {
     }
 
     DATA.root_dir
+        .lock()
+        .unwrap()
         .join(JDK21_FOLDER)
         .join("bin")
         .join("jps".to_owned() + FILE_EXTENSION)

@@ -1,39 +1,26 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, triggerRef, watch } from 'vue';
 import {
-    AlertTriangle,
-    Camera,
-    ChevronLeft,
-    ChevronRight,
-    Download,
-    ExternalLink,
-    Info,
-    MessageSquare,
-    RefreshCw,
-    ScrollText,
-    Send,
-    Star,
-    StopCircle,
-    Terminal,
-    Trash2,
-    X,
-    ZoomIn,
-    ZoomOut,
-} from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
-import gsap from 'gsap';
-import type { Client, ClientComment, ClientDetails, InstallProgress } from '../../../types/ui';
-import InsecureClientWarningModal from '../../modals/clients/InsecureClientWarningModal.vue';
-import ClientInfo from './ClientInfo.vue';
-import { openUrl } from '@tauri-apps/plugin-opener';
-import { invoke } from '@tauri-apps/api/core';
-import { useModal } from '../../../services/modalService';
-import { userService } from '../../../services/userService';
-import { apiDelete, apiGet, apiPost } from '../../../services/apiClient';
-import { formatDate } from '../../../utils/utils';
-import { resolveApiAssetUrl } from '../../../utils/url';
-import { ensureApiUrl } from '../../../config';
-import { useUser } from '../../../composables/useUser';
+    computed,
+    nextTick,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
+    watch,
+} from "vue";
+import { AlertTriangle, Star, X } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
+import gsap from "gsap";
+import type { Client, ClientDetails, InstallProgress } from "../../../types/ui";
+import InsecureClientWarningModal from "../../modals/clients/InsecureClientWarningModal.vue";
+import ClientInfo from "./ClientInfo.vue";
+import ScreenshotViewer from "./ScreenshotViewer.vue";
+import ClientCardActions from "./ClientCardActions.vue";
+import ClientCardDetails from "./ClientCardDetails.vue";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { apiGet } from "../../../services/apiClient";
+import { useModal } from "../../../services/modalService";
+import { useUser } from "../../../composables/useUser";
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();
@@ -55,13 +42,13 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits([
-    'launch',
-    'download',
-    'open-log-viewer',
-    'show-context-menu',
-    'client-click',
-    'expanded-state-changed',
-    'show-user-profile',
+    "launch",
+    "download",
+    "open-log-viewer",
+    "show-context-menu",
+    "client-click",
+    "expanded-state-changed",
+    "show-user-profile",
 ]);
 
 const isExpanded = ref(false);
@@ -72,59 +59,23 @@ const cardRef = shallowRef<HTMLElement | null>(null);
 const placeholder = shallowRef<HTMLElement | null>(null);
 const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
-const activeTab = ref<'info' | 'screenshots' | 'comments'>('info');
+const activeTab = ref<"info" | "screenshots" | "comments">("info");
 
-const comments = shallowRef<ClientComment[]>([]);
-const isLoadingComments = ref(false);
-const newCommentText = ref('');
-const isPostingComment = ref(false);
-type CurrentUser = { username: string };
-const currentUser = shallowRef<CurrentUser | null>(null);
 const myRating = ref<number | null>(null);
-const isSubmittingRating = ref(false);
-const isLoadingMyRating = ref(false);
+const ratingAvgOverride = ref<number | null>(null);
+const ratingCountOverride = ref<number | null>(null);
 
 const { isAuthenticated } = useUser();
 
-const MAX_COMMENT_LENGTH = 500;
-const canComment = computed(() => !!currentUser.value);
-const canRate = computed(() => isAuthenticated.value);
+let expansionLock = false;
+let inTransitionTimeout: number | null = null;
 
-const getRatingEndpoint = () => {
-    return `/clients/${props.client.id}/rating`;
-};
-
-const fetchMyRating = async () => {
-    if (!canRate.value) return;
-    if (isLoadingMyRating.value) return;
-    if (myRating.value !== null) return;
-
-    isLoadingMyRating.value = true;
-    try {
-        await ensureApiUrl();
-
-        const data = await apiGet<{ my_rating?: number | null }>(getRatingEndpoint());
-        if (typeof data?.my_rating === 'number') {
-            myRating.value = data.my_rating;
-        }
-    } catch (error) {
-        console.warn('Failed to fetch my rating:', error);
-    } finally {
-        isLoadingMyRating.value = false;
-    }
-};
-
-const previousTab = ref<'info' | 'screenshots' | 'comments'>('info');
-const slideDirection = ref<'left' | 'right'>('right');
+const previousTab = ref<"info" | "screenshots" | "comments">("info");
+const slideDirection = ref<"left" | "right">("right");
 
 const isScreenshotViewerOpen = ref(false);
 const currentScreenshotIndex = ref(0);
-const isImageLoading = ref(false);
-const imageTransitionDirection = ref<'next' | 'prev'>('next');
-const imageRef = shallowRef<HTMLImageElement | null>(null);
-const imageContainerRef = shallowRef<HTMLElement | null>(null);
 const backdropRef = shallowRef<HTMLElement | null>(null);
-const actionsRef = shallowRef<HTMLElement | null>(null);
 const favoriteRef = shallowRef<HTMLElement | null>(null);
 
 const scrollContainer = shallowRef<HTMLElement | null>(null);
@@ -191,9 +142,9 @@ const startScrollbarDrag = (event: MouseEvent) => {
     dragStartY.value = event.clientY;
     dragStartTop.value = thumbTop.value;
 
-    document.addEventListener('mousemove', onScrollbarDrag);
-    document.addEventListener('mouseup', stopScrollbarDrag);
-    document.body.style.userSelect = 'none';
+    document.addEventListener("mousemove", onScrollbarDrag);
+    document.addEventListener("mouseup", stopScrollbarDrag);
+    document.body.style.userSelect = "none";
 };
 
 const onScrollbarDrag = (event: MouseEvent) => {
@@ -216,166 +167,59 @@ const onScrollbarDrag = (event: MouseEvent) => {
 
 const stopScrollbarDrag = () => {
     isDraggingScrollbar.value = false;
-    document.removeEventListener('mousemove', onScrollbarDrag);
-    document.removeEventListener('mouseup', stopScrollbarDrag);
-    document.body.style.userSelect = '';
+    document.removeEventListener("mousemove", onScrollbarDrag);
+    document.removeEventListener("mouseup", stopScrollbarDrag);
+    document.body.style.userSelect = "";
 };
 
-const fetchComments = async () => {
-    if (isLoadingComments.value) return;
-    isLoadingComments.value = true;
-    try {
-        comments.value = await invoke<ClientComment[]>('get_client_comments', { clientId: props.client.id });
-    } catch (error) {
-        console.error('Failed to fetch comments:', error);
-    } finally {
-        isLoadingComments.value = false;
-    }
-};
-
-const postComment = async () => {
-    const trimmed = newCommentText.value.trim();
-    if (!trimmed || isPostingComment.value) return;
-
-    if (trimmed.length > MAX_COMMENT_LENGTH) {
-        newCommentText.value = trimmed.slice(0, MAX_COMMENT_LENGTH);
-        return;
-    }
-
-    isPostingComment.value = true;
-    try {
-        const token = localStorage.getItem('authToken');
-        if (!token) return;
-
-        const newComment = await invoke<ClientComment>('add_client_comment', {
-            clientId: props.client.id,
-            content: trimmed,
-            userToken: token
-        });
-
-        comments.value.unshift(newComment);
-        newCommentText.value = '';
-
-        if (clientDetails.value) {
-            clientDetails.value = {
-                ...clientDetails.value,
-                comments_count: (clientDetails.value.comments_count || 0) + 1
-            };
-        }
-    } catch (error) {
-        console.error('Failed to post comment:', error);
-    } finally {
-        isPostingComment.value = false;
-    }
-};
-
-const deleteComment = async (commentId: number) => {
-    try {
-        const token = localStorage.getItem('authToken');
-        if (!token) return;
-
-        await invoke('delete_client_comment', {
-            clientId: props.client.id,
-            commentId: commentId,
-            userToken: token
-        });
-
-        comments.value = comments.value.filter(c => c.id !== commentId);
-
-        if (clientDetails.value && clientDetails.value.comments_count) {
-            clientDetails.value = {
-                ...clientDetails.value,
-                comments_count: Math.max(0, clientDetails.value.comments_count - 1)
-            };
-        }
-    } catch (error) {
-        console.error('Failed to delete comment:', error);
-    }
-};
-
-const openProfileFromComment = async (comment: ClientComment) => {
-    try {
-        emit('show-user-profile', comment.user);
-    } catch (error) {
-        console.error('Failed to open user profile from client comment:', error);
-    }
-};
-
-const loadCurrentUser = async () => {
-    try {
-        const info = await userService.initializeUser();
-        if (info && info.user_info && info.user_info.username) {
-            currentUser.value = { username: info.user_info.username };
+watch(
+    isExpanded,
+    (newVal) => {
+        if (newVal) {
+            document.body.style.overflow = "hidden";
+            nextTick(() => {
+                updateScrollbar();
+            });
         } else {
-            currentUser.value = null;
+            document.body.style.overflow = "";
         }
-    } catch (e) {
-        console.error("Failed to load user info", e);
-    }
-};
+    },
+    { flush: "post" }
+);
 
-watch(isExpanded, (newVal) => {
-    if (newVal) {
-        loadCurrentUser();
-        fetchMyRating();
-        document.body.style.overflow = 'hidden';
-        nextTick(() => {
-            updateScrollbar();
-        });
-    } else {
-        document.body.style.overflow = '';
-    }
-}, { flush: 'post' });
+watch(
+    clientDetails,
+    () => {
+        if (isExpanded.value) {
+            nextTick(() => {
+                updateScrollbar();
+            });
+        }
+    },
+    { flush: "post" }
+);
 
-watch(canRate, (newVal) => {
-    if (newVal && isExpanded.value) {
-        fetchMyRating();
-    }
-}, { flush: 'post' });
+const tabOrder = ["info", "screenshots", "comments"] as const;
 
-watch(clientDetails, () => {
-    if (isExpanded.value) {
-        nextTick(() => {
-            updateScrollbar();
-        });
-    }
-}, { flush: 'post' });
-
-const zoomScale = ref(1);
-const zoomPosition = ref({ x: 0, y: 0 });
-const isZoomed = ref(false);
-const isDragging = ref(false);
-const dragStart = ref({ x: 0, y: 0 });
-const hasDragged = ref(false);
-const maxZoom = 5;
-const minZoom = 1;
-const zoomStep = 0.5;
-
-const tabOrder = ['info', 'screenshots', 'comments'] as const;
-
-const changeTab = (newTab: 'info' | 'screenshots' | 'comments') => {
+const changeTab = (newTab: "info" | "screenshots" | "comments") => {
     const currentIndex = tabOrder.indexOf(activeTab.value);
     const newIndex = tabOrder.indexOf(newTab);
 
-    slideDirection.value = newIndex > currentIndex ? 'right' : 'left';
+    slideDirection.value = newIndex > currentIndex ? "right" : "left";
     previousTab.value = activeTab.value;
     activeTab.value = newTab;
-
-    if (newTab === 'comments') {
-        fetchComments();
-    }
 };
 
 const handleLaunchClick = () => {
-    emit('launch', props.client);
+    emit("launch", props.client);
 };
 
 const handleDownloadClick = () => {
-    emit('download', props.client.id);
+    emit("download", props.client.id);
 };
 
 const handleOpenLogViewer = () => {
-    emit('open-log-viewer', props.client);
+    emit("open-log-viewer", props.client);
 };
 
 const handleCardClick = (event: MouseEvent) => {
@@ -386,13 +230,17 @@ const handleCardClick = (event: MouseEvent) => {
     }
 
     if (props.isMultiSelectMode) {
-        emit('client-click', props.client, event);
+        emit("client-click", props.client, event);
         return;
     }
 
     if (!props.isSelected && !props.client.meta.is_custom) {
         const target = event.target as HTMLElement;
-        if (target.closest('button, a, .progress-bar-container, input, select, textarea, div[class*="tooltip"]')) {
+        if (
+            target.closest(
+                'button, a, .progress-bar-container, input, select, textarea, div[class*="tooltip"]'
+            )
+        ) {
             return;
         }
         expandCard();
@@ -400,20 +248,20 @@ const handleCardClick = (event: MouseEvent) => {
 };
 
 const handleShowContextMenu = (event: MouseEvent) => {
-    emit('show-context-menu', event, props.client);
+    emit("show-context-menu", event, props.client);
 };
 
 const showInsecureWarning = () => {
     showModal(
-      `insecure-warning-${props.client.id}`,
-      InsecureClientWarningModal,
-      {
-          title: t('modals.insecure_client_warning.modal_title'),
-      },
-      { client: props.client, infoVariant: true },
-      {
-          close: () => hideModal(`insecure-warning-${props.client.id}`),
-      }
+        `insecure-warning-${props.client.id}`,
+        InsecureClientWarningModal,
+        {
+            title: t("modals.insecure_client_warning.modal_title"),
+        },
+        { client: props.client, infoVariant: true },
+        {
+            close: () => hideModal(`insecure-warning-${props.client.id}`),
+        }
     );
 };
 
@@ -422,116 +270,58 @@ const clientIsInstalling = computed(() => !!props.isClientInstalling);
 const currentInstallStatus = computed(() => props.installationStatus);
 
 const ratingAvg = computed(() => {
+    if (ratingAvgOverride.value !== null) {
+        return ratingAvgOverride.value;
+    }
     if (!isExpanded.value) {
         const avg = props.client.rating_avg;
-        return typeof avg === 'number' ? avg : null;
+        return typeof avg === "number" ? avg : null;
     }
     const avg = clientDetails.value?.rating_avg ?? props.client.rating_avg;
-    return typeof avg === 'number' ? avg : null;
+    return typeof avg === "number" ? avg : null;
 });
 
 const ratingCount = computed(() => {
+    if (ratingCountOverride.value !== null) {
+        return ratingCountOverride.value;
+    }
     if (!isExpanded.value) {
         const count = props.client.rating_count;
-        return typeof count === 'number' ? count : 0;
+        return typeof count === "number" ? count : 0;
     }
-    const count = clientDetails.value?.rating_count ?? props.client.rating_count;
-    return typeof count === 'number' ? count : 0;
+    const count =
+        clientDetails.value?.rating_count ?? props.client.rating_count;
+    return typeof count === "number" ? count : 0;
 });
-
-const ratingRounded = computed(() => {
-    const avg = ratingAvg.value;
-    if (avg === null) return null;
-    return Math.round(avg * 2) / 2;
-});
-
-const handleRatingClick = async (value: number) => {
-    if (isSubmittingRating.value) return;
-    if (!canRate.value) return;
-
-    if (myRating.value === value) {
-        await removeRating();
-        return;
-    }
-
-    await submitRating(value);
-};
-
-const submitRating = async (value: number) => {
-    if (isSubmittingRating.value) return;
-    if (!canRate.value) return;
-
-    const previousRating = myRating.value;
-    myRating.value = value;
-
-    isSubmittingRating.value = true;
-    try {
-        await ensureApiUrl();
-
-        const data = await apiPost<{
-            rating_avg: number | null;
-            rating_count: number;
-            my_rating?: number | null
-        }>(getRatingEndpoint(), { rating: value });
-
-        if (typeof data?.my_rating === 'number') {
-            myRating.value = data.my_rating;
-        } else {
-            myRating.value = value;
-        }
-
-        if (clientDetails.value) {
-            clientDetails.value = {
-                ...clientDetails.value,
-                rating_avg: typeof data?.rating_avg === 'number' || data?.rating_avg === null ? data.rating_avg : clientDetails.value.rating_avg,
-                rating_count: typeof data?.rating_count === 'number' ? data.rating_count : clientDetails.value.rating_count,
-            };
-            triggerRef(clientDetails);
-        }
-    } catch (error) {
-        console.error('Failed to submit rating:', error);
-        myRating.value = previousRating;
-    } finally {
-        isSubmittingRating.value = false;
-    }
-};
-
-const removeRating = async () => {
-    if (isSubmittingRating.value) return;
-    if (!canRate.value) return;
-    if (myRating.value === null) return;
-
-    const previousRating = myRating.value;
-    myRating.value = null;
-
-    isSubmittingRating.value = true;
-    try {
-        await ensureApiUrl();
-
-        await apiDelete(getRatingEndpoint());
-
-        myRating.value = null;
-    } catch (error) {
-        console.error('Failed to remove rating:', error);
-        myRating.value = previousRating;
-    } finally {
-        isSubmittingRating.value = false;
-    }
-};
-
 
 const expandCard = async () => {
     const card = cardRef.value;
-    if (!card || isAnimating.value) return;
+    if (!card || isAnimating.value || isCollapsing.value || inTransition.value)
+        return;
     if (props.isAnyCardExpanded) return;
     if (props.client.meta.is_custom) return;
+
+    if (expansionLock) return;
+    expansionLock = true;
+
+    isAnimating.value = true;
 
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
         try {
-            clientDetails.value = await invoke<ClientDetails>('get_client_details', { clientId: props.client.id });
+            clientDetails.value = await apiGet<ClientDetails>(
+                `/clients/${props.client.id}/detailed`
+            );
         } catch (error) {
-            console.error('Failed to fetch client details:', error);
+            console.error("Failed to fetch client details:", error);
+            if (inTransitionTimeout !== null) {
+                clearTimeout(inTransitionTimeout);
+                inTransitionTimeout = null;
+            }
+            inTransition.value = false;
+            isAnimating.value = false;
+            expansionLock = false;
+            return;
         } finally {
             isLoadingDetails.value = false;
         }
@@ -547,42 +337,58 @@ const expandCard = async () => {
     const centerX = (viewportWidth - modalWidth) / 2;
     const centerY = (viewportHeight - modalHeight) / 2;
 
-    isAnimating.value = true;
-    emit('expanded-state-changed', props.client.id, true);
+    emit("expanded-state-changed", props.client.id, true);
 
-    placeholder.value = document.createElement('div');
+    placeholder.value = document.createElement("div");
     placeholder.value.style.width = `${card.offsetWidth}px`;
     placeholder.value.style.height = `${card.offsetHeight}px`;
     placeholder.value.style.margin = getComputedStyle(card).margin;
-    placeholder.value.style.visibility = 'hidden';
+    placeholder.value.style.visibility = "hidden";
     card.parentNode?.insertBefore(placeholder.value, card);
 
-    const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
+    const detailsContainer = card.querySelector(
+        ".client-details"
+    ) as HTMLElement | null;
     if (detailsContainer) {
-        detailsContainer.style.display = 'block';
-        gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
+        detailsContainer.style.display = "block";
+        gsap.set(detailsContainer, {
+            opacity: 0,
+            maxHeight: "0px",
+            overflow: "hidden",
+        });
     }
 
-    card.style.position = 'fixed';
+    card.style.position = "fixed";
     card.style.top = `${rect.top}px`;
     card.style.left = `${rect.left}px`;
     card.style.width = `${rect.width}px`;
     card.style.height = `${rect.height}px`;
-    card.style.zIndex = '1000';
-    card.style.overflow = 'hidden';
+    card.style.zIndex = "1000";
+    card.style.overflow = "hidden";
 
-    const backdrop = document.createElement('div');
+    document.body.appendChild(card);
+
+    const fixedRect = card.getBoundingClientRect();
+    const offsetX = fixedRect.left - rect.left;
+    const offsetY = fixedRect.top - rect.top;
+
+    if (offsetX !== 0 || offsetY !== 0) {
+        card.style.left = `${rect.left - offsetX}px`;
+        card.style.top = `${rect.top - offsetY}px`;
+    }
+
+    const backdrop = document.createElement("div");
     Object.assign(backdrop.style, {
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0)',
-        backdropFilter: 'blur(0px)',
-        zIndex: '999',
-        pointerEvents: 'auto',
-        transition: 'background-color 0.5s ease, backdrop-filter 0.5s ease'
+        position: "fixed",
+        top: "0",
+        left: "0",
+        width: "100vw",
+        height: "100vh",
+        backgroundColor: "rgba(0, 0, 0, 0)",
+        backdropFilter: "blur(0px)",
+        zIndex: "999",
+        pointerEvents: "auto",
+        transition: "background-color 0.5s ease, backdrop-filter 0.5s ease",
     });
     document.body.appendChild(backdrop);
     backdropRef.value = backdrop;
@@ -590,59 +396,65 @@ const expandCard = async () => {
     backdrop.offsetHeight;
 
     Object.assign(backdrop.style, {
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)'
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
+        backdropFilter: "blur(4px)",
     });
 
-    backdrop.addEventListener('click', collapseCard);
+    backdrop.addEventListener("click", collapseCard);
 
     const tl = gsap.timeline({
         onComplete: () => {
             isExpanded.value = true;
-        }
+            isAnimating.value = false;
+        },
     });
 
-    if (actionsRef.value) {
-        tl.to(actionsRef.value, {
-            autoAlpha: 0,
-            height: 0,
-            marginTop: 0,
-            duration: 0.3,
-            ease: 'power2.out'
-        }, 0);
-    }
     if (favoriteRef.value) {
-        tl.to(favoriteRef.value, {
-            autoAlpha: 0,
-            duration: 0.3,
-            ease: 'power2.out'
-        }, 0);
+        tl.to(
+            favoriteRef.value,
+            {
+                autoAlpha: 0,
+                duration: 0.3,
+                ease: "power2.out",
+            },
+            0
+        );
     }
 
-    tl.to(card, {
-        duration: 0.5,
-        top: centerY,
-        left: centerX,
-        width: modalWidth,
-        height: modalHeight,
-        borderRadius: '1rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        ease: 'back.out(0.6)',
-    }, 0);
+    tl.to(
+        card,
+        {
+            duration: 0.5,
+            top: centerY - offsetY,
+            left: centerX - offsetX,
+            width: modalWidth,
+            height: modalHeight,
+            borderRadius: "1rem",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+            ease: "back.out(0.6)",
+        },
+        0
+    );
 
     if (detailsContainer) {
-        tl.to(detailsContainer, {
-            opacity: 1,
-            maxHeight: () => detailsContainer.scrollHeight + 'px',
-            duration: 0.4,
-            ease: 'power2.out',
-        }, "-=0.3");
-
-
+        tl.to(
+            detailsContainer,
+            {
+                opacity: 1,
+                maxHeight: () => detailsContainer.scrollHeight + "px",
+                duration: 0.4,
+                ease: "power2.out",
+            },
+            "-=0.3"
+        );
     }
 
-    setTimeout(() => {
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+    }
+    inTransitionTimeout = window.setTimeout(() => {
         inTransition.value = true;
+        inTransitionTimeout = null;
     }, 300);
 };
 
@@ -650,21 +462,30 @@ const collapseCard = () => {
     const card = cardRef.value;
     if (!card || !placeholder.value || isCollapsing.value) return;
 
+    ratingAvgOverride.value = null;
+    ratingCountOverride.value = null;
+
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+        inTransitionTimeout = null;
+    }
     inTransition.value = false;
     isCollapsing.value = true;
     isAnimating.value = true;
 
     const placeholderRect = placeholder.value.getBoundingClientRect();
-    if (card) card.style.overflow = 'hidden';
+    if (card) card.style.overflow = "hidden";
 
-    const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
+    const detailsContainer = card.querySelector(
+        ".client-details"
+    ) as HTMLElement | null;
 
     if (backdropRef.value) {
         const backdrop = backdropRef.value;
-        backdrop.removeEventListener('click', collapseCard);
+        backdrop.removeEventListener("click", collapseCard);
         Object.assign(backdrop.style, {
-            backgroundColor: 'rgba(0, 0, 0, 0)',
-            backdropFilter: 'blur(0px)'
+            backgroundColor: "rgba(0, 0, 0, 0)",
+            backdropFilter: "blur(0px)",
         });
 
         setTimeout(() => {
@@ -675,36 +496,55 @@ const collapseCard = () => {
         backdropRef.value = null;
     }
 
+    const currentRect = card.getBoundingClientRect();
+    const styleTop = parseFloat(card.style.top);
+    const styleLeft = parseFloat(card.style.left);
+    const offsetX = currentRect.left - styleLeft;
+    const offsetY = currentRect.top - styleTop;
+
     const tl = gsap.timeline({
         onComplete: () => {
             if (card) {
-                card.style.position = '';
-                card.style.top = '';
-                card.style.left = '';
-                card.style.width = '';
-                card.style.height = '';
-                card.style.zIndex = '';
-                card.style.boxShadow = '';
-                card.style.overflow = '';
-                card.style.borderRadius = '';
+                card.style.position = "";
+                card.style.top = "";
+                card.style.left = "";
+                card.style.width = "";
+                card.style.height = "";
+                card.style.zIndex = "";
+                card.style.boxShadow = "";
+                card.style.overflow = "";
+                card.style.borderRadius = "";
+
+                if (placeholder.value && placeholder.value.parentNode) {
+                    placeholder.value.parentNode.insertBefore(
+                        card,
+                        placeholder.value
+                    );
+                }
             }
 
             placeholder.value?.parentNode?.removeChild(placeholder.value);
             placeholder.value = null;
 
             if (detailsContainer) {
-                detailsContainer.style.display = 'none';
-                gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
+                detailsContainer.style.display = "none";
+                gsap.set(detailsContainer, {
+                    opacity: 0,
+                    maxHeight: "0px",
+                    overflow: "hidden",
+                });
             }
             isExpanded.value = false;
             isAnimating.value = false;
             isCollapsing.value = false;
-            emit('expanded-state-changed', props.client.id, false);
-        }
+            expansionLock = false;
+            emit("expanded-state-changed", props.client.id, false);
+        },
     });
 
     if (detailsContainer) {
-        const extraInfoElements = detailsContainer.querySelectorAll('.extra-info > *');
+        const extraInfoElements =
+            detailsContainer.querySelectorAll(".extra-info > *");
         if (extraInfoElements.length > 0) {
             tl.to(extraInfoElements, {
                 opacity: 0,
@@ -712,62 +552,60 @@ const collapseCard = () => {
                 duration: 0.2,
                 stagger: {
                     each: 0.04,
-                    from: "start"
+                    from: "start",
                 },
-                ease: 'power1.in',
+                ease: "power1.in",
             });
         }
 
-        tl.to(detailsContainer, {
-            maxHeight: '0px',
-            opacity: 0,
-            duration: 0.25,
-            ease: 'power2.in',
-            onStart: () => {
-                if (detailsContainer) detailsContainer.style.overflow = 'hidden';
-            }
-        }, extraInfoElements.length > 0 ? "-=0.1" : ">");
+        tl.to(
+            detailsContainer,
+            {
+                maxHeight: "0px",
+                opacity: 0,
+                duration: 0.25,
+                ease: "power2.in",
+                onStart: () => {
+                    if (detailsContainer)
+                        detailsContainer.style.overflow = "hidden";
+                },
+            },
+            extraInfoElements.length > 0 ? "-=0.1" : ">"
+        );
     }
 
-    tl.to(card, {
-        duration: 0.5,
-        top: placeholderRect.top,
-        left: placeholderRect.left,
-        width: placeholderRect.width,
-        height: placeholderRect.height,
-        borderRadius: '0.5rem',
-        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        ease: 'power3.inOut',
-    }, detailsContainer ? "-=0.2" : ">");
+    tl.to(
+        card,
+        {
+            duration: 0.5,
+            top: placeholderRect.top - offsetY,
+            left: placeholderRect.left - offsetX,
+            width: placeholderRect.width,
+            height: placeholderRect.height,
+            borderRadius: "0.5rem",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            ease: "power3.inOut",
+        },
+        detailsContainer ? "-=0.2" : ">"
+    );
 
-    if (actionsRef.value) {
-        tl.to(actionsRef.value, {
-            autoAlpha: 1,
-            height: 'auto',
-            marginTop: '0.5rem',
-            duration: 0.3,
-            ease: 'power2.out',
-            clearProps: 'all'
-        }, "-=0.3");
-    }
     if (favoriteRef.value) {
-        tl.to(favoriteRef.value, {
-            autoAlpha: 1,
-            duration: 0.3,
-            ease: 'power2.out',
-            clearProps: 'all'
-        }, "-=0.3");
+        tl.to(
+            favoriteRef.value,
+            {
+                autoAlpha: 1,
+                duration: 0.3,
+                ease: "power2.out",
+                clearProps: "all",
+            },
+            "-=0.3"
+        );
     }
 };
 
 const openScreenshotViewer = (index: number) => {
     currentScreenshotIndex.value = index;
     isScreenshotViewerOpen.value = true;
-    isImageLoading.value = true;
-    imageTransitionDirection.value = 'next';
-    resetZoom();
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('keydown', handleScreenshotKeydown);
 };
 
 const handleScreenshotClick = (event: MouseEvent, index: number) => {
@@ -776,268 +614,8 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
     openScreenshotViewer(index);
 };
 
-const closeScreenshotViewer = () => {
-    isScreenshotViewerOpen.value = false;
-    isImageLoading.value = false;
-    resetZoom();
-    document.body.style.overflow = '';
-    document.removeEventListener('keydown', handleScreenshotKeydown);
-};
-
-const handleScreenshotViewerClose = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    closeScreenshotViewer();
-};
-
-const nextScreenshot = () => {
-    if (clientDetails.value?.screenshot_urls && currentScreenshotIndex.value < clientDetails.value.screenshot_urls.length - 1) {
-        imageTransitionDirection.value = 'next';
-        isImageLoading.value = true;
-        currentScreenshotIndex.value = currentScreenshotIndex.value + 1;
-        resetZoom();
-    } else if (clientDetails.value?.screenshot_urls) {
-        imageTransitionDirection.value = 'next';
-        isImageLoading.value = true;
-        currentScreenshotIndex.value = 0;
-        resetZoom();
-    }
-};
-
-const prevScreenshot = () => {
-    if (currentScreenshotIndex.value > 0) {
-        imageTransitionDirection.value = 'prev';
-        isImageLoading.value = true;
-        currentScreenshotIndex.value = currentScreenshotIndex.value - 1;
-        resetZoom();
-    } else if (clientDetails.value?.screenshot_urls) {
-        imageTransitionDirection.value = 'prev';
-        isImageLoading.value = true;
-        currentScreenshotIndex.value = clientDetails.value.screenshot_urls.length - 1;
-        resetZoom();
-    }
-};
-
-const handleImageLoad = () => {
-    isImageLoading.value = false;
-};
-
-const handleImageError = () => {
-    isImageLoading.value = false;
-    closeScreenshotViewer();
-};
-
-const handleScreenshotKeydown = (event: KeyboardEvent) => {
-    switch (event.key) {
-        case 'Escape':
-            if (isZoomed.value) {
-                resetZoom();
-            } else {
-                closeScreenshotViewer();
-            }
-            break;
-        case 'ArrowLeft':
-            if (!isZoomed.value) {
-                prevScreenshot();
-            }
-            break;
-        case 'ArrowRight':
-            if (!isZoomed.value) {
-                nextScreenshot();
-            }
-            break;
-        case '+':
-        case '=':
-            zoomIn();
-            break;
-        case '-':
-            zoomOut();
-            break;
-        case '0':
-            resetZoom();
-            break;
-    }
-};
-
-
-const resetZoom = () => {
-    zoomScale.value = 1;
-    zoomPosition.value = { x: 0, y: 0 };
-    isZoomed.value = false;
-    isDragging.value = false;
-};
-
-const zoomToPoint = (event: MouseEvent) => {
-    if (!imageRef.value || !imageContainerRef.value) return;
-
-    const rect = imageContainerRef.value.getBoundingClientRect();
-
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const clickX = event.clientX - centerX;
-    const clickY = event.clientY - centerY;
-
-    const newScale = Math.min(zoomScale.value + zoomStep, maxZoom);
-
-    if (newScale > 1) {
-        const scaleFactor = newScale / zoomScale.value;
-
-        zoomPosition.value = {
-            x: (zoomPosition.value.x - clickX) * scaleFactor + clickX,
-            y: (zoomPosition.value.y - clickY) * scaleFactor + clickY
-        };
-
-        zoomScale.value = newScale;
-        isZoomed.value = true;
-
-        setTimeout(() => constrainPosition(), 0);
-    }
-};
-
-const zoomIn = (event?: MouseEvent) => {
-    if (zoomScale.value >= maxZoom) return;
-
-    if (event && imageRef.value) {
-        zoomToPoint(event);
-    } else {
-        const newScale = Math.min(zoomScale.value + zoomStep, maxZoom);
-        zoomScale.value = newScale;
-        isZoomed.value = newScale > 1;
-
-        if (isZoomed.value) {
-            setTimeout(() => constrainPosition(), 0);
-        }
-    }
-};
-
-const zoomOut = () => {
-    const newScale = Math.max(zoomScale.value - zoomStep, minZoom);
-
-    if (newScale <= 1) {
-        resetZoom();
-    } else {
-        zoomScale.value = newScale;
-        setTimeout(() => constrainPosition(), 0);
-    }
-};
-
-const handleWheel = (event: WheelEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (event.deltaY < 0) {
-        zoomIn(event);
-    } else {
-        zoomOut();
-    }
-};
-
-const startDrag = (event: MouseEvent) => {
-    if (!isZoomed.value) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    isDragging.value = true;
-    hasDragged.value = false;
-    dragStart.value = {
-        x: event.clientX - zoomPosition.value.x,
-        y: event.clientY - zoomPosition.value.y
-    };
-
-    document.addEventListener('mousemove', handleDrag, { passive: false });
-    document.addEventListener('mouseup', stopDrag);
-
-    if (imageRef.value) {
-        imageRef.value.style.pointerEvents = 'none';
-    }
-};
-
-const handleDrag = (event: MouseEvent) => {
-    if (!isDragging.value) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    hasDragged.value = true;
-
-    zoomPosition.value = {
-        x: event.clientX - dragStart.value.x,
-        y: event.clientY - dragStart.value.y
-    };
-};
-
-const stopDrag = (event?: MouseEvent) => {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-
-    isDragging.value = false;
-    document.removeEventListener('mousemove', handleDrag);
-    document.removeEventListener('mouseup', stopDrag);
-
-    if (imageRef.value) {
-        imageRef.value.style.pointerEvents = '';
-    }
-
-    constrainPosition();
-
-    setTimeout(() => {
-        hasDragged.value = false;
-    }, 100);
-};
-
-const constrainPosition = () => {
-    if (!imageRef.value || !imageContainerRef.value || zoomScale.value <= 1) {
-        zoomPosition.value = { x: 0, y: 0 };
-        return;
-    }
-
-    const containerRect = imageContainerRef.value.getBoundingClientRect();
-    const imageRect = imageRef.value.getBoundingClientRect();
-
-    const scaledWidth = imageRect.width * zoomScale.value;
-    const scaledHeight = imageRect.height * zoomScale.value;
-
-    const maxX = Math.max(0, (scaledWidth - containerRect.width) / 2);
-    const maxY = Math.max(0, (scaledHeight - containerRect.height) / 2);
-
-    const constrainedPosition = {
-        x: Math.min(Math.max(zoomPosition.value.x, -maxX), maxX),
-        y: Math.min(Math.max(zoomPosition.value.y, -maxY), maxY)
-    };
-
-    if (constrainedPosition.x !== zoomPosition.value.x || constrainedPosition.y !== zoomPosition.value.y) {
-        zoomPosition.value = constrainedPosition;
-    }
-};
-
-const handleImageClick = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (hasDragged.value) return;
-
-    if (isZoomed.value) {
-        resetZoom();
-    } else {
-        zoomToPoint(event);
-    }
-};
-
-const handleViewerBackgroundClick = (event: MouseEvent) => {
-    if (isDragging.value || hasDragged.value) return;
-
-    const target = event.target as HTMLElement;
-    if (target === event.currentTarget) {
-        closeScreenshotViewer();
-    }
-};
-
 const handleCardKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && isExpanded.value && !isCollapsing.value) {
+    if (event.key === "Escape" && isExpanded.value && !isCollapsing.value) {
         collapseCard();
     }
 };
@@ -1046,15 +624,21 @@ const handleClientSourceLink = async (url: string) => {
     try {
         await openUrl(url);
     } catch (error) {
-        console.error('Failed to open URL:', error);
+        console.error("Failed to open URL:", error);
     }
 };
 
 onMounted(() => {
-    document.addEventListener('keydown', handleCardKeyDown);
+    document.addEventListener("keydown", handleCardKeyDown);
 });
 
 const cleanupExpandedCard = () => {
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+        inTransitionTimeout = null;
+    }
+    inTransition.value = false;
+
     if (!isExpanded.value || !cardRef.value) return;
 
     const card = cardRef.value;
@@ -1070,614 +654,213 @@ const cleanupExpandedCard = () => {
         backdropRef.value = null;
     }
 
-    card.style.position = '';
-    card.style.top = '';
-    card.style.left = '';
-    card.style.width = '';
-    card.style.height = '';
-    card.style.zIndex = '';
-    card.style.boxShadow = '';
-    card.style.overflow = '';
-    card.style.borderRadius = '';
+    card.style.position = "";
+    card.style.top = "";
+    card.style.left = "";
+    card.style.width = "";
+    card.style.height = "";
+    card.style.zIndex = "";
+    card.style.boxShadow = "";
+    card.style.overflow = "";
+    card.style.borderRadius = "";
 
-    const detailsContainer = card.querySelector('.client-details') as HTMLElement | null;
+    const detailsContainer = card.querySelector(
+        ".client-details"
+    ) as HTMLElement | null;
     if (detailsContainer) {
         gsap.killTweensOf(detailsContainer);
-        gsap.set(detailsContainer, { opacity: 0, maxHeight: '0px', overflow: 'hidden' });
-        const extraInfoElements = detailsContainer.querySelectorAll('.extra-info > *');
+        gsap.set(detailsContainer, {
+            opacity: 0,
+            maxHeight: "0px",
+            overflow: "hidden",
+        });
+        const extraInfoElements =
+            detailsContainer.querySelectorAll(".extra-info > *");
         gsap.killTweensOf(extraInfoElements);
         gsap.set(extraInfoElements, { opacity: 0, y: 20 });
     }
 
     isExpanded.value = false;
-    emit('expanded-state-changed', props.client.id, false);
-};
-
-const cleanupScreenshotViewer = () => {
-    if (!isScreenshotViewerOpen.value) return;
-    document.body.style.overflow = '';
-    document.removeEventListener('keydown', handleScreenshotKeydown);
+    expansionLock = false;
+    emit("expanded-state-changed", props.client.id, false);
 };
 
 onBeforeUnmount(() => {
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+        inTransitionTimeout = null;
+    }
     cleanupExpandedCard();
-    cleanupScreenshotViewer();
-    document.removeEventListener('keydown', handleCardKeyDown);
+    document.removeEventListener("keydown", handleCardKeyDown);
 });
 </script>
 
 <template>
-    <div ref="cardRef" class="card card-border bg-base-300 shadow-lg border-base-content/10 client-card" :class="{
-        'border-primary/50 ring-2 ring-primary/30 bg-primary/5': isSelected,
-        'border-neutral/10': !isSelected,
-        'cursor-pointer': (isMultiSelectMode || !isAnimating),
-        'hover:border-primary/30': isMultiSelectMode && !isSelected,
-        'hover:bg-primary/10': isMultiSelectMode && !isSelected,
-        'transition-all duration-200 ease-out hover:shadow-xl': !isExpanded
-    }" :data-client-id="client.id" @contextmenu="handleShowContextMenu" @click="handleCardClick">
-        <div v-if="isSelected && !isExpanded" class="absolute z-0" style="right: 1.1rem; top: 1.1rem;">
-            <div class="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                <svg class="w-3 h-3 text-primary-content" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clip-rule="evenodd"/>
+    <div
+        ref="cardRef"
+        class="card card-border bg-base-300 shadow-lg border-base-content/10 client-card"
+        :class="{
+            'border-primary/50 ring-2 ring-primary/30 bg-primary/5': isSelected,
+            'border-neutral/10': !isSelected,
+            'cursor-pointer': isMultiSelectMode || !isAnimating,
+            'hover:border-primary/30': isMultiSelectMode && !isSelected,
+            'hover:bg-primary/10': isMultiSelectMode && !isSelected,
+            'transition-all duration-200 ease-out hover:shadow-xl': !isExpanded,
+        }"
+        :data-client-id="client.id"
+        @contextmenu="handleShowContextMenu"
+        @click="handleCardClick"
+    >
+        <div
+            v-if="isSelected && !isExpanded"
+            class="absolute z-0"
+            style="right: 1.1rem; top: 1.1rem"
+        >
+            <div
+                class="w-5 h-5 bg-primary rounded-full flex items-center justify-center"
+            >
+                <svg
+                    class="w-3 h-3 text-primary-content"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                    />
                 </svg>
             </div>
         </div>
-        <div class="absolute z-0 transition-opacity duration-200"
-             :class="[(isMultiSelectMode && !isSelected && !isExpanded) ? 'opacity-100' : 'opacity-0 pointer-events-none']"
-             style="right: 1.1rem; top: 1.1rem;">
-            <div class="w-5 h-5 border-2 border-base-content/30 rounded-full bg-base-100"></div>
+        <div
+            class="absolute z-0 transition-opacity duration-200"
+            :class="[
+                isMultiSelectMode && !isSelected && !isExpanded
+                    ? 'opacity-100'
+                    : 'opacity-0 pointer-events-none',
+            ]"
+            style="right: 1.1rem; top: 1.1rem"
+        >
+            <div
+                class="w-5 h-5 border-2 border-base-content/30 rounded-full bg-base-100"
+            ></div>
         </div>
 
-        <button @click="!isCollapsing && collapseCard()" :disabled="isCollapsing"
-                class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
-                :class="{
-                'opacity-0 pointer-events-none': (!isExpanded && !isAnimating) || isCollapsing,
-                'opacity-100 pointer-events-auto mr-2': (isExpanded || isAnimating) && !isCollapsing
-            }">
-            <X class="w-5 h-5"/>
+        <button
+            @click="!isCollapsing && collapseCard()"
+            :disabled="isCollapsing"
+            class="close-btn btn btn-sm btn-circle btn-ghost absolute top-3 right-3 z-50 text-base-content transition-opacity duration-200"
+            :class="{
+                'opacity-0 pointer-events-none':
+                    (!isExpanded && !isAnimating) || isCollapsing,
+                'opacity-100 pointer-events-auto mr-2':
+                    (isExpanded || isAnimating) && !isCollapsing,
+            }"
+        >
+            <X class="w-5 h-5" />
         </button>
 
-        <div class="scroll-container h-full w-full overflow-y-auto custom-scrollbar-hide relative" ref="scrollContainer"
-             @scroll="handleScroll">
+        <div
+            class="scroll-container h-full w-full overflow-y-auto custom-scrollbar-hide relative"
+            ref="scrollContainer"
+            @scroll="handleScroll"
+        >
             <div class="p-4 min-h-full">
                 <div class="card-body flex flex-col p-0">
                     <div class="flex justify-between items-start">
                         <h2 class="card-title text-base">
                             {{ client.name }}
                             <div v-if="client.insecure">
-                                <div class="tooltip tooltip-bottom" :data-tip="t('common.click')"
-                                     @click="showInsecureWarning">
-                                    <AlertTriangle class="text-warning w-4 h-4"/>
+                                <div
+                                    class="tooltip tooltip-bottom"
+                                    :data-tip="t('common.click')"
+                                    @click="showInsecureWarning"
+                                >
+                                    <AlertTriangle
+                                        class="text-warning w-4 h-4"
+                                    />
                                 </div>
                             </div>
                         </h2>
                         <transition name="fade" appear>
-                            <div ref="favoriteRef" v-if="isFavorite" class="favorite-indicator">
-                                <Star class="w-4 h-4 fill-yellow-400 text-yellow-400"/>
+                            <div
+                                ref="favoriteRef"
+                                v-if="isFavorite"
+                                class="favorite-indicator"
+                            >
+                                <Star
+                                    class="w-4 h-4 fill-yellow-400 text-yellow-400"
+                                />
                             </div>
                         </transition>
                     </div>
 
-                    <ClientInfo :client="client" :expanded="inTransition"/>
+                    <ClientInfo :client="client" :expanded="inTransition" />
 
-                    <div ref="actionsRef" class="card-actions justify-end mt-2">
-                        <button v-if="clientIsRunning && !clientIsInstalling" @click.stop="handleOpenLogViewer"
-                                class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20">
-                            <Terminal class="w-4 h-4"/>
-                        </button>
-                        <transition name="fade-transform" mode="out-in">
-                            <div v-if="clientIsInstalling" class="w-full">
-                                <div class="flex justify-between mb-1 text-xs text-base-content">
-                                    <span class="truncate max-w-[90%]">
-                                        {{ currentInstallStatus?.action }}
-                                        {{ client.name }}
-                                    </span>
-                                    <span>
-                                        {{ currentInstallStatus?.percentage }}%
-                                    </span>
-                                </div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" :style="{
-                                        width: `${currentInstallStatus?.percentage}%`,
-                                    }"></div>
-                                </div>
-                            </div>
-                            <div v-else class="flex items-center space-x-2">
-                                <button v-if="!client.meta.installed" @click="handleDownloadClick"
-                                        class="btn btn-sm btn-primary relative overflow-hidden group"
-                                        :disabled="isRequirementsInProgress || !client.working">
-                                    <span
-                                      class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3">
-                                        <Download v-if="client.working" class="w-4 h-4 mr-1"/>
-                                        <span v-if="client.working">{{
-                                                t('home.download')
-                                            }}</span>
-                                        <span v-else-if="!client.working">{{
-                                                t('home.unavailable')
-                                            }}</span>
-                                    </span>
-                                    <span
-                                      class="absolute inset-0 flex items-center justify-center opacity-0 translate-y-3 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-                                        {{ client.meta.size || '0' }} MB
-                                    </span>
-                                </button>
-                                <button v-else @click="handleLaunchClick" class="btn btn-sm min-w-20"
-                                        :disabled="isRequirementsInProgress" :class="clientIsRunning
-                                        ? 'btn-error'
-                                        : 'btn-primary'
-                                        ">
-                                    <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning"/>
-                                    {{ clientIsRunning ? t('home.stop') : t('home.launch') }}
-                                </button>
-                            </div>
-                        </transition>
-                    </div>
-                    <div class="client-details">
-                        <div class="space-y-4">
-                            <div v-if="isLoadingDetails" class="text-center py-4">
-                                <div class="loading loading-spinner loading-md"></div>
-                                <p class="text-sm text-base-content/60 mt-2">{{ t('client.details.loading') }}</p>
-                            </div>
+                    <ClientCardActions
+                        :client="client"
+                        :clientIsInstalling="clientIsInstalling"
+                        :currentInstallStatus="currentInstallStatus"
+                        :clientIsRunning="clientIsRunning"
+                        :isRequirementsInProgress="isRequirementsInProgress"
+                        :isAnimatingOrExpanded="isAnimating || isExpanded"
+                        @launch="handleLaunchClick"
+                        @download="handleDownloadClick"
+                        @open-log-viewer="handleOpenLogViewer"
+                    />
 
-                            <div v-else-if="clientDetails">
-                                <div role="tablist" class="tabs tabs-boxed mb-4 w-fit mx-auto">
-                                    <button type="button" role="tab" class="tab"
-                                            :class="{ 'tab-active': activeTab === 'info' }"
-                                            :aria-selected="activeTab === 'info'" @click="changeTab('info')">
-                                        <Info class="w-4 h-4 mr-2"/>
-                                        {{ t('client.details.info_tab') }}
-                                    </button>
-                                    <button type="button" role="tab" class="tab"
-                                            :class="{ 'tab-active': activeTab === 'screenshots' }"
-                                            :aria-selected="activeTab === 'screenshots'"
-                                            @click="changeTab('screenshots')">
-                                        <Camera class="w-4 h-4 mr-2"/>
-                                        {{ t('client.details.screenshots_tab') }}
-                                    </button>
-                                    <button type="button" role="tab" class="tab"
-                                            :class="{ 'tab-active': activeTab === 'comments' }"
-                                            :aria-selected="activeTab === 'comments'" @click="changeTab('comments')">
-                                        <div class="flex items-center gap-2">
-                                            <MessageSquare class="w-4 h-4"/>
-                                            <span>{{ t('client.details.comments_tab') }}</span>
-                                            <span v-if="clientDetails?.comments_count"
-                                                  class="badge badge-sm badge-ghost">{{
-                                                    clientDetails.comments_count
-                                                }}</span>
-                                        </div>
-                                    </button>
-                                </div>
-
-                                <div>
-                                    <transition :name="`tab-slide-${slideDirection}`" mode="out-in">
-                                        <div v-if="activeTab === 'info'" key="info" class="tab-pane p-1 space-y-4">
-                                            <div
-                                              class="stats stats-vertical sm:stats-horizontal w-full rounded-xl bg-base-200/40 border border-base-content/5">
-                                                <div class="stat">
-                                                    <div
-                                                      class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
-                                                        {{ t('client.details.rating') }}
-                                                    </div>
-                                                    <div class="stat-value text-base flex items-center gap-3">
-                                                        <div v-if="canRate" :key="`rating-${myRating}`"
-                                                             class="rating rating-sm">
-                                                            <input type="radio" :name="`rating-input-${client.id}`"
-                                                                   class="rating-hidden"/>
-                                                            <template v-for="i in 5" :key="i">
-                                                                <input type="radio" :name="`rating-input-${client.id}`"
-                                                                       class="mask mask-star-2 bg-warning"
-                                                                       :checked="(myRating ?? 0) === i"
-                                                                       :disabled="isSubmittingRating"
-                                                                       @click="handleRatingClick(i)"/>
-                                                            </template>
-                                                        </div>
-
-                                                        <div v-else class="tooltip tooltip-bottom"
-                                                             :data-tip="t('client.details.login_to_rate')">
-                                                            <div v-if="ratingRounded !== null"
-                                                                 class="rating rating-half rating-sm pointer-events-none opacity-80">
-                                                                <input type="radio"
-                                                                       :name="`rating-display-${client.id}`"
-                                                                       class="rating-hidden" disabled/>
-                                                                <template v-for="i in 5" :key="i">
-                                                                    <input type="radio"
-                                                                           :name="`rating-display-${client.id}`"
-                                                                           class="mask mask-star-2 mask-half-1 bg-warning"
-                                                                           :checked="ratingRounded === (i - 0.5)"
-                                                                           disabled/>
-                                                                    <input type="radio"
-                                                                           :name="`rating-display-${client.id}`"
-                                                                           class="mask mask-star-2 mask-half-2 bg-warning"
-                                                                           :checked="ratingRounded === i" disabled/>
-                                                                </template>
-                                                            </div>
-                                                            <div v-else
-                                                                 class="text-xs font-medium text-base-content/60">
-                                                                {{ t('client.details.no_rating') }}
-                                                            </div>
-                                                        </div>
-
-                                                        <div
-                                                          class="text-xs font-semibold text-base-content/70 whitespace-nowrap">
-                                                            <span v-if="ratingAvg !== null">{{
-                                                                    ratingAvg.toFixed(1)
-                                                                }}/5</span>
-                                                            <span v-else>—</span>
-                                                            <span class="text-base-content/50"> ({{
-                                                                    ratingCount
-                                                                }})</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div v-if="clientDetails.created_at" class="stat">
-                                                    <div
-                                                      class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
-                                                        {{ t('client.details.created') }}
-                                                    </div>
-                                                    <div
-                                                      class="stat-value text-sm font-semibold flex items-center gap-2">
-                                                        <Info class="w-4 h-4 text-base-content/40"/>
-                                                        {{
-                                                            new
-                                                            Date(clientDetails.created_at).toLocaleDateString(undefined, {
-                                                                dateStyle: 'medium'
-                                                            })
-                                                        }}
-                                                    </div>
-                                                </div>
-
-                                                <div v-if="clientDetails.source_link" class="stat">
-                                                    <div
-                                                      class="stat-title text-[10px] font-bold uppercase tracking-widest opacity-60">
-                                                        {{ t('client.details.source_link') }}
-                                                    </div>
-                                                    <div class="stat-value text-sm">
-                                                        <button type="button"
-                                                                class="btn btn-ghost btn-sm justify-start px-2 gap-2 min-h-0 h-8"
-                                                                @click="handleClientSourceLink(clientDetails.source_link)">
-                                                            <ExternalLink class="w-4 h-4"/>
-                                                            <span class="truncate max-w-[18rem]">{{
-                                                                    clientDetails.source_link
-                                                                }}</span>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="card bg-base-200/40 border border-base-content/5">
-                                                <div class="card-body p-4 gap-3">
-                                                    <div class="flex items-center justify-between">
-                                                        <h4
-                                                          class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
-                                                            <ScrollText class="w-4 h-4"/>
-                                                            {{ t('client.details.changelog') }}
-                                                        </h4>
-                                                        <span v-if="clientDetails.changelog_entries"
-                                                              class="badge badge-ghost badge-sm">
-                                                            {{ clientDetails.changelog_entries.length }}
-                                                        </span>
-                                                    </div>
-
-                                                    <div
-                                                      v-if="clientDetails.changelog_entries && clientDetails.changelog_entries.length > 0">
-                                                        <ul
-                                                          class="timeline timeline-compact max-h-52 overflow-y-auto ml-2 pr-4 scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-transparent">
-                                                            <li
-                                                              v-for="(entry, index) in clientDetails.changelog_entries"
-                                                              :key="entry.version" class="timeline-item">
-                                                                <div class="timeline-start text-xs text-right">
-                                                                    <span class="badge badge-ghost text-xs">
-                                                                        {{
-                                                                            new
-                                                                            Date(entry.created_at).toLocaleDateString(undefined,
-                                                                              {
-                                                                                  month: 'short', day: 'numeric'
-                                                                              })
-                                                                        }}
-                                                                    </span>
-                                                                </div>
-                                                                <div class="timeline-middle">
-                                                                    <Info class="w-4 h-4 text-base-content/50"/>
-                                                                </div>
-                                                                <div
-                                                                  class="timeline-end timeline-box shadow-sm bg-base-100/40 w-full mb-2 border border-base-content/10">
-                                                                    <div class="font-bold text-sm text-base-content">v{{
-                                                                            entry.version
-                                                                        }}
-                                                                    </div>
-                                                                    <div
-                                                                      class="text-sm whitespace-pre-line text-base-content/80 mt-1 leading-relaxed">
-                                                                        {{
-                                                                            entry.content
-                                                                        }}
-                                                                    </div>
-                                                                </div>
-                                                                <hr
-                                                                  v-if="index < clientDetails.changelog_entries.length - 1"
-                                                                  class="bg-base-content/10"/>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-
-                                                    <div v-else
-                                                         class="flex flex-col items-center justify-center text-center p-8 bg-base-100/30 border border-dashed border-base-content/10 rounded-lg opacity-0 animate-fade-in">
-                                                        <Info class="w-8 h-8 text-base-content/50 mb-2"/>
-                                                        <p class="text-sm font-medium text-base-content/70">{{
-                                                                t('client.details.no_changelog')
-                                                            }}</p>
-                                                        <p class="text-xs text-base-content/50 mt-1">{{
-                                                                t('client.details.no_changelog_desc')
-                                                            }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div v-else-if="activeTab === 'screenshots'" key="screenshots" class="tab-pane">
-                                            <div
-                                              v-if="clientDetails.screenshot_urls && clientDetails.screenshot_urls.length > 0"
-                                              class="screenshots-section">
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                    <div v-for="(screenshot, index) in clientDetails.screenshot_urls"
-                                                         :key="index" class="screenshot-container group">
-                                                        <div
-                                                          class="relative overflow-hidden rounded border border-base-content/10 cursor-pointer"
-                                                          @click.stop="handleScreenshotClick($event, index)">
-                                                            <img :src="screenshot"
-                                                                 :alt="`${client.name} screenshot ${index + 1}`"
-                                                                 class="w-full h-36 object-cover transition-all duration-200 group-hover:scale-105"
-                                                                 @error="($event.target as HTMLImageElement).style.display = 'none'"/>
-                                                            <div
-                                                              class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center pointer-events-none">
-                                                                <ZoomIn
-                                                                  class="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"/>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div v-else class="text-center py-8 text-base-content/60">
-                                                <p>{{ t('client.details.no_screenshots') }}</p>
-                                            </div>
-                                        </div>
-
-                                        <div v-else-if="activeTab === 'comments'" key="comments">
-                                            <div class="flex flex-col">
-                                                <div class="flex gap-2">
-                                                    <input v-model="newCommentText" type="text"
-                                                           :placeholder="t('client.comments.placeholder')"
-                                                           class="input input-bordered w-full input-sm"
-                                                           :maxlength="MAX_COMMENT_LENGTH" @keyup.enter="postComment"
-                                                           :disabled="isPostingComment || !canComment"/>
-                                                    <button class="btn btn-primary btn-sm btn-square"
-                                                            @click="postComment"
-                                                            :disabled="isPostingComment || !newCommentText.trim() || !canComment">
-                                                        <span v-if="isPostingComment"
-                                                              class="loading loading-spinner loading-xs"></span>
-                                                        <Send v-else class="w-4 h-4"/>
-                                                    </button>
-                                                </div>
-
-                                                <div class="flex justify-between text-[10px] mt-1 opacity-50">
-                                                    <span v-if="!canComment">{{ t('login') }}</span>
-                                                    <span>{{
-                                                            Math.min(newCommentText.length, MAX_COMMENT_LENGTH)
-                                                        }}/{{ MAX_COMMENT_LENGTH }}</span>
-                                                </div>
-
-                                                <div v-if="isLoadingComments" class="flex justify-center py-8">
-                                                    <span
-                                                      class="loading loading-spinner loading-md text-primary"></span>
-                                                </div>
-                                                <div v-else-if="comments.length === 0"
-                                                     class="text-center py-8 text-base-content/50">
-                                                    <MessageSquare class="w-8 h-8 mx-auto mb-2 opacity-50"/>
-                                                    <p>{{ t('client.comments.empty') }}</p>
-                                                </div>
-                                                <div v-else
-                                                     class="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
-                                                    <div v-for="comment in comments" :key="comment.id"
-                                                         class="chat chat-start">
-                                                        <div class="chat-image avatar">
-                                                            <div class="w-8 rounded-full cursor-pointer select-none"
-                                                                 role="button" tabindex="0"
-                                                                 @click.stop="openProfileFromComment(comment)"
-                                                                 @keydown.enter.stop.prevent="openProfileFromComment(comment)"
-                                                                 @keydown.space.stop.prevent="openProfileFromComment(comment)">
-                                                                <img v-if="comment.author_avatar"
-                                                                     :src="resolveApiAssetUrl(comment.author_avatar)"
-                                                                     :alt="comment.author_username"/>
-                                                                <div v-else
-                                                                     class="bg-base-200 text-base-content/70 w-8 h-8 flex items-center justify-center text-xs font-semibold">
-                                                                    {{
-                                                                        (comment.author_username?.[0] ||
-                                                                          '?').toUpperCase()
-                                                                    }}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div
-                                                          class="chat-header text-xs opacity-50 mb-1 flex items-center gap-2">
-                                                            <span class="cursor-pointer hover:underline"
-                                                                  @click.stop="openProfileFromComment(comment)">
-                                                                {{ comment.author_username }}
-                                                            </span>
-                                                            <time class="text-[10px]">{{
-                                                                    formatDate(comment.created_at)
-                                                                }}
-                                                            </time>
-                                                            <button
-                                                              v-if="currentUser && currentUser.username === comment.author_username"
-                                                              class="btn btn-ghost btn-xs btn-circle text-error"
-                                                              @click="deleteComment(comment.id)"
-                                                              :title="t('client.comments.delete')">
-                                                                <Trash2 class="w-3 h-3"/>
-                                                            </button>
-                                                        </div>
-                                                        <div
-                                                          class="chat-bubble chat-bubble-secondary text-sm wrap-break-word group relative">
-                                                            {{ comment.content }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </transition>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <ClientCardDetails
+                        :client="client"
+                        :clientDetails="clientDetails"
+                        :isLoadingDetails="isLoadingDetails"
+                        :isAuthenticated="isAuthenticated"
+                        :ratingAvg="ratingAvg"
+                        :ratingCount="ratingCount"
+                        :activeTab="activeTab"
+                        :slideDirection="slideDirection"
+                        :myRating="myRating"
+                        @update:my-rating="myRating = $event"
+                        @update:rating-avg="ratingAvgOverride = $event"
+                        @update:rating-count="ratingCountOverride = $event"
+                        @update:client-details="clientDetails = $event"
+                        @change-tab="changeTab"
+                        @screenshot-click="handleScreenshotClick"
+                        @show-user-profile="emit('show-user-profile', $event)"
+                        @open-source-link="handleClientSourceLink"
+                    />
                 </div>
             </div>
         </div>
 
-
         <transition name="fade">
-            <div v-if="showScrollbar"
-                 class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 m-1 h-[95%] bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
-                 :class="{
+            <div
+                v-if="showScrollbar"
+                class="custom-scrollbar-track absolute right-1 top-1 bottom-1 w-1.5 m-1 h-[95%] bg-base-content/5 rounded-full z-50 transition-opacity duration-200"
+                :class="{
                     'opacity-0': !isExpanded || isCollapsing,
-                    'opacity-100': isExpanded && !isCollapsing
-                }">
+                    'opacity-100': isExpanded && !isCollapsing,
+                }"
+            >
                 <div
-                  class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
-                  :style="{ height: thumbHeight + 'px', top: thumbTop + 'px' }" @mousedown="startScrollbarDrag">
-                </div>
+                    class="custom-scrollbar-thumb absolute w-full bg-base-content/20 hover:bg-base-content/40 rounded-full transition-colors duration-200 cursor-pointer"
+                    :style="{
+                        height: thumbHeight + 'px',
+                        top: thumbTop + 'px',
+                    }"
+                    @mousedown="startScrollbarDrag"
+                ></div>
             </div>
         </transition>
     </div>
 
-    <teleport to="body">
-        <transition name="screenshot-viewer" appear>
-            <div v-if="isScreenshotViewerOpen && clientDetails?.screenshot_urls"
-                 class="fixed inset-0 z-9999 bg-black/95 backdrop-blur-sm flex items-center justify-center"
-                 @click="handleViewerBackgroundClick">
-
-                <button @click="handleScreenshotViewerClose"
-                        class="absolute top-4 right-4 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200">
-                    <X class="w-6 h-6"/>
-                </button>
-
-                <button v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed" @click.stop="prevScreenshot"
-                        class="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
-                        :disabled="isImageLoading">
-                    <ChevronLeft class="w-6 h-6"/>
-                </button>
-
-                <button v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed" @click.stop="nextScreenshot"
-                        class="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200 hover:scale-110"
-                        :disabled="isImageLoading">
-                    <ChevronRight class="w-6 h-6"/>
-                </button>
-
-                <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                    <button @click.stop="zoomIn()"
-                            class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
-                            :disabled="zoomScale >= maxZoom" :class="{
-                            'cursor-not-allowed opacity-50': zoomScale >= maxZoom
-                        }">
-                        <ZoomIn class="w-5 h-5"/>
-                    </button>
-                    <button @click.stop="zoomOut"
-                            class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
-                            :disabled="zoomScale <= minZoom" :class="{
-                            'cursor-not-allowed opacity-50': zoomScale <= minZoom
-                        }">
-                        <ZoomOut class="w-5 h-5"/>
-                    </button>
-                    <button @click.stop="resetZoom"
-                            class="btn btn-circle btn-ghost text-white hover:bg-white/20 transition-all duration-200"
-                            :disabled="!isZoomed" :class="{
-                            'cursor-not-allowed opacity-50': !isZoomed
-                        }">
-                        <RefreshCw class="w-5 h-5"/>
-                    </button>
-                </div>
-
-                <transition name="fade" appear>
-                    <div v-if="isZoomed"
-                         class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm border border-white/10">
-                        {{
-                            t('client.details.screenshot_viewer.zoom_percent', { percent: Math.round(zoomScale * 100) })
-                        }}
-                    </div>
-                </transition>
-
-
-                <div class="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center p-12"
-                     @wheel="handleWheel" @click="handleViewerBackgroundClick">
-                    <div class="relative w-full h-full flex items-center justify-center">
-
-                        <transition name="fade">
-                            <div v-if="isImageLoading" class="absolute inset-0 flex items-center justify-center z-20">
-                                <div class="skeleton-container">
-                                    <div class="skeleton w-full h-full rounded-lg bg-base-200/20"></div>
-                                    <div class="absolute inset-0 flex items-center justify-center">
-                                        <div class="loading loading-spinner loading-lg text-white"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-
-                        <div ref="imageContainerRef"
-                             class="relative w-full h-full flex items-center justify-center overflow-hidden"
-                             @click="handleViewerBackgroundClick">
-                            <transition :name="`image-slide-${imageTransitionDirection}`" mode="out-in" appear>
-                                <img ref="imageRef" :key="currentScreenshotIndex"
-                                     :src="clientDetails.screenshot_urls[currentScreenshotIndex]"
-                                     :alt="`${client.name} screenshot ${currentScreenshotIndex + 1}`"
-                                     class="max-w-full max-h-full object-contain rounded-lg shadow-2xl select-none image-transition"
-                                     :class="{
-                                        'opacity-0': isImageLoading,
-                                        'opacity-100': !isImageLoading,
-                                        'cursor-zoom-in': !isZoomed,
-                                        'cursor-grab': isZoomed && !isDragging,
-                                        'cursor-grabbing': isDragging,
-                                        'smooth-transition': !isDragging
-                                    }" :style="{
-                                        transform: `scale(${zoomScale}) translate(${zoomPosition.x / zoomScale}px, ${zoomPosition.y / zoomScale}px)`,
-                                        transformOrigin: 'center center'
-                                    }" @click="handleImageClick" @mousedown="startDrag" @dragstart.prevent
-                                     @contextmenu.prevent @load="handleImageLoad" @error="handleImageError"/>
-                            </transition>
-                        </div>
-                    </div>
-                </div>
-
-                <transition name="fade-slide-up" appear>
-                    <div v-if="clientDetails.screenshot_urls.length > 1"
-                         class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm border border-white/10 backdrop-blur-md">
-                        {{
-                            t('client.details.screenshot_viewer.image_counter', {
-                                current: currentScreenshotIndex + 1,
-                                total: clientDetails.screenshot_urls.length
-                            })
-                        }}
-                    </div>
-                </transition>
-
-                <transition name="fade-slide-up" appear>
-                    <div
-                      class="absolute bottom-4 right-4 text-white/70 text-xs space-y-1 text-right bg-black/40 p-2 rounded border border-white/10 backdrop-blur-md">
-                        <div>{{
-                                isZoomed ? t('client.details.screenshot_viewer.controls.esc_reset') :
-                                  t('client.details.screenshot_viewer.controls.esc_close')
-                            }}
-                        </div>
-                        <div v-if="clientDetails.screenshot_urls.length > 1 && !isZoomed">{{
-                                t('client.details.screenshot_viewer.controls.navigate')
-                            }}
-                        </div>
-                        <div>{{ t('client.details.screenshot_viewer.controls.click_zoom') }}</div>
-                        <div v-if="isZoomed">{{ t('client.details.screenshot_viewer.controls.drag_pan') }}</div>
-                    </div>
-                </transition>
-            </div>
-        </transition>
-    </teleport>
+    <ScreenshotViewer
+        v-if="isScreenshotViewerOpen && clientDetails?.screenshot_urls"
+        :isOpen="isScreenshotViewerOpen"
+        :screenshotUrls="clientDetails.screenshot_urls"
+        :initialIndex="currentScreenshotIndex"
+        :clientName="client.name"
+        @close="isScreenshotViewerOpen = false"
+    />
 </template>
 
 <style scoped>
@@ -1698,12 +881,6 @@ onBeforeUnmount(() => {
     display: none;
 }
 
-.card-actions {
-    min-height: 2rem;
-    display: flex;
-    align-items: center;
-}
-
 .client-details {
     opacity: 0;
     max-height: 0;
@@ -1712,45 +889,11 @@ onBeforeUnmount(() => {
     scrollbar-gutter: stable;
 }
 
-.timeline {
-    scrollbar-gutter: stable;
-    scrollbar-width: thin;
-}
-
-.timeline::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-.timeline::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.timeline::-webkit-scrollbar-thumb {
-    background-color: rgba(100, 100, 100, 0.35);
-    border-radius: 999px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-}
-
-.progress-bar-container {
-    height: 6px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #3b3b3b, #777777);
-    border-radius: 2px;
-    transition: width 0.2s ease-out;
-}
-
 .fade-transform-enter-active,
 .fade-transform-leave-active {
-    transition: opacity 0.2s ease,
-    transform 0.2s ease;
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .fade-transform-enter-from,
@@ -1763,7 +906,6 @@ onBeforeUnmount(() => {
     opacity: 1;
 }
 
-
 .favorite-indicator {
     display: flex;
     align-items: center;
@@ -1772,211 +914,6 @@ onBeforeUnmount(() => {
     height: 24px;
     margin-left: 8px;
     color: #fbbf24;
-}
-
-.version-badge-container {
-    height: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.version-badge {
-    height: 1.25rem;
-    min-height: 1.25rem;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-}
-
-.tab-slide-enter-active,
-.tab-slide-leave-active {
-    transition: all 0.3s ease;
-}
-
-.tab-slide-enter-from {
-    opacity: 0;
-    transform: translateX(20px);
-}
-
-.tab-slide-leave-to {
-    opacity: 0;
-    transform: translateX(-20px);
-}
-
-.tab-slide-right-enter-active,
-.tab-slide-right-leave-active,
-.tab-slide-left-enter-active,
-.tab-slide-left-leave-active {
-    transition: all 0.3s ease;
-}
-
-.tab-slide-right-enter-from {
-    opacity: 0;
-    transform: translateX(20px);
-}
-
-.tab-slide-right-leave-to {
-    opacity: 0;
-    transform: translateX(-20px);
-}
-
-.tab-slide-left-enter-from {
-    opacity: 0;
-    transform: translateX(-20px);
-}
-
-.tab-slide-left-leave-to {
-    opacity: 0;
-    transform: translateX(20px);
-}
-
-.tab-pane {
-    min-height: 200px;
-}
-
-.tab-content {
-    position: relative;
-}
-
-.tabs {
-    justify-content: center;
-}
-
-.tab {
-    transition: all 0.2s ease;
-    border-radius: 4rem;
-}
-
-.tab:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.screenshot-container {
-    position: relative;
-    overflow: hidden;
-    border-radius: 0.2rem;
-    transition: transform 0.2s ease;
-}
-
-.screenshot-container:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.screenshot-viewer-enter-active,
-.screenshot-viewer-leave-active {
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.screenshot-viewer-enter-from,
-.screenshot-viewer-leave-to {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-    transform: scale(0.95);
-}
-
-.screenshot-viewer-enter-to,
-.screenshot-viewer-leave-from {
-    opacity: 1;
-    backdrop-filter: blur(4px);
-    transform: scale(1);
-}
-
-.image-slide-next-enter-active {
-    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.image-slide-next-leave-active {
-    transition: all 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
-}
-
-.image-slide-prev-enter-active {
-    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.image-slide-prev-leave-active {
-    transition: all 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
-}
-
-.image-slide-next-enter-from {
-    opacity: 0;
-    transform: translateX(150px) scale(0.9) rotateY(15deg);
-    filter: blur(2px);
-}
-
-.image-slide-next-leave-to {
-    opacity: 0;
-    transform: translateX(-150px) scale(0.9) rotateY(-15deg);
-    filter: blur(2px);
-}
-
-.image-slide-prev-enter-from {
-    opacity: 0;
-    transform: translateX(-150px) scale(0.9) rotateY(-15deg);
-    filter: blur(2px);
-}
-
-.image-slide-prev-leave-to {
-    opacity: 0;
-    transform: translateX(150px) scale(0.9) rotateY(15deg);
-    filter: blur(2px);
-}
-
-.image-slide-next-enter-to,
-.image-slide-next-leave-from,
-.image-slide-prev-enter-to,
-.image-slide-prev-leave-from {
-    opacity: 1;
-    transform: translateX(0) scale(1) rotateY(0deg);
-    filter: blur(0px);
-}
-
-.skeleton-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    max-width: 800px;
-    max-height: 600px;
-    min-width: 400px;
-    min-height: 300px;
-}
-
-
-.image-transition {
-    transition: opacity 0.3s ease;
-}
-
-.fade-slide-up-enter-active {
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transition-delay: 0.2s;
-}
-
-.fade-slide-up-leave-active {
-    transition: all 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53);
-}
-
-.fade-slide-up-enter-from {
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.fade-slide-up-leave-to {
-    opacity: 0;
-    transform: translateY(10px);
-}
-
-.fade-slide-up-enter-to,
-.fade-slide-up-leave-from {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.smooth-transition {
-    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-img.cursor-grabbing {
-    transition: none;
 }
 
 .fade-enter-active,
@@ -1989,25 +926,18 @@ img.cursor-grabbing {
     opacity: 0;
 }
 
-
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+    transition: all 0.3s ease;
 }
 
-.animate-fade-in {
-    animation: fade-in 0.4s ease-out forwards;
+.fade-transform-enter-from {
+    opacity: 0;
+    transform: translateX(10px);
 }
 
-.scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: var(--thumb-color) var(--track-color);
+.fade-transform-leave-to {
+    opacity: 0;
+    transform: translateX(-10px);
 }
 </style>

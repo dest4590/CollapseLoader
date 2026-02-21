@@ -1,6 +1,6 @@
-import i18n from '../i18n';
+import i18n from "../i18n";
 
-export type Category = 'feature' | 'improvement' | 'bugfix' | 'other';
+export type Category = "feature" | "improvement" | "bugfix" | "other";
 
 export interface ChangeItem {
     category: Category;
@@ -16,15 +16,15 @@ export interface ChangelogEntry {
 }
 
 const CATEGORY_KEYS: Record<Category, string> = {
-    feature: 'changelog.category.feature',
-    improvement: 'changelog.category.improvement',
-    bugfix: 'changelog.category.bugfix',
-    other: 'changelog.category.other',
+    feature: "changelog.category.feature",
+    improvement: "changelog.category.improvement",
+    bugfix: "changelog.category.bugfix",
+    other: "changelog.category.other",
 };
 
 export function resolveDescription(keyOrText: string) {
-    if (!keyOrText) return '';
-    if (keyOrText.includes('.')) {
+    if (!keyOrText) return "";
+    if (keyOrText.includes(".")) {
         return i18n.global.t(keyOrText) as string;
     }
     return keyOrText;
@@ -38,16 +38,17 @@ export function parseChangelog(raw: any): ChangelogEntry[] {
     return raw.map((entry: any) => {
         const changes: ChangeItem[] = Array.isArray(entry.changes)
             ? entry.changes.map((c: any) => ({
-                category: (c.category || 'other').toLowerCase() as Category,
-                description_key: c.description_key || c.description || c.text || '',
-                icon: c.icon || (c.category === 'Feature' ? '✨' : undefined),
-            }))
+                  category: (c.category || "other").toLowerCase() as Category,
+                  description_key:
+                      c.description_key || c.description || c.text || "",
+                  icon: c.icon || (c.category === "Feature" ? "✨" : undefined),
+              }))
             : [];
 
         return {
-            version: entry.version || entry.tag || '',
+            version: entry.version || entry.tag || "",
             changes,
-            date: entry.date || entry.published_at || '',
+            date: entry.date || entry.published_at || "",
             highlights: Array.isArray(entry.highlights) ? entry.highlights : [],
         } as ChangelogEntry;
     });
@@ -63,14 +64,14 @@ export function renderChange(change: ChangeItem) {
 
 function defaultIconForCategory(category: Category) {
     switch (category) {
-        case 'feature':
-            return '✨';
-        case 'improvement':
-            return '🔧';
-        case 'bugfix':
-            return '🐛';
+        case "feature":
+            return "✨";
+        case "improvement":
+            return "🔧";
+        case "bugfix":
+            return "🐛";
         default:
-            return '🔹';
+            return "🔹";
     }
 }
 

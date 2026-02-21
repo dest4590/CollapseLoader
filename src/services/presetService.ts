@@ -1,33 +1,43 @@
-import { invoke } from '@tauri-apps/api/core';
-import type { ThemePreset, CreatePresetInput, UpdatePresetInput } from '../types/presets';
-import { themeService } from './themeService';
+import { invoke } from "@tauri-apps/api/core";
+import type {
+    ThemePreset,
+    CreatePresetInput,
+    UpdatePresetInput,
+} from "../types/presets";
+import { themeService } from "./themeService";
 
 export class PresetService {
     async getAllPresets(): Promise<ThemePreset[]> {
-        return await invoke<ThemePreset[]>('get_all_presets');
+        return await invoke<ThemePreset[]>("get_all_presets");
     }
 
     async getPreset(id: string): Promise<ThemePreset | null> {
-        return await invoke<ThemePreset | null>('get_preset', { id });
+        return await invoke<ThemePreset | null>("get_preset", { id });
     }
 
     async createPreset(input: CreatePresetInput): Promise<ThemePreset> {
-        return await invoke<ThemePreset>('create_preset', { input });
+        return await invoke<ThemePreset>("create_preset", { input });
     }
 
     async updatePreset(input: UpdatePresetInput): Promise<ThemePreset> {
-        return await invoke<ThemePreset>('update_preset', { input });
+        return await invoke<ThemePreset>("update_preset", { input });
     }
 
     async deletePreset(id: string): Promise<void> {
-        await invoke<void>('delete_preset', { id });
+        await invoke<void>("delete_preset", { id });
     }
 
     async duplicatePreset(id: string, newName: string): Promise<ThemePreset> {
-        return await invoke<ThemePreset>('duplicate_preset', { id, newName: newName });
+        return await invoke<ThemePreset>("duplicate_preset", {
+            id,
+            newName: newName,
+        });
     }
 
-    createPresetFromCurrentSettings(name: string, description?: string): CreatePresetInput {
+    createPresetFromCurrentSettings(
+        name: string,
+        description?: string
+    ): CreatePresetInput {
         const settings = themeService.presetSettings;
 
         return {
@@ -57,6 +67,9 @@ export class PresetService {
             warningContent: settings.warningContent || undefined,
             error: settings.error || undefined,
             errorContent: settings.errorContent || undefined,
+            backgroundImage: settings.backgroundImage || undefined,
+            backgroundBlur: settings.backgroundBlur || undefined,
+            backgroundOpacity: settings.backgroundOpacity || undefined,
         };
     }
 
@@ -86,6 +99,9 @@ export class PresetService {
             warningContent: preset.warningContent,
             error: preset.error,
             errorContent: preset.errorContent,
+            backgroundImage: preset.backgroundImage,
+            backgroundBlur: preset.backgroundBlur,
+            backgroundOpacity: preset.backgroundOpacity,
         });
     }
 }

@@ -1,10 +1,16 @@
 <template>
-    <div v-if="modelValue" class="fixed inset-0 flex items-center justify-center z-2000 slide-up backdrop-blur-sm">
+    <div
+        v-if="modelValue"
+        class="fixed inset-0 flex items-center justify-center z-2000 slide-up backdrop-blur-sm"
+    >
         <div class="custom-modal-overlay" @click.self="closeModal">
             <div class="custom-modal-content">
                 <div class="custom-modal-header">
                     <div></div>
-                    <button @click="closeModal" class="custom-modal-close-button">
+                    <button
+                        @click="closeModal"
+                        class="custom-modal-close-button"
+                    >
                         ×
                     </button>
                 </div>
@@ -14,33 +20,36 @@
                             <UserRound class="w-7 h-7" />
                         </div>
                         <h3 class="text-xl font-bold mb-2">
-                            {{ $t('modals.register_prompt.title') }}
+                            {{ $t("modals.register_prompt.title") }}
                         </h3>
                     </div>
 
                     <p class="text-base-content/80 mb-4">
-                        {{ $t('modals.register_prompt.description') }}
+                        {{ $t("modals.register_prompt.description") }}
                     </p>
 
                     <ul class="list-disc list-inside space-y-2 mb-6 text-sm">
                         <li>
-                            {{ $t('modals.register_prompt.benefits.sync') }}
+                            {{ $t("modals.register_prompt.benefits.sync") }}
                         </li>
                         <li>
                             {{
                                 $t(
-                                    'modals.register_prompt.benefits.notifications'
+                                    "modals.register_prompt.benefits.notifications"
                                 )
                             }}
                         </li>
                     </ul>
 
                     <div class="flex flex-col sm:flex-row gap-3 mt-4">
-                        <button @click="proceedToRegister" class="btn btn-primary flex-1">
-                            {{ $t('modals.register_prompt.register_now') }}
+                        <button
+                            @click="proceedToRegister"
+                            class="btn btn-primary flex-1"
+                        >
+                            {{ $t("modals.register_prompt.register_now") }}
                         </button>
                         <button @click="cancel" class="btn btn-outline flex-1">
-                            {{ $t('modals.register_prompt.maybe_later') }}
+                            {{ $t("modals.register_prompt.maybe_later") }}
                         </button>
                     </div>
                 </div>
@@ -50,37 +59,37 @@
 </template>
 
 <script setup lang="ts">
-import { UserRound } from 'lucide-vue-next';
-import { computed, watch, onUnmounted } from 'vue';
+import { UserRound } from "lucide-vue-next";
+import { computed, watch, onUnmounted } from "vue";
 
 const props = defineProps<{
     modelValue: boolean;
 }>();
 
-const emit = defineEmits(['update:modelValue', 'register', 'cancel']);
+const emit = defineEmits(["update:modelValue", "register", "cancel"]);
 
 const isOpen = computed({
     get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value),
+    set: (value) => emit("update:modelValue", value),
 });
 
 const closeModal = () => {
     isOpen.value = false;
-    emit('cancel');
+    emit("cancel");
 };
 
 const proceedToRegister = () => {
     isOpen.value = false;
-    emit('register');
+    emit("register");
 };
 
 const cancel = () => {
     isOpen.value = false;
-    emit('cancel');
+    emit("cancel");
 };
 
 const handleEscape = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isOpen.value) {
+    if (e.key === "Escape" && isOpen.value) {
         closeModal();
     }
 };
@@ -89,19 +98,19 @@ watch(
     isOpen,
     (newVal) => {
         if (newVal) {
-            document.body.style.overflow = 'hidden';
-            document.addEventListener('keydown', handleEscape);
+            document.body.style.overflow = "hidden";
+            document.addEventListener("keydown", handleEscape);
         } else {
-            document.body.style.overflow = '';
-            document.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = "";
+            document.removeEventListener("keydown", handleEscape);
         }
     },
     { immediate: true }
 );
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleEscape);
-    document.body.style.overflow = '';
+    document.removeEventListener("keydown", handleEscape);
+    document.body.style.overflow = "";
 });
 </script>
 

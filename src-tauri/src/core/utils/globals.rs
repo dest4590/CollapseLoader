@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Abyss";
+pub static CODENAME: &str = "Atlas";
 
 pub static API_VERSION: &str = "v1";
 
@@ -31,27 +31,27 @@ pub static JDK8_ZIP: &str = if IS_LINUX {
 pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
 
 pub static ASSETS_FOLDER: &str = "assets";
-pub static ASSETS_FABRIC_FOLDER: &str = "assets_fabric";
+pub static ASSETS_FABRIC_FOLDER: &str = "assets-fabric";
 pub static LIBRARIES_FOLDER: &str = "libraries";
-pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries_fabric";
+pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 pub static NATIVES_FOLDER: &str = "natives";
 pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
 pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
-pub static NATIVES_FABRIC_FOLDER: &str = "natives_fabric";
+pub static NATIVES_FABRIC_FOLDER: &str = "natives-fabric";
 
-pub static ASSETS_ZIP: &str = "assets.zip";
-pub static ASSETS_FABRIC_ZIP: &str = "assets_fabric.zip";
-pub static LIBRARIES_ZIP: &str = "libraries.zip";
-pub static LIBRARIES_FABRIC_ZIP: &str = "libraries_fabric.zip";
-pub static LIBRARIES_LEGACY_ZIP: &str = "libraries-legacy.zip";
-pub static NATIVES_ZIP: &str = "natives.zip";
-pub static NATIVES_LINUX_ZIP: &str = "natives-linux.zip";
-pub static NATIVES_LEGACY_ZIP: &str = "natives-legacy.zip";
-pub static NATIVES_LEGACY_LINUX_ZIP: &str = "natives-legacy-linux.zip";
+pub static ASSETS_ZIP: &str = "misc/assets.zip";
+pub static ASSETS_FABRIC_ZIP: &str = "misc/assets-fabric.zip";
+pub static LIBRARIES_ZIP: &str = "misc/libraries.zip";
+pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
+pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
+pub static NATIVES_ZIP: &str = "misc/natives.zip";
+pub static NATIVES_LINUX_ZIP: &str = "misc/natives-linux.zip";
+pub static NATIVES_LEGACY_ZIP: &str = "misc/natives-legacy.zip";
+pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
 
-pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft_versions";
+pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft-versions";
 pub static AGENT_OVERLAY_FOLDER: &str = "agent_overlay";
 pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
 pub static MODS_FOLDER: &str = "mods";
@@ -60,6 +60,9 @@ pub static AGENT_FILE: &str = "CollapseAgent.jar";
 pub static OVERLAY_FILE: &str = "CollapseOverlay.dll";
 
 pub static IRC_HOST: &str = "irc.collapseloader.org:1338";
+
+pub static FABRIC_DEPS_URL: &str = "clients/fabric/deps/jars";
+pub static FORGE_DEPS_URL: &str = "clients/forge/deps/jars";
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var).ok().is_some_and(|s| {
@@ -73,22 +76,6 @@ pub static SKIP_AGENT_OVERLAY_VERIFICATION: LazyLock<bool> =
 
 pub static MOCK_CLIENTS: LazyLock<bool> = LazyLock::new(|| parse_env_bool("MOCK_CLIENTS"));
 
-pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
-    if let Ok(url) = std::env::var("FORCE_CDN") {
-        if !url.is_empty() {
-            log_info!("Using forced CDN server: {}", url);
-            return vec![Server::new(&url)];
-        }
-    }
-    vec![
-        Server::new("https://cdn.collapseloader.org/"),
-        Server::new("https://collapse.ttfdk.lol/cdn/"),
-        Server::new(
-            "https://axkanxneklh7.objectstorage.eu-amsterdam-1.oci.customer-oci.com/n/axkanxneklh7/b/collapse/o/",
-        ),
-    ]
-});
-
 pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     if let Ok(url) = std::env::var("FORCE_API") {
         if !url.is_empty() {
@@ -99,7 +86,20 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
 
     vec![
         Server::new("https://atlas.collapseloader.org/"),
-        Server::new("https://collapse.ttfdk.lol/auth/"),
+        Server::new("http://141.148.224.27/atlas/"),
+    ]
+});
+
+pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
+    if let Ok(url) = std::env::var("FORCE_CDN") {
+        if !url.is_empty() {
+            log_info!("Using forced CDN server: {}", url);
+            return vec![Server::new(&url)];
+        }
+    }
+    vec![
+        Server::new("https://atlas-test.collapseloader.org/uploads/"),
+        Server::new("http://141.148.224.27/cdn/"),
     ]
 });
 

@@ -1,42 +1,68 @@
 <template>
     <div class="space-y-4">
         <div class="form-control">
-            <label class="label"><span class="label-text">{{ t('marketplace.title_label') }}</span></label>
-            <input v-model="title" class="input input-bordered w-full"
-                :placeholder="t('marketplace.title_placeholder')" />
+            <label class="label"
+                ><span class="label-text">{{
+                    t("marketplace.title_label")
+                }}</span></label
+            >
+            <input
+                v-model="title"
+                class="input input-bordered w-full"
+                :placeholder="t('marketplace.title_placeholder')"
+            />
         </div>
         <div class="form-control">
-            <label class="label"><span class="label-text">{{ t('marketplace.description_label') }}</span></label>
-            <textarea v-model="description" class="textarea textarea-bordered w-full" rows="4"
-                :placeholder="t('marketplace.description_placeholder')"></textarea>
+            <label class="label"
+                ><span class="label-text">{{
+                    t("marketplace.description_label")
+                }}</span></label
+            >
+            <textarea
+                v-model="description"
+                class="textarea textarea-bordered w-full"
+                rows="4"
+                :placeholder="t('marketplace.description_placeholder')"
+            ></textarea>
         </div>
         <div class="form-control">
             <label class="cursor-pointer label">
-                <span class="label-text block">{{ t('marketplace.public_label') }}</span>
+                <span class="label-text block">{{
+                    t("marketplace.public_label")
+                }}</span>
                 <input type="checkbox" class="toggle" v-model="isPublic" />
             </label>
         </div>
         <div class="flex justify-end gap-2">
-            <button class="btn" @click="$emit('close')">{{ t('common.cancel') }}</button>
-            <button class="btn btn-primary" :disabled="loading || !title" @click="share">{{ loading ?
-                t('marketplace.sharing') : t('marketplace.share') }}</button>
+            <button class="btn" @click="$emit('close')">
+                {{ t("common.cancel") }}
+            </button>
+            <button
+                class="btn btn-primary"
+                :disabled="loading || !title"
+                @click="share"
+            >
+                {{
+                    loading ? t("marketplace.sharing") : t("marketplace.share")
+                }}
+            </button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { themeService } from '../../../../services/themeService';
-import { marketplaceService } from '../../../../services/marketplaceService';
-import { useToast } from '../../../../services/toastService';
-import { useI18n } from 'vue-i18n';
+import { ref } from "vue";
+import { themeService } from "../../../../services/themeService";
+import { marketplaceService } from "../../../../services/marketplaceService";
+import { useToast } from "../../../../services/toastService";
+import { useI18n } from "vue-i18n";
 
-const emit = defineEmits(['shared', 'close']);
+const emit = defineEmits(["shared", "close"]);
 
 const { addToast } = useToast();
 const { t } = useI18n();
-const title = ref('');
-const description = ref('');
+const title = ref("");
+const description = ref("");
 const isPublic = ref(true);
 const loading = ref(false);
 
@@ -69,15 +95,18 @@ async function share() {
             warningContent: s.warningContent || undefined,
             error: s.error || undefined,
             errorContent: s.errorContent || undefined,
+            backgroundImage: s.backgroundImage || undefined,
+            backgroundBlur: s.backgroundBlur,
+            backgroundOpacity: s.backgroundOpacity,
             is_public: isPublic.value,
         };
         await marketplaceService.createPreset(payload);
-        addToast(t('marketplace.shared_success'), 'success');
-        emit('shared');
-        emit('close');
+        addToast(t("marketplace.shared_success"), "success");
+        emit("shared");
+        emit("close");
     } catch (e) {
-        console.error('Failed to share preset:', e);
-        addToast(t('marketplace.shared_failed'), 'error');
+        console.error("Failed to share preset:", e);
+        addToast(t("marketplace.shared_failed"), "error");
     } finally {
         loading.value = false;
     }

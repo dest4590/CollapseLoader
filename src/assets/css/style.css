@@ -1,14 +1,11 @@
-@import 'tailwindcss';
-
-@plugin "daisyui" {
-    logs: false;
-}
+@import "tailwindcss";
+@plugin 'daisyui';
 
 @plugin "daisyui/theme" {
-    name: 'dark';
+    name: "dark";
     default: true;
     prefersdark: true;
-    color-scheme: 'dark';
+    color-scheme: "dark";
     --color-base-100: oklch(14% 0 0);
     --color-base-200: oklch(20% 0 0);
     --color-base-300: oklch(0.244 0 89.876);
@@ -40,10 +37,10 @@
 }
 
 @plugin "daisyui/theme" {
-    name: 'light';
+    name: "light";
     default: false;
     prefersdark: false;
-    color-scheme: 'light';
+    color-scheme: "light";
     --color-base-100: oklch(100% 0 0);
     --color-base-200: oklch(98% 0 0);
     --color-base-300: oklch(95% 0 0);
@@ -76,6 +73,78 @@
 
 html {
     @apply bg-base-200;
+    min-height: 100vh;
+}
+
+body {
+    min-height: 100vh;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: var(--background-image, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(var(--background-blur, 0px));
+    opacity: calc(var(--background-opacity, 100) / 100);
+    z-index: -1;
+    pointer-events: none;
+    transition:
+        filter 0.3s ease,
+        opacity 0.3s ease;
+}
+
+html[data-has-background="true"] {
+    background-color: transparent !important;
+}
+
+html[data-has-background="true"] .main-content,
+html[data-has-background="true"] .main-sidebar,
+html[data-has-background="true"] .titlebar {
+    background-color: color-mix(
+        in srgb,
+        var(--color-base-100, #1f1f1f),
+        transparent 70%
+    ) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+html[data-has-background="true"] .irc-chat > div,
+html[data-has-background="true"] .irc-chat > button {
+    background-color: transparent !important;
+}
+
+html[data-has-background="true"] .card,
+html[data-has-background="true"] .irc-chat {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-has-background="true"] .main-sidebar {
+    border-right-color: rgba(255, 255, 255, 0.05) !important;
+    border-left-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+html[data-has-background="true"] .dropdown-content,
+html[data-has-background="true"] .menu,
+html[data-has-background="true"] .modal-box,
+html[data-has-background="true"] .input,
+html[data-has-background="true"] .select,
+html[data-has-background="true"] .textarea {
+    background-color: var(--color-base-100, #141414) !important;
+    backdrop-filter: none !important;
+    opacity: 1 !important;
 }
 
 .slide-up {
@@ -114,7 +183,7 @@ html {
     display: block;
 }
 
-:root.winter-event[data-theme='dark'] {
+:root.winter-event[data-theme="dark"] {
     --color-primary: oklch(86% 0.06 240);
     --color-primary-content: oklch(0% 0 0);
     --color-accent: oklch(78% 0.05 210);
@@ -122,7 +191,7 @@ html {
     --color-info: oklch(72% 0.12 230);
 }
 
-:root.winter-event[data-theme='light'] {
+:root.winter-event[data-theme="light"] {
     --color-primary: oklch(28% 0.06 245);
     --color-primary-content: oklch(98% 0 0);
     --color-accent: oklch(32% 0.05 220);

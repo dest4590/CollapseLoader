@@ -46,8 +46,7 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     let new_dpi_bypass_value = input_settings.dpi_bypass.value;
 
-    let input_settings_clone = input_settings.clone();
-    let new_settings = Settings::from_input(input_settings_clone, config_path);
+    let new_settings = Settings::from_input(input_settings, config_path);
     *current_settings = new_settings.clone();
 
     new_settings.save_to_disk();
@@ -66,11 +65,15 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
 
     #[cfg(target_os = "windows")]
     {
-        if dpi_bypass_changed && new_dpi_bypass_value {
-            log_info!("DPI bypass enabled. Preparing to download and run package");
-
-            if let Err(e) = dpi::download_dpi_bypass() {
-                log_error!("Failed to initiate DPI bypass setup: {e}");
+        if dpi_bypass_changed {
+            if new_dpi_bypass_value {
+                log_info!("DPI bypass enabled. Preparing to download and run package");
+                if let Err(e) = dpi::enable_dpi_bypass_async() {
+                    log_error!("Failed to initiate DPI bypass setup: {e}");
+                }
+            } else {
+                log_info!("DPI bypass disabled. Killing existing processes");
+                dpi::kill_winws();
             }
         }
     }
@@ -323,7 +326,6 @@ pub fn is_telemetry_consent_shown() -> Result<bool, String> {
 
 #[tauri::command]
 pub fn set_custom_clients_display(display: String) -> Result<(), String> {
-    log_info!("Setting custom clients display to: {}", display);
     let mut flags = FLAGS_MANAGER.lock().unwrap();
     flags.set_custom_clients_display(display);
     flags.save_to_disk();

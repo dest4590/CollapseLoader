@@ -1,14 +1,24 @@
 <template>
     <div class="global-modals">
         <template v-for="(modal, id) in modals" :key="id">
-            <CustomModal v-model="modal.open" :title="modal.title" :content-class="modal.contentClass"
-                @close="closeModal(id)">
+            <CustomModal
+                v-model="modal.open"
+                :title="modal.title"
+                :content-class="modal.contentClass"
+                :size="modal.size"
+                @close="closeModal(id)"
+            >
                 <template #header>
                     <slot :name="`header-${id}`"></slot>
                 </template>
                 <template #body>
-                    <component :is="modal.component" v-bind="modal.props || {}" v-on="modal.listeners || {}"
-                        @close="closeModal(id)" :key="`${id}-${locale}`" />
+                    <component
+                        :is="modal.component"
+                        v-bind="modal.props || {}"
+                        v-on="modal.listeners || {}"
+                        @close="closeModal(id)"
+                        :key="`${id}-${locale}`"
+                    />
                 </template>
                 <template #footer>
                     <slot :name="`footer-${id}`"></slot>
@@ -19,9 +29,9 @@
 </template>
 
 <script setup lang="ts">
-import { useModal } from '../../services/modalService';
-import { useI18n } from 'vue-i18n';
-import CustomModal from '../modals/CustomModal.vue';
+import { useModal } from "../../services/modalService";
+import { useI18n } from "vue-i18n";
+import CustomModal from "../modals/CustomModal.vue";
 
 const { getModals, hideModal } = useModal();
 const { locale } = useI18n();

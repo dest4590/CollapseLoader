@@ -19,6 +19,8 @@ pub struct CustomClient {
     pub is_installed: bool,
     pub launches: u32,
     pub insecure: bool,
+    pub java_path: Option<String>,
+    pub java_args: Option<String>,
 }
 
 impl CustomClient {
@@ -41,6 +43,8 @@ impl CustomClient {
             is_installed: false,
             launches: 0,
             insecure: false,
+            java_path: None,
+            java_args: None,
         }
     }
 
@@ -72,6 +76,8 @@ impl CustomClient {
                 is_custom: true,
                 size: 0,
             },
+            java_path: self.java_path.clone(),
+            java_args: self.java_args.clone(),
         }
     }
 

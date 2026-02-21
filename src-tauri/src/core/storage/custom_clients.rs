@@ -14,11 +14,18 @@ use super::common::JsonStorage;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CustomClientManager {
     pub clients: Vec<CustomClient>,
+    #[serde(skip)]
     pub custom_clients_path: PathBuf,
     pub next_id: u32,
 }
 
 impl CustomClientManager {
+    pub fn load_from_disk(path: PathBuf) -> Self {
+        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+        loaded.custom_clients_path = path;
+        loaded
+    }
+
     pub fn add_client(&mut self, mut custom_client: CustomClient) -> Result<(), String> {
         if !custom_client.file_path.exists() {
             return Err(format!(
@@ -122,6 +129,14 @@ impl CustomClientManager {
                 client.main_class = main_class;
             }
 
+            if let Some(java_path) = updates.java_path {
+                client.java_path = Some(java_path);
+            }
+
+            if let Some(java_args) = updates.java_args {
+                client.java_args = Some(java_args);
+            }
+
             self.save_to_disk();
             Ok(())
         } else {
@@ -135,6 +150,8 @@ pub struct CustomClientUpdate {
     pub name: Option<String>,
     pub version: Option<String>,
     pub main_class: Option<String>,
+    pub java_path: Option<String>,
+    pub java_args: Option<String>,
 }
 
 impl JsonStorage for CustomClientManager {

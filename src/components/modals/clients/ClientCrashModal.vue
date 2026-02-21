@@ -1,10 +1,10 @@
 <template>
     <div class="client-crash-modal">
         <p v-if="error" class="error-message">
-            {{ $t('modals.client_crash.error_occurred', { error }) }}
+            {{ $t("modals.client_crash.error_occurred", { error }) }}
         </p>
         <p v-else>
-            {{ $t('modals.client_crash.crashed_message', { clientName }) }}
+            {{ $t("modals.client_crash.crashed_message", { clientName }) }}
         </p>
 
         <div class="logs-container">
@@ -13,19 +13,19 @@
 
         <div class="modal-actions">
             <button @click="copyLogs" class="btn btn-sm btn-outline">
-                {{ $t('modals.client_crash.copy_logs') }}
+                {{ $t("modals.client_crash.copy_logs") }}
             </button>
             <button @click="closeModal" class="btn btn-sm btn-primary">
-                {{ $t('modals.client_crash.close') }}
+                {{ $t("modals.client_crash.close") }}
             </button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useToast } from '../../../services/toastService';
-import { useI18n } from 'vue-i18n';
+import { computed } from "vue";
+import { useToast } from "../../../services/toastService";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     clientId: number;
@@ -35,29 +35,29 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['close']);
+const emit = defineEmits(["close"]);
 
 const { addToast } = useToast();
 const { t } = useI18n();
 
 const formattedLogs = computed(() => {
     if (!props.logs || props.logs.length === 0) {
-        return t('modals.client_crash.no_logs');
+        return t("modals.client_crash.no_logs");
     }
-    return props.logs.join('\n');
+    return props.logs.join("\n");
 });
 
 const closeModal = () => {
-    emit('close');
+    emit("close");
 };
 
 const copyLogs = async () => {
     try {
         await navigator.clipboard.writeText(formattedLogs.value);
-        addToast(t('toast.logs.client_logs_copied'), 'success');
+        addToast(t("toast.logs.client_logs_copied"), "success");
     } catch (err) {
-        console.error('Failed to copy logs: ', err);
-        addToast(t('toast.logs.client_logs_copy_failed'), 'error');
+        console.error("Failed to copy logs: ", err);
+        addToast(t("toast.logs.client_logs_copy_failed"), "error");
     }
 };
 </script>

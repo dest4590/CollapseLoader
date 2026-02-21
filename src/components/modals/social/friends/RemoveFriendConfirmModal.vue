@@ -1,26 +1,26 @@
 <template>
     <div>
         <p class="text-sm text-base-content/70">
-            {{ $t('modals.remove_friend_confirm.message', { displayName }) }}
+            {{ $t("modals.remove_friend_confirm.message", { displayName }) }}
         </p>
 
         <div class="flex justify-end space-x-2 mt-6">
             <button @click="confirmAction" class="btn btn-error">
                 <UserMinus class="w-4 h-4 mr-2" />
-                {{ $t('modals.remove_friend_confirm.yes_remove') }}
+                {{ $t("modals.remove_friend_confirm.yes_remove") }}
             </button>
             <button @click="$emit('close')" class="btn btn-outline">
                 <X class="w-4 h-4 mr-2" />
-                {{ $t('common.cancel') }}
+                {{ $t("common.cancel") }}
             </button>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { UserMinus, X } from 'lucide-vue-next';
-import { globalUserStatus } from '../../../../composables/useUserStatus';
+import { computed } from "vue";
+import { UserMinus, X } from "lucide-vue-next";
+import { globalUserStatus } from "../../../../composables/useUserStatus";
 
 interface Friend {
     id: number;
@@ -32,14 +32,16 @@ const props = defineProps<{
     friend: Friend;
 }>();
 
-const emit = defineEmits(['close', 'confirm']);
+const emit = defineEmits(["close", "confirm"]);
 
-const displayName = computed(
-    () => globalUserStatus.isStreamer.value ? '??' : (props.friend.nickname || props.friend.username)
+const displayName = computed(() =>
+    globalUserStatus.isStreamer.value
+        ? "??"
+        : props.friend.nickname || props.friend.username
 );
 
 const confirmAction = () => {
-    emit('confirm', props.friend);
-    emit('close');
+    emit("confirm", props.friend);
+    emit("close");
 };
 </script>

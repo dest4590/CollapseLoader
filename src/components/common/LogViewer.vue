@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
-import { X } from 'lucide-vue-next';
-import { useToast } from '../../services/toastService';
-import { useI18n } from 'vue-i18n';
+import { ref, onMounted, onUnmounted, watch } from "vue";
+import { invoke } from "@tauri-apps/api/core";
+import { X } from "lucide-vue-next";
+import { useToast } from "../../services/toastService";
+import { useI18n } from "vue-i18n";
 
 interface Props {
     clientId: number;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['close']);
+const emit = defineEmits(["close"]);
 
 const logs = ref<string[]>([]);
 const logsContainer = ref<HTMLDivElement | null>(null);
@@ -24,15 +24,15 @@ const { t } = useI18n();
 const fetchLogs = async () => {
     if (props.clientId && props.isOpen) {
         try {
-            logs.value = await invoke<string[]>('get_client_logs', {
+            logs.value = await invoke<string[]>("get_client_logs", {
                 id: props.clientId,
             });
             if (autoScroll.value && logsContainer.value) {
                 scrollToBottom();
             }
         } catch (err) {
-            console.error('Error fetching client logs:', err);
-            addToast(t('errors.logs_error', { error: err }), 'error');
+            console.error("Error fetching client logs:", err);
+            addToast(t("errors.logs_error", { error: err }), "error");
         }
     }
 };
@@ -102,7 +102,7 @@ onUnmounted(() => {
 });
 
 const close = () => {
-    emit('close');
+    emit("close");
 };
 </script>
 
@@ -110,20 +110,28 @@ const close = () => {
     <div v-if="isOpen" class="log-viewer-overlay" @click="close">
         <div class="log-viewer-modal" @click.stop>
             <div class="log-viewer-header">
-                <h3>{{ t('logs.title', { client: clientName }) }}</h3>
+                <h3>{{ t("logs.title", { client: clientName }) }}</h3>
                 <div class="log-viewer-actions">
                     <label class="auto-scroll-toggle">
-                        <input type="checkbox" class="checkbox" v-model="autoScroll" />
-                        <span>{{ t('appLogs.autoScroll') }}</span>
+                        <input
+                            type="checkbox"
+                            class="checkbox"
+                            v-model="autoScroll"
+                        />
+                        <span>{{ t("appLogs.autoScroll") }}</span>
                     </label>
                     <button class="close-btn" @click="close">
                         <X class="w-4" />
                     </button>
                 </div>
             </div>
-            <div ref="logsContainer" class="log-viewer-content" @scroll="handleScroll">
+            <div
+                ref="logsContainer"
+                class="log-viewer-content"
+                @scroll="handleScroll"
+            >
                 <div v-if="logs.length === 0" class="no-logs">
-                    {{ t('appLogs.noLogs') }}
+                    {{ t("appLogs.noLogs") }}
                 </div>
                 <pre v-else><code>{{ logs.join('\n') }}</code></pre>
             </div>
@@ -211,7 +219,7 @@ const close = () => {
     overflow-y: auto;
     overflow-x: hidden;
     padding: 16px;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: "Consolas", "Monaco", monospace;
     font-size: 13px;
     line-height: 1.5;
     white-space: pre-wrap;

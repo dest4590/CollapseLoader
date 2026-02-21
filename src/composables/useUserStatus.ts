@@ -1,28 +1,28 @@
-import { ref, computed, reactive, nextTick } from 'vue';
-import { apiClient } from '../services/apiClient';
-import { useStreamerMode } from './useStreamerMode';
+import { ref, computed, reactive, nextTick } from "vue";
+import { apiClient } from "../services/apiClient";
+import { useStreamerMode } from "./useStreamerMode";
 
 interface StatusData {
     isOnline: boolean;
-    currentClientName?: string | null;
+    currentClientName: string | null;
     invisibleMode: boolean;
     lastSeen: string | null;
     username: string;
     nickname: string | null;
     lastStatusUpdate: string | null;
+    startedAt: string | null;
 }
-
 
 const globalStatus = reactive<StatusData>({
     isOnline: false,
     currentClientName: null,
     invisibleMode: false,
     lastSeen: null,
-    username: '',
+    username: "",
     nickname: null,
-    lastStatusUpdate: null
+    lastStatusUpdate: null,
+    startedAt: null,
 });
-
 
 const isAuthenticated = ref(false);
 
@@ -38,14 +38,15 @@ export function useUserStatus() {
     const streamer = useStreamerMode();
 
     const checkAuthStatus = (): boolean => {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem("authToken");
         const isAuth = !!token;
         isAuthenticated.value = isAuth;
 
         return isAuth;
     };
 
-    const extractApiData = (resp: any) => resp && resp.data ? resp.data : resp;
+    const extractApiData = (resp: any) =>
+        resp && resp.data ? resp.data : resp;
 
     const syncStatusToServer = async (force = false): Promise<any> => {
         if (!checkAuthStatus()) {
@@ -60,25 +61,35 @@ export function useUserStatus() {
 
         try {
             const statusPayload = {
-                status: globalStatus.isOnline && !globalStatus.invisibleMode ? 'ONLINE' : 'OFFLINE',
-                client_name: globalStatus.currentClientName ?? null
+                status:
+                    globalStatus.isOnline && !globalStatus.invisibleMode
+                        ? "ONLINE"
+                        : "OFFLINE",
+                client_name: globalStatus.currentClientName ?? null,
             };
 
-            pendingStatusUpdate = apiClient.put('/users/me/status', statusPayload);
+            pendingStatusUpdate = apiClient.put(
+                "/users/me/status",
+                statusPayload
+            );
             const raw = await pendingStatusUpdate;
             const response = extractApiData(raw);
 
             if (currentRequestId === lastRequestId) {
                 updateLocalStatus(response);
-                console.log(`Status synced: ${globalStatus.isOnline ? 'online' : 'offline'}${globalStatus.invisibleMode ? ' (invisible)' : ''}`,
-                    globalStatus.currentClientName ? `on client: ${globalStatus.currentClientName}` : '');
+                console.log(
+                    `Status synced: ${globalStatus.isOnline ? "online" : "offline"}${globalStatus.invisibleMode ? " (invisible)" : ""} `,
+                    globalStatus.currentClientName
+                        ? `on client: ${globalStatus.currentClientName} `
+                        : ""
+                );
             } else {
-                console.log('Ignoring stale status response');
+                console.log("Ignoring stale status response");
             }
 
             return response;
         } catch (error) {
-            console.error('Failed to sync status to server:', error);
+            console.error("Failed to sync status to server:", error);
             throw error;
         } finally {
             if (currentRequestId === lastRequestId) {
@@ -93,59 +104,87 @@ export function useUserStatus() {
         if (!serverResponse) return false;
 
         if (serverResponse.status !== undefined) {
-            const normalized = String(serverResponse.status || '').toUpperCase();
-            globalStatus.isOnline = normalized.length > 0 && normalized !== 'OFFLINE' && normalized !== 'INVISIBLE';
+            const normalized = String(
+                serverResponse.status || ""
+            ).toUpperCase();
+            globalStatus.isOnline =
+                normalized.length > 0 &&
+                normalized !== "OFFLINE" &&
+                normalized !== "INVISIBLE";
         }
         if (serverResponse.client_name !== undefined) {
             globalStatus.currentClientName = serverResponse.client_name ?? null;
         }
         if (serverResponse.updated_at) {
             globalStatus.lastStatusUpdate = serverResponse.updated_at;
-            globalStatus.lastSeen = globalStatus.isOnline ? null : serverResponse.updated_at;
+            globalStatus.lastSeen = globalStatus.isOnline
+                ? null
+                : serverResponse.updated_at;
+        }
+        if (serverResponse.started_at) {
+            globalStatus.startedAt = serverResponse.started_at;
         }
 
-        const hasChanges = (
+        const hasChanges =
             oldStatus.isOnline !== globalStatus.isOnline ||
             oldStatus.currentClientName !== globalStatus.currentClientName ||
-            oldStatus.invisibleMode !== globalStatus.invisibleMode
-        );
+            oldStatus.invisibleMode !== globalStatus.invisibleMode ||
+            oldStatus.startedAt !== globalStatus.startedAt;
 
         if (hasChanges) {
-            console.log('Status change detected:', { ...globalStatus });
+            console.log("Status change detected:", { ...globalStatus });
         }
 
         return hasChanges;
     };
 
     const setOnline = (shouldQueue: boolean = true) => {
-        console.log('Setting user online (no client)');
+        console.log("Setting user online (no client)");
         globalStatus.isOnline = true;
         globalStatus.currentClientName = null;
-        if (shouldQueue) syncStatusToServer(true).catch(error => {
-            console.error('Immediate status update (online) failed:', error);
-        });
+        if (shouldQueue)
+            syncStatusToServer(true).catch((error) => {
+                console.error(
+                    "Immediate status update (online) failed:",
+                    error
+                );
+            });
     };
 
     const setOffline = (shouldQueue: boolean = true) => {
-        console.log('Setting user offline');
+        console.log("Setting user offline");
         globalStatus.isOnline = false;
         globalStatus.currentClientName = null;
-        if (shouldQueue) syncStatusToServer(true).catch(error => {
-            console.error('Immediate status update (offline) failed:', error);
-        });
+        if (shouldQueue)
+            syncStatusToServer(true).catch((error) => {
+                console.error(
+                    "Immediate status update (offline) failed:",
+                    error
+                );
+            });
     };
 
-    const setPlayingClient = (clientName?: string | null, shouldQueue: boolean = true) => {
-        console.log(`Setting user playing client name: ${clientName}`);
+    const setPlayingClient = (
+        clientName?: string | null,
+        shouldQueue: boolean = true
+    ) => {
+        console.log(`Setting user playing client name: ${clientName} `);
         globalStatus.isOnline = true;
-        if (clientName !== undefined) globalStatus.currentClientName = clientName ?? null;
-        if (shouldQueue) syncStatusToServer(true).catch(error => {
-            console.error('Immediate status update (client_change) failed:', error);
-        });
+        if (clientName !== undefined)
+            globalStatus.currentClientName = clientName ?? null;
+        if (shouldQueue)
+            syncStatusToServer(true).catch((error) => {
+                console.error(
+                    "Immediate status update (client_change) failed:",
+                    error
+                );
+            });
     };
 
     const setInvisibleMode = (enable: boolean, shouldQueue: boolean = true) => {
-        console.log(`Setting invisible mode: ${enable ? 'enabled' : 'disabled'}`);
+        console.log(
+            `Setting invisible mode: ${enable ? "enabled" : "disabled"} `
+        );
         globalStatus.invisibleMode = enable;
 
         if (enable) {
@@ -154,13 +193,19 @@ export function useUserStatus() {
         } else {
             globalStatus.isOnline = true;
         }
-        if (shouldQueue) syncStatusToServer(true).catch(error => {
-            console.error('Immediate status update (invisible_toggle) failed:', error);
-        });
+        if (shouldQueue)
+            syncStatusToServer(true).catch((error) => {
+                console.error(
+                    "Immediate status update (invisible_toggle) failed:",
+                    error
+                );
+            });
     };
 
     const setStreamerMode = (enable: boolean) => {
-        console.log(`Setting streamer mode: ${enable ? 'enabled' : 'disabled'}`);
+        console.log(
+            `Setting streamer mode: ${enable ? "enabled" : "disabled"} `
+        );
         streamer.setStreamerMode(enable);
     };
 
@@ -170,46 +215,42 @@ export function useUserStatus() {
         }
 
         const pollWrapper = async () => {
-            if (document && document.visibilityState === 'hidden') {
-                return;
-            }
-
             if (checkAuthStatus()) {
-                syncStatusToServer().catch(error => {
-                    console.error('Scheduled status sync failed:', error);
+                syncStatusToServer().catch((error) => {
+                    console.error("Scheduled status sync failed:", error);
                 });
             } else {
-                console.log('Auth check failed in sync interval, stopping sync');
+                console.log(
+                    "Auth check failed in sync interval, stopping sync"
+                );
                 await stopStatusSync();
             }
         };
 
         statusSyncInterval = setInterval(pollWrapper, pollingConfig.interval);
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                pollWrapper().catch(() => {
-                });
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                pollWrapper().catch(() => {});
             }
         });
     };
 
     const startStatusSync = () => {
         if (!checkAuthStatus()) {
-            console.log('Cannot start status sync - user not authenticated');
+            console.log("Cannot start status sync - user not authenticated");
             return;
         }
 
-        syncStatusToServer(true).catch(error => {
-            console.error('Failed to sync status on start:', error);
+        syncStatusToServer(true).catch((error) => {
+            console.error("Failed to sync status on start:", error);
         });
 
         startPolling();
     };
 
-
     const stopStatusSync = async () => {
-        console.log('Stopping status sync...');
+        console.log("Stopping status sync...");
 
         if (statusSyncInterval) {
             clearInterval(statusSyncInterval);
@@ -221,44 +262,41 @@ export function useUserStatus() {
             try {
                 await syncStatusToServer(true);
             } catch (error) {
-                console.error('Failed to mark user offline on stop:', error);
+                console.error("Failed to mark user offline on stop:", error);
             }
         }
-        console.log('Status sync stopped');
+        console.log("Status sync stopped");
     };
-
 
     const forceSyncStatus = async () => {
         return await syncStatusToServer(true);
     };
 
-
     const fetchCurrentStatus = async () => {
         if (!checkAuthStatus()) return null;
 
         try {
-            const statusRaw = await apiClient.get('/users/me/status');
+            const statusRaw = await apiClient.get("/users/me/status");
             const status = extractApiData(statusRaw);
             updateLocalStatus(status);
             return status;
         } catch (error) {
-            console.error('Failed to fetch current status:', error);
+            console.error("Failed to fetch current status:", error);
             return null;
         }
     };
 
-
     const initializeStatusSystem = () => {
         checkAuthStatus();
         if (isAuthenticated.value) {
-
             setOnline(false);
             startStatusSync();
         } else {
-            console.log('User not authenticated, skipping status system initialization');
+            console.log(
+                "User not authenticated, skipping status system initialization"
+            );
         }
     };
-
 
     const restartStatusSystem = async () => {
         await stopStatusSync();
@@ -297,7 +335,7 @@ export function useUserStatus() {
         initializeStatusSystem,
         restartStatusSystem,
         fetchCurrentStatus,
-        checkAuthStatus
+        checkAuthStatus,
     };
 }
 

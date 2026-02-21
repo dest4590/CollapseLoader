@@ -1,7 +1,7 @@
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useModal } from '../services/modalService';
-import SlowDownloadWarningModal from '../components/modals/common/SlowDownloadWarningModal.vue';
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useModal } from "../services/modalService";
+import SlowDownloadWarningModal from "../components/modals/common/SlowDownloadWarningModal.vue";
 
 export interface DownloadSpeedConfig {
     slowSpeedThreshold?: number;
@@ -38,7 +38,6 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
             const bytesDiff = downloaded - lastDownloaded.value;
             if (timeDiff > 0 && bytesDiff >= 0) {
                 currentSpeed.value = bytesDiff / timeDiff;
-                console.log(`[DownloadMonitor] Speed: ${(currentSpeed.value / 1024).toFixed(1)} KB/s`);
             }
         }
         lastDownloaded.value = downloaded;
@@ -50,7 +49,6 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
     const checkSlowSpeed = () => {
         if (currentSpeed.value > 0 && currentSpeed.value < slowSpeedThreshold) {
             slowSpeedCount.value++;
-            console.log(`[DownloadMonitor] Slow speed! Count: ${slowSpeedCount.value}/${slowSpeedConsecutiveCount}`);
         } else {
             slowSpeedCount.value = 0;
         }
@@ -71,8 +69,10 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
         const now = Date.now();
         const timeSinceLastProgress = now - lastProgressTime.value;
 
-        if (lastProgressTime.value > 0 && timeSinceLastProgress >= stalledTimeout) {
-            console.log(`[DownloadMonitor] Download stalled! No progress for ${(timeSinceLastProgress / 1000).toFixed(0)}s`);
+        if (
+            lastProgressTime.value > 0 &&
+            timeSinceLastProgress >= stalledTimeout
+        ) {
             showStalledWarningModal();
         }
     };
@@ -80,17 +80,17 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
     const showSlowWarningModal = () => {
         slowSpeedWarningShown.value = true;
         showModal(
-            'slow-download-warning',
+            "slow-download-warning",
             SlowDownloadWarningModal,
             {
-                title: t('modals.slow_download.modal_title'),
+                title: t("modals.slow_download.modal_title"),
             },
             {
                 currentSpeed: currentSpeed.value,
                 isStalled: false,
             },
             {
-                close: () => hideModal('slow-download-warning'),
+                close: () => hideModal("slow-download-warning"),
             }
         );
     };
@@ -98,17 +98,17 @@ export function useDownloadSpeedMonitor(config: DownloadSpeedConfig = {}) {
     const showStalledWarningModal = () => {
         stalledWarningShown.value = true;
         showModal(
-            'slow-download-warning',
+            "slow-download-warning",
             SlowDownloadWarningModal,
             {
-                title: t('modals.slow_download.stalled_modal_title'),
+                title: t("modals.slow_download.stalled_modal_title"),
             },
             {
                 currentSpeed: 0,
                 isStalled: true,
             },
             {
-                close: () => hideModal('slow-download-warning'),
+                close: () => hideModal("slow-download-warning"),
             }
         );
     };

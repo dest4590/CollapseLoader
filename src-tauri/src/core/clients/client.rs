@@ -23,10 +23,10 @@ use crate::core::storage::{
 use crate::core::utils::{
     globals::{
         AGENT_FILE, AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER,
-        ASSETS_ZIP, CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, JDK21_FOLDER, JDK8_FOLDER,
-        JDK8_ZIP, LEGACY_SUFFIX, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FOLDER,
-        LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, LINUX_SUFFIX,
-        MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_ZIP,
+        ASSETS_ZIP, CUSTOM_CLIENTS_FOLDER, FABRIC_DEPS_URL, FILE_EXTENSION, FORGE_DEPS_URL,
+        IS_LINUX, JDK21_FOLDER, JDK8_FOLDER, LEGACY_SUFFIX, LIBRARIES_FABRIC_FOLDER,
+        LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP,
+        LINUX_SUFFIX, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_ZIP,
         NATIVES_LINUX_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
     },
     hashing::calculate_md5_hash,
@@ -68,12 +68,6 @@ fn is_minecraft_version_dir_name(name: &str) -> bool {
     parts
         .iter()
         .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
-}
-
-fn is_fabric_loader_jar(path: &Path) -> bool {
-    path.file_name()
-        .and_then(|n| n.to_str())
-        .is_some_and(|n| n.starts_with("fabric-loader") && n.ends_with(".jar"))
 }
 
 fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<PathBuf> {
@@ -159,6 +153,8 @@ impl Meta {
                     .and_then(|n| n.to_str())
                     .unwrap_or(filename);
                 DATA.root_dir
+                    .lock()
+                    .unwrap()
                     .join(Data::get_filename(filename))
                     .join(MODS_FOLDER)
                     .join(jar_basename)
@@ -170,6 +166,8 @@ impl Meta {
                         .and_then(|n| n.to_str())
                         .unwrap_or(filename);
                     DATA.root_dir
+                        .lock()
+                        .unwrap()
                         .join(Data::get_filename(filename))
                         .join(MODS_FOLDER)
                         .join(jar_basename)
@@ -235,6 +233,10 @@ pub struct Client {
     pub client_type: ClientType,
     #[serde(default = "default_created_at")]
     pub created_at: DateTime<Utc>,
+    #[serde(default)]
+    pub java_path: Option<String>,
+    #[serde(default)]
+    pub java_args: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -244,7 +246,7 @@ pub struct Requirement {
     size: Option<u64>,
 }
 
-const fn default_meta() -> Meta {
+fn default_meta() -> Meta {
     Meta {
         is_new: false,
         is_fabric: false,
@@ -267,7 +269,7 @@ pub struct LaunchOptions {
 }
 
 impl LaunchOptions {
-    pub const fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
+    pub fn new(app_handle: AppHandle, user_token: String, is_custom: bool) -> Self {
         Self {
             app_handle,
             user_token,
@@ -292,28 +294,35 @@ impl Client {
 
     fn jdk_zip_name(&self) -> String {
         if self.client_type == ClientType::Forge {
-            JDK8_ZIP.to_string()
+            format!("misc/{JDK8_FOLDER}.zip")
         } else {
-            format!("{JDK21_FOLDER}.zip")
+            format!("misc/{JDK21_FOLDER}.zip")
         }
     }
 
     fn java_executable_path(&self) -> PathBuf {
         DATA.root_dir
+            .lock()
+            .unwrap()
             .join(self.jdk_folder_name())
             .join("bin")
             .join(format!("java{FILE_EXTENSION}"))
     }
 
-    fn get_launch_paths(&self) -> Result<(PathBuf, PathBuf), String> {
+    pub fn get_launch_paths(&self) -> Result<(PathBuf, PathBuf), String> {
         if self.meta.is_custom {
-            let folder = DATA.root_dir.join(CUSTOM_CLIENTS_FOLDER).join(&self.name);
+            let folder = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(CUSTOM_CLIENTS_FOLDER)
+                .join(&self.name);
             let jar = folder.join(&self.filename);
             return Ok((folder, jar));
         }
 
         let base_name = Data::get_filename(&self.filename);
-        let folder = DATA.root_dir.join(&base_name);
+        let folder = DATA.root_dir.lock().unwrap().join(&base_name);
 
         match self.client_type {
             ClientType::Forge | ClientType::Fabric => {
@@ -324,11 +333,14 @@ impl Client {
                 Ok((folder.clone(), folder.join(MODS_FOLDER).join(jar_basename)))
             }
             ClientType::Default => {
+                let jar_basename = Path::new(&self.filename)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or(&self.filename);
                 if self.filename.contains("fabric/") {
-                    let jar_basename = Path::new(&self.filename).file_name().unwrap();
                     Ok((folder.clone(), folder.join(MODS_FOLDER).join(jar_basename)))
                 } else {
-                    Ok((folder.clone(), folder.join(&self.filename)))
+                    Ok((folder.clone(), folder.join(jar_basename)))
                 }
             }
         }
@@ -339,10 +351,14 @@ impl Client {
         match self.client_type {
             ClientType::Fabric => DATA
                 .root_dir
+                .lock()
+                .unwrap()
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(format!("fabric_{}.jar", safe_ver)),
             ClientType::Forge => DATA
                 .root_dir
+                .lock()
+                .unwrap()
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(format!("forge_{}.jar", safe_ver)),
             ClientType::Default => self.get_launch_paths().unwrap_or_default().1,
@@ -380,9 +396,17 @@ impl Client {
                 let client_base = Data::get_filename(&self.filename);
                 let mods_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
                 let safe_ver = sanitize_version_for_paths(&self.version);
-                let forge_jar_name = format!("forge_{}.jar", safe_ver);
+                let forge_jar_name =
+                    format!("misc/{MINECRAFT_VERSIONS_FOLDER}/forge_{}.jar", safe_ver);
 
-                DATA.download_to_folder(&self.filename, &mods_folder)
+                let remote_path = if self.filename.contains('/') {
+                    let parts: Vec<&str> = self.filename.split('/').collect();
+                    format!("clients/{}/jars/{}", parts[0], parts[1])
+                } else {
+                    format!("clients/forge/jars/{}", self.filename)
+                };
+
+                DATA.download_to_folder(&remote_path, &mods_folder)
                     .await
                     .map_err(|e| format!("Forge Mod download failed: {e}"))?;
 
@@ -390,7 +414,26 @@ impl Client {
                     .await
                     .map_err(|e| format!("Forge MC Jar download failed: {e}"))
             }
-            _ => DATA.download(&self.filename).await,
+            ClientType::Fabric => {
+                let client_base = Data::get_filename(&self.filename);
+                let mods_folder = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
+                let remote_path = if self.filename.contains('/') {
+                    let parts: Vec<&str> = self.filename.split('/').collect();
+                    format!("clients/{}/jars/{}", parts[0], parts[1])
+                } else {
+                    format!("clients/fabric/jars/{}", self.filename)
+                };
+                DATA.download_to_folder(&remote_path, &mods_folder).await
+            }
+            _ => {
+                let remote_path = if self.filename.contains('/') {
+                    let parts: Vec<&str> = self.filename.split('/').collect();
+                    format!("clients/{}/jars/{}", parts[0], parts[1])
+                } else {
+                    format!("clients/vanilla/jars/{}", self.filename)
+                };
+                DATA.download(&remote_path).await
+            }
         };
 
         if let Err(e) = download_result {
@@ -409,14 +452,7 @@ impl Client {
             return Err(e);
         }
 
-        ClientManager::get_client(manager, self.id, |c| {
-            c.meta.installed = true;
-            c.meta.size = self.size;
-        });
-        log_debug!(
-            "Client '{}' downloaded and installed successfully",
-            self.name
-        );
+        log_debug!("Client '{}' download procedure finished", self.name);
 
         Ok(())
     }
@@ -472,6 +508,76 @@ impl Client {
         Ok(())
     }
 
+    async fn download_dependency(
+        &self,
+        remote_path: &str,
+        local_folder_rel: &str,
+        local_file_abs: &Path,
+        expected_md5: Option<&String>,
+        name_for_logs: &str,
+    ) -> Result<(), String> {
+        let mut need_download = true;
+
+        if local_file_abs.exists() {
+            if let Some(expected) = expected_md5 {
+                let ok = Data::verify_file_md5(local_file_abs, expected)
+                    .await
+                    .map_err(|e| format!("Failed to verify MD5 for {name_for_logs}: {e}"))?;
+                if ok {
+                    need_download = false;
+                } else {
+                    log_warn!(
+                        "MD5 mismatch for {}. Expected: {}. Redownloading...",
+                        name_for_logs,
+                        expected
+                    );
+                    let _ = std::fs::remove_file(local_file_abs);
+                    need_download = true;
+                }
+            } else {
+                need_download = false;
+            }
+        }
+
+        if need_download {
+            log_info!("Downloading dependency: {}", remote_path);
+            DATA.download_to_folder(remote_path, local_folder_rel)
+                .await
+                .map_err(|e| format!("Failed to download dependency {name_for_logs}: {e}"))?;
+
+            if let Some(expected) = expected_md5 {
+                let ok = Data::verify_file_md5(local_file_abs, expected)
+                    .await
+                    .map_err(|e| format!("Failed to verify MD5 for {name_for_logs}: {e}"))?;
+                if !ok {
+                    log_warn!(
+                        "MD5 mismatch after download for {}. Retrying...",
+                        name_for_logs
+                    );
+                    let _ = std::fs::remove_file(local_file_abs);
+                    DATA.download_to_folder(remote_path, local_folder_rel)
+                        .await
+                        .map_err(|e| {
+                            format!("Failed to redownload dependency {name_for_logs}: {e}")
+                        })?;
+
+                    let ok2 = Data::verify_file_md5(local_file_abs, expected)
+                        .await
+                        .map_err(|e| {
+                            format!("Failed to verify MD5 for {name_for_logs} after retry: {e}")
+                        })?;
+                    if !ok2 {
+                        let _ = std::fs::remove_file(local_file_abs);
+                        return Err(format!(
+                            "MD5 mismatch for {name_for_logs} after retry. Aborting."
+                        ));
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     async fn download_fabric_mods(&self) -> Result<(), String> {
         if self.client_type != ClientType::Fabric {
             return Ok(());
@@ -480,77 +586,61 @@ impl Client {
         if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
-            let mods_folder_abs = DATA.root_dir.join(&client_base).join(MODS_FOLDER);
+            let mods_folder_abs = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(&client_base)
+                .join(MODS_FOLDER);
 
             for req in mods {
                 let name = req.name.clone();
-                let expected_md5 = req.md5_hash.clone();
-
                 let mod_basename = name.trim_end_matches(".jar");
                 let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
-                let remote_path = format!("fabric/deps/{mod_basename}.jar");
+                let remote_path = format!("{FABRIC_DEPS_URL}/{mod_basename}.jar");
 
-                let mut need_download = true;
-                if dest.exists() {
-                    if let Some(ref expected) = expected_md5 {
-                        let ok = Data::verify_file_md5(&dest, expected)
-                            .await
-                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
-                        if ok {
-                            need_download = false;
-                        } else {
-                            log_warn!(
-                                "MD5 mismatch for {}. Expected: {}. Redownloading...",
-                                mod_basename,
-                                expected
-                            );
-                            let _ = std::fs::remove_file(&dest);
-                            need_download = true;
-                        }
-                    } else {
-                        need_download = false;
-                    }
-                }
+                self.download_dependency(
+                    &remote_path,
+                    &mods_folder_rel,
+                    &dest,
+                    req.md5_hash.as_ref(),
+                    mod_basename,
+                )
+                .await?;
+            }
+        }
+        Ok(())
+    }
 
-                if need_download {
-                    log_info!("Downloading dependency: {}", remote_path);
-                    DATA.download_to_folder(&remote_path, &mods_folder_rel)
-                        .await
-                        .map_err(|e| {
-                            format!("Failed to download dependency {mod_basename}: {e}")
-                        })?;
+    async fn download_forge_mods(&self) -> Result<(), String> {
+        if self.client_type != ClientType::Forge {
+            return Ok(());
+        }
 
-                    if let Some(ref expected) = expected_md5 {
-                        let ok = Data::verify_file_md5(&dest, expected)
-                            .await
-                            .map_err(|e| format!("Failed to verify MD5 for {mod_basename}: {e}"))?;
-                        if !ok {
-                            log_warn!(
-                                "MD5 mismatch after download for {}. Retrying...",
-                                mod_basename
-                            );
-                            let _ = std::fs::remove_file(&dest);
-                            DATA.download_to_folder(&remote_path, &mods_folder_rel)
-                                .await
-                                .map_err(|e| {
-                                    format!("Failed to redownload dependency {mod_basename}: {e}")
-                                })?;
+        if let Some(mods) = &self.dependencies {
+            let client_base = Data::get_filename(&self.filename);
+            let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
+            let mods_folder_abs = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(&client_base)
+                .join(MODS_FOLDER);
 
-                            let ok2 =
-                                Data::verify_file_md5(&dest, expected).await.map_err(|e| {
-                                    format!(
-                                        "Failed to verify MD5 for {mod_basename} after retry: {e}"
-                                    )
-                                })?;
-                            if !ok2 {
-                                let _ = std::fs::remove_file(&dest);
-                                return Err(format!(
-                                    "MD5 mismatch for {mod_basename} after retry. Aborting."
-                                ));
-                            }
-                        }
-                    }
-                }
+            for req in mods {
+                let name = req.name.clone();
+                let mod_basename = name.trim_end_matches(".jar");
+                let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
+                let remote_path = format!("{FORGE_DEPS_URL}/{mod_basename}.jar");
+
+                self.download_dependency(
+                    &remote_path,
+                    &mods_folder_rel,
+                    &dest,
+                    req.md5_hash.as_ref(),
+                    mod_basename,
+                )
+                .await?;
             }
         }
         Ok(())
@@ -570,7 +660,7 @@ impl Client {
                 || folder == JDK8_FOLDER
                 || folder == JDK21_FOLDER
             {
-                let path = DATA.root_dir.join(folder);
+                let path = DATA.root_dir.lock().unwrap().join(folder);
                 if !path.exists() {
                     log_info!("Folder '{}' missing. Queuing {} for download.", folder, zip);
                     files_to_download.push(zip.to_string());
@@ -583,7 +673,7 @@ impl Client {
                     "Integrity check failed for '{}'. Wiping folder for clean redownload.",
                     folder
                 );
-                let path = DATA.root_dir.join(folder);
+                let path = DATA.root_dir.lock().unwrap().join(folder);
                 if path.exists() {
                     let _ = std::fs::remove_dir_all(&path);
                 }
@@ -592,41 +682,43 @@ impl Client {
         };
 
         check_and_queue(self.jdk_folder_name(), &self.jdk_zip_name());
+        check_and_queue(
+            if self.client_type == ClientType::Fabric {
+                ASSETS_FABRIC_FOLDER
+            } else {
+                ASSETS_FOLDER
+            },
+            if self.client_type == ClientType::Fabric {
+                ASSETS_FABRIC_ZIP
+            } else {
+                ASSETS_ZIP
+            },
+        );
 
-        match self.client_type {
-            ClientType::Fabric => {
-                check_and_queue(ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP);
+        let (libs_zip, libs_folder, natives_zip, natives_folder) = if self.is_legacy_client() {
+            (
+                LIBRARIES_LEGACY_ZIP,
+                LIBRARIES_LEGACY_FOLDER,
+                NATIVES_LEGACY_ZIP,
+                NATIVES_LEGACY_FOLDER,
+            )
+        } else {
+            (LIBRARIES_ZIP, LIBRARIES_FOLDER, NATIVES_ZIP, NATIVES_FOLDER)
+        };
+
+        check_and_queue(libs_folder, libs_zip);
+
+        let (actual_natives_zip, actual_natives_folder) = if IS_LINUX {
+            if self.is_legacy_client() {
+                (NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_LINUX_FOLDER)
+            } else {
+                (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
             }
-            _ => {
-                check_and_queue(ASSETS_FOLDER, ASSETS_ZIP);
+        } else {
+            (natives_zip, natives_folder)
+        };
 
-                let (libs_zip, libs_folder, natives_zip, natives_folder) =
-                    if self.is_legacy_client() {
-                        (
-                            LIBRARIES_LEGACY_ZIP,
-                            LIBRARIES_LEGACY_FOLDER,
-                            NATIVES_LEGACY_ZIP,
-                            NATIVES_LEGACY_FOLDER,
-                        )
-                    } else {
-                        (LIBRARIES_ZIP, LIBRARIES_FOLDER, NATIVES_ZIP, NATIVES_FOLDER)
-                    };
-
-                check_and_queue(libs_folder, libs_zip);
-
-                let (actual_natives_zip, actual_natives_folder) = if IS_LINUX {
-                    if self.is_legacy_client() {
-                        (NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_LINUX_FOLDER)
-                    } else {
-                        (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
-                    }
-                } else {
-                    (natives_zip, natives_folder)
-                };
-
-                check_and_queue(actual_natives_folder, actual_natives_zip);
-            }
-        }
+        check_and_queue(actual_natives_folder, actual_natives_zip);
 
         if !files_to_download.is_empty() {
             self.batch_download_requirements(app_handle, files_to_download)
@@ -638,13 +730,18 @@ impl Client {
         }
 
         if self.client_type == ClientType::Fabric || self.client_type == ClientType::Forge {
-            let safe_ver = sanitize_version_for_paths(&self.version);
             let remote = match self.client_type {
                 ClientType::Fabric => {
-                    format!("fabric_{}.jar", safe_ver)
+                    format!(
+                        "misc/{MINECRAFT_VERSIONS_FOLDER}/fabric_{}.jar",
+                        self.version
+                    )
                 }
                 ClientType::Forge => {
-                    format!("forge_{}.jar", safe_ver)
+                    format!(
+                        "misc/{MINECRAFT_VERSIONS_FOLDER}/forge_{}.jar",
+                        self.version
+                    )
                 }
                 _ => unreachable!(),
             };
@@ -652,22 +749,27 @@ impl Client {
             let dest_filename = remote.rsplit('/').next().unwrap_or(&remote);
             let local_path = DATA
                 .root_dir
+                .lock()
+                .unwrap()
                 .join(MINECRAFT_VERSIONS_FOLDER)
                 .join(dest_filename);
 
-            if !local_path.exists() {
-                log_info!(
-                    "MC jar missing, downloading: {} -> {}",
-                    remote,
-                    local_path.display()
-                );
-                DATA.download_to_folder(&remote, MINECRAFT_VERSIONS_FOLDER)
-                    .await?;
-            }
+            self.download_dependency(
+                &remote,
+                MINECRAFT_VERSIONS_FOLDER,
+                &local_path,
+                None,
+                dest_filename,
+            )
+            .await?;
         }
 
         if self.client_type == ClientType::Fabric {
             self.download_fabric_mods().await?;
+        }
+
+        if self.client_type == ClientType::Forge {
+            self.download_forge_mods().await?;
         }
 
         Ok(())
@@ -696,6 +798,7 @@ impl Client {
         }
 
         self.download_fabric_mods().await?;
+        self.download_forge_mods().await?;
 
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
@@ -712,7 +815,12 @@ impl Client {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let bin_dir = DATA.root_dir.join(self.jdk_folder_name()).join("bin");
+            let bin_dir = DATA
+                .root_dir
+                .lock()
+                .unwrap()
+                .join(self.jdk_folder_name())
+                .join("bin");
             if bin_dir.exists() {
                 if let Ok(entries) = std::fs::read_dir(&bin_dir) {
                     for entry in entries.flatten() {
@@ -739,18 +847,25 @@ impl Client {
     }
 
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
-        let common_dir = DATA.root_dir.join(LIBRARIES_FABRIC_FOLDER);
+        let common_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+
         if !dir_has_any_jars(&common_dir, true) {
             log_info!("Downloading common Fabric libraries");
             DATA.download(LIBRARIES_FABRIC_ZIP).await?;
         }
 
         let versioned_zip = format!(
-            "{}/{}.zip",
+            "misc/{}/{}.zip",
             LIBRARIES_FABRIC_FOLDER,
             sanitize_version_for_paths(&self.version)
         );
-        let versioned_dir = DATA.root_dir.join(versioned_zip.replace(".zip", ""));
+
+        let versioned_dir = DATA.root_dir.lock().unwrap().join(
+            versioned_zip
+                .strip_prefix("misc/")
+                .unwrap_or(&versioned_zip)
+                .replace(".zip", ""),
+        );
 
         if !dir_has_any_jars(&versioned_dir, false) {
             log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);
@@ -766,8 +881,10 @@ impl Client {
 
         log_warn!("Java executable missing. Redownloading requirements...");
 
-        let _ = tokio::fs::remove_dir_all(DATA.root_dir.join(self.jdk_folder_name())).await;
-        let _ = tokio::fs::remove_file(DATA.root_dir.join(self.jdk_zip_name())).await;
+        let jdk_dir = DATA.root_dir.lock().unwrap().join(self.jdk_folder_name());
+        let _ = tokio::fs::remove_dir_all(jdk_dir).await;
+        let jdk_zip = DATA.root_dir.lock().unwrap().join(self.jdk_zip_name());
+        let _ = tokio::fs::remove_file(jdk_zip).await;
 
         self.download_requirements(app_handle).await?;
 
@@ -779,7 +896,7 @@ impl Client {
 
     fn build_classpath(&self) -> Result<String, String> {
         let (_, client_jar) = self.get_launch_paths()?;
-        let agent_overlay = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
+        let agent_overlay = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
 
         let mut cp_parts = Vec::new();
 
@@ -789,27 +906,25 @@ impl Client {
 
                 let v_libs = DATA
                     .root_dir
+                    .lock()
+                    .unwrap()
                     .join(LIBRARIES_FABRIC_FOLDER)
-                    .join(sanitize_version_for_paths(&self.version));
+                    .join(format!("{}", sanitize_version_for_paths(&self.version)));
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
 
-                let g_libs = DATA.root_dir.join(LIBRARIES_FABRIC_FOLDER);
-                for jar in collect_jars_recursive(&g_libs, true) {
-                    if !is_fabric_loader_jar(&jar) {
-                        cp_parts.push(jar);
-                    }
-                }
+                let g_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+                cp_parts.extend(collect_jars_recursive(&g_libs, true));
             }
             ClientType::Forge => {
                 cp_parts.push(self.get_minecraft_jar_path());
-                let libs = DATA.root_dir.join(LIBRARIES_LEGACY_FOLDER);
+                let libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER);
                 cp_parts.extend(collect_jars_recursive(&libs, false));
             }
             ClientType::Default => {
                 let libs = if self.is_legacy_client() {
-                    DATA.root_dir.join(LIBRARIES_LEGACY_FOLDER)
+                    DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER)
                 } else {
-                    DATA.root_dir.join(LIBRARIES_FOLDER)
+                    DATA.root_dir.lock().unwrap().join(LIBRARIES_FOLDER)
                 };
 
                 return Ok(format!(
@@ -839,12 +954,17 @@ impl Client {
         manager: Arc<Mutex<ClientManager>>,
     ) -> Result<(), String> {
         if !options.is_custom && SETTINGS.lock().is_ok_and(|s| s.optional_telemetry.value) {
-            Analytics::send_client_analytics(self.id);
+            Analytics::send_client_analytics(self.id, &options.user_token);
         }
 
         {
             let mut logs = CLIENT_LOGS.lock().unwrap();
-            logs.insert(self.id, Vec::new());
+            let client_logs = logs.entry(self.id).or_insert_with(Vec::new);
+            if !client_logs.is_empty() {
+                client_logs.push("-------------------------------------------".to_string());
+                client_logs.push(format!("--- New Instance Started ---"));
+                client_logs.push("-------------------------------------------".to_string());
+            }
         }
 
         let app_handle = options.app_handle.clone();
@@ -860,29 +980,55 @@ impl Client {
             return Err(e);
         }
 
-        let java_bin = self.java_executable_path();
+        let java_bin = if let Some(ref path) = self.java_path {
+            if !path.is_empty() {
+                PathBuf::from(path)
+            } else if let Ok(s) = SETTINGS.lock() {
+                if !s.java_path.value.is_empty() {
+                    PathBuf::from(&s.java_path.value)
+                } else {
+                    self.java_executable_path()
+                }
+            } else {
+                self.java_executable_path()
+            }
+        } else if let Ok(s) = SETTINGS.lock() {
+            if !s.java_path.value.is_empty() {
+                PathBuf::from(&s.java_path.value)
+            } else {
+                self.java_executable_path()
+            }
+        } else {
+            self.java_executable_path()
+        };
+
         let (client_folder, _) = self.get_launch_paths()?;
         let assets_dir = if self.client_type == ClientType::Fabric {
-            DATA.root_dir.join(ASSETS_FABRIC_FOLDER)
+            DATA.root_dir.lock().unwrap().join(ASSETS_FABRIC_FOLDER)
         } else {
-            DATA.root_dir.join(ASSETS_FOLDER)
+            DATA.root_dir.lock().unwrap().join(ASSETS_FOLDER)
         };
 
         let natives_path = if self.is_legacy_client() {
             if IS_LINUX {
-                DATA.root_dir.join(NATIVES_LEGACY_LINUX_FOLDER)
+                DATA.root_dir
+                    .lock()
+                    .unwrap()
+                    .join(NATIVES_LEGACY_LINUX_FOLDER)
             } else {
                 DATA.root_dir
+                    .lock()
+                    .unwrap()
                     .join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
             }
         } else if self.meta.is_new {
-            DATA.root_dir.join(format!(
+            DATA.root_dir.lock().unwrap().join(format!(
                 "{}{}",
                 NATIVES_FOLDER,
                 if IS_LINUX { LINUX_SUFFIX } else { "" }
             ))
         } else {
-            DATA.root_dir.join(format!(
+            DATA.root_dir.lock().unwrap().join(format!(
                 "{}{}",
                 NATIVES_FOLDER,
                 if IS_LINUX {
@@ -926,7 +1072,7 @@ impl Client {
             lang,
         );
 
-        let agent_overlay_path = DATA.root_dir.join(AGENT_OVERLAY_FOLDER);
+        let agent_overlay_path = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
 
         let mut cmd = Command::new(java_bin);
 
@@ -946,28 +1092,30 @@ impl Client {
             ));
         }
 
-        cmd.arg(format!("-Xmx{ram_mb}M"));
-
-        if self.client_type != ClientType::Fabric {
-            cmd.arg(format!(
-                "-Djava.library.path={}{}{}",
-                natives_path.display(),
-                PATH_SEPARATOR,
-                agent_overlay_path.display()
-            ));
-        } else {
-            cmd.arg(format!(
-                "-Djava.library.path={}",
-                agent_overlay_path.display()
-            ));
+        if let Ok(s) = SETTINGS.lock() {
+            if !s.java_args.value.is_empty() {
+                for arg in s.java_args.value.split_whitespace() {
+                    cmd.arg(arg);
+                }
+            }
         }
 
-        cmd.arg("--add-opens")
-            .arg("java.base/jdk.internal.misc=ALL-UNNAMED");
-        cmd.arg("--add-opens").arg("java.base/sun.misc=ALL-UNNAMED");
-        cmd.arg("--add-opens")
-            .arg("java.base/java.lang=ALL-UNNAMED");
-        cmd.arg("--add-opens").arg("java.base/java.io=ALL-UNNAMED");
+        if let Some(ref args) = self.java_args {
+            if !args.is_empty() {
+                for arg in args.split_whitespace() {
+                    cmd.arg(arg);
+                }
+            }
+        }
+
+        cmd.arg(format!("-Xmx{ram_mb}M"));
+
+        cmd.arg(format!(
+            "-Djava.library.path={}{}{}",
+            natives_path.display(),
+            PATH_SEPARATOR,
+            agent_overlay_path.display()
+        ));
 
         cmd.arg("-cp").arg(classpath).arg(&self.main_class);
 

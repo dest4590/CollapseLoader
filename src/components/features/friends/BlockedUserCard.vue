@@ -3,7 +3,10 @@
         <div class="card-body p-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div @click="$emit('view-profile', blockedUser.id)" class="avatar-click-area cursor-pointer">
+                    <div
+                        @click="$emit('view-profile', blockedUser.id)"
+                        class="avatar-click-area cursor-pointer"
+                    >
                         <UserAvatar :name="displayNickname" />
                     </div>
                     <div>
@@ -12,15 +15,18 @@
                             @{{ displayUsername }}
                         </p>
                         <p class="text-xs text-base-content/50">
-                            {{ $t('common.blocked') }}
+                            {{ $t("common.blocked") }}
                         </p>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <button @click="handleUnblockUser" class="btn btn-primary btn-sm">
+                    <button
+                        @click="handleUnblockUser"
+                        class="btn btn-primary btn-sm"
+                    >
                         <UserCheck class="w-4 h-4 mr-1" />
-                        {{ $t('userProfile.unblock_user') }}
+                        {{ $t("userProfile.unblock_user") }}
                     </button>
                 </div>
             </div>
@@ -29,11 +35,11 @@
 </template>
 
 <script setup lang="ts">
-import { UserCheck } from 'lucide-vue-next';
-import UserAvatar from '../../ui/UserAvatar.vue';
-import type { Friend } from '../../../services/userService';
-import { useStreamerMode } from '../../../composables/useStreamerMode';
-import { computed } from 'vue';
+import { UserCheck } from "lucide-vue-next";
+import UserAvatar from "../../ui/UserAvatar.vue";
+import type { Friend } from "../../../services/userService";
+import { useStreamerMode } from "../../../composables/useStreamerMode";
+import { computed } from "vue";
 
 const props = defineProps<{
     blockedUser: Friend;
@@ -41,13 +47,16 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     unblockUser: [user: Friend];
-    'view-profile': [userId: number];
+    "view-profile": [userId: number];
 }>();
 
 const streamer = useStreamerMode();
 
 const displayNickname = computed(() => {
-    return streamer.getDisplayName(props.blockedUser.nickname, props.blockedUser.username);
+    return streamer.getDisplayName(
+        props.blockedUser.nickname,
+        props.blockedUser.username
+    );
 });
 
 const displayUsername = computed(() => {
@@ -55,7 +64,7 @@ const displayUsername = computed(() => {
 });
 
 const handleUnblockUser = () => {
-    emit('unblockUser', props.blockedUser);
+    emit("unblockUser", props.blockedUser);
 };
 </script>
 

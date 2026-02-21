@@ -10,7 +10,7 @@ pub struct Flag<T> {
 }
 
 impl<T> Flag<T> {
-    pub const fn new(value: T) -> Self {
+    pub fn new(value: T) -> Self {
         Self { value }
     }
 }

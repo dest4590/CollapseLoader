@@ -1,8 +1,9 @@
-import { reactive, markRaw } from 'vue';
+import { reactive, markRaw } from "vue";
 
 export interface ModalOptions {
     title?: string;
     contentClass?: string;
+    size?: "sm" | "md" | "lg" | "xl" | "full";
     [key: string]: any;
 }
 
@@ -24,7 +25,7 @@ export function useModal() {
         props: Record<string, any> = {},
         listeners: Record<string, (...args: any[]) => void> = {}
     ) => {
-        const contentClass = options.contentClass || 'medium full-mobile';
+        const contentClass = options.contentClass || "medium full-mobile";
 
         modals[id] = {
             id,

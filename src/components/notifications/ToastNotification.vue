@@ -1,43 +1,59 @@
 <template>
-    <div class="toast-notification" :class="`toast-${toast.type}`" @mouseenter="handleMouseEnter"
-        @mouseleave="handleMouseLeave">
+    <div
+        class="toast-notification"
+        :class="`toast-${toast.type}`"
+        @mouseenter="handleMouseEnter"
+        @mouseleave="handleMouseLeave"
+    >
         <div class="toast-content">
             <div class="toast-icon">
-                <component :is="currentIcon" v-if="currentIcon" class="w-5 h-5" />
+                <component
+                    :is="currentIcon"
+                    v-if="currentIcon"
+                    class="w-5 h-5"
+                />
             </div>
             <div class="toast-message">{{ displayMessage }}</div>
-            <button v-if="props.toast.action" class="toast-action-btn" @click.stop="handleActionClick">{{
-                props.toast.action.label }}</button>
+            <button
+                v-if="props.toast.action"
+                class="toast-action-btn"
+                @click.stop="handleActionClick"
+            >
+                {{ props.toast.action.label }}
+            </button>
             <button class="toast-close-btn" @click.stop="closeToast">
                 <X class="w-4 h-4" />
             </button>
         </div>
         <div class="toast-progress-container">
-            <div class="toast-progress" :style="{ animationDuration: `${toast.duration}ms` }"
-                :class="{ 'toast-progress-paused': isPaused }"></div>
+            <div
+                class="toast-progress"
+                :style="{ animationDuration: `${toast.duration}ms` }"
+                :class="{ 'toast-progress-paused': isPaused }"
+            ></div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import type { ToastMessage, ToastType } from '../../types/toast';
+import { computed, ref } from "vue";
+import type { ToastMessage, ToastType } from "../../types/toast";
 import {
     CheckCircle,
     XCircle,
     AlertCircle,
     AlertTriangle,
     X,
-} from 'lucide-vue-next';
-import { useToast } from '../../services/toastService';
-import { openUrl } from '@tauri-apps/plugin-opener';
+} from "lucide-vue-next";
+import { useToast } from "../../services/toastService";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 interface Props {
     toast: ToastMessage;
 }
 
 const props = defineProps<Props>();
-const emit = defineEmits(['close']);
+const emit = defineEmits(["close"]);
 
 const { pauseToast, resumeToast, getDisplayMessage } = useToast();
 const isPaused = ref(false);
@@ -53,7 +69,7 @@ const currentIcon = computed(() => iconMap[props.toast.type]);
 const displayMessage = computed(() => getDisplayMessage(props.toast));
 
 const closeToast = () => {
-    emit('close', props.toast.id);
+    emit("close", props.toast.id);
 };
 
 const handleActionClick = async () => {
@@ -62,7 +78,7 @@ const handleActionClick = async () => {
         try {
             await openUrl(action.url);
         } catch (e) {
-            console.error('Failed to open URL via Tauri shell: ', e);
+            console.error("Failed to open URL via Tauri shell: ", e);
         }
     }
 };
@@ -82,7 +98,7 @@ const handleMouseLeave = () => {
     if (
         props.toast.duration &&
         props.toast.duration > 0 &&
-        typeof props.toast.remainingDuration === 'number'
+        typeof props.toast.remainingDuration === "number"
     ) {
         isPaused.value = false;
         resumeToast(props.toast.id);

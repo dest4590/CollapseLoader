@@ -10,37 +10,45 @@ const MAX_RETRIES: u32 = 3;
 const RETRY_DELAY: Duration = Duration::from_secs(2);
 
 pub async fn download_file(
-    url: &str,
+    urls: &[String],
     dest_path: &Path,
     emit_name: &str,
     app_handle: Option<&tauri::AppHandle>,
 ) -> Result<(), String> {
     let mut last_error = String::from("Unknown error");
 
-    for attempt in 1..=MAX_RETRIES {
-        if attempt > 1 {
-            log_warn!(
-                "Retrying download for {} (Attempt {}/{})",
-                emit_name,
-                attempt,
-                MAX_RETRIES
-            );
-            tokio::time::sleep(RETRY_DELAY).await;
-        }
-
-        match perform_download(url, dest_path, emit_name, app_handle).await {
-            Ok(_) => return Ok(()),
-            Err(e) => {
-                last_error = e;
-                log_error!(
-                    "Download failed for {} (Attempt {}/{}): {}",
+    for url in urls {
+        for attempt in 1..=MAX_RETRIES {
+            if attempt > 1 {
+                log_warn!(
+                    "Retrying download for {} (Attempt {}/{})",
                     emit_name,
                     attempt,
-                    MAX_RETRIES,
-                    last_error
+                    MAX_RETRIES
                 );
+                tokio::time::sleep(RETRY_DELAY).await;
+            }
+
+            match perform_download(url, dest_path, emit_name, app_handle).await {
+                Ok(_) => return Ok(()),
+                Err(e) => {
+                    last_error = e;
+                    log_error!(
+                        "Download failed for {} (Attempt {}/{}): {}",
+                        emit_name,
+                        attempt,
+                        MAX_RETRIES,
+                        last_error
+                    );
+                }
             }
         }
+        log_warn!(
+            "Failed to download {} from {} after {} attempts. Trying fallback if available...",
+            emit_name,
+            url,
+            MAX_RETRIES
+        );
     }
 
     Err(format!(

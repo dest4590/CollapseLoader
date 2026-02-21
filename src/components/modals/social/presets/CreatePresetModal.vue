@@ -2,11 +2,18 @@
     <div class="p-6 space-y-4">
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t('theme.presets.create_modal.name_label') }} *</span>
+                <span class="label-text"
+                    >{{ $t("theme.presets.create_modal.name_label") }} *</span
+                >
             </label>
-            <input v-model="form.name" type="text" :placeholder="$t('theme.presets.create_modal.name_placeholder')"
-                class="input input-bordered w-full" :class="{ 'input-error': errors.name }"
-                @input="clearError('name')" />
+            <input
+                v-model="form.name"
+                type="text"
+                :placeholder="$t('theme.presets.create_modal.name_placeholder')"
+                class="input input-bordered w-full"
+                :class="{ 'input-error': errors.name }"
+                @input="clearError('name')"
+            />
             <label v-if="errors.name" class="label">
                 <span class="label-text-alt text-error">{{ errors.name }}</span>
             </label>
@@ -14,57 +21,75 @@
 
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t('theme.presets.create_modal.description_label') }}</span>
+                <span class="label-text">{{
+                    $t("theme.presets.create_modal.description_label")
+                }}</span>
             </label>
-            <textarea v-model="form.description" :placeholder="$t('theme.presets.create_modal.description_placeholder')"
-                class="textarea textarea-bordered w-full" rows="3"></textarea>
+            <textarea
+                v-model="form.description"
+                :placeholder="
+                    $t('theme.presets.create_modal.description_placeholder')
+                "
+                class="textarea textarea-bordered w-full"
+                rows="3"
+            ></textarea>
         </div>
 
         <div class="form-control">
             <label class="label">
                 <span class="label-text flex items-center gap-2">
                     <Info class="w-4 h-4" />
-                    {{ $t('theme.presets.create_modal.source_info') }}
+                    {{ $t("theme.presets.create_modal.source_info") }}
                 </span>
             </label>
             <div class="text-sm text-base-content/70">
-                {{ editingPreset ? $t('theme.presets.create_modal.source_edit') :
-                    $t('theme.presets.create_modal.source_create') }}
+                {{
+                    editingPreset
+                        ? $t("theme.presets.create_modal.source_edit")
+                        : $t("theme.presets.create_modal.source_create")
+                }}
             </div>
         </div>
     </div>
 
     <div class="flex gap-3 p-6 border-t border-base-300">
-        <button @click="save" class="btn btn-primary flex-1" :class="{ 'loading': saving }"
-            :disabled="saving || !form.name.trim()">
+        <button
+            @click="save"
+            class="btn btn-primary flex-1"
+            :class="{ loading: saving }"
+            :disabled="saving || !form.name.trim()"
+        >
             <Save class="w-4 h-4 mr-2" v-if="!saving" />
-            {{ editingPreset ? $t('theme.presets.create_modal.update_button') :
-                $t('theme.presets.create_modal.create_button') }}
+            {{
+                editingPreset
+                    ? $t("theme.presets.create_modal.update_button")
+                    : $t("theme.presets.create_modal.create_button")
+            }}
         </button>
         <button @click="close" class="btn btn-ghost flex-1">
-            {{ $t('theme.presets.create_modal.cancel') }}
+            {{ $t("theme.presets.create_modal.cancel") }}
         </button>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
-import { Save, Info } from 'lucide-vue-next';
-import { useI18n } from 'vue-i18n';
-import type { ThemePreset, UpdatePresetInput } from '../../../../types/presets';
+import { ref, reactive, watch } from "vue";
+import { Save, Info } from "lucide-vue-next";
+import { useI18n } from "vue-i18n";
+import type { ThemePreset, UpdatePresetInput } from "../../../../types/presets";
 
 interface Props {
     editingPreset?: ThemePreset | null;
 }
 
 interface Emits {
-    (e: 'close'): void;
-    (e: 'save', data: { name: string; description?: string }): void;
-    (e: 'update', data: UpdatePresetInput): void;
+    (e: "close"): void;
+    (e: "save", data: { name: string; description?: string }): void;
+    (e: "update", data: UpdatePresetInput): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    editingPreset: null
+    editingPreset: null,
 });
 
 const emit = defineEmits<Emits>();
@@ -73,26 +98,26 @@ const { t } = useI18n();
 const saving = ref(false);
 
 const form = reactive({
-    name: '',
-    description: ''
+    name: "",
+    description: "",
 });
 
 const errors = reactive({
-    name: ''
+    name: "",
 });
 
 const clearError = (field: keyof typeof errors) => {
-    errors[field] = '';
+    errors[field] = "";
 };
 
 const validateForm = (): boolean => {
     let isValid = true;
 
     if (!form.name.trim()) {
-        errors.name = t('theme.presets.create_modal.name_required');
+        errors.name = t("theme.presets.create_modal.name_required");
         isValid = false;
     } else if (form.name.trim().length > 50) {
-        errors.name = t('theme.presets.create_modal.name_too_long');
+        errors.name = t("theme.presets.create_modal.name_too_long");
         isValid = false;
     }
 
@@ -106,7 +131,7 @@ const save = async () => {
         saving.value = true;
 
         if (props.editingPreset) {
-            emit('update', {
+            emit("update", {
                 id: props.editingPreset.id,
                 name: form.name.trim(),
                 description: form.description.trim() || undefined,
@@ -134,11 +159,14 @@ const save = async () => {
                 warningContent: props.editingPreset.warningContent,
                 error: props.editingPreset.error,
                 errorContent: props.editingPreset.errorContent,
+                backgroundImage: props.editingPreset.backgroundImage,
+                backgroundBlur: props.editingPreset.backgroundBlur,
+                backgroundOpacity: props.editingPreset.backgroundOpacity,
             });
         } else {
-            emit('save', {
+            emit("save", {
                 name: form.name.trim(),
-                description: form.description.trim() || undefined
+                description: form.description.trim() || undefined,
             });
         }
     } finally {
@@ -148,21 +176,25 @@ const save = async () => {
 };
 
 const close = () => {
-    emit('close');
+    emit("close");
 };
 
 const resetForm = () => {
-    form.name = '';
-    form.description = '';
-    errors.name = '';
+    form.name = "";
+    form.description = "";
+    errors.name = "";
 };
 
-watch(() => props.editingPreset, (preset) => {
-    if (preset) {
-        form.name = preset.name;
-        form.description = preset.description || '';
-    } else {
-        resetForm();
-    }
-}, { immediate: true });
+watch(
+    () => props.editingPreset,
+    (preset) => {
+        if (preset) {
+            form.name = preset.name;
+            form.description = preset.description || "";
+        } else {
+            resetForm();
+        }
+    },
+    { immediate: true }
+);
 </script>

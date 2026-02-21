@@ -18,7 +18,7 @@ pub struct Setting<T> {
 }
 
 impl<T> Setting<T> {
-    pub const fn new(value: T, show: bool) -> Self {
+    pub fn new(value: T, show: bool) -> Self {
         Self { value, show }
     }
 }
@@ -81,7 +81,7 @@ macro_rules! define_settings {
                         $(
                             $field: Setting {
                                 value: input.$field.value,
-                                show: input.$field.show,
+                                show: $show_val,
                             },
                         )*
                         config_path,
@@ -92,6 +92,9 @@ macro_rules! define_settings {
                     // update config_path here, because value is computed at runtime
                     let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
                     loaded.config_path = path;
+                    $(
+                        loaded.$field.show = $show_val;
+                    )*
                     loaded
                 }
             }
@@ -125,6 +128,10 @@ define_settings! {
         hash_verify: Setting<bool> = (true, true),
         sync_client_settings: Setting<bool> = (true, true),
         dpi_bypass: Setting<bool> = (false, true),
+        minimize_to_tray_on_launch: Setting<bool> = (false, true),
+        close_to_tray: Setting<bool> = (false, true),
+        java_path: Setting<String> = ("".to_string(), true),
+        java_args: Setting<String> = ("".to_string(), true),
     }
 }
 

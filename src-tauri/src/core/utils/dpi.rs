@@ -8,10 +8,8 @@ use crate::core::utils::helpers::emit_to_main_window;
 use crate::core::utils::helpers::is_development_enabled;
 #[cfg(target_os = "windows")]
 use crate::messagebox;
-#[cfg(target_os = "windows")]
-use crate::{log_error, log_warn};
 
-use crate::log_info;
+use crate::{log_debug, log_error, log_info, log_warn};
 
 #[cfg(target_os = "windows")]
 const DPI_RELEASE_API: &str =
@@ -22,6 +20,39 @@ const DPI_ZIP_FALLBACK_URL: &str = "https://github.com/dest4590/ZapretCollapseLo
 const DPI_ZIP_NAME: &str = "ZapretCollapseLoader.zip";
 #[cfg(target_os = "windows")]
 const DPI_FOLDER_NAME: &str = "ZapretCollapseLoader";
+
+#[cfg(target_os = "windows")]
+pub fn kill_winws() {
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
+
+    log_info!("Attempting to kill any existing winws.exe processes");
+
+    let mut cmd = Command::new("taskkill");
+    cmd.args(["/F", "/IM", "winws.exe", "/T"]);
+
+    if !is_development_enabled() {
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+
+    match cmd.output() {
+        Ok(output) => {
+            if output.status.success() {
+                log_info!("Successfully killed existing winws.exe processes");
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if stderr.contains("not found") || stderr.contains("не найден") {
+                    log_debug!("No winws.exe processes were found to kill");
+                } else {
+                    log_warn!("taskkill returned non-zero status: {}", stderr);
+                }
+            }
+        }
+        Err(e) => {
+            log_error!("Failed to execute taskkill: {}", e);
+        }
+    }
+}
 
 #[cfg(target_os = "windows")]
 pub fn enable_dpi_bypass_async() -> Result<(), String> {
@@ -40,8 +71,20 @@ pub fn enable_dpi_bypass_async() -> Result<(), String> {
                         "toast-error",
                         "Failed to enable DPI bypass due to insufficient privileges. Please run the application as administrator and try again.",
                     );
+                } else {
+                    emit_to_main_window(
+                        app_handle,
+                        "toast-error",
+                        format!("Failed to enable DPI bypass: {}", e),
+                    );
                 }
             }
+        } else if let Some(app_handle) = app_handle_clone.as_ref() {
+            emit_to_main_window(
+                app_handle,
+                "toast-success",
+                "DPI bypass enabled successfully",
+            );
         }
     });
     Ok(())
@@ -63,7 +106,10 @@ pub fn download_dpi_bypass() -> Result<(), String> {
             if r.status().is_success() {
                 match r.json::<serde_json::Value>() {
                     Ok(json) => {
-                        if let Some(assets) = json.get("assets").and_then(|v| v.as_array()) {
+                        json.get("assets").and_then(|v| v.as_array()).map_or_else(|| {
+                            log_warn!("No assets field in GitHub release JSON; falling back to hardcoded URL");
+                            DPI_ZIP_FALLBACK_URL.to_string()
+                        }, |assets| {
                             let mut found: Option<String> = None;
                             for asset in assets {
                                 if asset.get("name").and_then(|n| n.as_str()) == Some(DPI_ZIP_NAME)
@@ -76,19 +122,16 @@ pub fn download_dpi_bypass() -> Result<(), String> {
                                     }
                                 }
                             }
-                            if let Some(u) = found {
+                            found.map_or_else(|| {
+                                log_warn!("Asset {} not found in latest release; falling back to hardcoded URL", DPI_ZIP_NAME);
+                                DPI_ZIP_FALLBACK_URL.to_string()
+                            }, |u| {
                                 log_info!(
                                     "Resolved latest DPI package URL from GitHub releases API"
                                 );
                                 u
-                            } else {
-                                log_warn!("Asset {} not found in latest release; falling back to hardcoded URL", DPI_ZIP_NAME);
-                                DPI_ZIP_FALLBACK_URL.to_string()
-                            }
-                        } else {
-                            log_warn!("No assets field in GitHub release JSON; falling back to hardcoded URL");
-                            DPI_ZIP_FALLBACK_URL.to_string()
-                        }
+                            })
+                        })
                     }
                     Err(e) => {
                         log_warn!("Failed to parse GitHub release JSON: {}. Falling back to hardcoded URL", e);
@@ -156,8 +199,10 @@ fn start_winws_background_inner() -> Result<(), String> {
         return Ok(());
     }
 
+    kill_winws();
+
     use std::path::PathBuf;
-    let base_dir: PathBuf = DATA.root_dir.join(DPI_FOLDER_NAME);
+    let base_dir: PathBuf = DATA.root_dir.lock().unwrap().join(DPI_FOLDER_NAME);
     let bin_dir = base_dir.join("bin");
     let lists_dir = base_dir.join("lists");
     let winws_path = bin_dir.join("winws.exe");
@@ -178,11 +223,9 @@ fn start_winws_background_inner() -> Result<(), String> {
     }
 
     fn extend_with_game_filter(base: &str, game_filter: &Option<String>) -> String {
-        if let Some(filter) = game_filter {
-            format!("{},{}", base, filter)
-        } else {
-            base.to_string()
-        }
+        game_filter
+            .as_ref()
+            .map_or_else(|| base.to_string(), |filter| format!("{},{}", base, filter))
     }
 
     let game_filter = std::env::var("GameFilter")
@@ -381,6 +424,15 @@ fn start_winws_background_inner() -> Result<(), String> {
                 winws_path.display(),
                 e
             );
+
+            if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+                emit_to_main_window(
+                    app_handle,
+                    "toast-error",
+                    format!("Failed to start DPI bypass process: {}", e),
+                );
+            }
+
             return Err(format!("Failed to start winws.exe: {}", e));
         }
     }

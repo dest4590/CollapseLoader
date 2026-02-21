@@ -11,7 +11,9 @@ pub struct ThemePreset {
     pub name: String,
     pub description: Option<String>,
     pub created_at: String,
+    #[serde(rename = "customCSS", alias = "customCss")]
     pub custom_css: String,
+    #[serde(rename = "enableCustomCSS", alias = "enableCustomCss")]
     pub enable_custom_css: bool,
 
     pub base100: Option<String>,
@@ -35,11 +37,19 @@ pub struct ThemePreset {
     pub warning_content: Option<String>,
     pub error: Option<String>,
     pub error_content: Option<String>,
+
+    #[serde(rename = "backgroundImage")]
+    pub background_image: Option<String>,
+    #[serde(rename = "backgroundBlur")]
+    pub background_blur: Option<f64>,
+    #[serde(rename = "backgroundOpacity")]
+    pub background_opacity: Option<f64>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PresetManager {
     pub presets: HashMap<String, ThemePreset>,
+    #[serde(skip)]
     pub config_path: PathBuf,
 }
 
@@ -67,6 +77,12 @@ impl JsonStorage for PresetManager {
 }
 
 impl PresetManager {
+    pub fn load_from_disk(path: PathBuf) -> Self {
+        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
+        loaded.config_path = path;
+        loaded
+    }
+
     pub fn add_preset(&mut self, preset: ThemePreset) -> Result<(), String> {
         if self.presets.contains_key(&preset.id) {
             return Err(format!(

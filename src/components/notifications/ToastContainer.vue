@@ -1,15 +1,20 @@
 <template>
     <div class="toast-container" :class="positionClass">
         <transition-group name="toast-list" tag="div">
-            <ToastNotification v-for="toast in toasts" :key="toast.id" :toast="toast" @close="removeToast" />
+            <ToastNotification
+                v-for="toast in toasts"
+                :key="toast.id"
+                :toast="toast"
+                @close="removeToast"
+            />
         </transition-group>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import ToastNotification from './ToastNotification.vue';
-import { useToast } from '../../services/toastService';
+import { computed } from "vue";
+import ToastNotification from "./ToastNotification.vue";
+import { useToast } from "../../services/toastService";
 
 const { toasts, removeToast, toastPosition } = useToast();
 
@@ -26,33 +31,33 @@ const positionClass = computed(() => {
 }
 
 .toast-position-bottom-right {
-    bottom: 1rem;
-    right: 1rem;
+    bottom: var(--toast-bottom-offset, 1rem);
+    right: var(--toast-right-offset, 1rem);
 }
 
 .toast-position-bottom-left {
-    bottom: 1rem;
-    left: 1rem;
+    bottom: var(--toast-bottom-offset, 1rem);
+    left: var(--toast-left-offset, 1rem);
 }
 
 .toast-position-top-right {
-    top: 1rem;
-    right: 1rem;
+    top: var(--toast-top-offset, 1rem);
+    right: var(--toast-right-offset, 1rem);
 }
 
 .toast-position-top-left {
-    top: 1rem;
-    left: 1rem;
+    top: var(--toast-top-offset, 1rem);
+    left: var(--toast-left-offset, 1rem);
 }
 
 .toast-position-bottom-center {
-    bottom: 1rem;
+    bottom: var(--toast-bottom-offset, 1rem);
     left: 50%;
     transform: translateX(-50%);
 }
 
 .toast-position-top-center {
-    top: 1rem;
+    top: var(--toast-top-offset, 1rem);
     left: 50%;
     transform: translateX(-50%);
 }

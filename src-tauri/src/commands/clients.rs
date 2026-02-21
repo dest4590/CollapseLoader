@@ -3,15 +3,16 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
-use serde::de::DeserializeOwned;
-use serde::Deserialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 use crate::core::{
-    clients::custom_clients::CustomClient,
-    network::analytics::Analytics,
-    storage::{custom_clients::CustomClientUpdate, data::Data},
-    utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
+    clients::client::ClientType,
+    network::servers::{ServerConnectivityStatus, SERVERS},
+    utils::helpers::emit_to_main_window,
+};
+use crate::core::{
+    clients::custom_clients::CustomClient, storage::custom_clients::CustomClientUpdate,
+    utils::globals::SKIP_AGENT_OVERLAY_VERIFICATION,
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
@@ -20,14 +21,6 @@ use crate::core::{
 use crate::core::{
     storage::settings::SETTINGS,
     utils::{discord_rpc, hashing::calculate_md5_hash, logging},
-};
-use crate::{
-    commands::utils::get_api_url,
-    core::{
-        clients::client::ClientType,
-        network::servers::{ServerConnectivityStatus, SERVERS},
-        utils::helpers::emit_to_main_window,
-    },
 };
 use crate::{
     core::{self, storage::data::DATA},
@@ -74,13 +67,15 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         return Err("Fetched client list is empty".to_string());
     }
 
-    let mut manager = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to lock state".to_string())?;
+    {
+        let mut manager = state
+            .clients
+            .manager
+            .lock()
+            .map_err(|_| "Failed to lock state".to_string())?;
 
-    manager.clients = clients;
+        manager.clients = clients;
+    }
 
     Ok(())
 }
@@ -112,39 +107,6 @@ pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
         .unwrap_or_default()
 }
 
-#[derive(Deserialize)]
-struct ApiResponse<T> {
-    success: bool,
-    data: T,
-    #[serde(default)]
-    error: Option<String>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    timestamp: Option<i64>,
-}
-
-async fn extract_api_data<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, String> {
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let ApiResponse {
-        success,
-        data,
-        error,
-        ..
-    } = response
-        .json::<ApiResponse<T>>()
-        .await
-        .map_err(|e| format!("Failed to parse API response: {e}"))?;
-
-    if !success {
-        return Err(error.unwrap_or_else(|| "API returned unsuccessful response".to_string()));
-    }
-
-    Ok(data)
-}
-
 #[tauri::command]
 pub async fn launch_client(
     id: u32,
@@ -154,34 +116,7 @@ pub async fn launch_client(
 ) -> Result<(), String> {
     let client = get_client_by_id(id, &state.clients.manager)?;
 
-    let filename_for_if = if client.filename.contains("fabric/") {
-        client.filename.replace("fabric/", "")
-    } else if client.filename.contains("/fabric") {
-        client.filename.replace("/fabric", "")
-    } else {
-        client.filename.clone()
-    };
-
-    const MAIN_SEPARATOR: char = std::path::MAIN_SEPARATOR;
-
-    let file_name = Data::get_filename(&client.filename);
-    let jar_path = match client.client_type {
-        ClientType::Default => {
-            DATA.get_local(&format!("{file_name}{MAIN_SEPARATOR}{}", client.filename))
-        }
-        ClientType::Fabric => DATA.get_local(&format!(
-            "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{filename_for_if}"
-        )),
-        ClientType::Forge => {
-            let jar_basename = std::path::Path::new(&client.filename)
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or(&client.filename);
-            DATA.get_local(&format!(
-                "{file_name}{MAIN_SEPARATOR}mods{MAIN_SEPARATOR}{jar_basename}"
-            ))
-        }
-    };
+    let (_, jar_path) = client.get_launch_paths()?;
 
     if !jar_path.exists() {
         log_warn!(
@@ -331,6 +266,17 @@ pub async fn launch_client(
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
 
+    let minimize_on_launch = {
+        let settings = SETTINGS.lock().unwrap();
+        settings.minimize_to_tray_on_launch.value
+    };
+
+    if minimize_on_launch {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
+    }
+
     client.run(options, state.clients.manager.clone()).await
 }
 
@@ -397,7 +343,6 @@ pub async fn download_client_only(
 
     let requirements_download = client.download_requirements(&app_handle);
 
-    Analytics::send_client_download_analytics(id);
     log_debug!("Sent client download analytics for ID: {}", id);
 
     tokio::try_join!(client_download, requirements_download)?;
@@ -562,38 +507,6 @@ pub async fn delete_client(id: u32, state: State<'_, AppState>) -> Result<(), St
 }
 
 #[tauri::command]
-pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
-    log_debug!("Fetching details for client ID: {}", client_id);
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/detailed");
-    log_debug!("Requesting client details from URL: {}", url);
-
-    let client = reqwest::Client::new();
-    let response = client.get(&url).send().await.map_err(|e| {
-        log_error!("Failed to fetch client details from {}: {}", url, e);
-        format!("Failed to fetch client details: {e}")
-    })?;
-
-    if !response.status().is_success() {
-        log_warn!(
-            "API returned non-success status ({}) for client details request to {}",
-            response.status(),
-            url
-        );
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let details: serde_json::Value = response.json().await.map_err(|e| {
-        log_error!("Failed to parse client details JSON: {}", e);
-        format!("Failed to parse client details: {e}")
-    })?;
-
-    log_info!("Successfully fetched details for client ID: {}", client_id);
-    Ok(details)
-}
-
-#[tauri::command]
 pub fn increment_client_counter(
     id: u32,
     counter_type: String,
@@ -665,14 +578,17 @@ pub fn add_custom_client(
     filename: String,
     file_path: String,
     main_class: String,
+    java_path: Option<String>,
+    java_args: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Adding new custom client: '{}'", name);
     let mut manager = state.custom_clients.lock();
 
     let path_buf = PathBuf::from(file_path);
-
-    let custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
+    let mut custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
+    custom_client.java_path = java_path;
+    custom_client.java_args = java_args;
 
     log_debug!("New custom client details: {:?}", custom_client);
     manager.add_client(custom_client)
@@ -692,6 +608,8 @@ pub fn update_custom_client(
     name: Option<String>,
     version: Option<String>,
     main_class: Option<String>,
+    java_path: Option<String>,
+    java_args: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Updating custom client with ID: {}", id);
@@ -701,6 +619,8 @@ pub fn update_custom_client(
         name,
         version,
         main_class,
+        java_path,
+        java_args,
     };
 
     log_debug!("Applying updates to custom client ID {}: {:?}", id, updates);
@@ -751,6 +671,17 @@ pub async fn launch_custom_client(
 
     let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), true);
 
+    let minimize_on_launch = {
+        let settings = SETTINGS.lock().unwrap();
+        settings.minimize_to_tray_on_launch.value
+    };
+
+    if minimize_on_launch {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let _ = window.hide();
+        }
+    }
+
     client.run(options, state.clients.manager.clone()).await
 }
 
@@ -767,6 +698,85 @@ pub async fn get_running_custom_client_ids() -> Vec<u32> {
         log_error!("Failed to get running custom client IDs: {}", e);
         Vec::new()
     })
+}
+
+#[tauri::command]
+pub async fn install_mod_from_url(
+    id: u32,
+    url: String,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    log_info!(
+        "Installing mod for client {}: {} from {}",
+        id,
+        filename,
+        url
+    );
+
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let mods_folder_relative = match client.client_type {
+        ClientType::Fabric | ClientType::Forge | ClientType::Default => {
+            let (folder, _) = client.get_launch_paths().map_err(|e| e.to_string())?;
+            let root = DATA.root_dir.lock().unwrap().clone();
+            let relative = folder
+                .strip_prefix(&root)
+                .map_err(|_| "Client folder is outside of root directory".to_string())?;
+            relative.join("mods")
+        }
+    };
+
+    let mods_folder_str = mods_folder_relative
+        .to_str()
+        .ok_or_else(|| "Invalid mods folder path".to_string())?;
+
+    DATA.download_to_folder(&url, mods_folder_str).await?;
+
+    log_info!(
+        "Successfully installed mod: {} to {}",
+        filename,
+        mods_folder_str
+    );
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_installed_mods(
+    id: u32,
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, String> {
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let mods_folder = match client.client_type {
+        ClientType::Fabric | ClientType::Forge | ClientType::Default => {
+            let (folder, _) = client.get_launch_paths().map_err(|e| e.to_string())?;
+            folder.join("mods")
+        }
+    };
+
+    if !mods_folder.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut mods = Vec::new();
+    let mut entries = tokio::fs::read_dir(mods_folder)
+        .await
+        .map_err(|e| format!("Failed to read mods directory: {}", e))?;
+
+    while let Some(entry) = entries.next_entry().await.map_err(|e| e.to_string())? {
+        let path = entry.path();
+        if path.is_file() {
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.ends_with(".jar") {
+                    mods.push(filename.to_string());
+                }
+            }
+        }
+    }
+
+    Ok(mods)
 }
 
 #[tauri::command]
@@ -788,65 +798,4 @@ pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(
     handle
         .await
         .map_err(|e| format!("Stop custom client task error: {e}"))?
-}
-
-#[tauri::command]
-pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, String> {
-    log_debug!("Fetching comments for client ID: {}", client_id);
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
-
-    let client = reqwest::Client::new();
-    let response = client.get(&url).send().await.map_err(|e| {
-        log_error!("Failed to fetch client comments from {}: {}", url, e);
-        format!("Failed to fetch client comments: {e}")
-    })?;
-
-    extract_api_data(response).await
-}
-
-#[tauri::command]
-pub async fn add_client_comment(
-    client_id: u32,
-    content: String,
-    user_token: String,
-) -> Result<serde_json::Value, String> {
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
-
-    let client = reqwest::Client::new();
-    let response = client
-        .post(&url)
-        .header("Authorization", format!("Bearer {}", user_token))
-        .json(&serde_json::json!({ "content": content }))
-        .send()
-        .await
-        .map_err(|e| format!("Failed to add comment: {e}"))?;
-
-    extract_api_data(response).await
-}
-
-#[tauri::command]
-pub async fn delete_client_comment(
-    client_id: u32,
-    comment_id: u32,
-    user_token: String,
-) -> Result<(), String> {
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/{comment_id}");
-
-    let client = reqwest::Client::new();
-    let response = client
-        .delete(&url)
-        .header("Authorization", format!("Bearer {}", user_token))
-        .send()
-        .await
-        .map_err(|e| format!("Failed to delete comment: {e}"))?;
-
-    extract_api_data::<serde_json::Value>(response)
-        .await
-        .map(|_| ())
 }

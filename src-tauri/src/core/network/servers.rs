@@ -3,18 +3,19 @@ use crate::{
     log_info, log_warn,
 };
 use reqwest::Client;
+use serde::Serialize;
 use std::sync::{LazyLock, Mutex, RwLock};
 use std::time::Duration;
 use tokio::sync::watch;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Server {
     pub url: String,
 }
 
-#[derive(Debug, Clone, serde::Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ServerConnectivityStatus {
     pub cdn_online: bool,
     pub api_online: bool,
@@ -117,15 +118,28 @@ impl Servers {
         name: &str,
     ) {
         for server in servers {
-            match client.head(&server.url).send().await {
+            // if CDN located on same server as API we should check API server instead of CDN, to reduce unused requests
+            let url = if name == "CDN" {
+                if let Some(api_server) = self.apis.iter().find(|s| server.url.starts_with(&s.url))
+                {
+                    api_server.url.clone()
+                } else {
+                    server.url.clone()
+                }
+            } else {
+                server.url.clone()
+            };
+
+            let mut ok = false;
+
+            match client.head(&url).send().await {
                 Ok(resp) => {
-                    if resp.status().is_success() {
-                        let mut lock = selected.write().unwrap();
-                        *lock = Some(server.clone());
-                        return;
+                    if resp.status().is_success() || resp.status() == reqwest::StatusCode::NOT_FOUND
+                    {
+                        ok = true;
                     } else {
                         log_warn!(
-                            "{} Server {} returned status: {}",
+                            "{} Server {} returned status (HEAD): {}",
                             name,
                             server.url,
                             resp.status()
@@ -133,8 +147,46 @@ impl Servers {
                     }
                 }
                 Err(e) => {
-                    log_warn!("Failed to connect to {} Server {}: {}", name, server.url, e);
+                    log_warn!(
+                        "Failed to connect to {} Server {} (HEAD): {}",
+                        name,
+                        server.url,
+                        e
+                    );
                 }
+            }
+
+            if !ok {
+                match client.get(&url).send().await {
+                    Ok(resp) => {
+                        if resp.status().is_success()
+                            || resp.status() == reqwest::StatusCode::NOT_FOUND
+                        {
+                            ok = true;
+                        } else {
+                            log_warn!(
+                                "{} Server {} returned status (GET): {}",
+                                name,
+                                server.url,
+                                resp.status()
+                            );
+                        }
+                    }
+                    Err(e) => {
+                        log_warn!(
+                            "Failed to connect to {} Server {} (GET): {}",
+                            name,
+                            server.url,
+                            e
+                        );
+                    }
+                }
+            }
+
+            if ok {
+                let mut lock = selected.write().unwrap();
+                *lock = Some(server.clone());
+                return;
             }
         }
 
@@ -151,6 +203,14 @@ impl Servers {
 
     pub fn get_api_server_url(&self) -> Option<String> {
         self.selected_api
+            .read()
+            .unwrap()
+            .as_ref()
+            .map(|server| server.url.clone())
+    }
+
+    pub fn get_cdn_server_url(&self) -> Option<String> {
+        self.selected_cdn
             .read()
             .unwrap()
             .as_ref()
