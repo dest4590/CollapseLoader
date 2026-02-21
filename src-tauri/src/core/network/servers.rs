@@ -208,6 +208,14 @@ impl Servers {
             .as_ref()
             .map(|server| server.url.clone())
     }
+
+    pub fn get_cdn_server_url(&self) -> Option<String> {
+        self.selected_cdn
+            .read()
+            .unwrap()
+            .as_ref()
+            .map(|server| server.url.clone())
+    }
 }
 
 impl Default for Servers {

@@ -10,7 +10,7 @@ use crate::core::storage::flags::FLAGS_MANAGER;
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::discord_rpc;
-use crate::core::utils::globals::{API_VERSION, CODENAME};
+use crate::core::utils::globals::{API_VERSION, CDN_SERVERS, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
@@ -237,6 +237,19 @@ pub async fn get_api_url() -> Result<String, String> {
     SERVERS
         .get_api_server_url()
         .map_or_else(|| Ok("https://atlas.collapseloader.org".to_string()), Ok)
+}
+
+#[tauri::command]
+pub async fn get_cdn_url() -> Result<String, String> {
+    SERVERS.get_cdn_server_url().map_or_else(
+        || {
+            Ok(CDN_SERVERS
+                .first()
+                .map(|s| s.url.clone())
+                .unwrap_or_default())
+        },
+        Ok,
+    )
 }
 
 #[tauri::command]

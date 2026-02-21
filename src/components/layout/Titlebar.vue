@@ -28,6 +28,7 @@ const commitFull = ref("");
 const commitShort = ref("");
 const commitMessage = ref("");
 const apiUrl = ref("");
+const cdnUrl = ref("");
 const isVisible = ref(false);
 
 const tooltipContent = computed(() => {
@@ -37,6 +38,7 @@ const tooltipContent = computed(() => {
             `Build: v${version.value}${codename.value ? ` (${codename.value})` : ""}`
         );
     if (apiUrl.value) lines.push(`Server: ${apiUrl.value}`);
+    if (cdnUrl.value) lines.push(`CDN: ${cdnUrl.value}`);
     if (commitFull.value) lines.push(`Commit: ${commitFull.value}`);
     if (commitMessage.value) lines.push(`\nMessage: ${commitMessage.value}`);
     return lines.length > 0 ? lines.join("\n") : "No version info";
@@ -63,6 +65,13 @@ const fetchVersion = async () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
         apiUrl.value = "";
+    }
+    try {
+        const c = await invoke("get_cdn_url");
+        cdnUrl.value = typeof c === "string" ? c : String(c);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+        cdnUrl.value = "";
     }
 };
 

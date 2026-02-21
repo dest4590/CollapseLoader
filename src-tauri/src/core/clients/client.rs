@@ -848,7 +848,7 @@ impl Client {
 
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
         let common_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
-      
+
         if !dir_has_any_jars(&common_dir, true) {
             log_info!("Downloading common Fabric libraries");
             DATA.download(LIBRARIES_FABRIC_ZIP).await?;
@@ -904,10 +904,12 @@ impl Client {
             ClientType::Fabric => {
                 cp_parts.push(self.get_minecraft_jar_path());
 
-                let v_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER).join(format!(
-                    "{}",
-                    sanitize_version_for_paths(&self.version)
-                ));
+                let v_libs = DATA
+                    .root_dir
+                    .lock()
+                    .unwrap()
+                    .join(LIBRARIES_FABRIC_FOLDER)
+                    .join(format!("{}", sanitize_version_for_paths(&self.version)));
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
 
                 let g_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
