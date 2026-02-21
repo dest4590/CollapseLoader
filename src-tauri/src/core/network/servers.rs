@@ -130,17 +130,16 @@ impl Servers {
                 server.url.clone()
             };
 
+            let mut ok = false;
+
             match client.head(&url).send().await {
                 Ok(resp) => {
-                    if resp.status().is_success() {
-                        {
-                            let mut lock = selected.write().unwrap();
-                            *lock = Some(server.clone());
-                        }
-                        return;
+                    if resp.status().is_success() || resp.status() == reqwest::StatusCode::NOT_FOUND
+                    {
+                        ok = true;
                     } else {
                         log_warn!(
-                            "{} Server {} returned status: {}",
+                            "{} Server {} returned status (HEAD): {}",
                             name,
                             server.url,
                             resp.status()
@@ -148,8 +147,46 @@ impl Servers {
                     }
                 }
                 Err(e) => {
-                    log_warn!("Failed to connect to {} Server {}: {}", name, server.url, e);
+                    log_warn!(
+                        "Failed to connect to {} Server {} (HEAD): {}",
+                        name,
+                        server.url,
+                        e
+                    );
                 }
+            }
+
+            if !ok {
+                match client.get(&url).send().await {
+                    Ok(resp) => {
+                        if resp.status().is_success()
+                            || resp.status() == reqwest::StatusCode::NOT_FOUND
+                        {
+                            ok = true;
+                        } else {
+                            log_warn!(
+                                "{} Server {} returned status (GET): {}",
+                                name,
+                                server.url,
+                                resp.status()
+                            );
+                        }
+                    }
+                    Err(e) => {
+                        log_warn!(
+                            "Failed to connect to {} Server {} (GET): {}",
+                            name,
+                            server.url,
+                            e
+                        );
+                    }
+                }
+            }
+
+            if ok {
+                let mut lock = selected.write().unwrap();
+                *lock = Some(server.clone());
+                return;
             }
         }
 
