@@ -68,6 +68,7 @@ const ratingCountOverride = ref<number | null>(null);
 const { isAuthenticated } = useUser();
 
 let expansionLock = false;
+let inTransitionTimeout: number | null = null;
 
 const previousTab = ref<"info" | "screenshots" | "comments">("info");
 const slideDirection = ref<"left" | "right">("right");
@@ -313,6 +314,11 @@ const expandCard = async () => {
             );
         } catch (error) {
             console.error("Failed to fetch client details:", error);
+            if (inTransitionTimeout !== null) {
+                clearTimeout(inTransitionTimeout);
+                inTransitionTimeout = null;
+            }
+            inTransition.value = false;
             isAnimating.value = false;
             expansionLock = false;
             return;
@@ -443,8 +449,12 @@ const expandCard = async () => {
         );
     }
 
-    setTimeout(() => {
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+    }
+    inTransitionTimeout = window.setTimeout(() => {
         inTransition.value = true;
+        inTransitionTimeout = null;
     }, 300);
 };
 
@@ -455,6 +465,10 @@ const collapseCard = () => {
     ratingAvgOverride.value = null;
     ratingCountOverride.value = null;
 
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+        inTransitionTimeout = null;
+    }
     inTransition.value = false;
     isCollapsing.value = true;
     isAnimating.value = true;
@@ -619,6 +633,12 @@ onMounted(() => {
 });
 
 const cleanupExpandedCard = () => {
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+        inTransitionTimeout = null;
+    }
+    inTransition.value = false;
+
     if (!isExpanded.value || !cardRef.value) return;
 
     const card = cardRef.value;
@@ -666,6 +686,10 @@ const cleanupExpandedCard = () => {
 };
 
 onBeforeUnmount(() => {
+    if (inTransitionTimeout !== null) {
+        clearTimeout(inTransitionTimeout);
+        inTransitionTimeout = null;
+    }
     cleanupExpandedCard();
     document.removeEventListener("keydown", handleCardKeyDown);
 });
