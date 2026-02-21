@@ -2,7 +2,7 @@
 import { ref, shallowRef, onMounted, computed } from "vue";
 import { MessageSquare, Send, Trash2 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
-import { invoke } from "@tauri-apps/api/core";
+import { apiDelete, apiGet, apiPost } from "../../../services/apiClient";
 import { userService } from "../../../services/userService";
 import { formatDate } from "../../../utils/utils";
 import { resolveApiAssetUrl } from "../../../utils/url";
@@ -13,7 +13,7 @@ const props = defineProps<{
     commentsCount?: number;
 }>();
 
-const emit = defineEmits(["update:commentsCount", "show-user-profile"]);
+const emit = defineEmits(["update:comments-count", "show-user-profile"]);
 
 const { t } = useI18n();
 
@@ -45,9 +45,9 @@ const fetchComments = async () => {
     if (isLoadingComments.value) return;
     isLoadingComments.value = true;
     try {
-        comments.value = await invoke<ClientComment[]>("get_client_comments", {
-            clientId: props.clientId,
-        });
+        comments.value = await apiGet<ClientComment[]>(
+            `/clients/${props.clientId}/comments`
+        );
     } catch (error) {
         console.error("Failed to fetch comments:", error);
     } finally {
@@ -66,18 +66,14 @@ const postComment = async () => {
 
     isPostingComment.value = true;
     try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
-
-        const newComment = await invoke<ClientComment>("add_client_comment", {
-            clientId: props.clientId,
-            content: trimmed,
-            userToken: token,
-        });
+        const newComment = await apiPost<ClientComment>(
+            `/clients/${props.clientId}/comments`,
+            { content: trimmed }
+        );
 
         comments.value.unshift(newComment);
         newCommentText.value = "";
-        emit("update:commentsCount", (props.commentsCount || 0) + 1);
+        emit("update:comments-count", (props.commentsCount || 0) + 1);
     } catch (error) {
         console.error("Failed to post comment:", error);
     } finally {
@@ -87,18 +83,11 @@ const postComment = async () => {
 
 const deleteComment = async (commentId: number) => {
     try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
-
-        await invoke("delete_client_comment", {
-            clientId: props.clientId,
-            commentId: commentId,
-            userToken: token,
-        });
+        await apiDelete(`/clients/${props.clientId}/comments/${commentId}`);
 
         comments.value = comments.value.filter((c) => c.id !== commentId);
         emit(
-            "update:commentsCount",
+            "update:comments-count",
             Math.max(0, (props.commentsCount || 0) - 1)
         );
     } catch (error) {

@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { apiDelete, apiGet, apiPost } from "../../../services/apiClient";
 import { ensureApiUrl } from "../../../config";
-import { invoke } from "@tauri-apps/api/core";
 import type { ClientDetails } from "../../../types/ui";
 
 const props = defineProps<{
@@ -15,9 +14,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits([
-    "update:ratingAvg",
-    "update:ratingCount",
-    "update:myRating",
+    "update:rating-avg",
+    "update:rating-count",
+    "update:my-rating",
 ]);
 
 const { t } = useI18n();
@@ -26,7 +25,7 @@ const isSubmittingRating = ref(false);
 const isLoadingMyRating = ref(false);
 
 const ratingRounded = computed(() => {
-    if (props.ratingAvg === null) return null;
+    if (props.ratingAvg === null || props.ratingAvg === 0) return null;
     return Math.round(props.ratingAvg * 2) / 2;
 });
 
@@ -46,7 +45,7 @@ const fetchMyRating = async () => {
             getRatingEndpoint()
         );
         if (typeof data?.my_rating === "number") {
-            emit("update:myRating", data.my_rating);
+            emit("update:my-rating", data.my_rating);
         }
     } catch (error) {
         console.warn("Failed to fetch my rating:", error);
@@ -67,12 +66,21 @@ const handleRatingClick = async (value: number) => {
     await submitRating(value);
 };
 
+const handleRatingChange = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = parseFloat(target.getAttribute("data-value") || "0");
+
+    if (value === 0) {
+        await removeRating();
+    }
+};
+
 const submitRating = async (value: number) => {
     if (isSubmittingRating.value) return;
     if (!props.isAuthenticated) return;
 
     const previousRating = props.myRating;
-    emit("update:myRating", value);
+    emit("update:my-rating", value);
 
     isSubmittingRating.value = true;
     try {
@@ -84,20 +92,39 @@ const submitRating = async (value: number) => {
         }>(getRatingEndpoint(), { rating: value });
 
         if (typeof data?.my_rating === "number") {
-            emit("update:myRating", data.my_rating);
+            emit("update:my-rating", data.my_rating);
         } else {
-            emit("update:myRating", value);
+            emit("update:my-rating", value);
         }
 
         if (typeof data?.rating_avg === "number" || data?.rating_avg === null) {
-            emit("update:ratingAvg", data.rating_avg);
+            emit("update:rating-avg", data.rating_avg);
         }
         if (typeof data?.rating_count === "number") {
-            emit("update:ratingCount", data.rating_count);
+            emit("update:rating-count", data.rating_count);
+        }
+        try {
+            const updated = await apiGet<ClientDetails>(
+                `/clients/${props.clientId}/detailed`
+            );
+            if (
+                typeof updated?.rating_avg === "number" ||
+                updated?.rating_avg === null
+            ) {
+                emit("update:rating-avg", updated.rating_avg);
+            }
+            if (typeof updated?.rating_count === "number") {
+                emit("update:rating-count", updated.rating_count);
+            }
+        } catch (e) {
+            console.warn(
+                "Failed to refetch client details after rating submit:",
+                e
+            );
         }
     } catch (error) {
         console.error("Failed to submit rating:", error);
-        emit("update:myRating", previousRating);
+        emit("update:my-rating", previousRating);
     } finally {
         isSubmittingRating.value = false;
     }
@@ -109,19 +136,18 @@ const removeRating = async () => {
     if (props.myRating === null) return;
 
     const previousRating = props.myRating;
-    emit("update:myRating", null);
+    emit("update:my-rating", null);
 
     isSubmittingRating.value = true;
     try {
-        await ensureApiUrl();
         await apiDelete(getRatingEndpoint());
 
         try {
-            const updated = await invoke<ClientDetails>("get_client_details", {
-                clientId: props.clientId,
-            });
-            emit("update:ratingAvg", updated.rating_avg);
-            emit("update:ratingCount", updated.rating_count);
+            const updated = await apiGet<ClientDetails>(
+                `/clients/${props.clientId}/detailed`
+            );
+            emit("update:rating-avg", updated.rating_avg);
+            emit("update:rating-count", updated.rating_count);
         } catch (e) {
             console.warn(
                 "Failed to refetch client details after rating delete:",
@@ -130,7 +156,7 @@ const removeRating = async () => {
         }
     } catch (error) {
         console.error("Failed to remove rating:", error);
-        emit("update:myRating", previousRating);
+        emit("update:my-rating", previousRating);
     } finally {
         isSubmittingRating.value = false;
     }
@@ -158,6 +184,7 @@ onMounted(() => {
         <div class="stat-value text-base flex flex-col gap-2">
             <div class="flex items-center gap-3">
                 <div
+                    :key="`avg-display-${ratingRounded}`"
                     class="rating rating-half rating-sm pointer-events-none opacity-80"
                 >
                     <input
@@ -204,7 +231,7 @@ onMounted(() => {
                     {{ t("client.details.your_rating") }}:
                 </span>
                 <div
-                    :key="`my-rating-${myRating}`"
+                    :key="`my-rating-${myRating}-${clientId}`"
                     class="rating rating-half rating-sm"
                 >
                     <input
@@ -212,24 +239,29 @@ onMounted(() => {
                         :name="`my-rating-input-${clientId}`"
                         class="rating-hidden"
                         :checked="myRating === null"
-                        @click="removeRating"
+                        data-value="0"
+                        @change="handleRatingChange"
                     />
                     <template v-for="i in 5" :key="i">
                         <input
                             type="radio"
                             :name="`my-rating-input-${clientId}`"
-                            class="mask mask-star-2 mask-half-1 bg-warning"
+                            class="mask mask-star-2 mask-half-1 bg-warning cursor-pointer"
                             :checked="myRating === i - 0.5"
                             :disabled="isSubmittingRating"
+                            :data-value="i - 0.5"
                             @click="handleRatingClick(i - 0.5)"
+                            @change="() => {}"
                         />
                         <input
                             type="radio"
                             :name="`my-rating-input-${clientId}`"
-                            class="mask mask-star-2 mask-half-2 bg-warning"
+                            class="mask mask-star-2 mask-half-2 bg-warning cursor-pointer"
                             :checked="myRating === i"
                             :disabled="isSubmittingRating"
+                            :data-value="i"
                             @click="handleRatingClick(i)"
+                            @change="() => {}"
                         />
                     </template>
                 </div>

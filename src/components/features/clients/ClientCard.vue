@@ -18,7 +18,7 @@ import ScreenshotViewer from "./ScreenshotViewer.vue";
 import ClientCardActions from "./ClientCardActions.vue";
 import ClientCardDetails from "./ClientCardDetails.vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { invoke } from "@tauri-apps/api/core";
+import { apiGet } from "../../../services/apiClient";
 import { useModal } from "../../../services/modalService";
 import { useUser } from "../../../composables/useUser";
 
@@ -62,6 +62,8 @@ const isLoadingDetails = ref(false);
 const activeTab = ref<"info" | "screenshots" | "comments">("info");
 
 const myRating = ref<number | null>(null);
+const ratingAvgOverride = ref<number | null>(null);
+const ratingCountOverride = ref<number | null>(null);
 
 const { isAuthenticated } = useUser();
 
@@ -267,6 +269,9 @@ const clientIsInstalling = computed(() => !!props.isClientInstalling);
 const currentInstallStatus = computed(() => props.installationStatus);
 
 const ratingAvg = computed(() => {
+    if (ratingAvgOverride.value !== null) {
+        return ratingAvgOverride.value;
+    }
     if (!isExpanded.value) {
         const avg = props.client.rating_avg;
         return typeof avg === "number" ? avg : null;
@@ -276,6 +281,9 @@ const ratingAvg = computed(() => {
 });
 
 const ratingCount = computed(() => {
+    if (ratingCountOverride.value !== null) {
+        return ratingCountOverride.value;
+    }
     if (!isExpanded.value) {
         const count = props.client.rating_count;
         return typeof count === "number" ? count : 0;
@@ -300,9 +308,8 @@ const expandCard = async () => {
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
         try {
-            clientDetails.value = await invoke<ClientDetails>(
-                "get_client_details",
-                { clientId: props.client.id }
+            clientDetails.value = await apiGet<ClientDetails>(
+                `/clients/${props.client.id}/detailed`
             );
         } catch (error) {
             console.error("Failed to fetch client details:", error);
@@ -444,6 +451,9 @@ const expandCard = async () => {
 const collapseCard = () => {
     const card = cardRef.value;
     if (!card || !placeholder.value || isCollapsing.value) return;
+
+    ratingAvgOverride.value = null;
+    ratingCountOverride.value = null;
 
     inTransition.value = false;
     isCollapsing.value = true;
@@ -785,8 +795,10 @@ onBeforeUnmount(() => {
                         :activeTab="activeTab"
                         :slideDirection="slideDirection"
                         :myRating="myRating"
-                        @update:myRating="myRating = $event"
-                        @update:clientDetails="clientDetails = $event"
+                        @update:my-rating="myRating = $event"
+                        @update:rating-avg="ratingAvgOverride = $event"
+                        @update:rating-count="ratingCountOverride = $event"
+                        @update:client-details="clientDetails = $event"
                         @change-tab="changeTab"
                         @screenshot-click="handleScreenshotClick"
                         @show-user-profile="emit('show-user-profile', $event)"

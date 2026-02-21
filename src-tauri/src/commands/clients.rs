@@ -3,14 +3,16 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
-use serde::de::DeserializeOwned;
-use serde::Deserialize;
 use tauri::{AppHandle, Manager, State};
 
 use crate::core::{
-    clients::custom_clients::CustomClient,
-    storage::custom_clients::CustomClientUpdate,
-    utils::globals::{API_VERSION, SKIP_AGENT_OVERLAY_VERIFICATION},
+    clients::client::ClientType,
+    network::servers::{ServerConnectivityStatus, SERVERS},
+    utils::helpers::emit_to_main_window,
+};
+use crate::core::{
+    clients::custom_clients::CustomClient, storage::custom_clients::CustomClientUpdate,
+    utils::globals::SKIP_AGENT_OVERLAY_VERIFICATION,
 };
 use crate::core::{
     clients::{client::LaunchOptions, internal::agent_overlay::AgentOverlayManager},
@@ -19,14 +21,6 @@ use crate::core::{
 use crate::core::{
     storage::settings::SETTINGS,
     utils::{discord_rpc, hashing::calculate_md5_hash, logging},
-};
-use crate::{
-    commands::utils::get_api_url,
-    core::{
-        clients::client::ClientType,
-        network::servers::{ServerConnectivityStatus, SERVERS},
-        utils::helpers::emit_to_main_window,
-    },
 };
 use crate::{
     core::{self, storage::data::DATA},
@@ -111,39 +105,6 @@ pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
         .ok()
         .map(|manager| manager.clients.clone())
         .unwrap_or_default()
-}
-
-#[derive(Deserialize)]
-struct ApiResponse<T> {
-    success: bool,
-    data: T,
-    #[serde(default)]
-    error: Option<String>,
-    #[serde(default)]
-    #[allow(dead_code)]
-    timestamp: Option<i64>,
-}
-
-async fn extract_api_data<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, String> {
-    if !response.status().is_success() {
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let ApiResponse {
-        success,
-        data,
-        error,
-        ..
-    } = response
-        .json::<ApiResponse<T>>()
-        .await
-        .map_err(|e| format!("Failed to parse API response: {e}"))?;
-
-    if !success {
-        return Err(error.unwrap_or_else(|| "API returned unsuccessful response".to_string()));
-    }
-
-    Ok(data)
 }
 
 #[tauri::command]
@@ -546,38 +507,6 @@ pub async fn delete_client(id: u32, state: State<'_, AppState>) -> Result<(), St
 }
 
 #[tauri::command]
-pub async fn get_client_details(client_id: u32) -> Result<serde_json::Value, String> {
-    log_debug!("Fetching details for client ID: {}", client_id);
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/detailed");
-    log_debug!("Requesting client details from URL: {}", url);
-
-    let client = reqwest::Client::new();
-    let response = client.get(&url).send().await.map_err(|e| {
-        log_error!("Failed to fetch client details from {}: {}", url, e);
-        format!("Failed to fetch client details: {e}")
-    })?;
-
-    if !response.status().is_success() {
-        log_warn!(
-            "API returned non-success status ({}) for client details request to {}",
-            response.status(),
-            url
-        );
-        return Err(format!("API returned error: {}", response.status()));
-    }
-
-    let details: serde_json::Value = response.json().await.map_err(|e| {
-        log_error!("Failed to parse client details JSON: {}", e);
-        format!("Failed to parse client details: {e}")
-    })?;
-
-    log_info!("Successfully fetched details for client ID: {}", client_id);
-    Ok(details)
-}
-
-#[tauri::command]
 pub fn increment_client_counter(
     id: u32,
     counter_type: String,
@@ -869,65 +798,4 @@ pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(
     handle
         .await
         .map_err(|e| format!("Stop custom client task error: {e}"))?
-}
-
-#[tauri::command]
-pub async fn get_client_comments(client_id: u32) -> Result<serde_json::Value, String> {
-    log_debug!("Fetching comments for client ID: {}", client_id);
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
-
-    let client = reqwest::Client::new();
-    let response = client.get(&url).send().await.map_err(|e| {
-        log_error!("Failed to fetch client comments from {}: {}", url, e);
-        format!("Failed to fetch client comments: {e}")
-    })?;
-
-    extract_api_data(response).await
-}
-
-#[tauri::command]
-pub async fn add_client_comment(
-    client_id: u32,
-    content: String,
-    user_token: String,
-) -> Result<serde_json::Value, String> {
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments");
-
-    let client = reqwest::Client::new();
-    let response = client
-        .post(&url)
-        .header("Authorization", format!("Bearer {}", user_token))
-        .json(&serde_json::json!({ "content": content }))
-        .send()
-        .await
-        .map_err(|e| format!("Failed to add comment: {e}"))?;
-
-    extract_api_data(response).await
-}
-
-#[tauri::command]
-pub async fn delete_client_comment(
-    client_id: u32,
-    comment_id: u32,
-    user_token: String,
-) -> Result<(), String> {
-    let api_url = get_api_url().await?;
-    let base = api_url.trim_end_matches('/').to_string();
-    let url = format!("{base}/api/{API_VERSION}/clients/{client_id}/comments/{comment_id}");
-
-    let client = reqwest::Client::new();
-    let response = client
-        .delete(&url)
-        .header("Authorization", format!("Bearer {}", user_token))
-        .send()
-        .await
-        .map_err(|e| format!("Failed to delete comment: {e}"))?;
-
-    extract_api_data::<serde_json::Value>(response)
-        .await
-        .map(|_| ())
 }

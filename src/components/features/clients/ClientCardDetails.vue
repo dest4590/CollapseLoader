@@ -28,8 +28,10 @@ defineProps<{
 
 const emit = defineEmits([
     "change-tab",
-    "update:myRating",
-    "update:clientDetails",
+    "update:my-rating",
+    "update:rating-avg",
+    "update:rating-count",
+    "update:client-details",
     "screenshot-click",
     "show-user-profile",
     "open-source-link",
@@ -116,21 +118,15 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                                     :ratingAvg="ratingAvg"
                                     :ratingCount="ratingCount"
                                     :myRating="myRating"
-                                    @update:myRating="
-                                        emit('update:myRating', $event)
+                                    @update:my-rating="
+                                        emit('update:my-rating', $event)
                                     "
                                     :isAuthenticated="isAuthenticated"
-                                    @update:ratingAvg="
-                                        emit('update:clientDetails', {
-                                            ...clientDetails,
-                                            rating_avg: $event,
-                                        })
+                                    @update:rating-avg="
+                                        emit('update:rating-avg', $event)
                                     "
-                                    @update:ratingCount="
-                                        emit('update:clientDetails', {
-                                            ...clientDetails,
-                                            rating_count: $event,
-                                        })
+                                    @update:rating-count="
+                                        emit('update:rating-count', $event)
                                     "
                                 />
 
@@ -382,8 +378,8 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                             <ClientComments
                                 :clientId="client.id"
                                 :commentsCount="clientDetails.comments_count"
-                                @update:commentsCount="
-                                    emit('update:clientDetails', {
+                                @update:comments-count="
+                                    emit('update:client-details', {
                                         ...clientDetails,
                                         comments_count: $event,
                                     })
