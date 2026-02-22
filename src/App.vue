@@ -408,9 +408,8 @@ onMounted(() => {
                     });
 
                     if (!was_already_running) {
-                        const { getCurrentWindow } = await import(
-                            "@tauri-apps/api/window"
-                        );
+                        const { getCurrentWindow } =
+                            await import("@tauri-apps/api/window");
                         await getCurrentWindow().minimize();
                     }
                 } catch (e) {
@@ -582,8 +581,35 @@ onMounted(() => {
         );
     });
 
+    const broadcastHandler = (event: any) => {
+        const { message, type, sticky } = event.detail;
+        const audio = new Audio(notificationSound);
+        audio
+            .play()
+            .catch((e) =>
+                console.error("Failed to play notification sound:", e)
+            );
+
+        let toastType = "info";
+        if (type === "warning") toastType = "warning";
+        if (type === "error") toastType = "error";
+
+        const duration = sticky ? 60000 : 10000;
+        addToast(message, toastType as any, duration);
+    };
+
+    window.addEventListener("system-broadcast", broadcastHandler);
+
+    const updateHandler = async () => {
+        await updaterService.checkForUpdates(false, t);
+    };
+
+    window.addEventListener("trigger-update-check", updateHandler);
+
     onUnmounted(() => {
         window.removeEventListener("keydown", emergencyHandler);
+        window.removeEventListener("system-broadcast", broadcastHandler);
+        window.removeEventListener("trigger-update-check", updateHandler);
     });
 });
 

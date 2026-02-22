@@ -28,6 +28,7 @@ class WebSocketService {
                 this.subscribeToFriendNotifications();
                 this.subscribeToCommands();
                 this.subscribeToOnlineCount();
+                this.subscribeToBroadcasts();
             },
             onDisconnect: () => {
                 this.connected = false;
@@ -167,6 +168,41 @@ class WebSocketService {
                 window.dispatchEvent(event);
             }
         });
+    }
+
+    private subscribeToBroadcasts() {
+        if (!this.client) {
+            return;
+        }
+
+        this.client.subscribe("/topic/broadcast", (message) => {
+            if (message.body) {
+                const data = JSON.parse(message.body);
+                this.handleBroadcast(data);
+            }
+        });
+
+
+        this.client.subscribe("/topic/broadcast/users", (message) => {
+            if (message.body) {
+                const data = JSON.parse(message.body);
+                this.handleBroadcast(data);
+            }
+        });
+
+        this.client.subscribe("/topic/broadcast/guests", (message) => {
+            if (message.body) {
+                const data = JSON.parse(message.body);
+                this.handleBroadcast(data);
+            }
+        });
+    }
+
+    private handleBroadcast(data: any) {
+        const event = new CustomEvent("system-broadcast", {
+            detail: data,
+        });
+        window.dispatchEvent(event);
     }
 }
 
