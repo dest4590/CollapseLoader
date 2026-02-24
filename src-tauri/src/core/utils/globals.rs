@@ -64,6 +64,10 @@ pub static IRC_HOST: &str = "irc.collapseloader.org:1338";
 pub static FABRIC_DEPS_URL: &str = "clients/fabric/deps/jars";
 pub static FORGE_DEPS_URL: &str = "clients/forge/deps/jars";
 
+pub static VANILLA_CLIENTS_URL: &str = "clients";
+pub static FABRIC_CLIENTS_URL: &str = "fabric-clients";
+pub static FORGE_CLIENTS_URL: &str = "forge-clients";
+
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var).ok().is_some_and(|s| {
         let s = s.trim().to_ascii_lowercase();

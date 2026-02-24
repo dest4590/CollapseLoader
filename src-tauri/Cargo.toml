@@ -29,7 +29,7 @@ zip = "8.1.0"
 tokio = { version = "1.49.0", features = ["macros", "process"] }
 opener = "0.8.4"
 uuid = { version = "1.21.0", features = ["v4"] }
-chrono = { version = "0.4.43", features = ["serde"] }
+chrono = { version = "0.4.44", features = ["serde"] }
 paste = "1.0.15"
 open = "5.3.3"
 md5 = "0.8.0"

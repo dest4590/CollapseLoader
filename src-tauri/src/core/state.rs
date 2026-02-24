@@ -1,5 +1,6 @@
 use crate::core::clients::manager::ClientManager;
 use std::sync::{Arc, Mutex};
+use std::sync::{MutexGuard, PoisonError};
 
 pub struct ClientState {
     pub manager: Arc<Mutex<ClientManager>>,
@@ -11,13 +12,8 @@ impl ClientState {
     }
 }
 
+#[derive(Default)]
 pub struct CustomClientsState;
-
-impl Default for CustomClientsState {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl CustomClientsState {
     pub fn new() -> Self {
@@ -26,11 +22,10 @@ impl CustomClientsState {
 
     pub fn lock(
         &self,
-    ) -> std::sync::MutexGuard<'static, crate::core::storage::custom_clients::CustomClientManager>
-    {
+    ) -> MutexGuard<'static, crate::core::storage::custom_clients::CustomClientManager> {
         crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER
             .lock()
-            .unwrap()
+            .unwrap_or_else(PoisonError::into_inner)
     }
 }
 
