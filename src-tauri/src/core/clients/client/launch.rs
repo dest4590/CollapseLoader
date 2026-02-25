@@ -192,6 +192,7 @@ impl Client {
         }
 
         self.append_new_instance_separator();
+        let crash_report_token = options.user_token.clone();
 
         let app_handle = options.app_handle.clone();
         let client_id = self.id;
@@ -316,7 +317,7 @@ impl Client {
                     log_info!("{}", msg);
                     add_log_line(client_id, msg);
 
-                    let checker = LogChecker::new(self_clone.clone());
+                    let checker = LogChecker::new(self_clone.clone(), crash_report_token.clone());
                     checker.check(&app_handle);
 
                     if let Ok(m) = manager.lock() {

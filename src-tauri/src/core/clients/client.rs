@@ -33,6 +33,8 @@ pub static REQUIREMENTS_DOWNLOADING: std::sync::LazyLock<Mutex<bool>> =
 pub static REQUIREMENTS_SEMAPHORE: std::sync::LazyLock<Arc<Semaphore>> =
     std::sync::LazyLock::new(|| Arc::new(Semaphore::new(1)));
 
+const MAX_CLIENT_LOG_LINES: usize = 5000;
+
 fn sanitize_version_for_paths(version: &str) -> String {
     version.trim().replace(['/', '\\'], "_").replace(' ', "_")
 }
@@ -99,6 +101,10 @@ fn add_log_line(client_id: u32, line: String) {
     if let Ok(mut logs) = CLIENT_LOGS.lock() {
         if let Some(client_logs) = logs.get_mut(&client_id) {
             client_logs.push(line);
+            if client_logs.len() > MAX_CLIENT_LOG_LINES {
+                let to_remove = client_logs.len() - MAX_CLIENT_LOG_LINES;
+                client_logs.drain(0..to_remove);
+            }
         }
     }
 }

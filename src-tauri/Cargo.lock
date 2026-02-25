@@ -556,6 +556,7 @@ dependencies = [
  "opener",
  "paste",
  "rand 0.10.0",
+ "regex",
  "reqwest",
  "semver",
  "serde",
