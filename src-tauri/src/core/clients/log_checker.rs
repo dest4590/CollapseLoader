@@ -69,8 +69,7 @@ static MASK_PATTERNS: LazyLock<Vec<(Regex, &'static str)>> = LazyLock::new(|| {
             "USERNAME=********",
         ),
         (
-            Regex::new(r"(?i)\b(USERPROFILE|HOME|HOMEPATH)=\S+")
-                .expect("valid home env regex"),
+            Regex::new(r"(?i)\b(USERPROFILE|HOME|HOMEPATH)=\S+").expect("valid home env regex"),
             "$1=********",
         ),
         (
@@ -83,13 +82,11 @@ static MASK_PATTERNS: LazyLock<Vec<(Regex, &'static str)>> = LazyLock::new(|| {
             "$1********",
         ),
         (
-            Regex::new(r#"(?i)(--uuid\s+\"?)[^\"\s]+(\"?)"#)
-                .expect("valid uuid arg regex"),
+            Regex::new(r#"(?i)(--uuid\s+\"?)[^\"\s]+(\"?)"#).expect("valid uuid arg regex"),
             "$1********$2",
         ),
         (
-            Regex::new(r#"(?i)(--username\s+\"?)[^\"\s]+(\"?)"#)
-                .expect("valid username arg regex"),
+            Regex::new(r#"(?i)(--username\s+\"?)[^\"\s]+(\"?)"#).expect("valid username arg regex"),
             "$1********$2",
         ),
     ]

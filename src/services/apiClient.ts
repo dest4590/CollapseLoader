@@ -71,22 +71,6 @@ class ApiClient {
                     !originalRequest?._retry
                 ) {
                     originalRequest._retry = true;
-
-                    const ok = await this.refreshingPromise;
-                    this.refreshingPromise = null;
-                    if (ok) {
-                        const token = localStorage.getItem("authToken");
-                        if (token) {
-                            originalRequest.headers =
-                                originalRequest.headers || {};
-                            originalRequest.headers["Authorization"] =
-                                `Bearer ${token}`;
-                        }
-                        return this.client.request(originalRequest);
-                    } else {
-                        localStorage.removeItem("authToken");
-                        return Promise.reject(error);
-                    }
                 }
 
                 let errorMessage = "An unexpected error occurred";
@@ -110,11 +94,7 @@ class ApiClient {
                 return Promise.reject(error);
             }
         );
-
-        this.refreshingPromise = null;
     }
-
-    private refreshingPromise: Promise<boolean> | null = null;
 
     async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
         const resp = await this.executeRequest<any>(url, {

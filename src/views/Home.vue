@@ -1876,18 +1876,6 @@ onBeforeUnmount(() => {
                     ? { animationDelay: `${Math.min(idx * 100, 600)}ms` }
                     : {}
             "
-            v-bind="[
-                client.id,
-                isClientRunning(client.id),
-                isClientInstalling(client),
-                installationStatus.get(getFileBasename(client.filename))
-                    ?.percentage,
-                isClientFavorite(client.id),
-                isClientSelected(client.id),
-                isCtrlPressed,
-                hashVerifyingClients.has(client.id),
-                requirementsInProgress,
-            ]"
         >
             <ClientCard
                 :client="client"

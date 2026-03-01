@@ -163,7 +163,8 @@ const filteredLogs = computed(() => {
                 return (
                     low.includes("[collapsewarden]") ||
                     low.includes("[collapseagent]") ||
-                    low.includes("[collapsenative]")
+                    low.includes("[collapsenative]") ||
+                    low.includes("[collapseoverlay]")
                 );
             }
 
