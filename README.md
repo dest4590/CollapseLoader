@@ -57,15 +57,30 @@ For more info, read our [Security Overview](SECURITY.md).
 
 ---
 
-## How to Install
+## How to Install?
 
 ### What You Need
 
--   **Windows**: Windows 10 or newer.
--   **Linux**: A modern Linux system (like Ubuntu 20.04 or newer).
+- **Windows**: Windows 10 or newer  
+- **Linux**: A modern Linux system (for example, Ubuntu 20.04 or newer)
 
-We also have full table of client support [(click here)](https://docs.google.com/spreadsheets/d/1TcMOdRKTSeGfns5WijZjvZBz6HBdwXZlClN0pcPd14k/edit?usp=sharing)
+We also have a full table of client support — [check it out here](https://docs.google.com/spreadsheets/d/1TcMOdRKTSeGfns5WijZjvZBz6HBdwXZlClN0pcPd14k/edit?usp=sharing).
 
 ### Download
 
 Go to [GitHub Releases](https://github.com/dest4590/CollapseLoader/releases) or [collapseloader.org](https://collapseloader.org). Download the file for your system (Windows or Linux).
+
+
+---
+
+## How to Build
+
+- **Linux**  
+
+If you're running the binary (not the `.AppImage`), you'll need a few dependencies before everything works smoothly. The most important one is the `webkit2gtk4.1` package - make sure that’s installed first.  
+
+If you run into issues:  
+- Check the logs to see what's missing  
+- Install any extra packages as needed  
+
+Once the essentials are set up, everything falls into place and runs smoothly.
