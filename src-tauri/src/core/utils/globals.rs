@@ -16,17 +16,12 @@ pub static LEGACY_SUFFIX: &str = "-1.8.9";
 pub static PATH_SEPARATOR: &str = if IS_LINUX { ":" } else { ";" };
 
 pub static JDK21_FOLDER: &str = if IS_LINUX {
-    "jdk-21.0.2_linux"
+    "jdk-21.0.2-linux"
 } else {
     "jdk-21.0.2"
 };
 
 pub static JDK8_FOLDER: &str = if IS_LINUX { "jdk8-linux" } else { "jdk8" };
-pub static JDK8_ZIP: &str = if IS_LINUX {
-    "jdk8-linux.zip"
-} else {
-    "jdk8.zip"
-};
 
 pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
 
