@@ -54,7 +54,16 @@ pub static MODS_FOLDER: &str = "mods";
 pub static AGENT_FILE: &str = "CollapseAgent.jar";
 pub static OVERLAY_FILE: &str = "CollapseOverlay.dll";
 
-pub static IRC_HOST: &str = "irc.collapseloader.org:1338";
+pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {
+    if let Ok(url) = std::env::var("FORCE_IRC") {
+        if !url.is_empty() {
+            log_info!("Using forced IRC server: {}", url);
+            return url.to_string();
+        }
+    }
+
+    "irc.collapseloader.org:1338".to_string()
+});
 
 pub static FABRIC_DEPS_URL: &str = "clients/fabric/deps/jars";
 pub static FORGE_DEPS_URL: &str = "clients/forge/deps/jars";

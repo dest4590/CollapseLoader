@@ -33,9 +33,9 @@ pub async fn connect_irc(
         "authenticated"
     };
 
-    log_info!("Connecting to IRC server at {} as {}", IRC_HOST, mode);
+    log_info!("Connecting to IRC server at {} as {}", IRC_HOST.as_str(), mode);
 
-    match TcpStream::connect(IRC_HOST).await {
+    match TcpStream::connect(IRC_HOST.as_str()).await {
         Ok(stream) => {
             if let Err(e) = {
                 let sock_ref = socket2::SockRef::from(&stream);
