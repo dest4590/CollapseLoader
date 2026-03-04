@@ -272,7 +272,7 @@ pub fn run() {
             commands::clients::get_server_connectivity_status,
         ])
         .setup(|app| {
-            #[cfg(desktop)]
+            #[cfg(all(desktop, not(target_os = "macos")))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let handle = app.handle().clone();

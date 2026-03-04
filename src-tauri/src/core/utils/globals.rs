@@ -3,25 +3,47 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 use crate::{core::network::servers::Server, log_debug, log_info};
 
 pub static CODENAME: &str = "Atlas";
-
 pub static API_VERSION: &str = "v1";
 
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
 
 pub static IS_LINUX: bool = cfg!(target_os = "linux");
-pub static FILE_EXTENSION: &str = if IS_LINUX { "" } else { ".exe" };
+pub static IS_MACOS: bool = cfg!(target_os = "macos");
+pub static IS_WINDOWS: bool = cfg!(target_os = "windows");
+pub static IS_AARCH64: bool = cfg!(target_arch = "aarch64");
+
+pub static FILE_EXTENSION: &str = if IS_WINDOWS { ".exe" } else { "" };
+pub static PATH_SEPARATOR: &str = if IS_WINDOWS { ";" } else { ":" };
+
 pub static LINUX_SUFFIX: &str = "-linux";
+pub static MACOS_SUFFIX: &str = "-macos";
+pub static ARM64_SUFFIX: &str = "-arm64";
 pub static LEGACY_SUFFIX: &str = "-1.8.9";
-pub static PATH_SEPARATOR: &str = if IS_LINUX { ":" } else { ";" };
 
 pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2-linux"
+} else if IS_MACOS {
+    if IS_AARCH64 {
+        "jdk-21.0.2-macos-aarch64"
+    } else {
+        "jdk-21.0.2-macos-x64"
+    }
 } else {
     "jdk-21.0.2"
 };
 
-pub static JDK8_FOLDER: &str = if IS_LINUX { "jdk8-linux" } else { "jdk8" };
+pub static JDK8_FOLDER: &str = if IS_LINUX {
+    "jdk8-linux"
+} else if IS_MACOS {
+    if IS_AARCH64 {
+        "jdk8-macos-aarch64"
+    } else {
+        "jdk8-macos-x64"
+    }
+} else {
+    "jdk8"
+};
 
 pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
 
@@ -32,6 +54,8 @@ pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 pub static NATIVES_FOLDER: &str = "natives";
 pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
+pub static NATIVES_MACOS_FOLDER: &str = "natives-macos";
+pub static NATIVES_MACOS_ARM64_FOLDER: &str = "natives-macos-arm64";
 pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
 pub static NATIVES_FABRIC_FOLDER: &str = "natives-fabric";
@@ -43,6 +67,8 @@ pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
 pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 pub static NATIVES_LINUX_ZIP: &str = "misc/natives-linux.zip";
+pub static NATIVES_MACOS_ZIP: &str = "misc/natives-macos.zip";
+pub static NATIVES_MACOS_ARM64_ZIP: &str = "misc/natives-macos-arm64.zip";
 pub static NATIVES_LEGACY_ZIP: &str = "misc/natives-legacy.zip";
 pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
 
@@ -52,7 +78,13 @@ pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
 pub static MODS_FOLDER: &str = "mods";
 
 pub static AGENT_FILE: &str = "CollapseAgent.jar";
-pub static OVERLAY_FILE: &str = "CollapseOverlay.dll";
+pub static OVERLAY_FILE: &str = if IS_MACOS {
+    "libCollapseOverlay.dylib"
+} else if IS_LINUX {
+    "libCollapseOverlay.so"
+} else {
+    "CollapseOverlay.dll"
+};
 
 pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {
     if let Ok(url) = std::env::var("FORCE_IRC") {
@@ -120,6 +152,10 @@ pub static ROOT_DIR: LazyLock<String> = LazyLock::new(|| {
                     .map(|h| PathBuf::from(h).join(".local").join("share"))
                     .unwrap_or_else(|_| PathBuf::from("."))
             })
+    } else if IS_MACOS {
+        std::env::var("HOME")
+            .map(|h| PathBuf::from(h).join("Library").join("Application Support"))
+            .unwrap_or_else(|_| PathBuf::from("."))
     } else {
         std::env::var("APPDATA")
             .map(PathBuf::from)

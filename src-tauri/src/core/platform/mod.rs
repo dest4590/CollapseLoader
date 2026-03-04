@@ -7,6 +7,10 @@ pub use self::windows::check_platform_dependencies;
 pub mod messagebox;
 
 pub mod error;
+
+#[cfg(target_os = "macos")]
+use self::error::StartupError;
+
 #[cfg(target_os = "linux")]
 mod linux;
 

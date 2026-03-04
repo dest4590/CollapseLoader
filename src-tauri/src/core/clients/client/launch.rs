@@ -10,7 +10,7 @@ use tokio::{
 };
 
 use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
-use crate::core::utils::globals::NATIVES_LEGACY_LINUX_FOLDER;
+
 use crate::core::{
     clients::{
         internal::agent_overlay::AgentArguments, log_checker::LogChecker, manager::ClientManager,
@@ -19,8 +19,10 @@ use crate::core::{
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
     utils::{
         globals::{
-            AGENT_FILE, AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, IS_LINUX,
-            LEGACY_SUFFIX, LINUX_SUFFIX, NATIVES_FOLDER, PATH_SEPARATOR,
+            AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
+            IS_AARCH64, IS_LINUX, IS_MACOS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
+            NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
+            NATIVES_MACOS_FOLDER, PATH_SEPARATOR,
         },
         helpers::emit_to_main_window,
     },
@@ -69,34 +71,53 @@ impl Client {
     }
 
     fn resolve_natives_path(&self) -> PathBuf {
+        let root = DATA.root_dir.lock().unwrap();
+
         if self.is_legacy_client() {
             if IS_LINUX {
-                DATA.root_dir
-                    .lock()
-                    .unwrap()
-                    .join(NATIVES_LEGACY_LINUX_FOLDER)
+                root.join(NATIVES_LEGACY_LINUX_FOLDER)
+            } else if IS_MACOS {
+                if IS_AARCH64 {
+                    root.join(format!(
+                        "{}{}{}{}",
+                        NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX, ARM64_SUFFIX
+                    ))
+                } else {
+                    root.join(format!(
+                        "{}{}{}",
+                        NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX
+                    ))
+                }
             } else {
-                DATA.root_dir
-                    .lock()
-                    .unwrap()
-                    .join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
+                root.join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
             }
         } else if self.meta.is_new {
-            DATA.root_dir.lock().unwrap().join(format!(
-                "{}{}",
-                NATIVES_FOLDER,
-                if IS_LINUX { LINUX_SUFFIX } else { "" }
-            ))
-        } else {
-            DATA.root_dir.lock().unwrap().join(format!(
-                "{}{}",
-                NATIVES_FOLDER,
-                if IS_LINUX {
-                    LINUX_SUFFIX
+            if IS_LINUX {
+                root.join(format!("{}{}", NATIVES_FOLDER, LINUX_SUFFIX))
+            } else if IS_MACOS {
+                if IS_AARCH64 {
+                    root.join(NATIVES_MACOS_ARM64_FOLDER)
                 } else {
-                    LEGACY_SUFFIX
+                    root.join(NATIVES_MACOS_FOLDER)
                 }
-            ))
+            } else {
+                root.join(NATIVES_FOLDER)
+            }
+        } else {
+            if IS_LINUX {
+                root.join(format!("{}{}", NATIVES_FOLDER, LINUX_SUFFIX))
+            } else if IS_MACOS {
+                if IS_AARCH64 {
+                    root.join(format!(
+                        "{}{}{}",
+                        NATIVES_FOLDER, MACOS_SUFFIX, ARM64_SUFFIX
+                    ))
+                } else {
+                    root.join(NATIVES_MACOS_FOLDER)
+                }
+            } else {
+                root.join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
+            }
         }
     }
 

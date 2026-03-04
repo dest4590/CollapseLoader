@@ -10,20 +10,16 @@ use crate::core::storage::{
     data::{Data, DATA},
     settings::SETTINGS,
 };
-use crate::core::utils::globals::LIBRARIES_FABRIC_ZIP;
-use crate::core::utils::globals::{NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP};
-use crate::core::utils::{
-    globals::{
-        AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
-        FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_LINUX, JDK21_FOLDER, JDK8_FOLDER,
-        LIBRARIES_FABRIC_FOLDER, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
-        LIBRARIES_ZIP, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER,
-        NATIVES_LEGACY_FOLDER, NATIVES_LEGACY_ZIP, NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP,
-        NATIVES_ZIP, PATH_SEPARATOR,
-    },
-    hashing::calculate_md5_hash,
-    helpers::emit_to_main_window,
+use crate::core::utils::globals::{
+    AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
+    FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_AARCH64, IS_LINUX, IS_MACOS, JDK21_FOLDER, JDK8_FOLDER,
+    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER,
+    LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER,
+    NATIVES_LEGACY_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP,
+    NATIVES_LEGACY_ZIP, NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER,
+    NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
+use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
 use crate::{log_debug, log_error, log_info, log_warn};
 
 impl Client {
@@ -336,6 +332,12 @@ impl Client {
             } else {
                 (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
             }
+        } else if IS_MACOS {
+            if IS_AARCH64 {
+                (NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_ARM64_FOLDER)
+            } else {
+                (NATIVES_MACOS_ZIP, NATIVES_MACOS_FOLDER)
+            }
         } else {
             (natives_zip, natives_folder)
         }
@@ -445,7 +447,7 @@ impl Client {
                 .await
                 .map_err(|e| format!("Failed {file}: {e}"))?;
 
-            if IS_LINUX && file.starts_with(self.jdk_folder_name()) {
+            if (IS_LINUX || IS_MACOS) && file.starts_with(self.jdk_folder_name()) {
                 self.fix_java_permissions();
             }
         }
