@@ -455,7 +455,7 @@ impl Data {
     fn create_symlink(
         src: &std::path::Path,
         dst: &std::path::Path,
-        is_dir: bool,
+        _is_dir: bool,
     ) -> Result<(), String> {
         #[cfg(target_family = "unix")]
         {
@@ -465,7 +465,7 @@ impl Data {
         #[cfg(target_family = "windows")]
         {
             use std::os::windows::fs::{symlink_dir, symlink_file};
-            if is_dir {
+            if _is_dir {
                 symlink_dir(src, dst).map_err(|e| e.to_string())
             } else {
                 symlink_file(src, dst).map_err(|e| e.to_string())

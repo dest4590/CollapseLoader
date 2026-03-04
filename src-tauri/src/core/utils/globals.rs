@@ -25,9 +25,9 @@ pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2-linux"
 } else if IS_MACOS {
     if IS_AARCH64 {
-        "jdk-21.0.2-macos-aarch64"
+        "jdk-21.0.9-macos-aarch64"
     } else {
-        "jdk-21.0.2-macos-x64"
+        "jdk-21.0.9-macos-x64"
     }
 } else {
     "jdk-21.0.2"
@@ -54,7 +54,7 @@ pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 pub static NATIVES_FOLDER: &str = "natives";
 pub static NATIVES_LINUX_FOLDER: &str = "natives-linux";
-pub static NATIVES_MACOS_FOLDER: &str = "natives-macos";
+pub static NATIVES_MACOS_FOLDER: &str = "natives-macos-x64";
 pub static NATIVES_MACOS_ARM64_FOLDER: &str = "natives-macos-arm64";
 pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
@@ -67,7 +67,7 @@ pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
 pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 pub static NATIVES_LINUX_ZIP: &str = "misc/natives-linux.zip";
-pub static NATIVES_MACOS_ZIP: &str = "misc/natives-macos.zip";
+pub static NATIVES_MACOS_ZIP: &str = "misc/natives-macos-x64.zip";
 pub static NATIVES_MACOS_ARM64_ZIP: &str = "misc/natives-macos-arm64.zip";
 pub static NATIVES_LEGACY_ZIP: &str = "misc/natives-legacy.zip";
 pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
