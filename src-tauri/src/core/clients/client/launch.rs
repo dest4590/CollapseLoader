@@ -258,6 +258,9 @@ impl Client {
 
         cmd.arg("-Xverify:none");
 
+        #[cfg(target_os = "macos")]
+        cmd.arg("-XstartOnFirstThread");
+
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
         if self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(

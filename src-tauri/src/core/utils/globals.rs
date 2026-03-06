@@ -19,7 +19,7 @@ pub static PATH_SEPARATOR: &str = if IS_WINDOWS { ";" } else { ":" };
 pub static LINUX_SUFFIX: &str = "-linux";
 pub static MACOS_SUFFIX: &str = "-macos";
 pub static ARM64_SUFFIX: &str = "-arm64";
-pub static LEGACY_SUFFIX: &str = "-1.8.9";
+pub static LEGACY_SUFFIX: &str = "-legacy";
 
 pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2-linux"
