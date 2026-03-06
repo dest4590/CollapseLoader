@@ -318,6 +318,11 @@ pub fn run() {
                 if let Err(e) = window.set_title(&window_title) {
                     log_warn!("Failed to set window title: {}", e);
                 }
+
+                #[cfg(target_os = "macos")]
+                if let Err(e) = window.set_decorations(true) {
+                    log_warn!("Failed to enable window decorations: {}", e);
+                }
             }
 
             Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
