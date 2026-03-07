@@ -3,11 +3,23 @@ name: Build and Release
 on:
     push:
         branches: [main, dev]
+
     workflow_dispatch:
+        inputs:
+            skip_verify:
+                description: "Skip commit message verification"
+                type: boolean
+                default: false
+
+            build_macos:
+                description: "Force macOS build"
+                type: boolean
+                default: false
 
 jobs:
     check-flags:
         runs-on: ubuntu-latest
+
         outputs:
             skip: ${{ steps.flags.outputs.skip }}
             build_macos: ${{ steps.flags.outputs.build_macos }}
@@ -16,23 +28,36 @@ jobs:
             - uses: actions/checkout@v4
 
             - id: flags
+              shell: bash
               run: |
-                  msg=$(git log -1 --pretty=%B)
+
+                  msg="$(git log -1 --pretty=%B)"
 
                   echo "Commit message:"
                   echo "$msg"
 
-                  if echo "$msg" | grep -Ei "\[skip ci\]|skip-ci|skip_ci"; then
-                    echo "skip=true" >> $GITHUB_OUTPUT
+                  SKIP=false
+                  BUILD_MAC=false
+
+                  if [[ "${{ github.event.inputs.skip_verify }}" == "true" ]]; then
+                    echo "Manual override: skipping commit verification"
+                    SKIP=false
                   else
-                    echo "skip=false" >> $GITHUB_OUTPUT
+                    if echo "$msg" | grep -Ei "\[skip ci\]|skip-ci|skip_ci"; then
+                      SKIP=true
+                    fi
                   fi
 
                   if echo "$msg" | grep -Ei "release|build macos"; then
-                    echo "build_macos=true" >> $GITHUB_OUTPUT
-                  else
-                    echo "build_macos=false" >> $GITHUB_OUTPUT
+                    BUILD_MAC=true
                   fi
+
+                  if [[ "${{ github.event.inputs.build_macos }}" == "true" ]]; then
+                    BUILD_MAC=true
+                  fi
+
+                  echo "skip=$SKIP" >> $GITHUB_OUTPUT
+                  echo "build_macos=$BUILD_MAC" >> $GITHUB_OUTPUT
 
     build:
         needs: check-flags
@@ -85,8 +110,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: build-${{ matrix.platform }}
-                  path: |
-                      src-tauri/target/release/bundle/**/*
+                  path: src-tauri/target/release/bundle/**/*
 
     build-macos:
         needs: check-flags
@@ -119,29 +143,29 @@ jobs:
             - name: Install frontend dependencies
               run: npm ci
 
-            - name: Build ARM version
+            - name: Build ARM
               run: |
                   npm run tauri build -- --target aarch64-apple-darwin
 
-            - name: Build Intel version
+            - name: Build Intel
               run: |
                   npm run tauri build -- --target x86_64-apple-darwin
 
             - name: Create Universal Binary
               run: |
-                  APP_NAME=$(ls src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app | head -n1 | xargs basename)
+                  APP=$(ls src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app | head -n1)
+                  APP_NAME=$(basename "$APP" .app)
 
-                  ARM_BIN="src-tauri/target/aarch64-apple-darwin/release/$APP_NAME/Contents/MacOS/$APP_NAME"
-                  INTEL_BIN="src-tauri/target/x86_64-apple-darwin/release/$APP_NAME/Contents/MacOS/$APP_NAME"
+                  ARM_BIN="src-tauri/target/aarch64-apple-darwin/release/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+                  INTEL_BIN="src-tauri/target/x86_64-apple-darwin/release/$APP_NAME.app/Contents/MacOS/$APP_NAME"
 
-                  UNIVERSAL_DIR="src-tauri/target/universal-macos"
+                  UNIVERSAL="src-tauri/target/universal/$APP_NAME"
 
-                  mkdir -p "$UNIVERSAL_DIR"
+                  mkdir -p src-tauri/target/universal
 
-                  cp -R src-tauri/target/aarch64-apple-darwin/release/$APP_NAME "$UNIVERSAL_DIR"
+                  lipo -create "$ARM_BIN" "$INTEL_BIN" -output "$UNIVERSAL"
 
-                  lipo -create "$ARM_BIN" "$INTEL_BIN" \
-                    -output "$UNIVERSAL_DIR/$APP_NAME/Contents/MacOS/$APP_NAME"
+                  cp "$UNIVERSAL" "$ARM_BIN"
 
             - name: Upload macOS artifacts
               uses: actions/upload-artifact@v4
