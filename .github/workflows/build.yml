@@ -143,54 +143,28 @@ jobs:
                   cache: npm
 
             - uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: aarch64-apple-darwin, x86_64-apple-darwin
 
             - uses: Swatinem/rust-cache@v2
               with:
                   workspaces: src-tauri
 
-            - name: Add macOS targets
-              run: |
-                  rustup target add aarch64-apple-darwin
-                  rustup target add x86_64-apple-darwin
-
             - name: Install frontend dependencies
               run: npm ci
 
-            - name: Build ARM
-              run: |
-                  npm run tauri build -- --target aarch64-apple-darwin
-
-            - name: Build Intel
-              run: |
-                  npm run tauri build -- --target x86_64-apple-darwin
-
-            - name: Create Universal Binary
-              shell: bash
-              run: |
-                  set -e
-
-                  ARM_APP=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/macos -name "*.app" | head -n1)
-                  INTEL_APP=$(find src-tauri/target/x86_64-apple-darwin/release/bundle/macos -name "*.app" | head -n1)
-
-                  APP_NAME=$(basename "$ARM_APP" .app)
-
-                  ARM_BIN="$ARM_APP/Contents/MacOS/$APP_NAME"
-                  INTEL_BIN="$INTEL_APP/Contents/MacOS/$APP_NAME"
-
-                  echo "ARM binary: $ARM_BIN"
-                  echo "Intel binary: $INTEL_BIN"
-
-                  lipo -create "$ARM_BIN" "$INTEL_BIN" -output "$ARM_BIN"
-
-                  echo "Universal binary created"
-                  lipo -info "$ARM_BIN"
+            - name: Build Universal macOS App
+              uses: tauri-apps/tauri-action@v0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  args: --target universal-apple-darwin
 
             - name: Upload macOS artifacts
               uses: actions/upload-artifact@v4
               with:
                   name: build-macos
-                  path: |
-                      src-tauri/target/*/release/bundle/dmg/*.dmg
+                  path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
 
     create-release:
         needs: [build, build-macos]
