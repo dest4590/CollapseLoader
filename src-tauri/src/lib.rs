@@ -268,6 +268,7 @@ pub fn run() {
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::update_presence,
+            commands::utils::is_macos,
             // server connectivity
             commands::clients::get_server_connectivity_status,
         ])

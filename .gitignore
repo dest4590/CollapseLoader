@@ -31,3 +31,5 @@ TODO.md
 **/*.bak
 
 target/
+
+.DS_Store/
