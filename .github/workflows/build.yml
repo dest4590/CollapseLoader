@@ -153,20 +153,25 @@ jobs:
                   npm run tauri build -- --target x86_64-apple-darwin
 
             - name: Create Universal Binary
+              shell: bash
               run: |
-                  APP=$(ls src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app | head -n1)
-                  APP_NAME=$(basename "$APP" .app)
+                  set -e
 
-                  ARM_BIN="src-tauri/target/aarch64-apple-darwin/release/$APP_NAME.app/Contents/MacOS/$APP_NAME"
-                  INTEL_BIN="src-tauri/target/x86_64-apple-darwin/release/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+                  ARM_APP=$(find src-tauri/target/aarch64-apple-darwin/release/bundle/macos -name "*.app" | head -n1)
+                  INTEL_APP=$(find src-tauri/target/x86_64-apple-darwin/release/bundle/macos -name "*.app" | head -n1)
 
-                  UNIVERSAL="src-tauri/target/universal/$APP_NAME"
+                  APP_NAME=$(basename "$ARM_APP" .app)
 
-                  mkdir -p src-tauri/target/universal
+                  ARM_BIN="$ARM_APP/Contents/MacOS/$APP_NAME"
+                  INTEL_BIN="$INTEL_APP/Contents/MacOS/$APP_NAME"
 
-                  lipo -create "$ARM_BIN" "$INTEL_BIN" -output "$UNIVERSAL"
+                  echo "ARM binary: $ARM_BIN"
+                  echo "Intel binary: $INTEL_BIN"
 
-                  cp "$UNIVERSAL" "$ARM_BIN"
+                  lipo -create "$ARM_BIN" "$INTEL_BIN" -output "$ARM_BIN"
+
+                  echo "Universal binary created"
+                  lipo -info "$ARM_BIN"
 
             - name: Upload macOS artifacts
               uses: actions/upload-artifact@v4
