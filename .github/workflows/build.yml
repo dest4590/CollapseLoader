@@ -99,6 +99,7 @@ jobs:
                     libwebkit2gtk-4.1-dev \
                     libsoup-3.0-dev \
                     libjavascriptcoregtk-4.1-dev \
+                    libayatana-appindicator3-dev \
                     patchelf
 
             - name: Build Tauri
