@@ -1,6 +1,6 @@
 {
     "$schema": "https://schema.tauri.app/config/2",
-    "productName": "collapseloader",
+    "productName": "CollapseLoader",
     "version": "0.2.8",
     "identifier": "org.collapseloader",
     "build": {
@@ -34,14 +34,17 @@
             "icons/128x128@2x.png",
             "icons/icon.icns",
             "icons/icon.ico"
-        ]
+        ],
+        "macOS": {
+            "dmg": {
+                "background": "./dmg-background/background.png"
+            }
+        }
     },
     "plugins": {
         "deep-link": {
             "desktop": {
-                "schemes": [
-                    "collapseloader"
-                ]
+                "schemes": ["collapseloader"]
             }
         }
     }

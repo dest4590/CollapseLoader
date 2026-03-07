@@ -268,11 +268,12 @@ pub fn run() {
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::update_presence,
+            commands::utils::is_macos,
             // server connectivity
             commands::clients::get_server_connectivity_status,
         ])
         .setup(|app| {
-            #[cfg(desktop)]
+            #[cfg(all(desktop, not(target_os = "macos")))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let handle = app.handle().clone();
@@ -317,6 +318,11 @@ pub fn run() {
             if let Some(window) = app_handle.get_webview_window("main") {
                 if let Err(e) = window.set_title(&window_title) {
                     log_warn!("Failed to set window title: {}", e);
+                }
+
+                #[cfg(target_os = "macos")]
+                if let Err(e) = window.set_decorations(true) {
+                    log_warn!("Failed to enable window decorations: {}", e);
                 }
             }
 

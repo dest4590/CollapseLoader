@@ -45,6 +45,8 @@ import type { Client } from "./types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
 import { userService } from "./services/userService";
 
+const isMacOS = ref(false);
+
 interface Setting<T> {
     description: string;
     value: T;
@@ -359,14 +361,18 @@ const getTransitionName = () => {
           : "fade-slide";
 };
 
-onMounted(() => {
+onMounted(async () => {
     initApp(isAuthenticated, checkAuthStatus, news, unreadNewsCount);
     settingsService.loadSettings();
     checkAuthStatus();
 
-    (async () => {
+    try {
+        isMacOS.value = await invoke("is_macos");
         isDev.value = await getIsDevelopment();
-    })();
+    } catch (e) {
+        isMacOS.value = false;
+        isDev.value = false;
+    }
 
     listen("launch-client", async (event) => {
         const { id, was_already_running } = event.payload as {
@@ -666,9 +672,12 @@ onUnmounted(() => {
             class="flex h-screen flex-col overflow-hidden"
             v-if="!showInitialDisclaimer && !showFirstRunInfo && contentVisible"
         >
-            <Titlebar />
+            <Titlebar v-if="!isMacOS" />
 
-            <div class="flex-1 flex overflow-hidden relative pt-10">
+            <div
+                class="flex-1 flex overflow-hidden relative"
+                :class="{ 'pt-10': !isMacOS }"
+            >
                 <Sidebar
                     :activeTab="activeTab"
                     @changeTab="setActiveTab"
@@ -676,6 +685,7 @@ onUnmounted(() => {
                     :is-online="appOnline"
                     :is-authenticated="isAuthenticated"
                     :position="sidebarPosition"
+                    :isMacOS="isMacOS"
                     @update:position="updateSidebarPosition"
                 />
 

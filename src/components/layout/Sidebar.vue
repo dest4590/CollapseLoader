@@ -32,6 +32,7 @@ const props = defineProps<{
     isOnline: boolean;
     isAuthenticated: boolean;
     position?: "left" | "right" | "top" | "bottom";
+    isMacOS: boolean;
 }>();
 
 const emit = defineEmits(["changeTab", "open-dev-menu", "update:position"]);
@@ -41,6 +42,7 @@ const altPressCount = ref(0);
 const altPressTimeout = ref<number | null>(null);
 
 const isDev = ref(false);
+const isMacOS = computed(() => props.isMacOS);
 
 const { onlineFriendsCount, friendRequests } = useFriends();
 const incomingRequestsCount = computed(
@@ -181,22 +183,29 @@ const currentPosition = computed(() => props.position || "left");
 const sidebarClasses = computed(() => {
     const base =
         "fixed bg-base-300 flex items-center shadow-md border-base-content/10 z-[90] transition-all duration-500 ease-in-out active:cursor-grabbing";
-    const pos = currentPosition.value;
 
-    if (pos === "left")
-        return (
-            `${base} w-20 left-0 top-10 flex-col py-6 border-r` +
-            " h-[calc(100vh-2.5rem)]"
-        );
-    if (pos === "right")
-        return (
-            `${base} w-20 right-0 top-10 flex-col py-6 border-l` +
-            " h-[calc(100vh-2.5rem)]"
-        );
-    if (pos === "top")
-        return `${base} w-full h-20 left-0 top-10 flex-row px-6 border-b`;
-    if (pos === "bottom")
+    const pos = currentPosition.value;
+    const isNotMac = isMacOS;
+
+    const verticalOffset = isNotMac ? "top-10" : "top-0";
+    const sidebarHeight = isNotMac ? "h-[calc(100vh-2.5rem)]" : "h-full";
+
+    if (pos === "left") {
+        return `${base} w-20 left-0 ${verticalOffset} flex-col py-6 border-r ${sidebarHeight}`;
+    }
+
+    if (pos === "right") {
+        return `${base} w-20 right-0 ${verticalOffset} flex-col py-6 border-l ${sidebarHeight}`;
+    }
+
+    if (pos === "top") {
+        return `${base} w-full h-20 left-0 top-0 flex-row px-6 border-b`;
+    }
+
+    if (pos === "bottom") {
         return `${base} w-full h-20 left-0 bottom-0 flex-row px-6 border-t`;
+    }
+
     return "";
 });
 
