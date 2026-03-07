@@ -38,7 +38,6 @@
                                         :is-clickable="true"
                                         :src="user.avatar_url || null"
                                         :original-src="user.avatar_url || null"
-                                        "
                                     />
                                 </div>
                                 <div class="min-w-0 flex-1">
