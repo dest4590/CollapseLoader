@@ -42,7 +42,7 @@ const altPressCount = ref(0);
 const altPressTimeout = ref<number | null>(null);
 
 const isDev = ref(false);
-const isMacOS = computed(() => props.isMacOS);
+const isMacOS = computed(() => !!props.isMacOS);
 
 const { onlineFriendsCount, friendRequests } = useFriends();
 const incomingRequestsCount = computed(
@@ -185,7 +185,7 @@ const sidebarClasses = computed(() => {
         "fixed bg-base-300 flex items-center shadow-md border-base-content/10 z-[90] transition-all duration-500 ease-in-out active:cursor-grabbing";
 
     const pos = currentPosition.value;
-    const isNotMac = !isMacOS;
+    const isNotMac = !isMacOS.value;
 
     const verticalOffset = isNotMac ? "top-10" : "top-0";
     const sidebarHeight = isNotMac ? "h-[calc(100vh-2.5rem)]" : "h-full";
