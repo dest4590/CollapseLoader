@@ -6,81 +6,150 @@
 [![GitHub Release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?display_name=tag&style=for-the-badge&logo=alwaysdata&logoColor=ffffff)](https://github.com/dest4590/CollapseLoader/releases/latest)
 [![GitHub Pre-release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?include_prereleases&display_name=tag&style=for-the-badge&logo=buffer&label=Prerelease)](https://github.com/dest4590/CollapseLoader/releases)
 
-## A Simple Tool to Run Safe Minecraft Cheat Clients
+**A secure, open-source launcher for verified Minecraft cheat clients.**
 
-Download the latest version from our [official website](https://collapseloader.org) or [GitHub releases](https://github.com/dest4590/CollapseLoader/releases).
+[Website](https://collapseloader.org) • [Discord](https://collapseloader.org/discord) • [Releases](https://github.com/dest4590/CollapseLoader/releases)
 
 </div>
 
 ---
 
-## About CollapseLoader
+## 📑 Table of Contents
 
-CollapseLoader is a free, open-source tool built with Rust and Tauri. It helps you safely launch Minecraft cheat clients on Windows and Linux. We focus on safety, honesty, and making things easy to use.
-
-### Key Features
-
--   **Strict Checks**: We only support clients that pass our security tests.
--   **Open Source**: Anyone can check our code on [GitHub](https://github.com/dest4590/CollapseLoader).
--   **Works Everywhere**: Runs great on both Windows and Linux.
--   **No Viruses**: We scan every client and update with powerful antivirus tools to make sure they are clean.
-
-Join our [Discord community](https://collapseloader.org/discord) for help and news!
+- [About CollapseLoader](#about-collapseloader)
+- [Key Features](#key-features)
+- [Safety & Transparency](#safety--transparency)
+- [Screenshots](#screenshots)
+- [Installation](#installation)
+    - [Windows](#windows)
+    - [Linux](#linux)
+    - [Linux Troubleshooting](#linux-troubleshooting)
+- [Development](#development)
 
 ---
 
-## Why CollapseLoader is Safe
+## About CollapseLoader
 
-We built CollapseLoader with safety in mind:
+CollapseLoader is a modern, cross-platform tool built with **Rust** and **Tauri**. It provides a safe environment for launching Minecraft cheat clients on Windows and Linux. Our mission is to eliminate the risks associated with third-party software by providing a transparent, community-reviewed platform.
 
--   **Public Code**: All parts of our project are on [GitHub](https://github.com/CollapseLoader) for anyone to check.
--   **Tested Clients**: We test each client using special tools and virus scanners to ensure they are safe, using our own [CollapseScanner](https://github.com/CollapseLoader/CollapseScanner) tool.
--   **No Hidden Code**: We do not allow clients with hidden or "obfuscated" code. All clients code are fully open for review.
--   **Automatic Builds**: Our downloads are built automatically by GitHub Actions, so you know the files are safe and unchanged.
+### Key Features
 
-> **Note**: Even though we make things as safe as possible, always be careful with cheat clients. Only download from official sources.
+- **Strict Verification**: Only clients that pass rigorous security audits are supported.
+- **Cross-Platform**: Seamless performance on both Windows and Linux.
+- **Virus Protection**: Integration with [CollapseScanner](https://github.com/CollapseLoader/CollapseScanner) and industry-standard antivirus tools.
+- **Zero Obfuscation**: We only host clients with readable, reviewable code.
+- **Automated Trust**: All binaries are built via GitHub Actions to ensure the code you see is the code you run.
 
-For more info, read our [Security Overview](SECURITY.md).
+---
+
+## Safety & Transparency
+
+We take security seriously. Unlike traditional loaders, CollapseLoader is built on the principle of "Trust through Verification":
+
+- **Public Repositories**: Every component is open-source under the [CollapseLoader Organization](https://github.com/CollapseLoader).
+- **Security Audits**: We check for malicious network activity, token loggers, and file system intrusions.
+- **Security Policy**: For a deep dive into our protocols, check our [SECURITY.md](SECURITY.md).
 
 ---
 
 ## Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/ab1fee13-143c-4790-8db5-742c09f3b6eb" width="400">
-  <img src="https://github.com/user-attachments/assets/4e279ed9-ca9c-424b-a73b-ae7bc350e7da" width="400">
-  <img src="https://github.com/user-attachments/assets/341a0331-dae4-453d-875c-3f0fffbe7d8b" width="400">
-  <img src="https://github.com/user-attachments/assets/a908c8fe-9f69-4fc2-849b-5a0d8bd0d9da" width="400">
-  <img src="https://github.com/user-attachments/assets/453fd0b6-642d-439a-9002-ec1b3ad5dad7" width="400">
-  <img src="https://github.com/user-attachments/assets/5e934306-0408-407e-876b-0cd6e7b77152" width="400">
+  <img src="docs/screenshots/home.png" width="400">
+    <img src="docs/screenshots/friends.png" width="400">
+    <img src="docs/screenshots/settings.png" width="400">
+    <img src="docs/screenshots/customization.png" width="400">
+    <img src="docs/screenshots/marketplace.png" width="400">
+    <img src="docs/screenshots/account.png" width="400">
+    <img src="docs/screenshots/about.png" width="400">
 </div>
 
 ---
 
-## How to Install?
+## Installation
 
-### What You Need
+### Windows
 
-- **Windows**: Windows 10 or newer  
-- **Linux**: A modern Linux system (for example, Ubuntu 20.04 or newer)
+- **System**: Windows 10 or 11.
+- **Download**: Grab the `.msi` installer or the standalone `.exe` from [Releases](https://github.com/dest4590/CollapseLoader/releases).
 
-We also have a full table of client support — [check it out here](https://docs.google.com/spreadsheets/d/1TcMOdRKTSeGfns5WijZjvZBz6HBdwXZlClN0pcPd14k/edit?usp=sharing).
+### Linux
 
-### Download
+We provide several ways to install CollapseLoader depending on your distribution:
 
-Go to [GitHub Releases](https://github.com/dest4590/CollapseLoader/releases) or [collapseloader.org](https://collapseloader.org). Download the file for your system (Windows or Linux).
+#### 1. Arch Linux (AUR)
 
+Arch users can install the package using an AUR helper like `yay` or `paru`:
+
+```bash
+# To install the pre-compiled binary version
+yay -S collapseloader-bin
+
+# To build from the latest git source
+yay -S collapseloader-git
+```
+
+#### 2. Debian / Ubuntu
+
+Download the `.deb` package from the releases page and install it via:
+
+```bash
+sudo dpkg -i collapseloader_amd64.deb
+sudo apt install -f # Fix potential missing dependencies
+```
+
+#### 3. Generic (AppImage)
+
+Download the `.AppImage` file, make it executable, and run:
+
+```bash
+chmod +x CollapseLoader.AppImage
+./CollapseLoader.AppImage
+```
+
+For a full list of supported clients on linux, [view our compatibility table](https://docs.google.com/spreadsheets/d/1TcMOdRKTSeGfns5WijZjvZBz6HBdwXZlClN0pcPd14k/edit?usp=sharing).
 
 ---
 
-## How to Build
+## Linux Troubleshooting
 
-- **Linux**  
+### 1. Missing Dependencies (webkit2)
 
-If you're running the binary (not the `.AppImage`), you'll need a few dependencies before everything works smoothly. The most important one is the `webkit2gtk4.1` package - make sure that’s installed first.  
+If the application (especially the Binary or AppImage) fails to start, you likely need to install the `webkit2gtk` package for your system:
 
-If you run into issues:  
-- Check the logs to see what's missing  
-- Install any extra packages as needed  
+**Debian / Ubuntu / Mint:**
 
-Once the essentials are set up, everything falls into place and runs smoothly.
+```bash
+sudo apt install libwebkit2gtk-4.1-dev
+```
+
+**Arch Linux / Manjaro:**
+
+```bash
+sudo pacman -S webkit2gtk-4.1
+```
+
+**Fedora / RHEL:**
+
+```bash
+sudo dnf install webkit2gtk4.1-devel
+```
+
+### 2. Rendering Issues (Fix)
+
+If you experience a blank screen, flickering, or UI crashes (common on NVIDIA drivers or specific Wayland setups), use the following environment variables to launch the app:
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 GDK_BACKEND=x11 ./CollapseLoader
+```
+
+---
+
+## Development
+
+To build CollapseLoader from source, ensure you have the Rust toolchain and Node.js installed.
+
+1. Clone the repository: `git clone https://github.com/dest4590/CollapseLoader`
+2. Install dependencies: `npm install`
+3. Run in dev mode: `npm run tauri dev`
+4. Build: `npm run tauri build`
