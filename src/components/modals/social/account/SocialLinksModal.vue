@@ -200,7 +200,6 @@ const addLink = async () => {
         return;
     }
 
-    // Prevent adding duplicate platforms
     if (links.value.some((l) => l.platform === newPlatform.value)) {
         addToast(
             t("modals.social_links.platform_exists") ||
@@ -259,7 +258,6 @@ const saveEdit = async () => {
         addToast(t("modals.social_links.fill_fields"), "error");
         return;
     }
-    // Prevent changing platform to one that already exists on another link
     if (
         editing.value.platform !== editing.value.originalPlatform &&
         links.value.some((l) => l.platform === editing.value.platform)

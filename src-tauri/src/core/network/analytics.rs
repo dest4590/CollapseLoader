@@ -64,9 +64,6 @@ impl Analytics {
     }
 
     fn create_client() -> reqwest::blocking::Client {
-        reqwest::blocking::Client::builder()
-            .timeout(std::time::Duration::from_secs(10))
-            .build()
-            .unwrap_or_default()
+        super::create_blocking_client(std::time::Duration::from_secs(10))
     }
 }

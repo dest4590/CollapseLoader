@@ -11,12 +11,8 @@ use tokio::io::AsyncWriteExt;
 
 const MAX_RETRIES: u32 = 3;
 const RETRY_DELAY: Duration = Duration::from_secs(2);
-static HTTP_CLIENT: LazyLock<Client> = LazyLock::new(|| {
-    Client::builder()
-        .timeout(Duration::from_secs(600))
-        .build()
-        .unwrap_or_default()
-});
+static HTTP_CLIENT: LazyLock<Client> =
+    LazyLock::new(|| super::create_client(Duration::from_secs(600)));
 
 pub async fn download_file(
     urls: &[String],

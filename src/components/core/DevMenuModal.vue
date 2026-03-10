@@ -23,6 +23,12 @@
                         </button>
                         <button
                             class="btn btn-primary mb-4"
+                            @click="openNetworkDebug"
+                        >
+                            Network Debug
+                        </button>
+                        <button
+                            class="btn btn-primary mb-4"
                             @click="resetFlags"
                         >
                             Reset Flags
@@ -48,10 +54,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "../../services/toastService";
 import { useI18n } from "vue-i18n";
+import { useRouter } from "../../services/router";
 import meowUrl from "../../assets/misc/cat-meow.mp3";
 
 const { addToast } = useToast();
 const { t } = useI18n();
+const { push } = useRouter();
 
 defineProps<{
     showDevMenu: boolean;
@@ -61,6 +69,11 @@ const emit = defineEmits(["close"]);
 
 const closeDevMenu = () => {
     emit("close");
+};
+
+const openNetworkDebug = () => {
+    push("network_debug");
+    closeDevMenu();
 };
 
 const resetFlags = async () => {

@@ -269,6 +269,11 @@ pub fn run() {
             commands::utils::reset_requirements,
             commands::utils::update_presence,
             commands::utils::is_macos,
+            // network commands
+            commands::network::api_request,
+            commands::network::get_network_history,
+            commands::network::generate_network_report,
+            commands::network::export_network_report,
             // server connectivity
             commands::clients::get_server_connectivity_status,
         ])

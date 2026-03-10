@@ -118,7 +118,8 @@
             "delete_failed": "Nie udało się usunąć linku.",
             "updated": "Link zaktualizowany.",
             "update_failed": "Nie udało się zaktualizować linku.",
-            "hidden_in_streamer_mode": "Linki społecznościowe są ukryte w trybie streamera."
+            "hidden_in_streamer_mode": "Linki społecznościowe są ukryte w trybie streamera.",
+            "platform_exists": "Platforma już istnieje."
         },
         "edit_account": {
             "username_label": "Nazwa użytkownika",
@@ -354,6 +355,13 @@
             "auto_login_failed": "Rejestracja pomyślna, ale automatyczne logowanie nie powiodło się. Zaloguj się ręcznie.",
             "verification_required": "Wymagana weryfikacja adresu e-mail",
             "check_email": "Wiadomość weryfikacyjna została wysłana na adres {email}. Sprawdź swoją skrzynkę odbiorczą i postępuj zgodnie z instrukcjami, aby zweryfikować swoje konto."
+        },
+        "verify": {
+            "code_label": "Kod weryfikacyjny",
+            "code_placeholder": "Wprowadź kod weryfikacyjny",
+            "verify_button": "Zweryfikuj e-mail",
+            "success": "E-mail zweryfikowany pomyślnie!",
+            "error": "Nieprawidłowy lub wygasły kod weryfikacyjny"
         }
     },
     "blockedUsers": {
@@ -830,6 +838,7 @@
         "friend_request_sent_success": "Zaproszenie do znajomych wysłane do {name}",
         "friend_request_failed": "Nie udało się wysłać zaproszenia: {error}",
         "copy_username": "Kopiuj nazwę użytkownika",
+        "report_user": "Zgłoś użytkownika",
         "copied_username": "{name} skopiowano do schowka",
         "copy_failed": "Nie udało się skopiować nazwy użytkownika",
         "friend_request_canceled": "Zaproszenie do znajomych pomyślnie anulowane",
@@ -1197,5 +1206,19 @@
                 "description": "Graj w weekend."
             }
         }
+    },
+    "mods": {
+        "manager_title": "Menedżer modów",
+        "search_placeholder": "Szukaj modów w Modrinth...",
+        "no_results": "Nie znaleziono modów",
+        "no_compatible_version": "Nie znaleziono kompatybilnej wersji dla {version}",
+        "install_success": "Pomyślnie zainstalowano {mod}",
+        "install_failed": "Nie udało się zainstalować moda: {error}",
+        "manage_mods": "Zarządzaj modami",
+        "installed": "Zainstalowano",
+        "install": "Zainstaluj",
+        "choose_version": "Wybierz wersję",
+        "versions_for": "Wersje dla {mod}",
+        "loading_versions": "Ładowanie wersji..."
     }
 }

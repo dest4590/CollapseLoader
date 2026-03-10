@@ -118,7 +118,8 @@
             "delete_failed": "删除社交链接失败。",
             "updated": "已更新社交链接。",
             "update_failed": "更新社交链接失败。",
-            "hidden_in_streamer_mode": "主播模式下已隐藏社交链接。"
+            "hidden_in_streamer_mode": "主播模式下已隐藏社交链接。",
+            "platform_exists": "平台已存在。"
         },
         "edit_account": {
             "username_label": "用户名",
@@ -246,6 +247,7 @@
     "preloader": {
         "initializing": "正在初始化...",
         "connecting_servers": "正在连接服务器...",
+        "setting_up": "正在设置...",
         "ready": "就绪！",
         "initializing_progress": "初始化加载程序",
         "loading_user_data": "正在加载用户数据..."
@@ -383,6 +385,13 @@
             "auto_login_failed": "注册成功，但自动登录失败。请手动登录。",
             "verification_required": "需要邮箱验证",
             "check_email": "验证邮件已发送至 {email}。请检查您的收件箱并按照说明进行验证。"
+        },
+        "verify": {
+            "code_label": "验证码",
+            "code_placeholder": "输入验证码",
+            "verify_button": "验证邮箱",
+            "success": "邮箱验证成功！",
+            "error": "无效或过期的验证码"
         }
     },
     "appLogs": {
@@ -807,6 +816,7 @@
         "accept": "接受",
         "decline": "拒绝",
         "user_blocked": "该用户已被屏蔽",
+        "report_user": "举报用户",
         "send_friend_request": "发送好友请求",
         "sending": "正在发送...",
         "canceling": "正在取消...",
@@ -1199,5 +1209,19 @@
                 "description": "在周末游玩。"
             }
         }
+    },
+    "mods": {
+        "manager_title": "模组管理器",
+        "search_placeholder": "在 Modrinth 上搜索模组...",
+        "no_results": "未找到模组",
+        "no_compatible_version": "未找到与 {version} 兼容的版本",
+        "install_success": "已成功安装 {mod}",
+        "install_failed": "安装模组失败：{error}",
+        "manage_mods": "管理模组",
+        "installed": "已安装",
+        "install": "安装",
+        "choose_version": "选择版本",
+        "versions_for": "{mod} 的版本",
+        "loading_versions": "正在加载版本..."
     }
 }

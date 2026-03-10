@@ -35,12 +35,14 @@ import News from "./views/News.vue";
 import CustomClients from "./views/CustomClients.vue";
 import Marketplace from "./views/Marketplace.vue";
 import AuthModal from "./components/layout/modals/AuthModal.vue";
+import NetworkDebug from "./views/NetworkDebug.vue";
 import { fetchSettings } from "./utils/settings";
 import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
 import { useAppInit } from "./composables/useAppInit";
+import { initNetworkDebug } from "./services/networkDebugService";
 import type { Client } from "./types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
 import { userService } from "./services/userService";
@@ -243,6 +245,7 @@ const views: Record<string, any> = {
     friends: FriendsView,
     "user-profile": UserProfileView,
     marketplace: Marketplace,
+    network_debug: NetworkDebug,
 };
 
 const currentView = computed(() => views[activeTab.value] || Home);
@@ -322,6 +325,11 @@ const handleVerified = (token?: string) => {
 };
 
 onMounted(async () => {
+    try {
+        await initNetworkDebug();
+    } catch (e) {
+        console.warn("Failed to init global network debug service", e);
+    }
     await listen("verify-email", (event: any) => {
         const { code, email } = event.payload;
         console.log("Received verification deep link:", code, email);
@@ -370,6 +378,7 @@ onMounted(async () => {
         isMacOS.value = await invoke("is_macos");
         isDev.value = await getIsDevelopment();
     } catch (e) {
+        console.error("Failed to determine platform or environment:", e);
         isMacOS.value = false;
         isDev.value = false;
     }
@@ -540,6 +549,26 @@ onMounted(async () => {
 
     window.addEventListener("keydown", emergencyHandler);
 
+    const networkDebugHandler = (e: KeyboardEvent) => {
+        try {
+            const active = document.activeElement as HTMLElement | null;
+            const isTyping =
+                !!active &&
+                (active.tagName === "INPUT" ||
+                    active.tagName === "TEXTAREA" ||
+                    active.isContentEditable);
+            if (isTyping) return;
+
+            if (e.key === "F9" || e.code === "F9") {
+                setActiveTab("network_debug");
+            }
+        } catch (err) {
+            console.error("Error handling F9 keybind:", err);
+        }
+    };
+
+    window.addEventListener("keydown", networkDebugHandler);
+
     window.addEventListener("achievement-unlocked", (event: any) => {
         const { key } = event.detail;
         const name = t(`achievements.list.${key}.name`);
@@ -614,6 +643,7 @@ onMounted(async () => {
 
     onUnmounted(() => {
         window.removeEventListener("keydown", emergencyHandler);
+        window.removeEventListener("keydown", networkDebugHandler);
         window.removeEventListener("system-broadcast", broadcastHandler);
         window.removeEventListener("trigger-update-check", updateHandler);
     });

@@ -25,14 +25,7 @@ impl Api {
         let cached_data: Option<serde_json::Value> = cache::read_cached_json(&cache_file_path);
 
         let url = format!("{}api/{}/{}", self.api_server.url, API_VERSION, path);
-        let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(5))
-            .user_agent("CollapseLoader/tauri")
-            .build()
-            .map_err(|e| {
-                log_error!("Failed to create HTTP client for API request: {}", e);
-                Box::new(e) as Box<dyn std::error::Error>
-            })?;
+        let client = super::create_blocking_client(Duration::from_secs(5));
 
         for attempt in 0..API_MAX_RETRIES {
             if attempt > 0 {

@@ -26,6 +26,15 @@ pub async fn connect_irc(
     state: State<'_, IrcState>,
     token: Option<String>,
 ) -> Result<(), String> {
+    {
+        let writer_guard = state.writer.lock().await;
+        if writer_guard.is_some() {
+            log_info!("IRC already connected, skipping reconnect");
+            app.emit("irc-connected", ()).unwrap_or_default();
+            return Ok(());
+        }
+    }
+
     let token = token.unwrap_or_default();
     let mode = if token.is_empty() {
         "guest"
@@ -33,7 +42,11 @@ pub async fn connect_irc(
         "authenticated"
     };
 
-    log_info!("Connecting to IRC server at {} as {}", IRC_HOST.as_str(), mode);
+    log_info!(
+        "Connecting to IRC server at {} as {}",
+        IRC_HOST.as_str(),
+        mode
+    );
 
     match TcpStream::connect(IRC_HOST.as_str()).await {
         Ok(stream) => {
