@@ -138,6 +138,8 @@ impl Servers {
                     Ok(resp) => {
                         let status = resp.status();
                         if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
+                            log_info!("{} Server {} is online (HEAD)", name, server.url);
+
                             ok = true;
                             break;
                         } else {
@@ -173,6 +175,8 @@ impl Servers {
                         Ok(resp) => {
                             let status = resp.status();
                             if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
+                                log_info!("{} Server {} is online (GET)", name, server.url);
+
                                 ok = true;
                                 break;
                             } else {
