@@ -272,8 +272,8 @@ pub fn run() {
             // network commands
             commands::network::api_request,
             commands::network::get_network_history,
-            commands::network::generate_network_report,
-            commands::network::export_network_report,
+            commands::report::generate_network_report,
+            commands::report::export_network_report,
             // server connectivity
             commands::clients::get_server_connectivity_status,
         ])

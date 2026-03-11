@@ -85,16 +85,18 @@ impl Servers {
 
         log_info!(
             "Services: API [{}], CDN [{}]",
-            if self.selected_api.read().unwrap().is_some() {
-                "OK"
-            } else {
-                "OFFLINE"
-            },
-            if self.selected_cdn.read().unwrap().is_some() {
-                "OK"
-            } else {
-                "OFFLINE"
-            }
+            self.selected_api
+                .read()
+                .unwrap()
+                .as_ref()
+                .map(|api| format!("OK: {}", api.url))
+                .unwrap_or_else(|| "OFFLINE".to_string()),
+            self.selected_cdn
+                .read()
+                .unwrap()
+                .as_ref()
+                .map(|cdn| format!("OK: {}", cdn.url))
+                .unwrap_or_else(|| "OFFLINE".to_string()),
         );
 
         self.set_status();
@@ -134,9 +136,8 @@ impl Servers {
             for attempt in 0..MAX_SERVER_CHECK_RETRIES {
                 match client.head(&url).send().await {
                     Ok(resp) => {
-                        if resp.status().is_success()
-                            || resp.status() == reqwest::StatusCode::NOT_FOUND
-                        {
+                        let status = resp.status();
+                        if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
                             ok = true;
                             break;
                         } else {
@@ -144,7 +145,7 @@ impl Servers {
                                 "{} Server {} returned status (HEAD): {} (attempt {}/{})",
                                 name,
                                 server.url,
-                                resp.status(),
+                                status,
                                 attempt + 1,
                                 MAX_SERVER_CHECK_RETRIES
                             );
@@ -170,9 +171,8 @@ impl Servers {
                 for attempt in 0..MAX_SERVER_CHECK_RETRIES {
                     match client.get(&url).send().await {
                         Ok(resp) => {
-                            if resp.status().is_success()
-                                || resp.status() == reqwest::StatusCode::NOT_FOUND
-                            {
+                            let status = resp.status();
+                            if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
                                 ok = true;
                                 break;
                             } else {
@@ -180,7 +180,7 @@ impl Servers {
                                     "{} Server {} returned status (GET): {} (attempt {}/{})",
                                     name,
                                     server.url,
-                                    resp.status(),
+                                    status,
                                     attempt + 1,
                                     MAX_SERVER_CHECK_RETRIES
                                 );

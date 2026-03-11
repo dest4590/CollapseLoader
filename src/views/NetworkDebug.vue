@@ -1,9 +1,9 @@
 <template>
     <div
-        class="flex flex-col h-full bg-base-100 font-sans text-sm rounded-xl overflow-hidden border border-base-300 shadow-lg"
+        class="absolute inset-0 z-10 flex flex-col bg-base-100 font-sans text-sm rounded-xl overflow-hidden border border-base-300 shadow-lg"
     >
         <div
-            class="flex items-center justify-between px-4 py-2 bg-base-200 border-b border-base-300"
+            class="sticky top-0 z-20 flex items-center justify-between px-4 py-2 bg-base-200 border-b border-base-300"
         >
             <div class="flex items-center gap-4">
                 <h1 class="font-bold text-base-content flex items-center gap-2">
@@ -59,7 +59,7 @@
                                 :key="req.id"
                                 class="border-b border-base-200/50 cursor-pointer transition-colors"
                                 :class="{
-                                    'bg-primary/10 text-primary-content':
+                                    'bg-primary/10':
                                         selectedRequest?.id === req.id,
                                     'hover:bg-base-200':
                                         selectedRequest?.id !== req.id,
@@ -245,7 +245,7 @@
                                         {{ key }}:
                                     </div>
                                     <div class="break-all text-base-content">
-                                        {{ val }}
+                                        {{ formatHeaderValue(key, val) }}
                                     </div>
                                 </template>
                             </div>
@@ -431,6 +431,19 @@ const getStatusTextColor = (status?: number) => {
     if (status && status >= 200 && status < 300)
         return "text-success font-bold";
     return "text-base-content/70";
+};
+
+const formatHeaderValue = (key: string, value: string) => {
+    if (key.toLowerCase() === "authorization") {
+        const parts = value.split(" ");
+    
+        if (parts.length === 2) {
+            return `${parts[0]} ****`;
+        }
+    
+        return "****";
+    }
+    return value;
 };
 
 const formatStatus = (status?: number) => {

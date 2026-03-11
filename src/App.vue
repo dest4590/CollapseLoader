@@ -110,7 +110,7 @@ const updateSidebarPosition = (
 
 const mainClasses = computed(() => {
     const base =
-        "w-full p-6 pb-8 bg-base-200 overflow-y-auto overflow-x-hidden flex-1";
+        "relative w-full p-6 pb-8 bg-base-200 overflow-y-auto overflow-x-hidden flex-1";
     const pos = sidebarPosition.value;
 
     if (pos === "left") return `${base} ml-20`;
