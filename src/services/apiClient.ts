@@ -94,7 +94,10 @@ class ApiClient {
         }
     }
 
-    private unwrapResponse<T>(payload: any, headers: Record<string, string>): T {
+    private unwrapResponse<T>(
+        payload: any,
+        headers: Record<string, string>
+    ): T {
         if (this.isApiResponse(payload)) {
             if (!payload.success) {
                 if (headers["X-Skip-Toast"] !== "true") {

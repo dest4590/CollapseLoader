@@ -165,7 +165,6 @@ class WebSocketService {
             }
         });
 
-
         this.client.subscribe("/topic/broadcast/users", (message) => {
             if (message.body) {
                 const data = JSON.parse(message.body);

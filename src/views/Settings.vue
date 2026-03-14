@@ -241,7 +241,11 @@ const syncLocalAccountsToCloud = async () => {
 
         await Promise.allSettled(
             cloudAccounts
-                .filter((account) => account.display_name && !localUsernames.has(account.display_name))
+                .filter(
+                    (account) =>
+                        account.display_name &&
+                        !localUsernames.has(account.display_name)
+                )
                 .map((account) => userService.deleteExternalAccount(account.id))
         );
 
@@ -297,7 +301,10 @@ const syncLocalAccountsFromCloud = async () => {
         );
 
         for (const cloudAccount of cloudAccounts) {
-            if (cloudAccount.display_name && !localUsernames.has(cloudAccount.display_name)) {
+            if (
+                cloudAccount.display_name &&
+                !localUsernames.has(cloudAccount.display_name)
+            ) {
                 await invoke("add_account", {
                     username: cloudAccount.display_name,
                     tags: Array.isArray((cloudAccount.metadata as any)?.tags)

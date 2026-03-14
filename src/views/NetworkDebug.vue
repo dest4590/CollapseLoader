@@ -436,11 +436,11 @@ const getStatusTextColor = (status?: number) => {
 const formatHeaderValue = (key: string, value: string) => {
     if (key.toLowerCase() === "authorization") {
         const parts = value.split(" ");
-    
+
         if (parts.length === 2) {
             return `${parts[0]} ****`;
         }
-    
+
         return "****";
     }
     return value;

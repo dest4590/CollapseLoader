@@ -40,9 +40,9 @@ export const animations: Record<string, PreloaderAnimation> = {
     "matrix-horizontal": {
         svgString: matrixSvg,
         initMatrix: (canvas, theme = "dark") => {
-            if (!canvas) return () => { };
+            if (!canvas) return () => {};
             const ctx = setupCanvas(canvas);
-            if (!ctx) return () => { };
+            if (!ctx) return () => {};
 
             const rows = Math.floor(CANVAS_HEIGHT / FONT_SIZE);
             type Stream = {
@@ -104,9 +104,9 @@ export const animations: Record<string, PreloaderAnimation> = {
     "matrix-vertical": {
         svgString: matrixSvg,
         initMatrix: (canvas) => {
-            if (!canvas) return () => { };
+            if (!canvas) return () => {};
             const ctx = setupCanvas(canvas);
-            if (!ctx) return () => { };
+            if (!ctx) return () => {};
 
             const columns = Math.floor(CANVAS_WIDTH / FONT_SIZE);
             const drops: number[] = Array.from(

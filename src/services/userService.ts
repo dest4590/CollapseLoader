@@ -536,7 +536,8 @@ class UserService {
             username: u.username,
             nickname: u.nickname ?? null,
             avatar_url: u.avatar_url ?? null,
-            friendship_status: (u.friendship_status ?? null) as FriendshipStatus,
+            friendship_status: (u.friendship_status ??
+                null) as FriendshipStatus,
         }));
     }
 
@@ -788,12 +789,17 @@ class UserService {
 
         await Promise.all(
             remoteAccounts
-                .filter((a) => a.display_name && !localAccountNames.has(a.display_name))
+                .filter(
+                    (a) =>
+                        a.display_name && !localAccountNames.has(a.display_name)
+                )
                 .map((a) => this.deleteExternalAccount(a.id))
         );
 
         const remoteAccountNames = new Set(
-            remoteAccounts.map((a) => a.display_name).filter(Boolean) as string[]
+            remoteAccounts
+                .map((a) => a.display_name)
+                .filter(Boolean) as string[]
         );
         for (const acc of localAccounts) {
             if (remoteAccountNames.has(acc.username)) continue;
@@ -817,17 +823,14 @@ class UserService {
             .map((f) => Number.parseInt(String(f.reference), 10))
             .filter((n) => Number.isFinite(n));
 
-        const accounts_data = (accounts || [])
-            .map((a) => {
-                const meta: any =
-                    a.metadata && typeof a.metadata === "object"
-                        ? a.metadata
-                        : {};
-                return {
-                    username: a.display_name,
-                    tags: Array.isArray(meta.tags) ? meta.tags : ["cloud-sync"],
-                };
-            });
+        const accounts_data = (accounts || []).map((a) => {
+            const meta: any =
+                a.metadata && typeof a.metadata === "object" ? a.metadata : {};
+            return {
+                username: a.display_name,
+                tags: Array.isArray(meta.tags) ? meta.tags : ["cloud-sync"],
+            };
+        });
 
         const last_sync_timestamp = this.maxIsoTimestamp([
             settingsPref?.updated_at ?? null,
