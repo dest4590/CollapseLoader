@@ -78,9 +78,7 @@ pub static CUSTOM_CLIENTS_FOLDER: &str = "custom_clients";
 pub static MODS_FOLDER: &str = "mods";
 
 pub static AGENT_FILE: &str = "CollapseAgent.jar";
-pub static OVERLAY_FILE: &str = if IS_MACOS {
-    "libCollapseOverlay.dylib"
-} else if IS_LINUX {
+pub static OVERLAY_FILE: &str = if IS_LINUX {
     "libCollapseOverlay.so"
 } else {
     "CollapseOverlay.dll"

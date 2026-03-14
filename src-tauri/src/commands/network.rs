@@ -91,7 +91,57 @@ pub async fn api_request(
     }
 
     if let Some(ref b) = body {
-        rb = rb.json(b);
+        let mut is_form_data = false;
+        if let Some(obj) = b.as_object() {
+            for (_, val) in obj {
+                if let Some(val_obj) = val.as_object() {
+                    if val_obj.get("__type").and_then(|v| v.as_str()) == Some("file") {
+                        is_form_data = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if is_form_data {
+            let mut form = reqwest::multipart::Form::new();
+            if let Some(obj) = b.as_object() {
+                for (key, val) in obj {
+                    if let Some(val_obj) = val.as_object() {
+                        if val_obj.get("__type").and_then(|v| v.as_str()) == Some("file") {
+                            let name = val_obj
+                                .get("name")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("file");
+                            let mime = val_obj
+                                .get("type")
+                                .and_then(|v| v.as_str())
+                                .unwrap_or("application/octet-stream");
+                            let data_b64 =
+                                val_obj.get("data").and_then(|v| v.as_str()).unwrap_or("");
+                            let data = base64::Engine::decode(
+                                &base64::engine::general_purpose::STANDARD,
+                                data_b64,
+                            )
+                            .map_err(|e| format!("Failed to decode base64: {}", e))?;
+
+                            let part = reqwest::multipart::Part::bytes(data)
+                                .file_name(name.to_string())
+                                .mime_str(mime)
+                                .map_err(|e| format!("Invalid mime type: {}", e))?;
+                            form = form.part(key.clone(), part);
+                        } else {
+                            form = form.text(key.clone(), val.to_string());
+                        }
+                    } else {
+                        form = form.text(key.clone(), val.to_string());
+                    }
+                }
+            }
+            rb = rb.multipart(form);
+        } else {
+            rb = rb.json(b);
+        }
     }
 
     let response = match rb.send().await {

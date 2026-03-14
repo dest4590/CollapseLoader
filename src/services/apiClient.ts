@@ -47,11 +47,41 @@ class ApiClient {
         }
 
         try {
+            let body = data;
+            if (data instanceof FormData) {
+                const formData: Record<string, any> = {};
+                for (const [key, value] of (data as any).entries()) {
+                    if (value instanceof File) {
+                        const buffer = await value.arrayBuffer();
+                        const bytes = new Uint8Array(buffer);
+                        // Convert to base64 using a chunked approach to avoid stack overflow for large files
+                        let binary = "";
+                        const chunkSize = 8192;
+                        for (let i = 0; i < bytes.length; i += chunkSize) {
+                            binary += String.fromCharCode.apply(
+                                null,
+                                Array.from(bytes.subarray(i, i + chunkSize))
+                            );
+                        }
+                        const base64 = btoa(binary);
+                        formData[key] = {
+                            __type: "file",
+                            name: value.name,
+                            type: value.type,
+                            data: base64,
+                        };
+                    } else {
+                        formData[key] = value;
+                    }
+                }
+                body = formData;
+            }
+
             const response = await invoke<any>("api_request", {
                 method,
                 url: fullUrl,
                 headers: requestHeaders,
-                body: data,
+                body: body,
             });
 
             return this.unwrapResponse<T>(response, requestHeaders);
