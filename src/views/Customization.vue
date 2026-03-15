@@ -78,6 +78,17 @@
                                     t("theme.reset_button")
                                 }}</span>
                             </button>
+
+                            <button
+                                v-if="!isExternalWindow"
+                                class="btn btn-outline btn-primary btn-sm flex items-center gap-2"
+                                @click="openInNewWindow"
+                            >
+                                <ExternalLink class="w-4 h-4" />
+                                <span class="hidden sm:inline"
+                                    >Open Inspector</span
+                                >
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -813,8 +824,9 @@
 </template>
 
 <script setup lang="ts">
-defineEmits(["change-view"]);
 import { ref, onMounted, onUnmounted, watch, toRefs } from "vue";
+import { invoke } from "@tauri-apps/api/core";
+import { emit as emitAppEvent } from "@tauri-apps/api/event";
 import { useI18n } from "vue-i18n";
 import {
     ClipboardCopy,
@@ -823,6 +835,7 @@ import {
     Save,
     Store,
     SunMoon,
+    ExternalLink,
 } from "lucide-vue-next";
 import { useToast } from "../services/toastService";
 import { settingsService } from "../services/settingsService";
@@ -841,6 +854,8 @@ import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
 import ImportExportCssModal from "../components/modals/social/presets/ImportExportCssModal.vue";
 import { useModal } from "../services/modalService";
 
+defineEmits(["change-view"]);
+
 const i18n = useI18n();
 const { t } = i18n;
 const { addToast } = useToast();
@@ -852,6 +867,9 @@ const selectedTheme = ref(
 );
 const showExpertOptions = ref(false);
 const expertAnimationActive = ref(false);
+const isExternalWindow = window.location.search.includes(
+    "window=customization"
+);
 
 const {
     customCSS,
@@ -950,8 +968,11 @@ const changeTheme = async (theme: string) => {
     try {
         selectedTheme.value = theme;
         document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+        await invoke("set_window_theme", { theme });
 
         await settingsService.editSetting("theme", theme, false);
+        await emitAppEvent("theme-mode-update", theme);
 
         addToast(t("theme.change_success"), "success");
     } catch (error) {
@@ -1007,6 +1028,30 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const resetStyles = () => {
     themeService.resetPresetSettings();
+};
+
+const openInNewWindow = async () => {
+    try {
+        const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+        const webview = new WebviewWindow("customization-inspector", {
+            url: "index.html?window=customization",
+            title: "Theme Inspector",
+            width: 1000,
+            height: 800,
+            resizable: true,
+            decorations: true,
+        });
+
+        webview.once("tauri://created", function () {
+            console.log("Customization window created");
+        });
+
+        webview.once("tauri://error", function (e) {
+            console.error("Error creating window:", e);
+        });
+    } catch (e) {
+        console.error("Failed to open new window:", e);
+    }
 };
 
 const openExportModal = async () => {

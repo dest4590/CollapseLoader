@@ -13,6 +13,7 @@ export const VALID_TABS = [
     "user-profile",
     "news",
     "marketplace",
+    "network_debug",
 ];
 
 export type TabName = (typeof VALID_TABS)[number];

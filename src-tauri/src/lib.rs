@@ -77,6 +77,37 @@ pub fn handle_startup_error(error: &StartupError) {
     error.show_and_exit();
 }
 
+fn parse_verify_params(url: &str) -> Option<(String, String)> {
+    let query_part = url.split_once('?')?.1;
+    let mut code = String::new();
+    let mut email = String::new();
+
+    for pair in query_part.split('&') {
+        if let Some((key, value)) = pair.split_once('=') {
+            match key {
+                "code" => code = value.to_string(),
+                "email" => email = value.to_string(),
+                _ => {}
+            }
+        }
+    }
+
+    if code.is_empty() {
+        None
+    } else {
+        Some((code, email))
+    }
+}
+
+fn parse_client_name(url: &str) -> Option<&str> {
+    let (_, query_part) = url.split_once('?')?;
+
+    query_part
+        .split('&')
+        .find_map(|pair| pair.split_once('='))
+        .and_then(|(key, value)| (key == "client").then_some(value))
+}
+
 fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running: bool) {
     if was_already_running {
         if let Some(window) = app.get_webview_window("main") {
@@ -97,34 +128,18 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running
     }
 
     if url.contains("verify") {
-        if let Some(query_part) = url.split("?").nth(1) {
-            let mut code = String::new();
-            let mut email = String::new();
-
-            for pair in query_part.split('&') {
-                if let Some((key, value)) = pair.split_once('=') {
-                    match key {
-                        "code" => code = value.to_string(),
-                        "email" => email = value.to_string(),
-                        _ => {}
-                    }
-                }
-            }
-
-            if !code.is_empty() {
-                log_debug!("Emitting verify-email event for code: {}", code);
-                emit_to_main_window(
-                    app,
-                    "verify-email",
-                    serde_json::json!({ "code": code, "email": email }),
-                );
-                return;
-            }
+        if let Some((code, email)) = parse_verify_params(&url) {
+            log_debug!("Emitting verify-email event for code: {}", code);
+            emit_to_main_window(
+                app,
+                "verify-email",
+                serde_json::json!({ "code": code, "email": email }),
+            );
+            return;
         }
     }
 
-    if let Some(client_name) = url.split("client=").nth(1) {
-        let client_name = client_name.split('&').next().unwrap_or("");
+    if let Some(client_name) = parse_client_name(&url) {
         log_debug!("Launching client from deep link: {}", client_name);
         emit_to_main_window(
             app,
@@ -140,14 +155,15 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running
 fn should_handle_deep_link(url: &str) -> bool {
     static LAST_HANDLED: OnceLock<Mutex<Option<(String, Instant)>>> = OnceLock::new();
     let last = LAST_HANDLED.get_or_init(|| Mutex::new(None));
-    let mut guard = last.lock().unwrap();
+    let mut guard = match last.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
     let normalized = url.trim().to_string();
 
     if let Some((ref prev, prev_time)) = guard.as_ref() {
-        if prev == &normalized {
-            if prev_time.elapsed() < Duration::from_secs(2) {
-                return false;
-            }
+        if prev == &normalized && prev_time.elapsed() < Duration::from_secs(2) {
+            return false;
         }
     }
 
@@ -252,11 +268,19 @@ pub fn run() {
             commands::utils::open_data_folder,
             commands::utils::reset_requirements,
             commands::utils::update_presence,
+            commands::utils::is_macos,
+            commands::utils::set_window_theme,
+            // network commands
+            commands::network::api_request,
+            commands::network::get_network_history,
+            commands::network::clear_network_history,
+            commands::report::generate_network_report,
+            commands::report::export_network_report,
             // server connectivity
             commands::clients::get_server_connectivity_status,
         ])
         .setup(|app| {
-            #[cfg(desktop)]
+            #[cfg(all(desktop, not(target_os = "macos")))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let handle = app.handle().clone();
@@ -302,6 +326,11 @@ pub fn run() {
                 if let Err(e) = window.set_title(&window_title) {
                     log_warn!("Failed to set window title: {}", e);
                 }
+
+                #[cfg(target_os = "macos")]
+                if let Err(e) = window.set_decorations(true) {
+                    log_warn!("Failed to enable window decorations: {}", e);
+                }
             }
 
             Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
@@ -316,8 +345,13 @@ pub fn run() {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show, &hide, &quit])?;
 
+            let tray_icon = app
+                .default_window_icon()
+                .cloned()
+                .ok_or_else(|| "Default window icon is missing".to_string())?;
+
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(tray_icon)
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {

@@ -9,7 +9,10 @@ use crate::core::utils::helpers::is_development_enabled;
 #[cfg(target_os = "windows")]
 use crate::messagebox;
 
-use crate::{log_debug, log_error, log_info, log_warn};
+use crate::log_info;
+
+#[cfg(target_os = "windows")]
+use crate::{log_debug, log_error, log_warn};
 
 #[cfg(target_os = "windows")]
 const DPI_RELEASE_API: &str =

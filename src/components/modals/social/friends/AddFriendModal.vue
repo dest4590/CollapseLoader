@@ -38,7 +38,6 @@
                                         :is-clickable="true"
                                         :src="user.avatar_url || null"
                                         :original-src="user.avatar_url || null"
-                                        "
                                     />
                                 </div>
                                 <div class="min-w-0 flex-1">
@@ -55,7 +54,12 @@
 
                             <div class="shrink-0">
                                 <button
-                                    @click="sendFriendRequest(user.username, user.id)"
+                                    @click="
+                                        sendFriendRequest(
+                                            user.username,
+                                            user.id
+                                        )
+                                    "
                                     class="btn btn-primary btn-sm"
                                     :disabled="
                                         sendingRequest ||
@@ -68,21 +72,47 @@
                                     </span>
                                 </button>
 
-                                <template v-if="user.friendship_status === 'request_sent'">
-                                    <div class="badge badge-warning ml-2 hidden sm:inline-block">
-                                        {{ t('modals.add_friend.request_sent') }}
+                                <template
+                                    v-if="
+                                        user.friendship_status ===
+                                        'request_sent'
+                                    "
+                                >
+                                    <div
+                                        class="badge badge-warning ml-2 hidden sm:inline-block"
+                                    >
+                                        {{
+                                            t("modals.add_friend.request_sent")
+                                        }}
                                     </div>
                                 </template>
 
-                                <template v-else-if="user.friendship_status === 'request_received'">
-                                    <div class="badge badge-info ml-2 hidden sm:inline-block">
-                                        {{ t('modals.add_friend.request_received') }}
+                                <template
+                                    v-else-if="
+                                        user.friendship_status ===
+                                        'request_received'
+                                    "
+                                >
+                                    <div
+                                        class="badge badge-info ml-2 hidden sm:inline-block"
+                                    >
+                                        {{
+                                            t(
+                                                "modals.add_friend.request_received"
+                                            )
+                                        }}
                                     </div>
                                 </template>
 
-                                <template v-else-if="user.friendship_status === 'blocked'">
-                                    <div class="badge badge-error ml-2 hidden sm:inline-block">
-                                        {{ t('modals.add_friend.blocked') }}
+                                <template
+                                    v-else-if="
+                                        user.friendship_status === 'blocked'
+                                    "
+                                >
+                                    <div
+                                        class="badge badge-error ml-2 hidden sm:inline-block"
+                                    >
+                                        {{ t("modals.add_friend.blocked") }}
                                     </div>
                                 </template>
                             </div>
@@ -149,7 +179,8 @@ const getDisplayUsername = (user: SearchUser) => {
 };
 
 const getFriendButtonLabel = (user: SearchUser) => {
-    if (!user || !user.friendship_status) return t("modals.add_friend.add_friend");
+    if (!user || !user.friendship_status)
+        return t("modals.add_friend.add_friend");
     switch (user.friendship_status) {
         case "friends":
             return t("modals.add_friend.already_friends");

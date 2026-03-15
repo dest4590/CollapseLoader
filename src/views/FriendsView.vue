@@ -246,6 +246,7 @@ onMounted(async () => {
     );
 
     window.addEventListener("friend-request-received", handleRefreshEvent);
+    window.addEventListener("friend-request-sent", handleRefreshEvent);
     window.addEventListener("friend-request-accepted", handleRefreshEvent);
     window.addEventListener("friend-request-canceled", handleRefreshEvent);
 });
@@ -258,6 +259,7 @@ onUnmounted(() => {
         clearInterval(fullDataRefreshInterval);
     }
     window.removeEventListener("friend-request-received", handleRefreshEvent);
+    window.removeEventListener("friend-request-sent", handleRefreshEvent);
     window.removeEventListener("friend-request-accepted", handleRefreshEvent);
     window.removeEventListener("friend-request-canceled", handleRefreshEvent);
 });

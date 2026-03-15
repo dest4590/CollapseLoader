@@ -107,7 +107,8 @@ export function useAppInit() {
             unreadNewsCount.value = news.value.filter(
                 (a: any) => !readNews.includes(getNewsUniqueId(a))
             ).length;
-        } catch (e) {
+        } catch (error) {
+            console.error("Failed to fetch news:", error);
             unreadNewsCount.value = 0;
         }
     };
@@ -203,6 +204,7 @@ export function useAppInit() {
 
             if (!isOnline.value) addToast(t("toast.server.offline"), "error");
         } catch (error) {
+            console.error("Connectivity check failed:", error);
             isOnline.value = false;
         }
 
@@ -211,6 +213,7 @@ export function useAppInit() {
             apiInitialized.value = true;
             bootLogService.apiInitSuccess();
         } catch (error) {
+            console.error("API initialization failed:", error);
             bootLogService.apiInitFailed();
         }
 

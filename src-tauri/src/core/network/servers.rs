@@ -9,6 +9,8 @@ use std::time::Duration;
 use tokio::sync::watch;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+const MAX_SERVER_CHECK_RETRIES: usize = 7;
+const SERVER_CHECK_RETRY_DELAY: Duration = Duration::from_millis(100);
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Server {
@@ -74,10 +76,7 @@ impl Servers {
     }
 
     pub async fn check_servers(&self) {
-        let client = Client::builder()
-            .timeout(REQUEST_TIMEOUT)
-            .build()
-            .unwrap_or_default();
+        let client = super::create_client(REQUEST_TIMEOUT);
 
         tokio::join!(
             self.check_group(&client, &self.cdns, &self.selected_cdn, "CDN"),
@@ -86,16 +85,18 @@ impl Servers {
 
         log_info!(
             "Services: API [{}], CDN [{}]",
-            if self.selected_api.read().unwrap().is_some() {
-                "OK"
-            } else {
-                "OFFLINE"
-            },
-            if self.selected_cdn.read().unwrap().is_some() {
-                "OK"
-            } else {
-                "OFFLINE"
-            }
+            self.selected_api
+                .read()
+                .unwrap()
+                .as_ref()
+                .map(|api| format!("OK: {}", api.url))
+                .unwrap_or_else(|| "OFFLINE".to_string()),
+            self.selected_cdn
+                .read()
+                .unwrap()
+                .as_ref()
+                .map(|cdn| format!("OK: {}", cdn.url))
+                .unwrap_or_else(|| "OFFLINE".to_string()),
         );
 
         self.set_status();
@@ -132,53 +133,76 @@ impl Servers {
 
             let mut ok = false;
 
-            match client.head(&url).send().await {
-                Ok(resp) => {
-                    if resp.status().is_success() || resp.status() == reqwest::StatusCode::NOT_FOUND
-                    {
-                        ok = true;
-                    } else {
-                        log_warn!(
-                            "{} Server {} returned status (HEAD): {}",
-                            name,
-                            server.url,
-                            resp.status()
-                        );
-                    }
-                }
-                Err(e) => {
-                    log_warn!(
-                        "Failed to connect to {} Server {} (HEAD): {}",
-                        name,
-                        server.url,
-                        e
-                    );
-                }
-            }
-
-            if !ok {
-                match client.get(&url).send().await {
+            for attempt in 0..MAX_SERVER_CHECK_RETRIES {
+                match client.head(&url).send().await {
                     Ok(resp) => {
-                        if resp.status().is_success()
-                            || resp.status() == reqwest::StatusCode::NOT_FOUND
-                        {
+                        let status = resp.status();
+                        if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
+                            log_info!("{} Server {} is online (HEAD)", name, server.url);
+
                             ok = true;
+                            break;
                         } else {
                             log_warn!(
-                                "{} Server {} returned status (GET): {}",
+                                "{} Server {} returned status (HEAD): {} (attempt {}/{})",
                                 name,
                                 server.url,
-                                resp.status()
+                                status,
+                                attempt + 1,
+                                MAX_SERVER_CHECK_RETRIES
                             );
                         }
                     }
                     Err(e) => {
                         log_warn!(
-                            "Failed to connect to {} Server {} (GET): {}",
+                            "Failed to connect to {} Server {} (HEAD): {} (attempt {}/{})",
                             name,
                             server.url,
-                            e
+                            e,
+                            attempt + 1,
+                            MAX_SERVER_CHECK_RETRIES
                         );
+                    }
+                }
+                if attempt + 1 < MAX_SERVER_CHECK_RETRIES {
+                    tokio::time::sleep(SERVER_CHECK_RETRY_DELAY).await;
+                }
+            }
+
+            if !ok {
+                for attempt in 0..MAX_SERVER_CHECK_RETRIES {
+                    match client.get(&url).send().await {
+                        Ok(resp) => {
+                            let status = resp.status();
+                            if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
+                                log_info!("{} Server {} is online (GET)", name, server.url);
+
+                                ok = true;
+                                break;
+                            } else {
+                                log_warn!(
+                                    "{} Server {} returned status (GET): {} (attempt {}/{})",
+                                    name,
+                                    server.url,
+                                    status,
+                                    attempt + 1,
+                                    MAX_SERVER_CHECK_RETRIES
+                                );
+                            }
+                        }
+                        Err(e) => {
+                            log_warn!(
+                                "Failed to connect to {} Server {} (GET): {} (attempt {}/{})",
+                                name,
+                                server.url,
+                                e,
+                                attempt + 1,
+                                MAX_SERVER_CHECK_RETRIES
+                            );
+                        }
+                    }
+                    if attempt + 1 < MAX_SERVER_CHECK_RETRIES {
+                        tokio::time::sleep(SERVER_CHECK_RETRY_DELAY).await;
                     }
                 }
             }

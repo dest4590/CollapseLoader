@@ -35,15 +35,19 @@ import News from "./views/News.vue";
 import CustomClients from "./views/CustomClients.vue";
 import Marketplace from "./views/Marketplace.vue";
 import AuthModal from "./components/layout/modals/AuthModal.vue";
+import NetworkDebug from "./views/NetworkDebug.vue";
 import { fetchSettings } from "./utils/settings";
 import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
 import { useAppInit } from "./composables/useAppInit";
+import { initNetworkDebug } from "./services/networkDebugService";
 import type { Client } from "./types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
 import { userService } from "./services/userService";
+
+const isMacOS = ref(false);
 
 interface Setting<T> {
     description: string;
@@ -106,7 +110,7 @@ const updateSidebarPosition = (
 
 const mainClasses = computed(() => {
     const base =
-        "w-full p-6 pb-8 bg-base-200 overflow-y-auto overflow-x-hidden flex-1";
+        "relative w-full p-6 pb-8 bg-base-200 overflow-y-auto overflow-x-hidden flex-1";
     const pos = sidebarPosition.value;
 
     if (pos === "left") return `${base} ml-20`;
@@ -241,6 +245,7 @@ const views: Record<string, any> = {
     friends: FriendsView,
     "user-profile": UserProfileView,
     marketplace: Marketplace,
+    network_debug: NetworkDebug,
 };
 
 const currentView = computed(() => views[activeTab.value] || Home);
@@ -320,6 +325,11 @@ const handleVerified = (token?: string) => {
 };
 
 onMounted(async () => {
+    try {
+        await initNetworkDebug();
+    } catch (e) {
+        console.warn("Failed to init global network debug service", e);
+    }
     await listen("verify-email", (event: any) => {
         const { code, email } = event.payload;
         console.log("Received verification deep link:", code, email);
@@ -359,14 +369,19 @@ const getTransitionName = () => {
           : "fade-slide";
 };
 
-onMounted(() => {
+onMounted(async () => {
     initApp(isAuthenticated, checkAuthStatus, news, unreadNewsCount);
     settingsService.loadSettings();
     checkAuthStatus();
 
-    (async () => {
+    try {
+        isMacOS.value = await invoke("is_macos");
         isDev.value = await getIsDevelopment();
-    })();
+    } catch (e) {
+        console.error("Failed to determine platform or environment:", e);
+        isMacOS.value = false;
+        isDev.value = false;
+    }
 
     listen("launch-client", async (event) => {
         const { id, was_already_running } = event.payload as {
@@ -408,9 +423,8 @@ onMounted(() => {
                     });
 
                     if (!was_already_running) {
-                        const { getCurrentWindow } = await import(
-                            "@tauri-apps/api/window"
-                        );
+                        const { getCurrentWindow } =
+                            await import("@tauri-apps/api/window");
                         await getCurrentWindow().minimize();
                     }
                 } catch (e) {
@@ -535,6 +549,26 @@ onMounted(() => {
 
     window.addEventListener("keydown", emergencyHandler);
 
+    const networkDebugHandler = (e: KeyboardEvent) => {
+        try {
+            const active = document.activeElement as HTMLElement | null;
+            const isTyping =
+                !!active &&
+                (active.tagName === "INPUT" ||
+                    active.tagName === "TEXTAREA" ||
+                    active.isContentEditable);
+            if (isTyping) return;
+
+            if (e.key === "F9" || e.code === "F9") {
+                setActiveTab("network_debug");
+            }
+        } catch (err) {
+            console.error("Error handling F9 keybind:", err);
+        }
+    };
+
+    window.addEventListener("keydown", networkDebugHandler);
+
     window.addEventListener("achievement-unlocked", (event: any) => {
         const { key } = event.detail;
         const name = t(`achievements.list.${key}.name`);
@@ -582,8 +616,36 @@ onMounted(() => {
         );
     });
 
+    const broadcastHandler = (event: any) => {
+        const { message, type, sticky } = event.detail;
+        const audio = new Audio(notificationSound);
+        audio
+            .play()
+            .catch((e) =>
+                console.error("Failed to play notification sound:", e)
+            );
+
+        let toastType = "info";
+        if (type === "warning") toastType = "warning";
+        if (type === "error") toastType = "error";
+
+        const duration = sticky ? 60000 : 10000;
+        addToast(message, toastType as any, duration);
+    };
+
+    window.addEventListener("system-broadcast", broadcastHandler);
+
+    const updateHandler = async () => {
+        await updaterService.checkForUpdates(false, t);
+    };
+
+    window.addEventListener("trigger-update-check", updateHandler);
+
     onUnmounted(() => {
         window.removeEventListener("keydown", emergencyHandler);
+        window.removeEventListener("keydown", networkDebugHandler);
+        window.removeEventListener("system-broadcast", broadcastHandler);
+        window.removeEventListener("trigger-update-check", updateHandler);
     });
 });
 
@@ -640,9 +702,12 @@ onUnmounted(() => {
             class="flex h-screen flex-col overflow-hidden"
             v-if="!showInitialDisclaimer && !showFirstRunInfo && contentVisible"
         >
-            <Titlebar />
+            <Titlebar v-if="!isMacOS" />
 
-            <div class="flex-1 flex overflow-hidden relative pt-10">
+            <div
+                class="flex-1 flex overflow-hidden relative"
+                :class="{ 'pt-10': !isMacOS }"
+            >
                 <Sidebar
                     :activeTab="activeTab"
                     @changeTab="setActiveTab"
@@ -650,6 +715,7 @@ onUnmounted(() => {
                     :is-online="appOnline"
                     :is-authenticated="isAuthenticated"
                     :position="sidebarPosition"
+                    :isMacOS="isMacOS"
                     @update:position="updateSidebarPosition"
                 />
 

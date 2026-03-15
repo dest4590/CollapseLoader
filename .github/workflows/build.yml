@@ -1,376 +1,194 @@
 name: Build and Release
-on:
-  push:
-    branches:
-      - main
-      - dev
-    paths:
-      - "src/**"
-      - "src-tauri/**"
-      - "**.json"
-      - "**.toml"
-      - "**.yml"
-      - "**.yaml"
 
-  workflow_dispatch:
+on:
+    push:
+        branches: [main, dev]
+
+    workflow_dispatch:
+        inputs:
+            skip_verify:
+                description: "Skip commit message verification"
+                type: boolean
+                default: false
+
+            build_macos:
+                description: "Force macOS build"
+                type: boolean
+                default: false
 
 jobs:
-  check-skip:
-    runs-on: ubuntu-latest
-    outputs:
-      skip: ${{ steps.check.outputs.skip }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    check-flags:
+        runs-on: ubuntu-latest
 
-      - name: Check commit messages for skip keywords
-        id: check
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
+        outputs:
+            skip: ${{ steps.flags.outputs.skip }}
+            build_macos: ${{ steps.flags.outputs.build_macos }}
 
-          keywords='\[skip ci\]|\[ci skip\]|skip-ci|skip_ci|SKIP_CI|NO_CI|skipci'
+        steps:
+            - uses: actions/checkout@v4
 
-          # Determine the single relevant commit SHA:
-          # - For pull_request events use the PR head SHA
-          # - Otherwise prefer .after, head_commit.id, or GITHUB_SHA
-          commit_sha="$(jq -r '.pull_request.head.sha // .after // .head_commit.id // .sha // empty' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
-          commit_sha="${commit_sha:-${GITHUB_SHA:-}}"
+            - id: flags
+              shell: bash
+              run: |
 
-          if [ -z "$commit_sha" ]; then
-            echo "No commit SHA found; defaulting to full log fallback."
-            messages="$(git log --pretty=%B -n 10 || true)"
-          else
-            echo "Checking commit: $commit_sha"
-            # try to fetch the specific SHA if it's not present locally
-            if ! git cat-file -e "$commit_sha^{commit}" 2>/dev/null; then
-              git fetch --no-tags --depth=1 origin "$commit_sha" || git fetch --no-tags --depth=50 origin +refs/heads/*:refs/remotes/origin/* || true
-            fi
-            messages="$(git show -s --format=%B "$commit_sha" 2>/dev/null || true)"
-          fi
+                  msg="$(git log -1 --pretty=%B)"
 
-          # Fallback: if no message found, try event commits array
-          if [ -z "$(echo "$messages" | tr -d '[:space:]')" ]; then
-            messages="$(jq -r '.commits[]?.message // empty' < "$GITHUB_EVENT_PATH" 2>/dev/null || true)"
-          fi
+                  echo "Commit message:"
+                  echo "$msg"
 
-          echo "---- Collected commit message(s) ----"
-          if [ -n "$(echo "$messages" | tr -d '[:space:]')" ]; then
-            printf "%s\n" "$messages"
-          else
-            echo "<no commit messages found>"
-          fi
-          echo "---- End commit message(s) ----"
+                  SKIP=false
+                  BUILD_MAC=false
 
-          echo "---- Matching lines (case-insensitive) ----"
-          echo "$messages" | nl -ba | grep -Ei --color=never "$keywords" || true
-          echo "---- End matching lines ----"
+                  if [[ "${{ github.event.inputs.skip_verify }}" == "true" ]]; then
+                    echo "Manual override: skipping commit verification"
+                    SKIP=false
+                  else
+                    if echo "$msg" | grep -Ei "\[skip ci\]|skip-ci|skip_ci"; then
+                      SKIP=true
+                    fi
+                  fi
 
-          skip_found=false
-          if echo "$messages" | grep -Ei "$keywords" >/dev/null; then
-            echo "Found skip keyword in commit message. Cancelling run."
-            skip_found=true
-          else
-            echo "No skip keyword found in commit message. Continuing run."
-          fi
+                  if echo "$msg" | grep -Ei "release|build macos"; then
+                    BUILD_MAC=true
+                  fi
 
-          echo "skip=$skip_found" >> $GITHUB_OUTPUT
+                  if [[ "${{ github.event.inputs.build_macos }}" == "true" ]]; then
+                    BUILD_MAC=true
+                  fi
 
-  build:
-    needs: check-skip
-    if: needs.check-skip.outputs.skip != 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-latest, ubuntu-latest]
+                  echo "skip=$SKIP" >> $GITHUB_OUTPUT
+                  echo "build_macos=$BUILD_MAC" >> $GITHUB_OUTPUT
 
-    runs-on: ${{ matrix.platform }}
-    permissions:
-      contents: write
-      actions: write
-      id-token: write
+    build:
+        needs: check-flags
+        if: needs.check-flags.outputs.skip != 'true'
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        strategy:
+            fail-fast: false
+            matrix:
+                platform: [ubuntu-22.04, windows-latest]
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        runs-on: ${{ matrix.platform }}
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+        permissions:
+            contents: write
 
-      - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.9
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Cache sccache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/sccache
-            ~/AppData/Local/Mozilla/sccache
-          key: ${{ runner.os }}-sccache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-sccache-
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
 
-      - name: Install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libappindicator3-dev librsvg2-dev patchelf \
-          build-essential curl wget file libssl-dev \
-          libjavascriptcoregtk-4.1-dev libwebkit2gtk-4.1-dev \
-          libsoup-3.0-dev pkg-config
+            - uses: dtolnay/rust-toolchain@stable
 
-      - name: Configure pkg-config (Ubuntu only)
-        if: matrix.platform == 'ubuntu-latest'
-        run: |
-          echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
-          ls -la /usr/lib/x86_64-linux-gnu/pkgconfig/ || true
-          pkg-config --list-all | grep -i javascript || true
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  workspaces: src-tauri
 
-      - name: Install frontend dependencies (Windows)
-        if: matrix.platform == 'windows-latest'
-        run: npm ci; npm install
+            - name: Install frontend dependencies
+              run: npm ci
 
-      - name: Install frontend dependencies (Ubuntu)
-        if: matrix.platform == 'ubuntu-latest'
-        run: npm ci || npm install
+            - name: Install Linux dependencies
+              if: matrix.platform == 'ubuntu-22.04'
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y \
+                    build-essential \
+                    curl \
+                    wget \
+                    file \
+                    libgtk-3-dev \
+                    libwebkit2gtk-4.1-dev \
+                    libsoup-3.0-dev \
+                    libjavascriptcoregtk-4.1-dev \
+                    libayatana-appindicator3-dev \
+                    librsvg2-dev \
+                    libssl-dev \
+                    libxdo-dev \
+                    patchelf \
+                    libfuse2
 
-      - name: Get version from package.json (Ubuntu)
-        if: matrix.platform == 'ubuntu-latest'
-        id: package-version-ubuntu
-        uses: martinbeentjes/npm-get-version-action@main
+                  curl -L -o appimagetool-x86_64.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+                  chmod +x appimagetool-x86_64.AppImage
+                  sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
 
-      - name: Get version from package.json (Windows)
-        if: matrix.platform == 'windows-latest'
-        id: package-version-windows
-        shell: bash
-        run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+            - name: Build Tauri
+              uses: tauri-apps/tauri-action@v0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get commit hash
-        id: commit-hash
-        run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-        shell: bash
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-${{ matrix.platform }}
+                  path: |
+                      src-tauri/target/release/bundle/**/*.AppImage
+                      src-tauri/target/release/bundle/**/*.deb
+                      src-tauri/target/release/bundle/**/*.rpm
+                      src-tauri/target/release/bundle/**/*.tar.gz
+                      src-tauri/target/release/bundle/**/*.msi
+                      src-tauri/target/release/bundle/**/*.exe
+                      src-tauri/target/release/bundle/**/*.dmg
 
-      - name: Build the app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUSTC_WRAPPER: sccache
-          PKG_CONFIG_PATH: /usr/lib/pkgconfig:/usr/share/pkgconfig
-          PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: 1
-          PKG_CONFIG_ALLOW_SYSTEM_LIBS: 1
-        with:
-          includeUpdaterJson: true
-          updaterJsonKeepUniversal: true
+    build-macos:
+        needs: check-flags
+        if: needs.check-flags.outputs.build_macos == 'true'
 
-      - name: Show sccache stats
-        run: sccache --show-stats
+        runs-on: macos-latest
 
-      - name: Collect Windows artifacts
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        run: |
-          mkdir -p artifacts-windows
-          $version = "${{ steps.package-version-windows.outputs.current-version }}"
+        permissions:
+            contents: write
 
-          Get-ChildItem -Path ./src-tauri/target/release/bundle/msi/*.msi -Recurse | ForEach-Object {
-            Copy-Item $_.FullName -Destination artifacts-windows/
-            $md5 = Get-FileHash $_.FullName -Algorithm MD5
-            echo "MSI_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
-          }
+        steps:
+            - uses: actions/checkout@v4
 
-          Get-ChildItem -Path ./src-tauri/target/release/bundle/nsis/*-setup.exe -Recurse | ForEach-Object {
-            Copy-Item $_.FullName -Destination artifacts-windows/
-            $md5 = Get-FileHash $_.FullName -Algorithm MD5
-            echo "NSIS_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
-          }
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: npm
 
-          Get-ChildItem -Path ./src-tauri/target/release/*.exe | ForEach-Object {
-            $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
-            $extension = [System.IO.Path]::GetExtension($_.Name)
-            $newName = "${baseName}_${version}${extension}"
-            $newPath = Join-Path "artifacts-windows" $newName
-            Copy-Item $_.FullName -Destination $newPath
-            $md5 = Get-FileHash $_.FullName -Algorithm MD5
-            echo "EXE_MD5=$($md5.Hash)" >> $env:GITHUB_ENV
-          }
+            - uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: aarch64-apple-darwin, x86_64-apple-darwin
 
-          echo "ARTIFACT_PATH=artifacts-windows" >> $env:GITHUB_ENV
-      - name: Upload Windows artifacts to Telegram
-        if: matrix.platform == 'windows-latest'
-        shell: pwsh
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-        run: |
-          $token = $env:TELEGRAM_TOKEN
-          $chatId = $env:TELEGRAM_CHAT_ID
-          if (-not $token -or -not $chatId) { Write-Host "Telegram token or chat id not set; skipping upload."; exit 0 }
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  workspaces: src-tauri
 
-          $files = Get-ChildItem -Path artifacts-windows -File -Recurse | Where-Object { $_.Extension -in '.msi','.exe' -or $_.Name -like '*-setup.exe' } | ForEach-Object { $_.FullName }
-          if (-not $files) { Write-Host "No artifacts found to upload."; exit 0 }
+            - name: Install frontend dependencies
+              run: npm ci
 
-          $repo = $env:GITHUB_REPOSITORY
-          $hash = $env:HASH
-          $commitUrl = "https://github.com/$repo/commit/$hash"
+            - name: Build Universal macOS App
+              uses: tauri-apps/tauri-action@v0
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  args: --target universal-apple-darwin
 
-          # Try to get the commit subject (short message)
-          $commitSubject = ''
-          try { $commitSubject = (git log -1 --pretty=format:'%s' $hash) } catch { }
-          if (-not $commitSubject) { try { $commitSubject = (git log -1 --pretty=format:'%s') } catch { $commitSubject = '' } }
-          if (-not $commitSubject) { $commitSubject = "(no commit message)" }
+            - name: Upload macOS artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-macos
+                  path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
 
-          $media = @()
-          for ($i = 0; $i -lt $files.Count; $i++) {
-            $attachName = "file$i"
-            $item = @{ type = 'document'; media = "attach://$attachName" }
-            if ($i -eq 0) {
-              $item.caption = "Build artifacts for commit [$hash]($commitUrl) - $commitSubject"
-              $item.parse_mode = 'Markdown'
-            }
-            $media += $item
-          }
+    create-release:
+        needs: [build, build-macos]
+        runs-on: ubuntu-latest
 
-          $mediaJson = ($media | ConvertTo-Json -Compress)
-          $uri = "https://api.telegram.org/bot$token/sendMediaGroup"
+        permissions:
+            contents: write
 
-          $form = @()
-          $form += '-F'; $form += "chat_id=$chatId"
-          $form += '-F'; $form += "media=$mediaJson"
+        steps:
+            - uses: actions/download-artifact@v4
+              with:
+                  path: release-artifacts
 
-          for ($i = 0; $i -lt $files.Count; $i++) {
-            $attachName = "file$i"
-            $path = $files[$i]
-            $form += '-F'; $form += "${attachName}=@$path"
-          }
-
-          Write-Host "Uploading artifacts as a single media group to Telegram..."
-          & curl.exe -s -X POST $uri @form
-
-      - name: Collect Ubuntu artifacts
-        if: matrix.platform == 'ubuntu-latest'
-        run: |
-          mkdir -p artifacts-ubuntu
-          version="${{ steps.package-version-ubuntu.outputs.current-version }}"
-
-          find ./src-tauri/target/release/bundle/deb -name "*.deb" | while read file; do
-            cp "$file" artifacts-ubuntu/
-            MD5=$(md5sum "$file" | awk '{ print $1 }')
-            echo "DEB_MD5=$MD5" >> $GITHUB_ENV
-          done
-
-          find ./src-tauri/target/release/bundle/appimage -name "*.AppImage" 2>/dev/null | while read file; do
-            cp "$file" artifacts-ubuntu/
-            MD5=$(md5sum "$file" | awk '{ print $1 }')
-            echo "APPIMAGE_MD5=$MD5" >> $GITHUB_ENV
-          done
-
-          # Include the standalone Linux binary with version
-          find ./src-tauri/target/release -maxdepth 1 -type f -executable -not -name "*.so" -not -name "*.d" | while read file; do
-            if [ -f "$file" ] && file "$file" | grep -q "ELF.*executable"; then
-              basename=$(basename "$file")
-              extension=""
-              if [[ "$basename" == *.* ]]; then
-                extension=".${basename##*.}"
-                basename="${basename%.*}"
-              fi
-              versioned_name="${basename}_${version}${extension}"
-              cp "$file" "artifacts-ubuntu/$versioned_name"
-              MD5=$(md5sum "$file" | awk '{ print $1 }')
-              echo "BINARY_MD5=$MD5" >> $GITHUB_ENV
-            fi
-          done
-
-          echo "ARTIFACT_PATH=artifacts-ubuntu" >> $GITHUB_ENV
-
-      - name: VirusTotal Scan (Windows only)
-        if: matrix.platform == 'windows-latest' && github.event.repository.fork == false
-        uses: crazy-max/ghaction-virustotal@v4
-        id: virustotal
-        with:
-          vt_api_key: ${{ secrets.VT_API_KEY }}
-          files: |
-            artifacts-windows/*.msi
-            artifacts-windows/*-setup.exe
-            artifacts-windows/*.exe
-
-      - name: Extract and Print URL(s) of VirusTotal Scan (Windows only)
-        if: matrix.platform == 'windows-latest' && github.event.repository.fork == false && steps.virustotal.outputs.analysis != ''
-        shell: bash
-        run: |
-          ANALYSIS="${{ steps.virustotal.outputs.analysis }}"
-          urls=$(echo "$ANALYSIS" | tr ',' '\n' | grep -oE 'https?://[^[:space:]]*virustotal[^[:space:]]*' | sed 's/[[:space:]]*$//' | uniq)
-          if [ -n "$urls" ]; then
-            printf 'VIRUSTOTAL_URL<<EOF\n%s\nEOF\n' "$urls" >> $GITHUB_ENV
-            printf 'VIRUSTOTAL_LINE<<EOF\nVirusTotal scan:\n%s\nEOF\n' "$(echo "$urls" | sed 's/^/- /')" >> $GITHUB_ENV
-          else
-            echo "VIRUSTOTAL_URL=" >> $GITHUB_ENV
-            echo "VIRUSTOTAL_LINE=" >> $GITHUB_ENV
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: CollapseLoader-${{ matrix.platform }}-${{ env.HASH }}
-          path: ${{ matrix.platform == 'windows-latest' && 'artifacts-windows/**' || 'artifacts-ubuntu/**' }}
-
-  create-release:
-    needs: [check-skip, build]
-    if: needs.check-skip.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Get version from package.json
-        id: package-version
-        run: echo "current-version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Get commit hash
-        id: commit-hash
-        run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-
-      - name: List artifacts
-        run: find release-artifacts -type f
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VIRUSTOTAL_LINE: ${{ env.VIRUSTOTAL_LINE }}
-        with:
-          tag_name: prerelease-v${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}
-          name: "CollapseLoader ${{ steps.package-version.outputs.current-version }}-${{ env.HASH }}"
-          body: |
-
-            Automatic build from GitHub Actions
-
-            - Windows (.msi, .exe installer, standalone .exe with version)
-            - Linux (.deb, standalone binary with version)
-
-            Note: This is an automated build from the main branch.
-            Commit hash: ${{ env.HASH }}
-            ${{ env.VIRUSTOTAL_LINE }}
-          files: release-artifacts/**/*
-          prerelease: true
+            - name: Create Release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: build-${{ github.sha }}
+                  name: Automated Build
+                  prerelease: true
+                  files: release-artifacts/**/*

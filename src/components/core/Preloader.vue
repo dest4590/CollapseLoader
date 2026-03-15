@@ -84,6 +84,7 @@ import {
 } from "vue";
 import BootLogs from "./BootLogs.vue";
 import OdometerText from "./OdometerText.vue";
+import { animations, animationKeys } from "./preloaderAnimations";
 
 const props = defineProps({
     show: { type: Boolean, required: true },
@@ -92,6 +93,7 @@ const props = defineProps({
     currentProgress: { type: Number, required: true },
     halloweenActive: { type: Boolean, default: false },
     currentTheme: { type: String, default: "dark" },
+    animationType: { type: String, default: "" },
 });
 
 const displayProgress = ref(0);
@@ -99,6 +101,9 @@ const displayProgress = ref(0);
 let _progressRaf: number | null = null;
 const LERP_FACTOR = 0.12;
 const LERP_EPS = 0.05;
+
+const selectedAnimationKey = ref("");
+const _matrixCleanup = ref<(() => void) | null>(null);
 
 const stepProgress = () => {
     const target = props.currentProgress;
@@ -122,18 +127,26 @@ watch(
     { immediate: true }
 );
 
-const svgString = `
-<svg xmlns="http://www.w3.org/2000/svg" width="435" height="365" fill="none" viewBox="0 0 435 365">
-    <path fill="#000" d="M182.028 36.5L272.733 127.44L309.138 127.44L182.028 2.22629e-05L-7.97733e-06 182.5L182.028 365L309.138 237.56L272.733 237.56L182.028 328.5L36.4056 182.5L182.028 36.5Z" />
-    <path fill="#000" d="M182.028 72.81L236.731 127.655L182.028 182.5L236.731 237.345L182.028 292.19L72.6217 182.5L182.028 72.81Z" />
-    <path fill="#000" d="M254.65 36.5L345.354 127.44L381.76 127.44L254.65 1.90885e-05L236.447 18.25L236.446 18.2508L254.649 36.5008L254.65 36.5Z" />
-    <path fill="#000" d="M381.76 237.56L345.44 237.56L236.49 346.793L254.65 365L381.76 237.56Z" />
-    <path fill="#000" d="M249.602 148.733L216.137 182.285L249.602 215.837L249.653 215.786L249.653 215.888L401.535 215.888L401.535 215.837L435 182.285L401.535 148.733L401.484 148.783L249.653 148.783L249.602 148.733Z" />
-</svg>
-`;
+const pickAnimation = () => {
+    if (props.animationType && animations[props.animationType]) {
+        selectedAnimationKey.value = props.animationType;
+        return;
+    }
+    const keys = animationKeys;
+    selectedAnimationKey.value = keys[Math.floor(Math.random() * keys.length)];
+};
+
+const currentSvg = computed(() => {
+    const defaultKey = animationKeys[0] || Object.keys(animations)[0];
+    return (
+        animations[selectedAnimationKey.value]?.svgString ||
+        animations[defaultKey]?.svgString ||
+        ""
+    );
+});
 
 const maskStyle = computed(() => {
-    const encodedSvg = encodeURIComponent(svgString);
+    const encodedSvg = encodeURIComponent(currentSvg.value);
     const dataUrl = `url("data:image/svg+xml,${encodedSvg}")`;
     return {
         maskImage: dataUrl,
@@ -148,52 +161,6 @@ const maskStyle = computed(() => {
 });
 
 const matrixCanvas = ref<HTMLCanvasElement | null>(null);
-let _matrixInterval: number | null = null;
-
-const initMatrix = () => {
-    const canvas = matrixCanvas.value;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const width = 217.5;
-    const height = 182.5;
-    canvas.width = width * 2;
-    canvas.height = height * 2;
-    ctx.scale(2, 2);
-
-    const fontSize = 7;
-    const columns = Math.ceil(width / fontSize);
-    const drops: number[] = [];
-    for (let x = 0; x < columns; x++) drops[x] = Math.random() * -50;
-    const chars = "01XYZ_<>[]!@#";
-
-    const draw = () => {
-        if (props.currentTheme === "light") {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-        } else {
-            ctx.fillStyle = "rgba(255, 255, 255, 1)";
-        }
-
-        ctx.font = `${fontSize}px monospace`;
-        if (displayProgress.value > 50) {
-            ctx.shadowColor = "white";
-            ctx.shadowBlur = 8;
-        }
-
-        for (let i = 0; i < drops.length; i++) {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            const x = i * fontSize;
-            const y = drops[i] * fontSize;
-            ctx.fillText(text, x, y);
-            if (y > height && Math.random() > 0.95) drops[i] = 0;
-            drops[i] += 1.8;
-        }
-    };
-
-    if (_matrixInterval) clearInterval(_matrixInterval);
-    _matrixInterval = window.setInterval(draw, 16);
-};
 
 const visible = ref(props.show);
 const animateOut = ref(false);
@@ -205,7 +172,21 @@ watch(
         if (val) {
             animateOut.value = false;
             visible.value = true;
-            if (!props.halloweenActive) nextTick(() => initMatrix());
+            if (!props.halloweenActive)
+                nextTick(() => {
+                    pickAnimation();
+                    if (_matrixCleanup.value) {
+                        _matrixCleanup.value();
+                        _matrixCleanup.value = null;
+                    }
+                    const anim =
+                        animations[selectedAnimationKey.value] ||
+                        animations.matrix;
+                    _matrixCleanup.value = anim.initMatrix(
+                        matrixCanvas.value,
+                        props.currentTheme
+                    );
+                });
         } else {
             animateOut.value = true;
             window.setTimeout(() => {
@@ -217,16 +198,41 @@ watch(
 );
 
 onMounted(() => {
-    if (!props.halloweenActive) nextTick(() => initMatrix());
+    if (!props.halloweenActive)
+        nextTick(() => {
+            pickAnimation();
+            const anim =
+                animations[selectedAnimationKey.value] || animations.matrix;
+            _matrixCleanup.value = anim.initMatrix(
+                matrixCanvas.value,
+                props.currentTheme
+            );
+        });
 });
 watch(
     () => props.halloweenActive,
     (val) => {
-        if (!val) nextTick(() => initMatrix());
+        if (!val)
+            nextTick(() => {
+                pickAnimation();
+                if (_matrixCleanup.value) {
+                    _matrixCleanup.value();
+                    _matrixCleanup.value = null;
+                }
+                const anim =
+                    animations[selectedAnimationKey.value] || animations.matrix;
+                _matrixCleanup.value = anim.initMatrix(
+                    matrixCanvas.value,
+                    props.currentTheme
+                );
+            });
     }
 );
 onBeforeUnmount(() => {
-    if (_matrixInterval) clearInterval(_matrixInterval);
+    if (_matrixCleanup.value) {
+        _matrixCleanup.value();
+        _matrixCleanup.value = null;
+    }
     if (_progressRaf) cancelAnimationFrame(_progressRaf);
 });
 </script>
@@ -242,6 +248,11 @@ onBeforeUnmount(() => {
     z-index: 1337;
     transition: opacity 0.3s ease;
     color: white;
+    -webkit-app-region: drag;
+}
+
+#preloader * {
+    -webkit-app-region: drag;
 }
 
 [data-theme="light"] #preloader {

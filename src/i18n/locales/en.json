@@ -118,7 +118,8 @@
             "delete_failed": "Failed to delete social link.",
             "updated": "Social link updated.",
             "update_failed": "Failed to update social link.",
-            "hidden_in_streamer_mode": "Social links hidden in streamer mode."
+            "hidden_in_streamer_mode": "Social links hidden in streamer mode.",
+            "platform_exists": "Platform already exists."
         },
         "edit_account": {
             "username_label": "Username",
@@ -246,6 +247,7 @@
     "preloader": {
         "initializing": "Initialization...",
         "connecting_servers": "Connecting to servers...",
+        "setting_up": "Setting up...",
         "ready": "Ready!",
         "initializing_progress": "INITIALIZING LOADER",
         "loading_user_data": "Loading user data..."

@@ -351,12 +351,12 @@ export default defineComponent({
                 }
 
                 const params: any = {};
-                
+
                 if (props.ownerId !== undefined && props.ownerId !== null)
                     params.owner = Number(props.ownerId);
-                
+
                 if (search.value.trim()) params.q = search.value.trim();
-                
+
                 params.sort = sortBy.value;
 
                 const data = await marketplaceService.listPresets(params);

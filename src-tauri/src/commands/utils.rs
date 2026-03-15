@@ -10,13 +10,13 @@ use crate::core::storage::flags::FLAGS_MANAGER;
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::discord_rpc;
-use crate::core::utils::globals::{API_VERSION, CDN_SERVERS, CODENAME};
+use crate::core::utils::globals::{API_SERVERS, API_VERSION, CDN_SERVERS, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
 use crate::{log_debug, log_error, log_info, log_warn};
 use std::{fs, path::PathBuf};
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State, Theme, Window};
 use tokio::task;
 
 #[tauri::command]
@@ -234,13 +234,21 @@ pub async fn change_data_folder(
 
 #[tauri::command]
 pub async fn get_api_url() -> Result<String, String> {
-    SERVERS
-        .get_api_server_url()
-        .map_or_else(|| Ok("https://atlas.collapseloader.org".to_string()), Ok)
+    SERVERS.wait_for_initial_check().await;
+    SERVERS.get_api_server_url().map_or_else(
+        || {
+            Ok(API_SERVERS
+                .first()
+                .map(|s| s.url.clone())
+                .unwrap_or_default())
+        },
+        Ok,
+    )
 }
 
 #[tauri::command]
 pub async fn get_cdn_url() -> Result<String, String> {
+    SERVERS.wait_for_initial_check().await;
     SERVERS.get_cdn_server_url().map_or_else(
         || {
             Ok(CDN_SERVERS
@@ -288,4 +296,22 @@ pub fn update_presence(details: String, state: String) -> Result<(), String> {
     );
     discord_rpc::update_activity_async(details, state);
     Ok(())
+}
+
+#[tauri::command]
+pub fn is_macos() -> bool {
+    cfg!(target_os = "macos")
+}
+
+#[tauri::command]
+pub fn set_window_theme(window: Window, theme: String) {
+    let target_theme = match theme.as_str() {
+        "dark" => Some(Theme::Dark),
+        "light" => Some(Theme::Light),
+        _ => None,
+    };
+
+    if let Some(t) = target_theme {
+        let _ = window.set_theme(Some(t));
+    }
 }
