@@ -1,10 +1,6 @@
 use crate::core::network::create_client;
-use crate::core::storage::data::DATA;
 use serde::{Deserialize, Serialize};
-use std::fs::{File, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 
@@ -23,6 +19,12 @@ pub struct NetworkRequest {
     pub response_body: Option<serde_json::Value>,
     pub response_text: Option<String>,
     pub error_message: Option<String>,
+}
+
+static NETWORK_HISTORY: OnceLock<Mutex<Vec<NetworkRequest>>> = OnceLock::new();
+
+fn get_history() -> &'static Mutex<Vec<NetworkRequest>> {
+    NETWORK_HISTORY.get_or_init(|| Mutex::new(Vec::new()))
 }
 
 fn mask_auth_headers(
@@ -163,7 +165,7 @@ pub async fn api_request(
                 error_message: Some(e.to_string()),
             };
             let _ = app_handle.emit("network-response", rec.clone());
-            let _ = save_request_history(&rec).await;
+            save_request_history(rec);
             return Err(e.to_string());
         }
     };
@@ -207,7 +209,7 @@ pub async fn api_request(
     };
 
     let _ = app_handle.emit("network-response", rec.clone());
-    let _ = save_request_history(&rec).await;
+    save_request_history(rec);
 
     if let Some(j) = response_json {
         Ok(j)
@@ -216,57 +218,21 @@ pub async fn api_request(
     }
 }
 
-pub fn history_file_path() -> Option<PathBuf> {
-    Some(
-        DATA.root_dir
-            .lock()
-            .unwrap()
-            .join("network")
-            .join("network_history.jsonl"),
-    )
+#[tauri::command]
+pub fn clear_network_history() {
+    let mut history = get_history().lock().unwrap();
+    history.clear();
 }
 
-async fn save_request_history(rec: &NetworkRequest) -> Result<(), String> {
-    let json = serde_json::to_string(rec).map_err(|e| e.to_string())?;
-
-    tokio::task::spawn_blocking(move || {
-        let path = history_file_path().ok_or_else(|| "Failed to resolve app dir".to_string())?;
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)
-            .map_err(|e| e.to_string())?;
-
-        file.write_all(json.as_bytes()).map_err(|e| e.to_string())?;
-        file.write_all(b"\n").map_err(|e| e.to_string())?;
-
-        Ok(())
-    })
-    .await
-    .map_err(|e| format!("Task panicked: {}", e))?
-}
 #[tauri::command]
 pub fn get_network_history() -> Result<Vec<NetworkRequest>, String> {
-    let path = history_file_path().ok_or_else(|| "Failed to resolve app dir".to_string())?;
+    Ok(get_history().lock().unwrap().clone())
+}
 
-    if !path.exists() {
-        return Ok(vec![]);
+fn save_request_history(rec: NetworkRequest) {
+    let mut history = get_history().lock().unwrap();
+    history.push(rec);
+    if history.len() > 1000 {
+        history.remove(0);
     }
-
-    let file = File::open(&path).map_err(|e| e.to_string())?;
-    let reader = BufReader::new(file);
-    let mut out = Vec::new();
-
-    for line in reader.lines() {
-        if let Ok(l) = line {
-            if l.trim().is_empty() {
-                continue;
-            }
-            if let Ok(rec) = serde_json::from_str::<NetworkRequest>(&l) {
-                out.push(rec);
-            }
-        }
-    }
-
-    Ok(out)
 }

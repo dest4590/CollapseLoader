@@ -303,7 +303,7 @@ class SyncService {
                 );
                 const favoritesChanged =
                     cloudData.favorites_data.length !==
-                    currentFavorites.length ||
+                        currentFavorites.length ||
                     !cloudData.favorites_data.every((id: number) =>
                         currentFavorites.includes(id)
                     );

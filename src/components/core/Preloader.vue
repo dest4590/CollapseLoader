@@ -248,6 +248,11 @@ onBeforeUnmount(() => {
     z-index: 1337;
     transition: opacity 0.3s ease;
     color: white;
+    -webkit-app-region: drag;
+}
+
+#preloader * {
+    -webkit-app-region: drag;
 }
 
 [data-theme="light"] #preloader {

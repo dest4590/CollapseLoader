@@ -3,7 +3,9 @@
     "identifier": "default",
     "description": "Capability for the main window",
     "windows": [
-        "main"
+        "main",
+        "network-debug",
+        "customization-inspector"
     ],
     "permissions": [
         "core:default",
@@ -16,6 +18,7 @@
         "notification:default",
         "dialog:default",
         "fs:default",
-        "fs:allow-write-text-file"
+        "fs:allow-write-text-file",
+        "core:webview:allow-create-webview-window"
     ]
 }

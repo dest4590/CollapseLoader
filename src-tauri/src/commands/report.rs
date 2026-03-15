@@ -1,6 +1,6 @@
-use crate::commands::network::history_file_path;
 use crate::core::network::create_client;
 use crate::core::network::servers::SERVERS;
+use crate::core::storage::data::DATA;
 use crate::core::utils::globals::{API_SERVERS, CDN_SERVERS};
 use serde::Serialize;
 use std::env;
@@ -501,8 +501,12 @@ pub async fn export_network_report(app_handle: AppHandle) -> Result<String, Stri
     }
 
     tokio::task::spawn_blocking(move || -> Result<String, String> {
-        let path = history_file_path().ok_or_else(|| "Failed to resolve app dir".to_string())?;
-        let export_dir = path.parent().unwrap_or(&path).join("exports");
+        let export_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap()
+            .join("network")
+            .join("exports");
 
         if !export_dir.exists() {
             std::fs::create_dir_all(&export_dir).map_err(|e| e.to_string())?;

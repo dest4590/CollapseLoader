@@ -16,7 +16,7 @@ use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
 use crate::{log_debug, log_error, log_info, log_warn};
 use std::{fs, path::PathBuf};
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State, Theme, Window};
 use tokio::task;
 
 #[tauri::command]
@@ -301,4 +301,17 @@ pub fn update_presence(details: String, state: String) -> Result<(), String> {
 #[tauri::command]
 pub fn is_macos() -> bool {
     cfg!(target_os = "macos")
+}
+
+#[tauri::command]
+pub fn set_window_theme(window: Window, theme: String) {
+    let target_theme = match theme.as_str() {
+        "dark" => Some(Theme::Dark),
+        "light" => Some(Theme::Light),
+        _ => None,
+    };
+
+    if let Some(t) = target_theme {
+        let _ = window.set_theme(Some(t));
+    }
 }

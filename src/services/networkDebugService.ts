@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { listen } from "@tauri-apps/api/event";
+import { listen, emit } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 
 export interface NetworkRequest {
@@ -35,7 +35,7 @@ export async function initNetworkDebug() {
             requests.value[r.id] = r;
         }
     } catch (e) {
-        console.warn("Failed to load persisted network history:", e);
+        console.warn("Failed to load network history:", e);
     }
 
     unlistenReq = await listen<NetworkRequest>("network-request", (e) => {
@@ -44,6 +44,10 @@ export async function initNetworkDebug() {
 
     unlistenRes = await listen<NetworkRequest>("network-response", (e) => {
         requests.value[e.payload.id] = e.payload;
+    });
+
+    await listen("network-clear-local", () => {
+        requests.value = {};
     });
 }
 
@@ -59,8 +63,10 @@ export function destroyNetworkDebug() {
     inited = false;
 }
 
-export function clearRequestsLocal() {
+export async function clearRequestsLocal() {
     requests.value = {};
+    await invoke("clear_network_history");
+    emit("network-clear-local");
 }
 
 export async function exportReport(): Promise<string> {

@@ -1,5 +1,9 @@
 import { reactive, watchEffect } from "vue";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { listen, emit } from "@tauri-apps/api/event";
+
+const PRESET_SETTINGS_STORAGE_KEY = "presetSettings";
+const THEME_STORAGE_KEY = "theme";
 
 interface ThemeSettings {
     customCSS: string;
@@ -64,6 +68,26 @@ const defaultSettings: ThemeSettings = {
 };
 
 const presetSettings = reactive<ThemeSettings>({ ...defaultSettings });
+
+const persistPresetSettings = () => {
+    localStorage.setItem(
+        PRESET_SETTINGS_STORAGE_KEY,
+        JSON.stringify(presetSettings)
+    );
+};
+
+const applyThemeMode = (theme: string) => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+};
+
+const applyNativeWindowTheme = async (theme: string) => {
+    try {
+        await invoke("set_window_theme", { theme });
+    } catch (error) {
+        console.error("Failed to apply native window theme:", error);
+    }
+};
 
 export const cssVarList = [
     "--color-primary",
@@ -175,9 +199,11 @@ const applyPreset = () => {
     }
 };
 
+let isApplyingExternalUpdate = false;
+
 const loadSettings = () => {
     try {
-        const savedSettings = localStorage.getItem("presetSettings");
+        const savedSettings = localStorage.getItem(PRESET_SETTINGS_STORAGE_KEY);
         if (savedSettings) {
             const parsedSettings = JSON.parse(savedSettings);
             Object.assign(presetSettings, {
@@ -193,9 +219,35 @@ const loadSettings = () => {
     applyPreset();
 };
 
+const _updateInternalState = (newSettings: Partial<ThemeSettings>) => {
+    Object.entries(newSettings).forEach(([key, value]) => {
+        (presetSettings as any)[key] = value;
+    });
+};
+
+listen<ThemeSettings>("theme-update", (event) => {
+    console.log("Received theme update from another window:", event.payload);
+    isApplyingExternalUpdate = true;
+    _updateInternalState(event.payload);
+    persistPresetSettings();
+    applyPreset();
+    setTimeout(() => {
+        isApplyingExternalUpdate = false;
+    }, 50);
+});
+
+listen<string>("theme-mode-update", (event) => {
+    if (!event.payload) return;
+    applyThemeMode(event.payload);
+    void applyNativeWindowTheme(event.payload);
+});
+
 const saveCardSettings = () => {
+    if (isApplyingExternalUpdate) return;
+
     try {
-        localStorage.setItem("presetSettings", JSON.stringify(presetSettings));
+        persistPresetSettings();
+        emit("theme-update", JSON.parse(JSON.stringify(presetSettings)));
         console.log("Saved preset settings to localStorage:", presetSettings);
     } catch (error) {
         console.error("Failed to save preset settings:", error);

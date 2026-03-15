@@ -18,6 +18,14 @@
                 >
                     <Trash2 class="w-4 h-4" />
                 </button>
+                <button
+                    class="btn btn-sm btn-ghost text-base-content/70 hover:text-primary"
+                    @click="openInNewWindow"
+                    v-if="!isExternalWindow"
+                    title="Open in new window"
+                >
+                    <ExternalLink class="w-4 h-4" />
+                </button>
             </div>
 
             <button
@@ -339,7 +347,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Globe, Trash2, DownloadCloud, X } from "lucide-vue-next";
+import { Globe, Trash2, DownloadCloud, X, ExternalLink } from "lucide-vue-next";
 import {
     getRequestsRef,
     exportReport,
@@ -364,6 +372,7 @@ const requests = getRequestsRef();
 const selectedRequest = ref<NetworkRequest | null>(null);
 const exportingReport = ref(false);
 const activeTab = ref<"headers" | "payload" | "response">("headers");
+const isExternalWindow = window.location.search.includes("window=network");
 
 const sortedRequests = computed(() => {
     return Object.values(requests.value).sort(
@@ -380,8 +389,8 @@ const selectRequest = (req: NetworkRequest) => {
     }
 };
 
-const clearRequests = () => {
-    clearRequestsLocal();
+const clearRequests = async () => {
+    await clearRequestsLocal();
     selectedRequest.value = null;
 };
 
@@ -394,6 +403,30 @@ const doExportReport = async () => {
         console.error(err);
     } finally {
         exportingReport.value = false;
+    }
+};
+
+const openInNewWindow = async () => {
+    try {
+        const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+        const webview = new WebviewWindow("network-debug", {
+            url: "index.html?window=network",
+            title: "Network Debugger",
+            width: 1000,
+            height: 800,
+            resizable: true,
+            decorations: true,
+        });
+
+        webview.once("tauri://created", function () {
+            console.log("Network window created");
+        });
+
+        webview.once("tauri://error", function (e) {
+            console.error("Error creating window:", e);
+        });
+    } catch (e) {
+        console.error("Failed to open new window:", e);
     }
 };
 
