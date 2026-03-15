@@ -124,6 +124,7 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
 
     vec![
         Server::new("https://atlas.collapseloader.org/"),
+        Server::new("https://proxy.collapseloader.org/"),
         Server::new("http://141.148.224.27/atlas/"),
     ]
 });
@@ -137,6 +138,7 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     }
     vec![
         Server::new("https://atlas.collapseloader.org/uploads/"),
+        Server::new("https://proxy.collapseloader.org/uploads/"),
         Server::new("http://141.148.224.27/cdn/"),
     ]
 });
