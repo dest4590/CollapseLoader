@@ -7,7 +7,6 @@ export interface ApiResponse<T> {
     success: boolean;
     data: T;
     error: string | null;
-    timestamp: number | string;
 }
 
 export class ApiResponseError extends Error {
@@ -54,7 +53,6 @@ class ApiClient {
                     if (value instanceof File) {
                         const buffer = await value.arrayBuffer();
                         const bytes = new Uint8Array(buffer);
-                        // Convert to base64 using a chunked approach to avoid stack overflow for large files
                         let binary = "";
                         const chunkSize = 8192;
                         for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -116,8 +114,7 @@ class ApiClient {
             !!value &&
             typeof value === "object" &&
             typeof value.success === "boolean" &&
-            "data" in value &&
-            "timestamp" in value
+            "data" in value
         );
     }
 

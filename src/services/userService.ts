@@ -716,9 +716,10 @@ class UserService {
                 this.getExternalAccounts(),
             ]);
 
-            const settingsPref =
-                preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ||
-                null;
+            const settingsPref = Array.isArray(preferences)
+                ? preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ||
+                  null
+                : null;
 
             const lastSync = this.maxIsoTimestamp([
                 settingsPref?.updated_at ?? null,
@@ -816,7 +817,9 @@ class UserService {
         accounts: UserExternalAccount[]
     ): SyncData {
         const settingsPref =
-            preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) || null;
+            (Array.isArray(preferences)
+                ? preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY)
+                : null) || null;
 
         const favorites_data = (favorites || [])
             .filter((f) => f.type === SYNC_FAVORITE_TYPE)
