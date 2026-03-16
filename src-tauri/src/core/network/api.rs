@@ -17,7 +17,6 @@ struct ApiResponse {
     success: Option<bool>,
     data: Option<serde_json::Value>,
     error: Option<String>,
-    timestamp: Option<serde_json::Value>,
 }
 
 pub struct Api {
@@ -102,10 +101,7 @@ impl Api {
 
                     match serde_json::from_str::<ApiResponse>(&body) {
                         Ok(api_data) => {
-                            if api_data.success.is_none()
-                                || api_data.data.is_none()
-                                || api_data.timestamp.is_none()
-                            {
+                            if api_data.success.is_none() || api_data.data.is_none() {
                                 return Err(
                                     "API response does not match required ApiResponse<T> format"
                                         .to_string(),
