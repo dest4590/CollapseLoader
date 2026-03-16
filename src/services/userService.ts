@@ -529,7 +529,8 @@ class UserService {
 
     async searchUsers(query: string, limit = 20): Promise<SearchUser[]> {
         const resp = await apiClient.get<any[]>("/users/search", {
-            params: { q: query, limit },
+            q: query,
+            limit: limit.toString(),
         });
         return (resp || []).map((u: any) => ({
             id: u.id,

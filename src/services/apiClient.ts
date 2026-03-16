@@ -118,8 +118,8 @@ class ApiClient {
         );
     }
 
-    get<T = any>(url: string, config: any = {}): Promise<T> {
-        return this.request<T>("GET", url, undefined, config.headers);
+    get<T = any>(url: string, data?: any, config: any = {}): Promise<T> {
+        return this.request<T>("GET", url, data, config.headers);
     }
 
     post<T = any>(url: string, data?: any, config: any = {}): Promise<T> {
