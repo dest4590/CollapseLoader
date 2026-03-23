@@ -476,7 +476,7 @@
         "filters": {
             "installed": "Установленные"
         },
-        "clear_filters": "Отчистить фильтры"
+        "clear_filters": "Очистить фильтры"
     },
     "theme": {
         "actions": {
