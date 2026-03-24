@@ -199,7 +199,7 @@ const sidebarClasses = computed(() => {
     }
 
     if (pos === "top") {
-        return `${base} w-full h-20 left-0 top-0 flex-row px-6 border-b`;
+        return `${base} w-full h-20 left-0 ${verticalOffset} flex-row px-6 border-b`;
     }
 
     if (pos === "bottom") {
