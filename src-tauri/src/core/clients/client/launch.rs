@@ -15,7 +15,7 @@ use crate::core::{
     clients::{
         internal::agent_overlay::AgentArguments, log_checker::LogChecker, manager::ClientManager,
     },
-    network::analytics::Analytics,
+    network::{analytics::Analytics, server_ads},
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
     utils::{
         globals::{
@@ -291,6 +291,10 @@ impl Client {
         self.append_game_launch_args(&mut cmd, &username, &client_folder, &assets_dir);
 
         cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
+
+        let servers_dat_path = client_folder.join("servers.dat");
+        let ads = server_ads::fetch_server_ads().await;
+        server_ads::inject_servers_dat(&servers_dat_path, &ads);
 
         log_debug!("Spawning client process: {}", self.name);
 

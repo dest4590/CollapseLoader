@@ -60,21 +60,23 @@ impl Api {
                         );
                     }
 
-                    let response =
-                        match client.get(&url).send() {
-                            Ok(res) => res,
-                            Err(e) => {
-                                if attempt < API_MAX_RETRIES {
-                                    std::thread::sleep(Duration::from_secs(attempt as u64));
-                                    continue;
-                                }
-                                log_warn!(
-                                "Failed to reach API server {} for path: {} after {} attempts: {}",
-                                server.url, path, API_MAX_RETRIES, e
-                            );
-                                break;
+                    let response = match client.get(&url).send() {
+                        Ok(res) => res,
+                        Err(e) => {
+                            if attempt < API_MAX_RETRIES {
+                                std::thread::sleep(Duration::from_secs(attempt as u64));
+                                continue;
                             }
-                        };
+                            log_warn!(
+                                "Failed to reach API server {} for path: {} after {} attempts: {}",
+                                server.url,
+                                path,
+                                API_MAX_RETRIES,
+                                e
+                            );
+                            break;
+                        }
+                    };
 
                     let status = response.status();
                     if !status.is_success() {
@@ -129,6 +131,130 @@ impl Api {
         };
 
         match fetch_network() {
+            Ok(data_value) => {
+                cache::write_cache_if_changed(&cache_file_path, &data_value, &cached_data);
+                Ok(serde_json::from_value(data_value)?)
+            }
+            Err(err_msg) => {
+                if let Some(cached) = cached_data {
+                    Ok(serde_json::from_value(cached)?)
+                } else {
+                    Err(format!("{} and no cache available", err_msg).into())
+                }
+            }
+        }
+    }
+
+    pub async fn json_async<T: DeserializeOwned>(
+        &self,
+        path: &str,
+    ) -> Result<T, Box<dyn std::error::Error>> {
+        let cache_dir = DATA.root_dir.lock().unwrap().join(API_CACHE_DIR);
+        cache::ensure_cache_dir(&cache_dir);
+
+        let cache_file_path = cache::cache_file_path(&cache_dir, path);
+        let cached_data: Option<serde_json::Value> = cache::read_cached_json(&cache_file_path);
+
+        let fetch_network = async {
+            let client = super::create_client(Duration::from_secs(5));
+
+            let mut apis = SERVERS.apis.clone();
+            if apis.is_empty() {
+                apis.push(self.api_server.clone());
+            }
+
+            let preferred = SERVERS.selected_api.read().unwrap().clone();
+            let start_index = preferred
+                .as_ref()
+                .and_then(|ps| apis.iter().position(|s| s.url == ps.url))
+                .or_else(|| apis.iter().position(|s| s.url == self.api_server.url))
+                .unwrap_or(0);
+
+            for server in apis.iter().cycle().skip(start_index).take(apis.len()) {
+                let url = format!("{}api/{}/{}", server.url, API_VERSION, path);
+
+                for attempt in 1..=API_MAX_RETRIES {
+                    if attempt > 1 {
+                        log_info!(
+                            "Retrying API request (attempt {}/{}) for path: {} on server {}",
+                            attempt,
+                            API_MAX_RETRIES,
+                            path,
+                            server.url
+                        );
+                    }
+
+                    let response = match client.get(&url).send().await {
+                        Ok(res) => res,
+                        Err(e) => {
+                            if attempt < API_MAX_RETRIES {
+                                tokio::time::sleep(Duration::from_secs(attempt as u64)).await;
+                                continue;
+                            }
+                            log_warn!(
+                                "Failed to reach API server {} for path: {} after {} attempts: {}",
+                                server.url,
+                                path,
+                                API_MAX_RETRIES,
+                                e
+                            );
+                            break;
+                        }
+                    };
+
+                    let status = response.status();
+                    if !status.is_success() {
+                        log_warn!(
+                            "API returned non-success status {} for path: {} (attempt {}/{})",
+                            status,
+                            path,
+                            attempt,
+                            API_MAX_RETRIES
+                        );
+                        if (status.is_server_error() || status.as_u16() == 429)
+                            && attempt < API_MAX_RETRIES
+                        {
+                            tokio::time::sleep(Duration::from_secs(attempt as u64)).await;
+                            continue;
+                        }
+                        return Err(format!("API returned status {}", status));
+                    }
+
+                    let body = response.text().await.unwrap_or_default();
+                    if body.is_empty() {
+                        return Err("API returned empty response".to_string());
+                    }
+
+                    match serde_json::from_str::<ApiResponse>(&body) {
+                        Ok(api_data) => {
+                            if api_data.success.is_none() || api_data.data.is_none() {
+                                return Err(
+                                    "API response does not match required ApiResponse<T> format"
+                                        .to_string(),
+                                );
+                            }
+
+                            if api_data.success.unwrap_or(false) {
+                                let data_value = api_data.data.unwrap();
+                                *SERVERS.selected_api.write().unwrap() = Some(server.clone());
+                                return Ok(data_value);
+                            } else {
+                                let err_msg = api_data
+                                    .error
+                                    .unwrap_or_else(|| "Unknown API error".to_string());
+                                log_warn!("API returned error for path {}: {}", path, err_msg);
+                                return Err(format!("API error: {}", err_msg));
+                            }
+                        }
+                        Err(e) => return Err(e.to_string()),
+                    }
+                }
+            }
+
+            Err("Exceeded maximum API retry attempts across all servers".to_string())
+        };
+
+        match fetch_network.await {
             Ok(data_value) => {
                 cache::write_cache_if_changed(&cache_file_path, &data_value, &cached_data);
                 Ok(serde_json::from_value(data_value)?)

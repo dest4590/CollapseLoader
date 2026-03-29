@@ -542,13 +542,14 @@ dependencies = [
 
 [[package]]
 name = "collapseloader"
-version = "0.2.9"
+version = "0.3.0"
 dependencies = [
  "base64 0.22.1",
  "chrono",
  "colored",
  "discord-rich-presence",
  "dotenvy",
+ "flate2",
  "futures-util",
  "md5",
  "native-dialog",
