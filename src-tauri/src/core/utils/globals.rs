@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "TLS";
+pub static CODENAME: &str = "Major";
 pub static API_VERSION: &str = "v1";
 
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
