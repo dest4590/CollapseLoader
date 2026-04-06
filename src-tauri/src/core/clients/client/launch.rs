@@ -11,6 +11,7 @@ use tokio::{
 
 use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
 
+#[allow(unused)]
 use crate::core::{
     clients::{
         internal::agent_overlay::AgentArguments, log_checker::LogChecker, manager::ClientManager,
@@ -231,21 +232,21 @@ impl Client {
 
         let classpath = self.build_classpath()?;
 
-        let (analytics, irc, lang, ram_mb) = self.get_launch_settings();
+        let (_analytics, _irc, _lang, ram_mb) = self.get_launch_settings();
 
         let username = self.resolve_username();
 
-        let agent_args = AgentArguments::new(
-            options.user_token,
-            self.name.clone(),
-            if self.meta.is_custom {
-                false
-            } else {
-                analytics
-            },
-            irc,
-            lang,
-        );
+        //let agent_args = AgentArguments::new(
+        //    options.user_token,
+        //    self.name.clone(),
+        //    if self.meta.is_custom {
+        //        false
+        //    } else {
+        //        analytics
+        //    },
+        //    irc,
+        //    lang,
+        //);
 
         let agent_overlay_path = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
 
@@ -261,14 +262,14 @@ impl Client {
         #[cfg(target_os = "macos")]
         cmd.arg("-XstartOnFirstThread");
 
-        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
-        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
-            cmd.arg(format!(
-                "-javaagent:{}={}",
-                agent_overlay_path.join(AGENT_FILE).display(),
-                agent_args.encode()
-            ));
-        }
+        //let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+        //if self.client_type != ClientType::Forge && !is_legacy_vanilla {
+        //    cmd.arg(format!(
+        //        "-javaagent:{}={}",
+        //        agent_overlay_path.join(AGENT_FILE).display(),
+        //        agent_args.encode()
+        //    ));
+        //}
 
         self.apply_java_args(&mut cmd);
 
@@ -292,9 +293,10 @@ impl Client {
 
         cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
-        let servers_dat_path = client_folder.join("servers.dat");
-        let ads = server_ads::fetch_server_ads().await;
-        server_ads::inject_servers_dat(&servers_dat_path, &ads);
+        // PROJECT CLOSED
+        //let servers_dat_path = client_folder.join("servers.dat");
+        //let ads = server_ads::fetch_server_ads().await;
+        //server_ads::inject_servers_dat(&servers_dat_path, &ads);
 
         log_debug!("Spawning client process: {}", self.name);
 

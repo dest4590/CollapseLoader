@@ -19,6 +19,24 @@ struct ApiResponse {
     error: Option<String>,
 }
 
+fn extract_api_response(body: &str) -> Result<serde_json::Value, String> {
+    match serde_json::from_str::<ApiResponse>(body) {
+        Ok(api_data) => {
+            if api_data.success.is_none() || api_data.data.is_none() {
+                serde_json::from_str::<serde_json::Value>(body).map_err(|e| e.to_string())
+            } else if api_data.success.unwrap_or(false) {
+                Ok(api_data.data.unwrap())
+            } else {
+                let err_msg = api_data
+                    .error
+                    .unwrap_or_else(|| "Unknown API error".to_string());
+                Err(format!("API error: {}", err_msg))
+            }
+        }
+        Err(_) => serde_json::from_str::<serde_json::Value>(body).map_err(|e| e.to_string()),
+    }
+}
+
 pub struct Api {
     pub api_server: Server,
 }
@@ -47,7 +65,11 @@ impl Api {
                 .unwrap_or(0);
 
             for server in apis.iter().cycle().skip(start_index).take(apis.len()) {
-                let url = format!("{}api/{}/{}", server.url, API_VERSION, path);
+                // let url = format!("{}api/{}/{}", server.url, API_VERSION, path);
+
+                let url = format!("{}{}", server.url, path);
+
+                // println!("url is {}", url);
 
                 for attempt in 1..=API_MAX_RETRIES {
                     if attempt > 1 {
@@ -101,28 +123,12 @@ impl Api {
                         return Err("API returned empty response".to_string());
                     }
 
-                    match serde_json::from_str::<ApiResponse>(&body) {
-                        Ok(api_data) => {
-                            if api_data.success.is_none() || api_data.data.is_none() {
-                                return Err(
-                                    "API response does not match required ApiResponse<T> format"
-                                        .to_string(),
-                                );
-                            }
-
-                            if api_data.success.unwrap_or(false) {
-                                let data_value = api_data.data.unwrap();
-                                *SERVERS.selected_api.write().unwrap() = Some(server.clone());
-                                return Ok(data_value);
-                            } else {
-                                let err_msg = api_data
-                                    .error
-                                    .unwrap_or_else(|| "Unknown API error".to_string());
-                                log_warn!("API returned error for path {}: {}", path, err_msg);
-                                return Err(format!("API error: {}", err_msg));
-                            }
+                    match extract_api_response(&body) {
+                        Ok(data_value) => {
+                            *SERVERS.selected_api.write().unwrap() = Some(server.clone());
+                            return Ok(data_value);
                         }
-                        Err(e) => return Err(e.to_string()),
+                        Err(e) => return Err(e),
                     }
                 }
             }
@@ -225,28 +231,12 @@ impl Api {
                         return Err("API returned empty response".to_string());
                     }
 
-                    match serde_json::from_str::<ApiResponse>(&body) {
-                        Ok(api_data) => {
-                            if api_data.success.is_none() || api_data.data.is_none() {
-                                return Err(
-                                    "API response does not match required ApiResponse<T> format"
-                                        .to_string(),
-                                );
-                            }
-
-                            if api_data.success.unwrap_or(false) {
-                                let data_value = api_data.data.unwrap();
-                                *SERVERS.selected_api.write().unwrap() = Some(server.clone());
-                                return Ok(data_value);
-                            } else {
-                                let err_msg = api_data
-                                    .error
-                                    .unwrap_or_else(|| "Unknown API error".to_string());
-                                log_warn!("API returned error for path {}: {}", path, err_msg);
-                                return Err(format!("API error: {}", err_msg));
-                            }
+                    match extract_api_response(&body) {
+                        Ok(data_value) => {
+                            *SERVERS.selected_api.write().unwrap() = Some(server.clone());
+                            return Ok(data_value);
                         }
-                        Err(e) => return Err(e.to_string()),
+                        Err(e) => return Err(e),
                     }
                 }
             }

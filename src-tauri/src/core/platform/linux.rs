@@ -30,8 +30,7 @@ pub fn check_platform_dependencies() -> Result<(), StartupError> {
         return Err(StartupError::LinuxDependenciesMissing);
     }
 
-    let ok = has_pkg_config_package("webkit2gtk-4.1")
-        || has_pkg_config_package("webkit2gtk-4.0");
+    let ok = has_pkg_config_package("webkit2gtk-4.1") || has_pkg_config_package("webkit2gtk-4.0");
 
     if !ok {
         return Err(StartupError::LinuxDependenciesMissing);

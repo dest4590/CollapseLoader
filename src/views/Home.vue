@@ -35,7 +35,6 @@ import { useI18n } from "vue-i18n";
 import type { Client, CustomClient, InstallProgress } from "../types/ui";
 import LogViewerModal from "../components/modals/clients/LogViewerModal.vue";
 import InsecureClientWarningModal from "../components/modals/clients/InsecureClientWarningModal.vue";
-import InlineIRCChat from "../components/features/social/InlineIRCChat.vue";
 import { isHalloweenEvent } from "../utils/events";
 
 interface Account {
@@ -1810,6 +1809,7 @@ onBeforeUnmount(() => {
                     border: 'var(--border) solid #0000',
                     transitionDelay: '1s',
                 }"
+                disabled
             >
                 <Newspaper class="w-4 h-4" />
                 <span
@@ -1823,11 +1823,6 @@ onBeforeUnmount(() => {
             </button>
         </div>
     </div>
-
-    <InlineIRCChat
-        class="mb-6"
-        @show-user-profile="$emit('show-user-profile', $event)"
-    />
 
     <div
         v-if="filteredClients.length === 0 && !error && clientsLoaded"

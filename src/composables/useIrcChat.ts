@@ -69,6 +69,8 @@ const formatIsoToTime = (isoString?: string): string => {
     return `${hours}:${minutes}`;
 };
 
+const IRC_DISABLED = true;
+
 const parseIrcPayload = (payload: unknown): IrcMessage | null => {
     const fallbackTime = currentTime();
 
@@ -194,6 +196,13 @@ const scheduleReconnect = (reason?: string) => {
 export const ensureIrcConnection = async (
     isReconnect = false
 ): Promise<void> => {
+    if (IRC_DISABLED) {
+        connected.value = false;
+        isConnecting.value = false;
+        status.value = "disconnected";
+        return;
+    }
+
     await registerListeners();
 
     if (connectionPromise) {
@@ -224,6 +233,11 @@ export const ensureIrcConnection = async (
 };
 
 export function forceReconnect(): void {
+    if (IRC_DISABLED) {
+        status.value = "disconnected";
+        return;
+    }
+
     console.debug("IRC: forceReconnect called");
     connectionPromise = null;
     ensureIrcConnection(true).catch((err) => {
@@ -232,6 +246,9 @@ export function forceReconnect(): void {
 }
 
 export const sendIrcMessage = async (message: string): Promise<void> => {
+    if (IRC_DISABLED) {
+        return;
+    }
     await invoke("send_irc_message", { message });
 };
 

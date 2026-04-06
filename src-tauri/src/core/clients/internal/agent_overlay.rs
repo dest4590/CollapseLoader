@@ -1,7 +1,7 @@
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::data::DATA;
 use crate::core::utils::globals::{AGENT_FILE, AGENT_OVERLAY_FOLDER, API_VERSION, OVERLAY_FILE};
-use crate::core::utils::hashing::calculate_md5_hash;
+// use crate::core::utils::hashing::calculate_md5_hash;
 use crate::{log_debug, log_error, log_info, log_warn};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -86,7 +86,7 @@ impl AgentOverlayManager {
     pub async fn download_agent_overlay_files() -> Result<(), String> {
         log_debug!("Starting download of agent and overlay files...");
 
-        let info = Self::get_agent_overlay_info().await?;
+        //let info = Self::get_agent_overlay_info().await?;
 
         let folder = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
         if !folder.exists() {
@@ -112,58 +112,79 @@ impl AgentOverlayManager {
 
         log_info!("Downloading agent file...");
 
-        Self::download_file(
-            &format!("{base}/api/{API_VERSION}/agent/download"),
-            &agent_path,
-        )
-        .await
-        .map_err(|e| {
+        // Self::download_file(
+        //     &format!("{base}/api/{API_VERSION}/agent/download"),
+        //     &agent_path,
+        // )
+        // .await
+        // .map_err(|e| {
+        //     log_error!("Failed to download agent file: {}", e);
+        //     e
+        // })?;
+
+        let url = format!("{base}/agent/CollapseAgent.jar");
+
+        Self::download_file(&url, &agent_path).await.map_err(|e| {
             log_error!("Failed to download agent file: {}", e);
             e
         })?;
 
-        let downloaded_hash = calculate_md5_hash(&agent_path)?;
-        if downloaded_hash != info.agent_hash {
-            log_error!(
-                "Agent file hash mismatch. expected={} got={}",
-                info.agent_hash,
-                downloaded_hash
-            );
-            return Err(format!(
-                "Agent file hash mismatch. Expected: {}, Got: {}",
-                info.agent_hash, downloaded_hash
-            ));
-        }
+        //let downloaded_hash = calculate_md5_hash(&agent_path)?;
+        //if downloaded_hash != info.agent_hash {
+        //    log_error!(
+        //        "Agent file hash mismatch. expected={} got={}",
+        //        info.agent_hash,
+        //        downloaded_hash
+        //    );
+        //    return Err(format!(
+        //        "Agent file hash mismatch. Expected: {}, Got: {}",
+        //        info.agent_hash, downloaded_hash
+        //    ));
+        //}
 
         log_info!("Downloading overlay file for {system_name}");
 
-        Self::download_file(
-            &format!("{base}/api/{API_VERSION}/overlay/download/{system_name}"),
-            &overlay_path,
-        )
-        .await
-        .map_err(|e| {
-            log_error!("Failed to download overlay file: {}", e);
-            e
-        })?;
+        // Self::download_file(
+        //     &format!("{base}/api/{API_VERSION}/overlay/download/{system_name}"),
+        //     &overlay_path,
+        // )
+        // .await
+        // .map_err(|e| {
+        //     log_error!("Failed to download overlay file: {}", e);
+        //     e
+        // })?;
 
-        let downloaded_overlay_hash = calculate_md5_hash(&overlay_path)?;
-        if downloaded_overlay_hash != info.overlay_hash {
-            log_error!(
-                "Overlay file hash mismatch. expected={} got={}",
-                info.overlay_hash,
-                downloaded_overlay_hash
-            );
-            return Err(format!(
-                "Overlay file hash mismatch. Expected: {}, Got: {}",
-                info.overlay_hash, downloaded_overlay_hash
-            ));
-        }
+        let url = if system_name == "windows" {
+            format!("{base}/agent/CollapseOverlay.dll")
+        } else {
+            format!("{base}/agent/libCollapseOverlay.so")
+        };
+
+        Self::download_file(&url, &overlay_path)
+            .await
+            .map_err(|e| {
+                log_error!("Failed to download overlay file: {}", e);
+                e
+            })?;
+
+        //let downloaded_overlay_hash = calculate_md5_hash(&overlay_path)?;
+        //if downloaded_overlay_hash != info.overlay_hash {
+        //    log_error!(
+        //        "Overlay file hash mismatch. expected={} got={}",
+        //        info.overlay_hash,
+        //        downloaded_overlay_hash
+        //    );
+        //    return Err(format!(
+        //        "Overlay file hash mismatch. Expected: {}, Got: {}",
+        //        info.overlay_hash, downloaded_overlay_hash
+        //    ));
+        //}
 
         log_info!("Agent and overlay files downloaded and verified successfully");
         Ok(())
     }
 
+    #[allow(unused)]
     async fn get_agent_overlay_info() -> Result<AgentOverlayInfo, String> {
         let base_url = Self::get_api_base_url()?;
         let base = base_url.trim_end_matches('/').to_string();
@@ -252,27 +273,27 @@ impl AgentOverlayManager {
             return Ok(false);
         }
 
-        let info = Self::get_agent_overlay_info().await?;
+        //let info = Self::get_agent_overlay_info().await?;
 
-        let agent_hash = calculate_md5_hash(&agent_path)?;
-        if agent_hash != info.agent_hash {
-            log_warn!(
-                "Agent file hash verification failed. Expected: {}, Got: {}",
-                info.agent_hash,
-                agent_hash
-            );
-            return Ok(false);
-        }
-
-        let overlay_hash = calculate_md5_hash(&overlay_path)?;
-        if overlay_hash != info.overlay_hash {
-            log_error!(
-                "Overlay file hash verification failed. Expected: {}, Got: {}",
-                info.overlay_hash,
-                overlay_hash
-            );
-            return Ok(false);
-        }
+        //let agent_hash = calculate_md5_hash(&agent_path)?;
+        //if agent_hash != info.agent_hash {
+        //    log_warn!(
+        //        "Agent file hash verification failed. Expected: {}, Got: {}",
+        //        info.agent_hash,
+        //        agent_hash
+        //    );
+        //    return Ok(false);
+        //}
+        //
+        //let overlay_hash = calculate_md5_hash(&overlay_path)?;
+        //if overlay_hash != info.overlay_hash {
+        //    log_error!(
+        //        "Overlay file hash verification failed. Expected: {}, Got: {}",
+        //        info.overlay_hash,
+        //        overlay_hash
+        //    );
+        //    return Ok(false);
+        //}
 
         log_info!("Agent and overlay files verified successfully");
         Ok(true)

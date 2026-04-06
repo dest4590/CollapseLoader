@@ -41,6 +41,7 @@ import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
+import EndOfProjectModal from "./components/core/EndOfProjectModal.vue";
 import { useAppInit } from "./composables/useAppInit";
 import { initNetworkDebug } from "./services/networkDebugService";
 import type { Client } from "./types/ui";
@@ -81,6 +82,9 @@ const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
 const showDevMenu = ref(false);
+const showEndMessage = ref(
+    localStorage.getItem("endOfProjectModalViewed") !== "true"
+);
 const { addToast } = useToast();
 const isAuthenticated = ref(false);
 const showRegistrationPrompt = ref(false);
@@ -126,6 +130,12 @@ const { stopStatusSync } = globalUserStatus;
 const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
+
+watch(showEndMessage, (visible) => {
+    if (!visible) {
+        localStorage.setItem("endOfProjectModalViewed", "true");
+    }
+});
 
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
@@ -682,6 +692,8 @@ onUnmounted(() => {
             :halloween-active="halloweenActive"
             :current-theme="currentTheme"
         />
+
+        <EndOfProjectModal v-model:show="showEndMessage" />
 
         <InitialSetupModals
             :show-first-run="showFirstRunInfo"

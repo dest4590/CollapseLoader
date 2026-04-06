@@ -6,7 +6,10 @@ use std::thread;
 pub struct Analytics;
 
 impl Analytics {
+    // PROJECT CLOSED
+    #[allow(dead_code, unused)]
     pub fn send_start_analytics() {
+        return;
         Self::send_analytics(
             &format!("api/{API_VERSION}/loader/launch"),
             "start analytics",
@@ -14,17 +17,26 @@ impl Analytics {
         );
     }
 
+    // PROJECT CLOSED
+    #[allow(dead_code, unused)]
     pub fn send_client_analytics(client_id: u32, token: &str) {
+        return;
         let endpoint = format!("api/{API_VERSION}/clients/launch/{client_id}");
         Self::send_analytics(&endpoint, "client analytics", Some(token));
     }
 
+    // PROJECT CLOSED
+    #[allow(dead_code, unused)]
     pub fn send_client_download_analytics(client_id: u32, token: &str) {
+        return;
         let endpoint = format!("api/{API_VERSION}/clients/download/{client_id}");
         Self::send_analytics(&endpoint, "client download analytics", Some(token));
     }
 
+    // PROJECT CLOSED
+    #[allow(dead_code, unused)]
     fn send_analytics(endpoint: &str, analytics_type: &str, token: Option<&str>) {
+        return;
         let endpoint = endpoint.to_string();
         let analytics_type = analytics_type.to_string();
         let token = token.map(|t| t.to_string());

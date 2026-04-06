@@ -208,7 +208,10 @@ impl LogChecker {
         );
     }
 
+    // PROJECT CLOSED
+    #[allow(dead_code, unused)]
     fn send_crash_log(&self, crash_type: CrashType, client_logs: &[String]) {
+        return;
         let api_base = {
             let selected = SERVERS.selected_api.read().ok().and_then(|g| g.clone());
             selected.map(|s| s.url)

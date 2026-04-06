@@ -19,11 +19,6 @@
         </div>
     </div>
 
-    <InlineIRCChat
-        class="mb-6"
-        @show-user-profile="$emit('show-user-profile', $event)"
-    />
-
     <div
         v-if="
             friendRequests.received.length > 0 ||
@@ -190,7 +185,6 @@ import ReportModal from "../components/modals/common/ReportModal.vue";
 import FriendCard from "../components/features/friends/FriendCard.vue";
 import FriendRequestCard from "../components/features/friends/FriendRequestCard.vue";
 import UserAvatar from "../components/ui/UserAvatar.vue";
-import InlineIRCChat from "../components/features/social/InlineIRCChat.vue";
 import { UserCheck, UserPlus, Users } from "lucide-vue-next";
 import { useStreamerMode } from "../composables/useStreamerMode";
 

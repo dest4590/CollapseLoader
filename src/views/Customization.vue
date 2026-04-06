@@ -62,6 +62,7 @@
                             <button
                                 class="btn btn-accent btn-sm flex items-center gap-2"
                                 @click="$emit('change-view', 'marketplace')"
+                                disabled
                             >
                                 <Store class="w-4 h-4" />
                                 <span class="hidden sm:inline">{{
