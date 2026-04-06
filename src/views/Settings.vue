@@ -113,7 +113,9 @@ const currentLanguage = ref(getCurrentLanguage());
 const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 
 const filteredSettingsEntries = computed(() => {
-    return Object.entries(settings).filter(([, field]) => field.show);
+    return Object.entries(settings)
+        .filter(([, field]) => field.show)
+        .filter(([key]) => key !== "irc_chat");
 });
 
 const handleSliderChange = () => {
@@ -735,6 +737,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             activeTab === 'sync',
                         'hover:bg-base-300': activeTab !== 'sync',
                     }"
+                    disabled
                 >
                     <Cloud class="w-4 h-4 mr-2" />
                     {{ t("settings.sync") }}
@@ -1258,17 +1261,22 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                                 }}
                                             </p>
                                         </div>
+                                        <!-- 
+                                        :disabled="
+                                            isAccountSyncing ||
+                                            !isAuthenticated ||
+                                            remoteAccountsLoading
+                                        "
+
+                                        this code from syncLocalAccountsFromCloud buttons
+                                        -->
                                         <div class="flex flex-wrap gap-2">
                                             <button
                                                 class="btn btn-outline btn-sm flex items-center gap-2"
                                                 @click="
                                                     syncLocalAccountsFromCloud
                                                 "
-                                                :disabled="
-                                                    isAccountSyncing ||
-                                                    !isAuthenticated ||
-                                                    remoteAccountsLoading
-                                                "
+                                                disabled
                                             >
                                                 <Download class="w-4 h-4" />
                                                 {{
@@ -1282,11 +1290,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                                 @click="
                                                     syncLocalAccountsToCloud
                                                 "
-                                                :disabled="
-                                                    isAccountSyncing ||
-                                                    !isAuthenticated ||
-                                                    remoteAccountsLoading
-                                                "
+                                                disabled
                                             >
                                                 <Upload class="w-4 h-4" />
                                                 {{

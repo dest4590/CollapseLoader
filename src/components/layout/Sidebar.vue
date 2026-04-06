@@ -429,7 +429,10 @@ onUnmounted(() => {
                 v-if="isAuthenticated"
                 class="tooltip tooltip-accent"
                 :class="tooltipClass"
-                :data-tip="t('navigation.friends')"
+                :data-tip="
+                    t('navigation.friends') +
+                    ' (disabled because project is deprecated)'
+                "
             >
                 <button
                     class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
@@ -438,6 +441,7 @@ onUnmounted(() => {
                         'bg-primary text-primary-content shadow-lg scale-110':
                             activeTab === 'friends',
                     }"
+                    disabled
                 >
                     <Users class="w-5 h-5" />
                     <span
@@ -527,8 +531,10 @@ onUnmounted(() => {
                 :class="tooltipClass"
                 :data-tip="
                     isAuthenticated
-                        ? t('navigation.account')
-                        : t('auth.login.title')
+                        ? t('navigation.account') +
+                          ' (disabled because project is deprecated)'
+                        : t('auth.login.title') +
+                          ' (disabled because project is deprecated)'
                 "
             >
                 <button
@@ -541,6 +547,7 @@ onUnmounted(() => {
                         ].includes(activeTab),
                     }"
                     @click="changeTab(isAuthenticated ? 'account' : 'login')"
+                    disabled
                 >
                     <LogIn v-if="!isAuthenticated" class="w-5 h-5" />
                     <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5" />

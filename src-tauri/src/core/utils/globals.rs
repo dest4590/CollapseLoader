@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "Major";
+pub static CODENAME: &str = "THE END";
 pub static API_VERSION: &str = "v1";
 
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
@@ -98,9 +98,9 @@ pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {
 pub static FABRIC_DEPS_URL: &str = "clients/fabric/deps/jars";
 pub static FORGE_DEPS_URL: &str = "clients/forge/deps/jars";
 
-pub static VANILLA_CLIENTS_URL: &str = "clients";
-pub static FABRIC_CLIENTS_URL: &str = "fabric-clients";
-pub static FORGE_CLIENTS_URL: &str = "forge-clients";
+pub static VANILLA_CLIENTS_URL: &str = "clients.json";
+pub static FABRIC_CLIENTS_URL: &str = "fabric-clients.json";
+pub static FORGE_CLIENTS_URL: &str = "forge-clients.json";
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var).ok().is_some_and(|s| {
@@ -123,9 +123,9 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     }
 
     vec![
-        Server::new("https://atlas.collapseloader.org/"),
-        Server::new("https://proxy.collapseloader.org/"),
-        Server::new("http://141.148.224.27/atlas/"),
+        Server::new("https://froxlhdz2fil.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/froxlhdz2fil/b/collapse-cdn/o/static/"),
+        // Server::new("https://proxy.collapseloader.org/"),
+        // Server::new("http://141.148.224.27/atlas/"),
     ]
 });
 
@@ -137,9 +137,9 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
         }
     }
     vec![
-        Server::new("https://atlas.collapseloader.org/uploads/"),
-        Server::new("https://proxy.collapseloader.org/uploads/"),
-        Server::new("http://141.148.224.27/cdn/"),
+        Server::new("https://froxlhdz2fil.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/froxlhdz2fil/b/collapse-cdn/o/"),
+        // Server::new("https://proxy.collapseloader.org/uploads/"),
+        // Server::new("http://141.148.224.27/cdn/"),
     ]
 });
 
