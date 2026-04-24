@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
+import { readFile, writeFile, mkdir } from "@tauri-apps/plugin-fs";
 import { appDataDir, join } from "@tauri-apps/api/path";
 
 const PERSISTENCE_FILE = "aci.json";
