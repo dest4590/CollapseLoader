@@ -616,6 +616,12 @@ const toggleFavorite = async (client: Client) => {
             await invoke("add_favorite_client", { clientId: client.id });
             favoriteClients.value = [...favoriteClients.value, client.id];
             addToast(t("home.favorite_added"), "success");
+
+            // Track COLLECTOR achievement
+            if (favoriteClients.value.length >= 5) {
+                const { achievementService } = await import("../services/achievementService");
+                void achievementService.unlockAchievement("COLLECTOR");
+            }
         }
 
         syncService.uploadToCloud().catch((err) => {
@@ -1809,7 +1815,6 @@ onBeforeUnmount(() => {
                     border: 'var(--border) solid #0000',
                     transitionDelay: '1s',
                 }"
-                disabled
             >
                 <Newspaper class="w-4 h-4" />
                 <span

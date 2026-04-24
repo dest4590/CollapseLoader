@@ -71,7 +71,7 @@ const getVersion = async () => {
 
 const openRepository = async () => {
     try {
-        await openUrl("https://github.com/dest4590/CollapseLoader");
+        await openUrl("https://github.com/W1xced-io/CollapseLoader-reborn");
     } catch (error) {
         console.error("Failed to open repository:", error);
         addToast(t("about.open_failed", { platform: "Github" }), "error");
@@ -80,7 +80,7 @@ const openRepository = async () => {
 
 const openTelegram = async () => {
     try {
-        await openUrl("https://t.me/CollapseLoader");
+        await openUrl("https://t.me/CollapseLoaderReborn");
     } catch (error) {
         console.error("Failed to open telegram:", error);
         addToast(t("about.open_failed", { platform: "Telegram" }), "error");
@@ -125,7 +125,7 @@ onMounted(async () => {
             />
 
             <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">CollapseLoader (THE END)</h1>
+                <h1 class="text-4xl font-bold mb-2">CollapseLoader</h1>
                 <div
                     class="tooltip tooltip-bottom hover:underline cursor-pointer"
                     id="codename"

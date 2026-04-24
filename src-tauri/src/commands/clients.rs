@@ -580,6 +580,7 @@ pub fn add_custom_client(
     main_class: String,
     java_path: Option<String>,
     java_args: Option<String>,
+    client_type: ClientType,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Adding new custom client: '{}'", name);
@@ -589,6 +590,7 @@ pub fn add_custom_client(
     let mut custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
     custom_client.java_path = java_path;
     custom_client.java_args = java_args;
+    custom_client.client_type = client_type;
 
     log_debug!("New custom client details: {:?}", custom_client);
     manager.add_client(custom_client)
@@ -610,6 +612,7 @@ pub fn update_custom_client(
     main_class: Option<String>,
     java_path: Option<String>,
     java_args: Option<String>,
+    client_type: Option<ClientType>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Updating custom client with ID: {}", id);
@@ -621,6 +624,7 @@ pub fn update_custom_client(
         main_class,
         java_path,
         java_args,
+        client_type,
     };
 
     log_debug!("Applying updates to custom client ID {}: {:?}", id, updates);

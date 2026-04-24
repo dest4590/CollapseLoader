@@ -41,12 +41,13 @@ import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
-import EndOfProjectModal from "./components/core/EndOfProjectModal.vue";
+import RebornModal from "./components/core/RebornModal.vue";
 import { useAppInit } from "./composables/useAppInit";
 import { initNetworkDebug } from "./services/networkDebugService";
 import type { Client } from "./types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
 import { userService } from "./services/userService";
+import { localTrackerService } from "./services/localTrackerService";
 
 const isMacOS = ref(false);
 
@@ -82,8 +83,8 @@ const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
 const showDevMenu = ref(false);
-const showEndMessage = ref(
-    localStorage.getItem("endOfProjectModalViewed") !== "true"
+const showRebornModal = ref(
+    localStorage.getItem("rebornModalViewed") !== "true"
 );
 const { addToast } = useToast();
 const isAuthenticated = ref(false);
@@ -131,11 +132,7 @@ const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
 
-watch(showEndMessage, (visible) => {
-    if (!visible) {
-        localStorage.setItem("endOfProjectModalViewed", "true");
-    }
-});
+
 
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
@@ -284,6 +281,12 @@ const updateDiscordRPC = async (tab?: string) => {
 watch(isAuthenticated, (newVal) => {
     if (newVal) {
         showRegistrationPrompt.value = false;
+    }
+});
+
+watch(showRebornModal, (visible) => {
+    if (!visible) {
+        localStorage.setItem("rebornModalViewed", "true");
     }
 });
 
@@ -452,6 +455,8 @@ onMounted(async () => {
             version?: string;
         };
         console.log(`Client ${payload.name} launched, updating status...`);
+        localTrackerService.trackLaunch(payload.name);
+        localTrackerService.startPlaytimeTracking(payload.name);
 
         try {
             globalUserStatus.setPlayingClient(
@@ -479,6 +484,7 @@ onMounted(async () => {
             exitCode?: number;
         };
         console.log(`Client ${payload.name} exited, updating status...`);
+        localTrackerService.stopPlaytimeTracking();
 
         try {
             globalUserStatus.setOnline();
@@ -693,7 +699,9 @@ onUnmounted(() => {
             :current-theme="currentTheme"
         />
 
-        <EndOfProjectModal v-model:show="showEndMessage" />
+        <RebornModal v-model:show="showRebornModal" />
+
+
 
         <InitialSetupModals
             :show-first-run="showFirstRunInfo"

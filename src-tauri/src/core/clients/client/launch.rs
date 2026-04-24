@@ -64,10 +64,11 @@ impl Client {
     }
 
     fn resolve_assets_dir(&self) -> PathBuf {
+        let root = DATA.root_dir.lock().unwrap();
         if self.client_type == ClientType::Fabric {
-            DATA.root_dir.lock().unwrap().join(ASSETS_FABRIC_FOLDER)
+            root.join(ASSETS_FABRIC_FOLDER)
         } else {
-            DATA.root_dir.lock().unwrap().join(ASSETS_FOLDER)
+            root.join(ASSETS_FOLDER)
         }
     }
 
@@ -168,6 +169,18 @@ impl Client {
         client_folder: &Path,
         assets_dir: &Path,
     ) {
+        let effective_asset_index = if !self.meta.asset_index.is_empty() {
+            self.meta.asset_index.clone()
+        } else if self.version.contains("1.21") {
+            "1.21".to_string()
+        } else if self.version.contains("1.16") {
+            "1.16".to_string()
+        } else if self.version.contains("1.8.9") {
+            "1.8".to_string()
+        } else {
+            "1.16".to_string()
+        };
+
         cmd.arg("--username")
             .arg(username)
             .arg("--gameDir")
@@ -175,7 +188,7 @@ impl Client {
             .arg("--assetsDir")
             .arg(assets_dir)
             .arg("--assetIndex")
-            .arg(&self.meta.asset_index)
+            .arg(effective_asset_index)
             .arg("--uuid")
             .arg("N/A")
             .arg("--accessToken")
@@ -282,7 +295,13 @@ impl Client {
             agent_overlay_path.display()
         ));
 
-        cmd.arg("-cp").arg(classpath).arg(&self.main_class);
+        let actual_main_class = if self.client_type == ClientType::Forge {
+            "net.minecraft.launchwrapper.Launch".to_string()
+        } else {
+            self.main_class.clone()
+        };
+
+        cmd.arg("-cp").arg(classpath).arg(actual_main_class);
 
         if self.client_type == ClientType::Forge {
             cmd.arg("--tweakClass")

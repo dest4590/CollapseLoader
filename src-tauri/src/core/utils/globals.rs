@@ -2,7 +2,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "THE END";
+pub static CODENAME: &str = "REBORN";
 pub static API_VERSION: &str = "v1";
 
 pub static GITHUB_REPO_OWNER: &str = "dest4590";

@@ -21,6 +21,7 @@ pub struct CustomClient {
     pub insecure: bool,
     pub java_path: Option<String>,
     pub java_args: Option<String>,
+    pub client_type: ClientType,
 }
 
 impl CustomClient {
@@ -45,6 +46,7 @@ impl CustomClient {
             insecure: false,
             java_path: None,
             java_args: None,
+            client_type: ClientType::Default,
         }
     }
 
@@ -65,13 +67,21 @@ impl CustomClient {
             rating_count: None,
             size: 0,
             dependencies: None,
-            client_type: ClientType::Default,
+            client_type: self.client_type.clone(),
             created_at: chrono::Utc::now(),
             meta: Meta {
                 is_new: false,
-                is_fabric: false,
-                is_forge: false,
-                asset_index: String::new(),
+                is_fabric: self.client_type == ClientType::Fabric,
+                is_forge: self.client_type == ClientType::Forge,
+                asset_index: if self.version.contains("1.21") {
+                    "1.21".to_string()
+                } else if self.version.contains("1.16") {
+                    "1.16".to_string()
+                } else if self.version.contains("1.8.9") {
+                    "1.8".to_string()
+                } else {
+                    "1.16".to_string()
+                },
                 installed: self.is_installed,
                 is_custom: true,
                 size: 0,

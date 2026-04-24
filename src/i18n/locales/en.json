@@ -242,6 +242,9 @@
             "description": "This action cannot be undone",
             "deleting": "Deleting...",
             "delete_client": "Delete Client"
+        },
+        "role_selection": {
+            "description": "Select your role for the local profile"
         }
     },
     "preloader": {
@@ -285,6 +288,8 @@
         "password_mismatch": "New passwords do not match.",
         "nickname_update_failed": "Failed to update nickname. Please try again when online.",
         "nickname_update_success": "Nickname updated successfully!",
+        "role_update_failed": "Failed to update role. Please try again.",
+        "role_update_success": "Role updated successfully!",
         "nickname_label": "Edit nickname",
         "invisible_enabled": "Invisible mode enabled",
         "invisible_disabled": "Invisible mode disabled",
@@ -312,6 +317,7 @@
     },
     "roles": {
         "user": "User",
+        "local_user": "Local User",
         "tester": "Tester",
         "admin": "Admin",
         "developer": "Developer",
@@ -348,6 +354,7 @@
         "send": "Send",
         "copied_to_clipboard": "Color {color} copied to clipboard",
         "done": "Done",
+        "or": "or",
         "click": "Click",
         "show_more": "Show More",
         "show_less": "Show Less",
@@ -365,10 +372,13 @@
         "login": {
             "title": "Login",
             "username_placeholder": "Enter your username",
+            "enter_username": "Please enter a username",
             "password_placeholder": "Enter your password",
             "login_button": "Login",
             "register_link": "Don't have an account?",
             "success": "Logged in successfully!",
+            "local_success": "Successfully logged into local profile!",
+            "local_login": "Local Login",
             "login_failed": "Login failed. Please check your credentials.",
             "no_token": "No authentication token received.",
             "error": "Cannot login, check your username and password "

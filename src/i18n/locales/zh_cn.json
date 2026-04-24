@@ -242,6 +242,9 @@
             "description": "此操作不可撤销",
             "deleting": "正在删除...",
             "delete_client": "删除客户端"
+        },
+        "role_selection": {
+            "description": "为本地配置文件选择您的角色"
         }
     },
     "preloader": {
@@ -285,6 +288,8 @@
         "password_mismatch": "两次输入的新密码不一致。",
         "nickname_update_failed": "更新昵称失败。请在联网时重试。",
         "nickname_update_success": "昵称更新成功！",
+        "role_update_failed": "更新角色失败。请重试。",
+        "role_update_success": "角色更新成功！",
         "nickname_label": "编辑昵称",
         "invisible_enabled": "已启用隐身模式",
         "invisible_disabled": "已禁用隐身模式",
@@ -312,6 +317,7 @@
     },
     "roles": {
         "user": "用户",
+        "local_user": "本地用户",
         "tester": "测试员",
         "admin": "管理员",
         "developer": "开发者",
@@ -333,6 +339,7 @@
         "login": "登录",
         "register": "注册",
         "download": "下载",
+        "or": "或",
         "please_wait": "请稍候",
         "cancel": "取消",
         "reinstall": "重新安装",
@@ -365,10 +372,13 @@
         "login": {
             "title": "登录",
             "username_placeholder": "输入您的用户名",
+            "enter_username": "请输入用户名",
             "password_placeholder": "输入您的密码",
             "login_button": "登录",
             "register_link": "还没有账户？",
             "success": "登录成功！",
+            "local_success": "成功登录到本地配置文件！",
+            "local_login": "本地登录",
             "login_failed": "登录失败。请检查您的凭据。",
             "no_token": "未收到身份验证令牌。",
             "error": "无法登录，请检查您的用户名和密码"

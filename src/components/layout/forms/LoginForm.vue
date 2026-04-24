@@ -36,6 +36,17 @@
                 {{ t("auth.login.login_button") }}
             </button>
         </div>
+        <div class="divider">{{ t("common.or") }}</div>
+        <div class="form-control">
+            <button
+                type="button"
+                @click="handleLocalLogin"
+                class="btn btn-outline w-full"
+                :disabled="isLoading"
+            >
+                {{ t("auth.login.local_login") || "Войти локально" }}
+            </button>
+        </div>
     </form>
 </template>
 
@@ -46,6 +57,7 @@ import { apiPost } from "../../../services/apiClient";
 import { getApiBaseWithVersion } from "../../../config";
 import { useToast } from "../../../services/toastService";
 import { userService } from "../../../services/userService";
+import { localUserService } from "../../../services/localUserService";
 import { invoke } from "@tauri-apps/api/core";
 
 const { t } = useI18n();
@@ -92,6 +104,25 @@ const handleLogin = async () => {
         } else {
             addToast(errorMsg || t("auth.login.error"), "error");
         }
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const handleLocalLogin = async () => {
+    if (!username.value.trim()) {
+        addToast(t("auth.login.enter_username") || "Введите имя пользователя", "warning");
+        return;
+    }
+
+    try {
+        isLoading.value = true;
+        const profile = localUserService.createProfile(username.value.trim());
+        addToast(t("auth.login.local_success") || "Локальный профиль создан!", "success");
+        emit("logged-in");
+    } catch (e) {
+        console.error("Local login failed", e);
+        addToast("Failed to create local profile", "error");
     } finally {
         isLoading.value = false;
     }

@@ -1,6 +1,7 @@
 import { reactive, watchEffect } from "vue";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen, emit } from "@tauri-apps/api/event";
+import { achievementService } from "./achievementService";
 
 const PRESET_SETTINGS_STORAGE_KEY = "presetSettings";
 const THEME_STORAGE_KEY = "theme";
@@ -249,6 +250,9 @@ const saveCardSettings = () => {
         persistPresetSettings();
         emit("theme-update", JSON.parse(JSON.stringify(presetSettings)));
         console.log("Saved preset settings to localStorage:", presetSettings);
+        
+        // Trigger achievement
+        void achievementService.unlockAchievement("PRESET_MAX");
     } catch (error) {
         console.error("Failed to save preset settings:", error);
     }

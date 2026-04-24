@@ -302,6 +302,7 @@ import DeletePresetConfirmModal from "../modals/social/presets/DeletePresetConfi
 import { useI18n } from "vue-i18n";
 import { formatDate } from "../../utils/utils";
 import { useToast } from "../../services/toastService";
+import { achievementService } from "../../services/achievementService";
 
 const {
     presets,
@@ -415,6 +416,9 @@ const handleCreatePreset = async (data: {
     description?: string;
 }) => {
     await saveCurrentAsPreset(data.name, data.description);
+    
+    // Unlock achievement
+    await achievementService.unlockAchievement("PRESET_MAX");
 };
 
 const handleUpdatePreset = async (data: any) => {

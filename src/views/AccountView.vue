@@ -35,11 +35,13 @@
                                         }}
                                         <span
                                             v-if="roleBadge"
-                                            :class="
-                                                roleBadge.className + ' text-sm'
-                                            "
-                                            >{{ roleBadge.text }}</span
+                                            :class="roleBadge.className + ' text-sm'"
+                                            @click="isLocalUser ? openRoleModal() : null"
+                                            :style="isLocalUser ? 'cursor: pointer' : ''"
+                                            :title="isLocalUser ? t('modals.role_selection.description') || 'Сменить роль' : ''"
                                         >
+                                            {{ roleBadge.text }}
+                                        </span>
                                         <button
                                             @click="openNicknameModal"
                                             class="btn btn-ghost btn-xs p-1"
@@ -304,7 +306,7 @@
                 </div>
             </div>
 
-            <div class="col-span-1 md:col-span-2">
+            <div v-if="!isLocalUser" class="col-span-1 md:col-span-2">
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body">
                         <h2
@@ -411,6 +413,7 @@ import SocialLinksModal from "../components/modals/social/account/SocialLinksMod
 import ChangePasswordConfirmModal from "../components/modals/social/account/ChangePasswordConfirmModal.vue";
 import LogoutConfirmModal from "../components/modals/social/account/LogoutConfirmModal.vue";
 import AvatarUploadModal from "../components/modals/social/account/AvatarUploadModal.vue";
+import RoleSelectionModal from "../components/modals/social/account/RoleSelectionModal.vue";
 import UserAvatar from "../components/ui/UserAvatar.vue";
 import AchievementCard from "../components/features/profile/AchievementCard.vue";
 import { useUser } from "../composables/useUser";
@@ -468,6 +471,7 @@ const loadingClients = ref(false);
 const selectedFavoriteClientId = ref<number | null>(null);
 const updatingFavoriteClient = ref(false);
 
+const user = useUser();
 const {
     username,
     email,
@@ -477,7 +481,10 @@ const {
     refreshUserData,
     updateUserProfile: updateGlobalUserProfile,
     logout,
-} = useUser();
+    info: userRawInfo,
+} = user;
+
+const isLocalUser = computed(() => localStorage.getItem("authToken")?.startsWith("local_"));
 
 const invisibleMode = computed({
     get: () => globalUserStatus.isInvisible.value,
@@ -581,14 +588,11 @@ const getUnlockedAt = (achievementId: number) => {
 };
 
 const loadAchievements = async () => {
-    const userId = (useUser().info.value as any)?.id;
-    if (!userId) return;
-
     loadingAchievements.value = true;
     try {
         const [all, user] = await Promise.all([
             achievementService.getAllAchievements(),
-            achievementService.getUserAchievements(userId),
+            achievementService.getUserAchievements(),
         ]);
         achievements.value = all || [];
         userAchievements.value = user || [];
@@ -767,6 +771,29 @@ const openNicknameModal = () => {
                 }
             },
             close: () => hideModal("edit-nickname"),
+        }
+    );
+};
+
+
+
+const openRoleModal = () => {
+    showModal(
+        "role-selection",
+        RoleSelectionModal,
+        { title: t("roles.local_user") },
+        { currentRole: userInfo.value.role },
+        {
+            "role-selected": async (newRole: string) => {
+                const result = await userService.updateUserProfile(null, undefined, newRole);
+                if (result.success) {
+                    await refreshUserData();
+                    addToast(t("account.role_update_success"), "success");
+                } else {
+                    addToast(t("account.role_update_failed"), "error");
+                }
+            },
+            close: () => hideModal("role-selection"),
         }
     );
 };

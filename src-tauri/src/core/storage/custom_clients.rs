@@ -1,5 +1,6 @@
 use std::{fs, path::PathBuf, sync::Mutex};
 
+use crate::core::clients::client::ClientType;
 use crate::core::clients::custom_clients::CustomClient;
 use crate::core::storage::data::DATA;
 use crate::core::storage::settings::SETTINGS;
@@ -58,7 +59,19 @@ impl CustomClientManager {
                 .map_err(|e| format!("Failed to create client directory: {e}"))?;
         }
 
-        let target_path = client_dir.join(&custom_client.filename);
+        let mut target_path = client_dir.clone();
+        
+        // If it's a Fabric or Forge client, the JAR should go into the 'mods' folder
+        if custom_client.client_type == crate::core::clients::client::ClientType::Fabric 
+           || custom_client.client_type == crate::core::clients::client::ClientType::Forge {
+            target_path = target_path.join("mods");
+            if !target_path.exists() {
+                fs::create_dir_all(&target_path)
+                    .map_err(|e| format!("Failed to create mods directory: {e}"))?;
+            }
+        }
+        
+        target_path = target_path.join(&custom_client.filename);
         fs::copy(&custom_client.file_path, &target_path)
             .map_err(|e| format!("Failed to copy file: {e}"))?;
 
@@ -137,6 +150,10 @@ impl CustomClientManager {
                 client.java_args = Some(java_args);
             }
 
+            if let Some(client_type) = updates.client_type {
+                client.client_type = client_type;
+            }
+
             self.save_to_disk();
             Ok(())
         } else {
@@ -152,6 +169,7 @@ pub struct CustomClientUpdate {
     pub main_class: Option<String>,
     pub java_path: Option<String>,
     pub java_args: Option<String>,
+    pub client_type: Option<ClientType>,
 }
 
 impl JsonStorage for CustomClientManager {

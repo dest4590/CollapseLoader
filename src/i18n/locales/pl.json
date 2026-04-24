@@ -242,6 +242,9 @@
             "description": "Tej operacji nie można cofnąć",
             "deleting": "Usuwanie...",
             "delete_client": "Usuń klienta"
+        },
+        "role_selection": {
+            "description": "Wybierz swoją rolę dla profilu lokalnego"
         }
     },
     "preloader": {
@@ -282,6 +285,8 @@
         "nickname_label": "Edytuj nick",
         "nickname_update_failed": "Nie udało się zaktualizować nicku. \nSpróbuj ponownie, gdy będziesz online.",
         "nickname_update_success": "Nick zaktualizowany pomyślnie!",
+        "role_update_failed": "Nie udało się zaktualizować roli. Spróbuj ponownie.",
+        "role_update_success": "Rola zaktualizowana pomyślnie!",
         "no_email": "Brak adresu email",
         "password_change_failed": "Nie udało się zmienić hasła. \nSprawdź swoje połączenie i spróbuj ponownie.",
         "password_change_success": "Hasło zostało pomyślnie zmienione!",
@@ -315,7 +320,8 @@
         "developer": "Wywoływacz",
         "owner": "Właściciel",
         "tester": "Próbnik",
-        "user": "Użytkownik"
+        "user": "Użytkownik",
+        "local_user": "Lokalny użytkownik"
     },
     "appLogs": {
         "autoScroll": "Automatyczne przewijanie",
@@ -335,11 +341,14 @@
         "login": {
             "title": "Logowanie",
             "username_placeholder": "Wprowadź nazwę użytkownika",
+            "enter_username": "Proszę wprowadzić nazwę użytkownika",
             "password_placeholder": "Wprowadź hasło",
             "login_button": "Zaloguj się",
             "register_link": "Nie masz konta?",
-            "success": "Zalogowano pomyślnie!",
-            "login_failed": "Błąd logowania. Sprawdź swoje dane.",
+            "success": "Logowanie udane!",
+            "local_success": "Pomyślnie zalogowano do profilu lokalnego!",
+            "local_login": "Logowanie lokalne",
+            "login_failed": "Logowanie nieudane. Sprawdź swoje dane.",
             "no_token": "Nie otrzymano tokena uwierzytelniającego.",
             "error": "Nie można się zalogować. Sprawdź swoją nazwę użytkownika i hasło"
         },
@@ -380,6 +389,7 @@
         "login": "Zaloguj",
         "register": "Zarejestruj",
         "download": "Pobierz",
+        "or": "lub",
         "please_wait": "Proszę czekać",
         "cancel": "Anuluj",
         "reinstall": "Przeinstaluj",

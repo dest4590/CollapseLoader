@@ -4,6 +4,7 @@ import {
     type UserProfile,
     type UserInfo,
 } from "../services/userService";
+import { localUserService } from "../services/localUserService";
 
 interface GlobalUserState {
     profile: UserProfile | null;
@@ -130,7 +131,7 @@ const refreshUserData = (): Promise<void> => {
 };
 
 const logout = (): void => {
-    localStorage.removeItem("authToken");
+    localUserService.logout();
     userService.clearCache();
     clearUserData();
 };

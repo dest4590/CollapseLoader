@@ -542,7 +542,7 @@ dependencies = [
 
 [[package]]
 name = "collapseloader"
-version = "9.9.9"
+version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
  "chrono",
