@@ -69,7 +69,7 @@ class LocalTrackerService {
     private async checkLaunchAchievements() {
         if (this.stats.totalLaunches >= 1) {
             await achievementService.unlockAchievement("FIRST_GAME");
-            
+
             const isDev = await getIsDevelopment();
             let isDevBranch = false;
             try {

@@ -417,7 +417,6 @@ const handleCreatePreset = async (data: {
 }) => {
     await saveCurrentAsPreset(data.name, data.description);
     
-    // Unlock achievement
     await achievementService.unlockAchievement("PRESET_MAX");
 };
 

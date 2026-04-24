@@ -18,7 +18,12 @@
         "notification:default",
         "dialog:default",
         "fs:default",
+        "fs:allow-appdata-read",
+        "fs:allow-appdata-write",
+        "fs:allow-write-file",
         "fs:allow-write-text-file",
+        "fs:allow-mkdir",
+        "fs:allow-exists",
         "core:webview:allow-create-webview-window"
     ]
 }

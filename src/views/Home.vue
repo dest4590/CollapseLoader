@@ -617,7 +617,6 @@ const toggleFavorite = async (client: Client) => {
             favoriteClients.value = [...favoriteClients.value, client.id];
             addToast(t("home.favorite_added"), "success");
 
-            // Track COLLECTOR achievement
             if (favoriteClients.value.length >= 5) {
                 const { achievementService } = await import("../services/achievementService");
                 void achievementService.unlockAchievement("COLLECTOR");

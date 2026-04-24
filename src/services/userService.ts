@@ -362,11 +362,9 @@ class UserService {
                 };
             }
 
-
             if (nickname !== null && cached.profile) {
                 cached.profile.nickname = nickname;
                 if (cached.info) cached.info.username = nickname;
-
 
                 const normalized = nickname.trim().toUpperCase();
                 const roleMap: Record<string, string> = {
