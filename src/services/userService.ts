@@ -337,23 +337,24 @@ class UserService {
         try {
             let cached = this.getCachedData();
             if (!cached) {
+                const activeLocal = localUserService.getActiveProfile();
                 cached = {
                     profile: {
                         id: 1,
-                        nickname: null,
-                        avatar_url: null,
-                        role: "USER",
+                        nickname: activeLocal?.nickname || "Local User",
+                        avatar_url: activeLocal?.avatarUrl || null,
+                        role: activeLocal?.role || "USER",
                         social_links: [],
-                        created_at: new Date().toISOString(),
+                        created_at: activeLocal?.createdAt || new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         favorite_client_id: null,
                     },
                     info: {
                         id: 1,
-                        username: "local_user",
+                        username: activeLocal?.username || "local_user",
                         email: null,
-                        role: "LOCAL_USER",
-                        created_at: new Date().toISOString(),
+                        role: activeLocal?.role || "LOCAL_USER",
+                        created_at: activeLocal?.createdAt || new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         last_login_at: null,
                     },
