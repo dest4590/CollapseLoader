@@ -5,8 +5,8 @@ use crate::{core::network::servers::Server, log_debug, log_info};
 pub static CODENAME: &str = "REBORN";
 pub static API_VERSION: &str = "v1";
 
-pub static GITHUB_REPO_OWNER: &str = "dest4590";
-pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
+pub static GITHUB_REPO_OWNER: &str = "W1xced-io";
+pub static GITHUB_REPO_NAME: &str = "CollapseLoader-reborn";
 
 pub static IS_LINUX: bool = cfg!(target_os = "linux");
 pub static IS_MACOS: bool = cfg!(target_os = "macos");
