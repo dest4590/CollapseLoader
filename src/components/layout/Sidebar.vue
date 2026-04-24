@@ -6,9 +6,8 @@ import {
     Terminal,
     LogIn,
     User,
-    Users,
-    SlidersVertical,
     UserCog,
+    SlidersVertical,
 } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -44,10 +43,7 @@ const altPressTimeout = ref<number | null>(null);
 const isDev = ref(false);
 const isMacOS = computed(() => !!props.isMacOS);
 
-const { onlineFriendsCount, friendRequests } = useFriends();
-const incomingRequestsCount = computed(
-    () => friendRequests.value?.received?.length || 0
-);
+const { friendRequests } = useFriends();
 
 let homeClickCount = 0;
 const homeClickTimeout = ref<number | null>(null);

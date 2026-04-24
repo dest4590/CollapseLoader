@@ -145,7 +145,6 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
 import { useToast } from "../services/toastService";
-import { apiGet } from "../services/apiClient";
 import { getCurrentLanguage } from "../i18n";
 import { formatDate } from "../utils/utils";
 import { RefreshCcw } from "lucide-vue-next";
@@ -396,23 +395,6 @@ watch(filteredNews, () => {
     });
 });
 
-const renderNewsContent = (raw: string): string => {
-    let safe = raw
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-
-    safe = safe.replace(/\r\n|\r|\n/g, "<br>");
-
-    safe = safe.replace(
-        /(https?:\/\/[^\s<>"']+)/g,
-        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
-
-    return safe;
-};
 
 watch(
     () => getCurrentLanguage(),

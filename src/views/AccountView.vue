@@ -481,7 +481,6 @@ const {
     refreshUserData,
     updateUserProfile: updateGlobalUserProfile,
     logout,
-    info: userRawInfo,
 } = user;
 
 const isLocalUser = computed(() => localStorage.getItem("authToken")?.startsWith("local_"));

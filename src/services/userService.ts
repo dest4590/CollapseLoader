@@ -409,7 +409,7 @@ class UserService {
             this.setCachedData(cached);
 
             const token = localStorage.getItem("authToken");
-            if (token?.startsWith("local_")) {
+            if (token?.startsWith("local_") && cached.profile) {
                 const localId = token.replace("local_", "");
                 localUserService.updateProfile(localId, {
                     nickname: cached.profile.nickname || undefined,

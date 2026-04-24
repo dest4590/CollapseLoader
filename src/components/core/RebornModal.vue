@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 const props = defineProps<{ show: boolean }>();

@@ -1,5 +1,5 @@
 <template>
-    <form @submit.prevent="handleLogin" class="space-y-4">
+    <form @submit.prevent="handleLocalLogin" class="space-y-4">
         <div class="form-control">
             <label class="label">
                 <span class="label-text">{{ t("common.username") }}</span>
@@ -13,19 +13,7 @@
                 :disabled="isLoading"
             />
         </div>
-        <div class="form-control">
-            <label class="label">
-                <span class="label-text">{{ t("common.password") }}</span>
-            </label>
-            <input
-                v-model="password"
-                type="password"
-                :placeholder="t('auth.login.password_placeholder')"
-                class="input input-bordered w-full bg-base-100"
-                required
-                :disabled="isLoading"
-            />
-        </div>
+
         <div class="pt-2">
             <button
                 type="submit"
@@ -33,17 +21,6 @@
                 :disabled="isLoading"
             >
                 <span v-if="isLoading" class="loading loading-spinner"></span>
-                {{ t("auth.login.login_button") }}
-            </button>
-        </div>
-        <div class="divider">{{ t("common.or") }}</div>
-        <div class="form-control">
-            <button
-                type="button"
-                @click="handleLocalLogin"
-                class="btn btn-outline w-full"
-                :disabled="isLoading"
-            >
                 {{ t("auth.login.local_login") || "Войти локально" }}
             </button>
         </div>
@@ -117,7 +94,7 @@ const handleLocalLogin = async () => {
 
     try {
         isLoading.value = true;
-        const profile = localUserService.createProfile(username.value.trim());
+        localUserService.createProfile(username.value.trim());
         addToast(t("auth.login.local_success") || "Локальный профиль создан!", "success");
         emit("logged-in");
     } catch (e) {

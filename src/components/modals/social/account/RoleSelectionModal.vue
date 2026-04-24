@@ -46,8 +46,8 @@ const availableRoles = computed(() => {
         const badge = getRoleBadge(key, (k: string) => t(k));
         return {
             id: key,
-            name: badge.text,
-            badgeClass: badge.className
+            name: badge?.text || key,
+            badgeClass: badge?.className || "badge badge-outline"
         };
     });
 });
