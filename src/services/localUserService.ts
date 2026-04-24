@@ -1,4 +1,4 @@
-import { type UserProfile, type UserInfo } from "./userService";
+import { userService, type UserProfile, type UserInfo } from "./userService";
 
 export interface LocalUser {
     id: string;

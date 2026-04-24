@@ -212,7 +212,6 @@ impl Client {
             return Ok(());
         }
 
-        // Ensure Fabric API is downloaded for Fabric clients
         self.ensure_fabric_api().await?;
 
         if let Some(mods) = &self.dependencies {
@@ -257,7 +256,6 @@ impl Client {
                 .map_err(|e| format!("Failed to create mods folder: {e}"))?;
         }
 
-        // Check if any Fabric API is already there
         if let Ok(entries) = std::fs::read_dir(&mods_folder) {
             for entry in entries.flatten() {
                 if let Some(name) = entry.file_name().to_str() {
@@ -548,8 +546,6 @@ impl Client {
 
         self.download_type_mods().await?;
 
-        // For Fabric: remove empty/foreign-platform JAR placeholders
-        // so Fabric Loader doesn't crash trying to read them.
         if self.client_type == ClientType::Fabric {
             self.clean_fabric_libraries();
         }
@@ -600,9 +596,6 @@ impl Client {
         }
     }
 
-    /// Removes empty JAR placeholders and foreign-platform native JARs
-    /// from the libraries-fabric folder so Fabric Loader doesn't crash
-    /// trying to read them.
     fn clean_fabric_libraries(&self) {
         let fabric_libs_dir = DATA
             .root_dir
@@ -639,12 +632,10 @@ impl Client {
                 .and_then(|n| n.to_str())
                 .unwrap_or("");
 
-            // Check 1: delete empty JAR files (zero-byte placeholders)
             let is_empty = std::fs::metadata(&path)
                 .map(|m| m.len() == 0)
                 .unwrap_or(false);
 
-            // Check 2: delete native JARs for other platforms
             let is_foreign_native = filename.contains("natives") && ({
                 if IS_WINDOWS {
                     filename.contains("-linux") || filename.contains("-macos")
@@ -690,7 +681,6 @@ impl Client {
             DATA.download(&versioned_zip).await?;
         }
 
-        // Ensure SLF4J is present (required for Minecraft 1.17+)
         self.ensure_slf4j().await?;
 
         Ok(())
@@ -703,7 +693,6 @@ impl Client {
             .unwrap()
             .join(LIBRARIES_FABRIC_FOLDER);
 
-        // Check if slf4j-api is already present anywhere in the folder
         let already_present = {
             let mut found = false;
             if let Ok(entries) = std::fs::read_dir(&fabric_libs_dir) {
@@ -733,7 +722,6 @@ impl Client {
 
         log_info!("SLF4J not found, downloading from Maven Central...");
 
-        // slf4j-api 2.0.9 — required by Minecraft 1.17+ and Fabric Loader
         let slf4j_url = "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar";
         let dest = fabric_libs_dir.join("slf4j-api-2.0.9.jar");
 
@@ -797,14 +785,11 @@ impl Client {
                 let safe_ver = sanitize_version_for_paths(&self.version);
                 let fabric_libs_root = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
 
-                // 1. Version-specific fabric libraries
                 let v_libs = fabric_libs_root.join(&safe_ver);
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
 
-                // 2. Common fabric libraries (skipping version dirs)
                 cp_parts.extend(collect_jars_recursive(&fabric_libs_root, true));
 
-                // 3. Global Minecraft libraries (excluding conflicting old LWJGL)
                 let common_mc_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FOLDER);
                 let mc_jars = collect_jars_recursive(&common_mc_libs, false);
                 for jar in mc_jars {
@@ -815,7 +800,6 @@ impl Client {
                     }
                 }
 
-                // 4. The custom client mod jar
                 cp_parts.push(client_jar);
             }
             ClientType::Forge => {
@@ -823,7 +807,6 @@ impl Client {
                 let libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER);
                 cp_parts.extend(collect_jars_recursive(&libs, false));
 
-                // Add the custom client jar itself
                 cp_parts.push(client_jar);
             }
             ClientType::Default => {

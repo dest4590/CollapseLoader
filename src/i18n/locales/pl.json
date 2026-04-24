@@ -226,7 +226,19 @@
             "select_jar_file": "Wybierz plik .jar",
             "selected": "Wybrano",
             "adding": "Dodawanie...",
-            "add_client": "Dodaj klienta"
+            "add_client": "Dodaj klienta",
+            "client_type": "Typ klienta",
+            "client_type_vanilla": "Vanilla (Domyślny)",
+            "client_type_hint": "Wybierz Fabric/Forge, jeśli twój jar wymaga tych bibliotek.",
+            "java_path": "Niestandardowa ścieżka Java (opcjonalnie)",
+            "java_args": "Niestandardowe argumenty Java (opcjonalnie)",
+            "validate_name": "Nazwa jest wymagana",
+            "validate_version": "Wersja jest wymagana",
+            "validate_main_class": "Klasa główna jest wymagana",
+            "validate_file": "Proszę wybrać plik .jar",
+            "main_class_detected": "Klasa główna wykryta pomyślnie",
+            "file_select_failed": "Nie udało się wybrać pliku",
+            "add_failed": "Nie udało się dodać klienta: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Nazwa klienta",
@@ -235,7 +247,16 @@
             "main_class": "Klasa główna",
             "main_class_placeholder": "np.: net.minecraft.client.main.Main",
             "updating": "Aktualizowanie...",
-            "update_client": "Zaktualizuj klienta"
+            "update_client": "Zaktualizuj klienta",
+            "client_type": "Typ klienta",
+            "client_type_vanilla": "Vanilla (Domyślny)",
+            "client_type_hint": "Wybierz Fabric/Forge, jeśli twój jar wymaga tych bibliotek.",
+            "java_path": "Niestandardowa ścieżka Java (opcjonalnie)",
+            "java_args": "Niestandardowe argumenty Java (opcjonalnie)",
+            "validate_name": "Nazwa jest wymagana",
+            "validate_version": "Wersja jest wymagana",
+            "validate_main_class": "Klasa główna jest wymagana",
+            "update_failed": "Nie udało się zaktualizować klienta: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Usuń klienta",
@@ -1093,7 +1114,12 @@
         "display_mode": "Tryb wyświetlania",
         "display_mode_separate": "Oddzielnie",
         "no_results": "Spróbuj zmienić zapytanie wyszukiwania",
-        "no_clients_yet": "Dodaj swojego pierwszego klienta, aby zacząć"
+        "no_clients_yet": "Dodaj swojego pierwszego klienta, aby zacząć",
+        "search_placeholder": "Szukaj własnych klientów...",
+        "load_failed": "Nie udało się załadować własnych klientów: {error}",
+        "launch_failed": "Nie udało się uruchomić {name}: {error}",
+        "stop_failed": "Błąd zatrzymywania klienta: {error}",
+        "flags_failed": "Nie udało się załadować flag: {error}"
     },
     "marketplace": {
         "title": "Marketplace",

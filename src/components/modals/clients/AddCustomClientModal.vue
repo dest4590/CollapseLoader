@@ -3,8 +3,10 @@ import { ref, reactive, watch, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useToast } from "../../../services/toastService";
+import { useI18n } from "vue-i18n";
 
 const { addToast } = useToast();
+const { t } = useI18n();
 
 const emit = defineEmits<{
     "client-added": [];
@@ -53,19 +55,19 @@ const validateForm = () => {
     errors.value = {};
 
     if (!form.name.trim()) {
-        errors.value.name = "Name is required";
+        errors.value.name = t("modals.add_custom_client_modal.validate_name");
     }
 
     if (!form.version.trim()) {
-        errors.value.version = "Version is required";
+        errors.value.version = t("modals.add_custom_client_modal.validate_version");
     }
 
     if (!form.mainClass.trim()) {
-        errors.value.mainClass = "Main class is required";
+        errors.value.mainClass = t("modals.add_custom_client_modal.validate_main_class");
     }
 
     if (!form.filePath) {
-        errors.value.filePath = "Please select a .jar file";
+        errors.value.filePath = t("modals.add_custom_client_modal.validate_file");
     }
 
     return Object.keys(errors.value).length === 0;
@@ -94,15 +96,12 @@ const selectFile = async () => {
                 });
                 if (mainClass) {
                     form.mainClass = mainClass;
-                    addToast("Main class detected successfully", "success");
+                    addToast(t("modals.add_custom_client_modal.main_class_detected"), "success");
                 }
-            } catch (e) {
-                console.warn("Failed to detect main class:", e);
-            }
+            } catch (e) {}
         }
     } catch (error) {
-        console.error("File selection error:", error);
-        addToast("Failed to select file", "error");
+        addToast(t("modals.add_custom_client_modal.file_select_failed"), "error");
     }
 };
 
@@ -139,7 +138,7 @@ const handleSubmit = async () => {
         emit("client-added");
         emit("close");
     } catch (err) {
-        addToast(`Failed to add custom client: ${err}`, "error");
+        addToast(t("modals.add_custom_client_modal.add_failed", { error: err }), "error");
     } finally {
         loading.value = false;
     }
@@ -274,15 +273,15 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">Client Type</span>
+                    <span class="label-text">{{ $t("modals.add_custom_client_modal.client_type") }}</span>
                 </label>
                 <select v-model="form.clientType" class="select select-bordered w-full">
-                    <option value="default">Vanilla (Default)</option>
+                    <option value="default">{{ $t("modals.add_custom_client_modal.client_type_vanilla") }}</option>
                     <option value="fabric">Fabric</option>
                     <option value="forge">Forge</option>
                 </select>
                 <label class="label">
-                    <span class="label-text-alt opacity-60">Choose Fabric/Forge if your jar requires these libraries.</span>
+                    <span class="label-text-alt opacity-60">{{ $t("modals.add_custom_client_modal.client_type_hint") }}</span>
                 </label>
             </div>
 
@@ -292,7 +291,7 @@ const handleSubmit = async () => {
 
             <div class="form-control" v-if="form.clientType === 'default'">
                 <label class="label">
-                    <span class="label-text">Custom Java Path (Optional)</span>
+                    <span class="label-text">{{ $t("modals.add_custom_client_modal.java_path") }}</span>
                 </label>
                 <input
                     v-model="form.javaPath"
@@ -304,9 +303,7 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text"
-                        >Custom Java Arguments (Optional)</span
-                    >
+                    <span class="label-text">{{ $t("modals.add_custom_client_modal.java_args") }}</span>
                 </label>
                 <textarea
                     v-model="form.javaArgs"

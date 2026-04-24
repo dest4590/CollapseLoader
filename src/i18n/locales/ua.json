@@ -226,7 +226,19 @@
             "select_jar_file": "Оберіть .jar файл",
             "selected": "Обрано",
             "adding": "Додавання...",
-            "add_client": "Додати клієнт"
+            "add_client": "Додати клієнт",
+            "client_type": "Тип клієнта",
+            "client_type_vanilla": "Vanilla (За замовчуванням)",
+            "client_type_hint": "Оберіть Fabric/Forge, якщо ваш jar потребує цих бібліотек.",
+            "java_path": "Шлях до Java (необов'язково)",
+            "java_args": "Аргументи Java (необов'язково)",
+            "validate_name": "Назва обов'язкова",
+            "validate_version": "Версія обов'язкова",
+            "validate_main_class": "Головний клас обов'язковий",
+            "validate_file": "Будь ласка, оберіть .jar файл",
+            "main_class_detected": "Головний клас визначено успішно",
+            "file_select_failed": "Не вдалося вибрати файл",
+            "add_failed": "Не вдалося додати клієнта: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Назва клієнта",
@@ -235,7 +247,16 @@
             "main_class": "Головний клас",
             "main_class_placeholder": "напр., net.minecraft.client.main.Main",
             "updating": "Оновлення...",
-            "update_client": "Оновити клієнт"
+            "update_client": "Оновити клієнт",
+            "client_type": "Тип клієнта",
+            "client_type_vanilla": "Vanilla (За замовчуванням)",
+            "client_type_hint": "Оберіть Fabric/Forge, якщо ваш jar потребує цих бібліотек.",
+            "java_path": "Шлях до Java (необов'язково)",
+            "java_args": "Аргументи Java (необов'язково)",
+            "validate_name": "Назва обов'язкова",
+            "validate_version": "Версія обов'язкова",
+            "validate_main_class": "Головний клас обов'язковий",
+            "update_failed": "Не вдалося оновити клієнта: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Видалити власний клієнт",
@@ -1234,5 +1255,25 @@
         "choose_version": "Вибрати версію",
         "versions_for": "Версії для {mod}",
         "loading_versions": "Завантаження версій..."
+    },
+    "custom_clients": {
+        "add": "Додати клієнт",
+        "display_settings": "Налаштування відображення",
+        "search_placeholder": "Пошук власних клієнтів...",
+        "no_clients_yet": "Власних клієнтів ще немає",
+        "no_results": "Клієнтів не знайдено",
+        "running": "Запущено",
+        "edit": "Редагувати",
+        "delete": "Видалити",
+        "added": "Додано",
+        "stop": "Зупинити",
+        "launch": "Запустити",
+        "display_mode": "Режим відображення",
+        "display_mode_global": "Глобально",
+        "display_mode_separate": "Окремо",
+        "load_failed": "Не вдалося завантажити власних клієнтів: {error}",
+        "launch_failed": "Не вдалося запустити {name}: {error}",
+        "stop_failed": "Помилка зупинки клієнта: {error}",
+        "flags_failed": "Не вдалося завантажити прапорці: {error}"
     }
 }

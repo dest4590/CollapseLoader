@@ -226,7 +226,19 @@
             "select_jar_file": "Выберите .jar файл",
             "selected": "Выбрано",
             "adding": "Добавление...",
-            "add_client": "Добавить клиент"
+            "add_client": "Добавить клиент",
+            "client_type": "Тип клиента",
+            "client_type_vanilla": "Vanilla (По умолчанию)",
+            "client_type_hint": "Выберите Fabric/Forge, если ваш jar требует этих библиотек.",
+            "java_path": "Путь к Java (необязательно)",
+            "java_args": "Аргументы Java (необязательно)",
+            "validate_name": "Название обязательно",
+            "validate_version": "Версия обязательна",
+            "validate_main_class": "Главный класс обязателен",
+            "validate_file": "Пожалуйста, выберите .jar файл",
+            "main_class_detected": "Главный класс определён успешно",
+            "file_select_failed": "Не удалось выбрать файл",
+            "add_failed": "Не удалось добавить клиент: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Имя клиента",
@@ -235,7 +247,16 @@
             "main_class": "Главный класс",
             "main_class_placeholder": "например: net.minecraft.client.main.Main",
             "updating": "Обновление...",
-            "update_client": "Обновить клиент"
+            "update_client": "Обновить клиент",
+            "client_type": "Тип клиента",
+            "client_type_vanilla": "Vanilla (По умолчанию)",
+            "client_type_hint": "Выберите Fabric/Forge, если ваш jar требует этих библиотек.",
+            "java_path": "Путь к Java (необязательно)",
+            "java_args": "Аргументы Java (необязательно)",
+            "validate_name": "Название обязательно",
+            "validate_version": "Версия обязательна",
+            "validate_main_class": "Главный класс обязателен",
+            "update_failed": "Не удалось обновить клиент: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Удалить клиент",
@@ -1093,7 +1114,12 @@
         "display_mode": "Режим отображения",
         "display_mode_separate": "Отдельно",
         "no_results": "Попробуйте изменить поисковый запрос",
-        "no_clients_yet": "Добавьте свой первый клиент, чтобы начать"
+        "no_clients_yet": "Добавьте свой первый клиент, чтобы начать",
+        "search_placeholder": "Поиск своих клиентов...",
+        "load_failed": "Не удалось загрузить своих клиентов: {error}",
+        "launch_failed": "Не удалось запустить {name}: {error}",
+        "stop_failed": "Ошибка остановки клиента: {error}",
+        "flags_failed": "Не удалось загрузить флаги: {error}"
     },
     "marketplace": {
         "title": "Маркетплейс",

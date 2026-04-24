@@ -226,7 +226,19 @@
             "select_jar_file": "Select a .jar file",
             "selected": "Selected",
             "adding": "Adding...",
-            "add_client": "Add Client"
+            "add_client": "Add Client",
+            "client_type": "Client Type",
+            "client_type_vanilla": "Vanilla (Default)",
+            "client_type_hint": "Choose Fabric/Forge if your jar requires these libraries.",
+            "java_path": "Custom Java Path (Optional)",
+            "java_args": "Custom Java Arguments (Optional)",
+            "validate_name": "Name is required",
+            "validate_version": "Version is required",
+            "validate_main_class": "Main class is required",
+            "validate_file": "Please select a .jar file",
+            "main_class_detected": "Main class detected successfully",
+            "file_select_failed": "Failed to select file",
+            "add_failed": "Failed to add custom client: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Client Name",
@@ -235,7 +247,16 @@
             "main_class": "Main Class",
             "main_class_placeholder": "e.g., net.minecraft.client.main.Main",
             "updating": "Updating...",
-            "update_client": "Update Client"
+            "update_client": "Update Client",
+            "client_type": "Client Type",
+            "client_type_vanilla": "Vanilla (Default)",
+            "client_type_hint": "Choose Fabric/Forge if your jar requires these libraries.",
+            "java_path": "Custom Java Path (Optional)",
+            "java_args": "Custom Java Arguments (Optional)",
+            "validate_name": "Name is required",
+            "validate_version": "Version is required",
+            "validate_main_class": "Main class is required",
+            "update_failed": "Failed to update custom client: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Delete Custom Client",
@@ -1234,5 +1255,22 @@
         "choose_version": "Choose Version",
         "versions_for": "Versions for {mod}",
         "loading_versions": "Loading versions..."
+    },
+    "custom_clients": {
+        "add": "Add Client",
+        "display_settings": "Display Settings",
+        "search_placeholder": "Search custom clients...",
+        "no_clients_yet": "No custom clients yet",
+        "no_results": "No clients found",
+        "running": "Running",
+        "edit": "Edit",
+        "delete": "Delete",
+        "added": "Added",
+        "stop": "Stop",
+        "launch": "Launch",
+        "load_failed": "Failed to load custom clients: {error}",
+        "launch_failed": "Failed to launch {name}: {error}",
+        "stop_failed": "Error stopping client: {error}",
+        "flags_failed": "Failed to load flags: {error}"
     }
 }

@@ -55,8 +55,8 @@ const loadCustomClients = async () => {
             await invoke<CustomClient[]>("get_custom_clients");
         error.value = "";
     } catch (err) {
-        error.value = `Failed to load custom clients: ${err}`;
-        addToast(`Failed to load custom clients: ${err}`, "error");
+        error.value = t("custom_clients.load_failed", { error: err });
+        addToast(t("custom_clients.load_failed", { error: err }), "error");
     } finally {
         loading.value = false;
     }
@@ -99,7 +99,7 @@ const handleLaunchClient = async (client: CustomClient) => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         await checkCustomClientRunningStatus();
     } catch (err) {
-        addToast(`Failed to launch ${client.name}: ${err}`, "error");
+        addToast(t("custom_clients.launch_failed", { name: client.name, error: err }), "error");
     }
 };
 
@@ -114,8 +114,7 @@ const stopCustomClient = async (id: number) => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         await checkCustomClientRunningStatus();
     } catch (err) {
-        console.error("Error stopping custom client:", err);
-        addToast(`Error stopping client: ${err}`, "error");
+        addToast(t("custom_clients.stop_failed", { error: err }), "error");
     }
 };
 
@@ -193,8 +192,7 @@ const loadDisplayMode = async () => {
                 : "separate";
         return typedFlags;
     } catch (err) {
-        console.error("Error loading flags:", err);
-        addToast(`Failed to load flags: ${err}`, "error");
+        addToast(t("custom_clients.flags_failed", { error: err }), "error");
         return {};
     }
 };
@@ -263,7 +261,7 @@ const handleSearch = (query: string) => {
             <SearchBar
                 @search="handleSearch"
                 :initial-value="searchQuery"
-                placeholder="Search custom clients..."
+                :placeholder="t('custom_clients.search_placeholder')"
             />
         </div>
 

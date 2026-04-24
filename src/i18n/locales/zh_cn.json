@@ -225,8 +225,20 @@
             "no_file_selected": "未选择文件",
             "select_jar_file": "选择 .jar 文件",
             "selected": "已选择",
-            "adding": "正在添加...",
-            "add_client": "添加客户端"
+            "adding": "添加中...",
+            "add_client": "添加客户端",
+            "client_type": "客户端类型",
+            "client_type_vanilla": "Vanilla（默认）",
+            "client_type_hint": "如果您的 jar 需要 Fabric/Forge 库，请选择对应类型。",
+            "java_path": "自定义 Java 路径（可选）",
+            "java_args": "自定义 Java 参数（可选）",
+            "validate_name": "名称为必填项",
+            "validate_version": "版本为必填项",
+            "validate_main_class": "主类为必填项",
+            "validate_file": "请选择一个 .jar 文件",
+            "main_class_detected": "主类检测成功",
+            "file_select_failed": "选择文件失败",
+            "add_failed": "添加客户端失败：{error}"
         },
         "edit_custom_client_modal": {
             "client_name": "客户端名称",
@@ -234,8 +246,17 @@
             "minecraft_version": "Minecraft 版本",
             "main_class": "主类",
             "main_class_placeholder": "例如：net.minecraft.client.main.Main",
-            "updating": "正在更新...",
-            "update_client": "更新客户端"
+            "updating": "更新中...",
+            "update_client": "更新客户端",
+            "client_type": "客户端类型",
+            "client_type_vanilla": "Vanilla（默认）",
+            "client_type_hint": "如果您的 jar 需要 Fabric/Forge 库，请选择对应类型。",
+            "java_path": "自定义 Java 路径（可选）",
+            "java_args": "自定义 Java 参数（可选）",
+            "validate_name": "名称为必填项",
+            "validate_version": "版本为必填项",
+            "validate_main_class": "主类为必填项",
+            "update_failed": "更新客户端失败：{error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "删除自定义客户端",
@@ -1085,7 +1106,12 @@
         "display_mode_separate": "分离",
         "display_mode_global": "全局",
         "no_results": "尝试调整您的搜索条件。",
-        "no_clients_yet": "添加您的第一个自定义客户端以开始使用。"
+        "no_clients_yet": "添加您的第一个自定义客户端以开始使用。",
+        "search_placeholder": "搜索自定义客户端...",
+        "load_failed": "加载自定义客户端失败：{error}",
+        "launch_failed": "启动 {name} 失败：{error}",
+        "stop_failed": "停止客户端时出错：{error}",
+        "flags_failed": "加载标志失败：{error}"
     },
     "marketplace": {
         "title": "市场",
