@@ -150,10 +150,21 @@ pub async fn change_data_folder(
                     new_dir
                 );
                 copy_dir_recursive(&current_dir, &new_dir)?;
-                log_debug!("Finished recursive copy. Removing old directory.");
-                if let Err(e) = fs::remove_dir_all(&current_dir) {
-                    log_warn!("Failed to remove old data directory: {}", e);
-                    let _ = e;
+                log_debug!("Finished recursive copy. Removing old directory contents (except aci.json).");
+                if current_dir.exists() {
+                    if let Ok(entries) = fs::read_dir(&current_dir) {
+                        for entry in entries.flatten() {
+                            let path = entry.path();
+                            if path.is_file() && path.file_name().and_then(|n| n.to_str()) == Some("aci.json") {
+                                continue;
+                            }
+                            if path.is_dir() {
+                                let _ = fs::remove_dir_all(&path);
+                            } else {
+                                let _ = fs::remove_file(&path);
+                            }
+                        }
+                    }
                 }
                 Ok(())
             })
@@ -164,12 +175,22 @@ pub async fn change_data_folder(
             })??;
         }
     } else if mode == "wipe" {
-        log_info!("Wiping old data folder");
+        log_info!("Wiping old data folder (preserving aci.json)");
         if current_dir.exists() {
-            fs::remove_dir_all(&current_dir).map_err(|e| {
-                log_error!("Failed to wipe old data folder: {}", e);
-                format!("Failed to wipe old folder: {e}")
-            })?;
+            if let Ok(entries) = fs::read_dir(&current_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() && path.file_name().and_then(|n| n.to_str()) == Some("aci.json") {
+                        log_debug!("Preserving aci.json during wipe");
+                        continue;
+                    }
+                    if path.is_dir() {
+                        let _ = fs::remove_dir_all(&path);
+                    } else {
+                        let _ = fs::remove_file(&path);
+                    }
+                }
+            }
         }
     } else {
         log_warn!("Invalid mode for changing data folder: {}", mode);

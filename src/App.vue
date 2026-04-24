@@ -48,6 +48,7 @@ import type { Client } from "./types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
 import { userService } from "./services/userService";
 import { localTrackerService } from "./services/localTrackerService";
+import { persistenceService } from "./services/persistenceService";
 
 const isMacOS = ref(false);
 
@@ -338,6 +339,7 @@ const handleVerified = (token?: string) => {
 };
 
 onMounted(async () => {
+    await persistenceService.init();
     try {
         await initNetworkDebug();
     } catch (e) {
