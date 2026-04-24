@@ -1,4 +1,6 @@
 import { achievementService } from "./achievementService";
+import { invoke } from "@tauri-apps/api/core";
+import { getIsDevelopment } from "../utils/isDevelopment";
 
 interface LocalStats {
     totalLaunches: number;
@@ -67,6 +69,19 @@ class LocalTrackerService {
     private async checkLaunchAchievements() {
         if (this.stats.totalLaunches >= 1) {
             await achievementService.unlockAchievement("FIRST_GAME");
+            
+            const isDev = await getIsDevelopment();
+            let isDevBranch = false;
+            try {
+                const versionData = await invoke<any>("get_version");
+                isDevBranch = versionData.branch === "dev";
+            } catch (e) {
+                console.error("Failed to check branch:", e);
+            }
+
+            if (isDev || isDevBranch) {
+                await achievementService.unlockAchievement("BETA_TESTER");
+            }
         }
         if (this.stats.totalLaunches >= 50) {
             await achievementService.unlockAchievement("FREQUENT_FLYER");
