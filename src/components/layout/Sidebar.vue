@@ -11,7 +11,6 @@ import {
 } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useFriends } from "../../composables/useFriends";
 import { getIsDevelopment } from "../../utils/isDevelopment";
 import { isHalloweenEvent } from "../../utils/events";
 
@@ -43,7 +42,7 @@ const altPressTimeout = ref<number | null>(null);
 const isDev = ref(false);
 const isMacOS = computed(() => !!props.isMacOS);
 
-const { friendRequests } = useFriends();
+
 
 let homeClickCount = 0;
 const homeClickTimeout = ref<number | null>(null);
