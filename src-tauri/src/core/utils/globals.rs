@@ -123,9 +123,7 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     }
 
     vec![
-        Server::new("https://froxlhdz2fil.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/froxlhdz2fil/b/collapse-cdn/o/static/"),
-        // Server::new("https://proxy.collapseloader.org/"),
-        // Server::new("http://141.148.224.27/atlas/"),
+        Server::new("https://huggingface.co/datasets/W1xced/collapsecdn/resolve/main/static/"),
     ]
 });
 
@@ -137,9 +135,7 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
         }
     }
     vec![
-        Server::new("https://froxlhdz2fil.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/froxlhdz2fil/b/collapse-cdn/o/"),
-        // Server::new("https://proxy.collapseloader.org/uploads/"),
-        // Server::new("http://141.148.224.27/cdn/"),
+        Server::new("https://huggingface.co/datasets/W1xced/collapsecdn/resolve/main/"),
     ]
 });
 
