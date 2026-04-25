@@ -213,7 +213,7 @@ impl Client {
         }
 
         if self.meta.is_custom {
-            return Ok(());
+            return self.ensure_fabric_api().await;
         }
 
         if let Some(mods) = &self.dependencies {
@@ -251,10 +251,6 @@ impl Client {
 
     async fn ensure_fabric_api(&self) -> Result<(), String> {
         if self.client_type != ClientType::Fabric {
-            return Ok(());
-        }
-
-        if self.meta.is_custom {
             return Ok(());
         }
 
