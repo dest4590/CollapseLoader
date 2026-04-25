@@ -608,12 +608,6 @@ const roleBadge = computed(() => {
 
 const localStats = computed(() => localTrackerService.getStats());
 
-const sortedClientStats = computed(() => {
-    const stats = localStats.value.clientStats;
-    return Object.fromEntries(
-        Object.entries(stats).sort(([, a], [, b]) => b.playtimeMinutes - a.playtimeMinutes)
-    );
-});
 
 const topClientStats = computed(() => {
     const stats = localStats.value.clientStats;
