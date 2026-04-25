@@ -334,7 +334,13 @@
         "no_favorite_client": "No favorite client selected",
         "current_favorite": "Current favorite",
         "favorite_client_updated": "Favorite client updated successfully",
-        "favorite_client_update_failed": "Failed to update favorite client"
+        "favorite_client_update_failed": "Failed to update favorite client",
+        "playtime_stats": "Playtime Statistics",
+        "playtime_total": "Total",
+        "playtime_no_data": "No playtime data yet. Launch a client to start tracking.",
+        "playtime_launches": "{count} launches",
+        "playtime_show_all": "All {count}",
+        "playtime_more": "+{count} more"
     },
     "roles": {
         "user": "User",
@@ -889,7 +895,13 @@
         "presets": "presets",
         "presets_hidden_streamer": "Presets are hidden in streamer mode.",
         "no_presets": "This user hasn't shared any presets yet.",
-        "create_preset": "Create Preset"
+        "create_preset": "Create Preset",
+        "playtime_title": "Playtime Statistics",
+        "playtime_total": "Total",
+        "playtime_no_data": "No playtime data yet. Launch a client to start tracking.",
+        "playtime_launches": "{count} launches",
+        "playtime_show_all": "All {count}",
+        "playtime_more": "+{count} more"
     },
     "sync": {
         "last_sync": "Last sync",
@@ -1162,7 +1174,13 @@
         "comment_placeholder": "Write a comment...",
         "preset_picker_label": "Choose a local preset",
         "preset_picker_placeholder": "Select a preset...",
-        "no_local_presets": "You don't have any presets yet"
+        "no_local_presets": "You don't have any presets yet",
+        "tg_source": "Themes from Telegram channel",
+        "tg_refresh": "Refresh",
+        "tg_retry": "Try again",
+        "tg_load_failed": "Failed to load themes from Telegram. Check your connection.",
+        "tg_colors": "Colors",
+        "tg_has_css": "Includes custom CSS"
     },
     "events": {
         "halloween": {

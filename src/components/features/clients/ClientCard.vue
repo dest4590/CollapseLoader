@@ -59,7 +59,7 @@ const cardRef = shallowRef<HTMLElement | null>(null);
 const placeholder = shallowRef<HTMLElement | null>(null);
 const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
-const activeTab = ref<"info" | "screenshots" | "comments">("info");
+const activeTab = ref<"info" | "screenshots">("info");
 
 const myRating = ref<number | null>(null);
 const ratingAvgOverride = ref<number | null>(null);
@@ -70,7 +70,7 @@ const { isAuthenticated } = useUser();
 let expansionLock = false;
 let inTransitionTimeout: number | null = null;
 
-const previousTab = ref<"info" | "screenshots" | "comments">("info");
+const previousTab = ref<"info" | "screenshots">("info");
 const slideDirection = ref<"left" | "right">("right");
 
 const isScreenshotViewerOpen = ref(false);
@@ -199,9 +199,9 @@ watch(
     { flush: "post" }
 );
 
-const tabOrder = ["info", "screenshots", "comments"] as const;
+const tabOrder = ["info", "screenshots"] as const;
 
-const changeTab = (newTab: "info" | "screenshots" | "comments") => {
+const changeTab = (newTab: "info" | "screenshots") => {
     const currentIndex = tabOrder.indexOf(activeTab.value);
     const newIndex = tabOrder.indexOf(newTab);
 

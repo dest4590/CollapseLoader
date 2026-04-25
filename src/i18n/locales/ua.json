@@ -333,6 +333,12 @@
         "favorite_client_description": "Виберіть улюблений клієнт для відображення у вашому профілі",
         "favorite_client_update_failed": "Не вдалося оновити улюблений клієнт",
         "favorite_client_updated": "Улюблений клієнт успішно оновлено",
+        "playtime_stats": "Статистика гри",
+        "playtime_total": "Всього",
+        "playtime_no_data": "Даних поки немає. Запустіть клієнт, щоб почати відстеження.",
+        "playtime_launches": "{count} запусків",
+        "playtime_show_all": "Всі {count}",
+        "playtime_more": "ще {count}",
         "no_favorite_client": "Не вибрано улюблений клієнт",
         "select_favorite_client": "Вибрати улюблений клієнт"
     },
@@ -889,6 +895,12 @@
         "no_presets": "Цей користувач ще не поділився жодними пресетами.",
         "create_preset": "Створити пресет",
         "presets_hidden_streamer": "Пресети приховані в режимі стримера.",
+        "playtime_title": "Статистика гри",
+        "playtime_total": "Всього",
+        "playtime_no_data": "Даних поки немає. Запустіть клієнт, щоб почати відстеження.",
+        "playtime_launches": "{count} запусків",
+        "playtime_show_all": "Всі {count}",
+        "playtime_more": "ще {count}",
         "favorite_client": "Улюблений клієнт"
     },
     "sync": {
@@ -1162,7 +1174,13 @@
         "comment_placeholder": "Напишіть коментар...",
         "preset_picker_label": "Оберіть локальний пресет",
         "preset_picker_placeholder": "Оберіть пресет...",
-        "no_local_presets": "У вас ще немає жодних пресетів"
+        "no_local_presets": "У вас ще немає жодних пресетів",
+        "tg_source": "Теми з Telegram-каналу",
+        "tg_refresh": "Оновити",
+        "tg_retry": "Спробувати знову",
+        "tg_load_failed": "Не вдалося завантажити теми з Telegram. Перевірте з'єднання.",
+        "tg_colors": "Кольори",
+        "tg_has_css": "Містить кастомний CSS"
     },
     "events": {
         "halloween": {

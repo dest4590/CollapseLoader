@@ -334,7 +334,13 @@
         "no_favorite_client": "Любимый клиент не выбран",
         "current_favorite": "Текущий любимый",
         "favorite_client_updated": "Любимый клиент успешно обновлён",
-        "favorite_client_update_failed": "Не удалось обновить любимый клиент"
+        "favorite_client_update_failed": "Не удалось обновить любимый клиент",
+        "playtime_stats": "Статистика игры",
+        "playtime_total": "Всего",
+        "playtime_no_data": "Данных пока нет. Запустите клиент, чтобы начать отслеживание.",
+        "playtime_launches": "{count} запусков",
+        "playtime_show_all": "Все {count}",
+        "playtime_more": "ещё {count}"
     },
     "roles": {
         "user": "Пользователь",
@@ -886,7 +892,13 @@
         "create_preset": "Создать пресет",
         "presets_title": "Пресеты",
         "presets": "пресетов",
-        "presets_hidden_streamer": "Пресеты скрыты в режиме стримера."
+        "presets_hidden_streamer": "Пресеты скрыты в режиме стримера.",
+        "playtime_title": "Статистика игры",
+        "playtime_total": "Всего",
+        "playtime_no_data": "Данных пока нет. Запустите клиент, чтобы начать отслеживание.",
+        "playtime_launches": "{count} запусков",
+        "playtime_show_all": "Все {count}",
+        "playtime_more": "ещё {count}"
     },
     "sync": {
         "last_sync": "Последняя синхронизация",
@@ -1163,7 +1175,13 @@
         "comment_placeholder": "Напишите комментарий...",
         "preset_picker_label": "Выберите локальный пресет",
         "preset_picker_placeholder": "Выберите пресет...",
-        "no_local_presets": "У вас пока нет пресетов"
+        "no_local_presets": "У вас пока нет пресетов",
+        "tg_source": "Темы из Telegram-канала",
+        "tg_refresh": "Обновить",
+        "tg_retry": "Попробовать снова",
+        "tg_load_failed": "Не удалось загрузить темы из Telegram. Проверьте соединение.",
+        "tg_colors": "Цвета",
+        "tg_has_css": "Содержит кастомный CSS"
     },
     "events": {
         "halloween": {

@@ -525,6 +525,74 @@
                     </div>
                 </div>
             </div>
+
+            <div class="mt-6" v-if="isOwnProfile && !globalUserStatus.isStreamer.value">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-primary-focus">
+                        {{ t("userProfile.playtime_title") }}
+                    </h2>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+                            <Timer class="w-4 h-4" />
+                            <span>{{ formatPlaytime(ownLocalStats.totalPlaytimeMinutes) }}</span>
+                        </div>
+                        <button
+                            v-if="Object.keys(ownLocalStats.clientStats).length > 3"
+                            @click="openPlaytimeModal"
+                            class="btn btn-ghost btn-xs gap-1 text-primary"
+                        >
+                            <LayoutList class="w-3.5 h-3.5" />
+                            {{ t("userProfile.playtime_show_all", { count: Object.keys(ownLocalStats.clientStats).length }) }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <div v-if="Object.keys(ownLocalStats.clientStats).length === 0" class="text-center py-6 text-base-content/50">
+                            <Gamepad2 class="w-10 h-10 mx-auto mb-2 opacity-30" />
+                            <p>{{ t("userProfile.playtime_no_data") }}</p>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <div
+                                v-for="([clientName, stats], index) in ownTopClientStats"
+                                :key="clientName"
+                                class="flex items-center gap-3 p-3 bg-base-300/50 rounded-lg"
+                            >
+                                <span class="text-base-content/30 text-xs font-mono w-4 text-right shrink-0">{{ index + 1 }}</span>
+                                <Gamepad2 class="w-4 h-4 text-primary shrink-0" />
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="font-medium truncate text-sm">{{ clientName }}</span>
+                                        <span class="text-primary font-semibold shrink-0 text-sm">{{ formatPlaytime(stats.playtimeMinutes) }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-1">
+                                        <div class="flex-1 bg-base-content/10 rounded-full h-1">
+                                            <div
+                                                class="bg-primary h-1 rounded-full transition-all"
+                                                :style="{ width: getOwnPlaytimePercent(stats.playtimeMinutes) + '%' }"
+                                            ></div>
+                                        </div>
+                                        <span class="text-xs text-base-content/40 shrink-0">
+                                            {{ t("userProfile.playtime_launches", { count: stats.launches }) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                v-if="Object.keys(ownLocalStats.clientStats).length > 3"
+                                @click="openPlaytimeModal"
+                                class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm text-base-content/40 hover:text-base-content/70 hover:bg-base-300/40 transition-colors"
+                            >
+                                <ChevronDown class="w-4 h-4" />
+                                {{ t("userProfile.playtime_more", { count: Object.keys(ownLocalStats.clientStats).length - 3 }) }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-6" v-if="!globalUserStatus.isStreamer.value">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-primary-focus">
@@ -614,9 +682,13 @@ import {
     Copy,
     ChevronDown,
     ChevronUp,
+    Timer,
+    LayoutList,
 } from "lucide-vue-next";
 import { globalUserStatus } from "../composables/useUserStatus";
 import { invoke } from "@tauri-apps/api/core";
+import { localTrackerService } from "../services/localTrackerService";
+import PlaytimeStatsModal from "../components/modals/common/PlaytimeStatsModal.vue";
 
 interface Client {
     id: number;
@@ -755,6 +827,51 @@ const roleBadge = computed(() => {
     if (!userProfile.value) return null;
     return getRoleBadge((userProfile.value as any).role, (k: string) => t(k));
 });
+
+const ownLocalStats = computed(() => localTrackerService.getStats());
+
+const ownSortedClientStats = computed(() => {
+    const stats = ownLocalStats.value.clientStats;
+    return Object.fromEntries(
+        Object.entries(stats).sort(([, a], [, b]) => b.playtimeMinutes - a.playtimeMinutes)
+    );
+});
+
+const ownTopClientStats = computed(() => {
+    const stats = ownLocalStats.value.clientStats;
+    return Object.entries(stats)
+        .sort(([, a], [, b]) => b.playtimeMinutes - a.playtimeMinutes)
+        .slice(0, 3);
+});
+
+const ownMaxPlaytimeMinutes = computed(() => {
+    const stats = ownLocalStats.value.clientStats;
+    if (!Object.keys(stats).length) return 1;
+    return Math.max(...Object.values(stats).map((s) => s.playtimeMinutes), 1);
+});
+
+const getOwnPlaytimePercent = (minutes: number) => {
+    return Math.round((minutes / ownMaxPlaytimeMinutes.value) * 100);
+};
+
+const formatPlaytime = (minutes: number): string => {
+    if (!minutes) return "0m";
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+};
+
+const openPlaytimeModal = () => {
+    showModal(
+        "playtime-stats",
+        PlaytimeStatsModal,
+        { title: t("userProfile.playtime_title") },
+        {},
+        { close: () => hideModal("playtime-stats") }
+    );
+};
 
 const unlockedCount = computed(() => userAchievements.value.length);
 

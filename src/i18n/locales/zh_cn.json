@@ -333,6 +333,12 @@
         "favorite_client_description": "选择您最喜欢的客户以显示在您的个人资料上",
         "favorite_client_update_failed": "更新收藏客户端失败",
         "favorite_client_updated": "收藏客户端更新成功",
+        "playtime_stats": "游戏时长统计",
+        "playtime_total": "总计",
+        "playtime_no_data": "暂无游戏数据。启动一个客户端以开始记录。",
+        "playtime_launches": "启动 {count} 次",
+        "playtime_show_all": "全部 {count}",
+        "playtime_more": "还有 {count} 个",
         "no_favorite_client": "没有选择最喜欢的客户",
         "select_favorite_client": "选择最喜欢的客户"
     },
@@ -877,6 +883,12 @@
         "no_presets": "该用户尚未分享任何预设。",
         "create_preset": "创建预设",
         "presets_hidden_streamer": "主播模式下已隐藏预设。",
+        "playtime_title": "游戏时长统计",
+        "playtime_total": "总计",
+        "playtime_no_data": "暂无游戏数据。启动一个客户端以开始记录。",
+        "playtime_launches": "启动 {count} 次",
+        "playtime_show_all": "全部 {count}",
+        "playtime_more": "还有 {count} 个",
         "favorite_client": "最喜欢的客户"
     },
     "sync": {
@@ -1155,7 +1167,13 @@
         "sort_comments": "评论最多",
         "sort_downloads": "下载次数最多",
         "sort_newest": "最新",
-        "sort_popular": "受欢迎的"
+        "sort_popular": "受欢迎的",
+        "tg_source": "来自 Telegram 频道的主题",
+        "tg_refresh": "刷新",
+        "tg_retry": "重试",
+        "tg_load_failed": "无法从 Telegram 加载主题，请检查网络连接。",
+        "tg_colors": "颜色",
+        "tg_has_css": "包含自定义 CSS"
     },
     "events": {
         "halloween": {

@@ -212,6 +212,7 @@ export function useAppInit() {
             await invoke("initialize_api");
             apiInitialized.value = true;
             bootLogService.apiInitSuccess();
+            invoke("update_tray_menu").catch(() => {});
         } catch (error) {
             console.error("API initialization failed:", error);
             bootLogService.apiInitFailed();

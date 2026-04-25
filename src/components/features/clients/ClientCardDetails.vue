@@ -3,14 +3,12 @@ import {
     Camera,
     ExternalLink,
     Info,
-    MessageSquare,
     ScrollText,
     ZoomIn,
 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import type { Client, ClientDetails } from "../../../types/ui";
 import ClientRating from "./ClientRating.vue";
-import ClientComments from "./ClientComments.vue";
 
 const { t } = useI18n();
 
@@ -21,7 +19,7 @@ defineProps<{
     isAuthenticated: boolean;
     ratingAvg: number | null;
     ratingCount: number;
-    activeTab: "info" | "screenshots" | "comments";
+    activeTab: "info" | "screenshots";
     slideDirection: "left" | "right";
     myRating: number | null;
 }>();
@@ -79,24 +77,6 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                     >
                         <Camera class="w-4 h-4 mr-2" />
                         {{ t("client.details.screenshots_tab") }}
-                    </button>
-                    <button
-                        type="button"
-                        role="tab"
-                        class="tab"
-                        :class="{ 'tab-active': activeTab === 'comments' }"
-                        :aria-selected="activeTab === 'comments'"
-                        @click="emit('change-tab', 'comments')"
-                    >
-                        <div class="flex items-center gap-2">
-                            <MessageSquare class="w-4 h-4" />
-                            <span>{{ t("client.details.comments_tab") }}</span>
-                            <span
-                                v-if="clientDetails?.comments_count"
-                                class="badge badge-sm badge-ghost"
-                                >{{ clientDetails.comments_count }}</span
-                            >
-                        </div>
                     </button>
                 </div>
 
@@ -369,25 +349,6 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                             >
                                 <p>{{ t("client.details.no_screenshots") }}</p>
                             </div>
-                        </div>
-
-                        <div
-                            v-else-if="activeTab === 'comments'"
-                            key="comments"
-                        >
-                            <ClientComments
-                                :clientId="client.id"
-                                :commentsCount="clientDetails.comments_count"
-                                @update:comments-count="
-                                    emit('update:client-details', {
-                                        ...clientDetails,
-                                        comments_count: $event,
-                                    })
-                                "
-                                @show-user-profile="
-                                    emit('show-user-profile', $event)
-                                "
-                            />
                         </div>
                     </transition>
                 </div>

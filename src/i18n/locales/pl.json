@@ -333,6 +333,12 @@
         "favorite_client_description": "Wybierz swojego ulubionego klienta, który chcesz wyświetlić w swoim profilu",
         "favorite_client_update_failed": "Nie udało się zaktualizować ulubionego klienta",
         "favorite_client_updated": "Ulubiony klient został pomyślnie zaktualizowany",
+        "playtime_stats": "Statystyki czasu gry",
+        "playtime_total": "Łącznie",
+        "playtime_no_data": "Brak danych. Uruchom klienta, aby rozpocząć śledzenie.",
+        "playtime_launches": "{count} uruchomień",
+        "playtime_show_all": "Wszystkie {count}",
+        "playtime_more": "+{count} więcej",
         "no_favorite_client": "Nie wybrano ulubionego klienta",
         "select_favorite_client": "Wybierz ulubionego klienta"
     },
@@ -883,6 +889,12 @@
         "user_block_failed": "Nie udało się zablokować użytkownika",
         "no_presets": "Ten użytkownik nie udostępnił jeszcze żadnych presetów.",
         "create_preset": "Utwórz preset",
+        "playtime_title": "Statystyki czasu gry",
+        "playtime_total": "Łącznie",
+        "playtime_no_data": "Brak danych. Uruchom klienta, aby rozpocząć śledzenie.",
+        "playtime_launches": "{count} uruchomień",
+        "playtime_show_all": "Wszystkie {count}",
+        "playtime_more": "+{count} więcej",
         "presets_title": "Presety",
         "presets": "presetów",
         "presets_hidden_streamer": "Presety ukryte w trybie streamera.",
@@ -1159,11 +1171,12 @@
         "preset_picker_label": "Wybierz preset lokalny",
         "preset_picker_placeholder": "Wybierz preset...",
         "no_local_presets": "Nie masz jeszcze żadnych presetów",
-        "by_author": "PRZEZ {imię}",
-        "sort_comments": "Najczęściej komentowane",
-        "sort_downloads": "Najczęściej pobierane",
-        "sort_newest": "Najnowszy",
-        "sort_popular": "Popularny"
+        "tg_source": "Motywy z kanału Telegram",
+        "tg_refresh": "Odśwież",
+        "tg_retry": "Spróbuj ponownie",
+        "tg_load_failed": "Nie udało się załadować motywów z Telegram. Sprawdź połączenie.",
+        "tg_colors": "Kolory",
+        "tg_has_css": "Zawiera niestandardowy CSS"
     },
     "events": {
         "halloween": {

@@ -871,18 +871,21 @@ class UserService {
                   null
                 : null;
 
+            const safeFavorites = Array.isArray(favorites) ? favorites : [];
+            const safeAccounts = Array.isArray(accounts) ? accounts : [];
+
             const lastSync = this.maxIsoTimestamp([
                 settingsPref?.updated_at ?? null,
-                ...favorites.map((f) => f.created_at ?? null),
-                ...accounts.map((a) => a.updated_at ?? null),
+                ...safeFavorites.map((f) => f.created_at ?? null),
+                ...safeAccounts.map((a) => a.updated_at ?? null),
             ]);
 
             return {
                 last_sync_timestamp: lastSync,
                 has_cloud_data:
                     !!settingsPref ||
-                    favorites.length > 0 ||
-                    accounts.length > 0,
+                    safeFavorites.length > 0 ||
+                    safeAccounts.length > 0,
             };
         } catch (error) {
             console.error("Failed to get sync status:", error);
@@ -904,7 +907,7 @@ class UserService {
         const localFavoriteRefs = new Set(
             (syncData.favorites_data || []).map((id) => String(id))
         );
-        const remoteClientFavorites = remoteFavorites.filter(
+        const remoteClientFavorites = (Array.isArray(remoteFavorites) ? remoteFavorites : []).filter(
             (f) => f.type === SYNC_FAVORITE_TYPE
         );
 
@@ -966,17 +969,19 @@ class UserService {
         favorites: UserFavorite[],
         accounts: UserExternalAccount[]
     ): SyncData {
-        const settingsPref =
-            (Array.isArray(preferences)
-                ? preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY)
-                : null) || null;
+        const safePreferences = Array.isArray(preferences) ? preferences : [];
+        const safeFavorites = Array.isArray(favorites) ? favorites : [];
+        const safeAccounts = Array.isArray(accounts) ? accounts : [];
 
-        const favorites_data = (favorites || [])
+        const settingsPref =
+            safePreferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ?? null;
+
+        const favorites_data = safeFavorites
             .filter((f) => f.type === SYNC_FAVORITE_TYPE)
             .map((f) => Number.parseInt(String(f.reference), 10))
             .filter((n) => Number.isFinite(n));
 
-        const accounts_data = (accounts || []).map((a) => {
+        const accounts_data = safeAccounts.map((a) => {
             const meta: any =
                 a.metadata && typeof a.metadata === "object" ? a.metadata : {};
             return {
@@ -987,8 +992,8 @@ class UserService {
 
         const last_sync_timestamp = this.maxIsoTimestamp([
             settingsPref?.updated_at ?? null,
-            ...favorites.map((f) => f.created_at ?? null),
-            ...accounts.map((a) => a.updated_at ?? null),
+            ...safeFavorites.map((f) => f.created_at ?? null),
+            ...safeAccounts.map((a) => a.updated_at ?? null),
         ]);
 
         return {
