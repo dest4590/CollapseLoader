@@ -212,7 +212,9 @@ impl Client {
             return Ok(());
         }
 
-        self.ensure_fabric_api().await?;
+        if self.meta.is_custom {
+            return Ok(());
+        }
 
         if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
@@ -227,7 +229,8 @@ impl Client {
             for req in mods {
                 let name = req.name.clone();
                 let mod_basename = name.trim_end_matches(".jar");
-                let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
+                let decoded_basename = mod_basename.replace("%2B", "+").replace("%2b", "+");
+                let dest = mods_folder_abs.join(format!("{decoded_basename}.jar"));
                 let remote_path = format!("{FABRIC_DEPS_URL}/{mod_basename}.jar");
 
                 self.download_dependency(
@@ -235,16 +238,23 @@ impl Client {
                     &mods_folder_rel,
                     &dest,
                     req.md5_hash.as_ref(),
-                    mod_basename,
+                    &decoded_basename,
                 )
                 .await?;
             }
         }
+
+        self.ensure_fabric_api().await?;
+
         Ok(())
     }
 
     async fn ensure_fabric_api(&self) -> Result<(), String> {
         if self.client_type != ClientType::Fabric {
+            return Ok(());
+        }
+
+        if self.meta.is_custom {
             return Ok(());
         }
 

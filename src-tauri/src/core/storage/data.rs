@@ -500,7 +500,8 @@ impl Data {
         }
 
         let dest_filename = file.rsplit(['/', '\\']).next().unwrap_or(file);
-        let dest_path = dest_dir.join(dest_filename);
+        let dest_filename = dest_filename.replace("%2B", "+").replace("%20", " ").replace("%2b", "+");
+        let dest_path = dest_dir.join(&dest_filename);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         download_file(
