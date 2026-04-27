@@ -1290,12 +1290,15 @@
         "added": "Додано",
         "stop": "Зупинити",
         "launch": "Запустити",
+        "launch_another": "Запустити ще раз",
+        "open_folder": "Відкрити папку",
         "display_mode": "Режим відображення",
         "display_mode_global": "Глобально",
         "display_mode_separate": "Окремо",
         "load_failed": "Не вдалося завантажити власних клієнтів: {error}",
         "launch_failed": "Не вдалося запустити {name}: {error}",
         "stop_failed": "Помилка зупинки клієнта: {error}",
-        "flags_failed": "Не вдалося завантажити прапорці: {error}"
+        "flags_failed": "Не вдалося завантажити прапорці: {error}",
+        "open_folder_failed": "Не вдалося відкрити папку: {error}"
     }
 }

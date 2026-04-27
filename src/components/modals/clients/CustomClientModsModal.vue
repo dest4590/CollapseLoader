@@ -203,7 +203,6 @@ const handleSearch = async () => {
     hasSearched.value = true;
 
     try {
-        const loaders = props.client.client_type === "Forge" ? ["forge"] : ["fabric"];
         const result = await ModrinthService.searchMods(searchQuery.value, {
             limit: 20,
             facets: JSON.stringify([[`project_type:mod`]]),

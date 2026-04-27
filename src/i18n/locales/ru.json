@@ -1125,6 +1125,8 @@
         "added": "Добавлено",
         "stop": "Остановить",
         "launch": "Запустить",
+        "launch_another": "Запустить ещё раз",
+        "open_folder": "Открыть папку",
         "display_settings": "Настройка отображения",
         "display_mode_global": "Глобально",
         "display_mode": "Режим отображения",
@@ -1135,7 +1137,8 @@
         "load_failed": "Не удалось загрузить своих клиентов: {error}",
         "launch_failed": "Не удалось запустить {name}: {error}",
         "stop_failed": "Ошибка остановки клиента: {error}",
-        "flags_failed": "Не удалось загрузить флаги: {error}"
+        "flags_failed": "Не удалось загрузить флаги: {error}",
+        "open_folder_failed": "Не удалось открыть папку: {error}"
     },
     "marketplace": {
         "title": "Маркетплейс",

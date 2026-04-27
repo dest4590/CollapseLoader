@@ -1281,5 +1281,25 @@
         "choose_version": "选择版本",
         "versions_for": "{mod} 的版本",
         "loading_versions": "正在加载版本..."
+    },
+    "custom_clients": {
+        "add": "添加客户端",
+        "display_settings": "显示设置",
+        "search_placeholder": "搜索自定义客户端...",
+        "no_clients_yet": "暂无自定义客户端",
+        "no_results": "未找到客户端",
+        "running": "运行中",
+        "edit": "编辑",
+        "delete": "删除",
+        "added": "添加时间",
+        "stop": "停止",
+        "launch": "启动",
+        "launch_another": "再次启动",
+        "open_folder": "打开文件夹",
+        "load_failed": "加载客户端失败：{error}",
+        "launch_failed": "启动 {name} 失败：{error}",
+        "stop_failed": "停止客户端出错：{error}",
+        "flags_failed": "加载标志失败：{error}",
+        "open_folder_failed": "打开文件夹失败：{error}"
     }
 }

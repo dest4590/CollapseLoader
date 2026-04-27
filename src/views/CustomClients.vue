@@ -11,7 +11,6 @@ import {
     Package,
     Play,
     Plus,
-    RefreshCcw,
     Settings,
     StopCircle,
     Trash2,
@@ -384,7 +383,7 @@ const handleSearch = (query: string) => {
 
                         <div class="card-actions justify-end">
                             <button
-                                @click="handleLaunchClient(client)"
+                                @click="isCustomClientRunning(client.id) ? stopCustomClient(client.id) : handleLaunchClient(client)"
                                 class="btn btn-sm gap-2"
                                 :class="isCustomClientRunning(client.id) ? 'btn-error' : 'btn-primary'"
                                 :disabled="!client.is_installed"
@@ -392,8 +391,7 @@ const handleSearch = (query: string) => {
                                 <StopCircle v-if="isCustomClientRunning(client.id)" class="w-4 h-4" />
                                 <Play v-else class="w-4 h-4" />
                                 {{ isCustomClientRunning(client.id) ? $t("custom_clients.stop") : $t("custom_clients.launch") }}
-                            </button>
-                            <button @click="openLogViewer(client)" class="btn btn-sm btn-ghost gap-2">
+                            </button>                            <button @click="openLogViewer(client)" class="btn btn-sm btn-ghost gap-2">
                                 <FileText class="w-4 h-4" />
                                 {{ $t("logs.view") }}
                             </button>
