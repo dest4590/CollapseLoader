@@ -26,7 +26,6 @@ import {
     Search,
     UserIcon,
     LogIn,
-    WifiOff,
     Minimize2,
     MousePointer2,
     Coffee,
@@ -38,7 +37,6 @@ import { syncService, type SyncServiceState } from "../services/syncService";
 import { settingsService } from "../services/settingsService";
 import { globalUserStatus } from "../composables/useUserStatus";
 import { userService, type UserExternalAccount } from "../services/userService";
-import SyncStatus from "../components/common/SyncStatus.vue";
 import AddAccountModal from "../components/modals/social/account/AddAccountModal.vue";
 import EditAccountModal from "../components/modals/social/account/EditAccountModal.vue";
 import ResetConfirmModal from "../components/modals/settings/ResetConfirmModal.vue";
@@ -578,36 +576,6 @@ const selectTag = (tag: string) => {
 
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
-
-const handleUploadToCloud = async () => {
-    if (typeof t !== "function") {
-        console.error("Translation function t is not available");
-        addToast("Sync failed: Translation service not ready", "error");
-        return;
-    }
-
-    const toastAdapter = (message: string, type: string, duration?: number) => {
-        addToast(message, type as any, duration);
-    };
-
-    await syncService.manualSync(toastAdapter, t);
-};
-
-const handleDownloadFromCloud = async () => {
-    try {
-        await syncService.downloadFromCloud();
-        addToast(t("settings.download_success"), "success");
-        await loadSettings();
-        await loadAccounts();
-    } catch (error) {
-        addToast(t("settings.download_failed", { error }), "error");
-    }
-};
-
-const toggleAutoSync = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    syncService.setAutoSyncEnabled(target.checked);
-};
 
 const handleLanguageChange = async (languageCode: string) => {
     try {

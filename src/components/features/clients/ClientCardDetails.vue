@@ -327,7 +327,7 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                                                 :alt="`${client.name} screenshot ${index + 1}`"
                                                 class="w-full h-36 object-cover transition-all duration-200 group-hover:scale-105"
                                                 @error="
-                                                    ($event.target as HTMLImageElement).closest('.screenshot-container')!.style.display = 'none'
+                                                    ($event.target as HTMLImageElement).closest('.screenshot-container')?.setAttribute('style', 'display:none')
                                                 "
                                             />
                                             <div

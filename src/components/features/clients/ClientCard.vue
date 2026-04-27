@@ -19,7 +19,6 @@ import ClientCardActions from "./ClientCardActions.vue";
 import ClientCardDetails from "./ClientCardDetails.vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
-import { apiGet } from "../../../services/apiClient";
 import { useModal } from "../../../services/modalService";
 import { useUser } from "../../../composables/useUser";
 
