@@ -164,7 +164,11 @@
             "username_placeholder": "Введіть ім'я користувача",
             "tags_label": "Теги (через кому)",
             "tags_placeholder": "напр. funtime, spookytime",
-            "add_account": "Додати акаунт"
+            "add_account": "Додати акаунт",
+            "username_hint": "3–16 символів, тільки a-z, 0-9, _",
+            "username_too_short": "Мінімум 3 символи",
+            "username_too_long": "Максимум 16 символів (ліміт Minecraft)",
+            "username_invalid_chars": "Тільки літери, цифри та _ (підкреслення)"
         },
         "telemetry_consent": {
             "title": "Згода на додаткову аналітику",

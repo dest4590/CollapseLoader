@@ -164,7 +164,11 @@
             "username_placeholder": "Wprowadź nazwę użytkownika",
             "tags_label": "Tagi (oddzielone przecinkami)",
             "tags_placeholder": "np.: funtime, spookytime",
-            "add_account": "Dodaj konto"
+            "add_account": "Dodaj konto",
+            "username_hint": "3–16 znaków, tylko a-z, 0-9, _",
+            "username_too_short": "Minimum 3 znaki",
+            "username_too_long": "Maksimum 16 znaków (limit Minecraft)",
+            "username_invalid_chars": "Tylko litery, cyfry i _ (podkreślenie)"
         },
         "telemetry_consent": {
             "title": "Zgoda na dodatkową telemetrię",

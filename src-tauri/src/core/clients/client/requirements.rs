@@ -800,16 +800,6 @@ impl Client {
 
                 cp_parts.extend(collect_jars_recursive(&fabric_libs_root, true));
 
-                let common_mc_libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_FOLDER);
-                let mc_jars = collect_jars_recursive(&common_mc_libs, false);
-                for jar in mc_jars {
-                    if let Some(filename) = jar.file_name().and_then(|n| n.to_str()) {
-                        if !filename.to_lowercase().contains("lwjgl") {
-                            cp_parts.push(jar);
-                        }
-                    }
-                }
-
                 cp_parts.push(client_jar);
             }
             ClientType::Forge => {

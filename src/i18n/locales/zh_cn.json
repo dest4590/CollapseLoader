@@ -164,7 +164,11 @@
             "username_placeholder": "输入用户名",
             "tags_label": "标签（逗号分隔）",
             "tags_placeholder": "例如：funtime, spookytime",
-            "add_account": "添加账户"
+            "add_account": "添加账户",
+            "username_hint": "3–16 个字符，仅限 a-z、0-9、_",
+            "username_too_short": "最少 3 个字符",
+            "username_too_long": "最多 16 个字符（Minecraft 限制）",
+            "username_invalid_chars": "仅限字母、数字和 _（下划线）"
         },
         "telemetry_consent": {
             "title": "可选分析同意",

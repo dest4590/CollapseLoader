@@ -115,7 +115,8 @@ const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 const filteredSettingsEntries = computed(() => {
     return Object.entries(settings)
         .filter(([, field]) => field.show)
-        .filter(([key]) => key !== "irc_chat");
+        .filter(([key]) => key !== "irc_chat")
+        .filter(([key]) => key !== "optional_telemetry");
 });
 
 const handleSliderChange = () => {
@@ -730,19 +731,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     {{ t("settings.general") }}
                 </a>
                 <a
-                    @click="activeTab = 'sync'"
-                    class="tab transition-all duration-300"
-                    :class="{
-                        'tab-active transform scale-105 shadow-md bg-base-300':
-                            activeTab === 'sync',
-                        'hover:bg-base-300': activeTab !== 'sync',
-                    }"
-                    disabled
-                >
-                    <Cloud class="w-4 h-4 mr-2" />
-                    {{ t("settings.sync") }}
-                </a>
-                <a
                     @click="activeTab = 'accounts'"
                     class="tab transition-all duration-300"
                     :class="{
@@ -1040,168 +1028,10 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 </div>
 
                 <div
-                    v-else-if="activeTab === 'sync'"
-                    key="sync"
-                    class="space-y-3"
+                    v-else-if="activeTab === 'accounts'"
+                    key="accounts"
+                    class="space-y-3 overflow-x-hidden"
                 >
-                    <div
-                        class="card bg-base-200 shadow-md border border-base-300"
-                    >
-                        <div class="card-body p-3">
-                            <h2
-                                class="card-title text-base font-semibold text-primary-focus mb-2 flex items-center gap-2"
-                            >
-                                <Cloud class="w-5 h-5" />
-                                {{ t("settings.sync_status") }}
-                            </h2>
-                            <SyncStatus />
-                        </div>
-                    </div>
-
-                    <div
-                        class="card bg-base-200 shadow-md border border-base-300"
-                    >
-                        <div class="card-body p-4">
-                            <h2
-                                class="card-title text-lg font-semibold text-primary-focus mb-4 flex items-center gap-2"
-                            >
-                                <SettingsIcon class="w-5 h-5" />
-                                {{ t("settings.sync_controls") }}
-                            </h2>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div
-                                    class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors"
-                                >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <Upload class="w-5 h-5 text-primary" />
-                                        <h3 class="font-semibold">
-                                            {{ t("settings.upload_title") }}
-                                        </h3>
-                                    </div>
-                                    <p
-                                        class="text-sm text-base-content/70 mb-2"
-                                    >
-                                        {{ t("settings.upload_description") }}
-                                    </p>
-                                    <button
-                                        @click="handleUploadToCloud"
-                                        class="btn btn-primary btn-sm w-full"
-                                        :disabled="
-                                            syncState.isSyncing ||
-                                            !syncState.isOnline ||
-                                            !isAuthenticated
-                                        "
-                                    >
-                                        <Upload class="w-4 h-4 mr-2" />
-                                        {{
-                                            syncState.isSyncing
-                                                ? t("settings.syncing")
-                                                : t("settings.upload_button")
-                                        }}
-                                    </button>
-                                </div>
-
-                                <div
-                                    class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors"
-                                >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <Download class="w-5 h-5" />
-                                        <h3 class="font-semibold">
-                                            {{ t("settings.download_title") }}
-                                        </h3>
-                                    </div>
-                                    <p
-                                        class="text-sm text-base-content/70 mb-3"
-                                    >
-                                        {{ t("settings.download_description") }}
-                                    </p>
-                                    <button
-                                        @click="handleDownloadFromCloud"
-                                        class="btn btn-primary btn-sm w-full"
-                                        :disabled="
-                                            syncState.isSyncing ||
-                                            !syncState.isOnline ||
-                                            !syncState.hasCloudData ||
-                                            !isAuthenticated
-                                        "
-                                    >
-                                        <Download class="w-4 h-4 mr-2" />
-                                        {{
-                                            syncState.isSyncing
-                                                ? t("settings.syncing")
-                                                : t("settings.download_button")
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                class="mt-3 p-3 border border-base-300 rounded-lg"
-                            >
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-semibold text-sm mb-1">
-                                            {{ t("settings.auto_sync") }}
-                                        </h3>
-                                        <p class="text-sm text-base-content/70">
-                                            {{
-                                                t(
-                                                    "settings.auto_sync_description"
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        :checked="syncState.autoSyncEnabled"
-                                        @change="toggleAutoSync"
-                                        class="toggle toggle-primary"
-                                        :disabled="!isAuthenticated"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="!isAuthenticated"
-                                class="mt-2 alert alert-warning py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <LogIn class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.sync_login_required")
-                                    }}</span>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="!syncState.isOnline"
-                                class="mt-2 alert alert-warning py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <WifiOff class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.offline_warning")
-                                    }}</span>
-                                </div>
-                            </div>
-
-                            <div
-                                v-else-if="!syncState.hasCloudData"
-                                class="mt-2 alert alert-info py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <Cloud class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.no_cloud_data")
-                                    }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-else key="accounts" class="space-y-3 overflow-x-hidden">
                     <div
                         class="card bg-base-200 shadow-md border border-base-300"
                     >
@@ -1232,6 +1062,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             </div>
 
                             <div
+                                v-if="false"
                                 class="card bg-base-200 shadow-md border border-base-300 mb-3"
                             >
                                 <div class="card-body p-3 space-y-3">

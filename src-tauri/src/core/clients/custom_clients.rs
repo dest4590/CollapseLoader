@@ -74,7 +74,7 @@ impl CustomClient {
                 is_fabric: self.client_type == ClientType::Fabric,
                 is_forge: self.client_type == ClientType::Forge,
                 asset_index: if self.version.contains("1.21") {
-                    "17".to_string()
+                    "1.21".to_string()
                 } else if self.version.contains("1.16") {
                     "1.16".to_string()
                 } else if self.version.contains("1.8.9") {

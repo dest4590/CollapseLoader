@@ -164,7 +164,11 @@
             "username_placeholder": "Введите имя пользователя",
             "tags_label": "Теги (через запятую)",
             "tags_placeholder": "например: funtime, spookytime",
-            "add_account": "Добавить аккаунт"
+            "add_account": "Добавить аккаунт",
+            "username_hint": "3–16 символов, только a-z, 0-9, _",
+            "username_too_short": "Минимум 3 символа",
+            "username_too_long": "Максимум 16 символов (лимит Minecraft)",
+            "username_invalid_chars": "Только буквы, цифры и _ (подчёркивание)"
         },
         "telemetry_consent": {
             "title": "Согласие на дополнительную телеметрию",
