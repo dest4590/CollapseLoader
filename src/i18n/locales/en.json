@@ -1290,9 +1290,12 @@
         "added": "Added",
         "stop": "Stop",
         "launch": "Launch",
+        "launch_another": "Launch Again",
+        "open_folder": "Open Folder",
         "load_failed": "Failed to load custom clients: {error}",
         "launch_failed": "Failed to launch {name}: {error}",
         "stop_failed": "Error stopping client: {error}",
-        "flags_failed": "Failed to load flags: {error}"
+        "flags_failed": "Failed to load flags: {error}",
+        "open_folder_failed": "Failed to open folder: {error}"
     }
 }

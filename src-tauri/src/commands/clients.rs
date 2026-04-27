@@ -803,3 +803,122 @@ pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(
         .await
         .map_err(|e| format!("Stop custom client task error: {e}"))?
 }
+
+#[tauri::command]
+pub fn open_custom_client_folder(id: u32, state: State<'_, AppState>) -> Result<(), String> {
+    log_info!("Attempting to open folder for custom client ID: {}", id);
+    let manager = state.custom_clients.lock();
+    let custom_client = manager
+        .get_client(id)
+        .cloned()
+        .ok_or_else(|| "Custom client not found".to_string())?;
+    drop(manager);
+
+    let folder = custom_client.file_path.parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .to_path_buf();
+
+    if !folder.exists() {
+        return Err("Custom client folder does not exist".to_string());
+    }
+
+    let folder_absolute = folder
+        .canonicalize()
+        .map_err(|e| format!("Failed to get absolute path: {e}"))?;
+
+    opener::open(&folder_absolute).map_err(|e| format!("Failed to open folder: {e}"))
+}
+
+#[tauri::command]
+pub async fn list_installed_mods_custom(
+    id: u32,
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, String> {
+    let custom_client = {
+        let manager = state.custom_clients.lock();
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let mods_folder = custom_client.file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .join("mods");
+
+    if !mods_folder.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut mods = Vec::new();
+    let mut entries = tokio::fs::read_dir(mods_folder)
+        .await
+        .map_err(|e| format!("Failed to read mods directory: {e}"))?;
+
+    while let Some(entry) = entries.next_entry().await.map_err(|e| e.to_string())? {
+        let path = entry.path();
+        if path.is_file() {
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.ends_with(".jar") {
+                    mods.push(filename.to_string());
+                }
+            }
+        }
+    }
+
+    Ok(mods)
+}
+
+#[tauri::command]
+pub async fn install_mod_for_custom_client(
+    id: u32,
+    url: String,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    log_info!("Installing mod for custom client {}: {} from {}", id, filename, url);
+
+    let custom_client = {
+        let manager = state.custom_clients.lock();
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let mods_folder = custom_client.file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .join("mods");
+
+    tokio::fs::create_dir_all(&mods_folder)
+        .await
+        .map_err(|e| format!("Failed to create mods folder: {e}"))?;
+
+    let dest = mods_folder.join(&filename);
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&url)
+        .header("User-Agent", "CollapseLoader-Reborn")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download mod: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Download failed with status: {}", response.status()));
+    }
+
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Failed to read mod response: {e}"))?;
+
+    tokio::fs::write(&dest, &bytes)
+        .await
+        .map_err(|e| format!("Failed to write mod file: {e}"))?;
+
+    log_info!("Successfully installed mod: {} ({} bytes)", filename, bytes.len());
+    Ok(())
+}

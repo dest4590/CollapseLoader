@@ -206,6 +206,7 @@ pub fn run() {
             commands::clients::initialize_api,
             commands::clients::initialize_rpc,
             commands::clients::install_mod_from_url,
+            commands::clients::install_mod_for_custom_client,
             commands::clients::launch_client,
             commands::clients::launch_custom_client,
             commands::clients::list_installed_mods,
@@ -214,6 +215,8 @@ pub fn run() {
             commands::clients::remove_custom_client,
             commands::clients::stop_client,
             commands::clients::stop_custom_client,
+            commands::clients::open_custom_client_folder,
+            commands::clients::list_installed_mods_custom,
             commands::clients::update_client_installed_status,
             commands::clients::update_custom_client,
             // irc commands
