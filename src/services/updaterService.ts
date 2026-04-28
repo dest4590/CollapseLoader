@@ -156,14 +156,18 @@ class UpdaterService {
             clearInterval(this.checkInterval);
         }
 
-        setTimeout(() => {
-            this.checkForUpdates(false, t);
+        setTimeout(async () => {
+            const autoUpdate = await invoke<boolean>("get_setting_bool", { key: "auto_update" }).catch(() => true);
+            if (autoUpdate) this.checkForUpdates(false, t);
         }, 10000);
 
-        this.checkInterval = window.setInterval(() => {
-            this.checkForUpdates(false, t).then((r) => {
-                console.log("Periodic update check completed:", r);
-            });
+        this.checkInterval = window.setInterval(async () => {
+            const autoUpdate = await invoke<boolean>("get_setting_bool", { key: "auto_update" }).catch(() => true);
+            if (autoUpdate) {
+                this.checkForUpdates(false, t).then((r) => {
+                    console.log("Periodic update check completed:", r);
+                });
+            }
         }, this.CHECK_INTERVAL);
     }
 

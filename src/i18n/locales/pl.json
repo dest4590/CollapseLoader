@@ -780,10 +780,9 @@
             "close_to_tray": "Zminimalizuj aplikację do zasobnika systemowego, zamiast zamykać ją po kliknięciu przycisku zamykania.",
             "minimize_to_tray_on_launch": "Zminimalizuj aplikację do zasobnika systemowego po uruchomieniu klienta.",
             "java_path": "Ścieżka do pliku wykonywalnego Java. Pozostaw puste, aby użyć domyślnej wersji.",
-            "java_args": "Dodatkowe argumenty JVM używane podczas uruchamiania klienta."
+            "java_args": "Dodatkowe argumenty JVM używane podczas uruchamiania klienta.",
+            "auto_update": "Automatycznie sprawdzaj aktualizacje i powiadamiaj o nowych wersjach."
         },
-        "ram_warning": {},
-        "telemetry": "Analityka",
         "open_data": "Otwórz folder loadera",
         "add_account_title": "Dodaj nowe konto",
         "edit_account_title": "Edytuj konto",
@@ -852,6 +851,7 @@
         "sync_login_required": "Zaloguj się, aby włączyć synchronizację",
         "not_signed_in": "Nie jesteś zalogowany",
         "close_to_tray": "Blisko tacy",
+        "auto_update": "Automatyczne aktualizacje",
         "minimize_to_tray_on_launch": "Minimalizuj do zasobnika przy uruchomieniu"
     },
     "userProfile": {

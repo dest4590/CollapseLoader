@@ -238,6 +238,7 @@ pub fn run() {
             commands::settings::get_favorite_clients,
             commands::settings::get_flags,
             commands::settings::get_settings,
+            commands::settings::get_setting_bool,
             commands::settings::get_system_memory,
             commands::settings::is_client_favorite,
             commands::settings::is_telemetry_consent_shown,

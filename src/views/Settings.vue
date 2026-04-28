@@ -31,6 +31,7 @@ import {
     Coffee,
     Terminal,
     HardDrive,
+    RefreshCcw,
 } from "lucide-vue-next";
 import { useToast } from "../services/toastService";
 import type { ToastPosition } from "../types/toast";
@@ -515,6 +516,10 @@ const getFormattedLabel = (key: string) => {
         return "Custom Java Arguments";
     }
 
+    if (key === "auto_update") {
+        return t("settings.auto_update");
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
@@ -819,6 +824,10 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     />
                                     <MousePointer2
                                         v-if="key === 'close_to_tray'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <RefreshCcw
+                                        v-if="key === 'auto_update'"
                                         class="w-5 h-5 text-primary"
                                     />
                                     <Coffee
