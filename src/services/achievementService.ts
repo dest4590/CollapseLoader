@@ -1,3 +1,6 @@
+import { useToast } from "./toastService";
+import i18n from "../i18n";
+
 export interface Achievement {
     id: number;
     key: string;
@@ -133,10 +136,8 @@ class AchievementService {
             })
         );
 
-        const { useToast } = await import("./toastService");
         const { addToast } = useToast();
 
-        const i18n = (await import("../i18n")).default;
         const achievementName = i18n.global.t(`achievements.list.${key}.name`);
 
         addToast(

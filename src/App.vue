@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { router } from "./services/router";
 import { useI18n } from "vue-i18n";
@@ -411,7 +412,6 @@ onMounted(async () => {
                 2000
             );
             await invoke("launch_client", { id: target.id, userToken });
-            const { getCurrentWindow } = await import("@tauri-apps/api/window");
             await getCurrentWindow().minimize();
         } catch (e) {
             console.error("Cannot start client from tray", e);
@@ -459,8 +459,6 @@ onMounted(async () => {
                     });
 
                     if (!was_already_running) {
-                        const { getCurrentWindow } =
-                            await import("@tauri-apps/api/window");
                         await getCurrentWindow().minimize();
                     }
                 } catch (e) {

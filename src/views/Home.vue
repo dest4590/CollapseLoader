@@ -31,6 +31,7 @@ import ModsManagerModal from "../components/modals/clients/ModsManagerModal.vue"
 import { useToast } from "../services/toastService";
 import { useModal } from "../services/modalService";
 import { syncService } from "../services/syncService";
+import { achievementService } from "../services/achievementService";
 import { useI18n } from "vue-i18n";
 import type { Client, CustomClient, InstallProgress } from "../types/ui";
 import LogViewerModal from "../components/modals/clients/LogViewerModal.vue";
@@ -618,8 +619,6 @@ const toggleFavorite = async (client: Client) => {
             addToast(t("home.favorite_added"), "success");
 
             if (favoriteClients.value.length >= 5) {
-                const { achievementService } =
-                    await import("../services/achievementService");
                 void achievementService.unlockAchievement("COLLECTOR");
             }
         }

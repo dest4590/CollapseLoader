@@ -84,7 +84,7 @@ impl Servers {
         );
 
         log_info!(
-            "Services: API [{}], CDN [{}]",
+            "Services:\nAPI [{}]\nCDN [{}]",
             self.selected_api
                 .read()
                 .unwrap()

@@ -17,7 +17,7 @@ const props = defineProps<{
 
 const logContainer = ref<HTMLElement | null>(null);
 const displayedLogs = ref<LogEntry[]>([]);
-const activeTimeouts = ref<NodeJS.Timeout[]>([]);
+const activeTimeouts = ref<number[]>([]);
 
 const logs = bootLogService.getLogs();
 
@@ -31,7 +31,7 @@ const addLogToDisplay = async (logEntry: LogEntry) => {
 };
 
 const clearTimeouts = () => {
-    activeTimeouts.value.forEach((timeoutId) => clearTimeout(timeoutId));
+    activeTimeouts.value.forEach((timeoutId: number) => clearTimeout(timeoutId));
     activeTimeouts.value = [];
 };
 
