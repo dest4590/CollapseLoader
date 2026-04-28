@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { userService, type SyncData, type UserInitData } from "./userService";
 import { settingsService } from "./settingsService";
 import { globalUserStatus } from "../composables/useUserStatus";
+import { maxIsoTimestamp } from "../utils/utils";
 
 export type ToastFunction = (message: string, type: string) => void;
 export type TranslateFunction = (
@@ -126,23 +127,6 @@ class SyncService {
                 data.preferences.find(
                     (p) => p.key === "collapseloader.settings"
                 ) || null;
-
-            const maxIsoTimestamp = (
-                timestamps: Array<string | null | undefined>
-            ): string | null => {
-                let max: number | null = null;
-                let maxIso: string | null = null;
-                for (const ts of timestamps) {
-                    if (!ts) continue;
-                    const time = new Date(ts).getTime();
-                    if (Number.isNaN(time)) continue;
-                    if (max === null || time > max) {
-                        max = time;
-                        maxIso = ts;
-                    }
-                }
-                return maxIso;
-            };
 
             const lastSync = maxIsoTimestamp([
                 settingsPref?.updated_at ?? null,

@@ -2,9 +2,10 @@ import { reactive, watchEffect } from "vue";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen, emit } from "@tauri-apps/api/event";
 import { achievementService } from "./achievementService";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 const PRESET_SETTINGS_STORAGE_KEY = "presetSettings";
-const THEME_STORAGE_KEY = "theme";
+const THEME_STORAGE_KEY = STORAGE_KEYS.THEME;
 
 interface ThemeSettings {
     customCSS: string;

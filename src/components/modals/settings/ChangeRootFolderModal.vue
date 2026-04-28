@@ -119,5 +119,5 @@ const emit = defineEmits<{ (e: "close"): void; (e: "done"): void }>();
 
 <style scoped>
 @reference "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui/index.js";
 </style>

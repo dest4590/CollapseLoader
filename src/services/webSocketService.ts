@@ -2,6 +2,7 @@ import { Client } from "@stomp/stompjs";
 import { getApiUrl } from "../config";
 import { updaterService } from "./updaterService";
 import i18n from "../i18n";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 class WebSocketService {
     private client: Client | null = null;
@@ -16,7 +17,7 @@ class WebSocketService {
             brokerURL: this.getBrokerUrl(),
             connectHeaders: {
                 Authorization:
-                    `Bearer ${localStorage.getItem("authToken")}` || "",
+                    `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}` || "",
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
@@ -74,36 +75,22 @@ class WebSocketService {
         }
     }
 
-    private subscribeToUserAchievements() {
+    private safeSubscribe(destination: string, handler: (data: any) => void): void {
         if (!this.client) {
-            console.error(
-                "Cannot subscribe: WebSocket client is not initialized"
-            );
+            console.error("Cannot subscribe: WebSocket client is not initialized");
             return;
         }
-
-        this.client.subscribe("/user/queue/achievements", (message) => {
-            if (message.body) {
-                const achievement = JSON.parse(message.body);
-                this.handleAchievementUnlock(achievement);
-            }
+        this.client.subscribe(destination, (message) => {
+            if (message.body) handler(JSON.parse(message.body));
         });
     }
 
-    private subscribeToFriendNotifications() {
-        if (!this.client) {
-            console.error(
-                "Cannot subscribe: WebSocket client is not initialized"
-            );
-            return;
-        }
+    private subscribeToUserAchievements() {
+        this.safeSubscribe("/user/queue/achievements", (data) => this.handleAchievementUnlock(data));
+    }
 
-        this.client.subscribe("/user/queue/friends", (message) => {
-            if (message.body) {
-                const data = JSON.parse(message.body);
-                this.handleFriendNotification(data);
-            }
-        });
+    private subscribeToFriendNotifications() {
+        this.safeSubscribe("/user/queue/friends", (data) => this.handleFriendNotification(data));
     }
 
     private handleFriendNotification(data: any) {
@@ -131,19 +118,7 @@ class WebSocketService {
     }
 
     private subscribeToCommands() {
-        if (!this.client) {
-            console.error(
-                "Cannot subscribe: WebSocket client is not initialized"
-            );
-            return;
-        }
-
-        this.client.subscribe("/topic/commands", (message) => {
-            if (message.body) {
-                const data = JSON.parse(message.body);
-                this.handleCommand(data);
-            }
-        });
+        this.safeSubscribe("/topic/commands", (data) => this.handleCommand(data));
     }
 
     private async handleCommand(data: any) {
@@ -154,30 +129,9 @@ class WebSocketService {
     }
 
     private subscribeToBroadcasts() {
-        if (!this.client) {
-            return;
+        for (const topic of ["/topic/broadcast", "/topic/broadcast/users", "/topic/broadcast/guests"]) {
+            this.safeSubscribe(topic, (data) => this.handleBroadcast(data));
         }
-
-        this.client.subscribe("/topic/broadcast", (message) => {
-            if (message.body) {
-                const data = JSON.parse(message.body);
-                this.handleBroadcast(data);
-            }
-        });
-
-        this.client.subscribe("/topic/broadcast/users", (message) => {
-            if (message.body) {
-                const data = JSON.parse(message.body);
-                this.handleBroadcast(data);
-            }
-        });
-
-        this.client.subscribe("/topic/broadcast/guests", (message) => {
-            if (message.body) {
-                const data = JSON.parse(message.body);
-                this.handleBroadcast(data);
-            }
-        });
     }
 
     private handleBroadcast(data: any) {

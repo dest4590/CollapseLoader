@@ -1,7 +1,7 @@
 @import "tailwindcss";
-@plugin 'daisyui';
+@plugin "daisyui/index.js";
 
-@plugin "daisyui/theme" {
+@plugin "daisyui/theme/index.js" {
     name: "dark";
     default: true;
     prefersdark: true;
@@ -36,7 +36,7 @@
     --noise: 0;
 }
 
-@plugin "daisyui/theme" {
+@plugin "daisyui/theme/index.js" {
     name: "light";
     default: false;
     prefersdark: false;

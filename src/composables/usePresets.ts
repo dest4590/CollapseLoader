@@ -16,17 +16,20 @@ export function usePresets() {
     const { t } = useI18n();
     const { addToast } = useToast();
 
+    const handleError = (err: unknown, fallbackKey: string): string => {
+        const message = err instanceof Error ? err.message : t(fallbackKey);
+        error.value = message;
+        addToast(message, "error");
+        return message;
+    };
+
     const loadPresets = async (): Promise<void> => {
         try {
             loading.value = true;
             error.value = null;
             presets.value = await presetService.getAllPresets();
         } catch (err) {
-            error.value =
-                err instanceof Error
-                    ? err.message
-                    : t("theme.presets.messages.load_error");
-            addToast(t("theme.presets.messages.load_error"), "error");
+            handleError(err, "theme.presets.messages.load_error");
         } finally {
             loading.value = false;
         }
@@ -47,12 +50,7 @@ export function usePresets() {
             return preset;
         } catch (err) {
             console.log("Failed to create preset:", err);
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : t("theme.presets.messages.create_error");
-            error.value = message;
-            addToast(message, "error");
+            handleError(err, "theme.presets.messages.create_error");
             return null;
         }
     };
@@ -74,12 +72,7 @@ export function usePresets() {
             );
             return updatedPreset;
         } catch (err) {
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : t("theme.presets.messages.update_error");
-            error.value = message;
-            addToast(message, "error");
+            handleError(err, "theme.presets.messages.update_error");
             return null;
         }
     };
@@ -97,12 +90,7 @@ export function usePresets() {
             );
             return true;
         } catch (err) {
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : t("theme.presets.messages.delete_error");
-            error.value = message;
-            addToast(message, "error");
+            handleError(err, "theme.presets.messages.delete_error");
             return false;
         }
     };
@@ -125,12 +113,7 @@ export function usePresets() {
             );
             return duplicatedPreset;
         } catch (err) {
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : t("theme.presets.messages.duplicate_error");
-            error.value = message;
-            addToast(message, "error");
+            handleError(err, "theme.presets.messages.duplicate_error");
             return null;
         }
     };
@@ -145,12 +128,7 @@ export function usePresets() {
                 "success"
             );
         } catch (err) {
-            const message =
-                err instanceof Error
-                    ? err.message
-                    : t("theme.presets.messages.apply_error");
-            error.value = message;
-            addToast(message, "error");
+            handleError(err, "theme.presets.messages.apply_error");
         }
     };
 
@@ -225,7 +203,8 @@ export function usePresets() {
                 backgroundBlur:
                     presetData.background_blur ?? presetData.backgroundBlur,
                 backgroundOpacity:
-                    presetData.background_opacity ?? presetData.backgroundOpacity,
+                    presetData.background_opacity ??
+                    presetData.backgroundOpacity,
             };
 
             return await createPreset(input);

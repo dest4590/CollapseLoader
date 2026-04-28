@@ -22,38 +22,38 @@ tauri-plugin-single-instance = { version = "2.4.0", features = ["deep-link"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 colored = "3.1.1"
-rand = "0.10.0"
-reqwest = { version = "0.13.2", features = [
+rand = "0.10.1"
+reqwest = { version = "0.13.3", features = [
     "blocking",
     "json",
     "stream",
     "multipart",
 ] }
-semver = "1.0.27"
-zip = "8.2.0"
-tokio = { version = "1.50.0", features = ["macros", "process"] }
+semver = "1.0.28"
+zip = "8.6.0"
+tokio = { version = "1.52.1", features = ["macros", "process"] }
 opener = "0.8.4"
-uuid = { version = "1.22.0", features = ["v4"] }
+uuid = { version = "1.23.1", features = ["v4"] }
 chrono = { version = "0.4.44", features = ["serde"] }
 paste = "1.0.15"
-open = "5.3.3"
+open = "5.3.4"
 md5 = "0.8.0"
 discord-rich-presence = "1.1.0"
 futures-util = "0.3.32"
 base64 = "0.22.1"
-tauri-plugin-dialog = "2.6.0"
+tauri-plugin-dialog = "2.7.0"
 dotenvy = "0.15.7"
-tauri-plugin-fs = "2.4.5"
+tauri-plugin-fs = "2.5.0"
 thiserror = "2.0.18"
 native-dialog = "0.9.6"
 sysinfo = "0.38.4"
 socket2 = "0.6.3"
-sha2 = "0.10.9"
+sha2 = "0.11.0"
 regex = "1.12.3"
 flate2 = "1.1.9"
 
 [target.'cfg(windows)'.dependencies]
-winreg = { version = "0.55.0" }
+winreg = { version = "0.56.0" }
 windows = { version = "0.62.2", features = ["Win32_UI_HiDpi"] }
 
 [profile.dev]

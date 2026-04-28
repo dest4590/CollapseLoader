@@ -4,6 +4,8 @@ import {
     type Friend,
     type FriendRequest,
 } from "../services/userService";
+import { createPolling, type PollingController } from "./usePolling";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 interface GlobalFriendsState {
     friends: Friend[];
@@ -26,12 +28,10 @@ const globalFriendsState = reactive<GlobalFriendsState>({
 });
 
 const isStatusLoading = ref(false);
-const statusUpdateInterval: { current: NodeJS.Timeout | null } = {
-    current: null,
-};
+let statusPolling: PollingController | null = null;
 const STATUS_UPDATE_INTERVAL = 45000;
 
-const isAuthenticated = computed(() => !!localStorage.getItem("authToken"));
+const isAuthenticated = computed(() => !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN));
 
 export function useFriends() {
     const onlineFriends = computed(() =>
@@ -92,7 +92,7 @@ export function useFriends() {
             globalFriendsState.lastUpdated = new Date().toISOString();
             globalFriendsState.isLoaded = true;
 
-            if (!statusUpdateInterval.current) {
+            if (!statusPolling) {
                 startStatusUpdates();
             }
 
@@ -178,22 +178,11 @@ export function useFriends() {
     };
 
     const startStatusUpdates = (): void => {
-        if (statusUpdateInterval.current) {
-            clearInterval(statusUpdateInterval.current);
-        }
+        statusPolling?.stop();
 
         const runStatusUpdate = async () => {
-            if (document && document.visibilityState === "hidden") {
-                return;
-            }
-
-            if (
-                !isAuthenticated.value ||
-                globalFriendsState.friends.length === 0
-            ) {
-                return;
-            }
-
+            if (document.visibilityState === "hidden") return;
+            if (!isAuthenticated.value || globalFriendsState.friends.length === 0) return;
             await updateFriendStatuses();
         };
 
@@ -202,16 +191,8 @@ export function useFriends() {
             (error) => console.error("Failed to start status updates:", error)
         );
 
-        statusUpdateInterval.current = setInterval(
-            runStatusUpdate,
-            STATUS_UPDATE_INTERVAL
-        );
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                runStatusUpdate().catch(() => {});
-            }
-        });
+        statusPolling = createPolling(runStatusUpdate, STATUS_UPDATE_INTERVAL);
+        statusPolling.start();
 
         console.log(
             `Started status updates with ${STATUS_UPDATE_INTERVAL}ms interval`
@@ -324,11 +305,7 @@ export function useFriends() {
         globalFriendsState.isLoaded = false;
         globalFriendsState.lastUpdated = null;
         globalFriendsState.lastStatusUpdate = 0;
-
-        if (statusUpdateInterval.current) {
-            clearInterval(statusUpdateInterval.current);
-            statusUpdateInterval.current = null;
-        }
+        stopStatusUpdates();
     };
 
     const hydrateFriends = (data: {
@@ -348,17 +325,15 @@ export function useFriends() {
         globalFriendsState.isLoaded = true;
         globalFriendsState.lastUpdated = new Date().toISOString();
 
-        if (!statusUpdateInterval.current) {
+        if (!statusPolling) {
             startStatusUpdates();
         }
     };
 
     const stopStatusUpdates = (): void => {
-        if (statusUpdateInterval.current) {
-            clearInterval(statusUpdateInterval.current);
-            statusUpdateInterval.current = null;
-            console.log("Stopped status updates");
-        }
+        statusPolling?.stop();
+        statusPolling = null;
+        console.log("Stopped status updates");
     };
 
     watch(isAuthenticated, (newValue) => {

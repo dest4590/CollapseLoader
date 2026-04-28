@@ -1,6 +1,8 @@
 import { ref, computed, reactive, nextTick } from "vue";
 import { apiClient } from "../services/apiClient";
 import { useStreamerMode } from "./useStreamerMode";
+import { createPolling, type PollingController } from "./usePolling";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 interface StatusData {
     isOnline: boolean;
@@ -30,7 +32,7 @@ const pollingConfig = {
     interval: 30000,
 };
 
-let statusSyncInterval: ReturnType<typeof setInterval> | null = null;
+let statusPolling: PollingController | null = null;
 let pendingStatusUpdate: Promise<any> | null = null;
 let lastRequestId = 0;
 
@@ -38,7 +40,7 @@ export function useUserStatus() {
     const streamer = useStreamerMode();
 
     const checkAuthStatus = (): boolean => {
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         const isAuth = !!token;
         isAuthenticated.value = isAuth;
 
@@ -210,11 +212,9 @@ export function useUserStatus() {
     };
 
     const startPolling = () => {
-        if (statusSyncInterval) {
-            clearInterval(statusSyncInterval);
-        }
+        statusPolling?.stop();
 
-        const pollWrapper = async () => {
+        statusPolling = createPolling(async () => {
             if (checkAuthStatus()) {
                 syncStatusToServer().catch((error) => {
                     console.error("Scheduled status sync failed:", error);
@@ -225,15 +225,9 @@ export function useUserStatus() {
                 );
                 await stopStatusSync();
             }
-        };
+        }, pollingConfig.interval);
 
-        statusSyncInterval = setInterval(pollWrapper, pollingConfig.interval);
-
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                pollWrapper().catch(() => {});
-            }
-        });
+        statusPolling.start();
     };
 
     const startStatusSync = () => {
@@ -252,10 +246,8 @@ export function useUserStatus() {
     const stopStatusSync = async () => {
         console.log("Stopping status sync...");
 
-        if (statusSyncInterval) {
-            clearInterval(statusSyncInterval);
-            statusSyncInterval = null;
-        }
+        statusPolling?.stop();
+        statusPolling = null;
 
         if (checkAuthStatus() && globalStatus.isOnline) {
             setOffline(false);
