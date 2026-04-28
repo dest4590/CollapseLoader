@@ -30,6 +30,7 @@ import {
     MousePointer2,
     Coffee,
     Terminal,
+    HardDrive,
 } from "lucide-vue-next";
 import { useToast } from "../services/toastService";
 import type { ToastPosition } from "../types/toast";
@@ -595,6 +596,34 @@ const openDataFolder = async () => {
     await invoke("open_data_folder");
 };
 
+const storageUsage = ref<{
+    clients: number;
+    libraries: number;
+    natives: number;
+    assets: number;
+    custom_clients: number;
+    total: number;
+} | null>(null);
+const storageLoading = ref(false);
+
+const loadStorageUsage = async () => {
+    storageLoading.value = true;
+    try {
+        storageUsage.value = await invoke("get_storage_usage");
+    } catch (e) {
+        console.error("Failed to get storage usage", e);
+    } finally {
+        storageLoading.value = false;
+    }
+};
+
+const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return "0 B";
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
 const resetRequirements = async () => {
     try {
         await invoke("reset_requirements");
@@ -626,6 +655,8 @@ onMounted(async () => {
         console.error("Failed to get system memory:", error);
         systemMemory.value = null;
     }
+
+    loadStorageUsage();
 });
 
 onUnmounted(() => {
@@ -990,6 +1021,57 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     <RotateCcw class="w-4 h-4 text-warning" />
                                     {{ $t("settings.reset_settings") }}
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-200 shadow-md border border-base-300">
+                        <div class="card-body p-3">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="card-title text-sm font-semibold text-primary-focus flex items-center gap-2">
+                                    <HardDrive class="w-5 h-5" />
+                                    {{ $t("settings.storage_usage") }}
+                                </h2>
+                                <button
+                                    @click="loadStorageUsage"
+                                    class="btn btn-ghost btn-xs btn-square"
+                                >
+                                    <RotateCcw class="w-3.5 h-3.5" :class="{ 'animate-spin': storageLoading }" />
+                                </button>
+                            </div>
+
+                            <div v-if="storageLoading" class="flex justify-center py-4">
+                                <span class="loading loading-spinner loading-sm text-primary"></span>
+                            </div>
+
+                            <div v-else-if="storageUsage" class="space-y-2">
+                                <div
+                                    v-for="item in [
+                                        { key: 'clients', label: $t('settings.storage_clients'), value: storageUsage.clients },
+                                        { key: 'libraries', label: $t('settings.storage_libraries'), value: storageUsage.libraries },
+                                        { key: 'natives', label: $t('settings.storage_natives'), value: storageUsage.natives },
+                                        { key: 'assets', label: $t('settings.storage_assets'), value: storageUsage.assets },
+                                        { key: 'java', label: $t('settings.storage_java'), value: storageUsage.java },
+                                        { key: 'other', label: $t('settings.storage_other'), value: storageUsage.other },
+                                    ]"
+                                    :key="item.key"
+                                    class="flex items-center justify-between text-xs"
+                                >
+                                    <span class="text-base-content/70">{{ item.label }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-20 bg-base-300 rounded-full h-1.5">
+                                            <div
+                                                class="bg-primary h-1.5 rounded-full transition-all"
+                                                :style="{ width: storageUsage.total > 0 ? `${Math.min(100, (item.value / storageUsage.total) * 100).toFixed(0)}%` : '0%' }"
+                                            ></div>
+                                        </div>
+                                        <span class="font-mono font-medium w-16 text-right">{{ formatBytes(item.value) }}</span>
+                                    </div>
+                                </div>
+                                <div class="border-t border-base-300 pt-2 flex items-center justify-between text-xs font-semibold">
+                                    <span>{{ $t("settings.storage_total") }}</span>
+                                    <span class="font-mono text-primary">{{ formatBytes(storageUsage.total) }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>

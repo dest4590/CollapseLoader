@@ -12,7 +12,7 @@ const close = () => {
 
 const openGithub = async () => {
     try {
-        await openUrl("https://github.com/W1xced-io");
+        await openUrl("https://github.com/dest4590/CollapseLoader/tree/dev");
     } catch (error) {
         console.error("Failed to open GitHub:", error);
     }

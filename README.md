@@ -2,13 +2,13 @@
   <img src="https://github.com/dest4590/CollapseLoader/assets/80628386/190926bf-cde4-4de4-a35f-476eb9d9ac7b" width="100">
   <h1>CollapseLoader Reborn</h1>
 
-[![GitHub Release](https://img.shields.io/github/v/release/W1xced-io/CollapseLoader-reborn?display_name=tag&style=for-the-badge&logo=alwaysdata&logoColor=ffffff)](https://github.com/W1xced-io/CollapseLoader-reborn/releases/latest)
-[![GitHub Stars](https://img.shields.io/github/stars/W1xced-io/CollapseLoader-reborn?style=for-the-badge&logo=github&logoColor=ffffff)](https://github.com/W1xced-io/CollapseLoader-reborn/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/W1xced-io/CollapseLoader-reborn?style=for-the-badge&logo=github&logoColor=ffffff)](https://github.com/W1xced-io/CollapseLoader-reborn/issues)
+[![GitHub Release](https://img.shields.io/github/v/release/dest4590/CollapseLoader?display_name=tag&style=for-the-badge&logo=alwaysdata&logoColor=ffffff)](https://github.com/dest4590/CollapseLoader/releases/latest)
+[![GitHub Stars](https://img.shields.io/github/stars/dest4590/CollapseLoader?style=for-the-badge&logo=github&logoColor=ffffff)](https://github.com/dest4590/CollapseLoader/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/dest4590/CollapseLoader?style=for-the-badge&logo=github&logoColor=ffffff)](https://github.com/dest4590/CollapseLoader/issues)
 
 **A secure, open-source launcher for verified Minecraft cheat clients.**
 
-[Releases](https://github.com/W1xced-io/CollapseLoader-reborn/releases) • [Issues](https://github.com/W1xced-io/CollapseLoader-reborn/issues) 
+[Releases](https://github.com/dest4590/CollapseLoader/releases) • [Issues](https://github.com/dest4590/CollapseLoader/issues) 
 
 </div>
 
@@ -62,7 +62,7 @@ CollapseLoader Reborn is a modern, cross-platform launcher built with **Rust** a
 ### Windows
 
 - **System**: Windows 10 or 11.
-- **Download**: Grab the `.msi` installer or the standalone `.exe` from [Releases](https://github.com/W1xced-io/CollapseLoader-reborn/releases).
+- **Download**: Grab the `.msi` installer or the standalone `.exe` from [Releases](https://github.com/dest4590/CollapseLoader/releases).
 
 ### Linux
 
@@ -114,7 +114,7 @@ WEBKIT_DISABLE_DMABUF_RENDERER=1 WEBKIT_DISABLE_COMPOSITING_MODE=1 GDK_BACKEND=x
 Requires Rust toolchain and Node.js.
 
 ```bash
-git clone https://github.com/W1xced-io/CollapseLoader-reborn
+git clone https://github.com/dest4590/CollapseLoader
 cd CollapseLoader-reborn
 npm install
 npm run tauri dev

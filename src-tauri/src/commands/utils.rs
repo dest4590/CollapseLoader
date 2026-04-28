@@ -392,3 +392,115 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
 
     Ok(())
 }
+
+#[derive(serde::Serialize)]
+pub struct StorageUsage {
+    pub clients: u64,
+    pub libraries: u64,
+    pub natives: u64,
+    pub assets: u64,
+    pub java: u64,
+    pub other: u64,
+    pub total: u64,
+}
+
+fn dir_size(path: &std::path::Path) -> u64 {
+    if !path.exists() {
+        return 0;
+    }
+    let mut total = 0u64;
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_dir() {
+                total += dir_size(&p);
+            } else if let Ok(meta) = fs::metadata(&p) {
+                total += meta.len();
+            }
+        }
+    }
+    total
+}
+
+#[tauri::command]
+pub async fn get_storage_usage() -> StorageUsage {
+    tokio::task::spawn_blocking(|| {
+        let root = DATA.root_dir.lock().unwrap().clone();
+
+        let known_system_dirs = [
+            "libraries", "libraries-fabric", "libraries-legacy",
+            "natives", "natives-macos-x64", "natives-macos-arm64",
+            "natives-linux", "natives-legacy", "natives-legacy-linux", "natives-fabric",
+            "assets", "assets-fabric",
+            "minecraft-versions",
+            "custom_clients",
+            "agent_overlay",
+            "misc",
+            "synced_options",
+            "cache",
+        ];
+
+        let libraries = dir_size(&root.join("libraries"))
+            + dir_size(&root.join("libraries-fabric"))
+            + dir_size(&root.join("libraries-legacy"));
+
+        let natives = dir_size(&root.join("natives"))
+            + dir_size(&root.join("natives-macos-x64"))
+            + dir_size(&root.join("natives-macos-arm64"))
+            + dir_size(&root.join("natives-linux"))
+            + dir_size(&root.join("natives-legacy"))
+            + dir_size(&root.join("natives-legacy-linux"))
+            + dir_size(&root.join("natives-fabric"));
+
+        let assets = dir_size(&root.join("assets"))
+            + dir_size(&root.join("assets-fabric"));
+
+        let mc_versions = dir_size(&root.join("minecraft-versions"));
+        let custom_clients_size = dir_size(&root.join("custom_clients"));
+
+        let mut java = 0u64;
+        let mut client_folders = 0u64;
+
+        if let Ok(entries) = fs::read_dir(&root) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_lowercase();
+                let path = entry.path();
+
+                if !path.is_dir() {
+                    continue;
+                }
+
+                if name.starts_with("jdk") {
+                    java += dir_size(&path);
+                } else if !known_system_dirs.contains(&name.as_str()) {
+                    client_folders += dir_size(&path);
+                }
+            }
+        }
+
+        let clients = mc_versions + custom_clients_size + client_folders;
+        let total = dir_size(&root);
+        let accounted = clients + libraries + natives + assets + java;
+        let other = total.saturating_sub(accounted);
+
+        StorageUsage {
+            clients,
+            libraries,
+            natives,
+            assets,
+            java,
+            other,
+            total,
+        }
+    })
+    .await
+    .unwrap_or(StorageUsage {
+        clients: 0,
+        libraries: 0,
+        natives: 0,
+        assets: 0,
+        java: 0,
+        other: 0,
+        total: 0,
+    })
+}

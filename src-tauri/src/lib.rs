@@ -269,6 +269,7 @@ pub fn run() {
             commands::utils::get_version,
             commands::utils::is_development,
             commands::utils::open_data_folder,
+            commands::utils::get_storage_usage,
             commands::utils::reset_requirements,
             commands::utils::update_presence,
             commands::utils::is_macos,

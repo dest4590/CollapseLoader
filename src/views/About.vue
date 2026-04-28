@@ -71,7 +71,7 @@ const getVersion = async () => {
 
 const openRepository = async () => {
     try {
-        await openUrl("https://github.com/W1xced-io/CollapseLoader-reborn");
+        await openUrl("https://github.com/dest4590/CollapseLoader/tree/dev");
     } catch (error) {
         console.error("Failed to open repository:", error);
         addToast(t("about.open_failed", { platform: "Github" }), "error");
