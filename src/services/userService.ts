@@ -437,7 +437,8 @@ class UserService {
                     const localId = token.replace("local_", "");
                     localUserService.updateProfile(localId, { avatarUrl: base64 });
 
-                    if (!cached) {
+                    const cached = this.getCachedData();
+                    if (!cached || !cached.profile) {
                         const activeLocal = localUserService.getActiveProfile();
                         const newProfile: UserProfile = {
                             id: 1,
@@ -460,15 +461,14 @@ class UserService {
                                 updated_at: new Date().toISOString(),
                                 last_login_at: null,
                             },
+                            lastUpdated: new Date().toISOString(),
                         };
                         this.setCachedData(newCached);
                         resolve({ success: true, profile: newProfile });
-                    } else if (cached.profile) {
+                    } else {
                         cached.profile.avatar_url = base64;
                         this.setCachedData(cached);
                         resolve({ success: true, profile: cached.profile });
-                    } else {
-                        resolve({ success: false, error: "Profile not found" });
                     }
                 };
                 reader.readAsDataURL(file);
