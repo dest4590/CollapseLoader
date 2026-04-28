@@ -798,7 +798,8 @@
             "minimize_to_tray_on_launch": "Minimize the app to system tray when a client is launched.",
             "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked.",
             "java_path": "Path to the Java executable. Leave empty to use the default version.",
-            "java_args": "Custom JVM arguments to pass to the client on launch."
+            "java_args": "Custom JVM arguments to pass to the client on launch.",
+            "auto_update": "Automatically check for updates and notify when a new version is available."
         },
         "ram_warning": {},
         "telemetry": "Analytics",
@@ -846,6 +847,7 @@
         "sync_client_settings": "Sync client settings",
         "minimize_to_tray_on_launch": "Minimize to tray on launch",
         "close_to_tray": "Close to tray",
+        "auto_update": "Auto Update",
         "reset_settings": "Reset settings",
         "storage_usage": "Storage Usage",
         "storage_calculate": "Calculate",

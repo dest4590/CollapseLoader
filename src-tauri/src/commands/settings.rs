@@ -15,6 +15,19 @@ pub fn get_settings() -> Settings {
 }
 
 #[tauri::command]
+pub fn get_setting_bool(key: String) -> bool {
+    let s = SETTINGS.lock().unwrap();
+    match key.as_str() {
+        "auto_update" => s.auto_update.value,
+        "discord_rpc_enabled" => s.discord_rpc_enabled.value,
+        "hash_verify" => s.hash_verify.value,
+        "minimize_to_tray_on_launch" => s.minimize_to_tray_on_launch.value,
+        "close_to_tray" => s.close_to_tray.value,
+        _ => false,
+    }
+}
+
+#[tauri::command]
 pub fn get_flags() -> Flags {
     FLAGS_MANAGER.lock().unwrap().clone()
 }

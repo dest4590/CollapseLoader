@@ -17,6 +17,15 @@ pub struct Setting<T> {
     pub show: bool,
 }
 
+impl<T: Default> Default for Setting<T> {
+    fn default() -> Self {
+        Self {
+            value: T::default(),
+            show: true,
+        }
+    }
+}
+
 impl<T> Setting<T> {
     pub fn new(value: T, show: bool) -> Self {
         Self { value, show }
@@ -54,14 +63,14 @@ macro_rules! define_settings {
             $(#[$attr])*
             #[derive(Clone, Debug, Serialize, Deserialize)]
             pub struct $name {
-                $(pub $field: Setting<$field_type>,)*
+                $(#[serde(default)] pub $field: Setting<$field_type>,)*
                 #[serde(skip)]
                 pub config_path: PathBuf,
             }
 
             #[derive(Deserialize, Clone, Debug)]
             pub struct [<Input $name>] {
-                $(pub $field: Setting<$field_type>,)*
+                $(#[serde(default)] pub $field: Setting<$field_type>,)*
             }
 
             impl Default for $name {
@@ -132,6 +141,7 @@ define_settings! {
         close_to_tray: Setting<bool> = (false, true),
         java_path: Setting<String> = ("".to_string(), true),
         java_args: Setting<String> = ("".to_string(), true),
+        auto_update: Setting<bool> = (true, true),
     }
 }
 
