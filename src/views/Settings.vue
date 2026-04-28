@@ -601,7 +601,8 @@ const storageUsage = ref<{
     libraries: number;
     natives: number;
     assets: number;
-    custom_clients: number;
+    java: number;
+    other: number;
     total: number;
 } | null>(null);
 const storageLoading = ref(false);
