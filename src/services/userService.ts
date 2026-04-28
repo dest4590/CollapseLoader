@@ -437,18 +437,20 @@ class UserService {
                     const localId = token.replace("local_", "");
                     localUserService.updateProfile(localId, { avatarUrl: base64 });
 
-                    let cached = this.getCachedData();
                     if (!cached) {
                         const activeLocal = localUserService.getActiveProfile();
-                        cached = {
-                            profile: {
-                                id: 1,
-                                nickname: activeLocal?.nickname || "Local User",
-                                avatar_url: base64,
-                                role: activeLocal?.role || "LOCAL_USER",
-                                social_links: [],
-                                created_at: activeLocal?.createdAt || new Date().toISOString(),
-                            },
+                        const newProfile: UserProfile = {
+                            id: 1,
+                            nickname: activeLocal?.nickname || "Local User",
+                            avatar_url: base64,
+                            role: activeLocal?.role || "LOCAL_USER",
+                            social_links: [],
+                            created_at: activeLocal?.createdAt || new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            favorite_client_id: null,
+                        };
+                        const newCached: CachedUserData = {
+                            profile: newProfile,
                             info: {
                                 id: 1,
                                 username: activeLocal?.username || "local_user",
@@ -459,12 +461,15 @@ class UserService {
                                 last_login_at: null,
                             },
                         };
+                        this.setCachedData(newCached);
+                        resolve({ success: true, profile: newProfile });
                     } else if (cached.profile) {
                         cached.profile.avatar_url = base64;
+                        this.setCachedData(cached);
+                        resolve({ success: true, profile: cached.profile });
+                    } else {
+                        resolve({ success: false, error: "Profile not found" });
                     }
-
-                    this.setCachedData(cached);
-                    resolve({ success: true, profile: cached.profile! });
                 };
                 reader.readAsDataURL(file);
             });
