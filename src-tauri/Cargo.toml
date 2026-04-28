@@ -2,7 +2,7 @@
 name = "collapseloader"
 version = "1.2.0"
 description = "CollapseLoader"
-authors = ["dest4590"]
+authors = ["W1xced"]
 edition = "2021"
 build = "build.rs"
 
