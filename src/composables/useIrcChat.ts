@@ -2,6 +2,7 @@ import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useToast } from "../services/toastService";
+import { formatTime } from "../utils/utils";
 
 interface SenderInfo {
     username: string;
@@ -54,25 +55,17 @@ let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
 const { addToast } = useToast();
 
-const currentTime = (): string => {
-    const now = new Date();
-    return `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-};
-
 const formatIsoToTime = (isoString?: string): string => {
-    if (!isoString) return currentTime();
+    if (!isoString) return formatTime();
     const parsed = new Date(isoString);
-    if (Number.isNaN(parsed.getTime())) return currentTime();
-
-    const hours = parsed.getHours().toString().padStart(2, "0");
-    const minutes = parsed.getMinutes().toString().padStart(2, "0");
-    return `${hours}:${minutes}`;
+    if (Number.isNaN(parsed.getTime())) return formatTime();
+    return formatTime(parsed);
 };
 
 const IRC_DISABLED = true;
 
 const parseIrcPayload = (payload: unknown): IrcMessage | null => {
-    const fallbackTime = currentTime();
+    const fallbackTime = formatTime();
 
     const normalizeSender = (
         raw?: IncomingIrcPayload["sender"]
@@ -148,7 +141,7 @@ const registerListeners = async (): Promise<void> => {
             connected.value = false;
             status.value = "reconnecting";
             messages.value.push({
-                time: currentTime(),
+                time: formatTime(),
                 content: "Disconnected from IRC server.",
                 type: "error",
             });
@@ -175,7 +168,7 @@ const scheduleReconnect = (reason?: string) => {
 
     if (reason) {
         messages.value.push({
-            time: currentTime(),
+            time: formatTime(),
             content: reason,
             type: "system",
         });

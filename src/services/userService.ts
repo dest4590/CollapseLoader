@@ -1,6 +1,8 @@
 import { apiClient } from "./apiClient";
 import { achievementService } from "./achievementService";
 import { localUserService } from "./localUserService";
+import { STORAGE_KEYS } from "../utils/storageKeys";
+import { maxIsoTimestamp } from "../utils/utils";
 
 type FriendshipStatus =
     | "friends"
@@ -164,38 +166,53 @@ export interface SyncStatus {
     has_cloud_data: boolean;
 }
 
-export interface UserInitData {
-    user: {
-        id: number;
-        username: string;
-        email: string;
-        role: string;
-        created_at: string;
-        updated_at: string;
-        last_login_at: string | null;
-        profile: UserProfile;
-        status: UserStatus;
-    };
-    preferences: UserPreference[];
-    favorites: UserFavorite[];
-    accounts: UserExternalAccount[];
-    friends: {
-        friends: any[];
-        requests: {
-            sent: any[];
-            received: any[];
-            blocked: any[];
-        };
-    };
-}
-
-const CACHE_KEY = "userData";
+const CACHE_KEY = STORAGE_KEYS.USER_DATA;
 const CACHE_EXPIRY_HOURS = 24;
 
 const SYNC_SETTINGS_PREF_KEY = "collapseloader.settings";
 const SYNC_FAVORITE_TYPE = "client";
 
 class UserService {
+    private getLocalId(): string | null {
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        return token?.startsWith("local_") ? token.replace("local_", "") : null;
+    }
+
+    private makeOnlineStatus(): UserStatus {
+        return {
+            status: "ONLINE",
+            client_name: null,
+            updated_at: new Date().toISOString(),
+        };
+    }
+
+    private buildLocalCachedData(localId: string): CachedUserData {
+        const now = new Date().toISOString();
+        const p = localUserService.getProfiles().find((x) => x.id === localId);
+        return {
+            profile: {
+                id: 1,
+                nickname: p?.nickname ?? "Local User",
+                avatar_url: p?.avatarUrl ?? null,
+                role: p?.role ?? "LOCAL_USER",
+                social_links: [],
+                created_at: p?.createdAt ?? now,
+                updated_at: now,
+                favorite_client_id: null,
+            },
+            info: {
+                id: 1,
+                username: p?.username ?? "local_user",
+                email: "local@user.none",
+                role: p?.role ?? "LOCAL_USER",
+                created_at: p?.createdAt ?? now,
+                updated_at: now,
+                last_login_at: now,
+            },
+            lastUpdated: now,
+        };
+    }
+
     private getCachedData(): CachedUserData | null {
         try {
             const cached = localStorage.getItem(CACHE_KEY);
@@ -301,23 +318,6 @@ class UserService {
         };
     }
 
-    private maxIsoTimestamp(
-        timestamps: Array<string | null | undefined>
-    ): string | null {
-        let max: number | null = null;
-        let maxIso: string | null = null;
-        for (const ts of timestamps) {
-            if (!ts) continue;
-            const time = new Date(ts).getTime();
-            if (Number.isNaN(time)) continue;
-            if (max === null || time > max) {
-                max = time;
-                maxIso = ts;
-            }
-        }
-        return maxIso;
-    }
-
     private async getCurrentUserId(): Promise<number | null> {
         const cached = this.getCachedData();
         if (cached?.info?.id) return cached.info.id;
@@ -345,7 +345,8 @@ class UserService {
                         avatar_url: activeLocal?.avatarUrl || null,
                         role: activeLocal?.role || "USER",
                         social_links: [],
-                        created_at: activeLocal?.createdAt || new Date().toISOString(),
+                        created_at:
+                            activeLocal?.createdAt || new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         favorite_client_id: null,
                     },
@@ -354,7 +355,8 @@ class UserService {
                         username: activeLocal?.username || "local_user",
                         email: null,
                         role: activeLocal?.role || "LOCAL_USER",
-                        created_at: activeLocal?.createdAt || new Date().toISOString(),
+                        created_at:
+                            activeLocal?.createdAt || new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         last_login_at: null,
                     },
@@ -368,33 +370,40 @@ class UserService {
 
                 const normalized = nickname.trim().toUpperCase();
                 const roleMap: Record<string, string> = {
-                    "OWNER": "OWNER",
-                    "DEVELOPER": "DEVELOPER",
-                    "ADMIN": "ADMIN",
-                    "TESTER": "TESTER",
-                    "USER": "USER"
+                    OWNER: "OWNER",
+                    DEVELOPER: "DEVELOPER",
+                    ADMIN: "ADMIN",
+                    TESTER: "TESTER",
+                    USER: "USER",
                 };
                 if (roleMap[normalized]) {
                     cached.profile.role = roleMap[normalized];
                     if (cached.info) cached.info.role = roleMap[normalized];
                 }
             } else if (cached.profile && cached.info) {
-                cached.info.username = cached.profile.nickname || cached.info.username;
+                cached.info.username =
+                    cached.profile.nickname || cached.info.username;
             }
 
             if (favoriteClientId !== undefined && cached.profile) {
                 cached.profile.favorite_client_id = favoriteClientId;
-                
+
                 if (favoriteClientId !== null) {
-                    const favoritesKey = "local_unique_favorites";
-                    const stored = localStorage.getItem(favoritesKey);
+                    const stored = localStorage.getItem(
+                        STORAGE_KEYS.LOCAL_UNIQUE_FAVORITES
+                    );
                     const favorites = stored ? JSON.parse(stored) : [];
                     if (!favorites.includes(favoriteClientId)) {
                         favorites.push(favoriteClientId);
-                        localStorage.setItem(favoritesKey, JSON.stringify(favorites));
-                        
+                        localStorage.setItem(
+                            STORAGE_KEYS.LOCAL_UNIQUE_FAVORITES,
+                            JSON.stringify(favorites)
+                        );
+
                         if (favorites.length >= 5) {
-                            void achievementService.unlockAchievement("COLLECTOR");
+                            void achievementService.unlockAchievement(
+                                "COLLECTOR"
+                            );
                         }
                     }
                 }
@@ -407,7 +416,7 @@ class UserService {
 
             this.setCachedData(cached);
 
-            const token = localStorage.getItem("authToken");
+            const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
             if (token?.startsWith("local_") && cached.profile) {
                 const localId = token.replace("local_", "");
                 localUserService.updateProfile(localId, {
@@ -427,15 +436,16 @@ class UserService {
     async uploadAvatar(
         file: File
     ): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
-        const token = localStorage.getItem("authToken");
-        if (token?.startsWith("local_")) {
+        const localId = this.getLocalId();
+        if (localId !== null) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result as string;
 
-                    const localId = token.replace("local_", "");
-                    localUserService.updateProfile(localId, { avatarUrl: base64 });
+                    localUserService.updateProfile(localId, {
+                        avatarUrl: base64,
+                    });
 
                     const cached = this.getCachedData();
                     if (!cached || !cached.profile) {
@@ -446,7 +456,9 @@ class UserService {
                             avatar_url: base64,
                             role: activeLocal?.role || "LOCAL_USER",
                             social_links: [],
-                            created_at: activeLocal?.createdAt || new Date().toISOString(),
+                            created_at:
+                                activeLocal?.createdAt ||
+                                new Date().toISOString(),
                             updated_at: new Date().toISOString(),
                             favorite_client_id: null,
                         };
@@ -457,7 +469,9 @@ class UserService {
                                 username: activeLocal?.username || "local_user",
                                 email: "local@user.none",
                                 role: activeLocal?.role || "LOCAL_USER",
-                                created_at: activeLocal?.createdAt || new Date().toISOString(),
+                                created_at:
+                                    activeLocal?.createdAt ||
+                                    new Date().toISOString(),
                                 updated_at: new Date().toISOString(),
                                 last_login_at: null,
                             },
@@ -534,54 +548,35 @@ class UserService {
         user_info: UserInfo;
         status: UserStatus;
     }> {
-        const token = localStorage.getItem("authToken");
-        if (token?.startsWith("local_")) {
+        const localId = this.getLocalId();
+        if (localId !== null) {
             const cached = this.getCachedData();
-            const localId = token.replace("local_", "");
-            const localProfile = localUserService.getProfiles().find(p => p.id === localId);
+            const localProfile = localUserService
+                .getProfiles()
+                .find((p) => p.id === localId);
             const persistedAvatar = localProfile?.avatarUrl || null;
 
             if (cached && cached.profile && cached.info) {
-                if (persistedAvatar && cached.profile.avatar_url !== persistedAvatar) {
+                if (
+                    persistedAvatar &&
+                    cached.profile.avatar_url !== persistedAvatar
+                ) {
                     cached.profile.avatar_url = persistedAvatar;
                     this.setCachedData(cached);
                 }
                 return {
                     profile: cached.profile,
                     user_info: cached.info,
-                    status: {
-                        status: "ONLINE",
-                        client_name: null,
-                        updated_at: new Date().toISOString(),
-                    },
+                    status: this.makeOnlineStatus(),
                 };
             }
-            
+
+            const data = this.buildLocalCachedData(localId);
+            this.setCachedData(data);
             return {
-                profile: {
-                    id: 1,
-                    nickname: localProfile?.nickname || "Local User",
-                    avatar_url: localProfile?.avatarUrl || null,
-                    role: localProfile?.role || "LOCAL_USER",
-                    social_links: [],
-                    created_at: localProfile?.createdAt || new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    favorite_client_id: null,
-                } as UserProfile,
-                user_info: {
-                    id: 1,
-                    username: localProfile?.username || "local_user",
-                    email: "local@user.none",
-                    role: localProfile?.role || "LOCAL_USER",
-                    created_at: localProfile?.createdAt || new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    last_login_at: new Date().toISOString(),
-                } as UserInfo,
-                status: {
-                    status: "ONLINE",
-                    client_name: null,
-                    updated_at: new Date().toISOString(),
-                },
+                profile: data.profile as UserProfile,
+                user_info: data.info as UserInfo,
+                status: this.makeOnlineStatus(),
             };
         }
 
@@ -661,7 +656,7 @@ class UserService {
             return { ...base, friendship_status: publicUser.friendship_status };
         }
 
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
         if (!token) return base;
 
         try {
@@ -722,11 +717,11 @@ class UserService {
         friends: Friend[];
         requests: FriendRequestsBatch;
     }> {
-        const token = localStorage.getItem("authToken");
-        if (token?.startsWith("local_")) {
+        const localId = this.getLocalId();
+        if (localId !== null) {
             return {
                 friends: [],
-                requests: { sent: [], received: [], blocked: [] }
+                requests: { sent: [], received: [], blocked: [] },
             };
         }
 
@@ -909,7 +904,7 @@ class UserService {
             const safeFavorites = Array.isArray(favorites) ? favorites : [];
             const safeAccounts = Array.isArray(accounts) ? accounts : [];
 
-            const lastSync = this.maxIsoTimestamp([
+            const lastSync = maxIsoTimestamp([
                 settingsPref?.updated_at ?? null,
                 ...safeFavorites.map((f) => f.created_at ?? null),
                 ...safeAccounts.map((a) => a.updated_at ?? null),
@@ -942,9 +937,9 @@ class UserService {
         const localFavoriteRefs = new Set(
             (syncData.favorites_data || []).map((id) => String(id))
         );
-        const remoteClientFavorites = (Array.isArray(remoteFavorites) ? remoteFavorites : []).filter(
-            (f) => f.type === SYNC_FAVORITE_TYPE
-        );
+        const remoteClientFavorites = (
+            Array.isArray(remoteFavorites) ? remoteFavorites : []
+        ).filter((f) => f.type === SYNC_FAVORITE_TYPE);
 
         await Promise.all(
             remoteClientFavorites
@@ -1009,7 +1004,8 @@ class UserService {
         const safeAccounts = Array.isArray(accounts) ? accounts : [];
 
         const settingsPref =
-            safePreferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ?? null;
+            safePreferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ??
+            null;
 
         const favorites_data = safeFavorites
             .filter((f) => f.type === SYNC_FAVORITE_TYPE)
@@ -1025,7 +1021,7 @@ class UserService {
             };
         });
 
-        const last_sync_timestamp = this.maxIsoTimestamp([
+        const last_sync_timestamp = maxIsoTimestamp([
             settingsPref?.updated_at ?? null,
             ...safeFavorites.map((f) => f.created_at ?? null),
             ...safeAccounts.map((a) => a.updated_at ?? null),

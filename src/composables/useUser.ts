@@ -5,6 +5,7 @@ import {
     type UserInfo,
 } from "../services/userService";
 import { localUserService } from "../services/localUserService";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 interface GlobalUserState {
     profile: UserProfile | null;
@@ -22,20 +23,20 @@ const globalUserState = reactive<GlobalUserState>({
     lastUpdated: null,
 });
 
-const authToken = ref(localStorage.getItem("authToken"));
+const authToken = ref(localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN));
 const isAuthenticated = computed(() => !!authToken.value);
 
 let authWatcherAttached = false;
 
 window.addEventListener("storage", (event) => {
-    if (event.key === "authToken") {
+    if (event.key === STORAGE_KEYS.AUTH_TOKEN) {
         authToken.value = event.newValue;
     }
 });
 
 const originalSetItem = localStorage.setItem;
 localStorage.setItem = function (key: string, value: string) {
-    if (key === "authToken") {
+    if (key === STORAGE_KEYS.AUTH_TOKEN) {
         authToken.value = value;
     }
     originalSetItem.apply(this, [key, value]);
@@ -43,7 +44,7 @@ localStorage.setItem = function (key: string, value: string) {
 
 const originalRemoveItem = localStorage.removeItem;
 localStorage.removeItem = function (key: string) {
-    if (key === "authToken") {
+    if (key === STORAGE_KEYS.AUTH_TOKEN) {
         authToken.value = null;
     }
     originalRemoveItem.apply(this, [key]);

@@ -1,15 +1,17 @@
 import { readFile, writeFile, mkdir } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 const PERSISTENCE_FILE = "aci.json";
-const STORAGE_KEYS = [
-    "local_profiles",
-    "active_local_profile",
-    "local_achievements",
-    "local_user_stats",
-    "local_unique_favorites",
-    "userData"
+
+const PERSISTED_KEYS: string[] = [
+    STORAGE_KEYS.LOCAL_PROFILES,
+    STORAGE_KEYS.ACTIVE_LOCAL_PROFILE,
+    STORAGE_KEYS.LOCAL_ACHIEVEMENTS,
+    STORAGE_KEYS.LOCAL_USER_STATS,
+    STORAGE_KEYS.LOCAL_UNIQUE_FAVORITES,
+    STORAGE_KEYS.USER_DATA,
 ];
 
 class PersistenceService {
@@ -29,13 +31,13 @@ class PersistenceService {
 
                 console.log("Loading local data from aci.json...");
 
-                for (const key of STORAGE_KEYS) {
+                for (const key of PERSISTED_KEYS) {
                     if (json[key]) {
                         localStorage.setItem(key, typeof json[key] === 'string' ? json[key] : JSON.stringify(json[key]));
                     }
                 }
                 console.log("Local data restored successfully.");
-            } catch (e) {
+            } catch {
                 console.log("aci.json not found or empty, starting fresh.");
                 await this.saveToDisk();
             }
@@ -53,7 +55,7 @@ class PersistenceService {
 
         localStorage.setItem = function (key: string, value: string) {
             originalSetItem.apply(this, [key, value]);
-            if (STORAGE_KEYS.includes(key)) {
+            if (PERSISTED_KEYS.includes(key)) {
                 self.saveToDisk();
             }
         };
@@ -61,13 +63,13 @@ class PersistenceService {
         const originalRemoveItem = localStorage.removeItem;
         localStorage.removeItem = function (key: string) {
             originalRemoveItem.apply(this, [key]);
-            if (STORAGE_KEYS.includes(key)) {
+            if (PERSISTED_KEYS.includes(key)) {
                 self.saveToDisk();
             }
         };
 
         window.addEventListener('storage', (event) => {
-            if (event.key && STORAGE_KEYS.includes(event.key)) {
+            if (event.key && PERSISTED_KEYS.includes(event.key)) {
                 this.saveToDisk();
             }
         });
@@ -76,7 +78,7 @@ class PersistenceService {
     async saveToDisk() {
         try {
             const data: Record<string, any> = {};
-            for (const key of STORAGE_KEYS) {
+            for (const key of PERSISTED_KEYS) {
                 const val = localStorage.getItem(key);
                 if (val) {
                     try {

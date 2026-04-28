@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "./toastService";
 import { getCurrentLanguage } from "../i18n";
 import { getApiBaseWithVersion, ensureApiUrl } from "../config";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
 export interface ApiResponse<T> {
     success: boolean;
@@ -34,7 +35,7 @@ class ApiClient {
             fullUrl = `${baseUrl}${url}`;
         }
 
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 
         const requestHeaders: Record<string, string> = {
             ...headers,

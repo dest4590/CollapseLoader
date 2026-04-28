@@ -355,7 +355,7 @@ const resolveDescription = (change: ChangeItem, entry: ChangelogEntry) => {
 
 <style scoped>
 @reference "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui/index.js";
 
 .timeline-entry {
     position: relative;

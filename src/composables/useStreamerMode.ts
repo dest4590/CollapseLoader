@@ -1,6 +1,7 @@
 import { ref, computed } from "vue";
+import { STORAGE_KEYS } from "../utils/storageKeys";
 
-const STORAGE_KEY = "streamerModeEnabled";
+const STORAGE_KEY = STORAGE_KEYS.STREAMER_MODE;
 
 function readStoredFlag(key: string): boolean {
     try {
