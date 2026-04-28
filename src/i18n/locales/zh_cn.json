@@ -242,7 +242,9 @@
             "validate_file": "请选择一个 .jar 文件",
             "main_class_detected": "主类检测成功",
             "file_select_failed": "选择文件失败",
-            "add_failed": "添加客户端失败：{error}"
+            "add_failed": "添加客户端失败：{error}",
+            "drop_jar_here": "将 .jar 文件拖放到此处",
+            "or_click_browse": "或点击浏览"
         },
         "edit_custom_client_modal": {
             "client_name": "客户端名称",
