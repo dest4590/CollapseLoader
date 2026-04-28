@@ -523,10 +523,9 @@
         "actions": {
             "add_favorite": "Dodaj do ulubionych",
             "remove_favorite": "Usuń z ulubionych",
-            "open_folder": "Otwórz folder"
+            "open_folder": "Otwórz folder",
+            "open_inspector": "Otwórz inspektor"
         },
-        "select_theme": "Wybierz motyw",
-        "description": "Wybierz preferowany motyw.",
         "change_success": "Motyw zmieniony",
         "save_failed": "Nie udało się zapisać motywu: {error}",
         "reset_button": "Reset",

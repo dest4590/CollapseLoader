@@ -526,10 +526,9 @@
         "actions": {
             "add_favorite": "添加到收藏",
             "remove_favorite": "从收藏移除",
-            "open_folder": "打开文件夹"
+            "open_folder": "打开文件夹",
+            "open_inspector": "打开检查器"
         },
-        "select_theme": "选择主题",
-        "description": "选择您偏好的主题。",
         "change_success": "主题已更改",
         "save_failed": "保存主题失败：{error}",
         "reset_button": "重置",

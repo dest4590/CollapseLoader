@@ -527,10 +527,9 @@
         "actions": {
             "add_favorite": "Додати до обраного",
             "remove_favorite": "Видалити з обраного",
-            "open_folder": "Відкрити папку"
+            "open_folder": "Відкрити папку",
+            "open_inspector": "Відкрити інспектор"
         },
-        "select_theme": "Обрати тему",
-        "description": "Оберіть бажану тему.",
         "change_success": "Тему змінено",
         "save_failed": "Не вдалося зберегти тему: {error}",
         "reset_button": "Скинути",

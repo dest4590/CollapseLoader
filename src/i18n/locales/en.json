@@ -526,7 +526,8 @@
         "actions": {
             "add_favorite": "Add to Favorites",
             "remove_favorite": "Remove from Favorites",
-            "open_folder": "Open Folder"
+            "open_folder": "Open Folder",
+            "open_inspector": "Open Inspector"
         },
         "select_theme": "Select Theme",
         "description": "Select your preferred theme.",

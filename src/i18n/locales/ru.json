@@ -523,10 +523,9 @@
         "actions": {
             "add_favorite": "Добавить в избранное",
             "remove_favorite": "Удалить из избранного",
-            "open_folder": "Открыть папку"
+            "open_folder": "Открыть папку",
+            "open_inspector": "Открыть инспектор"
         },
-        "select_theme": "Выбрать тему",
-        "description": "Выберите предпочитаемую тему.",
         "change_success": "Тема изменена",
         "save_failed": "Не удалось сохранить тему: {error}",
         "reset_button": "Сброс",
