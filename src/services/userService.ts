@@ -433,13 +433,42 @@ class UserService {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result as string;
+
+                    const localId = token.replace("local_", "");
+                    localUserService.updateProfile(localId, { avatarUrl: base64 });
+
                     const cached = this.getCachedData();
-                    if (cached && cached.profile) {
+                    if (!cached || !cached.profile) {
+                        const activeLocal = localUserService.getActiveProfile();
+                        const newProfile: UserProfile = {
+                            id: 1,
+                            nickname: activeLocal?.nickname || "Local User",
+                            avatar_url: base64,
+                            role: activeLocal?.role || "LOCAL_USER",
+                            social_links: [],
+                            created_at: activeLocal?.createdAt || new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            favorite_client_id: null,
+                        };
+                        const newCached: CachedUserData = {
+                            profile: newProfile,
+                            info: {
+                                id: 1,
+                                username: activeLocal?.username || "local_user",
+                                email: "local@user.none",
+                                role: activeLocal?.role || "LOCAL_USER",
+                                created_at: activeLocal?.createdAt || new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                                last_login_at: null,
+                            },
+                            lastUpdated: new Date().toISOString(),
+                        };
+                        this.setCachedData(newCached);
+                        resolve({ success: true, profile: newProfile });
+                    } else {
                         cached.profile.avatar_url = base64;
                         this.setCachedData(cached);
                         resolve({ success: true, profile: cached.profile });
-                    } else {
-                        resolve({ success: false, error: "Profile not found" });
                     }
                 };
                 reader.readAsDataURL(file);
@@ -508,7 +537,15 @@ class UserService {
         const token = localStorage.getItem("authToken");
         if (token?.startsWith("local_")) {
             const cached = this.getCachedData();
+            const localId = token.replace("local_", "");
+            const localProfile = localUserService.getProfiles().find(p => p.id === localId);
+            const persistedAvatar = localProfile?.avatarUrl || null;
+
             if (cached && cached.profile && cached.info) {
+                if (persistedAvatar && cached.profile.avatar_url !== persistedAvatar) {
+                    cached.profile.avatar_url = persistedAvatar;
+                    this.setCachedData(cached);
+                }
                 return {
                     profile: cached.profile,
                     user_info: cached.info,
@@ -519,8 +556,6 @@ class UserService {
                     },
                 };
             }
-            const localId = token.replace("local_", "");
-            const localProfile = localUserService.getProfiles().find(p => p.id === localId);
             
             return {
                 profile: {

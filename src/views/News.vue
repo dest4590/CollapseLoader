@@ -230,7 +230,7 @@ const fetchNews = async () => {
     try {
         const response = await invoke<string>("api_request", {
             method: "GET",
-            url: "https://t.me/s/CollapseLoaderReborn",
+            url: "https://t.me/s/collapseloader",
             headers: {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             },

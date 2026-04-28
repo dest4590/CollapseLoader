@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, reactive, watch, computed } from "vue";
+import { ref, reactive, watch, computed, onMounted, onUnmounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useToast } from "../../../services/toastService";
 import { useI18n } from "vue-i18n";
 
@@ -30,8 +31,53 @@ const form = reactive({
     clientType: "default",
 });
 
-const loading = ref(false);
+const isDragging = ref(false);
+let unlistenDrop: (() => void) | null = null;
+
+const applyJarFile = async (filePath: string) => {
+    if (!filePath.endsWith(".jar")) {
+        addToast(t("modals.add_custom_client_modal.file_select_failed"), "error");
+        return;
+    }
+
+    form.filePath = filePath;
+    const parts = filePath.split(/[/\\]/);
+    form.fileName = parts[parts.length - 1];
+
+    if (!form.name) {
+        form.name = form.fileName.replace(".jar", "");
+    }
+
+    try {
+        const mainClass = await invoke<string>("detect_main_class", { filePath });
+        if (mainClass) {
+            form.mainClass = mainClass;
+            addToast(t("modals.add_custom_client_modal.main_class_detected"), "success");
+        }
+    } catch (e) {}
+};
+
+onMounted(async () => {
+    unlistenDrop = await getCurrentWebview().onDragDropEvent(async (event) => {
+        if (event.payload.type === "over") {
+            isDragging.value = true;
+        } else if (event.payload.type === "drop") {
+            isDragging.value = false;
+            const paths = event.payload.paths;
+            if (paths.length > 0) {
+                await applyJarFile(paths[0]);
+            }
+        } else {
+            isDragging.value = false;
+        }
+    });
+});
+
+onUnmounted(() => {
+    if (unlistenDrop) unlistenDrop();
+});
 const errors = ref<Record<string, string>>({});
+const loading = ref(false);
 
 const availableVersions = computed(() => {
     return VERSION_MAP[form.clientType as keyof typeof VERSION_MAP] || [];
@@ -77,28 +123,11 @@ const selectFile = async () => {
     try {
         const selected = await open({
             multiple: false,
-            filters: [
-                {
-                    name: "JAR Files",
-                    extensions: ["jar"],
-                },
-            ],
+            filters: [{ name: "JAR Files", extensions: ["jar"] }],
         });
 
         if (selected) {
-            form.filePath = selected;
-            const pathParts = selected.split(/[/\\]/);
-            form.fileName = pathParts[pathParts.length - 1];
-
-            try {
-                const mainClass = await invoke<string>("detect_main_class", {
-                    filePath: selected,
-                });
-                if (mainClass) {
-                    form.mainClass = mainClass;
-                    addToast(t("modals.add_custom_client_modal.main_class_detected"), "success");
-                }
-            } catch (e) {}
+            await applyJarFile(selected);
         }
     } catch (error) {
         addToast(t("modals.add_custom_client_modal.file_select_failed"), "error");
@@ -234,40 +263,24 @@ const handleSubmit = async () => {
                         *</span
                     >
                 </label>
-                <div class="flex gap-2">
-                    <input
-                        :value="
-                            form.fileName ||
-                            $t(
-                                'modals.add_custom_client_modal.no_file_selected'
-                            )
-                        "
-                        type="text"
-                        :placeholder="
-                            $t('modals.add_custom_client_modal.select_jar_file')
-                        "
-                        class="input input-bordered flex-1"
-                        readonly
-                        :class="{ 'input-error': errors.filePath }"
-                    />
-                    <button
-                        type="button"
-                        @click="selectFile"
-                        class="btn btn-outline"
-                    >
-                        {{ $t("common.browse") }}
-                    </button>
+                <div
+                    class="border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer mb-2"
+                    :class="isDragging ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-primary/50'"
+                    @click="selectFile"
+                >
+                    <div v-if="!form.fileName" class="space-y-1">
+                        <p class="text-sm text-base-content/60">{{ $t("modals.add_custom_client_modal.drop_jar_here") }}</p>
+                        <p class="text-xs text-base-content/40">{{ $t("modals.add_custom_client_modal.or_click_browse") }}</p>
+                    </div>
+                    <div v-else class="flex items-center justify-center gap-2 text-success text-sm">
+                        <span>✓</span>
+                        <span class="font-medium truncate max-w-xs">{{ form.fileName }}</span>
+                    </div>
                 </div>
                 <label v-if="errors.filePath" class="label">
                     <span class="label-text-alt text-error">{{
                         errors.filePath
                     }}</span>
-                </label>
-                <label v-if="form.fileName" class="label">
-                    <span class="label-text-alt text-success"
-                        >{{ $t("modals.add_custom_client_modal.selected") }}:
-                        {{ form.fileName }}</span
-                    >
                 </label>
             </div>
 

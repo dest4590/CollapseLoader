@@ -242,7 +242,9 @@
             "validate_file": "Proszę wybrać plik .jar",
             "main_class_detected": "Klasa główna wykryta pomyślnie",
             "file_select_failed": "Nie udało się wybrać pliku",
-            "add_failed": "Nie udało się dodać klienta: {error}"
+            "add_failed": "Nie udało się dodać klienta: {error}",
+            "drop_jar_here": "Upuść plik .jar tutaj",
+            "or_click_browse": "lub kliknij, aby przeglądać"
         },
         "edit_custom_client_modal": {
             "client_name": "Nazwa klienta",
@@ -523,10 +525,9 @@
         "actions": {
             "add_favorite": "Dodaj do ulubionych",
             "remove_favorite": "Usuń z ulubionych",
-            "open_folder": "Otwórz folder"
+            "open_folder": "Otwórz folder",
+            "open_inspector": "Otwórz inspektor"
         },
-        "select_theme": "Wybierz motyw",
-        "description": "Wybierz preferowany motyw.",
         "change_success": "Motyw zmieniony",
         "save_failed": "Nie udało się zapisać motywu: {error}",
         "reset_button": "Reset",

@@ -242,7 +242,9 @@
             "validate_file": "Please select a .jar file",
             "main_class_detected": "Main class detected successfully",
             "file_select_failed": "Failed to select file",
-            "add_failed": "Failed to add custom client: {error}"
+            "add_failed": "Failed to add custom client: {error}",
+            "drop_jar_here": "Drop .jar file here",
+            "or_click_browse": "or click to browse"
         },
         "edit_custom_client_modal": {
             "client_name": "Client Name",
@@ -526,7 +528,8 @@
         "actions": {
             "add_favorite": "Add to Favorites",
             "remove_favorite": "Remove from Favorites",
-            "open_folder": "Open Folder"
+            "open_folder": "Open Folder",
+            "open_inspector": "Open Inspector"
         },
         "select_theme": "Select Theme",
         "description": "Select your preferred theme.",

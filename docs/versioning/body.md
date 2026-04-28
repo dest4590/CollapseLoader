@@ -9,7 +9,7 @@ Hidden cloud sync, local account sync and telemetry in settings
 
 << LINKS >>
 
-[Telegram](https://t.me/CollapseLoaderReborn)
+[Telegram](https://t.me/collapseloader)
 
 <details>
 <summary><strong>do not read, for internal updater</strong></summary>

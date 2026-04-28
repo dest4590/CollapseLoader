@@ -242,7 +242,9 @@
             "validate_file": "Будь ласка, оберіть .jar файл",
             "main_class_detected": "Головний клас визначено успішно",
             "file_select_failed": "Не вдалося вибрати файл",
-            "add_failed": "Не вдалося додати клієнта: {error}"
+            "add_failed": "Не вдалося додати клієнта: {error}",
+            "drop_jar_here": "Перетягніть .jar файл сюди",
+            "or_click_browse": "або натисніть для вибору"
         },
         "edit_custom_client_modal": {
             "client_name": "Назва клієнта",
@@ -527,10 +529,9 @@
         "actions": {
             "add_favorite": "Додати до обраного",
             "remove_favorite": "Видалити з обраного",
-            "open_folder": "Відкрити папку"
+            "open_folder": "Відкрити папку",
+            "open_inspector": "Відкрити інспектор"
         },
-        "select_theme": "Обрати тему",
-        "description": "Оберіть бажану тему.",
         "change_success": "Тему змінено",
         "save_failed": "Не вдалося зберегти тему: {error}",
         "reset_button": "Скинути",

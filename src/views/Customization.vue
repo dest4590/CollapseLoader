@@ -86,7 +86,7 @@
                             >
                                 <ExternalLink class="w-4 h-4" />
                                 <span class="hidden sm:inline"
-                                    >Open Inspector</span
+                                    >{{ $t("theme.actions.open_inspector") }}</span
                                 >
                             </button>
                         </div>
