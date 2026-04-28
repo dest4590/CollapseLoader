@@ -33,7 +33,12 @@ class PersistenceService {
 
                 for (const key of PERSISTED_KEYS) {
                     if (json[key]) {
-                        localStorage.setItem(key, typeof json[key] === 'string' ? json[key] : JSON.stringify(json[key]));
+                        localStorage.setItem(
+                            key,
+                            typeof json[key] === "string"
+                                ? json[key]
+                                : JSON.stringify(json[key])
+                        );
                     }
                 }
                 console.log("Local data restored successfully.");
@@ -68,7 +73,7 @@ class PersistenceService {
             }
         };
 
-        window.addEventListener('storage', (event) => {
+        window.addEventListener("storage", (event) => {
             if (event.key && PERSISTED_KEYS.includes(event.key)) {
                 this.saveToDisk();
             }
@@ -92,11 +97,14 @@ class PersistenceService {
             const dataDir = await invoke<string>("get_data_folder");
             try {
                 await mkdir(dataDir, { recursive: true });
-            } catch { }
+            } catch {}
 
             const filePath = await join(dataDir, PERSISTENCE_FILE);
             const encoder = new TextEncoder();
-            await writeFile(filePath, encoder.encode(JSON.stringify(data, null, 4)));
+            await writeFile(
+                filePath,
+                encoder.encode(JSON.stringify(data, null, 4))
+            );
         } catch (error) {
             console.error("Failed to save data to disk:", error);
         }

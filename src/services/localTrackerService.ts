@@ -7,7 +7,7 @@ interface LocalStats {
     totalPlaytimeMinutes: number;
     firstLaunchDate: string | null;
     lastLaunchDate: string | null;
-    clientStats: Record<string, { launches: number, playtimeMinutes: number }>;
+    clientStats: Record<string, { launches: number; playtimeMinutes: number }>;
 }
 
 class LocalTrackerService {
@@ -17,13 +17,15 @@ class LocalTrackerService {
 
     constructor() {
         const stored = localStorage.getItem(this.storageKey);
-        this.stats = stored ? JSON.parse(stored) : {
-            totalLaunches: 0,
-            totalPlaytimeMinutes: 0,
-            firstLaunchDate: null,
-            lastLaunchDate: null,
-            clientStats: {}
-        };
+        this.stats = stored
+            ? JSON.parse(stored)
+            : {
+                  totalLaunches: 0,
+                  totalPlaytimeMinutes: 0,
+                  firstLaunchDate: null,
+                  lastLaunchDate: null,
+                  clientStats: {},
+              };
     }
 
     private save() {
@@ -38,7 +40,10 @@ class LocalTrackerService {
         }
 
         if (!this.stats.clientStats[clientName]) {
-            this.stats.clientStats[clientName] = { launches: 0, playtimeMinutes: 0 };
+            this.stats.clientStats[clientName] = {
+                launches: 0,
+                playtimeMinutes: 0,
+            };
         }
         this.stats.clientStats[clientName].launches++;
 

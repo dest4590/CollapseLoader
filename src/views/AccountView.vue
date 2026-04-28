@@ -35,10 +35,26 @@
                                         }}
                                         <span
                                             v-if="roleBadge"
-                                            :class="roleBadge.className + ' text-sm'"
-                                            @click="isLocalUser ? openRoleModal() : null"
-                                            :style="isLocalUser ? 'cursor: pointer' : ''"
-                                            :title="isLocalUser ? t('modals.role_selection.description') || 'Сменить роль' : ''"
+                                            :class="
+                                                roleBadge.className + ' text-sm'
+                                            "
+                                            @click="
+                                                isLocalUser
+                                                    ? openRoleModal()
+                                                    : null
+                                            "
+                                            :style="
+                                                isLocalUser
+                                                    ? 'cursor: pointer'
+                                                    : ''
+                                            "
+                                            :title="
+                                                isLocalUser
+                                                    ? t(
+                                                          'modals.role_selection.description'
+                                                      ) || 'Сменить роль'
+                                                    : ''
+                                            "
                                         >
                                             {{ roleBadge.text }}
                                         </span>
@@ -176,64 +192,129 @@
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body">
                         <div class="flex items-center justify-between mb-4">
-                            <h2 class="card-title text-lg font-medium text-primary-focus">
+                            <h2
+                                class="card-title text-lg font-medium text-primary-focus"
+                            >
                                 {{ t("account.playtime_stats") }}
                             </h2>
                             <div class="flex items-center gap-3">
-                                <div class="flex items-center gap-1.5 text-sm text-base-content/60">
+                                <div
+                                    class="flex items-center gap-1.5 text-sm text-base-content/60"
+                                >
                                     <Timer class="w-4 h-4" />
-                                    <span>{{ formatPlaytime(localStats.totalPlaytimeMinutes) }}</span>
+                                    <span>{{
+                                        formatPlaytime(
+                                            localStats.totalPlaytimeMinutes
+                                        )
+                                    }}</span>
                                 </div>
                                 <button
-                                    v-if="Object.keys(localStats.clientStats).length > 3"
+                                    v-if="
+                                        Object.keys(localStats.clientStats)
+                                            .length > 3
+                                    "
                                     @click="openPlaytimeModal"
                                     class="btn btn-ghost btn-xs gap-1 text-primary"
                                 >
                                     <LayoutList class="w-3.5 h-3.5" />
-                                    {{ t("account.playtime_show_all", { count: Object.keys(localStats.clientStats).length }) }}
+                                    {{
+                                        t("account.playtime_show_all", {
+                                            count: Object.keys(
+                                                localStats.clientStats
+                                            ).length,
+                                        })
+                                    }}
                                 </button>
                             </div>
                         </div>
 
-                        <div v-if="Object.keys(localStats.clientStats).length === 0" class="text-center py-6 text-base-content/50">
-                            <Gamepad2 class="w-10 h-10 mx-auto mb-2 opacity-30" />
+                        <div
+                            v-if="
+                                Object.keys(localStats.clientStats).length === 0
+                            "
+                            class="text-center py-6 text-base-content/50"
+                        >
+                            <Gamepad2
+                                class="w-10 h-10 mx-auto mb-2 opacity-30"
+                            />
                             <p>{{ t("account.playtime_no_data") }}</p>
                         </div>
 
                         <div v-else class="space-y-2">
                             <div
-                                v-for="([clientName, stats], index) in topClientStats"
+                                v-for="(
+                                    [clientName, stats], index
+                                ) in topClientStats"
                                 :key="clientName"
                                 class="flex items-center gap-3 p-3 bg-base-300/50 rounded-lg"
                             >
-                                <span class="text-base-content/30 text-xs font-mono w-4 text-right shrink-0">{{ index + 1 }}</span>
-                                <Gamepad2 class="w-4 h-4 text-primary shrink-0" />
+                                <span
+                                    class="text-base-content/30 text-xs font-mono w-4 text-right shrink-0"
+                                    >{{ index + 1 }}</span
+                                >
+                                <Gamepad2
+                                    class="w-4 h-4 text-primary shrink-0"
+                                />
                                 <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <span class="font-medium truncate text-sm">{{ clientName }}</span>
-                                        <span class="text-primary font-semibold shrink-0 text-sm">{{ formatPlaytime(stats.playtimeMinutes) }}</span>
+                                    <div
+                                        class="flex items-center justify-between gap-2"
+                                    >
+                                        <span
+                                            class="font-medium truncate text-sm"
+                                            >{{ clientName }}</span
+                                        >
+                                        <span
+                                            class="text-primary font-semibold shrink-0 text-sm"
+                                            >{{
+                                                formatPlaytime(
+                                                    stats.playtimeMinutes
+                                                )
+                                            }}</span
+                                        >
                                     </div>
                                     <div class="flex items-center gap-3 mt-1">
-                                        <div class="flex-1 bg-base-content/10 rounded-full h-1">
+                                        <div
+                                            class="flex-1 bg-base-content/10 rounded-full h-1"
+                                        >
                                             <div
                                                 class="bg-primary h-1 rounded-full transition-all"
-                                                :style="{ width: getPlaytimePercent(stats.playtimeMinutes) + '%' }"
+                                                :style="{
+                                                    width:
+                                                        getPlaytimePercent(
+                                                            stats.playtimeMinutes
+                                                        ) + '%',
+                                                }"
                                             ></div>
                                         </div>
-                                        <span class="text-xs text-base-content/40 shrink-0">
-                                            {{ t("account.playtime_launches", { count: stats.launches }) }}
+                                        <span
+                                            class="text-xs text-base-content/40 shrink-0"
+                                        >
+                                            {{
+                                                t("account.playtime_launches", {
+                                                    count: stats.launches,
+                                                })
+                                            }}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <button
-                                v-if="Object.keys(localStats.clientStats).length > 3"
+                                v-if="
+                                    Object.keys(localStats.clientStats).length >
+                                    3
+                                "
                                 @click="openPlaytimeModal"
                                 class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm text-base-content/40 hover:text-base-content/70 hover:bg-base-300/40 transition-colors"
                             >
                                 <ChevronDown class="w-4 h-4" />
-                                {{ t("account.playtime_more", { count: Object.keys(localStats.clientStats).length - 3 }) }}
+                                {{
+                                    t("account.playtime_more", {
+                                        count:
+                                            Object.keys(localStats.clientStats)
+                                                .length - 3,
+                                    })
+                                }}
                             </button>
                         </div>
                     </div>
@@ -556,7 +637,9 @@ const {
     logout,
 } = user;
 
-const isLocalUser = computed(() => localStorage.getItem("authToken")?.startsWith("local_"));
+const isLocalUser = computed(() =>
+    localStorage.getItem("authToken")?.startsWith("local_")
+);
 
 const invisibleMode = computed({
     get: () => globalUserStatus.isInvisible.value,
@@ -607,7 +690,6 @@ const roleBadge = computed(() => {
 });
 
 const localStats = computed(() => localTrackerService.getStats());
-
 
 const topClientStats = computed(() => {
     const stats = localStats.value.clientStats;
@@ -886,8 +968,6 @@ const openNicknameModal = () => {
     );
 };
 
-
-
 const openRoleModal = () => {
     showModal(
         "role-selection",
@@ -896,7 +976,11 @@ const openRoleModal = () => {
         { currentRole: userInfo.value.role },
         {
             "role-selected": async (newRole: string) => {
-                const result = await userService.updateUserProfile(null, undefined, newRole);
+                const result = await userService.updateUserProfile(
+                    null,
+                    undefined,
+                    newRole
+                );
                 if (result.success) {
                     await refreshUserData();
                     addToast(t("account.role_update_success"), "success");

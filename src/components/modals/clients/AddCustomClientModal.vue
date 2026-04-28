@@ -17,7 +17,7 @@ const emit = defineEmits<{
 const VERSION_MAP = {
     default: ["1.16.5"],
     forge: ["1.8.9"],
-    fabric: ["1.21.4", "1.21.8", "1.21.11"]
+    fabric: ["1.21.4", "1.21.8", "1.21.11"],
 };
 
 const form = reactive({
@@ -36,7 +36,10 @@ let unlistenDrop: (() => void) | null = null;
 
 const applyJarFile = async (filePath: string) => {
     if (!filePath.endsWith(".jar")) {
-        addToast(t("modals.add_custom_client_modal.file_select_failed"), "error");
+        addToast(
+            t("modals.add_custom_client_modal.file_select_failed"),
+            "error"
+        );
         return;
     }
 
@@ -49,10 +52,15 @@ const applyJarFile = async (filePath: string) => {
     }
 
     try {
-        const mainClass = await invoke<string>("detect_main_class", { filePath });
+        const mainClass = await invoke<string>("detect_main_class", {
+            filePath,
+        });
         if (mainClass) {
             form.mainClass = mainClass;
-            addToast(t("modals.add_custom_client_modal.main_class_detected"), "success");
+            addToast(
+                t("modals.add_custom_client_modal.main_class_detected"),
+                "success"
+            );
         }
     } catch (e) {}
 };
@@ -83,19 +91,22 @@ const availableVersions = computed(() => {
     return VERSION_MAP[form.clientType as keyof typeof VERSION_MAP] || [];
 });
 
-watch(() => form.clientType, (newType) => {
-    if (newType === 'fabric') {
-        form.mainClass = "net.fabricmc.loader.impl.launch.knot.KnotClient";
-    } else if (newType === 'default') {
-        form.mainClass = "net.minecraft.client.main.Main";
+watch(
+    () => form.clientType,
+    (newType) => {
+        if (newType === "fabric") {
+            form.mainClass = "net.fabricmc.loader.impl.launch.knot.KnotClient";
+        } else if (newType === "default") {
+            form.mainClass = "net.minecraft.client.main.Main";
+        }
+
+        // Auto-set version
+        const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
+        if (versions && versions.length > 0) {
+            form.version = versions[0];
+        }
     }
-    
-    // Auto-set version
-    const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
-    if (versions && versions.length > 0) {
-        form.version = versions[0];
-    }
-});
+);
 
 const validateForm = () => {
     errors.value = {};
@@ -105,15 +116,21 @@ const validateForm = () => {
     }
 
     if (!form.version.trim()) {
-        errors.value.version = t("modals.add_custom_client_modal.validate_version");
+        errors.value.version = t(
+            "modals.add_custom_client_modal.validate_version"
+        );
     }
 
     if (!form.mainClass.trim()) {
-        errors.value.mainClass = t("modals.add_custom_client_modal.validate_main_class");
+        errors.value.mainClass = t(
+            "modals.add_custom_client_modal.validate_main_class"
+        );
     }
 
     if (!form.filePath) {
-        errors.value.filePath = t("modals.add_custom_client_modal.validate_file");
+        errors.value.filePath = t(
+            "modals.add_custom_client_modal.validate_file"
+        );
     }
 
     return Object.keys(errors.value).length === 0;
@@ -130,7 +147,10 @@ const selectFile = async () => {
             await applyJarFile(selected);
         }
     } catch (error) {
-        addToast(t("modals.add_custom_client_modal.file_select_failed"), "error");
+        addToast(
+            t("modals.add_custom_client_modal.file_select_failed"),
+            "error"
+        );
     }
 };
 
@@ -167,7 +187,10 @@ const handleSubmit = async () => {
         emit("client-added");
         emit("close");
     } catch (err) {
-        addToast(t("modals.add_custom_client_modal.add_failed", { error: err }), "error");
+        addToast(
+            t("modals.add_custom_client_modal.add_failed", { error: err }),
+            "error"
+        );
     } finally {
         loading.value = false;
     }
@@ -218,7 +241,9 @@ const handleSubmit = async () => {
                     class="select select-bordered w-full"
                     :class="{ 'select-error': errors.version }"
                 >
-                    <option v-for="v in availableVersions" :key="v" :value="v">{{ v }}</option>
+                    <option v-for="v in availableVersions" :key="v" :value="v">
+                        {{ v }}
+                    </option>
                 </select>
                 <label v-if="errors.version" class="label">
                     <span class="label-text-alt text-error">{{
@@ -265,16 +290,37 @@ const handleSubmit = async () => {
                 </label>
                 <div
                     class="border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer mb-2"
-                    :class="isDragging ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-primary/50'"
+                    :class="
+                        isDragging
+                            ? 'border-primary bg-primary/10'
+                            : 'border-base-300 hover:border-primary/50'
+                    "
                     @click="selectFile"
                 >
                     <div v-if="!form.fileName" class="space-y-1">
-                        <p class="text-sm text-base-content/60">{{ $t("modals.add_custom_client_modal.drop_jar_here") }}</p>
-                        <p class="text-xs text-base-content/40">{{ $t("modals.add_custom_client_modal.or_click_browse") }}</p>
+                        <p class="text-sm text-base-content/60">
+                            {{
+                                $t(
+                                    "modals.add_custom_client_modal.drop_jar_here"
+                                )
+                            }}
+                        </p>
+                        <p class="text-xs text-base-content/40">
+                            {{
+                                $t(
+                                    "modals.add_custom_client_modal.or_click_browse"
+                                )
+                            }}
+                        </p>
                     </div>
-                    <div v-else class="flex items-center justify-center gap-2 text-success text-sm">
+                    <div
+                        v-else
+                        class="flex items-center justify-center gap-2 text-success text-sm"
+                    >
                         <span>✓</span>
-                        <span class="font-medium truncate max-w-xs">{{ form.fileName }}</span>
+                        <span class="font-medium truncate max-w-xs">{{
+                            form.fileName
+                        }}</span>
                     </div>
                 </div>
                 <label v-if="errors.filePath" class="label">
@@ -286,15 +332,28 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">{{ $t("modals.add_custom_client_modal.client_type") }}</span>
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.client_type")
+                    }}</span>
                 </label>
-                <select v-model="form.clientType" class="select select-bordered w-full">
-                    <option value="default">{{ $t("modals.add_custom_client_modal.client_type_vanilla") }}</option>
+                <select
+                    v-model="form.clientType"
+                    class="select select-bordered w-full"
+                >
+                    <option value="default">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.client_type_vanilla"
+                            )
+                        }}
+                    </option>
                     <option value="fabric">Fabric</option>
                     <option value="forge">Forge</option>
                 </select>
                 <label class="label">
-                    <span class="label-text-alt opacity-60">{{ $t("modals.add_custom_client_modal.client_type_hint") }}</span>
+                    <span class="label-text-alt opacity-60">{{
+                        $t("modals.add_custom_client_modal.client_type_hint")
+                    }}</span>
                 </label>
             </div>
 
@@ -304,7 +363,9 @@ const handleSubmit = async () => {
 
             <div class="form-control" v-if="form.clientType === 'default'">
                 <label class="label">
-                    <span class="label-text">{{ $t("modals.add_custom_client_modal.java_path") }}</span>
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.java_path")
+                    }}</span>
                 </label>
                 <input
                     v-model="form.javaPath"
@@ -316,7 +377,9 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">{{ $t("modals.add_custom_client_modal.java_args") }}</span>
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.java_args")
+                    }}</span>
                 </label>
                 <textarea
                     v-model="form.javaArgs"

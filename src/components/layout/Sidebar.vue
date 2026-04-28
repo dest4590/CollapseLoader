@@ -42,8 +42,6 @@ const altPressTimeout = ref<number | null>(null);
 const isDev = ref(false);
 const isMacOS = computed(() => !!props.isMacOS);
 
-
-
 let homeClickCount = 0;
 const homeClickTimeout = ref<number | null>(null);
 
@@ -419,8 +417,6 @@ onUnmounted(() => {
                     ></span>
                 </button>
             </div>
-
-
 
             <div
                 class="tooltip tooltip-accent"

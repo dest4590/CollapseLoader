@@ -40,17 +40,22 @@ const emit = defineEmits(["logged-in", "unverified"]);
 const username = ref("");
 const isLoading = ref(false);
 
-
 const handleLocalLogin = async () => {
     if (!username.value.trim()) {
-        addToast(t("auth.login.enter_username") || "Введите имя пользователя", "warning");
+        addToast(
+            t("auth.login.enter_username") || "Введите имя пользователя",
+            "warning"
+        );
         return;
     }
 
     try {
         isLoading.value = true;
         localUserService.createProfile(username.value.trim());
-        addToast(t("auth.login.local_success") || "Локальный профиль создан!", "success");
+        addToast(
+            t("auth.login.local_success") || "Локальный профиль создан!",
+            "success"
+        );
         emit("logged-in");
     } catch (e) {
         console.error("Local login failed", e);

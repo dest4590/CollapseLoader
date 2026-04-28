@@ -12,16 +12,76 @@ export interface UserAchievement {
 }
 
 const ALL_ACHIEVEMENTS: Achievement[] = [
-    { id: 1, key: "FIRST_GAME", icon: "Rocket", hidden: false, receivePercentage: 0 },
-    { id: 2, key: "PLAYED_1Hour", icon: "Clock", hidden: false, receivePercentage: 0 },
-    { id: 3, key: "PLAYED_10Hours", icon: "Award", hidden: false, receivePercentage: 0 },
-    { id: 4, key: "SECRET_FINDER", icon: "Search", hidden: true, receivePercentage: 0 },
-    { id: 6, key: "FREQUENT_FLYER", icon: "Zap", hidden: false, receivePercentage: 0 },
-    { id: 8, key: "BETA_TESTER", icon: "TestTube", hidden: false, receivePercentage: 0 },
-    { id: 9, key: "COLLECTOR", icon: "Star", hidden: false, receivePercentage: 0 },
-    { id: 10, key: "NIGHT_OWL", icon: "Moon", hidden: false, receivePercentage: 0 },
-    { id: 11, key: "EARLY_BIRD", icon: "Sun", hidden: false, receivePercentage: 0 },
-    { id: 12, key: "WEEKEND_WARRIOR", icon: "Calendar", hidden: false, receivePercentage: 0 },
+    {
+        id: 1,
+        key: "FIRST_GAME",
+        icon: "Rocket",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 2,
+        key: "PLAYED_1Hour",
+        icon: "Clock",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 3,
+        key: "PLAYED_10Hours",
+        icon: "Award",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 4,
+        key: "SECRET_FINDER",
+        icon: "Search",
+        hidden: true,
+        receivePercentage: 0,
+    },
+    {
+        id: 6,
+        key: "FREQUENT_FLYER",
+        icon: "Zap",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 8,
+        key: "BETA_TESTER",
+        icon: "TestTube",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 9,
+        key: "COLLECTOR",
+        icon: "Star",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 10,
+        key: "NIGHT_OWL",
+        icon: "Moon",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 11,
+        key: "EARLY_BIRD",
+        icon: "Sun",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 12,
+        key: "WEEKEND_WARRIOR",
+        icon: "Calendar",
+        hidden: false,
+        receivePercentage: 0,
+    },
 ];
 
 class AchievementService {
@@ -37,11 +97,15 @@ class AchievementService {
 
         try {
             const unlockedKeys = JSON.parse(stored) as Record<string, string>;
-            return Object.entries(unlockedKeys).map(([key, unlockedAt]) => {
-                const achievement = ALL_ACHIEVEMENTS.find(a => a.key === key);
-                if (!achievement) return null;
-                return { achievement, unlockedAt };
-            }).filter((ua): ua is UserAchievement => ua !== null);
+            return Object.entries(unlockedKeys)
+                .map(([key, unlockedAt]) => {
+                    const achievement = ALL_ACHIEVEMENTS.find(
+                        (a) => a.key === key
+                    );
+                    if (!achievement) return null;
+                    return { achievement, unlockedAt };
+                })
+                .filter((ua): ua is UserAchievement => ua !== null);
         } catch (e) {
             console.error("Failed to parse local achievements", e);
             return [];
@@ -50,11 +114,11 @@ class AchievementService {
 
     async unlockAchievement(key: string): Promise<void> {
         const userAchievements = await this.getUserAchievements();
-        if (userAchievements.some(ua => ua.achievement.key === key)) {
+        if (userAchievements.some((ua) => ua.achievement.key === key)) {
             return;
         }
 
-        const achievement = ALL_ACHIEVEMENTS.find(a => a.key === key);
+        const achievement = ALL_ACHIEVEMENTS.find((a) => a.key === key);
         if (!achievement) return;
 
         const unlockedAt = new Date().toISOString();
@@ -63,17 +127,24 @@ class AchievementService {
         unlockedKeys[key] = unlockedAt;
         localStorage.setItem(this.storageKey, JSON.stringify(unlockedKeys));
 
-        window.dispatchEvent(new CustomEvent("achievement-unlocked", {
-            detail: { key, achievement }
-        }));
+        window.dispatchEvent(
+            new CustomEvent("achievement-unlocked", {
+                detail: { key, achievement },
+            })
+        );
 
         const { useToast } = await import("./toastService");
         const { addToast } = useToast();
 
         const i18n = (await import("../i18n")).default;
         const achievementName = i18n.global.t(`achievements.list.${key}.name`);
-        
-        addToast(i18n.global.t("achievements.unlocked_title", { name: achievementName }), "success");
+
+        addToast(
+            i18n.global.t("achievements.unlocked_title", {
+                name: achievementName,
+            }),
+            "success"
+        );
     }
 }
 

@@ -9,7 +9,7 @@ import type { CustomClient } from "../../../types/ui";
 const VERSION_MAP = {
     default: ["1.16.5"],
     forge: ["1.8.9"],
-    fabric: ["1.21.4", "1.21.8", "1.21.11"]
+    fabric: ["1.21.4", "1.21.8", "1.21.11"],
 };
 
 const { addToast } = useToast();
@@ -38,16 +38,22 @@ const availableVersions = computed(() => {
     return VERSION_MAP[form.clientType as keyof typeof VERSION_MAP] || [];
 });
 
-watch(() => form.clientType, (newType) => {
-    if (newType === 'fabric' && form.mainClass !== "net.fabricmc.loader.impl.launch.knot.KnotClient") {
-        form.mainClass = "net.fabricmc.loader.impl.launch.knot.KnotClient";
+watch(
+    () => form.clientType,
+    (newType) => {
+        if (
+            newType === "fabric" &&
+            form.mainClass !== "net.fabricmc.loader.impl.launch.knot.KnotClient"
+        ) {
+            form.mainClass = "net.fabricmc.loader.impl.launch.knot.KnotClient";
+        }
+
+        const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
+        if (versions && !versions.includes(form.version)) {
+            form.version = versions[0];
+        }
     }
-    
-    const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
-    if (versions && !versions.includes(form.version)) {
-        form.version = versions[0];
-    }
-});
+);
 
 const validateForm = () => {
     errors.value = {};
@@ -57,11 +63,15 @@ const validateForm = () => {
     }
 
     if (!form.version.trim()) {
-        errors.value.version = t("modals.edit_custom_client_modal.validate_version");
+        errors.value.version = t(
+            "modals.edit_custom_client_modal.validate_version"
+        );
     }
 
     if (!form.mainClass.trim()) {
-        errors.value.mainClass = t("modals.edit_custom_client_modal.validate_main_class");
+        errors.value.mainClass = t(
+            "modals.edit_custom_client_modal.validate_main_class"
+        );
     }
 
     return Object.keys(errors.value).length === 0;
@@ -88,7 +98,10 @@ const handleSubmit = async () => {
         emit("client-edited");
         emit("close");
     } catch (err) {
-        addToast(t("modals.edit_custom_client_modal.update_failed", { error: err }), "error");
+        addToast(
+            t("modals.edit_custom_client_modal.update_failed", { error: err }),
+            "error"
+        );
     } finally {
         loading.value = false;
     }
@@ -152,7 +165,9 @@ watch(
                 class="select select-bordered w-full"
                 :class="{ 'select-error': errors.version }"
             >
-                <option v-for="v in availableVersions" :key="v" :value="v">{{ v }}</option>
+                <option v-for="v in availableVersions" :key="v" :value="v">
+                    {{ v }}
+                </option>
             </select>
             <label v-if="errors.version" class="label">
                 <span class="label-text-alt text-error">{{
@@ -188,15 +203,28 @@ watch(
 
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t("modals.edit_custom_client_modal.client_type") }}</span>
+                <span class="label-text">{{
+                    $t("modals.edit_custom_client_modal.client_type")
+                }}</span>
             </label>
-            <select v-model="form.clientType" class="select select-bordered w-full">
-                <option value="default">{{ $t("modals.edit_custom_client_modal.client_type_vanilla") }}</option>
+            <select
+                v-model="form.clientType"
+                class="select select-bordered w-full"
+            >
+                <option value="default">
+                    {{
+                        $t(
+                            "modals.edit_custom_client_modal.client_type_vanilla"
+                        )
+                    }}
+                </option>
                 <option value="fabric">Fabric</option>
                 <option value="forge">Forge</option>
             </select>
             <label class="label">
-                <span class="label-text-alt opacity-60">{{ $t("modals.edit_custom_client_modal.client_type_hint") }}</span>
+                <span class="label-text-alt opacity-60">{{
+                    $t("modals.edit_custom_client_modal.client_type_hint")
+                }}</span>
             </label>
         </div>
 
@@ -206,7 +234,9 @@ watch(
 
         <div class="form-control" v-if="form.clientType === 'default'">
             <label class="label">
-                <span class="label-text">{{ $t("modals.edit_custom_client_modal.java_path") }}</span>
+                <span class="label-text">{{
+                    $t("modals.edit_custom_client_modal.java_path")
+                }}</span>
             </label>
             <input
                 v-model="form.javaPath"
@@ -218,7 +248,9 @@ watch(
 
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ $t("modals.edit_custom_client_modal.java_args") }}</span>
+                <span class="label-text">{{
+                    $t("modals.edit_custom_client_modal.java_args")
+                }}</span>
             </label>
             <textarea
                 v-model="form.javaArgs"

@@ -31,7 +31,9 @@ const isStatusLoading = ref(false);
 let statusPolling: PollingController | null = null;
 const STATUS_UPDATE_INTERVAL = 45000;
 
-const isAuthenticated = computed(() => !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN));
+const isAuthenticated = computed(
+    () => !!localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
+);
 
 export function useFriends() {
     const onlineFriends = computed(() =>
@@ -182,7 +184,11 @@ export function useFriends() {
 
         const runStatusUpdate = async () => {
             if (document.visibilityState === "hidden") return;
-            if (!isAuthenticated.value || globalFriendsState.friends.length === 0) return;
+            if (
+                !isAuthenticated.value ||
+                globalFriendsState.friends.length === 0
+            )
+                return;
             await updateFriendStatuses();
         };
 

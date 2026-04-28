@@ -7,7 +7,11 @@
                 }}</span>
                 <span
                     class="label-text-alt"
-                    :class="username.length > 16 ? 'text-error' : 'text-base-content/50'"
+                    :class="
+                        username.length > 16
+                            ? 'text-error'
+                            : 'text-base-content/50'
+                    "
                 >
                     {{ username.length }}/16
                 </span>
@@ -22,10 +26,14 @@
                 @input="validateUsername"
             />
             <div v-if="usernameError" class="label">
-                <span class="label-text-alt text-error">{{ usernameError }}</span>
+                <span class="label-text-alt text-error">{{
+                    usernameError
+                }}</span>
             </div>
             <div v-else class="label">
-                <span class="label-text-alt text-base-content/40">{{ t("modals.add_account.username_hint") }}</span>
+                <span class="label-text-alt text-base-content/40">{{
+                    t("modals.add_account.username_hint")
+                }}</span>
             </div>
         </div>
 
@@ -44,7 +52,11 @@
         </div>
 
         <div class="flex justify-end space-x-2 mt-9 w-full">
-            <button @click="addAccount" class="btn btn-primary" :disabled="!!usernameError || !username.trim()">
+            <button
+                @click="addAccount"
+                class="btn btn-primary"
+                :disabled="!!usernameError || !username.trim()"
+            >
                 {{ t("modals.add_account.add_account") }}
             </button>
             <button @click="$emit('close')" class="btn btn-outline">
@@ -94,7 +106,10 @@ const validateUsername = () => {
 const addAccount = async () => {
     validateUsername();
     if (usernameError.value || !username.value.trim()) {
-        addToast(usernameError.value || t("toast.account.username_required"), "error");
+        addToast(
+            usernameError.value || t("toast.account.username_required"),
+            "error"
+        );
         return;
     }
 

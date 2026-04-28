@@ -131,8 +131,6 @@ const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
 
-
-
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
     previousTab.value = router.currentRoute.value;
@@ -283,8 +281,6 @@ watch(isAuthenticated, (newVal) => {
     }
 });
 
-
-
 watch(activeTab, async (newTab) => {
     await updateDiscordRPC(newTab);
 });
@@ -401,11 +397,19 @@ onMounted(async () => {
         try {
             const userToken = localStorage.getItem("authToken") || "null";
             if (!target.meta.installed) {
-                addToast(t("home.starting_download", { name: target.name }), "info", 3000);
+                addToast(
+                    t("home.starting_download", { name: target.name }),
+                    "info",
+                    3000
+                );
                 await invoke("download_client_only", { id: target.id });
                 target.meta.installed = true;
             }
-            addToast(t("home.launching", { client: target.name }), "info", 2000);
+            addToast(
+                t("home.launching", { client: target.name }),
+                "info",
+                2000
+            );
             await invoke("launch_client", { id: target.id, userToken });
             const { getCurrentWindow } = await import("@tauri-apps/api/window");
             await getCurrentWindow().minimize();
@@ -717,10 +721,6 @@ onUnmounted(() => {
             :halloween-active="halloweenActive"
             :current-theme="currentTheme"
         />
-
-
-
-
 
         <InitialSetupModals
             :show-first-run="showFirstRunInfo"
