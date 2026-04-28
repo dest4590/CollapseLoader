@@ -7,7 +7,9 @@
         ></div>
 
         <div>
-            <p class="text-xs text-base-content/50 uppercase tracking-widest font-bold mb-2">
+            <p
+                class="text-xs text-base-content/50 uppercase tracking-widest font-bold mb-2"
+            >
                 {{ t("marketplace.tg_colors") }}
             </p>
             <div class="flex flex-wrap gap-2">
@@ -27,28 +29,46 @@
         </div>
 
         <div v-if="theme.backgroundImage" class="space-y-1">
-            <p class="text-xs text-base-content/50 uppercase tracking-widest font-bold mb-2">
+            <p
+                class="text-xs text-base-content/50 uppercase tracking-widest font-bold mb-2"
+            >
                 {{ t("customization.background_title") }}
             </p>
             <div class="flex flex-wrap gap-3 text-sm text-base-content/70">
-                <span v-if="theme.backgroundBlur != null" class="flex items-center gap-1">
+                <span
+                    v-if="theme.backgroundBlur != null"
+                    class="flex items-center gap-1"
+                >
                     <Blend class="w-3.5 h-3.5" />
-                    {{ t("customization.background_blur") }}: {{ theme.backgroundBlur }}px
+                    {{ t("customization.background_blur") }}:
+                    {{ theme.backgroundBlur }}px
                 </span>
-                <span v-if="theme.backgroundOpacity != null" class="flex items-center gap-1">
+                <span
+                    v-if="theme.backgroundOpacity != null"
+                    class="flex items-center gap-1"
+                >
                     <SlidersHorizontal class="w-3.5 h-3.5" />
-                    {{ t("customization.background_opacity") }}: {{ theme.backgroundOpacity }}%
+                    {{ t("customization.background_opacity") }}:
+                    {{ theme.backgroundOpacity }}%
                 </span>
             </div>
         </div>
 
-        <div v-if="theme.enableCustomCSS && theme.customCSS" class="flex items-center gap-2">
+        <div
+            v-if="theme.enableCustomCSS && theme.customCSS"
+            class="flex items-center gap-2"
+        >
             <Code class="w-4 h-4 text-primary" />
-            <span class="text-sm text-base-content/70">{{ t("marketplace.tg_has_css") }}</span>
+            <span class="text-sm text-base-content/70">{{
+                t("marketplace.tg_has_css")
+            }}</span>
         </div>
 
         <div class="flex gap-3 pt-2">
-            <button class="btn btn-primary flex-1 gap-2" @click="$emit('apply')">
+            <button
+                class="btn btn-primary flex-1 gap-2"
+                @click="$emit('apply')"
+            >
                 <PaintBucket class="w-4 h-4" />
                 {{ t("marketplace.apply") }}
             </button>

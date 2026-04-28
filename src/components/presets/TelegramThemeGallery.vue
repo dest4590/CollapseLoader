@@ -10,7 +10,8 @@
                         target="_blank"
                         rel="noreferrer"
                         class="text-primary hover:underline ml-1"
-                    >@{{ TG_CHANNEL }}</a>
+                        >@{{ TG_CHANNEL }}</a
+                    >
                 </span>
             </div>
             <button
@@ -31,10 +32,15 @@
                 :placeholder="t('marketplace.search_placeholder')"
                 v-model="search"
             />
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-base-content/60 pointer-events-none" />
+            <Search
+                class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-base-content/60 pointer-events-none"
+            />
         </div>
 
-        <div v-if="loading" class="flex items-center gap-2 text-base-content/70 py-8 justify-center">
+        <div
+            v-if="loading"
+            class="flex items-center gap-2 text-base-content/70 py-8 justify-center"
+        >
             <span class="loading loading-spinner loading-md"></span>
             <span>{{ t("common.loading") }}</span>
         </div>
@@ -47,7 +53,10 @@
             </button>
         </div>
 
-        <div v-else-if="!filteredThemes.length" class="text-center py-8 text-base-content/50">
+        <div
+            v-else-if="!filteredThemes.length"
+            class="text-center py-8 text-base-content/50"
+        >
             <Palette class="w-10 h-10 mx-auto mb-2 opacity-30" />
             <p class="text-sm">{{ t("marketplace.no_items") }}</p>
         </div>
@@ -65,11 +74,19 @@
                 <div class="card-body p-3.5">
                     <div class="flex flex-col h-full">
                         <div class="flex flex-col gap-0.5 mb-2.5">
-                            <h4 class="text-base font-bold text-base-content tracking-tight line-clamp-1">
+                            <h4
+                                class="text-base font-bold text-base-content tracking-tight line-clamp-1"
+                            >
                                 {{ preset.name }}
                             </h4>
-                            <p class="text-[9px] font-black text-base-content/30 uppercase tracking-widest">
-                                {{ t("marketplace.by_author", { name: `@${TG_CHANNEL}`.toUpperCase() }) }}
+                            <p
+                                class="text-[9px] font-black text-base-content/30 uppercase tracking-widest"
+                            >
+                                {{
+                                    t("marketplace.by_author", {
+                                        name: `@${TG_CHANNEL}`.toUpperCase(),
+                                    })
+                                }}
                             </p>
                         </div>
 
@@ -79,14 +96,18 @@
                         >
                             <div
                                 class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                :style="{ backgroundImage: `url(${preset.theme.backgroundImage})` }"
+                                :style="{
+                                    backgroundImage: `url(${preset.theme.backgroundImage})`,
+                                }"
                             ></div>
                         </div>
                         <div
                             v-else
                             class="w-full h-24 rounded-xl bg-base-300/20 border border-white/5 flex items-center justify-center mb-2.5 overflow-hidden group-hover:border-primary/5 transition-all duration-500"
                         >
-                            <Image class="w-5 h-5 text-base-content/10 group-hover:text-base-content/20 transition-colors duration-500" />
+                            <Image
+                                class="w-5 h-5 text-base-content/10 group-hover:text-base-content/20 transition-colors duration-500"
+                            />
                         </div>
 
                         <PresetColorPreview :preset="preset" class="mt-0!" />
@@ -235,7 +256,9 @@ async function saveLocal(preset: MarketplacePreset) {
         preset.description,
         theme
     );
-    const input = JSON.parse(JSON.stringify(raw, (_k, v) => v === undefined ? null : v));
+    const input = JSON.parse(
+        JSON.stringify(raw, (_k, v) => (v === undefined ? null : v))
+    );
     const result = await createPreset(input);
     if (result) {
         await loadPresets();

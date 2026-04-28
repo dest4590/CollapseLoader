@@ -181,9 +181,9 @@ const applyPreset = () => {
 
     const bgImage = presetSettings.backgroundImage;
     const bgOpacity = presetSettings.backgroundOpacity;
-    const effectiveOpacity = bgOpacity !== null && bgOpacity !== undefined ? bgOpacity : 100;
-    const hasBg =
-        bgImage && bgImage.trim().length > 0 && effectiveOpacity > 0;
+    const effectiveOpacity =
+        bgOpacity !== null && bgOpacity !== undefined ? bgOpacity : 100;
+    const hasBg = bgImage && bgImage.trim().length > 0 && effectiveOpacity > 0;
 
     if (hasBg) {
         root.setAttribute("data-has-background", "true");
@@ -261,7 +261,7 @@ const saveCardSettings = () => {
         persistPresetSettings();
         emit("theme-update", JSON.parse(JSON.stringify(presetSettings)));
         console.log("Saved preset settings to localStorage:", presetSettings);
-        
+
         void achievementService.unlockAchievement("PRESET_MAX");
     } catch (error) {
         console.error("Failed to save preset settings:", error);

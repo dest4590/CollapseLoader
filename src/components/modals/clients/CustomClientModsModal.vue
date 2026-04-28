@@ -39,7 +39,9 @@
                     v-if="isLoading"
                     class="flex justify-center items-center h-40"
                 >
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <span
+                        class="loading loading-spinner loading-lg text-primary"
+                    ></span>
                 </div>
 
                 <div v-else-if="error" class="alert alert-error">
@@ -61,20 +63,31 @@
                         class="bg-base-200/50 p-3 rounded-lg flex items-center gap-3 hover:bg-base-200 transition-colors"
                     >
                         <img
-                            :src="mod.icon_url || 'https://cdn.modrinth.com/assets/unknown_server.png'"
+                            :src="
+                                mod.icon_url ||
+                                'https://cdn.modrinth.com/assets/unknown_server.png'
+                            "
                             :alt="mod.title"
                             class="w-10 h-10 rounded shadow-sm object-cover"
                         />
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm truncate">{{ mod.title }}</h4>
-                                <span class="text-[10px] bg-base-300 px-1.5 py-0.5 rounded text-base-content/60">{{ mod.author }}</span>
+                                <h4 class="font-bold text-sm truncate">
+                                    {{ mod.title }}
+                                </h4>
+                                <span
+                                    class="text-[10px] bg-base-300 px-1.5 py-0.5 rounded text-base-content/60"
+                                    >{{ mod.author }}</span
+                                >
                                 <span
                                     v-if="isModInstalled(mod)"
                                     class="badge badge-success badge-xs text-[10px] py-2 px-2 uppercase font-bold tracking-tighter opacity-70"
-                                >{{ t("mods.installed") }}</span>
+                                    >{{ t("mods.installed") }}</span
+                                >
                             </div>
-                            <p class="text-xs text-base-content/70 truncate">{{ mod.description }}</p>
+                            <p class="text-xs text-base-content/70 truncate">
+                                {{ mod.description }}
+                            </p>
                         </div>
                         <button
                             @click="showVersions(mod)"
@@ -96,13 +109,21 @@
                     v-if="isLoadingVersions"
                     class="flex justify-center items-center h-40"
                 >
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <span
+                        class="loading loading-spinner loading-lg text-primary"
+                    ></span>
                 </div>
                 <div
                     v-else-if="versions.length === 0"
                     class="text-center py-8 text-base-content/60"
                 >
-                    <p>{{ t("mods.no_compatible_version", { version: client.version }) }}</p>
+                    <p>
+                        {{
+                            t("mods.no_compatible_version", {
+                                version: client.version,
+                            })
+                        }}
+                    </p>
                 </div>
                 <div
                     v-else
@@ -113,11 +134,23 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 font-bold text-sm">
                             {{ version.version_number }}
-                            <span v-if="version.version_type === 'release'" class="badge badge-success badge-xs">Release</span>
-                            <span v-else-if="version.version_type === 'beta'" class="badge badge-warning badge-xs">Beta</span>
+                            <span
+                                v-if="version.version_type === 'release'"
+                                class="badge badge-success badge-xs"
+                                >Release</span
+                            >
+                            <span
+                                v-else-if="version.version_type === 'beta'"
+                                class="badge badge-warning badge-xs"
+                                >Beta</span
+                            >
                         </div>
                         <div class="text-[10px] text-base-content/50 mt-1">
-                            {{ new Date(version.date_published).toLocaleDateString() }}
+                            {{
+                                new Date(
+                                    version.date_published
+                                ).toLocaleDateString()
+                            }}
                             • {{ version.loaders.join(", ") }}
                         </div>
                     </div>
@@ -131,7 +164,9 @@
             </div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2 border-t border-base-content/10">
+        <div
+            class="flex justify-end gap-2 pt-2 border-t border-base-content/10"
+        >
             <button @click="emit('close')" class="btn btn-ghost">
                 {{ t("common.close") }}
             </button>
@@ -173,9 +208,12 @@ const isLoadingVersions = ref(false);
 
 const fetchInstalledMods = async () => {
     try {
-        installedModFiles.value = await invoke<string[]>("list_installed_mods_custom", {
-            id: props.client.id,
-        });
+        installedModFiles.value = await invoke<string[]>(
+            "list_installed_mods_custom",
+            {
+                id: props.client.id,
+            }
+        );
     } catch (e) {
         console.error("Failed to fetch installed mods", e);
     }
@@ -220,7 +258,8 @@ const showVersions = async (mod: ModrinthSearchResult) => {
     selectedVersionsMod.value = mod;
     isLoadingVersions.value = true;
     try {
-        const loaders = props.client.client_type === "Forge" ? ["forge"] : ["fabric"];
+        const loaders =
+            props.client.client_type === "Forge" ? ["forge"] : ["fabric"];
         versions.value = await ModrinthService.getModVersions(
             mod.slug,
             loaders,
@@ -244,7 +283,8 @@ const installVersion = async (
     installingMods.value.add(mod.project_id);
 
     try {
-        const file = version.files.find((f: any) => f.primary) || version.files[0];
+        const file =
+            version.files.find((f: any) => f.primary) || version.files[0];
         if (!file) {
             throw new Error("No file found in version");
         }
@@ -255,7 +295,11 @@ const installVersion = async (
             filename: file.filename,
         });
 
-        addToast(t("mods.install_success", { mod: mod.title }), "success", 3000);
+        addToast(
+            t("mods.install_success", { mod: mod.title }),
+            "success",
+            3000
+        );
         await fetchInstalledMods();
     } catch (e: any) {
         console.error("Install failed", e);

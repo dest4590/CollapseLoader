@@ -17,7 +17,8 @@ class WebSocketService {
             brokerURL: this.getBrokerUrl(),
             connectHeaders: {
                 Authorization:
-                    `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}` || "",
+                    `Bearer ${localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)}` ||
+                    "",
             },
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
@@ -75,9 +76,14 @@ class WebSocketService {
         }
     }
 
-    private safeSubscribe(destination: string, handler: (data: any) => void): void {
+    private safeSubscribe(
+        destination: string,
+        handler: (data: any) => void
+    ): void {
         if (!this.client) {
-            console.error("Cannot subscribe: WebSocket client is not initialized");
+            console.error(
+                "Cannot subscribe: WebSocket client is not initialized"
+            );
             return;
         }
         this.client.subscribe(destination, (message) => {
@@ -86,11 +92,15 @@ class WebSocketService {
     }
 
     private subscribeToUserAchievements() {
-        this.safeSubscribe("/user/queue/achievements", (data) => this.handleAchievementUnlock(data));
+        this.safeSubscribe("/user/queue/achievements", (data) =>
+            this.handleAchievementUnlock(data)
+        );
     }
 
     private subscribeToFriendNotifications() {
-        this.safeSubscribe("/user/queue/friends", (data) => this.handleFriendNotification(data));
+        this.safeSubscribe("/user/queue/friends", (data) =>
+            this.handleFriendNotification(data)
+        );
     }
 
     private handleFriendNotification(data: any) {
@@ -118,7 +128,9 @@ class WebSocketService {
     }
 
     private subscribeToCommands() {
-        this.safeSubscribe("/topic/commands", (data) => this.handleCommand(data));
+        this.safeSubscribe("/topic/commands", (data) =>
+            this.handleCommand(data)
+        );
     }
 
     private async handleCommand(data: any) {
@@ -129,7 +141,11 @@ class WebSocketService {
     }
 
     private subscribeToBroadcasts() {
-        for (const topic of ["/topic/broadcast", "/topic/broadcast/users", "/topic/broadcast/guests"]) {
+        for (const topic of [
+            "/topic/broadcast",
+            "/topic/broadcast/users",
+            "/topic/broadcast/guests",
+        ]) {
             this.safeSubscribe(topic, (data) => this.handleBroadcast(data));
         }
     }

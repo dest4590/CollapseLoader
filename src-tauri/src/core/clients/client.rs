@@ -19,7 +19,7 @@ use crate::core::utils::{
     },
     process,
 };
-use crate::{log_debug, log_error, log_info};
+use crate::{log_error, log_info};
 
 mod launch;
 mod requirements;
@@ -84,11 +84,11 @@ fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<Pa
                     .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
                 {
                     let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-                    
+
                     // Filter by platform (only for natives)
                     let mut should_include = true;
                     let is_native = filename.contains("natives");
-                    
+
                     if is_native {
                         if IS_WINDOWS {
                             if filename.contains("-linux") || filename.contains("-macos") {
@@ -108,9 +108,9 @@ fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<Pa
                     if should_include {
                         let filename_lower = filename.to_lowercase();
                         if filename_lower.contains("slf4j") || filename_lower.contains("log4j") {
-                            log_info!("Found critical logging library: {}", filename);
+                            //log_info!("Found critical logging library: {}", filename);
                         } else {
-                            log_debug!("Found JAR: {}", filename);
+                            //log_debug!("Found JAR: {}", filename);
                         }
                         jars.push(path);
                     }
@@ -364,16 +364,20 @@ impl Client {
 
     fn get_minecraft_jar_path(&self) -> PathBuf {
         if self.meta.is_custom && self.client_type == ClientType::Default {
-            return self.get_launch_paths().map(|(_, jar)| jar).unwrap_or_default();
+            return self
+                .get_launch_paths()
+                .map(|(_, jar)| jar)
+                .unwrap_or_default();
         }
 
         let safe_ver = sanitize_version_for_paths(&self.version);
         let root = DATA.root_dir.lock().unwrap();
-        root.join(MINECRAFT_VERSIONS_FOLDER).join(match self.client_type {
-            ClientType::Fabric => format!("fabric_{}.jar", safe_ver),
-            ClientType::Forge => format!("forge_{}.jar", safe_ver),
-            ClientType::Default => format!("{}.jar", safe_ver),
-        })
+        root.join(MINECRAFT_VERSIONS_FOLDER)
+            .join(match self.client_type {
+                ClientType::Fabric => format!("fabric_{}.jar", safe_ver),
+                ClientType::Forge => format!("forge_{}.jar", safe_ver),
+                ClientType::Default => format!("{}.jar", safe_ver),
+            })
     }
 
     pub fn get_running_clients(manager: &Arc<Mutex<ClientManager>>) -> Vec<Self> {

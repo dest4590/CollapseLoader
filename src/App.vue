@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { router } from "./services/router";
 import { useI18n } from "vue-i18n";
@@ -130,8 +131,6 @@ const { stopStatusSync } = globalUserStatus;
 const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
-
-
 
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
@@ -283,8 +282,6 @@ watch(isAuthenticated, (newVal) => {
     }
 });
 
-
-
 watch(activeTab, async (newTab) => {
     await updateDiscordRPC(newTab);
 });
@@ -401,13 +398,20 @@ onMounted(async () => {
         try {
             const userToken = localStorage.getItem("authToken") || "null";
             if (!target.meta.installed) {
-                addToast(t("home.starting_download", { name: target.name }), "info", 3000);
+                addToast(
+                    t("home.starting_download", { name: target.name }),
+                    "info",
+                    3000
+                );
                 await invoke("download_client_only", { id: target.id });
                 target.meta.installed = true;
             }
-            addToast(t("home.launching", { client: target.name }), "info", 2000);
+            addToast(
+                t("home.launching", { client: target.name }),
+                "info",
+                2000
+            );
             await invoke("launch_client", { id: target.id, userToken });
-            const { getCurrentWindow } = await import("@tauri-apps/api/window");
             await getCurrentWindow().minimize();
         } catch (e) {
             console.error("Cannot start client from tray", e);
@@ -455,8 +459,6 @@ onMounted(async () => {
                     });
 
                     if (!was_already_running) {
-                        const { getCurrentWindow } =
-                            await import("@tauri-apps/api/window");
                         await getCurrentWindow().minimize();
                     }
                 } catch (e) {
@@ -717,10 +719,6 @@ onUnmounted(() => {
             :halloween-active="halloweenActive"
             :current-theme="currentTheme"
         />
-
-
-
-
 
         <InitialSetupModals
             :show-first-run="showFirstRunInfo"

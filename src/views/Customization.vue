@@ -85,9 +85,9 @@
                                 @click="openInNewWindow"
                             >
                                 <ExternalLink class="w-4 h-4" />
-                                <span class="hidden sm:inline"
-                                    >{{ $t("theme.actions.open_inspector") }}</span
-                                >
+                                <span class="hidden sm:inline">{{
+                                    $t("theme.actions.open_inspector")
+                                }}</span>
                             </button>
                         </div>
                     </div>

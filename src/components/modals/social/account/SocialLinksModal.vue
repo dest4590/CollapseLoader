@@ -210,10 +210,10 @@ const addLink = async () => {
             { platform: newPlatform.value, url: newUrl.value.trim() },
         ];
         saveLinksToLocal(newLinks);
-        
+
         // Trigger achievement
         await achievementService.unlockAchievement("SOCIAL_BUTTERFLY");
-        
+
         newPlatform.value = "";
         newUrl.value = "";
         addToast(t("modals.social_links.added"), "success");

@@ -1,11 +1,15 @@
 <template>
     <div class="space-y-3">
-        <div class="flex items-center justify-between p-3 bg-base-300/60 rounded-lg mb-4">
+        <div
+            class="flex items-center justify-between p-3 bg-base-300/60 rounded-lg mb-4"
+        >
             <div class="flex items-center gap-2 text-base-content/70 text-sm">
                 <Timer class="w-4 h-4 text-primary" />
                 <span>{{ t("account.playtime_total") }}</span>
             </div>
-            <span class="font-bold text-primary">{{ formatPlaytime(totalMinutes) }}</span>
+            <span class="font-bold text-primary">{{
+                formatPlaytime(totalMinutes)
+            }}</span>
         </div>
 
         <div
@@ -13,24 +17,34 @@
             :key="clientName"
             class="flex items-center gap-3 p-3 bg-base-300/40 rounded-lg"
         >
-            <span class="text-base-content/30 text-xs font-mono w-5 text-right shrink-0">
+            <span
+                class="text-base-content/30 text-xs font-mono w-5 text-right shrink-0"
+            >
                 {{ index + 1 }}
             </span>
             <Gamepad2 class="w-5 h-5 text-primary shrink-0" />
             <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between gap-2">
                     <span class="font-medium truncate">{{ clientName }}</span>
-                    <span class="text-primary font-semibold shrink-0">{{ formatPlaytime(stats.playtimeMinutes) }}</span>
+                    <span class="text-primary font-semibold shrink-0">{{
+                        formatPlaytime(stats.playtimeMinutes)
+                    }}</span>
                 </div>
                 <div class="flex items-center gap-3 mt-1">
                     <div class="flex-1 bg-base-content/10 rounded-full h-1.5">
                         <div
                             class="bg-primary h-1.5 rounded-full transition-all"
-                            :style="{ width: getPercent(stats.playtimeMinutes) + '%' }"
+                            :style="{
+                                width: getPercent(stats.playtimeMinutes) + '%',
+                            }"
                         ></div>
                     </div>
                     <span class="text-xs text-base-content/50 shrink-0">
-                        {{ t("account.playtime_launches", { count: stats.launches }) }}
+                        {{
+                            t("account.playtime_launches", {
+                                count: stats.launches,
+                            })
+                        }}
                     </span>
                 </div>
             </div>

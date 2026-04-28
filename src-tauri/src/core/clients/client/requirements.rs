@@ -12,13 +12,13 @@ use crate::core::storage::{
 };
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
-    FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
-    JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER,
-    LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP,
+    CUSTOM_CLIENTS_FOLDER, FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_AARCH64, IS_LINUX, IS_MACOS,
+    IS_WINDOWS, JDK21_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP,
+    LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP,
     MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_FOLDER,
-    NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP, NATIVES_LINUX_FOLDER,
-    NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_FOLDER,
-    NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR, CUSTOM_CLIENTS_FOLDER,
+    NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
+    NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP,
+    NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
 use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -266,14 +266,17 @@ impl Client {
             for entry in entries.flatten() {
                 if let Some(name) = entry.file_name().to_str() {
                     if name.to_lowercase().contains("fabric-api") {
-                        log_debug!("Fabric API already present in mods folder: {}", name);
+                        // log_debug!("Fabric API already present in mods folder: {}", name);
                         return Ok(());
                     }
                 }
             }
         }
 
-        log_info!("Fetching Fabric API for version {} from Modrinth...", self.version);
+        log_info!(
+            "Fetching Fabric API for version {} from Modrinth...",
+            self.version
+        );
 
         let url = format!(
             "https://api.modrinth.com/v2/project/P7dR8mSH/version?game_versions=[\"{}\"]&loaders=[\"fabric\"]",
@@ -283,13 +286,19 @@ impl Client {
         let client = reqwest::Client::new();
         let response = client
             .get(&url)
-            .header("User-Agent", "CollapseLauncher-Reborn (github.com/dest4590/CollapseLoader)")
+            .header(
+                "User-Agent",
+                "CollapseLauncher-Reborn (github.com/dest4590/CollapseLoader)",
+            )
             .send()
             .await
             .map_err(|e| format!("Failed to fetch Fabric API info from Modrinth: {e}"))?;
 
         if !response.status().is_success() {
-            return Err(format!("Modrinth API returned error: {}", response.status()));
+            return Err(format!(
+                "Modrinth API returned error: {}",
+                response.status()
+            ));
         }
 
         let versions: Vec<ModrinthVersion> = response
@@ -298,17 +307,21 @@ impl Client {
             .map_err(|e| format!("Failed to parse Modrinth API response: {e}"))?;
 
         let best_version = versions.first().ok_or_else(|| {
-            format!("No Fabric API version found on Modrinth for Minecraft {}", self.version)
+            format!(
+                "No Fabric API version found on Modrinth for Minecraft {}",
+                self.version
+            )
         })?;
 
-        let file = best_version.files.first().ok_or_else(|| {
-            format!("No files found for the latest Fabric API on Modrinth")
-        })?;
+        let file = best_version
+            .files
+            .first()
+            .ok_or_else(|| format!("No files found for the latest Fabric API on Modrinth"))?;
 
         let api_path = mods_folder.join(&file.filename);
-        
+
         log_info!("Downloading Fabric API: {}", file.filename);
-        
+
         let mods_folder_rel = if self.meta.is_custom {
             format!("{}/{}/{}", CUSTOM_CLIENTS_FOLDER, self.name, MODS_FOLDER)
         } else {
@@ -316,13 +329,8 @@ impl Client {
             format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}")
         };
 
-        self.download_dependency(
-            &file.url,
-            &mods_folder_rel,
-            &api_path,
-            None,
-            &file.filename,
-        ).await?;
+        self.download_dependency(&file.url, &mods_folder_rel, &api_path, None, &file.filename)
+            .await?;
 
         Ok(())
     }
@@ -603,11 +611,7 @@ impl Client {
     }
 
     fn clean_fabric_libraries(&self) {
-        let fabric_libs_dir = DATA
-            .root_dir
-            .lock()
-            .unwrap()
-            .join(LIBRARIES_FABRIC_FOLDER);
+        let fabric_libs_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
 
         if !fabric_libs_dir.exists() {
             return;
@@ -629,33 +633,33 @@ impl Client {
                 Self::clean_jars_in_dir_recursive(&path, depth + 1, max_depth);
                 continue;
             }
-            let Some(ext) = path.extension() else { continue; };
+            let Some(ext) = path.extension() else {
+                continue;
+            };
             if !ext.eq_ignore_ascii_case("jar") {
                 continue;
             }
-            let filename = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("");
+            let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
             let is_empty = std::fs::metadata(&path)
                 .map(|m| m.len() == 0)
                 .unwrap_or(false);
 
-            let is_foreign_native = filename.contains("natives") && ({
-                if IS_WINDOWS {
-                    filename.contains("-linux") || filename.contains("-macos")
-                } else if IS_LINUX {
-                    filename.contains("-windows") || filename.contains("-macos")
-                } else if IS_MACOS {
-                    filename.contains("-windows") || filename.contains("-linux")
-                } else {
-                    false
-                }
-            });
+            let is_foreign_native = filename.contains("natives")
+                && ({
+                    if IS_WINDOWS {
+                        filename.contains("-linux") || filename.contains("-macos")
+                    } else if IS_LINUX {
+                        filename.contains("-windows") || filename.contains("-macos")
+                    } else if IS_MACOS {
+                        filename.contains("-windows") || filename.contains("-linux")
+                    } else {
+                        false
+                    }
+                });
 
             if is_empty || is_foreign_native {
-                log_info!("Removing incompatible library: {}", filename);
+                //log_info!("Removing incompatible library: {}", filename);
                 let _ = std::fs::remove_file(&path);
             }
         }
@@ -693,20 +697,13 @@ impl Client {
     }
 
     async fn ensure_slf4j(&self) -> Result<(), String> {
-        let fabric_libs_dir = DATA
-            .root_dir
-            .lock()
-            .unwrap()
-            .join(LIBRARIES_FABRIC_FOLDER);
+        let fabric_libs_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
 
         let already_present = {
             let mut found = false;
             if let Ok(entries) = std::fs::read_dir(&fabric_libs_dir) {
                 for entry in entries.flatten() {
-                    let name = entry
-                        .file_name()
-                        .to_string_lossy()
-                        .to_lowercase();
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
                     if name.contains("slf4j-api") && name.ends_with(".jar") {
                         let size = std::fs::metadata(entry.path())
                             .map(|m| m.len())
@@ -728,7 +725,8 @@ impl Client {
 
         log_info!("SLF4J not found, downloading from Maven Central...");
 
-        let slf4j_url = "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar";
+        let slf4j_url =
+            "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar";
         let dest = fabric_libs_dir.join("slf4j-api-2.0.9.jar");
 
         let client = reqwest::Client::new();
@@ -751,8 +749,7 @@ impl Client {
             .await
             .map_err(|e| format!("Failed to read slf4j-api response: {e}"))?;
 
-        std::fs::write(&dest, &bytes)
-            .map_err(|e| format!("Failed to write slf4j-api: {e}"))?;
+        std::fs::write(&dest, &bytes).map_err(|e| format!("Failed to write slf4j-api: {e}"))?;
 
         log_info!("Downloaded slf4j-api-2.0.9.jar ({} bytes)", bytes.len());
         Ok(())
@@ -828,9 +825,9 @@ impl Client {
 
         log_info!("Built classpath with {} elements", cp_parts.len());
         if cp_parts.len() < 10 {
-             for (i, p) in cp_parts.iter().enumerate() {
-                 log_debug!("CP [{}]: {:?}", i, p);
-             }
+            for (i, p) in cp_parts.iter().enumerate() {
+                log_debug!("CP [{}]: {:?}", i, p);
+            }
         }
 
         Ok(cp_parts

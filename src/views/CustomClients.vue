@@ -73,8 +73,10 @@ const showContextMenu = (event: MouseEvent, client: CustomClient) => {
     let x = event.clientX;
     let y = event.clientY;
 
-    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 8;
-    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 8;
+    if (x + menuWidth > window.innerWidth)
+        x = window.innerWidth - menuWidth - 8;
+    if (y + menuHeight > window.innerHeight)
+        y = window.innerHeight - menuHeight - 8;
 
     contextMenu.value = {
         visible: true,
@@ -107,7 +109,8 @@ const hideContextMenu = () => {
 const loadCustomClients = async () => {
     try {
         loading.value = true;
-        customClients.value = await invoke<CustomClient[]>("get_custom_clients");
+        customClients.value =
+            await invoke<CustomClient[]>("get_custom_clients");
         error.value = "";
     } catch (err) {
         error.value = t("custom_clients.load_failed", { error: err });
@@ -119,7 +122,9 @@ const loadCustomClients = async () => {
 
 const checkCustomClientRunningStatus = async () => {
     try {
-        runningCustomClients.value = await invoke<number[]>("get_running_custom_client_ids");
+        runningCustomClients.value = await invoke<number[]>(
+            "get_running_custom_client_ids"
+        );
     } catch (err) {
         console.error("Error checking custom client running status:", err);
     }
@@ -138,7 +143,13 @@ const handleLaunchClient = async (client: CustomClient) => {
         await new Promise((resolve) => setTimeout(resolve, 500));
         await checkCustomClientRunningStatus();
     } catch (err) {
-        addToast(t("custom_clients.launch_failed", { name: client.name, error: err }), "error");
+        addToast(
+            t("custom_clients.launch_failed", {
+                name: client.name,
+                error: err,
+            }),
+            "error"
+        );
     }
 };
 
@@ -146,7 +157,8 @@ const stopCustomClient = async (id: number) => {
     hideContextMenu();
     try {
         const client = customClients.value.find((c) => c.id === id);
-        if (client) addToast(t("home.stopping", { client: client.name }), "info", 2000);
+        if (client)
+            addToast(t("home.stopping", { client: client.name }), "info", 2000);
         await invoke("stop_custom_client", { id });
         await new Promise((resolve) => setTimeout(resolve, 1000));
         await checkCustomClientRunningStatus();
@@ -207,7 +219,10 @@ const openLogViewer = (client: CustomClient) => {
     showModal(
         `log-viewer-${client.id}`,
         LogViewerModal,
-        { title: t("logs.title", { client: client.name }), contentClass: "wide" },
+        {
+            title: t("logs.title", { client: client.name }),
+            contentClass: "wide",
+        },
         { clientId: client.id, clientName: client.name },
         { close: () => {} }
     );
@@ -218,7 +233,10 @@ const openClientFolder = async (client: CustomClient) => {
     try {
         await invoke("open_custom_client_folder", { id: client.id });
     } catch (err) {
-        addToast(t("custom_clients.open_folder_failed", { error: err }), "error");
+        addToast(
+            t("custom_clients.open_folder_failed", { error: err }),
+            "error"
+        );
     }
 };
 
@@ -236,7 +254,9 @@ const openModsManager = (client: CustomClient) => {
 const copyClientLogs = async (client: CustomClient) => {
     hideContextMenu();
     try {
-        const logs = await invoke<string>("get_latest_client_logs", { id: client.id });
+        const logs = await invoke<string>("get_latest_client_logs", {
+            id: client.id,
+        });
         await navigator.clipboard.writeText(logs);
         addToast(t("logs.copied"), "success");
     } catch (err) {
@@ -277,7 +297,10 @@ onMounted(async () => {
 
     if (statusInterval.value !== null) clearInterval(statusInterval.value);
 
-    statusInterval.value = setInterval(checkCustomClientRunningStatus, 5000) as unknown as number;
+    statusInterval.value = setInterval(
+        checkCustomClientRunningStatus,
+        5000
+    ) as unknown as number;
 });
 
 onBeforeUnmount(() => {
@@ -306,7 +329,10 @@ const handleSearch = (query: string) => {
                     <Plus class="w-4 h-4" />
                     {{ $t("custom_clients.add") }}
                 </button>
-                <button @click="handleDisplaySettings()" class="btn btn-secondary gap-2">
+                <button
+                    @click="handleDisplaySettings()"
+                    class="btn btn-secondary gap-2"
+                >
                     <Edit3 class="w-4 h-4" />
                     {{ $t("custom_clients.display_settings") }}
                 </button>
@@ -334,16 +360,27 @@ const handleSearch = (query: string) => {
             <div class="max-w-md mx-auto">
                 <FileText class="w-16 h-16 text-base-content/30 mx-auto mb-4" />
                 <h3 class="text-xl font-semibold mb-2">
-                    {{ searchQuery ? t("custom_clients.no_results") : t("custom_clients.no_clients_yet") }}
+                    {{
+                        searchQuery
+                            ? t("custom_clients.no_results")
+                            : t("custom_clients.no_clients_yet")
+                    }}
                 </h3>
-                <button v-if="!searchQuery" @click="handleAddClient" class="btn btn-primary">
+                <button
+                    v-if="!searchQuery"
+                    @click="handleAddClient"
+                    class="btn btn-primary"
+                >
                     <Plus class="w-4 h-4 mr-2" />
                     {{ $t("custom_clients.add") }}
                 </button>
             </div>
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+            v-else
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
             <div
                 v-for="client in filteredClients"
                 :key="client.id"
@@ -354,11 +391,16 @@ const handleSearch = (query: string) => {
                         <div class="flex-1">
                             <h3 class="card-title text-lg font-semibold mb-1">
                                 {{ client.name }}
-                                <div v-if="isCustomClientRunning(client.id)" class="badge badge-success badge-sm ml-2">
+                                <div
+                                    v-if="isCustomClientRunning(client.id)"
+                                    class="badge badge-success badge-sm ml-2"
+                                >
                                     {{ $t("custom_clients.running") }}
                                 </div>
                             </h3>
-                            <div class="badge badge-outline badge-sm">{{ client.version }}</div>
+                            <div class="badge badge-outline badge-sm">
+                                {{ client.version }}
+                            </div>
                         </div>
                         <button
                             @click.stop="showContextMenu($event, client)"
@@ -369,29 +411,53 @@ const handleSearch = (query: string) => {
                     </div>
 
                     <div class="space-y-3">
-                        <div v-if="client.description" class="text-sm text-base-content/70">
+                        <div
+                            v-if="client.description"
+                            class="text-sm text-base-content/70"
+                        >
                             {{ client.description }}
                         </div>
 
                         <div class="text-sm space-y-1">
                             <div class="flex items-center gap-2">
                                 <Calendar class="w-4 h-4 text-primary" />
-                                <span class="font-medium">{{ $t("custom_clients.added") }}:</span>
+                                <span class="font-medium"
+                                    >{{ $t("custom_clients.added") }}:</span
+                                >
                                 <span>{{ formatDate(client.created_at) }}</span>
                             </div>
                         </div>
 
                         <div class="card-actions justify-end">
                             <button
-                                @click="isCustomClientRunning(client.id) ? stopCustomClient(client.id) : handleLaunchClient(client)"
+                                @click="
+                                    isCustomClientRunning(client.id)
+                                        ? stopCustomClient(client.id)
+                                        : handleLaunchClient(client)
+                                "
                                 class="btn btn-sm gap-2"
-                                :class="isCustomClientRunning(client.id) ? 'btn-error' : 'btn-primary'"
+                                :class="
+                                    isCustomClientRunning(client.id)
+                                        ? 'btn-error'
+                                        : 'btn-primary'
+                                "
                                 :disabled="!client.is_installed"
                             >
-                                <StopCircle v-if="isCustomClientRunning(client.id)" class="w-4 h-4" />
+                                <StopCircle
+                                    v-if="isCustomClientRunning(client.id)"
+                                    class="w-4 h-4"
+                                />
                                 <Play v-else class="w-4 h-4" />
-                                {{ isCustomClientRunning(client.id) ? $t("custom_clients.stop") : $t("custom_clients.launch") }}
-                            </button>                            <button @click="openLogViewer(client)" class="btn btn-sm btn-ghost gap-2">
+                                {{
+                                    isCustomClientRunning(client.id)
+                                        ? $t("custom_clients.stop")
+                                        : $t("custom_clients.launch")
+                                }}
+                            </button>
+                            <button
+                                @click="openLogViewer(client)"
+                                class="btn btn-sm btn-ghost gap-2"
+                            >
                                 <FileText class="w-4 h-4" />
                                 {{ $t("logs.view") }}
                             </button>
@@ -408,11 +474,18 @@ const handleSearch = (query: string) => {
         class="fixed z-100 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
         :class="contextMenu.animationClass"
     >
-        <h3 class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30">
+        <h3
+            class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30"
+        >
             {{ contextMenu.client?.name }}
         </h3>
         <ul>
-            <li v-if="contextMenu.client?.is_installed && isCustomClientRunning(contextMenu.client.id)">
+            <li
+                v-if="
+                    contextMenu.client?.is_installed &&
+                    isCustomClientRunning(contextMenu.client.id)
+                "
+            >
                 <a
                     @click="handleLaunchClient(contextMenu.client!)"
                     class="flex items-center gap-2 text-sm active:bg-primary/30"
@@ -430,7 +503,12 @@ const handleSearch = (query: string) => {
                     {{ t("theme.actions.open_folder") }}
                 </a>
             </li>
-            <li v-if="contextMenu.client?.is_installed && contextMenu.client?.client_type?.toLowerCase() === 'fabric'">
+            <li
+                v-if="
+                    contextMenu.client?.is_installed &&
+                    contextMenu.client?.client_type?.toLowerCase() === 'fabric'
+                "
+            >
                 <a
                     @click="openModsManager(contextMenu.client!)"
                     class="flex items-center gap-2 text-sm active:bg-primary/30 text-primary font-medium"

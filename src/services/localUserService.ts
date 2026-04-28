@@ -21,7 +21,7 @@ class LocalUserService {
     getActiveProfile(): LocalUser | null {
         const profileId = localStorage.getItem(this.activeProfileKey);
         if (!profileId) return null;
-        return this.getProfiles().find(p => p.id === profileId) || null;
+        return this.getProfiles().find((p) => p.id === profileId) || null;
     }
 
     createProfile(username: string): LocalUser {
@@ -32,7 +32,7 @@ class LocalUserService {
             nickname: username,
             avatarUrl: null,
             role: "LOCAL_USER",
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
         };
         profiles.push(newProfile);
         localStorage.setItem(this.storageKey, JSON.stringify(profiles));
@@ -42,7 +42,7 @@ class LocalUserService {
 
     updateProfile(id: string, updates: Partial<LocalUser>): LocalUser | null {
         const profiles = this.getProfiles();
-        const index = profiles.findIndex(p => p.id === id);
+        const index = profiles.findIndex((p) => p.id === id);
         if (index === -1) return null;
 
         profiles[index] = { ...profiles[index], ...updates };
@@ -51,7 +51,7 @@ class LocalUserService {
     }
 
     setActiveProfile(id: string) {
-        const profile = this.getProfiles().find(p => p.id === id);
+        const profile = this.getProfiles().find((p) => p.id === id);
         if (profile) {
             const userData = {
                 profile: {
@@ -62,7 +62,7 @@ class LocalUserService {
                     social_links: [],
                     created_at: profile.createdAt,
                     updated_at: new Date().toISOString(),
-                    favorite_client_id: null
+                    favorite_client_id: null,
                 } as UserProfile,
                 info: {
                     id: 1,
@@ -71,9 +71,9 @@ class LocalUserService {
                     role: profile.role,
                     created_at: profile.createdAt,
                     updated_at: new Date().toISOString(),
-                    last_login_at: new Date().toISOString()
+                    last_login_at: new Date().toISOString(),
                 } as UserInfo,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: new Date().toISOString(),
             };
             localStorage.setItem("userData", JSON.stringify(userData));
         }

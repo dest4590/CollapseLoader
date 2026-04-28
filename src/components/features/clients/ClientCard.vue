@@ -310,30 +310,35 @@ const expandCard = async () => {
         isLoadingDetails.value = true;
         try {
             const clientName = props.client.filename
-                ? props.client.filename.split('/').pop()?.replace(/\.jar$/i, '') ?? props.client.name
+                ? (props.client.filename
+                      .split("/")
+                      .pop()
+                      ?.replace(/\.jar$/i, "") ?? props.client.name)
                 : props.client.name;
 
             const cdnBase = await invoke<string>("get_cdn_url");
-            const base = cdnBase.endsWith('/') ? cdnBase : cdnBase + '/';
+            const base = cdnBase.endsWith("/") ? cdnBase : cdnBase + "/";
 
             const screenshotUrls: string[] = [];
             for (let i = 1; i <= 10; i++) {
-                screenshotUrls.push(`${base}photoclient/${clientName}/${i}.png`);
+                screenshotUrls.push(
+                    `${base}photoclient/${clientName}/${i}.png`
+                );
             }
 
             clientDetails.value = {
-                source_link: '',
+                source_link: "",
                 screenshot_urls: screenshotUrls,
-                created_at: props.client.meta?.created_at ?? '',
+                created_at: props.client.meta?.created_at ?? "",
                 rating_avg: props.client.rating_avg ?? null,
                 rating_count: props.client.rating_count ?? 0,
             };
         } catch (error) {
             console.error("Failed to build client details:", error);
             clientDetails.value = {
-                source_link: '',
+                source_link: "",
                 screenshot_urls: [],
-                created_at: '',
+                created_at: "",
                 rating_avg: props.client.rating_avg ?? null,
                 rating_count: props.client.rating_count ?? 0,
             };
