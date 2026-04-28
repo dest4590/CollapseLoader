@@ -41,7 +41,7 @@ import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
-import RebornModal from "./components/core/RebornModal.vue";
+
 import { useAppInit } from "./composables/useAppInit";
 import { initNetworkDebug } from "./services/networkDebugService";
 import type { Client } from "./types/ui";
@@ -84,9 +84,7 @@ const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
 const showDevMenu = ref(false);
-const showRebornModal = ref(
-    localStorage.getItem("rebornModalViewed") !== "true"
-);
+
 const { addToast } = useToast();
 const isAuthenticated = ref(false);
 const showRegistrationPrompt = ref(false);
@@ -285,11 +283,7 @@ watch(isAuthenticated, (newVal) => {
     }
 });
 
-watch(showRebornModal, (visible) => {
-    if (!visible) {
-        localStorage.setItem("rebornModalViewed", "true");
-    }
-});
+
 
 watch(activeTab, async (newTab) => {
     await updateDiscordRPC(newTab);
@@ -724,7 +718,7 @@ onUnmounted(() => {
             :current-theme="currentTheme"
         />
 
-        <RebornModal v-model:show="showRebornModal" />
+
 
 
 
