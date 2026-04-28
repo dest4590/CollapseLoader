@@ -430,7 +430,7 @@ const handleSearch = (query: string) => {
                     {{ t("theme.actions.open_folder") }}
                 </a>
             </li>
-            <li v-if="contextMenu.client?.is_installed">
+            <li v-if="contextMenu.client?.is_installed && contextMenu.client?.client_type?.toLowerCase() === 'fabric'">
                 <a
                     @click="openModsManager(contextMenu.client!)"
                     class="flex items-center gap-2 text-sm active:bg-primary/30 text-primary font-medium"
