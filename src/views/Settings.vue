@@ -26,11 +26,11 @@ import {
     Search,
     UserIcon,
     LogIn,
-    WifiOff,
     Minimize2,
     MousePointer2,
     Coffee,
     Terminal,
+    HardDrive,
 } from "lucide-vue-next";
 import { useToast } from "../services/toastService";
 import type { ToastPosition } from "../types/toast";
@@ -38,7 +38,6 @@ import { syncService, type SyncServiceState } from "../services/syncService";
 import { settingsService } from "../services/settingsService";
 import { globalUserStatus } from "../composables/useUserStatus";
 import { userService, type UserExternalAccount } from "../services/userService";
-import SyncStatus from "../components/common/SyncStatus.vue";
 import AddAccountModal from "../components/modals/social/account/AddAccountModal.vue";
 import EditAccountModal from "../components/modals/social/account/EditAccountModal.vue";
 import ResetConfirmModal from "../components/modals/settings/ResetConfirmModal.vue";
@@ -115,7 +114,8 @@ const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 const filteredSettingsEntries = computed(() => {
     return Object.entries(settings)
         .filter(([, field]) => field.show)
-        .filter(([key]) => key !== "irc_chat");
+        .filter(([key]) => key !== "irc_chat")
+        .filter(([key]) => key !== "optional_telemetry");
 });
 
 const handleSliderChange = () => {
@@ -578,36 +578,6 @@ const selectTag = (tag: string) => {
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
 
-const handleUploadToCloud = async () => {
-    if (typeof t !== "function") {
-        console.error("Translation function t is not available");
-        addToast("Sync failed: Translation service not ready", "error");
-        return;
-    }
-
-    const toastAdapter = (message: string, type: string, duration?: number) => {
-        addToast(message, type as any, duration);
-    };
-
-    await syncService.manualSync(toastAdapter, t);
-};
-
-const handleDownloadFromCloud = async () => {
-    try {
-        await syncService.downloadFromCloud();
-        addToast(t("settings.download_success"), "success");
-        await loadSettings();
-        await loadAccounts();
-    } catch (error) {
-        addToast(t("settings.download_failed", { error }), "error");
-    }
-};
-
-const toggleAutoSync = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    syncService.setAutoSyncEnabled(target.checked);
-};
-
 const handleLanguageChange = async (languageCode: string) => {
     try {
         currentLanguage.value = languageCode as any;
@@ -624,6 +594,35 @@ const getSettingDescription = (key: string) => {
 
 const openDataFolder = async () => {
     await invoke("open_data_folder");
+};
+
+const storageUsage = ref<{
+    clients: number;
+    libraries: number;
+    natives: number;
+    assets: number;
+    java: number;
+    other: number;
+    total: number;
+} | null>(null);
+const storageLoading = ref(false);
+
+const loadStorageUsage = async () => {
+    storageLoading.value = true;
+    try {
+        storageUsage.value = await invoke("get_storage_usage");
+    } catch (e) {
+        console.error("Failed to get storage usage", e);
+    } finally {
+        storageLoading.value = false;
+    }
+};
+
+const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return "0 B";
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 };
 
 const resetRequirements = async () => {
@@ -657,6 +656,8 @@ onMounted(async () => {
         console.error("Failed to get system memory:", error);
         systemMemory.value = null;
     }
+
+    loadStorageUsage();
 });
 
 onUnmounted(() => {
@@ -728,19 +729,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 >
                     <SettingsIcon class="w-4 h-4 mr-2" />
                     {{ t("settings.general") }}
-                </a>
-                <a
-                    @click="activeTab = 'sync'"
-                    class="tab transition-all duration-300"
-                    :class="{
-                        'tab-active transform scale-105 shadow-md bg-base-300':
-                            activeTab === 'sync',
-                        'hover:bg-base-300': activeTab !== 'sync',
-                    }"
-                    disabled
-                >
-                    <Cloud class="w-4 h-4 mr-2" />
-                    {{ t("settings.sync") }}
                 </a>
                 <a
                     @click="activeTab = 'accounts'"
@@ -1037,171 +1025,64 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             </div>
                         </div>
                     </div>
+
+                    <div class="card bg-base-200 shadow-md border border-base-300">
+                        <div class="card-body p-3">
+                            <div class="flex items-center justify-between mb-3">
+                                <h2 class="card-title text-sm font-semibold text-primary-focus flex items-center gap-2">
+                                    <HardDrive class="w-5 h-5" />
+                                    {{ $t("settings.storage_usage") }}
+                                </h2>
+                                <button
+                                    @click="loadStorageUsage"
+                                    class="btn btn-ghost btn-xs btn-square"
+                                >
+                                    <RotateCcw class="w-3.5 h-3.5" :class="{ 'animate-spin': storageLoading }" />
+                                </button>
+                            </div>
+
+                            <div v-if="storageLoading" class="flex justify-center py-4">
+                                <span class="loading loading-spinner loading-sm text-primary"></span>
+                            </div>
+
+                            <div v-else-if="storageUsage" class="space-y-2">
+                                <div
+                                    v-for="item in [
+                                        { key: 'clients', label: $t('settings.storage_clients'), value: storageUsage.clients },
+                                        { key: 'libraries', label: $t('settings.storage_libraries'), value: storageUsage.libraries },
+                                        { key: 'natives', label: $t('settings.storage_natives'), value: storageUsage.natives },
+                                        { key: 'assets', label: $t('settings.storage_assets'), value: storageUsage.assets },
+                                        { key: 'java', label: $t('settings.storage_java'), value: storageUsage.java },
+                                        { key: 'other', label: $t('settings.storage_other'), value: storageUsage.other },
+                                    ]"
+                                    :key="item.key"
+                                    class="flex items-center justify-between text-xs"
+                                >
+                                    <span class="text-base-content/70">{{ item.label }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-20 bg-base-300 rounded-full h-1.5">
+                                            <div
+                                                class="bg-primary h-1.5 rounded-full transition-all"
+                                                :style="{ width: storageUsage.total > 0 ? `${Math.min(100, (item.value / storageUsage.total) * 100).toFixed(0)}%` : '0%' }"
+                                            ></div>
+                                        </div>
+                                        <span class="font-mono font-medium w-16 text-right">{{ formatBytes(item.value) }}</span>
+                                    </div>
+                                </div>
+                                <div class="border-t border-base-300 pt-2 flex items-center justify-between text-xs font-semibold">
+                                    <span>{{ $t("settings.storage_total") }}</span>
+                                    <span class="font-mono text-primary">{{ formatBytes(storageUsage.total) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div
-                    v-else-if="activeTab === 'sync'"
-                    key="sync"
-                    class="space-y-3"
+                    v-else-if="activeTab === 'accounts'"
+                    key="accounts"
+                    class="space-y-3 overflow-x-hidden"
                 >
-                    <div
-                        class="card bg-base-200 shadow-md border border-base-300"
-                    >
-                        <div class="card-body p-3">
-                            <h2
-                                class="card-title text-base font-semibold text-primary-focus mb-2 flex items-center gap-2"
-                            >
-                                <Cloud class="w-5 h-5" />
-                                {{ t("settings.sync_status") }}
-                            </h2>
-                            <SyncStatus />
-                        </div>
-                    </div>
-
-                    <div
-                        class="card bg-base-200 shadow-md border border-base-300"
-                    >
-                        <div class="card-body p-4">
-                            <h2
-                                class="card-title text-lg font-semibold text-primary-focus mb-4 flex items-center gap-2"
-                            >
-                                <SettingsIcon class="w-5 h-5" />
-                                {{ t("settings.sync_controls") }}
-                            </h2>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div
-                                    class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors"
-                                >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <Upload class="w-5 h-5 text-primary" />
-                                        <h3 class="font-semibold">
-                                            {{ t("settings.upload_title") }}
-                                        </h3>
-                                    </div>
-                                    <p
-                                        class="text-sm text-base-content/70 mb-2"
-                                    >
-                                        {{ t("settings.upload_description") }}
-                                    </p>
-                                    <button
-                                        @click="handleUploadToCloud"
-                                        class="btn btn-primary btn-sm w-full"
-                                        :disabled="
-                                            syncState.isSyncing ||
-                                            !syncState.isOnline ||
-                                            !isAuthenticated
-                                        "
-                                    >
-                                        <Upload class="w-4 h-4 mr-2" />
-                                        {{
-                                            syncState.isSyncing
-                                                ? t("settings.syncing")
-                                                : t("settings.upload_button")
-                                        }}
-                                    </button>
-                                </div>
-
-                                <div
-                                    class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors"
-                                >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <Download class="w-5 h-5" />
-                                        <h3 class="font-semibold">
-                                            {{ t("settings.download_title") }}
-                                        </h3>
-                                    </div>
-                                    <p
-                                        class="text-sm text-base-content/70 mb-3"
-                                    >
-                                        {{ t("settings.download_description") }}
-                                    </p>
-                                    <button
-                                        @click="handleDownloadFromCloud"
-                                        class="btn btn-primary btn-sm w-full"
-                                        :disabled="
-                                            syncState.isSyncing ||
-                                            !syncState.isOnline ||
-                                            !syncState.hasCloudData ||
-                                            !isAuthenticated
-                                        "
-                                    >
-                                        <Download class="w-4 h-4 mr-2" />
-                                        {{
-                                            syncState.isSyncing
-                                                ? t("settings.syncing")
-                                                : t("settings.download_button")
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                class="mt-3 p-3 border border-base-300 rounded-lg"
-                            >
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-semibold text-sm mb-1">
-                                            {{ t("settings.auto_sync") }}
-                                        </h3>
-                                        <p class="text-sm text-base-content/70">
-                                            {{
-                                                t(
-                                                    "settings.auto_sync_description"
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        :checked="syncState.autoSyncEnabled"
-                                        @change="toggleAutoSync"
-                                        class="toggle toggle-primary"
-                                        :disabled="!isAuthenticated"
-                                    />
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="!isAuthenticated"
-                                class="mt-2 alert alert-warning py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <LogIn class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.sync_login_required")
-                                    }}</span>
-                                </div>
-                            </div>
-
-                            <div
-                                v-if="!syncState.isOnline"
-                                class="mt-2 alert alert-warning py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <WifiOff class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.offline_warning")
-                                    }}</span>
-                                </div>
-                            </div>
-
-                            <div
-                                v-else-if="!syncState.hasCloudData"
-                                class="mt-2 alert alert-info py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <Cloud class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.no_cloud_data")
-                                    }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div v-else key="accounts" class="space-y-3 overflow-x-hidden">
                     <div
                         class="card bg-base-200 shadow-md border border-base-300"
                     >
@@ -1232,6 +1113,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             </div>
 
                             <div
+                                v-if="false"
                                 class="card bg-base-200 shadow-md border border-base-300 mb-3"
                             >
                                 <div class="card-body p-3 space-y-3">

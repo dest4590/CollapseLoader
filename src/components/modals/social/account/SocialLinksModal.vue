@@ -145,13 +145,14 @@ import { ref, onMounted, computed } from "vue";
 import { globalUserStatus } from "../../../../composables/useUserStatus";
 import { useI18n } from "vue-i18n";
 import { useToast } from "../../../../services/toastService";
-import { apiGet, apiPut } from "../../../../services/apiClient";
+import { achievementService } from "../../../../services/achievementService";
 
 const { t } = useI18n();
 const { addToast } = useToast();
 
 const links = ref<any[]>([]);
 const loading = ref(true);
+const STORAGE_KEY = "local_social_links";
 
 const isStreamerMode = computed(() => globalUserStatus.isStreamer.value);
 
@@ -167,14 +168,14 @@ const newUrl = ref("");
 
 const editing = ref<any | null>(null);
 
-const loadLinks = async () => {
+const loadLinks = () => {
     loading.value = true;
     try {
-        const resp = await apiGet<any[]>("/users/me/social-links");
-        links.value = resp || [];
+        const stored = localStorage.getItem(STORAGE_KEY);
+        links.value = stored ? JSON.parse(stored) : [];
     } catch (error) {
         console.error("Failed to load social links", error);
-        addToast(t("modals.social_links.load_failed"), "error");
+        links.value = [];
     } finally {
         loading.value = false;
     }
@@ -182,15 +183,9 @@ const loadLinks = async () => {
 
 const platformLabel = (key: string) => platformOptions[key] || key;
 
-const updateSocialLinks = async (updatedLinks: any[]) => {
-    const payload = {
-        links: updatedLinks.map((l) => ({
-            platform: l.platform,
-            url: l.url,
-        })),
-    };
-    const resp = await apiPut<any[]>("/users/me/social-links", payload);
-    links.value = resp || [];
+const saveLinksToLocal = (updatedLinks: any[]) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLinks));
+    links.value = updatedLinks;
 };
 
 const addLink = async () => {
@@ -214,15 +209,17 @@ const addLink = async () => {
             ...links.value,
             { platform: newPlatform.value, url: newUrl.value.trim() },
         ];
-        await updateSocialLinks(newLinks);
+        saveLinksToLocal(newLinks);
+        
+        // Trigger achievement
+        await achievementService.unlockAchievement("SOCIAL_BUTTERFLY");
+        
         newPlatform.value = "";
         newUrl.value = "";
         addToast(t("modals.social_links.added"), "success");
     } catch (error: any) {
         console.error("Add social link failed", error);
-        const msg =
-            error?.response?.data?.error || t("modals.social_links.add_failed");
-        addToast(msg, "error");
+        addToast(t("modals.social_links.add_failed"), "error");
     }
 };
 
@@ -236,7 +233,7 @@ const deleteLink = async (link: any) => {
         const newLinks = links.value.filter(
             (l) => l.platform !== link.platform
         );
-        await updateSocialLinks(newLinks);
+        saveLinksToLocal(newLinks);
         addToast(t("modals.social_links.deleted"), "success");
     } catch (error) {
         console.error("Delete social link failed", error);
@@ -275,15 +272,12 @@ const saveEdit = async () => {
                 ? { platform: editing.value.platform, url: editing.value.url }
                 : l
         );
-        await updateSocialLinks(updatedLinks);
+        saveLinksToLocal(updatedLinks);
         editing.value = null;
         addToast(t("modals.social_links.updated"), "success");
     } catch (error: any) {
         console.error("Update social link failed", error);
-        const msg =
-            error?.response?.data?.error ||
-            t("modals.social_links.update_failed");
-        addToast(msg, "error");
+        addToast(t("modals.social_links.update_failed"), "error");
     }
 };
 

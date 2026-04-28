@@ -1,4 +1,6 @@
 import { apiClient } from "./apiClient";
+import { achievementService } from "./achievementService";
+import { localUserService } from "./localUserService";
 
 type FriendshipStatus =
     | "friends"
@@ -329,27 +331,121 @@ class UserService {
 
     async updateUserProfile(
         nickname: string | null,
-        favoriteClientId?: number | null
+        favoriteClientId?: number | null,
+        role?: string | null
     ): Promise<{ success: boolean; error?: string }> {
         try {
-            const payload: any = { nickname };
-            if (favoriteClientId !== undefined) {
-                payload.favorite_client_id = favoriteClientId;
+            let cached = this.getCachedData();
+            if (!cached) {
+                const activeLocal = localUserService.getActiveProfile();
+                cached = {
+                    profile: {
+                        id: 1,
+                        nickname: activeLocal?.nickname || "Local User",
+                        avatar_url: activeLocal?.avatarUrl || null,
+                        role: activeLocal?.role || "USER",
+                        social_links: [],
+                        created_at: activeLocal?.createdAt || new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        favorite_client_id: null,
+                    },
+                    info: {
+                        id: 1,
+                        username: activeLocal?.username || "local_user",
+                        email: null,
+                        role: activeLocal?.role || "LOCAL_USER",
+                        created_at: activeLocal?.createdAt || new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        last_login_at: null,
+                    },
+                    lastUpdated: new Date().toISOString(),
+                };
             }
-            await apiClient.patch("/users/me/profile", payload);
-            await this.refreshCachedUser();
+
+            if (nickname !== null && cached.profile) {
+                cached.profile.nickname = nickname;
+                if (cached.info) cached.info.username = nickname;
+
+                const normalized = nickname.trim().toUpperCase();
+                const roleMap: Record<string, string> = {
+                    "OWNER": "OWNER",
+                    "DEVELOPER": "DEVELOPER",
+                    "ADMIN": "ADMIN",
+                    "TESTER": "TESTER",
+                    "USER": "USER"
+                };
+                if (roleMap[normalized]) {
+                    cached.profile.role = roleMap[normalized];
+                    if (cached.info) cached.info.role = roleMap[normalized];
+                }
+            } else if (cached.profile && cached.info) {
+                cached.info.username = cached.profile.nickname || cached.info.username;
+            }
+
+            if (favoriteClientId !== undefined && cached.profile) {
+                cached.profile.favorite_client_id = favoriteClientId;
+                
+                if (favoriteClientId !== null) {
+                    const favoritesKey = "local_unique_favorites";
+                    const stored = localStorage.getItem(favoritesKey);
+                    const favorites = stored ? JSON.parse(stored) : [];
+                    if (!favorites.includes(favoriteClientId)) {
+                        favorites.push(favoriteClientId);
+                        localStorage.setItem(favoritesKey, JSON.stringify(favorites));
+                        
+                        if (favorites.length >= 5) {
+                            void achievementService.unlockAchievement("COLLECTOR");
+                        }
+                    }
+                }
+            }
+
+            if (role !== undefined && cached.profile) {
+                cached.profile.role = role || "USER";
+                if (cached.info) cached.info.role = role || "USER";
+            }
+
+            this.setCachedData(cached);
+
+            const token = localStorage.getItem("authToken");
+            if (token?.startsWith("local_") && cached.profile) {
+                const localId = token.replace("local_", "");
+                localUserService.updateProfile(localId, {
+                    nickname: cached.profile.nickname || undefined,
+                    username: cached.info?.username || undefined,
+                    role: cached.profile.role as any,
+                });
+            }
+
             return { success: true };
         } catch (error: any) {
-            console.error("Failed to update user profile:", error);
-            const errorMessage =
-                error.response?.data?.error || "Failed to update profile";
-            return { success: false, error: errorMessage };
+            console.error("Failed to update user profile locally:", error);
+            return { success: false, error: "Failed to update profile" };
         }
     }
 
     async uploadAvatar(
         file: File
     ): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+        const token = localStorage.getItem("authToken");
+        if (token?.startsWith("local_")) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64 = reader.result as string;
+                    const cached = this.getCachedData();
+                    if (cached && cached.profile) {
+                        cached.profile.avatar_url = base64;
+                        this.setCachedData(cached);
+                        resolve({ success: true, profile: cached.profile });
+                    } else {
+                        resolve({ success: false, error: "Profile not found" });
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
         try {
             const form = new FormData();
             form.append("avatar", file);
@@ -409,6 +505,51 @@ class UserService {
         user_info: UserInfo;
         status: UserStatus;
     }> {
+        const token = localStorage.getItem("authToken");
+        if (token?.startsWith("local_")) {
+            const cached = this.getCachedData();
+            if (cached && cached.profile && cached.info) {
+                return {
+                    profile: cached.profile,
+                    user_info: cached.info,
+                    status: {
+                        status: "ONLINE",
+                        client_name: null,
+                        updated_at: new Date().toISOString(),
+                    },
+                };
+            }
+            const localId = token.replace("local_", "");
+            const localProfile = localUserService.getProfiles().find(p => p.id === localId);
+            
+            return {
+                profile: {
+                    id: 1,
+                    nickname: localProfile?.nickname || "Local User",
+                    avatar_url: localProfile?.avatarUrl || null,
+                    role: localProfile?.role || "LOCAL_USER",
+                    social_links: [],
+                    created_at: localProfile?.createdAt || new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    favorite_client_id: null,
+                } as UserProfile,
+                user_info: {
+                    id: 1,
+                    username: localProfile?.username || "local_user",
+                    email: "local@user.none",
+                    role: localProfile?.role || "LOCAL_USER",
+                    created_at: localProfile?.createdAt || new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    last_login_at: new Date().toISOString(),
+                } as UserInfo,
+                status: {
+                    status: "ONLINE",
+                    client_name: null,
+                    updated_at: new Date().toISOString(),
+                },
+            };
+        }
+
         try {
             const data = await apiClient.get<any>("/users/me");
             const result = {
@@ -546,6 +687,14 @@ class UserService {
         friends: Friend[];
         requests: FriendRequestsBatch;
     }> {
+        const token = localStorage.getItem("authToken");
+        if (token?.startsWith("local_")) {
+            return {
+                friends: [],
+                requests: { sent: [], received: [], blocked: [] }
+            };
+        }
+
         const resp = await apiClient.get<any>("/friends/batch");
 
         const friends: Friend[] = (resp.friends || []).map((f: any) =>
@@ -722,18 +871,21 @@ class UserService {
                   null
                 : null;
 
+            const safeFavorites = Array.isArray(favorites) ? favorites : [];
+            const safeAccounts = Array.isArray(accounts) ? accounts : [];
+
             const lastSync = this.maxIsoTimestamp([
                 settingsPref?.updated_at ?? null,
-                ...favorites.map((f) => f.created_at ?? null),
-                ...accounts.map((a) => a.updated_at ?? null),
+                ...safeFavorites.map((f) => f.created_at ?? null),
+                ...safeAccounts.map((a) => a.updated_at ?? null),
             ]);
 
             return {
                 last_sync_timestamp: lastSync,
                 has_cloud_data:
                     !!settingsPref ||
-                    favorites.length > 0 ||
-                    accounts.length > 0,
+                    safeFavorites.length > 0 ||
+                    safeAccounts.length > 0,
             };
         } catch (error) {
             console.error("Failed to get sync status:", error);
@@ -755,7 +907,7 @@ class UserService {
         const localFavoriteRefs = new Set(
             (syncData.favorites_data || []).map((id) => String(id))
         );
-        const remoteClientFavorites = remoteFavorites.filter(
+        const remoteClientFavorites = (Array.isArray(remoteFavorites) ? remoteFavorites : []).filter(
             (f) => f.type === SYNC_FAVORITE_TYPE
         );
 
@@ -817,17 +969,19 @@ class UserService {
         favorites: UserFavorite[],
         accounts: UserExternalAccount[]
     ): SyncData {
-        const settingsPref =
-            (Array.isArray(preferences)
-                ? preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY)
-                : null) || null;
+        const safePreferences = Array.isArray(preferences) ? preferences : [];
+        const safeFavorites = Array.isArray(favorites) ? favorites : [];
+        const safeAccounts = Array.isArray(accounts) ? accounts : [];
 
-        const favorites_data = (favorites || [])
+        const settingsPref =
+            safePreferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ?? null;
+
+        const favorites_data = safeFavorites
             .filter((f) => f.type === SYNC_FAVORITE_TYPE)
             .map((f) => Number.parseInt(String(f.reference), 10))
             .filter((n) => Number.isFinite(n));
 
-        const accounts_data = (accounts || []).map((a) => {
+        const accounts_data = safeAccounts.map((a) => {
             const meta: any =
                 a.metadata && typeof a.metadata === "object" ? a.metadata : {};
             return {
@@ -838,8 +992,8 @@ class UserService {
 
         const last_sync_timestamp = this.maxIsoTimestamp([
             settingsPref?.updated_at ?? null,
-            ...favorites.map((f) => f.created_at ?? null),
-            ...accounts.map((a) => a.updated_at ?? null),
+            ...safeFavorites.map((f) => f.created_at ?? null),
+            ...safeAccounts.map((a) => a.updated_at ?? null),
         ]);
 
         return {

@@ -14,12 +14,12 @@ use crate::core::clients::manager::ClientManager;
 use crate::core::storage::data::{Data, DATA};
 use crate::core::utils::{
     globals::{
-        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, JDK21_FOLDER, JDK8_FOLDER,
-        MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
+        JDK8_FOLDER, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
     },
     process,
 };
-use crate::{log_error, log_info};
+use crate::{log_debug, log_error, log_info};
 
 mod launch;
 mod requirements;
@@ -60,7 +60,7 @@ fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<Pa
     }
 
     let mut dirs_to_visit = vec![(dir.to_path_buf(), 0)];
-    let max_depth = 8;
+    let max_depth = 15;
 
     while let Some((current_dir, depth)) = dirs_to_visit.pop() {
         if depth >= max_depth {
@@ -83,7 +83,37 @@ fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<Pa
                     .extension()
                     .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
                 {
-                    jars.push(path);
+                    let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                    
+                    // Filter by platform (only for natives)
+                    let mut should_include = true;
+                    let is_native = filename.contains("natives");
+                    
+                    if is_native {
+                        if IS_WINDOWS {
+                            if filename.contains("-linux") || filename.contains("-macos") {
+                                should_include = false;
+                            }
+                        } else if IS_LINUX {
+                            if filename.contains("-windows") || filename.contains("-macos") {
+                                should_include = false;
+                            }
+                        } else if IS_MACOS {
+                            if filename.contains("-windows") || filename.contains("-linux") {
+                                should_include = false;
+                            }
+                        }
+                    }
+
+                    if should_include {
+                        let filename_lower = filename.to_lowercase();
+                        if filename_lower.contains("slf4j") || filename_lower.contains("log4j") {
+                            log_info!("Found critical logging library: {}", filename);
+                        } else {
+                            log_debug!("Found JAR: {}", filename);
+                        }
+                        jars.push(path);
+                    }
                 }
             }
         }
@@ -333,22 +363,17 @@ impl Client {
     }
 
     fn get_minecraft_jar_path(&self) -> PathBuf {
-        let safe_ver = sanitize_version_for_paths(&self.version);
-        match self.client_type {
-            ClientType::Fabric => DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(MINECRAFT_VERSIONS_FOLDER)
-                .join(format!("fabric_{}.jar", safe_ver)),
-            ClientType::Forge => DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(MINECRAFT_VERSIONS_FOLDER)
-                .join(format!("forge_{}.jar", safe_ver)),
-            ClientType::Default => self.get_launch_paths().unwrap_or_default().1,
+        if self.meta.is_custom && self.client_type == ClientType::Default {
+            return self.get_launch_paths().map(|(_, jar)| jar).unwrap_or_default();
         }
+
+        let safe_ver = sanitize_version_for_paths(&self.version);
+        let root = DATA.root_dir.lock().unwrap();
+        root.join(MINECRAFT_VERSIONS_FOLDER).join(match self.client_type {
+            ClientType::Fabric => format!("fabric_{}.jar", safe_ver),
+            ClientType::Forge => format!("forge_{}.jar", safe_ver),
+            ClientType::Default => format!("{}.jar", safe_ver),
+        })
     }
 
     pub fn get_running_clients(manager: &Arc<Mutex<ClientManager>>) -> Vec<Self> {

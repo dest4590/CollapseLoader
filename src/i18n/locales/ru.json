@@ -164,7 +164,11 @@
             "username_placeholder": "Введите имя пользователя",
             "tags_label": "Теги (через запятую)",
             "tags_placeholder": "например: funtime, spookytime",
-            "add_account": "Добавить аккаунт"
+            "add_account": "Добавить аккаунт",
+            "username_hint": "3–16 символов, только a-z, 0-9, _",
+            "username_too_short": "Минимум 3 символа",
+            "username_too_long": "Максимум 16 символов (лимит Minecraft)",
+            "username_invalid_chars": "Только буквы, цифры и _ (подчёркивание)"
         },
         "telemetry_consent": {
             "title": "Согласие на дополнительную телеметрию",
@@ -226,7 +230,19 @@
             "select_jar_file": "Выберите .jar файл",
             "selected": "Выбрано",
             "adding": "Добавление...",
-            "add_client": "Добавить клиент"
+            "add_client": "Добавить клиент",
+            "client_type": "Тип клиента",
+            "client_type_vanilla": "Vanilla (По умолчанию)",
+            "client_type_hint": "Выберите Fabric/Forge, если ваш jar требует этих библиотек.",
+            "java_path": "Путь к Java (необязательно)",
+            "java_args": "Аргументы Java (необязательно)",
+            "validate_name": "Название обязательно",
+            "validate_version": "Версия обязательна",
+            "validate_main_class": "Главный класс обязателен",
+            "validate_file": "Пожалуйста, выберите .jar файл",
+            "main_class_detected": "Главный класс определён успешно",
+            "file_select_failed": "Не удалось выбрать файл",
+            "add_failed": "Не удалось добавить клиент: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Имя клиента",
@@ -235,13 +251,25 @@
             "main_class": "Главный класс",
             "main_class_placeholder": "например: net.minecraft.client.main.Main",
             "updating": "Обновление...",
-            "update_client": "Обновить клиент"
+            "update_client": "Обновить клиент",
+            "client_type": "Тип клиента",
+            "client_type_vanilla": "Vanilla (По умолчанию)",
+            "client_type_hint": "Выберите Fabric/Forge, если ваш jar требует этих библиотек.",
+            "java_path": "Путь к Java (необязательно)",
+            "java_args": "Аргументы Java (необязательно)",
+            "validate_name": "Название обязательно",
+            "validate_version": "Версия обязательна",
+            "validate_main_class": "Главный класс обязателен",
+            "update_failed": "Не удалось обновить клиент: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Удалить клиент",
             "description": "Это действие нельзя отменить",
             "deleting": "Удаление...",
             "delete_client": "Удалить клиент"
+        },
+        "role_selection": {
+            "description": "Выберите вашу роль для локального профиля"
         }
     },
     "preloader": {
@@ -282,6 +310,8 @@
         "nickname_label": "Редактировать ник",
         "nickname_update_failed": "Не удалось обновить ник. \nПожалуйста, попробуйте еще раз, когда вы будете онлайн.",
         "nickname_update_success": "Ник обновлен успешно!",
+        "role_update_failed": "Не удалось обновить роль. Пожалуйста, попробуйте еще раз.",
+        "role_update_success": "Роль успешно обновлена!",
         "no_email": "Нет электронной почты",
         "password_change_failed": "Не удалось изменить пароль. \nПожалуйста, проверьте свое соединение и попробуйте еще раз.",
         "password_change_success": "Пароль успешно изменился!",
@@ -308,10 +338,17 @@
         "no_favorite_client": "Любимый клиент не выбран",
         "current_favorite": "Текущий любимый",
         "favorite_client_updated": "Любимый клиент успешно обновлён",
-        "favorite_client_update_failed": "Не удалось обновить любимый клиент"
+        "favorite_client_update_failed": "Не удалось обновить любимый клиент",
+        "playtime_stats": "Статистика игры",
+        "playtime_total": "Всего",
+        "playtime_no_data": "Данных пока нет. Запустите клиент, чтобы начать отслеживание.",
+        "playtime_launches": "{count} запусков",
+        "playtime_show_all": "Все {count}",
+        "playtime_more": "ещё {count}"
     },
     "roles": {
         "user": "Пользователь",
+        "local_user": "Локальный пользователь",
         "tester": "Тестер",
         "admin": "Админ",
         "developer": "Разработчик",
@@ -335,10 +372,13 @@
         "login": {
             "title": "Вход",
             "username_placeholder": "Введите ваше имя пользователя",
+            "enter_username": "Пожалуйста, введите имя пользователя",
             "password_placeholder": "Введите ваш пароль",
             "login_button": "Войти",
             "register_link": "Нет аккаунта?",
             "success": "Вход выполнен успешно!",
+            "local_success": "Вы успешно вошли в локальный профиль!",
+            "local_login": "Локальный вход",
             "login_failed": "Ошибка входа. Проверьте свои учетные данные.",
             "no_token": "Токен аутентификации не получен.",
             "error": "Не получилось войти, проверьте логин и пароль"
@@ -395,6 +435,7 @@
         "send": "Отправить",
         "copied_to_clipboard": "Цвет {color} скопирован в буфер обмена",
         "done": "Готово",
+        "or": "или",
         "click": "Нажмите",
         "show_more": "Показать больше",
         "show_less": "Скрыть",
@@ -787,6 +828,15 @@
         "minimize_to_tray_on_launch": "Сворачивать в трей при запуске",
         "close_to_tray": "Закрывать в трей",
         "reset_settings": "Сбросить настройки",
+        "storage_usage": "Использование диска",
+        "storage_calculate": "Подсчитать",
+        "storage_clients": "Клиенты",
+        "storage_libraries": "Библиотеки",
+        "storage_natives": "Нативы",
+        "storage_assets": "Ассеты",
+        "storage_total": "Итого",
+        "storage_java": "Java",
+        "storage_other": "Прочее",
         "accounts_description": "Управляйте своими игровыми аккаунтами и легко переключайтесь между ними",
         "accounts_management": "Управление учетными записями",
         "no_matching_accounts": "Не найдены соответствующие учетные записи",
@@ -855,7 +905,13 @@
         "create_preset": "Создать пресет",
         "presets_title": "Пресеты",
         "presets": "пресетов",
-        "presets_hidden_streamer": "Пресеты скрыты в режиме стримера."
+        "presets_hidden_streamer": "Пресеты скрыты в режиме стримера.",
+        "playtime_title": "Статистика игры",
+        "playtime_total": "Всего",
+        "playtime_no_data": "Данных пока нет. Запустите клиент, чтобы начать отслеживание.",
+        "playtime_launches": "{count} запусков",
+        "playtime_show_all": "Все {count}",
+        "playtime_more": "ещё {count}"
     },
     "sync": {
         "last_sync": "Последняя синхронизация",
@@ -1078,12 +1134,20 @@
         "added": "Добавлено",
         "stop": "Остановить",
         "launch": "Запустить",
+        "launch_another": "Запустить ещё раз",
+        "open_folder": "Открыть папку",
         "display_settings": "Настройка отображения",
         "display_mode_global": "Глобально",
         "display_mode": "Режим отображения",
         "display_mode_separate": "Отдельно",
         "no_results": "Попробуйте изменить поисковый запрос",
-        "no_clients_yet": "Добавьте свой первый клиент, чтобы начать"
+        "no_clients_yet": "Добавьте свой первый клиент, чтобы начать",
+        "search_placeholder": "Поиск своих клиентов...",
+        "load_failed": "Не удалось загрузить своих клиентов: {error}",
+        "launch_failed": "Не удалось запустить {name}: {error}",
+        "stop_failed": "Ошибка остановки клиента: {error}",
+        "flags_failed": "Не удалось загрузить флаги: {error}",
+        "open_folder_failed": "Не удалось открыть папку: {error}"
     },
     "marketplace": {
         "title": "Маркетплейс",
@@ -1127,7 +1191,13 @@
         "comment_placeholder": "Напишите комментарий...",
         "preset_picker_label": "Выберите локальный пресет",
         "preset_picker_placeholder": "Выберите пресет...",
-        "no_local_presets": "У вас пока нет пресетов"
+        "no_local_presets": "У вас пока нет пресетов",
+        "tg_source": "Темы из Telegram-канала",
+        "tg_refresh": "Обновить",
+        "tg_retry": "Попробовать снова",
+        "tg_load_failed": "Не удалось загрузить темы из Telegram. Проверьте соединение.",
+        "tg_colors": "Цвета",
+        "tg_has_css": "Содержит кастомный CSS"
     },
     "events": {
         "halloween": {

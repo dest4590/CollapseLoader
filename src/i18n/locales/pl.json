@@ -164,7 +164,11 @@
             "username_placeholder": "Wprowadź nazwę użytkownika",
             "tags_label": "Tagi (oddzielone przecinkami)",
             "tags_placeholder": "np.: funtime, spookytime",
-            "add_account": "Dodaj konto"
+            "add_account": "Dodaj konto",
+            "username_hint": "3–16 znaków, tylko a-z, 0-9, _",
+            "username_too_short": "Minimum 3 znaki",
+            "username_too_long": "Maksimum 16 znaków (limit Minecraft)",
+            "username_invalid_chars": "Tylko litery, cyfry i _ (podkreślenie)"
         },
         "telemetry_consent": {
             "title": "Zgoda na dodatkową telemetrię",
@@ -226,7 +230,19 @@
             "select_jar_file": "Wybierz plik .jar",
             "selected": "Wybrano",
             "adding": "Dodawanie...",
-            "add_client": "Dodaj klienta"
+            "add_client": "Dodaj klienta",
+            "client_type": "Typ klienta",
+            "client_type_vanilla": "Vanilla (Domyślny)",
+            "client_type_hint": "Wybierz Fabric/Forge, jeśli twój jar wymaga tych bibliotek.",
+            "java_path": "Niestandardowa ścieżka Java (opcjonalnie)",
+            "java_args": "Niestandardowe argumenty Java (opcjonalnie)",
+            "validate_name": "Nazwa jest wymagana",
+            "validate_version": "Wersja jest wymagana",
+            "validate_main_class": "Klasa główna jest wymagana",
+            "validate_file": "Proszę wybrać plik .jar",
+            "main_class_detected": "Klasa główna wykryta pomyślnie",
+            "file_select_failed": "Nie udało się wybrać pliku",
+            "add_failed": "Nie udało się dodać klienta: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Nazwa klienta",
@@ -235,13 +251,25 @@
             "main_class": "Klasa główna",
             "main_class_placeholder": "np.: net.minecraft.client.main.Main",
             "updating": "Aktualizowanie...",
-            "update_client": "Zaktualizuj klienta"
+            "update_client": "Zaktualizuj klienta",
+            "client_type": "Typ klienta",
+            "client_type_vanilla": "Vanilla (Domyślny)",
+            "client_type_hint": "Wybierz Fabric/Forge, jeśli twój jar wymaga tych bibliotek.",
+            "java_path": "Niestandardowa ścieżka Java (opcjonalnie)",
+            "java_args": "Niestandardowe argumenty Java (opcjonalnie)",
+            "validate_name": "Nazwa jest wymagana",
+            "validate_version": "Wersja jest wymagana",
+            "validate_main_class": "Klasa główna jest wymagana",
+            "update_failed": "Nie udało się zaktualizować klienta: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Usuń klienta",
             "description": "Tej operacji nie można cofnąć",
             "deleting": "Usuwanie...",
             "delete_client": "Usuń klienta"
+        },
+        "role_selection": {
+            "description": "Wybierz swoją rolę dla profilu lokalnego"
         }
     },
     "preloader": {
@@ -282,6 +310,8 @@
         "nickname_label": "Edytuj nick",
         "nickname_update_failed": "Nie udało się zaktualizować nicku. \nSpróbuj ponownie, gdy będziesz online.",
         "nickname_update_success": "Nick zaktualizowany pomyślnie!",
+        "role_update_failed": "Nie udało się zaktualizować roli. Spróbuj ponownie.",
+        "role_update_success": "Rola zaktualizowana pomyślnie!",
         "no_email": "Brak adresu email",
         "password_change_failed": "Nie udało się zmienić hasła. \nSprawdź swoje połączenie i spróbuj ponownie.",
         "password_change_success": "Hasło zostało pomyślnie zmienione!",
@@ -307,6 +337,12 @@
         "favorite_client_description": "Wybierz swojego ulubionego klienta, który chcesz wyświetlić w swoim profilu",
         "favorite_client_update_failed": "Nie udało się zaktualizować ulubionego klienta",
         "favorite_client_updated": "Ulubiony klient został pomyślnie zaktualizowany",
+        "playtime_stats": "Statystyki czasu gry",
+        "playtime_total": "Łącznie",
+        "playtime_no_data": "Brak danych. Uruchom klienta, aby rozpocząć śledzenie.",
+        "playtime_launches": "{count} uruchomień",
+        "playtime_show_all": "Wszystkie {count}",
+        "playtime_more": "+{count} więcej",
         "no_favorite_client": "Nie wybrano ulubionego klienta",
         "select_favorite_client": "Wybierz ulubionego klienta"
     },
@@ -315,7 +351,8 @@
         "developer": "Wywoływacz",
         "owner": "Właściciel",
         "tester": "Próbnik",
-        "user": "Użytkownik"
+        "user": "Użytkownik",
+        "local_user": "Lokalny użytkownik"
     },
     "appLogs": {
         "autoScroll": "Automatyczne przewijanie",
@@ -335,11 +372,14 @@
         "login": {
             "title": "Logowanie",
             "username_placeholder": "Wprowadź nazwę użytkownika",
+            "enter_username": "Proszę wprowadzić nazwę użytkownika",
             "password_placeholder": "Wprowadź hasło",
             "login_button": "Zaloguj się",
             "register_link": "Nie masz konta?",
-            "success": "Zalogowano pomyślnie!",
-            "login_failed": "Błąd logowania. Sprawdź swoje dane.",
+            "success": "Logowanie udane!",
+            "local_success": "Pomyślnie zalogowano do profilu lokalnego!",
+            "local_login": "Logowanie lokalne",
+            "login_failed": "Logowanie nieudane. Sprawdź swoje dane.",
             "no_token": "Nie otrzymano tokena uwierzytelniającego.",
             "error": "Nie można się zalogować. Sprawdź swoją nazwę użytkownika i hasło"
         },
@@ -380,6 +420,7 @@
         "login": "Zaloguj",
         "register": "Zarejestruj",
         "download": "Pobierz",
+        "or": "lub",
         "please_wait": "Proszę czekać",
         "cancel": "Anuluj",
         "reinstall": "Przeinstaluj",
@@ -785,6 +826,15 @@
         },
         "sync_client_settings": "Synchronizuj ustawienia klienta",
         "reset_settings": "Zresetuj ustawienia",
+        "storage_usage": "Zajęte miejsce",
+        "storage_calculate": "Oblicz",
+        "storage_clients": "Klienci",
+        "storage_libraries": "Biblioteki",
+        "storage_natives": "Natywne",
+        "storage_assets": "Zasoby",
+        "storage_total": "Łącznie",
+        "storage_java": "Java",
+        "storage_other": "Inne",
         "accounts_description": "Zarządzaj swoimi kontami do gier i łatwo przełączaj się między nimi",
         "accounts_management": "Zarządzanie kontami",
         "no_matching_accounts": "Nie znaleziono pasujących kont",
@@ -852,6 +902,12 @@
         "user_block_failed": "Nie udało się zablokować użytkownika",
         "no_presets": "Ten użytkownik nie udostępnił jeszcze żadnych presetów.",
         "create_preset": "Utwórz preset",
+        "playtime_title": "Statystyki czasu gry",
+        "playtime_total": "Łącznie",
+        "playtime_no_data": "Brak danych. Uruchom klienta, aby rozpocząć śledzenie.",
+        "playtime_launches": "{count} uruchomień",
+        "playtime_show_all": "Wszystkie {count}",
+        "playtime_more": "+{count} więcej",
         "presets_title": "Presety",
         "presets": "presetów",
         "presets_hidden_streamer": "Presety ukryte w trybie streamera.",
@@ -1083,7 +1139,12 @@
         "display_mode": "Tryb wyświetlania",
         "display_mode_separate": "Oddzielnie",
         "no_results": "Spróbuj zmienić zapytanie wyszukiwania",
-        "no_clients_yet": "Dodaj swojego pierwszego klienta, aby zacząć"
+        "no_clients_yet": "Dodaj swojego pierwszego klienta, aby zacząć",
+        "search_placeholder": "Szukaj własnych klientów...",
+        "load_failed": "Nie udało się załadować własnych klientów: {error}",
+        "launch_failed": "Nie udało się uruchomić {name}: {error}",
+        "stop_failed": "Błąd zatrzymywania klienta: {error}",
+        "flags_failed": "Nie udało się załadować flag: {error}"
     },
     "marketplace": {
         "title": "Marketplace",
@@ -1123,11 +1184,12 @@
         "preset_picker_label": "Wybierz preset lokalny",
         "preset_picker_placeholder": "Wybierz preset...",
         "no_local_presets": "Nie masz jeszcze żadnych presetów",
-        "by_author": "PRZEZ {imię}",
-        "sort_comments": "Najczęściej komentowane",
-        "sort_downloads": "Najczęściej pobierane",
-        "sort_newest": "Najnowszy",
-        "sort_popular": "Popularny"
+        "tg_source": "Motywy z kanału Telegram",
+        "tg_refresh": "Odśwież",
+        "tg_retry": "Spróbuj ponownie",
+        "tg_load_failed": "Nie udało się załadować motywów z Telegram. Sprawdź połączenie.",
+        "tg_colors": "Kolory",
+        "tg_has_css": "Zawiera niestandardowy CSS"
     },
     "events": {
         "halloween": {
@@ -1220,5 +1282,25 @@
         "choose_version": "Wybierz wersję",
         "versions_for": "Wersje dla {mod}",
         "loading_versions": "Ładowanie wersji..."
+    },
+    "custom_clients": {
+        "add": "Dodaj klienta",
+        "display_settings": "Ustawienia wyświetlania",
+        "search_placeholder": "Szukaj własnych klientów...",
+        "no_clients_yet": "Brak własnych klientów",
+        "no_results": "Nie znaleziono klientów",
+        "running": "Uruchomiony",
+        "edit": "Edytuj",
+        "delete": "Usuń",
+        "added": "Dodano",
+        "stop": "Zatrzymaj",
+        "launch": "Uruchom",
+        "launch_another": "Uruchom ponownie",
+        "open_folder": "Otwórz folder",
+        "load_failed": "Nie udało się załadować klientów: {error}",
+        "launch_failed": "Nie udało się uruchomić {name}: {error}",
+        "stop_failed": "Błąd zatrzymania klienta: {error}",
+        "flags_failed": "Nie udało się załadować flag: {error}",
+        "open_folder_failed": "Nie udało się otworzyć folderu: {error}"
     }
 }

@@ -62,7 +62,6 @@
                             <button
                                 class="btn btn-accent btn-sm flex items-center gap-2"
                                 @click="$emit('change-view', 'marketplace')"
-                                disabled
                             >
                                 <Store class="w-4 h-4" />
                                 <span class="hidden sm:inline">{{
@@ -958,7 +957,7 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
     const r = refs[settingKey];
     if (r) {
         if (settingKey === "backgroundImage") {
-            r.value = value && value.trim().length > 0 ? value : null;
+            r.value = value && value.trim().length > 0 ? value.trim() : null;
         } else {
             r.value = value;
         }

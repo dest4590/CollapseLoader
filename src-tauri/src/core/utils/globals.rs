@@ -2,11 +2,12 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 
 use crate::{core::network::servers::Server, log_debug, log_info};
 
-pub static CODENAME: &str = "THE END";
+pub static CODENAME: &str = "REBORN";
 pub static API_VERSION: &str = "v1";
 
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
+pub static GITHUB_REPO_BRANCH: &str = "dev";
 
 pub static IS_LINUX: bool = cfg!(target_os = "linux");
 pub static IS_MACOS: bool = cfg!(target_os = "macos");
@@ -123,9 +124,7 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     }
 
     vec![
-        Server::new("https://froxlhdz2fil.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/froxlhdz2fil/b/collapse-cdn/o/static/"),
-        // Server::new("https://proxy.collapseloader.org/"),
-        // Server::new("http://141.148.224.27/atlas/"),
+        Server::new("https://huggingface.co/datasets/W1xced/collapsecdn/resolve/main/static/"),
     ]
 });
 
@@ -137,9 +136,7 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
         }
     }
     vec![
-        Server::new("https://froxlhdz2fil.objectstorage.eu-frankfurt-1.oci.customer-oci.com/n/froxlhdz2fil/b/collapse-cdn/o/"),
-        // Server::new("https://proxy.collapseloader.org/uploads/"),
-        // Server::new("http://141.148.224.27/cdn/"),
+        Server::new("https://huggingface.co/datasets/W1xced/collapsecdn/resolve/main/"),
     ]
 });
 

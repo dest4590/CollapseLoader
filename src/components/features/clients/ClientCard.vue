@@ -18,7 +18,7 @@ import ScreenshotViewer from "./ScreenshotViewer.vue";
 import ClientCardActions from "./ClientCardActions.vue";
 import ClientCardDetails from "./ClientCardDetails.vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { apiGet } from "../../../services/apiClient";
+import { invoke } from "@tauri-apps/api/core";
 import { useModal } from "../../../services/modalService";
 import { useUser } from "../../../composables/useUser";
 
@@ -59,7 +59,7 @@ const cardRef = shallowRef<HTMLElement | null>(null);
 const placeholder = shallowRef<HTMLElement | null>(null);
 const clientDetails = shallowRef<ClientDetails | null>(null);
 const isLoadingDetails = ref(false);
-const activeTab = ref<"info" | "screenshots" | "comments">("info");
+const activeTab = ref<"info" | "screenshots">("info");
 
 const myRating = ref<number | null>(null);
 const ratingAvgOverride = ref<number | null>(null);
@@ -70,7 +70,7 @@ const { isAuthenticated } = useUser();
 let expansionLock = false;
 let inTransitionTimeout: number | null = null;
 
-const previousTab = ref<"info" | "screenshots" | "comments">("info");
+const previousTab = ref<"info" | "screenshots">("info");
 const slideDirection = ref<"left" | "right">("right");
 
 const isScreenshotViewerOpen = ref(false);
@@ -199,9 +199,9 @@ watch(
     { flush: "post" }
 );
 
-const tabOrder = ["info", "screenshots", "comments"] as const;
+const tabOrder = ["info", "screenshots"] as const;
 
-const changeTab = (newTab: "info" | "screenshots" | "comments") => {
+const changeTab = (newTab: "info" | "screenshots") => {
     const currentIndex = tabOrder.indexOf(activeTab.value);
     const newIndex = tabOrder.indexOf(newTab);
 
@@ -309,19 +309,34 @@ const expandCard = async () => {
     if (!clientDetails.value && !isLoadingDetails.value) {
         isLoadingDetails.value = true;
         try {
-            clientDetails.value = await apiGet<ClientDetails>(
-                `/clients/${props.client.id}/detailed`
-            );
-        } catch (error) {
-            console.error("Failed to fetch client details:", error);
-            if (inTransitionTimeout !== null) {
-                clearTimeout(inTransitionTimeout);
-                inTransitionTimeout = null;
+            const clientName = props.client.filename
+                ? props.client.filename.split('/').pop()?.replace(/\.jar$/i, '') ?? props.client.name
+                : props.client.name;
+
+            const cdnBase = await invoke<string>("get_cdn_url");
+            const base = cdnBase.endsWith('/') ? cdnBase : cdnBase + '/';
+
+            const screenshotUrls: string[] = [];
+            for (let i = 1; i <= 10; i++) {
+                screenshotUrls.push(`${base}photoclient/${clientName}/${i}.png`);
             }
-            inTransition.value = false;
-            isAnimating.value = false;
-            expansionLock = false;
-            return;
+
+            clientDetails.value = {
+                source_link: '',
+                screenshot_urls: screenshotUrls,
+                created_at: props.client.meta?.created_at ?? '',
+                rating_avg: props.client.rating_avg ?? null,
+                rating_count: props.client.rating_count ?? 0,
+            };
+        } catch (error) {
+            console.error("Failed to build client details:", error);
+            clientDetails.value = {
+                source_link: '',
+                screenshot_urls: [],
+                created_at: '',
+                rating_avg: props.client.rating_avg ?? null,
+                rating_count: props.client.rating_count ?? 0,
+            };
         } finally {
             isLoadingDetails.value = false;
         }

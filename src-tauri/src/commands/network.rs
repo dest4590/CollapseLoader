@@ -93,7 +93,8 @@ pub async fn api_request(
     }
 
     if let Some(ref b) = body {
-        let mut is_form_data = false;
+        if !b.is_null() {
+            let mut is_form_data = false;
         if let Some(obj) = b.as_object() {
             for (_, val) in obj {
                 if let Some(val_obj) = val.as_object() {
@@ -141,8 +142,9 @@ pub async fn api_request(
                 }
             }
             rb = rb.multipart(form);
-        } else {
-            rb = rb.json(b);
+            } else {
+                rb = rb.json(b);
+            }
         }
     }
 

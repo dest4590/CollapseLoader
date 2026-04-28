@@ -6,13 +6,11 @@ import {
     Terminal,
     LogIn,
     User,
-    Users,
-    SlidersVertical,
     UserCog,
+    SlidersVertical,
 } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useFriends } from "../../composables/useFriends";
 import { getIsDevelopment } from "../../utils/isDevelopment";
 import { isHalloweenEvent } from "../../utils/events";
 
@@ -44,10 +42,7 @@ const altPressTimeout = ref<number | null>(null);
 const isDev = ref(false);
 const isMacOS = computed(() => !!props.isMacOS);
 
-const { onlineFriendsCount, friendRequests } = useFriends();
-const incomingRequestsCount = computed(
-    () => friendRequests.value?.received?.length || 0
-);
+
 
 let homeClickCount = 0;
 const homeClickTimeout = ref<number | null>(null);
@@ -425,40 +420,7 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <div
-                v-if="isAuthenticated"
-                class="tooltip tooltip-accent"
-                :class="tooltipClass"
-                :data-tip="
-                    t('navigation.friends') +
-                    ' (disabled because project is deprecated)'
-                "
-            >
-                <button
-                    class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
-                    @click="changeTab('friends')"
-                    :class="{
-                        'bg-primary text-primary-content shadow-lg scale-110':
-                            activeTab === 'friends',
-                    }"
-                    disabled
-                >
-                    <Users class="w-5 h-5" />
-                    <span
-                        v-if="onlineFriendsCount > 0"
-                        class="absolute -top-1 -right-1 bg-success text-success-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300"
-                    >
-                        {{ onlineFriendsCount }}
-                    </span>
 
-                    <span
-                        v-if="incomingRequestsCount > 0"
-                        class="absolute -bottom-1 -right-1 bg-info text-info-content text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-base-300"
-                    >
-                        {{ incomingRequestsCount }}
-                    </span>
-                </button>
-            </div>
 
             <div
                 class="tooltip tooltip-accent"
@@ -531,10 +493,8 @@ onUnmounted(() => {
                 :class="tooltipClass"
                 :data-tip="
                     isAuthenticated
-                        ? t('navigation.account') +
-                          ' (disabled because project is deprecated)'
-                        : t('auth.login.title') +
-                          ' (disabled because project is deprecated)'
+                        ? t('navigation.account')
+                        : t('auth.login.title')
                 "
             >
                 <button
@@ -547,7 +507,6 @@ onUnmounted(() => {
                         ].includes(activeTab),
                     }"
                     @click="changeTab(isAuthenticated ? 'account' : 'login')"
-                    disabled
                 >
                     <LogIn v-if="!isAuthenticated" class="w-5 h-5" />
                     <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5" />

@@ -1,6 +1,7 @@
 import { reactive, watchEffect } from "vue";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen, emit } from "@tauri-apps/api/event";
+import { achievementService } from "./achievementService";
 
 const PRESET_SETTINGS_STORAGE_KEY = "presetSettings";
 const THEME_STORAGE_KEY = "theme";
@@ -156,10 +157,19 @@ const applyPreset = () => {
             let cssValue = String(value);
             if (key === "backgroundBlur") cssValue = `${value}px`;
             if (key === "backgroundImage") {
-                if (value.startsWith("http") || value.startsWith("data:")) {
-                    cssValue = `url("${value}")`;
-                } else if (value.trim().length > 0) {
-                    cssValue = `url("${convertFileSrc(value)}")`;
+                const trimmed = value.trim();
+                if (
+                    trimmed.startsWith("http://") ||
+                    trimmed.startsWith("https://") ||
+                    trimmed.startsWith("data:") ||
+                    trimmed.startsWith("blob:")
+                ) {
+                    cssValue = `url("${trimmed}")`;
+                } else if (trimmed.length > 0) {
+                    cssValue = `url("${convertFileSrc(trimmed)}")`;
+                } else {
+                    root.style.removeProperty(cssVar);
+                    return;
                 }
             }
             root.style.setProperty(cssVar, cssValue);
@@ -170,8 +180,9 @@ const applyPreset = () => {
 
     const bgImage = presetSettings.backgroundImage;
     const bgOpacity = presetSettings.backgroundOpacity;
+    const effectiveOpacity = bgOpacity !== null && bgOpacity !== undefined ? bgOpacity : 100;
     const hasBg =
-        bgImage && bgImage.trim().length > 0 && bgOpacity && bgOpacity > 0;
+        bgImage && bgImage.trim().length > 0 && effectiveOpacity > 0;
 
     if (hasBg) {
         root.setAttribute("data-has-background", "true");
@@ -249,6 +260,8 @@ const saveCardSettings = () => {
         persistPresetSettings();
         emit("theme-update", JSON.parse(JSON.stringify(presetSettings)));
         console.log("Saved preset settings to localStorage:", presetSettings);
+        
+        void achievementService.unlockAchievement("PRESET_MAX");
     } catch (error) {
         console.error("Failed to save preset settings:", error);
     }

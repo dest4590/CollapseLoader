@@ -41,7 +41,7 @@ class ApiClient {
             "Accept-Language": getCurrentLanguage() || "en",
         };
 
-        if (token) {
+        if (token && url.startsWith("/")) {
             requestHeaders["Authorization"] = `Bearer ${token}`;
         }
 
@@ -79,7 +79,7 @@ class ApiClient {
                 method,
                 url: fullUrl,
                 headers: requestHeaders,
-                body: body,
+                body: body || null,
             });
 
             return this.unwrapResponse<T>(response, requestHeaders);

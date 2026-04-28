@@ -41,12 +41,14 @@ import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
-import EndOfProjectModal from "./components/core/EndOfProjectModal.vue";
+import RebornModal from "./components/core/RebornModal.vue";
 import { useAppInit } from "./composables/useAppInit";
 import { initNetworkDebug } from "./services/networkDebugService";
 import type { Client } from "./types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
 import { userService } from "./services/userService";
+import { localTrackerService } from "./services/localTrackerService";
+import { persistenceService } from "./services/persistenceService";
 
 const isMacOS = ref(false);
 
@@ -82,8 +84,8 @@ const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
 const showDevMenu = ref(false);
-const showEndMessage = ref(
-    localStorage.getItem("endOfProjectModalViewed") !== "true"
+const showRebornModal = ref(
+    localStorage.getItem("rebornModalViewed") !== "true"
 );
 const { addToast } = useToast();
 const isAuthenticated = ref(false);
@@ -131,11 +133,7 @@ const handleUnreadNewsCountUpdated = (count: number) => {
     unreadNewsCount.value = count;
 };
 
-watch(showEndMessage, (visible) => {
-    if (!visible) {
-        localStorage.setItem("endOfProjectModalViewed", "true");
-    }
-});
+
 
 const setActiveTab = (tab: string, opts?: { userId?: number | null }) => {
     if (!VALID_TABS.includes(tab)) return;
@@ -287,6 +285,12 @@ watch(isAuthenticated, (newVal) => {
     }
 });
 
+watch(showRebornModal, (visible) => {
+    if (!visible) {
+        localStorage.setItem("rebornModalViewed", "true");
+    }
+});
+
 watch(activeTab, async (newTab) => {
     await updateDiscordRPC(newTab);
 });
@@ -335,6 +339,7 @@ const handleVerified = (token?: string) => {
 };
 
 onMounted(async () => {
+    await persistenceService.init();
     try {
         await initNetworkDebug();
     } catch (e) {
@@ -392,6 +397,29 @@ onMounted(async () => {
         isMacOS.value = false;
         isDev.value = false;
     }
+
+    listen("tray-launch-client", async (event) => {
+        const { id } = event.payload as { id: number };
+        if (!id) return;
+        const clients = await invoke<Client[]>("get_clients");
+        const target = clients.find((c) => c.id === id);
+        if (!target) return;
+        try {
+            const userToken = localStorage.getItem("authToken") || "null";
+            if (!target.meta.installed) {
+                addToast(t("home.starting_download", { name: target.name }), "info", 3000);
+                await invoke("download_client_only", { id: target.id });
+                target.meta.installed = true;
+            }
+            addToast(t("home.launching", { client: target.name }), "info", 2000);
+            await invoke("launch_client", { id: target.id, userToken });
+            const { getCurrentWindow } = await import("@tauri-apps/api/window");
+            await getCurrentWindow().minimize();
+        } catch (e) {
+            console.error("Cannot start client from tray", e);
+            addToast(String(e), "error", 5000);
+        }
+    });
 
     listen("launch-client", async (event) => {
         const { id, was_already_running } = event.payload as {
@@ -452,6 +480,8 @@ onMounted(async () => {
             version?: string;
         };
         console.log(`Client ${payload.name} launched, updating status...`);
+        localTrackerService.trackLaunch(payload.name);
+        localTrackerService.startPlaytimeTracking(payload.name);
 
         try {
             globalUserStatus.setPlayingClient(
@@ -479,6 +509,7 @@ onMounted(async () => {
             exitCode?: number;
         };
         console.log(`Client ${payload.name} exited, updating status...`);
+        localTrackerService.stopPlaytimeTracking();
 
         try {
             globalUserStatus.setOnline();
@@ -693,7 +724,9 @@ onUnmounted(() => {
             :current-theme="currentTheme"
         />
 
-        <EndOfProjectModal v-model:show="showEndMessage" />
+        <RebornModal v-model:show="showRebornModal" />
+
+
 
         <InitialSetupModals
             :show-first-run="showFirstRunInfo"

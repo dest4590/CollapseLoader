@@ -164,7 +164,11 @@
             "username_placeholder": "输入用户名",
             "tags_label": "标签（逗号分隔）",
             "tags_placeholder": "例如：funtime, spookytime",
-            "add_account": "添加账户"
+            "add_account": "添加账户",
+            "username_hint": "3–16 个字符，仅限 a-z、0-9、_",
+            "username_too_short": "最少 3 个字符",
+            "username_too_long": "最多 16 个字符（Minecraft 限制）",
+            "username_invalid_chars": "仅限字母、数字和 _（下划线）"
         },
         "telemetry_consent": {
             "title": "可选分析同意",
@@ -225,8 +229,20 @@
             "no_file_selected": "未选择文件",
             "select_jar_file": "选择 .jar 文件",
             "selected": "已选择",
-            "adding": "正在添加...",
-            "add_client": "添加客户端"
+            "adding": "添加中...",
+            "add_client": "添加客户端",
+            "client_type": "客户端类型",
+            "client_type_vanilla": "Vanilla（默认）",
+            "client_type_hint": "如果您的 jar 需要 Fabric/Forge 库，请选择对应类型。",
+            "java_path": "自定义 Java 路径（可选）",
+            "java_args": "自定义 Java 参数（可选）",
+            "validate_name": "名称为必填项",
+            "validate_version": "版本为必填项",
+            "validate_main_class": "主类为必填项",
+            "validate_file": "请选择一个 .jar 文件",
+            "main_class_detected": "主类检测成功",
+            "file_select_failed": "选择文件失败",
+            "add_failed": "添加客户端失败：{error}"
         },
         "edit_custom_client_modal": {
             "client_name": "客户端名称",
@@ -234,14 +250,26 @@
             "minecraft_version": "Minecraft 版本",
             "main_class": "主类",
             "main_class_placeholder": "例如：net.minecraft.client.main.Main",
-            "updating": "正在更新...",
-            "update_client": "更新客户端"
+            "updating": "更新中...",
+            "update_client": "更新客户端",
+            "client_type": "客户端类型",
+            "client_type_vanilla": "Vanilla（默认）",
+            "client_type_hint": "如果您的 jar 需要 Fabric/Forge 库，请选择对应类型。",
+            "java_path": "自定义 Java 路径（可选）",
+            "java_args": "自定义 Java 参数（可选）",
+            "validate_name": "名称为必填项",
+            "validate_version": "版本为必填项",
+            "validate_main_class": "主类为必填项",
+            "update_failed": "更新客户端失败：{error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "删除自定义客户端",
             "description": "此操作不可撤销",
             "deleting": "正在删除...",
             "delete_client": "删除客户端"
+        },
+        "role_selection": {
+            "description": "为本地配置文件选择您的角色"
         }
     },
     "preloader": {
@@ -285,6 +313,8 @@
         "password_mismatch": "两次输入的新密码不一致。",
         "nickname_update_failed": "更新昵称失败。请在联网时重试。",
         "nickname_update_success": "昵称更新成功！",
+        "role_update_failed": "更新角色失败。请重试。",
+        "role_update_success": "角色更新成功！",
         "nickname_label": "编辑昵称",
         "invisible_enabled": "已启用隐身模式",
         "invisible_disabled": "已禁用隐身模式",
@@ -307,11 +337,18 @@
         "favorite_client_description": "选择您最喜欢的客户以显示在您的个人资料上",
         "favorite_client_update_failed": "更新收藏客户端失败",
         "favorite_client_updated": "收藏客户端更新成功",
+        "playtime_stats": "游戏时长统计",
+        "playtime_total": "总计",
+        "playtime_no_data": "暂无游戏数据。启动一个客户端以开始记录。",
+        "playtime_launches": "启动 {count} 次",
+        "playtime_show_all": "全部 {count}",
+        "playtime_more": "还有 {count} 个",
         "no_favorite_client": "没有选择最喜欢的客户",
         "select_favorite_client": "选择最喜欢的客户"
     },
     "roles": {
         "user": "用户",
+        "local_user": "本地用户",
         "tester": "测试员",
         "admin": "管理员",
         "developer": "开发者",
@@ -333,6 +370,7 @@
         "login": "登录",
         "register": "注册",
         "download": "下载",
+        "or": "或",
         "please_wait": "请稍候",
         "cancel": "取消",
         "reinstall": "重新安装",
@@ -365,10 +403,13 @@
         "login": {
             "title": "登录",
             "username_placeholder": "输入您的用户名",
+            "enter_username": "请输入用户名",
             "password_placeholder": "输入您的密码",
             "login_button": "登录",
             "register_link": "还没有账户？",
             "success": "登录成功！",
+            "local_success": "成功登录到本地配置文件！",
+            "local_login": "本地登录",
             "login_failed": "登录失败。请检查您的凭据。",
             "no_token": "未收到身份验证令牌。",
             "error": "无法登录，请检查您的用户名和密码"
@@ -778,6 +819,15 @@
             "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
         },
         "reset_settings": "重置设置",
+        "storage_usage": "存储占用",
+        "storage_calculate": "计算",
+        "storage_clients": "客户端",
+        "storage_libraries": "库文件",
+        "storage_natives": "原生库",
+        "storage_assets": "资源文件",
+        "storage_total": "合计",
+        "storage_java": "Java",
+        "storage_other": "其他",
         "accounts_description": "轻松管理您的游戏账号并自由切换",
         "accounts_management": "账户管理",
         "no_matching_accounts": "未找到匹配的帐户",
@@ -846,6 +896,12 @@
         "no_presets": "该用户尚未分享任何预设。",
         "create_preset": "创建预设",
         "presets_hidden_streamer": "主播模式下已隐藏预设。",
+        "playtime_title": "游戏时长统计",
+        "playtime_total": "总计",
+        "playtime_no_data": "暂无游戏数据。启动一个客户端以开始记录。",
+        "playtime_launches": "启动 {count} 次",
+        "playtime_show_all": "全部 {count}",
+        "playtime_more": "还有 {count} 个",
         "favorite_client": "最喜欢的客户"
     },
     "sync": {
@@ -1075,7 +1131,12 @@
         "display_mode_separate": "分离",
         "display_mode_global": "全局",
         "no_results": "尝试调整您的搜索条件。",
-        "no_clients_yet": "添加您的第一个自定义客户端以开始使用。"
+        "no_clients_yet": "添加您的第一个自定义客户端以开始使用。",
+        "search_placeholder": "搜索自定义客户端...",
+        "load_failed": "加载自定义客户端失败：{error}",
+        "launch_failed": "启动 {name} 失败：{error}",
+        "stop_failed": "停止客户端时出错：{error}",
+        "flags_failed": "加载标志失败：{error}"
     },
     "marketplace": {
         "title": "市场",
@@ -1119,7 +1180,13 @@
         "sort_comments": "评论最多",
         "sort_downloads": "下载次数最多",
         "sort_newest": "最新",
-        "sort_popular": "受欢迎的"
+        "sort_popular": "受欢迎的",
+        "tg_source": "来自 Telegram 频道的主题",
+        "tg_refresh": "刷新",
+        "tg_retry": "重试",
+        "tg_load_failed": "无法从 Telegram 加载主题，请检查网络连接。",
+        "tg_colors": "颜色",
+        "tg_has_css": "包含自定义 CSS"
     },
     "events": {
         "halloween": {
@@ -1223,5 +1290,25 @@
         "choose_version": "选择版本",
         "versions_for": "{mod} 的版本",
         "loading_versions": "正在加载版本..."
+    },
+    "custom_clients": {
+        "add": "添加客户端",
+        "display_settings": "显示设置",
+        "search_placeholder": "搜索自定义客户端...",
+        "no_clients_yet": "暂无自定义客户端",
+        "no_results": "未找到客户端",
+        "running": "运行中",
+        "edit": "编辑",
+        "delete": "删除",
+        "added": "添加时间",
+        "stop": "停止",
+        "launch": "启动",
+        "launch_another": "再次启动",
+        "open_folder": "打开文件夹",
+        "load_failed": "加载客户端失败：{error}",
+        "launch_failed": "启动 {name} 失败：{error}",
+        "stop_failed": "停止客户端出错：{error}",
+        "flags_failed": "加载标志失败：{error}",
+        "open_folder_failed": "打开文件夹失败：{error}"
     }
 }

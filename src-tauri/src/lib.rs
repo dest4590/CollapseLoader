@@ -206,6 +206,7 @@ pub fn run() {
             commands::clients::initialize_api,
             commands::clients::initialize_rpc,
             commands::clients::install_mod_from_url,
+            commands::clients::install_mod_for_custom_client,
             commands::clients::launch_client,
             commands::clients::launch_custom_client,
             commands::clients::list_installed_mods,
@@ -214,6 +215,8 @@ pub fn run() {
             commands::clients::remove_custom_client,
             commands::clients::stop_client,
             commands::clients::stop_custom_client,
+            commands::clients::open_custom_client_folder,
+            commands::clients::list_installed_mods_custom,
             commands::clients::update_client_installed_status,
             commands::clients::update_custom_client,
             // irc commands
@@ -266,10 +269,12 @@ pub fn run() {
             commands::utils::get_version,
             commands::utils::is_development,
             commands::utils::open_data_folder,
+            commands::utils::get_storage_usage,
             commands::utils::reset_requirements,
             commands::utils::update_presence,
             commands::utils::is_macos,
             commands::utils::set_window_theme,
+            commands::utils::update_tray_menu,
             // network commands
             commands::network::api_request,
             commands::network::get_network_history,
@@ -340,38 +345,89 @@ pub fn run() {
                 Analytics::send_start_analytics();
             });
 
-            let show = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
-            let hide = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show, &hide, &quit])?;
+            let show = MenuItem::with_id(app, "show", "▶  Open CollapseLoader", true, None::<&str>)?;
+            let sep1 = tauri::menu::PredefinedMenuItem::separator(app)?;
+            let sep2 = tauri::menu::PredefinedMenuItem::separator(app)?;
+            let quit = MenuItem::with_id(app, "quit", "✕  Quit", true, None::<&str>)?;
+
+            let installed_clients: Vec<(u32, String)> = {
+                use crate::AppState;
+                if let Some(state) = app.try_state::<AppState>() {
+                    state.clients.manager.lock()
+                        .map(|m| {
+                            m.clients.iter()
+                                .filter(|c| c.show && c.working && c.meta.installed)
+                                .map(|c| {
+                                    let ver = c.version.replace('_', ".").trim_start_matches('V').to_string();
+                                    (c.id, format!("⚡  {} {}", c.name, ver))
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                } else {
+                    vec![]
+                }
+            };
+
+            let menu = {
+                let client_items: Vec<MenuItem<tauri::Wry>> = installed_clients
+                    .iter()
+                    .map(|(id, label)| {
+                        MenuItem::with_id(app, format!("launch_{id}"), label.as_str(), true, None::<&str>)
+                            .expect("Failed to create client menu item")
+                    })
+                    .collect();
+
+                if client_items.is_empty() {
+                    Menu::with_items(app, &[&show, &sep1, &quit])?
+                } else {
+                    let clients_label = MenuItem::with_id(
+                        app, "_clients_header", "── Launch Client ──", false, None::<&str>
+                    )?;
+                    let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
+                        vec![&show, &sep1, &clients_label];
+                    for item in &client_items {
+                        item_refs.push(item);
+                    }
+                    item_refs.push(&sep2);
+                    item_refs.push(&quit);
+                    Menu::with_items(app, &item_refs)?
+                }
+            };
 
             let tray_icon = app
                 .default_window_icon()
                 .cloned()
                 .ok_or_else(|| "Default window icon is missing".to_string())?;
 
-            let _tray = TrayIconBuilder::new()
+            let _tray = TrayIconBuilder::with_id("main")
                 .icon(tray_icon)
                 .menu(&menu)
                 .show_menu_on_left_click(false)
-                .on_menu_event(|app, event| match event.id.as_ref() {
-                    "show" => {
+                .on_menu_event(|app: &tauri::AppHandle, event| {
+                    let id = event.id.as_ref();
+                    if id == "show" {
                         if let Some(window) = app.get_webview_window("main") {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
-                    }
-                    "hide" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.hide();
+                    } else if id == "quit" {
+                        app.exit(0);
+                    } else if let Some(id_str) = id.strip_prefix("launch_") {
+                        if let Ok(client_id) = id_str.parse::<u32>() {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                            crate::core::utils::helpers::emit_to_main_window(
+                                app,
+                                "tray-launch-client",
+                                serde_json::json!({ "id": client_id }),
+                            );
                         }
                     }
-                    "quit" => {
-                        app.exit(0);
-                    }
-                    _ => {}
                 })
-                .on_tray_icon_event(|tray, event| {
+                .on_tray_icon_event(|tray: &tauri::tray::TrayIcon, event| {
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         button_state: MouseButtonState::Up,

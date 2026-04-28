@@ -164,7 +164,11 @@
             "username_placeholder": "Enter username",
             "tags_label": "Tags (comma separated)",
             "tags_placeholder": "e.g. funtime, spookytime",
-            "add_account": "Add Account"
+            "add_account": "Add Account",
+            "username_hint": "3–16 characters, only a-z, 0-9, _",
+            "username_too_short": "Minimum 3 characters",
+            "username_too_long": "Maximum 16 characters (Minecraft limit)",
+            "username_invalid_chars": "Only letters, digits and _ (underscore)"
         },
         "telemetry_consent": {
             "title": "Optional Analytics Consent",
@@ -226,7 +230,19 @@
             "select_jar_file": "Select a .jar file",
             "selected": "Selected",
             "adding": "Adding...",
-            "add_client": "Add Client"
+            "add_client": "Add Client",
+            "client_type": "Client Type",
+            "client_type_vanilla": "Vanilla (Default)",
+            "client_type_hint": "Choose Fabric/Forge if your jar requires these libraries.",
+            "java_path": "Custom Java Path (Optional)",
+            "java_args": "Custom Java Arguments (Optional)",
+            "validate_name": "Name is required",
+            "validate_version": "Version is required",
+            "validate_main_class": "Main class is required",
+            "validate_file": "Please select a .jar file",
+            "main_class_detected": "Main class detected successfully",
+            "file_select_failed": "Failed to select file",
+            "add_failed": "Failed to add custom client: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Client Name",
@@ -235,13 +251,25 @@
             "main_class": "Main Class",
             "main_class_placeholder": "e.g., net.minecraft.client.main.Main",
             "updating": "Updating...",
-            "update_client": "Update Client"
+            "update_client": "Update Client",
+            "client_type": "Client Type",
+            "client_type_vanilla": "Vanilla (Default)",
+            "client_type_hint": "Choose Fabric/Forge if your jar requires these libraries.",
+            "java_path": "Custom Java Path (Optional)",
+            "java_args": "Custom Java Arguments (Optional)",
+            "validate_name": "Name is required",
+            "validate_version": "Version is required",
+            "validate_main_class": "Main class is required",
+            "update_failed": "Failed to update custom client: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Delete Custom Client",
             "description": "This action cannot be undone",
             "deleting": "Deleting...",
             "delete_client": "Delete Client"
+        },
+        "role_selection": {
+            "description": "Select your role for the local profile"
         }
     },
     "preloader": {
@@ -285,6 +313,8 @@
         "password_mismatch": "New passwords do not match.",
         "nickname_update_failed": "Failed to update nickname. Please try again when online.",
         "nickname_update_success": "Nickname updated successfully!",
+        "role_update_failed": "Failed to update role. Please try again.",
+        "role_update_success": "Role updated successfully!",
         "nickname_label": "Edit nickname",
         "invisible_enabled": "Invisible mode enabled",
         "invisible_disabled": "Invisible mode disabled",
@@ -308,10 +338,17 @@
         "no_favorite_client": "No favorite client selected",
         "current_favorite": "Current favorite",
         "favorite_client_updated": "Favorite client updated successfully",
-        "favorite_client_update_failed": "Failed to update favorite client"
+        "favorite_client_update_failed": "Failed to update favorite client",
+        "playtime_stats": "Playtime Statistics",
+        "playtime_total": "Total",
+        "playtime_no_data": "No playtime data yet. Launch a client to start tracking.",
+        "playtime_launches": "{count} launches",
+        "playtime_show_all": "All {count}",
+        "playtime_more": "+{count} more"
     },
     "roles": {
         "user": "User",
+        "local_user": "Local User",
         "tester": "Tester",
         "admin": "Admin",
         "developer": "Developer",
@@ -348,6 +385,7 @@
         "send": "Send",
         "copied_to_clipboard": "Color {color} copied to clipboard",
         "done": "Done",
+        "or": "or",
         "click": "Click",
         "show_more": "Show More",
         "show_less": "Show Less",
@@ -365,10 +403,13 @@
         "login": {
             "title": "Login",
             "username_placeholder": "Enter your username",
+            "enter_username": "Please enter a username",
             "password_placeholder": "Enter your password",
             "login_button": "Login",
             "register_link": "Don't have an account?",
             "success": "Logged in successfully!",
+            "local_success": "Successfully logged into local profile!",
+            "local_login": "Local Login",
             "login_failed": "Login failed. Please check your credentials.",
             "no_token": "No authentication token received.",
             "error": "Cannot login, check your username and password "
@@ -803,6 +844,15 @@
         "minimize_to_tray_on_launch": "Minimize to tray on launch",
         "close_to_tray": "Close to tray",
         "reset_settings": "Reset settings",
+        "storage_usage": "Storage Usage",
+        "storage_calculate": "Calculate",
+        "storage_clients": "Clients",
+        "storage_libraries": "Libraries",
+        "storage_natives": "Natives",
+        "storage_assets": "Assets",
+        "storage_total": "Total",
+        "storage_java": "Java",
+        "storage_other": "Other",
         "sync_login_required": "Sign in to enable syncing",
         "not_signed_in": "You are not logged in"
     },
@@ -858,7 +908,13 @@
         "presets": "presets",
         "presets_hidden_streamer": "Presets are hidden in streamer mode.",
         "no_presets": "This user hasn't shared any presets yet.",
-        "create_preset": "Create Preset"
+        "create_preset": "Create Preset",
+        "playtime_title": "Playtime Statistics",
+        "playtime_total": "Total",
+        "playtime_no_data": "No playtime data yet. Launch a client to start tracking.",
+        "playtime_launches": "{count} launches",
+        "playtime_show_all": "All {count}",
+        "playtime_more": "+{count} more"
     },
     "sync": {
         "last_sync": "Last sync",
@@ -1131,7 +1187,13 @@
         "comment_placeholder": "Write a comment...",
         "preset_picker_label": "Choose a local preset",
         "preset_picker_placeholder": "Select a preset...",
-        "no_local_presets": "You don't have any presets yet"
+        "no_local_presets": "You don't have any presets yet",
+        "tg_source": "Themes from Telegram channel",
+        "tg_refresh": "Refresh",
+        "tg_retry": "Try again",
+        "tg_load_failed": "Failed to load themes from Telegram. Check your connection.",
+        "tg_colors": "Colors",
+        "tg_has_css": "Includes custom CSS"
     },
     "events": {
         "halloween": {
@@ -1224,5 +1286,25 @@
         "choose_version": "Choose Version",
         "versions_for": "Versions for {mod}",
         "loading_versions": "Loading versions..."
+    },
+    "custom_clients": {
+        "add": "Add Client",
+        "display_settings": "Display Settings",
+        "search_placeholder": "Search custom clients...",
+        "no_clients_yet": "No custom clients yet",
+        "no_results": "No clients found",
+        "running": "Running",
+        "edit": "Edit",
+        "delete": "Delete",
+        "added": "Added",
+        "stop": "Stop",
+        "launch": "Launch",
+        "launch_another": "Launch Again",
+        "open_folder": "Open Folder",
+        "load_failed": "Failed to load custom clients: {error}",
+        "launch_failed": "Failed to launch {name}: {error}",
+        "stop_failed": "Error stopping client: {error}",
+        "flags_failed": "Failed to load flags: {error}",
+        "open_folder_failed": "Failed to open folder: {error}"
     }
 }

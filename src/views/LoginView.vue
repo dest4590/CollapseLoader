@@ -7,7 +7,7 @@
             @logged-in="$emit('logged-in')"
             @unverified="handleUnverified"
         />
-        <div class="text-center mt-6">
+        <div v-if="false" class="text-center mt-6">
             <p class="text-sm text-base-content/70">
                 {{ t("auth.login.register_link") }}
                 <a

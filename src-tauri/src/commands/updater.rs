@@ -66,6 +66,7 @@ pub struct UpdateInfo {
 
 fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
     let version = version.trim_start_matches('v');
+    let version = version.split('-').next().unwrap_or(version);
     let parts: Vec<&str> = version.split('.').collect();
 
     if parts.len() != 3 {
@@ -380,25 +381,37 @@ pub fn get_changelog() -> Vec<ChangelogEntry> {
 
 fn extract_changelog_json_block(body: &str) -> Option<String> {
     let marker = if let Some(idx) = body.find("```changelog") {
-        (idx, "```changelog")
+        Some((idx, "```changelog"))
     } else if let Some(idx) = body.find("``` changelog") {
-        (idx, "``` changelog")
+        Some((idx, "``` changelog"))
     } else {
-        return None;
+        None
     };
 
-    let start_idx = marker.0;
+    if let Some((start_idx, _)) = marker {
+        let after_marker = &body[start_idx..];
+        let first_newline = after_marker.find('\n')?;
+        let content_start = start_idx + first_newline + 1;
+        let rest = &body[content_start..];
+        if let Some(closing_rel) = rest.find("```") {
+            let closing_idx = content_start + closing_rel;
+            let content = &body[content_start..closing_idx];
+            return Some(content.trim().to_string());
+        }
+    }
 
-    let after_marker = &body[start_idx..];
-    let first_newline = after_marker.find('\n')?;
-    let content_start = start_idx + first_newline + 1;
-
-    let rest = &body[content_start..];
-    if let Some(closing_rel) = rest.find("```") {
-        let closing_idx = content_start + closing_rel;
-        let content = &body[content_start..closing_idx];
-
-        return Some(content.trim().to_string());
+    if let Some(details_start) = body.find("<details>") {
+        let details_body = &body[details_start..];
+        if let Some(json_marker) = details_body.find("```json") {
+            let after_marker = &details_body[json_marker..];
+            let first_newline = after_marker.find('\n')?;
+            let content_start = json_marker + first_newline + 1;
+            let rest = &details_body[content_start..];
+            if let Some(closing_rel) = rest.find("```") {
+                let content = &details_body[content_start..content_start + closing_rel];
+                return Some(content.trim().to_string());
+            }
+        }
     }
 
     None

@@ -150,10 +150,21 @@ pub async fn change_data_folder(
                     new_dir
                 );
                 copy_dir_recursive(&current_dir, &new_dir)?;
-                log_debug!("Finished recursive copy. Removing old directory.");
-                if let Err(e) = fs::remove_dir_all(&current_dir) {
-                    log_warn!("Failed to remove old data directory: {}", e);
-                    let _ = e;
+                log_debug!("Finished recursive copy. Removing old directory contents (except aci.json).");
+                if current_dir.exists() {
+                    if let Ok(entries) = fs::read_dir(&current_dir) {
+                        for entry in entries.flatten() {
+                            let path = entry.path();
+                            if path.is_file() && path.file_name().and_then(|n| n.to_str()) == Some("aci.json") {
+                                continue;
+                            }
+                            if path.is_dir() {
+                                let _ = fs::remove_dir_all(&path);
+                            } else {
+                                let _ = fs::remove_file(&path);
+                            }
+                        }
+                    }
                 }
                 Ok(())
             })
@@ -164,12 +175,22 @@ pub async fn change_data_folder(
             })??;
         }
     } else if mode == "wipe" {
-        log_info!("Wiping old data folder");
+        log_info!("Wiping old data folder (preserving aci.json)");
         if current_dir.exists() {
-            fs::remove_dir_all(&current_dir).map_err(|e| {
-                log_error!("Failed to wipe old data folder: {}", e);
-                format!("Failed to wipe old folder: {e}")
-            })?;
+            if let Ok(entries) = fs::read_dir(&current_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() && path.file_name().and_then(|n| n.to_str()) == Some("aci.json") {
+                        log_debug!("Preserving aci.json during wipe");
+                        continue;
+                    }
+                    if path.is_dir() {
+                        let _ = fs::remove_dir_all(&path);
+                    } else {
+                        let _ = fs::remove_file(&path);
+                    }
+                }
+            }
         }
     } else {
         log_warn!("Invalid mode for changing data folder: {}", mode);
@@ -314,4 +335,172 @@ pub fn set_window_theme(window: Window, theme: String) {
     if let Some(t) = target_theme {
         let _ = window.set_theme(Some(t));
     }
+}
+
+#[tauri::command]
+pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    use tauri::menu::{Menu, MenuItem};
+    use tauri::menu::PredefinedMenuItem;
+
+    let installed_clients: Vec<(u32, String)> = state.clients.manager.lock()
+        .map(|m| {
+            m.clients.iter()
+                .filter(|c| c.show && c.working && c.meta.installed)
+                .map(|c| {
+                    let ver = c.version.replace('_', ".").trim_start_matches('V').to_string();
+                    (c.id, format!("⚡  {} {}", c.name, ver))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let show = MenuItem::with_id(&app, "show", "▶  Open CollapseLoader", true, None::<&str>)
+        .map_err(|e| e.to_string())?;
+    let sep1 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    let sep2 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    let quit = MenuItem::with_id(&app, "quit", "✕  Quit", true, None::<&str>)
+        .map_err(|e| e.to_string())?;
+
+    let client_items: Vec<MenuItem<tauri::Wry>> = installed_clients
+        .iter()
+        .map(|(id, label)| {
+            MenuItem::with_id(&app, format!("launch_{id}"), label.as_str(), true, None::<&str>)
+                .expect("Failed to create client menu item")
+        })
+        .collect();
+
+    let new_menu = if client_items.is_empty() {
+        Menu::with_items(&app, &[&show, &sep1, &quit]).map_err(|e| e.to_string())?
+    } else {
+        let clients_label = MenuItem::with_id(
+            &app, "_clients_header", "── Launch Client ──", false, None::<&str>
+        ).map_err(|e| e.to_string())?;
+
+        let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
+            vec![&show, &sep1, &clients_label];
+        for item in &client_items {
+            item_refs.push(item);
+        }
+        item_refs.push(&sep2);
+        item_refs.push(&quit);
+        Menu::with_items(&app, &item_refs).map_err(|e| e.to_string())?
+    };
+
+    if let Some(tray) = app.tray_by_id("0").or_else(|| app.tray_by_id("main")) {
+        tray.set_menu(Some(new_menu)).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[derive(serde::Serialize)]
+pub struct StorageUsage {
+    pub clients: u64,
+    pub libraries: u64,
+    pub natives: u64,
+    pub assets: u64,
+    pub java: u64,
+    pub other: u64,
+    pub total: u64,
+}
+
+fn dir_size(path: &std::path::Path) -> u64 {
+    if !path.exists() {
+        return 0;
+    }
+    let mut total = 0u64;
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_dir() {
+                total += dir_size(&p);
+            } else if let Ok(meta) = fs::metadata(&p) {
+                total += meta.len();
+            }
+        }
+    }
+    total
+}
+
+#[tauri::command]
+pub async fn get_storage_usage() -> StorageUsage {
+    tokio::task::spawn_blocking(|| {
+        let root = DATA.root_dir.lock().unwrap().clone();
+
+        let known_system_dirs = [
+            "libraries", "libraries-fabric", "libraries-legacy",
+            "natives", "natives-macos-x64", "natives-macos-arm64",
+            "natives-linux", "natives-legacy", "natives-legacy-linux", "natives-fabric",
+            "assets", "assets-fabric",
+            "minecraft-versions",
+            "custom_clients",
+            "agent_overlay",
+            "misc",
+            "synced_options",
+            "cache",
+        ];
+
+        let libraries = dir_size(&root.join("libraries"))
+            + dir_size(&root.join("libraries-fabric"))
+            + dir_size(&root.join("libraries-legacy"));
+
+        let natives = dir_size(&root.join("natives"))
+            + dir_size(&root.join("natives-macos-x64"))
+            + dir_size(&root.join("natives-macos-arm64"))
+            + dir_size(&root.join("natives-linux"))
+            + dir_size(&root.join("natives-legacy"))
+            + dir_size(&root.join("natives-legacy-linux"))
+            + dir_size(&root.join("natives-fabric"));
+
+        let assets = dir_size(&root.join("assets"))
+            + dir_size(&root.join("assets-fabric"));
+
+        let mc_versions = dir_size(&root.join("minecraft-versions"));
+        let custom_clients_size = dir_size(&root.join("custom_clients"));
+
+        let mut java = 0u64;
+        let mut client_folders = 0u64;
+
+        if let Ok(entries) = fs::read_dir(&root) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_lowercase();
+                let path = entry.path();
+
+                if !path.is_dir() {
+                    continue;
+                }
+
+                if name.starts_with("jdk") {
+                    java += dir_size(&path);
+                } else if !known_system_dirs.contains(&name.as_str()) {
+                    client_folders += dir_size(&path);
+                }
+            }
+        }
+
+        let clients = mc_versions + custom_clients_size + client_folders;
+        let total = dir_size(&root);
+        let accounted = clients + libraries + natives + assets + java;
+        let other = total.saturating_sub(accounted);
+
+        StorageUsage {
+            clients,
+            libraries,
+            natives,
+            assets,
+            java,
+            other,
+            total,
+        }
+    })
+    .await
+    .unwrap_or(StorageUsage {
+        clients: 0,
+        libraries: 0,
+        natives: 0,
+        assets: 0,
+        java: 0,
+        other: 0,
+        total: 0,
+    })
 }

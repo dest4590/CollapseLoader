@@ -164,7 +164,11 @@
             "username_placeholder": "Введіть ім'я користувача",
             "tags_label": "Теги (через кому)",
             "tags_placeholder": "напр. funtime, spookytime",
-            "add_account": "Додати акаунт"
+            "add_account": "Додати акаунт",
+            "username_hint": "3–16 символів, тільки a-z, 0-9, _",
+            "username_too_short": "Мінімум 3 символи",
+            "username_too_long": "Максимум 16 символів (ліміт Minecraft)",
+            "username_invalid_chars": "Тільки літери, цифри та _ (підкреслення)"
         },
         "telemetry_consent": {
             "title": "Згода на додаткову аналітику",
@@ -226,7 +230,19 @@
             "select_jar_file": "Оберіть .jar файл",
             "selected": "Обрано",
             "adding": "Додавання...",
-            "add_client": "Додати клієнт"
+            "add_client": "Додати клієнт",
+            "client_type": "Тип клієнта",
+            "client_type_vanilla": "Vanilla (За замовчуванням)",
+            "client_type_hint": "Оберіть Fabric/Forge, якщо ваш jar потребує цих бібліотек.",
+            "java_path": "Шлях до Java (необов'язково)",
+            "java_args": "Аргументи Java (необов'язково)",
+            "validate_name": "Назва обов'язкова",
+            "validate_version": "Версія обов'язкова",
+            "validate_main_class": "Головний клас обов'язковий",
+            "validate_file": "Будь ласка, оберіть .jar файл",
+            "main_class_detected": "Головний клас визначено успішно",
+            "file_select_failed": "Не вдалося вибрати файл",
+            "add_failed": "Не вдалося додати клієнта: {error}"
         },
         "edit_custom_client_modal": {
             "client_name": "Назва клієнта",
@@ -235,13 +251,25 @@
             "main_class": "Головний клас",
             "main_class_placeholder": "напр., net.minecraft.client.main.Main",
             "updating": "Оновлення...",
-            "update_client": "Оновити клієнт"
+            "update_client": "Оновити клієнт",
+            "client_type": "Тип клієнта",
+            "client_type_vanilla": "Vanilla (За замовчуванням)",
+            "client_type_hint": "Оберіть Fabric/Forge, якщо ваш jar потребує цих бібліотек.",
+            "java_path": "Шлях до Java (необов'язково)",
+            "java_args": "Аргументи Java (необов'язково)",
+            "validate_name": "Назва обов'язкова",
+            "validate_version": "Версія обов'язкова",
+            "validate_main_class": "Головний клас обов'язковий",
+            "update_failed": "Не вдалося оновити клієнта: {error}"
         },
         "delete_custom_client_confirm_modal": {
             "title": "Видалити власний клієнт",
             "description": "Цю дію не можна скасувати",
             "deleting": "Видалення...",
             "delete_client": "Видалити клієнт"
+        },
+        "role_selection": {
+            "description": "Оберіть вашу роль для локального профілю"
         }
     },
     "preloader": {
@@ -285,6 +313,8 @@
         "password_mismatch": "Нові паролі не збігаються.",
         "nickname_update_failed": "Не вдалося оновити нікнейм. Будь ласка, спробуйте ще раз, коли будете онлайн.",
         "nickname_update_success": "Нікнейм успішно оновлено!",
+        "role_update_failed": "Не вдалося оновити роль. Будь ласка, спробуйте ще раз.",
+        "role_update_success": "Роль успішно оновлено!",
         "nickname_label": "Редагувати нікнейм",
         "invisible_enabled": "Режим невидимості увімкнено",
         "invisible_disabled": "Режим невидимості вимкнено",
@@ -307,11 +337,18 @@
         "favorite_client_description": "Виберіть улюблений клієнт для відображення у вашому профілі",
         "favorite_client_update_failed": "Не вдалося оновити улюблений клієнт",
         "favorite_client_updated": "Улюблений клієнт успішно оновлено",
+        "playtime_stats": "Статистика гри",
+        "playtime_total": "Всього",
+        "playtime_no_data": "Даних поки немає. Запустіть клієнт, щоб почати відстеження.",
+        "playtime_launches": "{count} запусків",
+        "playtime_show_all": "Всі {count}",
+        "playtime_more": "ще {count}",
         "no_favorite_client": "Не вибрано улюблений клієнт",
         "select_favorite_client": "Вибрати улюблений клієнт"
     },
     "roles": {
         "user": "Користувач",
+        "local_user": "Локальний користувач",
         "tester": "Тестувальник",
         "admin": "Адміністратор",
         "developer": "Розробник",
@@ -333,6 +370,7 @@
         "login": "Увійти",
         "register": "Реєстрація",
         "download": "Завантажити",
+        "or": "або",
         "please_wait": "Будь ласка, зачекайте",
         "cancel": "Скасувати",
         "reinstall": "Перевстановити",
@@ -348,6 +386,7 @@
         "send": "Надіслати",
         "copied_to_clipboard": "Колір {color} скопійовано до буфера обміну",
         "done": "Готово",
+        "or": "або",
         "click": "Натисніть",
         "show_more": "Показати більше",
         "show_less": "Сховати",
@@ -365,10 +404,13 @@
         "login": {
             "title": "Вхід",
             "username_placeholder": "Введіть ваше ім'я користувача",
+            "enter_username": "Будь ласка, введіть ім'я користувача",
             "password_placeholder": "Введіть ваш пароль",
             "login_button": "Увійти",
             "register_link": "Не маєте акаунту?",
             "success": "Вхід виконано успішно!",
+            "local_success": "Ви успішно увійшли в локальний профіль!",
+            "local_login": "Локальний вхід",
             "login_failed": "Помилка входу. Будь ласка, перевірте ваші дані.",
             "no_token": "Не отримано токен автентифікації.",
             "error": "Не вдалося увійти, перевірте логін і пароль"
@@ -789,6 +831,15 @@
             "warning": "Попередження: Ви вибрали {selectedRamMb} МБ оперативної пам'яті. Це перевищує рекомендований ліміт у 6 ГБ і може спричинити проблеми з продуктивністю або збій системи."
         },
         "reset_settings": "Скинути налаштування",
+        "storage_usage": "Використання диску",
+        "storage_calculate": "Підрахувати",
+        "storage_clients": "Клієнти",
+        "storage_libraries": "Бібліотеки",
+        "storage_natives": "Нативи",
+        "storage_assets": "Ресурси",
+        "storage_total": "Разом",
+        "storage_java": "Java",
+        "storage_other": "Інше",
         "accounts_description": "Керуйте своїми ігровими обліковими записами та легко переключайтеся між ними",
         "accounts_management": "Управління обліковими записами",
         "no_matching_accounts": "Не знайдено відповідних облікових записів",
@@ -857,6 +908,12 @@
         "no_presets": "Цей користувач ще не поділився жодними пресетами.",
         "create_preset": "Створити пресет",
         "presets_hidden_streamer": "Пресети приховані в режимі стримера.",
+        "playtime_title": "Статистика гри",
+        "playtime_total": "Всього",
+        "playtime_no_data": "Даних поки немає. Запустіть клієнт, щоб почати відстеження.",
+        "playtime_launches": "{count} запусків",
+        "playtime_show_all": "Всі {count}",
+        "playtime_more": "ще {count}",
         "favorite_client": "Улюблений клієнт"
     },
     "sync": {
@@ -1130,7 +1187,13 @@
         "comment_placeholder": "Напишіть коментар...",
         "preset_picker_label": "Оберіть локальний пресет",
         "preset_picker_placeholder": "Оберіть пресет...",
-        "no_local_presets": "У вас ще немає жодних пресетів"
+        "no_local_presets": "У вас ще немає жодних пресетів",
+        "tg_source": "Теми з Telegram-каналу",
+        "tg_refresh": "Оновити",
+        "tg_retry": "Спробувати знову",
+        "tg_load_failed": "Не вдалося завантажити теми з Telegram. Перевірте з'єднання.",
+        "tg_colors": "Кольори",
+        "tg_has_css": "Містить кастомний CSS"
     },
     "events": {
         "halloween": {
@@ -1223,5 +1286,28 @@
         "choose_version": "Вибрати версію",
         "versions_for": "Версії для {mod}",
         "loading_versions": "Завантаження версій..."
+    },
+    "custom_clients": {
+        "add": "Додати клієнт",
+        "display_settings": "Налаштування відображення",
+        "search_placeholder": "Пошук власних клієнтів...",
+        "no_clients_yet": "Власних клієнтів ще немає",
+        "no_results": "Клієнтів не знайдено",
+        "running": "Запущено",
+        "edit": "Редагувати",
+        "delete": "Видалити",
+        "added": "Додано",
+        "stop": "Зупинити",
+        "launch": "Запустити",
+        "launch_another": "Запустити ще раз",
+        "open_folder": "Відкрити папку",
+        "display_mode": "Режим відображення",
+        "display_mode_global": "Глобально",
+        "display_mode_separate": "Окремо",
+        "load_failed": "Не вдалося завантажити власних клієнтів: {error}",
+        "launch_failed": "Не вдалося запустити {name}: {error}",
+        "stop_failed": "Помилка зупинки клієнта: {error}",
+        "flags_failed": "Не вдалося завантажити прапорці: {error}",
+        "open_folder_failed": "Не вдалося відкрити папку: {error}"
     }
 }

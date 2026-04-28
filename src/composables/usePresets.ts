@@ -220,6 +220,12 @@ export function usePresets() {
                 error: presetData.error,
                 errorContent:
                     presetData.error_content || presetData.errorContent,
+                backgroundImage:
+                    presetData.background_image || presetData.backgroundImage,
+                backgroundBlur:
+                    presetData.background_blur ?? presetData.backgroundBlur,
+                backgroundOpacity:
+                    presetData.background_opacity ?? presetData.backgroundOpacity,
             };
 
             return await createPreset(input);

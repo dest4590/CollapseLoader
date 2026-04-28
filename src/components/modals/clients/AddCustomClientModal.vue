@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useToast } from "../../../services/toastService";
+import { useI18n } from "vue-i18n";
 
 const { addToast } = useToast();
+const { t } = useI18n();
 
 const emit = defineEmits<{
     "client-added": [];
     close: [];
 }>();
+
+const VERSION_MAP = {
+    default: ["1.16.5"],
+    forge: ["1.8.9"],
+    fabric: ["1.21.4", "1.21.8", "1.21.11"]
+};
 
 const form = reactive({
     name: "",
@@ -19,28 +27,47 @@ const form = reactive({
     fileName: "",
     javaPath: "",
     javaArgs: "",
+    clientType: "default",
 });
 
 const loading = ref(false);
 const errors = ref<Record<string, string>>({});
 
+const availableVersions = computed(() => {
+    return VERSION_MAP[form.clientType as keyof typeof VERSION_MAP] || [];
+});
+
+watch(() => form.clientType, (newType) => {
+    if (newType === 'fabric') {
+        form.mainClass = "net.fabricmc.loader.impl.launch.knot.KnotClient";
+    } else if (newType === 'default') {
+        form.mainClass = "net.minecraft.client.main.Main";
+    }
+    
+    // Auto-set version
+    const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
+    if (versions && versions.length > 0) {
+        form.version = versions[0];
+    }
+});
+
 const validateForm = () => {
     errors.value = {};
 
     if (!form.name.trim()) {
-        errors.value.name = "Name is required";
+        errors.value.name = t("modals.add_custom_client_modal.validate_name");
     }
 
     if (!form.version.trim()) {
-        errors.value.version = "Version is required";
+        errors.value.version = t("modals.add_custom_client_modal.validate_version");
     }
 
     if (!form.mainClass.trim()) {
-        errors.value.mainClass = "Main class is required";
+        errors.value.mainClass = t("modals.add_custom_client_modal.validate_main_class");
     }
 
     if (!form.filePath) {
-        errors.value.filePath = "Please select a .jar file";
+        errors.value.filePath = t("modals.add_custom_client_modal.validate_file");
     }
 
     return Object.keys(errors.value).length === 0;
@@ -69,15 +96,12 @@ const selectFile = async () => {
                 });
                 if (mainClass) {
                     form.mainClass = mainClass;
-                    addToast("Main class detected successfully", "success");
+                    addToast(t("modals.add_custom_client_modal.main_class_detected"), "success");
                 }
-            } catch (e) {
-                console.warn("Failed to detect main class:", e);
-            }
+            } catch (e) {}
         }
     } catch (error) {
-        console.error("File selection error:", error);
-        addToast("Failed to select file", "error");
+        addToast(t("modals.add_custom_client_modal.file_select_failed"), "error");
     }
 };
 
@@ -97,6 +121,7 @@ const handleSubmit = async () => {
             mainClass: form.mainClass.trim(),
             javaPath: form.javaPath.trim() || null,
             javaArgs: form.javaArgs.trim() || null,
+            clientType: form.clientType,
         });
 
         Object.assign(form, {
@@ -107,12 +132,13 @@ const handleSubmit = async () => {
             fileName: "",
             javaPath: "",
             javaArgs: "",
+            clientType: "default",
         });
 
         emit("client-added");
         emit("close");
     } catch (err) {
-        addToast(`Failed to add custom client: ${err}`, "error");
+        addToast(t("modals.add_custom_client_modal.add_failed", { error: err }), "error");
     } finally {
         loading.value = false;
     }
@@ -158,13 +184,13 @@ const handleSubmit = async () => {
                         *</span
                     >
                 </label>
-                <input
+                <select
                     v-model="form.version"
-                    type="text"
-                    placeholder="e.g. 1.16.5"
-                    class="input input-bordered"
-                    :class="{ 'input-error': errors.version }"
-                />
+                    class="select select-bordered w-full"
+                    :class="{ 'select-error': errors.version }"
+                >
+                    <option v-for="v in availableVersions" :key="v" :value="v">{{ v }}</option>
+                </select>
                 <label v-if="errors.version" class="label">
                     <span class="label-text-alt text-error">{{
                         errors.version
@@ -172,7 +198,7 @@ const handleSubmit = async () => {
                 </label>
             </div>
 
-            <div class="form-control">
+            <div class="form-control" v-if="form.clientType === 'default'">
                 <label class="label">
                     <span class="label-text"
                         >{{
@@ -245,13 +271,27 @@ const handleSubmit = async () => {
                 </label>
             </div>
 
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{ $t("modals.add_custom_client_modal.client_type") }}</span>
+                </label>
+                <select v-model="form.clientType" class="select select-bordered w-full">
+                    <option value="default">{{ $t("modals.add_custom_client_modal.client_type_vanilla") }}</option>
+                    <option value="fabric">Fabric</option>
+                    <option value="forge">Forge</option>
+                </select>
+                <label class="label">
+                    <span class="label-text-alt opacity-60">{{ $t("modals.add_custom_client_modal.client_type_hint") }}</span>
+                </label>
+            </div>
+
             <div class="divider text-xs opacity-50 uppercase tracking-widest">
                 {{ $t("common.advanced") }}
             </div>
 
-            <div class="form-control">
+            <div class="form-control" v-if="form.clientType === 'default'">
                 <label class="label">
-                    <span class="label-text">Custom Java Path (Optional)</span>
+                    <span class="label-text">{{ $t("modals.add_custom_client_modal.java_path") }}</span>
                 </label>
                 <input
                     v-model="form.javaPath"
@@ -263,9 +303,7 @@ const handleSubmit = async () => {
 
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text"
-                        >Custom Java Arguments (Optional)</span
-                    >
+                    <span class="label-text">{{ $t("modals.add_custom_client_modal.java_args") }}</span>
                 </label>
                 <textarea
                     v-model="form.javaArgs"
