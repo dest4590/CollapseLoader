@@ -65,7 +65,7 @@ pub async fn reset_requirements() -> Result<(), String> {
 #[tauri::command]
 pub fn get_data_folder() -> Result<String, String> {
     let path = DATA.root_dir.lock().unwrap().to_string_lossy().to_string();
-    log_debug!("Getting data folder path: {}", path);
+    // log_debug!("Getting data folder path: {}", path);
     Ok(path)
 }
 

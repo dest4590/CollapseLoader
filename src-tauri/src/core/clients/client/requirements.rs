@@ -719,7 +719,7 @@ impl Client {
         };
 
         if already_present {
-            log_debug!("SLF4J already present in libraries-fabric, skipping download");
+            //log_debug!("SLF4J already present in libraries-fabric, skipping download");
             return Ok(());
         }
 
