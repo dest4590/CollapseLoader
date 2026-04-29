@@ -1148,7 +1148,15 @@
         "display_mode_separate": "Separate",
         "display_mode_global": "Global",
         "no_results": "Try adjusting your search query.",
-        "no_clients_yet": "Add your first custom client to get started."
+        "no_clients_yet": "Add your first custom client to get started.",
+        "search_placeholder": "Search custom clients...",
+        "launch_another": "Launch Again",
+        "open_folder": "Open Folder",
+        "load_failed": "Failed to load custom clients: {error}",
+        "launch_failed": "Failed to launch {name}: {error}",
+        "stop_failed": "Error stopping client: {error}",
+        "flags_failed": "Failed to load flags: {error}",
+        "open_folder_failed": "Failed to open folder: {error}"
     },
     "marketplace": {
         "title": "Marketplace",
@@ -1291,25 +1299,5 @@
         "choose_version": "Choose Version",
         "versions_for": "Versions for {mod}",
         "loading_versions": "Loading versions..."
-    },
-    "custom_clients": {
-        "add": "Add Client",
-        "display_settings": "Display Settings",
-        "search_placeholder": "Search custom clients...",
-        "no_clients_yet": "No custom clients yet",
-        "no_results": "No clients found",
-        "running": "Running",
-        "edit": "Edit",
-        "delete": "Delete",
-        "added": "Added",
-        "stop": "Stop",
-        "launch": "Launch",
-        "launch_another": "Launch Again",
-        "open_folder": "Open Folder",
-        "load_failed": "Failed to load custom clients: {error}",
-        "launch_failed": "Failed to launch {name}: {error}",
-        "stop_failed": "Error stopping client: {error}",
-        "flags_failed": "Failed to load flags: {error}",
-        "open_folder_failed": "Failed to open folder: {error}"
     }
 }
