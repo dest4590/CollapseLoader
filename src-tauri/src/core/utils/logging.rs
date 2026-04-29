@@ -25,7 +25,7 @@ impl Logger {
     pub fn log_with_module(level: LogLevel, tag: &str, message: &str) {
         let timestamp = Local::now().format("%H:%M:%S").to_string();
 
-        let short = tag
+        let _short = tag
             .rsplit(|c: char| ['.', ':', '/'].contains(&c))
             .next()
             .unwrap_or(tag)
@@ -71,7 +71,7 @@ impl Logger {
             message
         );
 
-        let plain = format!("{timestamp} [{level_name}] [{short}] {message}");
+        let plain = format!("{timestamp} [{level_name:<5}] [{shorted_tag}] {message}");
         if let Ok(mut app_logs) = APP_LOGS.lock() {
             app_logs.push_back(plain);
             if app_logs.len() > MAX_APP_LOGS {
