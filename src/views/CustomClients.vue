@@ -267,11 +267,11 @@ const copyClientLogs = async (client: CustomClient) => {
 const loadDisplayMode = async () => {
     try {
         const flags = await invoke("get_flags");
-        const typedFlags = flags as { custom_clients_display?: string };
+        const typedFlags = flags as { custom_clients_display?: { value: string } };
         displayMode.value =
-            typedFlags.custom_clients_display === "global" ||
-            typedFlags.custom_clients_display === "separate"
-                ? typedFlags.custom_clients_display
+            typedFlags.custom_clients_display?.value === "global" ||
+            typedFlags.custom_clients_display?.value === "separate"
+                ? typedFlags.custom_clients_display.value
                 : "separate";
         return typedFlags;
     } catch (err) {

@@ -1135,17 +1135,20 @@
         "added": "Dodano",
         "stop": "Zatrzymaj",
         "launch": "Uruchom",
+        "launch_another": "Uruchom ponownie",
+        "open_folder": "Otwórz folder",
         "display_settings": "Ustawienia wyświetlania",
         "display_mode_global": "Globalnie",
         "display_mode": "Tryb wyświetlania",
         "display_mode_separate": "Oddzielnie",
+        "search_placeholder": "Szukaj własnych klientów...",
         "no_results": "Spróbuj zmienić zapytanie wyszukiwania",
         "no_clients_yet": "Dodaj swojego pierwszego klienta, aby zacząć",
-        "search_placeholder": "Szukaj własnych klientów...",
         "load_failed": "Nie udało się załadować własnych klientów: {error}",
         "launch_failed": "Nie udało się uruchomić {name}: {error}",
-        "stop_failed": "Błąd zatrzymywania klienta: {error}",
-        "flags_failed": "Nie udało się załadować flag: {error}"
+        "stop_failed": "Błąd zatrzymania klienta: {error}",
+        "flags_failed": "Nie udało się załadować flag: {error}",
+        "open_folder_failed": "Nie udało się otworzyć folderu: {error}"
     },
     "marketplace": {
         "title": "Marketplace",
@@ -1283,25 +1286,5 @@
         "choose_version": "Wybierz wersję",
         "versions_for": "Wersje dla {mod}",
         "loading_versions": "Ładowanie wersji..."
-    },
-    "custom_clients": {
-        "add": "Dodaj klienta",
-        "display_settings": "Ustawienia wyświetlania",
-        "search_placeholder": "Szukaj własnych klientów...",
-        "no_clients_yet": "Brak własnych klientów",
-        "no_results": "Nie znaleziono klientów",
-        "running": "Uruchomiony",
-        "edit": "Edytuj",
-        "delete": "Usuń",
-        "added": "Dodano",
-        "stop": "Zatrzymaj",
-        "launch": "Uruchom",
-        "launch_another": "Uruchom ponownie",
-        "open_folder": "Otwórz folder",
-        "load_failed": "Nie udało się załadować klientów: {error}",
-        "launch_failed": "Nie udało się uruchomić {name}: {error}",
-        "stop_failed": "Błąd zatrzymania klienta: {error}",
-        "flags_failed": "Nie udało się załadować flag: {error}",
-        "open_folder_failed": "Nie udało się otworzyć folderu: {error}"
     }
 }

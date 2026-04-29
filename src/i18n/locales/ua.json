@@ -1139,12 +1139,20 @@
         "added": "Додано",
         "stop": "Зупинити",
         "launch": "Запустити",
+        "launch_another": "Запустити ще раз",
+        "open_folder": "Відкрити папку",
         "display_settings": "Налаштування відображення",
         "display_mode": "Режим відображення",
         "display_mode_separate": "Окремо",
         "display_mode_global": "Глобально",
+        "search_placeholder": "Пошук власних клієнтів...",
         "no_results": "Спробуйте змінити свій пошуковий запит.",
-        "no_clients_yet": "Додайте свій перший власний клієнт, щоб почати."
+        "no_clients_yet": "Додайте свій перший власний клієнт, щоб почати.",
+        "load_failed": "Не вдалося завантажити власних клієнтів: {error}",
+        "launch_failed": "Не вдалося запустити {name}: {error}",
+        "stop_failed": "Помилка зупинки клієнта: {error}",
+        "flags_failed": "Не вдалося завантажити прапорці: {error}",
+        "open_folder_failed": "Не вдалося відкрити папку: {error}"
     },
     "marketplace": {
         "title": "Маркетплейс",
@@ -1287,28 +1295,5 @@
         "choose_version": "Вибрати версію",
         "versions_for": "Версії для {mod}",
         "loading_versions": "Завантаження версій..."
-    },
-    "custom_clients": {
-        "add": "Додати клієнт",
-        "display_settings": "Налаштування відображення",
-        "search_placeholder": "Пошук власних клієнтів...",
-        "no_clients_yet": "Власних клієнтів ще немає",
-        "no_results": "Клієнтів не знайдено",
-        "running": "Запущено",
-        "edit": "Редагувати",
-        "delete": "Видалити",
-        "added": "Додано",
-        "stop": "Зупинити",
-        "launch": "Запустити",
-        "launch_another": "Запустити ще раз",
-        "open_folder": "Відкрити папку",
-        "display_mode": "Режим відображення",
-        "display_mode_global": "Глобально",
-        "display_mode_separate": "Окремо",
-        "load_failed": "Не вдалося завантажити власних клієнтів: {error}",
-        "launch_failed": "Не вдалося запустити {name}: {error}",
-        "stop_failed": "Помилка зупинки клієнта: {error}",
-        "flags_failed": "Не вдалося завантажити прапорці: {error}",
-        "open_folder_failed": "Не вдалося відкрити папку: {error}"
     }
 }
