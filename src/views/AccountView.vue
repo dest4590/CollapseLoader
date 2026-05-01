@@ -554,24 +554,24 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted, watch } from "vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
-import EditNicknameModal from "../components/modals/social/account/EditNicknameModal.vue";
-import SocialLinksModal from "../components/modals/social/account/SocialLinksModal.vue";
-import ChangePasswordConfirmModal from "../components/modals/social/account/ChangePasswordConfirmModal.vue";
-import LogoutConfirmModal from "../components/modals/social/account/LogoutConfirmModal.vue";
-import AvatarUploadModal from "../components/modals/social/account/AvatarUploadModal.vue";
-import RoleSelectionModal from "../components/modals/social/account/RoleSelectionModal.vue";
-import UserAvatar from "../components/ui/UserAvatar.vue";
+import EditNicknameModal from "@features/social/modals/EditNicknameModal.vue";
+import SocialLinksModal from "@features/social/modals/SocialLinksModal.vue";
+import ChangePasswordConfirmModal from "@features/social/modals/ChangePasswordConfirmModal.vue";
+import LogoutConfirmModal from "@features/social/modals/LogoutConfirmModal.vue";
+import AvatarUploadModal from "@features/social/modals/AvatarUploadModal.vue";
+import RoleSelectionModal from "@features/social/modals/RoleSelectionModal.vue";
+import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import AchievementCard from "../components/features/profile/AchievementCard.vue";
-import { useUser } from "../composables/useUser";
-import { userService } from "../services/userService";
+import { useUser } from "@core/auth/useUser";
+import { userService } from "@core/auth/userService";
 import {
     achievementService,
     type Achievement,
     type UserAchievement,
-} from "../services/achievementService";
+} from "@features/social/achievementService";
 import {
     EditIcon,
     EyeIcon,
@@ -583,9 +583,9 @@ import {
     LayoutList,
 } from "lucide-vue-next";
 import { localTrackerService } from "../services/localTrackerService";
-import PlaytimeStatsModal from "../components/modals/common/PlaytimeStatsModal.vue";
-import getRoleBadge from "../utils/roleBadge";
-import { globalUserStatus } from "../composables/useUserStatus";
+import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
+import getRoleBadge from "@features/social/utils/roleBadge";
+import { globalUserStatus } from "@core/auth/useUserStatus";
 import { syncService, SyncServiceState } from "../services/syncService";
 import { invoke } from "@tauri-apps/api/core";
 

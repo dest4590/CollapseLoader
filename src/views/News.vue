@@ -144,9 +144,9 @@ import {
 } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
-import { useToast } from "../services/toastService";
-import { getCurrentLanguage } from "../i18n";
-import { formatDate } from "../utils/utils";
+import { useToast } from "@shared/composables/useToast";
+import { getCurrentLanguage } from "@core/i18n";
+import { formatDate } from "@shared/utils/utils";
 import { RefreshCcw } from "lucide-vue-next";
 
 interface NewsArticle {

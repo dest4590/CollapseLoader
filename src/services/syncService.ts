@@ -1,8 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
-import { userService, type SyncData, type UserInitData } from "./userService";
-import { settingsService } from "./settingsService";
-import { globalUserStatus } from "../composables/useUserStatus";
-import { maxIsoTimestamp } from "../utils/utils";
+import {
+    userService,
+    type SyncData,
+    type UserInitData,
+} from "@core/auth/userService";
+import { settingsService } from "@core/settings/settingsService";
+import { globalUserStatus } from "@core/auth/useUserStatus";
+import { maxIsoTimestamp } from "@shared/utils/utils";
 
 export type ToastFunction = (message: string, type: string) => void;
 export type TranslateFunction = (

@@ -2,8 +2,8 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import NetworkWindow from "./windows/NetworkWindow.vue";
 import CustomizationWindow from "./windows/CustomizationWindow.vue";
-import i18n from "./i18n/index";
-import { initializeApiUrl } from "./config";
+import i18n from "@core/i18n";
+import { initializeApiUrl } from "@/config";
 import { loader } from "@guolao/vue-monaco-editor";
 
 loader.config({

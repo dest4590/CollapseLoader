@@ -2,21 +2,20 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { bootLogService } from "../services/bootLogService";
+import { bootLogService } from "@core/logs/bootLogService";
 import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
-import { applyCursorForEvent, isHalloweenEvent } from "../utils/events";
-import { useToast } from "../services/toastService";
-import { globalUserStatus } from "./useUserStatus";
-import { useUser } from "./useUser";
-import { userService } from "../services/userService";
-import { globalFriends } from "./useFriends";
-import { updaterService } from "../services/updaterService";
+import { useToast } from "@shared/composables/useToast";
+import { globalUserStatus } from "@core/auth/useUserStatus";
+import { useUser } from "@core/auth/useUser";
+import { userService } from "@core/auth/userService";
+import { globalFriends } from "@features/friends/useFriends";
+import { updaterService } from "@core/updater/updaterService";
 import { syncService } from "../services/syncService";
-import { getCurrentLanguage } from "../i18n";
-import { useModal } from "../services/modalService";
-import ClientCrashModal from "../components/modals/clients/ClientCrashModal.vue";
-import { apiGet } from "../services/apiClient";
-import { webSocketService } from "../services/webSocketService";
+import { getCurrentLanguage } from "@core/i18n";
+import { useModal } from "@shared/composables/useModal";
+import ClientCrashModal from "@features/clients/modals/ClientCrashModal.vue";
+import { apiGet } from "@api/clients/internal";
+import { webSocketService } from "@core/network/webSocketService";
 
 interface Flags {
     disclaimer_shown: { value: boolean };
@@ -50,7 +49,6 @@ export function useAppInit() {
     const initialModalsLoaded = ref(false);
     const showFirstRunInfo = ref(false);
     const showInitialDisclaimer = ref(false);
-    const halloweenActive = ref(isHalloweenEvent());
 
     const initialTheme =
         (document.documentElement.getAttribute("data-theme") as string) ||
@@ -163,9 +161,7 @@ export function useAppInit() {
             );
         });
 
-        const cursorTask = applyCursorForEvent().then(() =>
-            bootLogService.cursorApplied()
-        );
+        const cursorTask = Promise.resolve();
 
         await Promise.all([rpcTask, themeTask, languageTask, cursorTask]);
 
@@ -301,7 +297,6 @@ export function useAppInit() {
         initialModalsLoaded,
         showFirstRunInfo,
         showInitialDisclaimer,
-        halloweenActive,
         currentTheme,
         apiInitialized,
         initApp,

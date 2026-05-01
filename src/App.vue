@@ -5,22 +5,22 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { router } from "./services/router";
 import { useI18n } from "vue-i18n";
-import GlobalModal from "./components/modals/GlobalModal.vue";
+import GlobalModal from "@shared/components/common/GlobalModal.vue";
 import DevMenuModal from "./components/core/DevMenuModal.vue";
 import InitialSetupModals from "./components/core/InitialSetupModals.vue";
-import DownloadProgress from "./components/features/download/DownloadProgress.vue";
+import DownloadProgress from "@features/download/components/DownloadProgress.vue";
 import Sidebar from "./components/layout/Sidebar.vue";
 import Titlebar from "./components/layout/Titlebar.vue";
-import RegisterPromptModal from "./components/modals/social/account/RegisterPromptModal.vue";
-import ToastContainer from "./components/notifications/ToastContainer.vue";
-import { useUser } from "./composables/useUser";
-import { globalUserStatus } from "./composables/useUserStatus";
+import RegisterPromptModal from "@features/social/modals/RegisterPromptModal.vue";
+import ToastContainer from "@shared/components/notifications/ToastContainer.vue";
+import { useUser } from "@core/auth/useUser";
+import { globalUserStatus } from "@core/auth/useUserStatus";
 import { syncService } from "./services/syncService";
-import { settingsService } from "./services/settingsService";
-import { useToast } from "./services/toastService";
-import { themeService } from "./services/themeService";
-import { updaterService } from "./services/updaterService";
-import { webSocketService } from "./services/webSocketService";
+import { settingsService } from "@core/settings/settingsService";
+import { useToast } from "@shared/composables/useToast";
+import { themeService } from "@core/theme/themeService";
+import { updaterService } from "@core/updater/updaterService";
+import { webSocketService } from "@core/network/webSocketService";
 import About from "./views/About.vue";
 import AccountView from "./views/AccountView.vue";
 import AppLogs from "./views/AppLogs.vue";
@@ -38,17 +38,17 @@ import Marketplace from "./views/Marketplace.vue";
 import AuthModal from "./components/layout/modals/AuthModal.vue";
 import NetworkDebug from "./views/NetworkDebug.vue";
 import { fetchSettings } from "./utils/settings";
-import { getDiscordState } from "./utils/discord";
+import { getDiscordState } from "@features/social/utils/discord";
 import { VALID_TABS } from "./utils/tabs";
-import { getIsDevelopment } from "./utils/isDevelopment";
+import { getIsDevelopment } from "@shared/utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
 import SpotlightSearch from "./components/core/SpotlightSearch.vue";
 
 import { useAppInit } from "./composables/useAppInit";
 import { initNetworkDebug } from "./services/networkDebugService";
-import type { Client } from "./types/ui";
+import type { Client } from "@shared/types/ui";
 import notificationSound from "./assets/misc/notification.mp3";
-import { userService } from "./services/userService";
+import { userService } from "@core/auth/userService";
 import { localTrackerService } from "./services/localTrackerService";
 import { persistenceService } from "./services/persistenceService";
 
@@ -74,7 +74,6 @@ const {
     isOnline,
     showFirstRunInfo,
     showInitialDisclaimer,
-    halloweenActive,
     currentTheme,
     apiInitialized,
     contentVisible,
@@ -732,7 +731,6 @@ onUnmounted(() => {
             :is-dev="isDev"
             :loading-state="loadingState"
             :current-progress="currentProgress"
-            :halloween-active="halloweenActive"
             :current-theme="currentTheme"
         />
 

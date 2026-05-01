@@ -113,9 +113,9 @@ import { useI18n } from "vue-i18n";
 import { Mail } from "lucide-vue-next";
 import LoginForm from "../forms/LoginForm.vue";
 import RegistrationForm from "../forms/RegistrationForm.vue";
-import { apiPost } from "../../../services/apiClient";
-import { getApiBaseWithVersion } from "../../../config";
-import { useToast } from "../../../services/toastService";
+import { apiPost } from "@api/clients/internal";
+import { getApiBaseWithVersion } from "@/config";
+import { useToast } from "@shared/composables/useToast";
 
 const props = defineProps<{
     modelValue: boolean;

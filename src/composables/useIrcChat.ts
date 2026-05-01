@@ -1,8 +1,8 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useToast } from "../services/toastService";
-import { formatTime } from "../utils/utils";
+import { useToast } from "@shared/composables/useToast";
+import { formatTime } from "@shared/utils/utils";
 
 interface SenderInfo {
     username: string;

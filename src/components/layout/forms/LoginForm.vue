@@ -30,8 +30,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useToast } from "../../../services/toastService";
-import { localUserService } from "../../../services/localUserService";
+import { useToast } from "@shared/composables/useToast";
+import { localUserService } from "@core/auth/localUserService";
 
 const { t } = useI18n();
 const { addToast } = useToast();

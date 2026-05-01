@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { useToast } from "../../services/toastService";
+import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
 import { ref, watch, onMounted, onUnmounted, computed } from "vue";
-import i18n from "../../i18n";
-import HoldButton from "../ui/HoldButton.vue";
+import i18n from "@core/i18n";
+import HoldButton from "@shared/components/ui/HoldButton.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
     getCurrentLanguage,
-} from "../../i18n";
+} from "@core/i18n";
 import {
     Languages,
     MemoryStick,
@@ -21,7 +21,7 @@ import {
     NotebookPen,
     HeartHandshake,
 } from "lucide-vue-next";
-import AnimatedSlider from "../ui/AnimatedSlider.vue";
+import AnimatedSlider from "@shared/components/ui/AnimatedSlider.vue";
 import { invoke } from "@tauri-apps/api/core";
 
 const props = defineProps({
@@ -170,7 +170,7 @@ const handleLanguageChange = async (languageCode: string) => {
 
 const handleSliderChange = () => {};
 
-import { settingsService } from "../../services/settingsService";
+import { settingsService } from "@core/settings/settingsService";
 
 const saveRamSettings = async () => {
     try {

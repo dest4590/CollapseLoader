@@ -11,11 +11,9 @@ import {
 } from "lucide-vue-next";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { getIsDevelopment } from "../../utils/isDevelopment";
-import { isHalloweenEvent } from "../../utils/events";
+import { getIsDevelopment } from "@shared/utils/isDevelopment";
 
 const { t } = useI18n();
-const halloweenActive = ref(isHalloweenEvent());
 
 const sidebarHelpVideo = new URL(
     "../../assets/videos/sidebar-help.mp4",
@@ -391,10 +389,7 @@ onUnmounted(() => {
         <div :class="[containerClasses, 'sidebar-items-container']">
             <div
                 class="tooltip"
-                :class="[
-                    tooltipClass,
-                    halloweenActive ? 'tooltip-warning' : 'tooltip-accent',
-                ]"
+                :class="[tooltipClass, 'tooltip-accent']"
                 :data-tip="t('navigation.home')"
             >
                 <button
@@ -406,11 +401,6 @@ onUnmounted(() => {
                     @click="changeTab('home')"
                 >
                     <Home class="w-5 h-5transition-transform duration-300" />
-                    <span
-                        v-if="halloweenActive"
-                        class="absolute -top-1 -right-1 text-xl"
-                        >🎃</span
-                    >
                     <span
                         v-if="!isOnline"
                         class="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-base-300"

@@ -2,16 +2,16 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { onMounted, ref } from "vue";
-import { useToast } from "../services/toastService";
+import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
-import { UpdateInfo, updaterService } from "../services/updaterService";
+import { UpdateInfo, updaterService } from "@core/updater/updaterService";
 import Logo from "../assets/images/logo.svg";
 import IconGitHub from "../assets/icons/github.svg";
 import IconTelegram from "../assets/icons/telegram.svg";
 import IconDiscord from "../assets/icons/discord.svg";
 import { CircleFadingArrowUp } from "lucide-vue-next";
-import { achievementService } from "../services/achievementService";
-import { useUser } from "../composables/useUser";
+import { achievementService } from "@features/social/achievementService";
+import { useUser } from "@core/auth/useUser";
 
 const { t } = useI18n();
 const LogoUrl = String(Logo);
