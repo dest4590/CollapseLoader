@@ -773,7 +773,8 @@
             "java_path": "Java 可执行文件的路径。留空则使用默认版本。",
             "java_args": "启动客户端时传递的自定义 JVM 参数。",
             "auto_update": "自动检查更新并在有新版本时通知。",
-            "autostart": "在系统启动时自动运行 CollapseLoader。"
+            "autostart": "在系统启动时自动运行 CollapseLoader。",
+            "start_minimized": "启动时将 CollapseLoader 最小化到系统托盘。"
         },
         "add_account_title": "添加新账户",
         "edit_account_title": "编辑账户",
@@ -820,6 +821,7 @@
         "close_to_tray": "关闭到系统托盘",
         "auto_update": "自动更新",
         "autostart": "开机自启动",
+        "start_minimized": "启动时最小化",
         "ram": {
             "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
         },
