@@ -113,10 +113,36 @@ const currentLanguage = ref(getCurrentLanguage());
 const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 
 const filteredSettingsEntries = computed(() => {
+    const KEY_ORDER = [
+        "ram",
+        "language",
+        "discord_rpc_enabled",
+        "optional_telemetry",
+        "cordshare",
+        "irc_chat",
+        "hash_verify",
+        "sync_client_settings",
+        "dpi_bypass",
+        "minimize_to_tray_on_launch",
+        "close_to_tray",
+        "auto_update",
+        "autostart",
+        "java_path",
+        "java_args",
+    ];
+
     return Object.entries(settings)
         .filter(([, field]) => field.show)
         .filter(([key]) => key !== "irc_chat")
-        .filter(([key]) => key !== "optional_telemetry");
+        .filter(([key]) => key !== "optional_telemetry")
+        .sort(([a], [b]) => {
+            const ai = KEY_ORDER.indexOf(a);
+            const bi = KEY_ORDER.indexOf(b);
+            if (ai === -1 && bi === -1) return 0;
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+        });
 });
 
 const handleSliderChange = () => {
@@ -520,6 +546,14 @@ const getFormattedLabel = (key: string) => {
         return t("settings.auto_update");
     }
 
+    if (key === "autostart") {
+        return t("settings.autostart");
+    }
+
+    if (key === "start_minimized") {
+        return t("settings.start_minimized");
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
@@ -761,7 +795,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 [key, field], index
                             ) in filteredSettingsEntries"
                             :key="key"
-                            class="h-full flex w-full"
+                            :class="[
+                                'flex w-full',
+                                key === 'java_path' || key === 'java_args'
+                                    ? 'lg:col-span-2'
+                                    : 'h-full'
+                            ]"
                         >
                             <SettingCard
                                 :field="field"
@@ -829,6 +868,14 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     />
                                     <RefreshCcw
                                         v-if="key === 'auto_update'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <HardDrive
+                                        v-if="key === 'autostart'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <Minimize2
+                                        v-if="key === 'start_minimized'"
                                         class="w-5 h-5 text-primary"
                                     />
                                     <Coffee
@@ -925,12 +972,33 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <div
                                     v-else-if="typeof field.value === 'boolean'"
                                 >
+                                    <div v-if="key === 'autostart'" class="flex flex-col items-end gap-2">
+                                        <input
+                                            type="checkbox"
+                                            v-model="field.value"
+                                            class="toggle toggle-primary toggle-sm"
+                                        />
+                                        <transition name="fade-slide">
+                                            <div
+                                                v-if="field.value && settings.start_minimized"
+                                                class="flex items-center gap-2 text-xs text-base-content/70"
+                                            >
+                                                <Minimize2 class="w-3.5 h-3.5" />
+                                                <span>{{ t('settings.start_minimized') }}</span>
+                                                <input
+                                                    type="checkbox"
+                                                    v-model="settings.start_minimized.value"
+                                                    class="toggle toggle-primary toggle-xs"
+                                                />
+                                            </div>
+                                        </transition>
+                                    </div>
                                     <input
-                                        type="checkbox"
-                                        v-if="
+                                        v-else-if="
                                             !isFeatureOnline(key) ||
                                             isAuthenticated
                                         "
+                                        type="checkbox"
                                         v-model="field.value"
                                         class="toggle toggle-primary toggle-sm"
                                     />

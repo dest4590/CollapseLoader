@@ -337,6 +337,17 @@ pub fn run() {
                 if let Err(e) = window.set_decorations(true) {
                     log_warn!("Failed to enable window decorations: {}", e);
                 }
+
+                let start_minimized = {
+                    crate::core::storage::settings::SETTINGS
+                        .lock()
+                        .map(|s| s.start_minimized.value)
+                        .unwrap_or(false)
+                };
+
+                if start_minimized {
+                    let _ = window.hide();
+                }
             }
 
             Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);

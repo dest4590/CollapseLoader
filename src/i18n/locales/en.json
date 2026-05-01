@@ -799,7 +799,9 @@
             "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked.",
             "java_path": "Path to the Java executable. Leave empty to use the default version.",
             "java_args": "Custom JVM arguments to pass to the client on launch.",
-            "auto_update": "Automatically check for updates and notify when a new version is available."
+            "auto_update": "Automatically check for updates and notify when a new version is available.",
+            "autostart": "Launch CollapseLoader automatically when the system starts.",
+            "start_minimized": "Start CollapseLoader minimized to the system tray."
         },
         "ram_warning": {},
         "telemetry": "Analytics",
@@ -848,6 +850,8 @@
         "minimize_to_tray_on_launch": "Minimize to tray on launch",
         "close_to_tray": "Close to tray",
         "auto_update": "Auto Update",
+        "autostart": "Launch on startup",
+        "start_minimized": "Start minimized",
         "reset_settings": "Reset settings",
         "storage_usage": "Storage Usage",
         "storage_calculate": "Calculate",
