@@ -42,7 +42,6 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
             'border-base-300 hover:border-primary/20': !isDragging && !isDragOver,
         }"
     >
-        <!-- Drop indicator line at top when dragging over -->
         <div
             v-if="isDragOver && !isDragging"
             class="h-0.5 bg-primary rounded-full mx-3 mt-2"
@@ -50,7 +49,6 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
 
         <div class="card-body p-4">
             <div class="flex items-center gap-2">
-                <!-- Drag handle -->
                 <div
                     class="drag-handle flex-shrink-0 cursor-grab active:cursor-grabbing text-base-content/30 hover:text-base-content/70 transition-colors p-1 rounded"
                     @mousedown="handleDragStart"
@@ -162,7 +160,6 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
     animation: fadeInUp 0.4s ease-out forwards;
 }
 
-/* When dragging — override the animation so opacity class works */
 .account-card.opacity-40 {
     animation: none;
     opacity: 0.4 !important;
