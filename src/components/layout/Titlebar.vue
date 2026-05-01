@@ -35,12 +35,12 @@ const tooltipContent = computed(() => {
     const lines: string[] = [];
     if (version.value)
         lines.push(
-            `Build: v${version.value}${codename.value ? ` (${codename.value})` : ""}`
+            `BUILD: v${version.value}${codename.value ? ` (${codename.value})` : ""}`
         );
-    if (apiUrl.value) lines.push(`Server: ${apiUrl.value}`);
+    if (apiUrl.value) lines.push(`SERVER: ${apiUrl.value}`);
     if (cdnUrl.value) lines.push(`CDN: ${cdnUrl.value}`);
-    if (commitFull.value) lines.push(`Commit: ${commitFull.value}`);
-    if (commitMessage.value) lines.push(`\nMessage: ${commitMessage.value}`);
+    if (commitFull.value) lines.push(`COMMIT: ${commitFull.value}`);
+    if (commitMessage.value) lines.push(`\nMSG: ${commitMessage.value}`);
     return lines.length > 0 ? lines.join("\n") : "No version info";
 });
 
@@ -106,15 +106,28 @@ onUnmounted(() => {
         >
             <span
                 data-tauri-drag-region
+                class="flex overflow-hidden"
                 :class="[
-                    'text-[12px] font-semibold tracking-tight text-base-content/80 uppercase cursor-default',
+                    'text-[14px] font-bold tracking-tight text-base-content/80 cursor-default px-0.5',
                     'transition-all duration-1000 delay-200 ease-out',
                     isVisible
                         ? 'opacity-100 translate-x-0 scale-100'
                         : 'opacity-0 -translate-x-8 scale-90',
                 ]"
             >
-                CollapseLoader
+                <span
+                    v-for="(char, index) in 'CollapseLoader'.split('')"
+                    :key="index"
+                    :style="{ transitionDelay: `${200 + index * 50}ms` }"
+                    :class="[
+                        'inline-block transition-all duration-500 ease-out',
+                        isVisible
+                            ? 'opacity-100 translate-y-0'
+                            : 'opacity-0 -translate-y-2',
+                    ]"
+                >
+                    {{ char }}
+                </span>
             </span>
 
             <div
@@ -125,9 +138,10 @@ onUnmounted(() => {
                     'tooltip tooltip-bottom tooltip-multiline cursor-default pointer-events-auto',
                     'text-[10px] font-medium tracking-tight text-base-content/50 select-none',
                     'transition-all duration-1000 delay-400 ease-out',
+                    'animate-in fade-in slide-in-from-top-2',
                     isVisible
-                        ? 'opacity-100 translate-x-0'
-                        : 'opacity-0 -translate-x-6',
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 -translate-y-4',
                 ]"
             >
                 <span data-tauri-drag-region v-if="version"
@@ -148,8 +162,8 @@ onUnmounted(() => {
                 'flex h-full relative z-10',
                 'transition-all duration-1000 delay-300 ease-out',
                 isVisible
-                    ? 'opacity-100 translate-x-0 scale-100'
-                    : 'opacity-0 translate-x-8 scale-90',
+                    ? 'opacity-100 translate-y-0 scale-100'
+                    : 'opacity-0 -translate-y-4 scale-95',
             ]"
         >
             <button class="titlebar-btn" @click="minimize" title="Minimize">
@@ -189,19 +203,24 @@ onUnmounted(() => {
 
 .tooltip-multiline:before {
     white-space: pre-wrap;
+    word-break: break-all;
     text-align: left;
-    max-width: 320px;
+    width: 320px;
     font-size: 11px;
     line-height: 1.5;
     padding: 10px 12px;
-    background-color: #121212;
+    background-color: #161616;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    left: 0;
+    transform: translateX(0);
 }
 
 .tooltip-multiline:after {
-    border-bottom-color: #121212;
+    border-bottom-color: #161616;
+    left: 20px;
+    transform: translateX(0);
 }
 
 .titlebar-btn {

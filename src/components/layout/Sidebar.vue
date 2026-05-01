@@ -388,7 +388,7 @@ onUnmounted(() => {
             :class="isCentered ? 'grow' : 'grow-0'"
         ></div>
 
-        <div :class="containerClasses">
+        <div :class="[containerClasses, 'sidebar-items-container']">
             <div
                 class="tooltip"
                 :class="[
@@ -405,7 +405,7 @@ onUnmounted(() => {
                     }"
                     @click="changeTab('home')"
                 >
-                    <Home class="w-5 h-5" />
+                    <Home class="w-5 h-5transition-transform duration-300" />
                     <span
                         v-if="halloweenActive"
                         class="absolute -top-1 -right-1 text-xl"
@@ -483,7 +483,7 @@ onUnmounted(() => {
             :class="isCentered ? 'grow-0' : 'grow'"
         ></div>
 
-        <div :class="footerClasses">
+        <div :class="[footerClasses, 'sidebar-footer-container']">
             <div
                 class="tooltip tooltip-accent"
                 :class="tooltipClass"
@@ -601,53 +601,49 @@ onUnmounted(() => {
         opacity 0.5s ease;
 }
 
-.sidebar-hidden-left .flex > *,
-.sidebar-hidden-left .mt-auto > *,
-.sidebar-hidden-right .flex > *,
-.sidebar-hidden-right .mt-auto > *,
-.sidebar-hidden-top .flex > *,
-.sidebar-hidden-top .mt-auto > *,
-.sidebar-hidden-bottom .flex > *,
-.sidebar-hidden-bottom .mt-auto > * {
+.sidebar-hidden-left .sidebar-items-container > *,
+.sidebar-hidden-left .sidebar-footer-container > *,
+.sidebar-hidden-right .sidebar-items-container > *,
+.sidebar-hidden-right .sidebar-footer-container > *,
+.sidebar-hidden-top .sidebar-items-container > *,
+.sidebar-hidden-top .sidebar-footer-container > *,
+.sidebar-hidden-bottom .sidebar-items-container > *,
+.sidebar-hidden-bottom .sidebar-footer-container > * {
     opacity: 0;
-    transform: scale(0.995);
+    transform: scale(0.8) translateY(10px);
 }
 
-.sidebar-entered .flex > *,
-.sidebar-entered .mt-auto > * {
+.sidebar-entered .sidebar-items-container > *,
+.sidebar-entered .sidebar-footer-container > * {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
     transition:
-        transform 0.42s cubic-bezier(0.2, 0.9, 0.2, 1),
-        opacity 0.42s ease;
+        transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.4s ease;
 }
 
-.sidebar-entered .flex > *:nth-child(1) {
-    transition-delay: 0.06s;
-}
-
-.sidebar-entered .flex > *:nth-child(2) {
+.sidebar-entered .sidebar-items-container > *:nth-child(1) {
     transition-delay: 0.1s;
 }
 
-.sidebar-entered .flex > *:nth-child(3) {
-    transition-delay: 0.14s;
+.sidebar-entered .sidebar-items-container > *:nth-child(2) {
+    transition-delay: 0.15s;
 }
 
-.sidebar-entered .flex > *:nth-child(4) {
-    transition-delay: 0.18s;
+.sidebar-entered .sidebar-items-container > *:nth-child(3) {
+    transition-delay: 0.2s;
 }
 
-.sidebar-entered .mt-auto > *:nth-child(1) {
-    transition-delay: 0.22s;
+.sidebar-entered .sidebar-items-container > *:nth-child(4) {
+    transition-delay: 0.25s;
 }
 
-.sidebar-entered .mt-auto > *:nth-child(2) {
-    transition-delay: 0.26s;
-}
-
-.sidebar-entered .mt-auto > *:nth-child(3) {
+.sidebar-entered .sidebar-footer-container > *:nth-child(1) {
     transition-delay: 0.3s;
+}
+
+.sidebar-entered .sidebar-footer-container > *:nth-child(2) {
+    transition-delay: 0.35s;
 }
 
 .sidebar-help-tooltip video {

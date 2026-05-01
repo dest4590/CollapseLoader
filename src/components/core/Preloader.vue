@@ -85,7 +85,7 @@ import {
 } from "vue";
 import BootLogs from "./BootLogs.vue";
 import OdometerText from "./OdometerText.vue";
-import { animations, animationKeys } from "./preloaderAnimations";
+import { animations, animationKeys } from "../../services/preloaderAnimations";
 
 const props = defineProps({
     show: { type: Boolean, required: true },
