@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+
 const props = defineProps<{
     account: {
         id: string;
@@ -44,7 +48,7 @@ const handleDelete = () => emit("delete-account", props.account);
                             <div
                                 class="w-1.5 h-1.5 rounded-full bg-current"
                             ></div>
-                            Active
+                            {{ t('settings.active') }}
                         </div>
                     </div>
 
@@ -67,7 +71,7 @@ const handleDelete = () => emit("delete-account", props.account);
                             class="w-1 h-1 rounded-full bg-base-content/20"
                         ></span>
                         <span
-                            >Created
+                            >{{ t('settings.created') }}
                             {{
                                 formatDate
                                     ? formatDate(account.created_at)
@@ -79,7 +83,7 @@ const handleDelete = () => emit("delete-account", props.account);
                                 class="w-1 h-1 rounded-full bg-base-content/20"
                             ></span>
                             <span
-                                >Used
+                                >{{ t('settings.last_used') }}
                                 {{
                                     formatDate
                                         ? formatDate(account.last_used)
