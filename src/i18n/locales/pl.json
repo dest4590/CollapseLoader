@@ -783,7 +783,9 @@
             "minimize_to_tray_on_launch": "Zminimalizuj aplikację do zasobnika systemowego po uruchomieniu klienta.",
             "java_path": "Ścieżka do pliku wykonywalnego Java. Pozostaw puste, aby użyć domyślnej wersji.",
             "java_args": "Dodatkowe argumenty JVM używane podczas uruchamiania klienta.",
-            "auto_update": "Automatycznie sprawdzaj aktualizacje i powiadamiaj o nowych wersjach."
+            "auto_update": "Automatycznie sprawdzaj aktualizacje i powiadamiaj o nowych wersjach.",
+            "autostart": "Automatycznie uruchamiaj CollapseLoader przy starcie systemu.",
+            "start_minimized": "Uruchamiaj CollapseLoader zminimalizowany do zasobnika systemowego."
         },
         "open_data": "Otwórz folder loadera",
         "add_account_title": "Dodaj nowe konto",
@@ -854,6 +856,8 @@
         "not_signed_in": "Nie jesteś zalogowany",
         "close_to_tray": "Blisko tacy",
         "auto_update": "Automatyczne aktualizacje",
+        "autostart": "Uruchamiaj przy starcie systemu",
+        "start_minimized": "Uruchamiaj zminimalizowany",
         "minimize_to_tray_on_launch": "Minimalizuj do zasobnika przy uruchomieniu"
     },
     "userProfile": {

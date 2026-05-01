@@ -142,6 +142,8 @@ define_settings! {
         java_path: Setting<String> = ("".to_string(), true),
         java_args: Setting<String> = ("".to_string(), true),
         auto_update: Setting<bool> = (true, true),
+        autostart: Setting<bool> = (false, true),
+        start_minimized: Setting<bool> = (false, true),
     }
 }
 
