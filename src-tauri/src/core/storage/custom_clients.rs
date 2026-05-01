@@ -60,17 +60,17 @@ impl CustomClientManager {
         }
 
         let mut target_path = client_dir.clone();
-        
-        // If it's a Fabric or Forge client, the JAR should go into the 'mods' folder
-        if custom_client.client_type == crate::core::clients::client::ClientType::Fabric 
-           || custom_client.client_type == crate::core::clients::client::ClientType::Forge {
+
+        if custom_client.client_type == ClientType::Fabric
+            || custom_client.client_type == ClientType::Forge
+        {
             target_path = target_path.join("mods");
             if !target_path.exists() {
                 fs::create_dir_all(&target_path)
                     .map_err(|e| format!("Failed to create mods directory: {e}"))?;
             }
         }
-        
+
         target_path = target_path.join(&custom_client.filename);
         fs::copy(&custom_client.file_path, &target_path)
             .map_err(|e| format!("Failed to copy file: {e}"))?;

@@ -44,9 +44,7 @@
     "plugins": {
         "deep-link": {
             "desktop": {
-                "schemes": [
-                    "collapseloader"
-                ]
+                "schemes": ["collapseloader"]
             }
         }
     }

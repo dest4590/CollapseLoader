@@ -51,7 +51,12 @@ export function useAppInit() {
     const showFirstRunInfo = ref(false);
     const showInitialDisclaimer = ref(false);
     const halloweenActive = ref(isHalloweenEvent());
-    const currentTheme = ref("dark");
+
+    const initialTheme =
+        (document.documentElement.getAttribute("data-theme") as string) ||
+        localStorage.getItem("theme") ||
+        "dark";
+    const currentTheme = ref(initialTheme);
     const apiInitialized = ref(false);
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
@@ -96,7 +101,18 @@ export function useAppInit() {
                     "Content-Type": "application/json",
                 },
             });
-            const allNews = response as any[];
+
+            let allNews: any[] = [];
+            if (Array.isArray(response)) {
+                allNews = response;
+            } else if (response && Array.isArray((response as any).data)) {
+                allNews = (response as any).data;
+            } else if (response && typeof response === "object") {
+                allNews = Object.values(response).filter(
+                    (v) => typeof v === "object"
+                );
+            }
+
             news.value = allNews.filter(
                 (a: any) => a.language === currentLanguage
             );
@@ -124,6 +140,13 @@ export function useAppInit() {
 
         loadingState.value = loadingStates[0];
         currentProgress.value = 5;
+
+        // Listen for theme changes from other windows or settings
+        await listen("theme-mode-update", (event: any) => {
+            if (event.payload) {
+                currentTheme.value = event.payload;
+            }
+        });
 
         const rpcTask = invoke("initialize_rpc").catch((e) =>
             bootLogService.addCustomLog("WARN", "rpc", String(e))

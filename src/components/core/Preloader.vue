@@ -81,6 +81,7 @@ import {
     onBeforeUnmount,
     onMounted,
     nextTick,
+    toRefs,
 } from "vue";
 import BootLogs from "./BootLogs.vue";
 import OdometerText from "./OdometerText.vue";
@@ -95,6 +96,9 @@ const props = defineProps({
     currentTheme: { type: String, default: "dark" },
     animationType: { type: String, default: "" },
 });
+
+const { isDev, loadingState, currentProgress, halloweenActive, currentTheme } =
+    toRefs(props);
 
 const displayProgress = ref(0);
 

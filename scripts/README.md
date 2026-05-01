@@ -4,7 +4,7 @@ This folder contains scripts that are used to automate various tasks related to 
 
 - [bump_version.py](bump_version.py): A script to automate the process of bumping the version number in the project. It updates version and codename in the relevant files.
 
-- [remove_canceled_actions.py](remove_canceled_actions.py): A script to delete GitHub Action runs that were canceled. It supports a dry-run mode by default and can apply changes with a flag.
+- [remove_unused_actions.py](remove_unused_actions.py): A script to delete GitHub Action runs that were unused. It supports a dry-run mode by default and can apply changes with a flag.
 
 - [remove_releases.py](remove_releases.py): A script to delete GitHub releases except the latest one. It supports a dry-run mode by default and can apply changes with a flag.
 
