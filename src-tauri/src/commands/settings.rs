@@ -9,6 +9,129 @@ use crate::core::utils::dpi;
 use crate::{log_debug, log_error, log_info};
 use sysinfo::System;
 
+#[cfg(target_os = "windows")]
+fn set_autostart_registry(enabled: bool) -> Result<(), String> {
+    use winreg::enums::*;
+    use winreg::RegKey;
+
+    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let run_key = hkcu
+        .open_subkey_with_flags(
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            KEY_SET_VALUE | KEY_QUERY_VALUE,
+        )
+        .map_err(|e| format!("Failed to open registry key: {}", e))?;
+
+    if enabled {
+        let exe_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let exe_str = exe_path
+            .to_str()
+            .ok_or("Failed to convert exe path to string")?;
+        run_key
+            .set_value("CollapseLoader", &exe_str)
+            .map_err(|e| format!("Failed to set registry value: {}", e))?;
+        log_info!("Autostart enabled: {}", exe_str);
+    } else {
+        match run_key.delete_value("CollapseLoader") {
+            Ok(_) => log_info!("Autostart disabled"),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                log_info!("Autostart entry not found, nothing to remove");
+            }
+            Err(e) => return Err(format!("Failed to delete registry value: {}", e)),
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn set_autostart_registry(enabled: bool) -> Result<(), String> {
+    let home = std::env::var("HOME").map_err(|e| format!("Failed to get HOME: {}", e))?;
+    let plist_dir = format!("{}/Library/LaunchAgents", home);
+    let plist_path = format!("{}/org.collapseloader.app.plist", plist_dir);
+
+    if enabled {
+        let exe_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let exe_str = exe_path
+            .to_str()
+            .ok_or("Failed to convert exe path to string")?;
+
+        std::fs::create_dir_all(&plist_dir)
+            .map_err(|e| format!("Failed to create LaunchAgents dir: {}", e))?;
+
+        let plist_content = format!(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>org.collapseloader.app</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{}</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>"#,
+            exe_str
+        );
+
+        std::fs::write(&plist_path, plist_content)
+            .map_err(|e| format!("Failed to write plist: {}", e))?;
+        log_info!("Autostart enabled via LaunchAgent: {}", plist_path);
+    } else {
+        match std::fs::remove_file(&plist_path) {
+            Ok(_) => log_info!("Autostart disabled, plist removed"),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                log_info!("Autostart plist not found, nothing to remove");
+            }
+            Err(e) => return Err(format!("Failed to remove plist: {}", e)),
+        }
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn set_autostart_registry(enabled: bool) -> Result<(), String> {
+    let home = std::env::var("HOME").map_err(|e| format!("Failed to get HOME: {}", e))?;
+    let autostart_dir = format!("{}/.config/autostart", home);
+    let desktop_path = format!("{}/collapseloader.desktop", autostart_dir);
+
+    if enabled {
+        let exe_path = std::env::current_exe()
+            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let exe_str = exe_path
+            .to_str()
+            .ok_or("Failed to convert exe path to string")?;
+
+        std::fs::create_dir_all(&autostart_dir)
+            .map_err(|e| format!("Failed to create autostart dir: {}", e))?;
+
+        let desktop_content = format!(
+            "[Desktop Entry]\nType=Application\nName=CollapseLoader\nExec={}\nHidden=false\nNoDisplay=false\nX-GNOME-Autostart-enabled=true\n",
+            exe_str
+        );
+
+        std::fs::write(&desktop_path, desktop_content)
+            .map_err(|e| format!("Failed to write desktop file: {}", e))?;
+        log_info!("Autostart enabled via .desktop file: {}", desktop_path);
+    } else {
+        match std::fs::remove_file(&desktop_path) {
+            Ok(_) => log_info!("Autostart disabled, desktop file removed"),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                log_info!("Autostart desktop file not found, nothing to remove");
+            }
+            Err(e) => return Err(format!("Failed to remove desktop file: {}", e)),
+        }
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 pub fn get_settings() -> Settings {
     SETTINGS.lock().unwrap().clone()
@@ -48,11 +171,14 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     let config_path = current_settings.config_path.clone();
 
     let old_discord_rpc_enabled = current_settings.discord_rpc_enabled.value;
+    let old_autostart = current_settings.autostart.value;
     #[cfg(target_os = "windows")]
     let old_dpi_bypass_enabled = current_settings.dpi_bypass.value;
 
     let discord_rpc_changed = old_discord_rpc_enabled != input_settings.discord_rpc_enabled.value;
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
+    let autostart_changed = old_autostart != input_settings.autostart.value;
+    let new_autostart_value = input_settings.autostart.value;
 
     #[cfg(target_os = "windows")]
     let dpi_bypass_changed = old_dpi_bypass_enabled != input_settings.dpi_bypass.value;
@@ -65,6 +191,12 @@ pub fn save_settings(input_settings: InputSettings) -> Result<(), String> {
     new_settings.save_to_disk();
 
     drop(current_settings);
+
+    if autostart_changed {
+        if let Err(e) = set_autostart_registry(new_autostart_value) {
+            log_error!("Failed to set autostart: {e}");
+        }
+    }
 
     if discord_rpc_changed {
         log_info!(
