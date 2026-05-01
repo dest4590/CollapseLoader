@@ -290,7 +290,6 @@ const selectItem = async (item: ResultItem) => {
                 console.error("Failed to switch account", e);
             }
         }
-        emit("close");
     }
 };
 
