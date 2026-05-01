@@ -826,7 +826,12 @@ onUnmounted(() => {
         <SpotlightSearch
             :show="showSpotlight"
             @close="showSpotlight = false"
-            @navigate="(tab) => { setActiveTab(tab); showSpotlight = false; }"
+            @navigate="
+                (tab) => {
+                    setActiveTab(tab);
+                    showSpotlight = false;
+                }
+            "
         />
         <RegisterPromptModal
             v-model="showRegistrationPrompt"

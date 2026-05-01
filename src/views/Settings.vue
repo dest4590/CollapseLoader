@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
+import { ref, onMounted, watch, computed, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import AnimatedSlider from "../components/ui/AnimatedSlider.vue";
 import {
@@ -35,7 +35,7 @@ import {
 } from "lucide-vue-next";
 import { useToast } from "../services/toastService";
 import type { ToastPosition } from "../types/toast";
-import { syncService, type SyncServiceState } from "../services/syncService";
+import { syncService } from "../services/syncService";
 import { settingsService } from "../services/settingsService";
 import { globalUserStatus } from "../composables/useUserStatus";
 import { userService, type UserExternalAccount } from "../services/userService";
@@ -615,7 +615,7 @@ const selectTag = (tag: string) => {
     }
 };
 
-let unsubscribeSyncService: (() => void) | null = null;
+// let unsubscribeSyncService: (() => void) | null = null;
 
 const handleLanguageChange = async (languageCode: string) => {
     try {
@@ -683,15 +683,17 @@ let _ghostOffsetX = 0;
 let _ghostOffsetY = 0;
 
 const _reorderAccounts = async (sourceId: string, targetId: string) => {
-    const fromIndex = accounts.value.findIndex(a => a.id === sourceId);
-    const toIndex = accounts.value.findIndex(a => a.id === targetId);
+    const fromIndex = accounts.value.findIndex((a) => a.id === sourceId);
+    const toIndex = accounts.value.findIndex((a) => a.id === targetId);
     if (fromIndex === -1 || toIndex === -1) return;
     const reordered = [...accounts.value];
     const [moved] = reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, moved);
     accounts.value = reordered;
     try {
-        await invoke("reorder_accounts", { orderedIds: reordered.map(a => a.id) });
+        await invoke("reorder_accounts", {
+            orderedIds: reordered.map((a) => a.id),
+        });
     } catch (e) {
         console.error("Failed to reorder accounts", e);
         await loadAccounts();
@@ -703,14 +705,18 @@ const _onMouseMove = (e: MouseEvent) => {
     _ghostEl.style.top = `${e.clientY - _ghostOffsetY}px`;
     _ghostEl.style.left = `${e.clientX - _ghostOffsetX}px`;
 
-    const cards = document.querySelectorAll<HTMLElement>('[data-account-id]');
+    const cards = document.querySelectorAll<HTMLElement>("[data-account-id]");
     let found: string | null = null;
     for (const card of cards) {
         const id = card.dataset.accountId;
         if (!id || id === draggedId.value) continue;
         const r = card.getBoundingClientRect();
-        if (e.clientX >= r.left && e.clientX <= r.right &&
-            e.clientY >= r.top  && e.clientY <= r.bottom) {
+        if (
+            e.clientX >= r.left &&
+            e.clientX <= r.right &&
+            e.clientY >= r.top &&
+            e.clientY <= r.bottom
+        ) {
             found = id;
             break;
         }
@@ -719,10 +725,10 @@ const _onMouseMove = (e: MouseEvent) => {
 };
 
 const _onMouseUp = async () => {
-    document.removeEventListener('mousemove', _onMouseMove);
-    document.removeEventListener('mouseup', _onMouseUp);
-    document.body.style.userSelect = '';
-    document.body.style.cursor = '';
+    document.removeEventListener("mousemove", _onMouseMove);
+    document.removeEventListener("mouseup", _onMouseUp);
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
 
     if (_ghostEl) {
         _ghostEl.remove();
@@ -745,8 +751,11 @@ const startDrag = (e: MouseEvent, accountId: string) => {
     dragOverId.value = null;
 
     // Find root card element
-    const cardEl = (e.currentTarget as HTMLElement)?.closest?.('[data-account-id]') as HTMLElement
-        ?? document.querySelector<HTMLElement>(`[data-account-id="${accountId}"]`);
+    const cardEl =
+        ((e.currentTarget as HTMLElement)?.closest?.(
+            "[data-account-id]"
+        ) as HTMLElement) ??
+        document.querySelector<HTMLElement>(`[data-account-id="${accountId}"]`);
 
     if (cardEl) {
         const rect = cardEl.getBoundingClientRect();
@@ -766,21 +775,21 @@ const startDrag = (e: MouseEvent, accountId: string) => {
             `box-shadow:0 20px 40px rgba(0,0,0,0.35)`,
             `border-radius:0.5rem`,
             `transition:none`,
-        ].join(';');
+        ].join(";");
         document.body.appendChild(clone);
         _ghostEl = clone;
     }
 
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'grabbing';
-    document.addEventListener('mousemove', _onMouseMove);
-    document.addEventListener('mouseup', _onMouseUp);
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    document.addEventListener("mousemove", _onMouseMove);
+    document.addEventListener("mouseup", _onMouseUp);
 };
 
 onMounted(async () => {
-    unsubscribeSyncService = syncService.subscribe((state) => {
-        syncState.value = state;
-    });
+    // unsubscribeSyncService = syncService.subscribe((state) => {
+    //     syncState.value = state;
+    // });
 
     await syncService.initializeSyncStatus();
 
@@ -802,11 +811,11 @@ onMounted(async () => {
     loadStorageUsage();
 });
 
-onUnmounted(() => {
-    if (unsubscribeSyncService) {
-        unsubscribeSyncService();
-    }
-});
+// onUnmounted(() => {
+//     if (unsubscribeSyncService) {
+//         unsubscribeSyncService();
+//     }
+// });
 
 watch(
     () => settings.enable_telemetry?.value,
@@ -901,7 +910,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 'flex w-full',
                                 key === 'java_path' || key === 'java_args'
                                     ? 'lg:col-span-2'
-                                    : 'h-full'
+                                    : 'h-full',
                             ]"
                         >
                             <SettingCard
@@ -1074,7 +1083,10 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <div
                                     v-else-if="typeof field.value === 'boolean'"
                                 >
-                                    <div v-if="key === 'autostart'" class="flex flex-col items-end gap-2">
+                                    <div
+                                        v-if="key === 'autostart'"
+                                        class="flex flex-col items-end gap-2"
+                                    >
                                         <input
                                             type="checkbox"
                                             v-model="field.value"
@@ -1082,14 +1094,26 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                         />
                                         <transition name="fade-slide">
                                             <div
-                                                v-if="field.value && settings.start_minimized"
+                                                v-if="
+                                                    field.value &&
+                                                    settings.start_minimized
+                                                "
                                                 class="flex items-center gap-2 text-xs text-base-content/70"
                                             >
-                                                <Minimize2 class="w-3.5 h-3.5" />
-                                                <span>{{ t('settings.start_minimized') }}</span>
+                                                <Minimize2
+                                                    class="w-3.5 h-3.5"
+                                                />
+                                                <span>{{
+                                                    t(
+                                                        "settings.start_minimized"
+                                                    )
+                                                }}</span>
                                                 <input
                                                     type="checkbox"
-                                                    v-model="settings.start_minimized.value"
+                                                    v-model="
+                                                        settings.start_minimized
+                                                            .value
+                                                    "
                                                     class="toggle toggle-primary toggle-xs"
                                                 />
                                             </div>

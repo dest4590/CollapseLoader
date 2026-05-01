@@ -99,9 +99,9 @@ pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {
 pub static FABRIC_DEPS_URL: &str = "clients/fabric/deps/jars";
 pub static FORGE_DEPS_URL: &str = "clients/forge/deps/jars";
 
-pub static VANILLA_CLIENTS_URL: &str = "clients.json";
-pub static FABRIC_CLIENTS_URL: &str = "fabric-clients.json";
-pub static FORGE_CLIENTS_URL: &str = "forge-clients.json";
+pub static VANILLA_CLIENTS_URL: &str = "static/clients.json";
+pub static FABRIC_CLIENTS_URL: &str = "static/fabric-clients.json";
+pub static FORGE_CLIENTS_URL: &str = "static/forge-clients.json";
 
 fn parse_env_bool(var: &str) -> bool {
     std::env::var(var).ok().is_some_and(|s| {
@@ -123,9 +123,9 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
         }
     }
 
-    vec![
-        Server::new("https://huggingface.co/datasets/Collapsecdn/collapsecdn/resolve/main/"),
-    ]
+    vec![Server::new(
+        "https://huggingface.co/datasets/Collapsecdn/collapsecdn/resolve/main/",
+    )]
 });
 
 pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
@@ -135,9 +135,9 @@ pub static CDN_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
             return vec![Server::new(&url)];
         }
     }
-    vec![
-        Server::new("https://huggingface.co/datasets/Collapsecdn/collapsecdn/resolve/main/"),
-    ]
+    vec![Server::new(
+        "https://huggingface.co/datasets/Collapsecdn/collapsecdn/resolve/main/",
+    )]
 });
 
 pub static ROOT_DIR: LazyLock<String> = LazyLock::new(|| {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import NetworkDebug from "./views/NetworkDebug.vue";
+import NetworkDebug from "../views/NetworkDebug.vue";
 import { onMounted } from "vue";
-import { initNetworkDebug } from "./services/networkDebugService";
+import { initNetworkDebug } from "../services/networkDebugService";
 
 onMounted(() => {
     initNetworkDebug();

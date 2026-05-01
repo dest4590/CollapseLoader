@@ -83,23 +83,6 @@ impl Servers {
             self.check_group(&client, &self.apis, &self.selected_api, "API")
         );
 
-        let api_status = self
-            .selected_api
-            .read()
-            .unwrap()
-            .as_ref()
-            .map(|s| format!("OK  {}", s.url))
-            .unwrap_or_else(|| "OFFLINE".to_string());
-        let cdn_status = self
-            .selected_cdn
-            .read()
-            .unwrap()
-            .as_ref()
-            .map(|s| format!("OK  {}", s.url))
-            .unwrap_or_else(|| "OFFLINE".to_string());
-
-        log_info!("Services:\n  API  {}\n  CDN  {}", api_status, cdn_status);
-
         self.set_status();
         let _ = self.check_complete_tx.send(true);
     }
@@ -137,7 +120,7 @@ impl Servers {
             ok = self
                 .probe_server(client, &url, "HEAD", &server.url, name)
                 .await;
-            
+
             if !ok {
                 ok = self
                     .probe_server(client, &url, "GET", &server.url, name)

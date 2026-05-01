@@ -45,12 +45,20 @@ const accounts = ref<Account[]>([]);
 const tabItems = [
     { id: "home", icon: Home, labelKey: "navigation.home" },
     { id: "settings", icon: Settings, labelKey: "navigation.settings" },
-    { id: "customization", icon: Palette, labelKey: "navigation.customization" },
+    {
+        id: "customization",
+        icon: Palette,
+        labelKey: "navigation.customization",
+    },
     { id: "friends", icon: Users, labelKey: "navigation.friends" },
     { id: "account", icon: User, labelKey: "navigation.account" },
     { id: "news", icon: Newspaper, labelKey: "navigation.news" },
     { id: "marketplace", icon: Package, labelKey: "navigation.marketplace" },
-    { id: "custom_clients", icon: FileText, labelKey: "navigation.custom_clients" },
+    {
+        id: "custom_clients",
+        icon: FileText,
+        labelKey: "navigation.custom_clients",
+    },
     { id: "about", icon: Info, labelKey: "navigation.about" },
     { id: "app_logs", icon: FileText, labelKey: "navigation.app_logs" },
 ];
@@ -86,13 +94,19 @@ const results = computed<ResultItem[]>(() => {
 
     if (!q) {
         if (accounts.value.length > 0) {
-            items.push({ type: "separator", id: "sep-accounts", label: t("spotlight.type_account") });
+            items.push({
+                type: "separator",
+                id: "sep-accounts",
+                label: t("spotlight.type_account"),
+            });
             for (const acc of accounts.value) {
                 items.push({
                     type: "account",
                     id: acc.id,
                     label: acc.username,
-                    subtitle: acc.is_active ? t("spotlight.account_active") : t("spotlight.account_switch"),
+                    subtitle: acc.is_active
+                        ? t("spotlight.account_active")
+                        : t("spotlight.account_switch"),
                     icon: acc.is_active ? UserCheck : User,
                     isActive: acc.is_active,
                 });
@@ -119,7 +133,9 @@ const results = computed<ResultItem[]>(() => {
                 type: "account",
                 id: acc.id,
                 label: acc.username,
-                subtitle: acc.is_active ? t("spotlight.account_active") : t("spotlight.account_switch"),
+                subtitle: acc.is_active
+                    ? t("spotlight.account_active")
+                    : t("spotlight.account_switch"),
                 icon: acc.is_active ? UserCheck : User,
                 isActive: acc.is_active,
             });
@@ -127,7 +143,10 @@ const results = computed<ResultItem[]>(() => {
     }
 
     for (const client of clients.value) {
-        if (client.name.toLowerCase().includes(q) || client.version.toLowerCase().includes(q)) {
+        if (
+            client.name.toLowerCase().includes(q) ||
+            client.version.toLowerCase().includes(q)
+        ) {
             cls.push({
                 type: "client",
                 id: String(client.id),
@@ -156,26 +175,44 @@ const results = computed<ResultItem[]>(() => {
     }
 
     if (tabs.length > 0) {
-        items.push({ type: "separator", id: "sep-tabs", label: t("spotlight.type_page") });
+        items.push({
+            type: "separator",
+            id: "sep-tabs",
+            label: t("spotlight.type_page"),
+        });
         items.push(...tabs);
     }
     if (accs.length > 0) {
-        items.push({ type: "separator", id: "sep-accs", label: t("spotlight.type_account") });
+        items.push({
+            type: "separator",
+            id: "sep-accs",
+            label: t("spotlight.type_account"),
+        });
         items.push(...accs);
     }
     if (cls.length > 0) {
-        items.push({ type: "separator", id: "sep-clients", label: t("spotlight.type_client") });
+        items.push({
+            type: "separator",
+            id: "sep-clients",
+            label: t("spotlight.type_client"),
+        });
         items.push(...cls);
     }
     if (stgs.length > 0) {
-        items.push({ type: "separator", id: "sep-settings", label: t("spotlight.type_setting") });
+        items.push({
+            type: "separator",
+            id: "sep-settings",
+            label: t("spotlight.type_setting"),
+        });
         items.push(...stgs);
     }
 
     return items;
 });
 
-const selectableResults = computed(() => results.value.filter(i => i.type !== "separator"));
+const selectableResults = computed(() =>
+    results.value.filter((i) => i.type !== "separator")
+);
 
 watch(query, () => {
     selectedIndex.value = 0;
@@ -215,19 +252,29 @@ const selectItem = async (item: ResultItem) => {
         if (client) {
             if (client.meta.installed) {
                 try {
-                    const userToken = localStorage.getItem("authToken") || "null";
-                    await invoke("increment_client_counter", { id: client.id, counterType: "launch" });
+                    const userToken =
+                        localStorage.getItem("authToken") || "null";
+                    await invoke("increment_client_counter", {
+                        id: client.id,
+                        counterType: "launch",
+                    });
                     await invoke("launch_client", { id: client.id, userToken });
                 } catch (e) {
                     console.error("Failed to launch client from spotlight", e);
                 }
             } else {
                 try {
-                    await invoke("increment_client_counter", { id: client.id, counterType: "download" });
+                    await invoke("increment_client_counter", {
+                        id: client.id,
+                        counterType: "download",
+                    });
                     await invoke("download_client_only", { id: client.id });
                     clients.value = await invoke<Client[]>("get_clients");
                 } catch (e) {
-                    console.error("Failed to download client from spotlight", e);
+                    console.error(
+                        "Failed to download client from spotlight",
+                        e
+                    );
                 }
             }
         }
@@ -248,13 +295,18 @@ const selectItem = async (item: ResultItem) => {
 };
 
 const getSelectableIndex = (item: ResultItem) => {
-    return selectableResults.value.findIndex(i => i.id === item.id && i.type === item.type);
+    return selectableResults.value.findIndex(
+        (i) => i.id === item.id && i.type === item.type
+    );
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
     if (e.key === "ArrowDown") {
         e.preventDefault();
-        selectedIndex.value = Math.min(selectedIndex.value + 1, selectableResults.value.length - 1);
+        selectedIndex.value = Math.min(
+            selectedIndex.value + 1,
+            selectableResults.value.length - 1
+        );
     } else if (e.key === "ArrowUp") {
         e.preventDefault();
         selectedIndex.value = Math.max(selectedIndex.value - 1, 0);
@@ -273,16 +325,21 @@ const handleKeydown = (e: KeyboardEvent) => {
         <Transition name="spotlight">
             <div
                 v-if="show"
-                class="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh]"
+                class="fixed inset-0 z-9999 flex items-start justify-center pt-[15vh]"
                 @click.self="emit('close')"
             >
-                <div class="absolute inset-0 bg-black/50" @click="emit('close')" />
+                <div
+                    class="absolute inset-0 bg-black/50"
+                    @click="emit('close')"
+                />
 
                 <div
                     class="relative w-full max-w-xl mx-4 bg-base-100 rounded-2xl shadow-2xl border border-base-300 overflow-hidden"
                     @keydown="handleKeydown"
                 >
-                    <div class="flex items-center gap-3 px-4 py-3 border-b border-base-300">
+                    <div
+                        class="flex items-center gap-3 px-4 py-3 border-b border-base-300"
+                    >
                         <Search class="w-5 h-5 text-base-content/40 shrink-0" />
                         <input
                             ref="inputRef"
@@ -293,8 +350,15 @@ const handleKeydown = (e: KeyboardEvent) => {
                         <kbd class="kbd kbd-sm opacity-50">Esc</kbd>
                     </div>
 
-                    <div v-if="results.length > 0" class="py-2 max-h-80 overflow-y-auto" @mouseleave="selectedIndex = -1">
-                        <template v-for="item in results" :key="item.type + item.id">
+                    <div
+                        v-if="results.length > 0"
+                        class="py-2 max-h-80 overflow-y-auto"
+                        @mouseleave="selectedIndex = -1"
+                    >
+                        <template
+                            v-for="item in results"
+                            :key="item.type + item.id"
+                        >
                             <div
                                 v-if="item.type === 'separator'"
                                 class="px-4 pt-3 pb-1 text-xs font-semibold text-base-content/30 uppercase tracking-wider"
@@ -304,27 +368,56 @@ const handleKeydown = (e: KeyboardEvent) => {
                             <button
                                 v-else
                                 class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
-                                :class="getSelectableIndex(item) === selectedIndex ? 'bg-primary/10 text-primary' : 'hover:bg-base-200'"
+                                :class="
+                                    getSelectableIndex(item) === selectedIndex
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'hover:bg-base-200'
+                                "
                                 @click="selectItem(item)"
-                                @mouseenter="selectedIndex = getSelectableIndex(item)"
+                                @mouseenter="
+                                    selectedIndex = getSelectableIndex(item)
+                                "
                             >
                                 <div
                                     class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                                     :class="[
-                                        getSelectableIndex(item) === selectedIndex ? 'bg-primary/20' : 'bg-base-300',
-                                        item.isActive ? 'ring-1 ring-success/50' : ''
+                                        getSelectableIndex(item) ===
+                                        selectedIndex
+                                            ? 'bg-primary/20'
+                                            : 'bg-base-300',
+                                        item.isActive
+                                            ? 'ring-1 ring-success/50'
+                                            : '',
                                     ]"
                                 >
-                                    <component :is="item.icon" class="w-4 h-4" :class="item.isActive ? 'text-success' : ''" />
+                                    <component
+                                        :is="item.icon"
+                                        class="w-4 h-4"
+                                        :class="
+                                            item.isActive ? 'text-success' : ''
+                                        "
+                                    />
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium truncate flex items-center gap-1.5">
+                                    <div
+                                        class="text-sm font-medium truncate flex items-center gap-1.5"
+                                    >
                                         {{ item.label }}
-                                        <CheckCircle v-if="item.isActive" class="w-3.5 h-3.5 text-success shrink-0" />
+                                        <CheckCircle
+                                            v-if="item.isActive"
+                                            class="w-3.5 h-3.5 text-success shrink-0"
+                                        />
                                     </div>
-                                    <div v-if="item.subtitle" class="text-xs text-base-content/50 truncate">{{ item.subtitle }}</div>
+                                    <div
+                                        v-if="item.subtitle"
+                                        class="text-xs text-base-content/50 truncate"
+                                    >
+                                        {{ item.subtitle }}
+                                    </div>
                                 </div>
-                                <ChevronRight class="w-3.5 h-3.5 text-base-content/30 shrink-0" />
+                                <ChevronRight
+                                    class="w-3.5 h-3.5 text-base-content/30 shrink-0"
+                                />
                             </button>
                         </template>
                     </div>
@@ -333,20 +426,31 @@ const handleKeydown = (e: KeyboardEvent) => {
                         v-else-if="query.trim()"
                         class="py-10 text-center text-base-content/40 text-sm"
                     >
-                        {{ t('spotlight.no_results') }}
+                        {{ t("spotlight.no_results") }}
                     </div>
 
                     <div
                         v-else
                         class="py-6 text-center text-base-content/30 text-xs"
                     >
-                        {{ t('spotlight.hint') }}
+                        {{ t("spotlight.hint") }}
                     </div>
 
-                    <div class="px-4 py-2 border-t border-base-300 flex items-center gap-4 text-xs text-base-content/30">
-                        <span><kbd class="kbd kbd-xs">↑↓</kbd> {{ t('spotlight.navigate') }}</span>
-                        <span><kbd class="kbd kbd-xs">↵</kbd> {{ t('spotlight.select') }}</span>
-                        <span><kbd class="kbd kbd-xs">Esc</kbd> {{ t('spotlight.close') }}</span>
+                    <div
+                        class="px-4 py-2 border-t border-base-300 flex items-center gap-4 text-xs text-base-content/30"
+                    >
+                        <span
+                            ><kbd class="kbd kbd-xs">↑↓</kbd>
+                            {{ t("spotlight.navigate") }}</span
+                        >
+                        <span
+                            ><kbd class="kbd kbd-xs">↵</kbd>
+                            {{ t("spotlight.select") }}</span
+                        >
+                        <span
+                            ><kbd class="kbd kbd-xs">Esc</kbd>
+                            {{ t("spotlight.close") }}</span
+                        >
                     </div>
                 </div>
             </div>
@@ -364,11 +468,15 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 .spotlight-enter-active .relative {
-    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
+    transition:
+        transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.15s ease;
 }
 
 .spotlight-leave-active .relative {
-    transition: transform 0.1s ease, opacity 0.1s ease;
+    transition:
+        transform 0.1s ease,
+        opacity 0.1s ease;
 }
 
 .spotlight-enter-from,

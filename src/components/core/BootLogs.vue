@@ -31,7 +31,9 @@ const addLogToDisplay = async (logEntry: LogEntry) => {
 };
 
 const clearTimeouts = () => {
-    activeTimeouts.value.forEach((timeoutId: number) => clearTimeout(timeoutId));
+    activeTimeouts.value.forEach((timeoutId: number) =>
+        clearTimeout(timeoutId)
+    );
     activeTimeouts.value = [];
 };
 

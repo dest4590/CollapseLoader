@@ -38,8 +38,10 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
         :data-account-id="account.id"
         :class="{
             'opacity-40 scale-[0.98] border-primary/30': isDragging,
-            'border-primary shadow-md ring-2 ring-primary/30': isDragOver && !isDragging,
-            'border-base-300 hover:border-primary/20': !isDragging && !isDragOver,
+            'border-primary shadow-md ring-2 ring-primary/30':
+                isDragOver && !isDragging,
+            'border-base-300 hover:border-primary/20':
+                !isDragging && !isDragOver,
         }"
     >
         <div
@@ -50,7 +52,7 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
         <div class="card-body p-4">
             <div class="flex items-center gap-2">
                 <div
-                    class="drag-handle flex-shrink-0 cursor-grab active:cursor-grabbing text-base-content/30 hover:text-base-content/70 transition-colors p-1 rounded"
+                    class="drag-handle shrink-0 cursor-grab active:cursor-grabbing text-base-content/30 hover:text-base-content/70 transition-colors p-1 rounded"
                     @mousedown="handleDragStart"
                     title="Перетащить"
                 >
@@ -69,12 +71,12 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
                             </h3>
                             <div
                                 v-if="account.is_active"
-                                class="badge badge-success badge-sm gap-1 flex-shrink-0"
+                                class="badge badge-success badge-sm gap-1 shrink-0"
                             >
                                 <div
                                     class="w-1.5 h-1.5 rounded-full bg-current"
                                 ></div>
-                                {{ t('settings.active') }}
+                                {{ t("settings.active") }}
                             </div>
                         </div>
 
@@ -97,7 +99,7 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
                                 class="w-1 h-1 rounded-full bg-base-content/20"
                             ></span>
                             <span
-                                >{{ t('settings.created') }}
+                                >{{ t("settings.created") }}
                                 {{
                                     formatDate
                                         ? formatDate(account.created_at)
@@ -109,7 +111,7 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
                                     class="w-1 h-1 rounded-full bg-base-content/20"
                                 ></span>
                                 <span
-                                    >{{ t('settings.last_used') }}
+                                    >{{ t("settings.last_used") }}
                                     {{
                                         formatDate
                                             ? formatDate(account.last_used)
@@ -121,7 +123,7 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
                     </div>
 
                     <div
-                        class="flex items-center gap-2 w-full sm:w-auto justify-end flex-shrink-0"
+                        class="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0"
                     >
                         <button
                             @click="handleSetActive"
