@@ -154,7 +154,7 @@ impl Servers {
         let mut lock = selected.write().unwrap();
         *lock = None;
         log_warn!(
-            "{} server unreachable — all {} servers failed",
+            "{} server unreachable – all {} servers failed",
             name,
             servers.len()
         );
@@ -181,7 +181,7 @@ impl Servers {
                 Ok(resp) => {
                     let status = resp.status();
                     if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
-                        log_info!("{} [{}] {} — online", name, method, display_url);
+                        log_info!("{} [{}] {} – online", name, method, display_url);
                         return true;
                     }
                     last_err = Some(format!("HTTP {}", status.as_u16()));
@@ -197,7 +197,7 @@ impl Servers {
         }
 
         log_warn!(
-            "{} [{}] {} — unreachable after {} attempts: {}",
+            "{} [{}] {} – unreachable after {} attempts: {}",
             name,
             method,
             display_url,

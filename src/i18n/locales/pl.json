@@ -24,9 +24,9 @@
                 "description": "Szybko skonfigurujmy aplikację, aby uzyskać lepszą wydajność i prywatność.",
                 "subtitle": "Szybka konfiguracja, aby rozpocząć",
                 "features": {
-                    "fast_startup": "Szybki start — minimalny czas oczekiwania",
-                    "secure_clients": "Niezawodne klienty — sprawdzone i w pełni bezpieczne",
-                    "auto_updates": "Automatyczne aktualizacje — loader i klienty zawsze aktualne"
+                    "fast_startup": "Szybki start – minimalny czas oczekiwania",
+                    "secure_clients": "Niezawodne klienty – sprawdzone i w pełni bezpieczne",
+                    "auto_updates": "Automatyczne aktualizacje – loader i klienty zawsze aktualne"
                 }
             },
             "gui": {},
@@ -58,7 +58,7 @@
             },
             "appreciation": {
                 "title": "Dziękujemy za wybór CollapseLoader",
-                "subtitle": "Gotowe — można zaczynać",
+                "subtitle": "Gotowe – można zaczynać",
                 "description": "Mamy nadzieję, że korzystanie z naszego loadera sprawi Ci przyjemność!"
             },
             "disclaimer": {

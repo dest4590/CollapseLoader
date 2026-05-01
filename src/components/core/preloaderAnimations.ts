@@ -71,16 +71,16 @@ export const animations: Record<string, PreloaderAnimation> = {
             const interval = window.setInterval(() => {
                 ctx.fillStyle =
                     theme === "light"
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(0,0,0,0.06)";
+                        ? "rgba(0,0,0,0.06)"
+                        : "rgba(255,255,255,0.06)";
 
                 for (const stream of streams) {
                     const char =
                         chars[Math.floor(Math.random() * chars.length)];
                     ctx.fillStyle =
                         theme === "light"
-                            ? `rgba(0,0,0,${0.6 + Math.random() * 0.3})`
-                            : `rgba(255,255,255,${0.7 + Math.random() * 0.3})`;
+                            ? `rgba(255,255,255,${0.7 + Math.random() * 0.3})`
+                            : `rgba(0,0,0,${0.6 + Math.random() * 0.3})`;
 
                     ctx.fillText(char, stream.x, stream.y);
 
@@ -103,7 +103,7 @@ export const animations: Record<string, PreloaderAnimation> = {
 
     "matrix-vertical": {
         svgString: matrixSvg,
-        initMatrix: (canvas) => {
+        initMatrix: (canvas, theme = "dark") => {
             if (!canvas) return () => {};
             const ctx = setupCanvas(canvas);
             if (!ctx) return () => {};
@@ -116,7 +116,10 @@ export const animations: Record<string, PreloaderAnimation> = {
             const chars = "01337XYZ_<>[]!@#";
 
             const interval = window.setInterval(() => {
-                ctx.fillStyle = "rgba(255,255,255,0.9)";
+                ctx.fillStyle =
+                    theme === "light"
+                        ? "rgba(255,255,255,0.9)"
+                        : "rgba(0,0,0,0.9)";
 
                 for (let i = 0; i < drops.length; i++) {
                     const text =

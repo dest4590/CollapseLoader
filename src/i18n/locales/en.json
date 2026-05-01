@@ -24,9 +24,9 @@
                 "description": "We'll guide you through a quick setup to optimize performance and privacy.",
                 "subtitle": "Quick setup to get you up and running",
                 "features": {
-                    "fast_startup": "Fast startup — minimal waiting time",
-                    "secure_clients": "Secure clients — verified and safe",
-                    "auto_updates": "Automatic updates — keep loader and clients up to date"
+                    "fast_startup": "Fast startup – minimal waiting time",
+                    "secure_clients": "Secure clients – verified and safe",
+                    "auto_updates": "Automatic updates – keep loader and clients up to date"
                 }
             },
             "gui": {},
@@ -58,7 +58,7 @@
             },
             "appreciation": {
                 "title": "Thank You for Choosing CollapseLoader",
-                "subtitle": "You're all set — ready to start",
+                "subtitle": "You're all set – ready to start",
                 "description": "We hope you enjoy using our loader!"
             },
             "disclaimer": {

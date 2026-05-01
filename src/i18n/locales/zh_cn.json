@@ -24,9 +24,9 @@
                 "description": "我们将引导您完成快速设置，以优化性能与隐私。",
                 "subtitle": "快速设置，立即开始",
                 "features": {
-                    "fast_startup": "快速启动 — 减少等待时间",
-                    "secure_clients": "可靠的客户——经过验证并且完全安全。",
-                    "auto_updates": "自动更新 — 保持加载器和客户端为最新"
+                    "fast_startup": "快速启动 – 减少等待时间",
+                    "secure_clients": "可靠的客户––经过验证并且完全安全。",
+                    "auto_updates": "自动更新 – 保持加载器和客户端为最新"
                 }
             },
             "gui": {},
@@ -58,7 +58,7 @@
             },
             "appreciation": {
                 "title": "感谢选择 CollapseLoader",
-                "subtitle": "您已准备就绪 — 开始使用吧",
+                "subtitle": "您已准备就绪 – 开始使用吧",
                 "description": "希望您喜欢我们的加载器！"
             },
             "disclaimer": {
@@ -103,7 +103,7 @@
         "edit_nickname": {
             "label": "昵称",
             "placeholder": "输入您的昵称",
-            "description": "可选—这是他人看到的名称",
+            "description": "可选–这是他人看到的名称",
             "update": "更新昵称"
         },
         "social_links": {

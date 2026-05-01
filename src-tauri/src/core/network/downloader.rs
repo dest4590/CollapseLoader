@@ -244,7 +244,7 @@ async fn perform_download(
         0.0
     };
     log_info!(
-        "Downloaded {} — {} in {:.1}s (avg {}ps)",
+        "Downloaded {} – {} in {:.1}s (avg {}ps)",
         emit_name,
         human_size(downloaded),
         elapsed.as_secs_f64(),

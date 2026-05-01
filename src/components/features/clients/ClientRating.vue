@@ -217,7 +217,7 @@ onMounted(() => {
                     <span v-if="ratingAvg !== null"
                         >{{ ratingAvg.toFixed(1) }}/5</span
                     >
-                    <span v-else>—</span>
+                    <span v-else>–</span>
                     <span class="text-base-content/50">
                         ({{ ratingCount }})</span
                     >

@@ -3,7 +3,7 @@ CollapseLoader Reborn (1.1.0-LB1.1.0)
 << CHANGELOG >>
 Minecraft account nickname validation (3–16 chars, a-z 0-9 _)
 Client screenshots loaded from CDN 
-Fixed Fabric classpath — removed conflicting patchy/netty from vanilla libraries
+Fixed Fabric classpath – removed conflicting patchy/netty from vanilla libraries
 Fixed custom Fabric client assets dir (wrong asset index)
 Hidden cloud sync, local account sync and telemetry in settings
 
@@ -68,13 +68,13 @@ Hidden cloud sync, local account sync and telemetry in settings
                 "changelogs": {
                     "feature": {
                         "v1_1_0": {
-                            "account_validation": "Minecraft account nickname validation — 3–16 chars, only a-z 0-9 _",
+                            "account_validation": "Minecraft account nickname validation – 3–16 chars, only a-z 0-9 _",
                             "screenshots": "Client screenshots loaded from CDN"
                         }
                     },
                     "bugfix": {
                         "v1_1_0": {
-                            "fabric_classpath": "Fixed Fabric classpath — removed conflicting patchy and netty from vanilla libraries",
+                            "fabric_classpath": "Fixed Fabric classpath – removed conflicting patchy and netty from vanilla libraries",
                             "fabric_assets": "Fixed custom Fabric client using wrong asset index (17 instead of 1.21)"
                         }
                     },

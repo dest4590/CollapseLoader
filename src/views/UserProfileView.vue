@@ -174,7 +174,7 @@
                                         <span
                                             class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap"
                                         >
-                                            {{ platformLabel(link.platform) }} —
+                                            {{ platformLabel(link.platform) }} –
                                             {{
                                                 displayHref(
                                                     link.platform,
@@ -197,7 +197,7 @@
                                         <span
                                             class="inline-block ml-0 group-hover:ml-2 text-sm text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 max-w-0 group-hover:max-w-xs overflow-hidden whitespace-nowrap"
                                         >
-                                            {{ platformLabel(link.platform) }} —
+                                            {{ platformLabel(link.platform) }} –
                                             {{
                                                 displayHandle(
                                                     link.platform,
