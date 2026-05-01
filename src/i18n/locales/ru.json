@@ -528,6 +528,8 @@
             "open_folder": "Открыть папку",
             "open_inspector": "Открыть инспектор"
         },
+        "select_theme": "Выбор темы",
+        "description": "Выберите предпочитаемую тему.",
         "change_success": "Тема изменена",
         "save_failed": "Не удалось сохранить тему: {error}",
         "reset_button": "Сброс",

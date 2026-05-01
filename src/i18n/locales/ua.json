@@ -532,6 +532,8 @@
             "open_folder": "Відкрити папку",
             "open_inspector": "Відкрити інспектор"
         },
+        "select_theme": "Вибір теми",
+        "description": "Виберіть бажану тему.",
         "change_success": "Тему змінено",
         "save_failed": "Не вдалося зберегти тему: {error}",
         "reset_button": "Скинути",
