@@ -1110,7 +1110,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                             label: $t('settings.storage_other'),
                                             value: storageUsage.other,
                                         },
-                                    ]"
+                                    ].sort((a, b) => b.value - a.value)"
                                     :key="item.key"
                                     class="flex items-center justify-between text-xs"
                                 >
