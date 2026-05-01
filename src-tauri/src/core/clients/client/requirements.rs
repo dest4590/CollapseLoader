@@ -316,7 +316,7 @@ impl Client {
         let file = best_version
             .files
             .first()
-            .ok_or_else(|| format!("No files found for the latest Fabric API on Modrinth"))?;
+            .ok_or_else(|| "No files found for the latest Fabric API on Modrinth".to_string())?;
 
         let api_path = mods_folder.join(&file.filename);
 

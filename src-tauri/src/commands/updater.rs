@@ -382,11 +382,7 @@ pub fn get_changelog() -> Vec<ChangelogEntry> {
 fn extract_changelog_json_block(body: &str) -> Option<String> {
     let marker = if let Some(idx) = body.find("```changelog") {
         Some((idx, "```changelog"))
-    } else if let Some(idx) = body.find("``` changelog") {
-        Some((idx, "``` changelog"))
-    } else {
-        None
-    };
+    } else { body.find("``` changelog").map(|idx| (idx, "``` changelog")) };
 
     if let Some((start_idx, _)) = marker {
         let after_marker = &body[start_idx..];

@@ -98,11 +98,10 @@ fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<Pa
                             if filename.contains("-windows") || filename.contains("-macos") {
                                 should_include = false;
                             }
-                        } else if IS_MACOS {
-                            if filename.contains("-windows") || filename.contains("-linux") {
+                        } else if IS_MACOS
+                            && (filename.contains("-windows") || filename.contains("-linux")) {
                                 should_include = false;
                             }
-                        }
                     }
 
                     if should_include {

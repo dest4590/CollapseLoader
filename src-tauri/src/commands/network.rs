@@ -181,7 +181,7 @@ pub async fn api_request(
     }
 
     let text = response.text().await.map_err(|e| e.to_string())?;
-    let response_size = Some(text.as_bytes().len() as u64);
+    let response_size = Some(text.len() as u64);
     let mut response_json: Option<serde_json::Value> = None;
 
     if !text.is_empty() {
