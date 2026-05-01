@@ -1,8 +1,5 @@
 @import "tailwindcss";
-
-@plugin 'daisyui/index.js' {
-    themes: all;
-}
+@plugin "daisyui";
 
 @plugin "daisyui/theme" {
     name: "dark";
