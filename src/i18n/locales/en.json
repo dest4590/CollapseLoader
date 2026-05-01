@@ -730,6 +730,22 @@
             "copyNickname": "Copy nickname"
         }
     },
+    "spotlight": {
+        "placeholder": "Search clients, settings, pages...",
+        "no_results": "No results found",
+        "hint": "Start typing to search",
+        "navigate": "navigate",
+        "select": "select",
+        "close": "close",
+        "type_page": "Page",
+        "type_client": "Client",
+        "type_setting": "Setting",
+        "type_account": "Account",
+        "account_active": "Active account",
+        "account_switch": "Switch account",
+        "client_launch": "Launch",
+        "client_download": "Download"
+    },
     "settings": {
         "general": "Settings",
         "sync": "Cloud Sync",
@@ -852,6 +868,9 @@
         "auto_update": "Auto Update",
         "autostart": "Launch on startup",
         "start_minimized": "Start minimized",
+        "language": "Language",
+        "java_path": "Custom Java Path",
+        "java_args": "Custom Java Arguments",
         "reset_settings": "Reset settings",
         "storage_usage": "Storage Usage",
         "storage_calculate": "Calculate",
@@ -941,6 +960,8 @@
         "news": "News",
         "customization": "Customization",
         "custom_clients": "Custom Clients",
+        "marketplace": "Marketplace",
+        "app_logs": "App Logs",
         "sidebar_help": {
             "title": "Tip:",
             "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",

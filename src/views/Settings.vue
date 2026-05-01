@@ -135,6 +135,7 @@ const filteredSettingsEntries = computed(() => {
         .filter(([, field]) => field.show)
         .filter(([key]) => key !== "irc_chat")
         .filter(([key]) => key !== "optional_telemetry")
+        .filter(([key]) => key !== "start_minimized")
         .sort(([a], [b]) => {
             const ai = KEY_ORDER.indexOf(a);
             const bi = KEY_ORDER.indexOf(b);
@@ -614,7 +615,6 @@ const selectTag = (tag: string) => {
     }
 };
 
-const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
 
 const handleLanguageChange = async (languageCode: string) => {
@@ -673,6 +673,108 @@ const resetRequirements = async () => {
         console.error("Failed to reset requirements:", error);
         addToast(t("settings.reset_requirements_failed"), "error");
     }
+};
+
+const draggedId = ref<string | null>(null);
+const dragOverId = ref<string | null>(null);
+
+let _ghostEl: HTMLElement | null = null;
+let _ghostOffsetX = 0;
+let _ghostOffsetY = 0;
+
+const _reorderAccounts = async (sourceId: string, targetId: string) => {
+    const fromIndex = accounts.value.findIndex(a => a.id === sourceId);
+    const toIndex = accounts.value.findIndex(a => a.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const reordered = [...accounts.value];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    accounts.value = reordered;
+    try {
+        await invoke("reorder_accounts", { orderedIds: reordered.map(a => a.id) });
+    } catch (e) {
+        console.error("Failed to reorder accounts", e);
+        await loadAccounts();
+    }
+};
+
+const _onMouseMove = (e: MouseEvent) => {
+    if (!_ghostEl) return;
+    _ghostEl.style.top = `${e.clientY - _ghostOffsetY}px`;
+    _ghostEl.style.left = `${e.clientX - _ghostOffsetX}px`;
+
+    const cards = document.querySelectorAll<HTMLElement>('[data-account-id]');
+    let found: string | null = null;
+    for (const card of cards) {
+        const id = card.dataset.accountId;
+        if (!id || id === draggedId.value) continue;
+        const r = card.getBoundingClientRect();
+        if (e.clientX >= r.left && e.clientX <= r.right &&
+            e.clientY >= r.top  && e.clientY <= r.bottom) {
+            found = id;
+            break;
+        }
+    }
+    dragOverId.value = found;
+};
+
+const _onMouseUp = async () => {
+    document.removeEventListener('mousemove', _onMouseMove);
+    document.removeEventListener('mouseup', _onMouseUp);
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+
+    if (_ghostEl) {
+        _ghostEl.remove();
+        _ghostEl = null;
+    }
+
+    const sourceId = draggedId.value;
+    const targetId = dragOverId.value;
+    draggedId.value = null;
+    dragOverId.value = null;
+
+    if (sourceId && targetId) {
+        await _reorderAccounts(sourceId, targetId);
+    }
+};
+
+const startDrag = (e: MouseEvent, accountId: string) => {
+    e.preventDefault();
+    draggedId.value = accountId;
+    dragOverId.value = null;
+
+    // Find root card element
+    const cardEl = (e.currentTarget as HTMLElement)?.closest?.('[data-account-id]') as HTMLElement
+        ?? document.querySelector<HTMLElement>(`[data-account-id="${accountId}"]`);
+
+    if (cardEl) {
+        const rect = cardEl.getBoundingClientRect();
+        _ghostOffsetX = e.clientX - rect.left;
+        _ghostOffsetY = e.clientY - rect.top;
+
+        const clone = cardEl.cloneNode(true) as HTMLElement;
+        clone.style.cssText = [
+            `position:fixed`,
+            `top:${rect.top}px`,
+            `left:${rect.left}px`,
+            `width:${rect.width}px`,
+            `z-index:9999`,
+            `pointer-events:none`,
+            `opacity:0.85`,
+            `transform:rotate(1.5deg) scale(1.03)`,
+            `box-shadow:0 20px 40px rgba(0,0,0,0.35)`,
+            `border-radius:0.5rem`,
+            `transition:none`,
+        ].join(';');
+        document.body.appendChild(clone);
+        _ghostEl = clone;
+    }
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'grabbing';
+    document.addEventListener('mousemove', _onMouseMove);
+    document.addEventListener('mouseup', _onMouseUp);
 };
 
 onMounted(async () => {
@@ -1451,8 +1553,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <AccountCard
                                     v-for="account in filteredAccounts"
                                     :key="account.id"
+                                    :data-account-id="account.id"
                                     :account="account"
                                     :formatDate="formatDate"
+                                    :isDragging="draggedId === account.id"
+                                    :isDragOver="dragOverId === account.id"
+                                    @drag-start="startDrag($event, account.id)"
                                     @set-active="setActiveAccount"
                                     @edit-account="editAccount"
                                     @delete-account="deleteAccount"

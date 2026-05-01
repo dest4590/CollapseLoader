@@ -719,6 +719,22 @@
             "copyNickname": "复制昵称"
         }
     },
+    "spotlight": {
+        "placeholder": "搜索客户端、设置、页面...",
+        "no_results": "未找到结果",
+        "hint": "开始输入以搜索",
+        "navigate": "导航",
+        "select": "选择",
+        "close": "关闭",
+        "type_page": "页面",
+        "type_client": "客户端",
+        "type_setting": "设置",
+        "type_account": "账户",
+        "account_active": "当前账户",
+        "account_switch": "切换账户",
+        "client_launch": "启动",
+        "client_download": "下载"
+    },
     "settings": {
         "general": "设置",
         "sync": "云同步",
@@ -822,6 +838,9 @@
         "auto_update": "自动更新",
         "autostart": "开机自启动",
         "start_minimized": "启动时最小化",
+        "language": "语言",
+        "java_path": "Java 路径",
+        "java_args": "Java 参数",
         "ram": {
             "warning": "警告：您已选择 {selectedRamMb} MB 内存。此配置超过推荐的 6 GB 限制，可能导致性能问题或系统崩溃。"
         },

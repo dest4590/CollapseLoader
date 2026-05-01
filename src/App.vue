@@ -42,6 +42,7 @@ import { getDiscordState } from "./utils/discord";
 import { VALID_TABS } from "./utils/tabs";
 import { getIsDevelopment } from "./utils/isDevelopment";
 import Preloader from "./components/core/Preloader.vue";
+import SpotlightSearch from "./components/core/SpotlightSearch.vue";
 
 import { useAppInit } from "./composables/useAppInit";
 import { initNetworkDebug } from "./services/networkDebugService";
@@ -85,6 +86,7 @@ const appOnline = computed(() => isOnline?.value ?? true);
 
 const activeTab = computed(() => router.currentRoute.value as any);
 const showDevMenu = ref(false);
+const showSpotlight = ref(false);
 
 const { addToast } = useToast();
 const isAuthenticated = ref(false);
@@ -586,6 +588,20 @@ onMounted(async () => {
 
     window.addEventListener("keydown", emergencyHandler);
 
+    const spotlightHandler = (e: KeyboardEvent) => {
+        try {
+            if (e.ctrlKey && e.code === "Space") {
+                e.preventDefault();
+                e.stopPropagation();
+                showSpotlight.value = !showSpotlight.value;
+            }
+        } catch (err) {
+            console.error("Error handling spotlight shortcut:", err);
+        }
+    };
+
+    window.addEventListener("keydown", spotlightHandler);
+
     const networkDebugHandler = (e: KeyboardEvent) => {
         try {
             const active = document.activeElement as HTMLElement | null;
@@ -807,6 +823,11 @@ onUnmounted(() => {
         <DownloadProgress />
         <ToastContainer />
         <GlobalModal />
+        <SpotlightSearch
+            :show="showSpotlight"
+            @close="showSpotlight = false"
+            @navigate="(tab) => { setActiveTab(tab); showSpotlight = false; }"
+        />
         <RegisterPromptModal
             v-model="showRegistrationPrompt"
             @register="handleRegisterPrompt"

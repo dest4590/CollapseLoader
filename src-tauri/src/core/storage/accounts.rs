@@ -105,6 +105,23 @@ impl AccountManager {
             false
         }
     }
+
+    pub fn reorder_accounts(&mut self, ordered_ids: Vec<String>) -> bool {
+        let mut reordered: Vec<Account> = Vec::with_capacity(ordered_ids.len());
+        for id in &ordered_ids {
+            if let Some(acc) = self.accounts.iter().find(|a| &a.id == id) {
+                reordered.push(acc.clone());
+            }
+        }
+        for acc in &self.accounts {
+            if !ordered_ids.contains(&acc.id) {
+                reordered.push(acc.clone());
+            }
+        }
+        self.accounts = reordered;
+        self.save_to_disk();
+        true
+    }
 }
 
 impl JsonStorage for AccountManager {

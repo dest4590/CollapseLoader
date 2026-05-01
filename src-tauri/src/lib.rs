@@ -245,6 +245,7 @@ pub fn run() {
             commands::settings::mark_disclaimer_shown,
             commands::settings::mark_first_run_shown,
             commands::settings::mark_telemetry_consent_shown,
+            commands::settings::reorder_accounts,
             commands::settings::remove_account,
             commands::settings::remove_favorite_client,
             commands::settings::reset_flags,

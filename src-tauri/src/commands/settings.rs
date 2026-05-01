@@ -453,6 +453,21 @@ pub fn is_client_favorite(client_id: u32) -> Result<bool, String> {
 }
 
 #[tauri::command]
+pub fn reorder_accounts(ordered_ids: Vec<String>) -> Result<(), String> {
+    log_info!("Reordering accounts");
+    ACCOUNT_MANAGER.lock().map_or_else(
+        |e| {
+            log_error!("Failed to acquire lock on account manager: {}", e);
+            Err("Failed to acquire lock on account manager".to_string())
+        },
+        |mut account_manager| {
+            account_manager.reorder_accounts(ordered_ids);
+            Ok(())
+        },
+    )
+}
+
+#[tauri::command]
 pub fn mark_telemetry_consent_shown() -> Result<(), String> {
     log_info!("Marking telemetry consent as shown");
     let mut flags = FLAGS_MANAGER.lock().unwrap();

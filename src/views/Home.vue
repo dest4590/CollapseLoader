@@ -1556,7 +1556,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
         ctrlPressTimer = window.setTimeout(() => {
             isCtrlPressed.value = true;
             ctrlPressTimer = null;
-        }, 50);
+        }, 400);
         return;
     }
 

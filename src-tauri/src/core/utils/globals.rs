@@ -124,7 +124,7 @@ pub static API_SERVERS: LazyLock<Vec<Server>> = LazyLock::new(|| {
     }
 
     vec![
-        Server::new("https://huggingface.co/datasets/Collapsecdn/collapsecdn/resolve/main/static/"),
+        Server::new("https://huggingface.co/datasets/Collapsecdn/collapsecdn/resolve/main/"),
     ]
 });
 

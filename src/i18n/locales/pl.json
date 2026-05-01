@@ -727,6 +727,22 @@
             "copyNickname": "Kopiuj nick"
         }
     },
+    "spotlight": {
+        "placeholder": "Szukaj klientów, ustawień, stron...",
+        "no_results": "Brak wyników",
+        "hint": "Zacznij pisać, aby wyszukać",
+        "navigate": "nawigacja",
+        "select": "wybierz",
+        "close": "zamknij",
+        "type_page": "Strona",
+        "type_client": "Klient",
+        "type_setting": "Ustawienie",
+        "type_account": "Konto",
+        "account_active": "Aktywne konto",
+        "account_switch": "Przełącz konto",
+        "client_launch": "Uruchom",
+        "client_download": "Pobierz"
+    },
     "settings": {
         "general": "Ustawienia",
         "sync": "Synchronizacja w chmurze",
@@ -858,6 +874,9 @@
         "auto_update": "Automatyczne aktualizacje",
         "autostart": "Uruchamiaj przy starcie systemu",
         "start_minimized": "Uruchamiaj zminimalizowany",
+        "language": "Język",
+        "java_path": "Ścieżka Java",
+        "java_args": "Argumenty Java",
         "minimize_to_tray_on_launch": "Minimalizuj do zasobnika przy uruchomieniu"
     },
     "userProfile": {

@@ -727,6 +727,22 @@
             "copyNickname": "Скопировать никнейм"
         }
     },
+    "spotlight": {
+        "placeholder": "Поиск клиентов, настроек, страниц...",
+        "no_results": "Ничего не найдено",
+        "hint": "Начните вводить для поиска",
+        "navigate": "навигация",
+        "select": "выбрать",
+        "close": "закрыть",
+        "type_page": "Страница",
+        "type_client": "Клиент",
+        "type_setting": "Настройка",
+        "type_account": "Аккаунт",
+        "account_active": "Активный аккаунт",
+        "account_switch": "Переключить аккаунт",
+        "client_launch": "Запустить",
+        "client_download": "Скачать"
+    },
     "settings": {
         "general": "Настройки",
         "sync": "Облачная синхронизация",
@@ -834,6 +850,9 @@
         "auto_update": "Авто обновление",
         "autostart": "Запуск при старте системы",
         "start_minimized": "Запускать свёрнутым",
+        "language": "Язык",
+        "java_path": "Путь к Java",
+        "java_args": "Аргументы Java",
         "reset_settings": "Сбросить настройки",
         "storage_usage": "Использование диска",
         "storage_calculate": "Подсчитать",
