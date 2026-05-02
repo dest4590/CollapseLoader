@@ -122,7 +122,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 2000;
     backdrop-filter: blur(0px);
     animation: overlay-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     padding: 1rem;
