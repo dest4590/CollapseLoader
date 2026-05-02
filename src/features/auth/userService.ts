@@ -599,21 +599,51 @@ class UserService {
 
     async initializeUserFull(): Promise<UserInitData> {
         try {
-            const data = await apiClient.get<UserInitData>("/users/init");
+            const data = await apiClient.get<any>("/users/init");
+
+            const user =
+                data && typeof data === "object"
+                    ? data.user || (data.id ? data : null)
+                    : null;
+
+            if (!user) {
+                if (data === "Entry not found") {
+                    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+                    throw new Error("Session expired or user not found");
+                }
+                console.error("Received invalid user data:", data);
+                throw new Error("Invalid user data received from server");
+            }
+
             const userInfo = {
-                id: data.user.id,
-                username: data.user.username,
-                email: data.user.email,
-                role: data.user.role,
-                created_at: data.user.created_at,
-                updated_at: data.user.updated_at,
-                last_login_at: data.user.last_login_at ?? null,
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                created_at: user.created_at,
+                updated_at: user.updated_at,
+                last_login_at: user.last_login_at ?? null,
             };
+
             this.setCachedData({
-                profile: data.user.profile,
+                profile: user.profile,
                 info: userInfo as UserInfo,
             });
-            return data;
+
+            return {
+                user: {
+                    ...userInfo,
+                    profile: user.profile,
+                    status: user.status,
+                },
+                preferences: data.preferences || [],
+                favorites: data.favorites || [],
+                accounts: data.accounts || [],
+                friends: data.friends || {
+                    friends: [],
+                    requests: { sent: [], received: [], blocked: [] },
+                },
+            } as UserInitData;
         } catch (error) {
             console.error("Failed to initialize user (full):", error);
             throw error;

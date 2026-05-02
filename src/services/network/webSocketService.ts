@@ -8,6 +8,7 @@ class WebSocketService {
     private client: Client | null = null;
     private connected: boolean = false;
 
+    // @ts-ignore
     private initializeClient() {
         if (this.client) {
             return;
@@ -64,10 +65,11 @@ class WebSocketService {
     }
 
     public connect() {
-        if (!this.connected) {
-            this.initializeClient();
-            this.client?.activate();
-        }
+        // ATLAS DIED, WE DONT NEED THIS ANYMORE
+        // if (!this.connected) {
+        //     this.initializeClient();
+        //     this.client?.activate();
+        // }
     }
 
     public disconnect() {

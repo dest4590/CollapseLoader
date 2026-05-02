@@ -62,7 +62,9 @@ const applyJarFile = async (filePath: string) => {
                 "success"
             );
         }
-    } catch (e) {}
+    } catch (e) {
+        console.log("Failed to detect main class:", e);
+    }
 };
 
 onMounted(async () => {
@@ -100,7 +102,6 @@ watch(
             form.mainClass = "net.minecraft.client.main.Main";
         }
 
-        // Auto-set version
         const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
         if (versions && versions.length > 0) {
             form.version = versions[0];
@@ -147,6 +148,7 @@ const selectFile = async () => {
             await applyJarFile(selected);
         }
     } catch (error) {
+        console.log("File selection cancelled or failed", error);
         addToast(
             t("modals.add_custom_client_modal.file_select_failed"),
             "error"

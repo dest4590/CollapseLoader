@@ -195,6 +195,10 @@
             "cancel": "取消",
             "close": "我已了解"
         },
+        "spotlight_tip": {
+            "title": "聚光灯搜索",
+            "description": "您可以使用快捷键在应用程序的任何地方快速搜索客户端、设置和页面："
+        },
         "slow_download": {
             "modal_title": "下载速度慢",
             "title": "下载速度过慢",

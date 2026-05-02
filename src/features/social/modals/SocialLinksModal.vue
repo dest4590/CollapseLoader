@@ -211,7 +211,6 @@ const addLink = async () => {
         ];
         saveLinksToLocal(newLinks);
 
-        // Trigger achievement
         await achievementService.unlockAchievement("SOCIAL_BUTTERFLY");
 
         newPlatform.value = "";

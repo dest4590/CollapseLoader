@@ -195,6 +195,10 @@
             "cancel": "Anuluj",
             "close": "Rozumiem"
         },
+        "spotlight_tip": {
+            "title": "Wyszukiwanie Spotlight",
+            "description": "Możesz szybko wyszukiwać klientów, ustawienia i strony z dowolnego miejsca w aplikacji, używając skrótu:"
+        },
         "slow_download": {
             "modal_title": "Wolne pobieranie",
             "title": "Niska prędkość pobierania",

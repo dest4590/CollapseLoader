@@ -20,9 +20,9 @@
                         :key="`${id}-${locale}`"
                     />
                 </template>
-                <template #footer>
+                <!-- <template #footer>
                     <slot :name="`footer-${id}`"></slot>
-                </template>
+                </template> -->
             </CustomModal>
         </template>
     </div>

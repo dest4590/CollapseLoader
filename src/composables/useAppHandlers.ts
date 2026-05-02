@@ -28,6 +28,7 @@ export function useAppHandlers(props: {
     previousTab: any;
     authModalView: any;
     showAuthModal: any;
+    initializeUserDataWrapper?: (auth: boolean) => Promise<void>;
 }) {
     const { t, locale } = useI18n();
     const { addToast } = useToast();
@@ -119,12 +120,12 @@ export function useAppHandlers(props: {
         webSocketService.disconnect();
     };
 
-    const handleLoggedIn = async (
-        initializeUserDataWrapper: (auth: boolean) => Promise<void>
-    ) => {
+    const handleLoggedIn = async () => {
         props.isAuthenticated.value = true;
         setActiveTab("home");
-        await initializeUserDataWrapper(true);
+        if (props.initializeUserDataWrapper) {
+            await props.initializeUserDataWrapper(true);
+        }
         await syncService.initializeSyncStatus();
         await syncService.checkAndRestoreOnStartup();
         globalUserStatus.initializeStatusSystem();

@@ -29,12 +29,10 @@ class SettingsService {
         try {
             const loaded = await invoke<SettingsMap>("get_settings");
 
-            // Clear existing settings
             Object.keys(this.settings).forEach(
                 (key) => delete this.settings[key]
             );
 
-            // Populate with new settings
             for (const [key, val] of Object.entries(loaded || {})) {
                 const isSettingObject =
                     val &&

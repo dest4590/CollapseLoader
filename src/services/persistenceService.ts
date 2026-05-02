@@ -21,8 +21,8 @@ class PersistenceService {
         if (this.isInitialized) return;
 
         try {
-            const dataDir = await invoke<string>("get_data_folder");
-            const filePath = await join(dataDir, PERSISTENCE_FILE);
+            const dir = await invoke<string>("get_data_folder");
+            const filePath = await join(dir, PERSISTENCE_FILE);
 
             try {
                 const content = await readFile(filePath);

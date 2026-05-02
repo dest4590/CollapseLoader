@@ -79,9 +79,14 @@ const handleOpenLogViewer = () => {
             <button
                 v-else
                 @click="handleLaunchClick"
-                class="btn btn-sm min-w-20"
+                class="btn btn-sm min-w-20 transition-all duration-300 active:scale-90"
                 :disabled="isRequirementsInProgress"
-                :class="clientIsRunning ? 'btn-error' : 'btn-primary'"
+                :class="[
+                    clientIsRunning
+                        ? 'btn-error animate-pulse-subtle'
+                        : 'btn-primary',
+                    'hover:shadow-lg hover:shadow-primary/20',
+                ]"
             >
                 <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />
                 {{ clientIsRunning ? t("home.stop") : t("home.launch") }}
@@ -92,12 +97,71 @@ const handleOpenLogViewer = () => {
             v-if="clientIsRunning && !clientIsInstalling"
             key="terminal"
             @click.stop="handleOpenLogViewer"
-            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 ml-2"
+            class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 ml-2 transition-transform hover:rotate-12 active:scale-90"
         >
             <Terminal class="w-4 h-4" />
         </button>
     </transition-group>
 </template>
+
+<style scoped>
+@reference 'tailwindcss';
+@plugin 'daisyui';
+
+.progress-bar-container {
+    @apply w-full h-1.5 bg-base-content/10 rounded-full overflow-hidden relative;
+}
+
+.progress-bar {
+    @apply h-full bg-primary transition-all duration-300 ease-out relative;
+}
+
+.progress-bar::after {
+    content: "";
+    @apply absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes pulse-subtle {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(0.98);
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.action-list-enter-active,
+.action-list-leave-active {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.action-list-enter-from {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+}
+
+.action-list-leave-to {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+}
+</style>
 
 <style scoped>
 .card-actions {

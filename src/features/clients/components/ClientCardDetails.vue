@@ -453,6 +453,33 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.tab-slide-right-enter-active,
+.tab-slide-right-leave-active,
+.tab-slide-left-enter-active,
+.tab-slide-left-leave-active {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tab-slide-right-enter-from {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.tab-slide-right-leave-to {
+    opacity: 0;
+    transform: translateX(-30px);
+}
+
+.tab-slide-left-enter-from {
+    opacity: 0;
+    transform: translateX(-30px);
+}
+
+.tab-slide-left-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
 .screenshot-container {
     position: relative;
     overflow: hidden;

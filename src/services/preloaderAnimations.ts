@@ -105,8 +105,6 @@ export const animations: Record<string, PreloaderAnimation> = {
     "matrix-vertical": {
         svgString: matrixSvg,
         initMatrix: (canvas, theme) => {
-            console.log(theme);
-
             if (!canvas) return () => {};
             const ctx = setupCanvas(canvas);
             if (!ctx) return () => {};

@@ -841,8 +841,9 @@ const handleFavoriteClientChange = async () => {
                 result.error || t("account.favorite_client_update_failed"),
                 "error"
             );
-            // Revert selection on error
+
             const profile = useUser().profile.value;
+
             if (profile && (profile as any).favorite_client_id) {
                 selectedFavoriteClientId.value = (
                     profile as any

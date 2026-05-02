@@ -361,7 +361,6 @@ const importPreset = (presetJSON: string): void => {
         const numberFields = ["backgroundBlur", "backgroundOpacity"];
         const booleanFields = ["enableCustomCSS"];
 
-        // Map legacy field names if necessary
         if (parsed.primaryColorOverride !== undefined) {
             parsed.primary = parsed.primaryColorOverride;
         }

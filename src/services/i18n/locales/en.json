@@ -195,6 +195,10 @@
             "cancel": "Cancel",
             "close": "I understand"
         },
+        "spotlight_tip": {
+            "title": "Spotlight Search",
+            "description": "You can quickly search for clients, settings, and pages from anywhere in the app using the shortcut:"
+        },
         "slow_download": {
             "modal_title": "Slow Download Detected",
             "title": "Slow Download Speed",

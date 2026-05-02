@@ -17,6 +17,7 @@ import ToastContainer from "@shared/components/notifications/ToastContainer.vue"
 import Preloader from "./components/core/Preloader.vue";
 import SpotlightSearch from "./components/core/SpotlightSearch.vue";
 import AuthModal from "@layouts/modals/AuthModal.vue";
+import SpotlightTipModal from "./components/modals/common/SpotlightTipModal.vue";
 
 // Views
 import { views, tabOrder } from "@router/views";
@@ -25,6 +26,7 @@ import { views, tabOrder } from "@router/views";
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { settingsService } from "@services/settings/settingsService";
 import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { useAppInit } from "./composables/useAppInit";
 import { useAppHandlers } from "./composables/useAppHandlers";
 import { initNetworkDebug } from "./services/networkDebugService";
@@ -37,6 +39,7 @@ import { updaterService } from "./services/updater/updaterService";
 
 const { t } = useI18n();
 const { addToast } = useToast();
+const { showModal } = useModal();
 
 // State
 const isMacOS = ref(false);
@@ -92,6 +95,7 @@ const {
     previousTab,
     authModalView,
     showAuthModal,
+    initializeUserDataWrapper,
 });
 
 const appOnline = computed(() => isOnline?.value ?? true);
@@ -154,7 +158,7 @@ const handleVerified = (token?: string) => {
         localStorage.setItem("authToken", token);
         userService.clearCache();
         addToast(`${successMsg} Logging you in...`, "success");
-        handleLoggedIn(initializeUserDataWrapper);
+        handleLoggedIn();
         return;
     }
 
@@ -200,6 +204,16 @@ onMounted(async () => {
 
     await initSystemInfo();
 
+    const hasSeenSpotlightTip = localStorage.getItem("hasSeenSpotlightTip");
+    if (!hasSeenSpotlightTip) {
+        setTimeout(() => {
+            showModal("spotlight-tip", SpotlightTipModal, {
+                size: "md",
+            });
+            localStorage.setItem("hasSeenSpotlightTip", "true");
+        }, 4000);
+    }
+
     const spotlightHandler = (e: KeyboardEvent) => {
         if (e.ctrlKey && e.code === "Space") {
             e.preventDefault();
@@ -209,11 +223,24 @@ onMounted(async () => {
     };
     window.addEventListener("keydown", spotlightHandler);
 
-    onUnmounted(() => {
-        cleanupTauri();
-        cleanupWindow();
-        window.removeEventListener("keydown", spotlightHandler);
-    });
+    cleanupTauriGlobal = cleanupTauri;
+    cleanupWindowGlobal = cleanupWindow;
+    spotlightHandlerGlobal = spotlightHandler;
+});
+
+let cleanupTauriGlobal: () => void;
+let cleanupWindowGlobal: () => void;
+let spotlightHandlerGlobal: (e: KeyboardEvent) => void;
+
+onUnmounted(() => {
+    if (cleanupTauriGlobal) cleanupTauriGlobal();
+    if (cleanupWindowGlobal) cleanupWindowGlobal();
+    if (spotlightHandlerGlobal) {
+        window.removeEventListener("keydown", spotlightHandlerGlobal);
+    }
+    console.log("App unmounting, stopping systems...");
+    globalUserStatus.stopStatusSync();
+    updaterService.stopPeriodicCheck();
 });
 
 const getTransitionName = () => {
@@ -225,12 +252,6 @@ const getTransitionName = () => {
 
     return currentIndex > previousIndex ? "slide-down" : "slide-up";
 };
-
-onUnmounted(() => {
-    console.log("App unmounting, stopping systems...");
-    globalUserStatus.stopStatusSync();
-    updaterService.stopPeriodicCheck();
-});
 </script>
 
 <template>
