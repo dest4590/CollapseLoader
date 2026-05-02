@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
     computed,
-    nextTick,
     onBeforeUnmount,
     onMounted,
     ref,
@@ -99,16 +98,7 @@ if (hasAnimatedBefore.value) {
     viewVisible.value = true;
 }
 
-const playClientSlideAnim = ref(!hasAnimatedBefore.value);
-
-const STAGGER_KEY = "staggerCardsPlayed";
-const hasStaggerPlayed = ref<boolean>(false);
-try {
-    hasStaggerPlayed.value = sessionStorage.getItem(STAGGER_KEY) === "1";
-} catch (e) {
-    console.error("Failed to read sessionStorage:", e);
-    hasStaggerPlayed.value = false;
-}
+const playClientSlideAnim = ref(true);
 
 const accounts = ref<Account[]>([]);
 const selectedAccountId = ref<string>("");
@@ -1660,6 +1650,8 @@ onMounted(async () => {
 
     await setupEventListeners();
 
+    viewVisible.value = true;
+
     setTimeout(() => {
         if (statusInterval.value === null && !isLeaving.value) {
             statusInterval.value = setInterval(
@@ -1674,52 +1666,6 @@ onMounted(async () => {
     document.addEventListener("click", handleDocumentClick);
     window.addEventListener("blur", blurHandler);
     document.addEventListener("visibilitychange", visibilityHandler);
-
-    if (!hasAnimatedBefore.value) {
-        await nextTick();
-        viewVisible.value = true;
-        if (filteredClients.value.length > 0) {
-            const totalDelay = Math.min(
-                Math.max(0, filteredClients.value.length) * 45 + 500,
-                2000
-            );
-            setTimeout(() => {
-                playClientSlideAnim.value = false;
-                try {
-                    sessionStorage.setItem(HOME_ANIM_KEY, "1");
-                    hasAnimatedBefore.value = true;
-                } catch (e) {
-                    console.error("Failed to set sessionStorage item:", e);
-                }
-            }, totalDelay);
-        } else {
-            try {
-                sessionStorage.setItem(HOME_ANIM_KEY, "1");
-                hasAnimatedBefore.value = true;
-            } catch (e) {
-                console.error("Failed to set sessionStorage item:", e);
-            }
-        }
-    }
-
-    try {
-        if (!hasStaggerPlayed.value) {
-            const maxIndex = Math.max(0, filteredClients.value.length - 1);
-            const perItemDelay = 70;
-            const animDuration = 400;
-            const total = maxIndex * perItemDelay + animDuration + 80;
-            setTimeout(() => {
-                try {
-                    sessionStorage.setItem(STAGGER_KEY, "1");
-                    hasStaggerPlayed.value = true;
-                } catch (e) {
-                    console.error("Failed to set stagger session key:", e);
-                }
-            }, total);
-        }
-    } catch (e) {
-        console.error("Error scheduling stagger flag:", e);
-    }
 });
 
 onBeforeUnmount(() => {
@@ -1773,33 +1719,36 @@ onBeforeUnmount(() => {
             :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')"
         />
-        <FiltersMenu
-            v-model:activeFilters="activeFilters"
-            v-model:clientSortKey="clientSortKey"
-            v-model:clientSortOrder="clientSortOrder"
-        />
+        <div class="home-action-btn">
+            <FiltersMenu
+                v-model:activeFilters="activeFilters"
+                v-model:clientSortKey="clientSortKey"
+                v-model:clientSortOrder="clientSortOrder"
+            />
+        </div>
         <div
-            class="tooltip tooltip-bottom"
+            class="tooltip tooltip-bottom home-action-btn"
             :data-tip="t('navigation.custom_clients')"
         >
             <button
                 @click="$emit('change-view', 'custom_clients')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 home-action-btn"
+                class="btn btn-ghost border-base-300 btn-primary gap-2"
                 :style="{
                     border: 'var(--border) solid #0000',
-                    transitionDelay: '0.5s',
                 }"
             >
                 <FileText class="w-4 h-4" />
             </button>
         </div>
-        <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
+        <div
+            class="tooltip tooltip-bottom home-action-btn"
+            :data-tip="t('navigation.news')"
+        >
             <button
                 @click="$emit('change-view', 'news')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 relative home-action-btn"
+                class="btn btn-ghost border-base-300 btn-primary gap-2 relative"
                 :style="{
                     border: 'var(--border) solid #0000',
-                    transitionDelay: '1s',
                 }"
             >
                 <Newspaper class="w-4 h-4" />
@@ -2279,24 +2228,24 @@ onBeforeUnmount(() => {
 
 .home-search {
     opacity: 0;
-    transform: translateY(-30px) scale(0.995);
+    transform: translateY(-40px) scale(0.95);
     transition:
-        transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1),
+        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
         opacity 0.6s ease;
 }
 
 .home-entered .home-search {
     opacity: 1;
     transform: translateY(0) scale(1);
-    transition-delay: 0.08s;
+    transition-delay: 0.1s;
 }
 
 .home-action-btn {
     opacity: 0;
-    transform: translateY(-30px) scale(0.995);
+    transform: translateY(-40px) scale(0.95);
     transition:
-        transform 0.56s cubic-bezier(0.2, 0.9, 0.2, 1),
-        opacity 0.56s ease;
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.7s ease;
 }
 
 .home-entered .home-action-btn {
@@ -2304,40 +2253,36 @@ onBeforeUnmount(() => {
     transform: translateY(0) scale(1);
 }
 
-.home-entered .home-action-btn:nth-child(1) {
-    transition-delay: 0.12s;
+.home-entered .home-action-btn:nth-child(2) {
+    transition-delay: 0.2s;
 }
 
-.home-entered .home-action-btn:nth-child(2) {
-    transition-delay: 0.16s;
+.home-entered .home-action-btn:nth-child(3) {
+    transition-delay: 0.3s;
+}
+
+.home-entered .home-action-btn:nth-child(4) {
+    transition-delay: 0.4s;
 }
 
 .client-card-item {
     opacity: 1;
-}
-
-.client-card-item.stagger-animate {
-    opacity: 0;
-    transform: translateY(15px);
-    animation: fadeInUp 0.4s ease-out forwards;
+    transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.3s ease;
 }
 
 .client-card-item.slide-in-animate {
     opacity: 0;
-    transform: translateX(80px);
-    animation: slideInFromRight 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    transform: translateY(40px) scale(0.9) rotate(2deg);
+    animation: slideInFromBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     will-change: transform, opacity;
 }
 
-@keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(80px);
-    }
-
+@keyframes slideInFromBottom {
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0) scale(1) rotate(0deg);
     }
 }
 

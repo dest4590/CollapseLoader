@@ -528,17 +528,16 @@ onUnmounted(() => {
 <style scoped>
 .btn-square {
     transition:
-        all 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-        transform 0.15s ease-out;
-    outline: none;
+        all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .btn-square:hover {
-    transform: scale(1.05);
+    transform: scale(1.15);
 }
 
 .btn-square:active {
-    transform: scale(1.02);
+    transform: scale(0.95);
 }
 
 .settings-icon {
@@ -587,8 +586,8 @@ onUnmounted(() => {
     transform: translateX(0) translateY(0);
     opacity: 1;
     transition:
-        transform 1.6s cubic-bezier(0.2, 0.9, 0.2, 1),
-        opacity 0.5s ease;
+        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.6s ease;
 }
 
 .sidebar-hidden-left .sidebar-items-container > *,
@@ -600,40 +599,40 @@ onUnmounted(() => {
 .sidebar-hidden-bottom .sidebar-items-container > *,
 .sidebar-hidden-bottom .sidebar-footer-container > * {
     opacity: 0;
-    transform: scale(0.8) translateY(10px);
+    transform: scale(0.5) translateY(20px) rotate(-10deg);
 }
 
 .sidebar-entered .sidebar-items-container > *,
 .sidebar-entered .sidebar-footer-container > * {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: scale(1) translateY(0) rotate(0deg);
     transition:
-        transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.4s ease;
+        transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.5s ease;
 }
 
 .sidebar-entered .sidebar-items-container > *:nth-child(1) {
-    transition-delay: 0.1s;
-}
-
-.sidebar-entered .sidebar-items-container > *:nth-child(2) {
     transition-delay: 0.15s;
 }
 
-.sidebar-entered .sidebar-items-container > *:nth-child(3) {
-    transition-delay: 0.2s;
-}
-
-.sidebar-entered .sidebar-items-container > *:nth-child(4) {
+.sidebar-entered .sidebar-items-container > *:nth-child(2) {
     transition-delay: 0.25s;
 }
 
+.sidebar-entered .sidebar-items-container > *:nth-child(3) {
+    transition-delay: 0.35s;
+}
+
+.sidebar-entered .sidebar-items-container > *:nth-child(4) {
+    transition-delay: 0.45s;
+}
+
 .sidebar-entered .sidebar-footer-container > *:nth-child(1) {
-    transition-delay: 0.3s;
+    transition-delay: 0.55s;
 }
 
 .sidebar-entered .sidebar-footer-container > *:nth-child(2) {
-    transition-delay: 0.35s;
+    transition-delay: 0.65s;
 }
 
 .sidebar-help-tooltip video {
