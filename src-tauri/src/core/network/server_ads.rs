@@ -6,12 +6,16 @@ use crate::{log_error, log_info, log_warn};
 
 const SERVER_ADS_URL: &str = "server-ads";
 
+/// Data structure for a server advertisement.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ServerAdData {
+    /// The display name of the server.
     pub name: String,
+    /// The IP address or hostname of the server.
     pub ip: String,
 }
 
+/// Fetches the current list of server advertisements from the API.
 pub async fn fetch_server_ads() -> Vec<ServerAdData> {
     let Some(api) = API.as_ref() else {
         log_warn!("API not available, skipping server ads fetch");
@@ -30,6 +34,10 @@ pub async fn fetch_server_ads() -> Vec<ServerAdData> {
     }
 }
 
+/// Injects server advertisements into a Minecraft `servers.dat` file.
+///
+/// This function merges the ads with existing user servers, ensuring that
+/// ads are placed at the top of the list and duplicates are removed.
 pub fn inject_servers_dat(path: &Path, ads: &[ServerAdData]) {
     if ads.is_empty() {
         return;

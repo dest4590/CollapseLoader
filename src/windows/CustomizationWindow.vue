@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Customization from "../views/Customization.vue";
 import { onMounted } from "vue";
-import { themeService } from "../services/themeService";
+import { themeService } from "@services/theme/themeService";
 
 onMounted(() => {
     themeService.loadSettings();

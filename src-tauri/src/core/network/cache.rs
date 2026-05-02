@@ -6,10 +6,12 @@ use std::path::{Path, PathBuf};
 use crate::log_debug;
 use crate::log_warn;
 
+/// Sanitizes an API path to be used as a filename for caching.
 pub fn sanitize_path_for_filename(path: &str) -> String {
     path.replace(['/', '\\'], "_") + ".json"
 }
 
+/// Ensures that the API cache directory exists on disk.
 pub fn ensure_cache_dir(cache_dir: &Path) {
     match fs::create_dir(cache_dir) {
         Ok(()) => {
@@ -39,11 +41,13 @@ pub fn ensure_cache_dir(cache_dir: &Path) {
     }
 }
 
+/// Returns the full path to a cached API response file.
 pub fn cache_file_path(cache_dir: &Path, path: &str) -> PathBuf {
     let file_name = sanitize_path_for_filename(path);
     cache_dir.join(file_name)
 }
 
+/// Reads and deserializes a cached JSON response from disk.
 pub fn read_cached_json(cache_file_path: &Path) -> Option<Value> {
     if !cache_file_path.exists() {
         return None;
@@ -75,6 +79,7 @@ pub fn read_cached_json(cache_file_path: &Path) -> Option<Value> {
     }
 }
 
+/// Writes an API response to the cache if it has changed since the last fetch.
 pub fn write_cache_if_changed(
     cache_file_path: &Path,
     api_data: &Value,

@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import RegistrationForm from "../components/layout/forms/RegistrationForm.vue";
+import RegistrationForm from "@layouts/forms/RegistrationForm.vue";
 
 const { t } = useI18n();
 const emit = defineEmits([

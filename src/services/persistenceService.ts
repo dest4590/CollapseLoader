@@ -1,7 +1,7 @@
 import { readFile, writeFile, mkdir } from "@tauri-apps/plugin-fs";
 import { join } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
-import { STORAGE_KEYS } from "../utils/storageKeys";
+import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 
 const PERSISTENCE_FILE = "aci.json";
 

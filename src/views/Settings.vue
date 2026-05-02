@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import AnimatedSlider from "../components/ui/AnimatedSlider.vue";
+import AnimatedSlider from "@shared/components/ui/AnimatedSlider.vue";
 import {
     RotateCcw,
     Plus,
@@ -33,28 +33,31 @@ import {
     HardDrive,
     RefreshCcw,
 } from "lucide-vue-next";
-import { useToast } from "../services/toastService";
-import type { ToastPosition } from "../types/toast";
+import { useToast } from "@shared/composables/useToast";
+import type { ToastPosition } from "@shared/types/toast";
 import { syncService } from "../services/syncService";
-import { settingsService } from "../services/settingsService";
-import { globalUserStatus } from "../composables/useUserStatus";
-import { userService, type UserExternalAccount } from "../services/userService";
-import AddAccountModal from "../components/modals/social/account/AddAccountModal.vue";
-import EditAccountModal from "../components/modals/social/account/EditAccountModal.vue";
-import ResetConfirmModal from "../components/modals/settings/ResetConfirmModal.vue";
-import TelemetryInfoModal from "../components/modals/clients/TelemetryInfoModal.vue";
-import ChangeRootFolderModal from "../components/modals/settings/ChangeRootFolderModal.vue";
-import DeleteAccountConfirmModal from "../components/modals/social/account/DeleteAccountConfirmModal.vue";
+import { settingsService } from "@services/settings/settingsService";
+import { globalUserStatus } from "@features/auth/useUserStatus";
+import {
+    userService,
+    type UserExternalAccount,
+} from "@features/auth/userService";
+import AddAccountModal from "@features/social/modals/AddAccountModal.vue";
+import EditAccountModal from "@features/social/modals/EditAccountModal.vue";
+import ResetConfirmModal from "@services/settings/modals/ResetConfirmModal.vue";
+import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue";
+import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
+import DeleteAccountConfirmModal from "@features/social/modals/DeleteAccountConfirmModal.vue";
 import SettingCard from "../components/settings/SettingCard.vue";
 import AccountCard from "../components/settings/AccountCard.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
     getCurrentLanguage,
-} from "../i18n";
+} from "@services/i18n";
 import { useI18n } from "vue-i18n";
-import { formatDate } from "../utils/utils";
-import { useModal } from "../services/modalService";
+import { formatDate } from "@shared/utils/utils";
+import { useModal } from "@shared/composables/useModal";
 
 interface Account {
     id: string;

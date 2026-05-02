@@ -157,16 +157,16 @@ import {
     Download,
     Palette,
 } from "lucide-vue-next";
-import TelegramIcon from "../ui/icons/TelegramIcon.vue";
+import TelegramIcon from "@shared/components/ui/icons/TelegramIcon.vue";
 import PresetColorPreview from "./PresetColorPreview.vue";
 import { telegramThemeService } from "../../services/telegramThemeService";
-import { presetService } from "../../services/presetService";
-import { useToast } from "../../services/toastService";
-import { useModal } from "../../services/modalService";
-import { buildPresetCreatePayload } from "../../utils/presetPayload";
-import { usePresets } from "../../composables/usePresets";
-import type { MarketplacePreset } from "../../types/presets";
-import TelegramThemeDetailsModal from "../modals/common/TelegramThemeDetailsModal.vue";
+import { presetService } from "@features/presets/presetService";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
+import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload";
+import { usePresets } from "@features/presets/usePresets";
+import type { MarketplacePreset } from "@features/presets/types";
+import TelegramThemeDetailsModal from "@/components/modals/common/TelegramThemeDetailsModal.vue";
 
 const TG_CHANNEL = "CollapseTheme";
 

@@ -1,9 +1,12 @@
+//! Logging infrastructure for the application, providing formatted console output and in-memory log storage.
+
 use chrono::Local;
 use colored::Colorize;
 use std::collections::VecDeque;
 use std::fmt;
 use std::sync::{LazyLock, Mutex};
 
+/// Represents the severity level of a log message.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LogLevel {
     Error = 1,
@@ -12,24 +15,34 @@ pub enum LogLevel {
     Debug = 4,
 }
 
+/// A centralized logger that handles message formatting, filtering, and storage.
 pub struct Logger;
 
+/// Global storage for application logs, accessible via the UI.
 pub static APP_LOGS: LazyLock<Mutex<VecDeque<String>>> =
     LazyLock::new(|| Mutex::new(VecDeque::new()));
+
+/// The current global log level filter.
 pub static LOG_LEVEL: LazyLock<Mutex<LogLevel>> = LazyLock::new(|| Mutex::new(LogLevel::Debug));
+
+/// Tracks whether the startup banner has been printed.
 pub static STARTUP_PRINTED: LazyLock<Mutex<bool>> = LazyLock::new(|| Mutex::new(false));
 
 const MAX_APP_LOGS: usize = 1000;
 
 impl Logger {
+    /// Logs a message with a specific level and module tag.
+    ///
+    /// This function handles console output with colors and emojis, and also stores
+    /// a plain-text version in the global `APP_LOGS` buffer.
     pub fn log_with_module(level: LogLevel, tag: &str, message: &str) {
         let timestamp = Local::now().format("%H:%M:%S").to_string();
 
-        let _short = tag
-            .rsplit(|c: char| ['.', ':', '/'].contains(&c))
-            .next()
-            .unwrap_or(tag)
-            .to_uppercase();
+        if let Ok(gl) = LOG_LEVEL.lock() {
+            if (level as i32) > (*gl as i32) {
+                return;
+            }
+        }
 
         let (level_name, level_colored) = match level {
             LogLevel::Info => ("INFO", format!("{:<5}", "INFO").green().bold()),
@@ -38,18 +51,10 @@ impl Logger {
             LogLevel::Debug => ("DEBUG", format!("{:<5}", "DEBUG").cyan().bold()),
         };
 
-        if let Ok(gl) = LOG_LEVEL.lock() {
-            if (level as i32) > (*gl as i32) {
-                return;
-            }
-        }
-
-        let mut shorted_tag = {
-            let slice = tag
-                .rfind("collapseloader_lib.")
-                .map_or(tag, |pos| &tag[pos + "collapseloader_lib.".len()..]);
-            slice.replace("collapse.module.collapseloader_lib", "core.init")
-        };
+        let mut shorted_tag = tag
+            .strip_prefix("collapseloader_lib.")
+            .unwrap_or(tag)
+            .replace("collapse.module.collapseloader_lib", "core.init");
 
         if shorted_tag.starts_with("commands.") {
             shorted_tag.insert_str(0, "tauri.");
@@ -80,22 +85,21 @@ impl Logger {
         }
     }
 
+    /// Returns a representative emoji for a given module tag.
     fn emoji_for_module(tag: &str) -> Option<&'static str> {
-        if tag.contains("core.network") {
-            Some("\u{2601}")
-        } else if tag.contains("core.clients") {
-            Some("\u{2609}")
-        } else if tag.contains("core.storage") {
-            Some("\u{26C3}")
-        } else if tag.contains("core.utils") {
-            Some("\u{2692}")
-        } else if tag.contains("core.init") {
-            Some("\u{2699}")
-        } else if tag.contains("commands.") {
-            Some("\u{25CF}")
-        } else {
-            None
-        }
+        const MAPPINGS: &[(&str, &str)] = &[
+            ("core.network", "\u{2601}"), // Cloud
+            ("core.clients", "\u{2609}"), // Sun
+            ("core.storage", "\u{26C3}"), // Box
+            ("core.utils", "\u{2692}"),   // Hammer and Pick
+            ("core.init", "\u{2699}"),    // Gear
+            ("commands.", "\u{25CF}"),    // Circle
+        ];
+
+        MAPPINGS
+            .iter()
+            .find(|(pattern, _)| tag.contains(pattern))
+            .map(|(_, emoji)| *emoji)
     }
 }
 

@@ -1,0 +1,163 @@
+<template>
+    <div class="space-y-4">
+        <div class="form-control">
+            <label class="label"
+                ><span class="label-text">{{
+                    t("marketplace.preset_picker_label")
+                }}</span></label
+            >
+            <select v-model="selectedId" class="select select-bordered w-full">
+                <option :value="''" disabled>
+                    {{ t("marketplace.preset_picker_placeholder") }}
+                </option>
+                <option v-for="p in presets" :key="p.id" :value="p.id">
+                    {{ p.name }}
+                </option>
+            </select>
+            <p
+                v-if="!presetsLoading && presets.length === 0"
+                class="text-sm text-base-content/60 mt-2"
+            >
+                {{ t("marketplace.no_local_presets") }}
+            </p>
+        </div>
+
+        <div class="form-control">
+            <label class="label"
+                ><span class="label-text">{{
+                    t("marketplace.title_label")
+                }}</span></label
+            >
+            <input
+                v-model="title"
+                class="input input-bordered w-full"
+                :placeholder="t('marketplace.title_placeholder')"
+            />
+        </div>
+
+        <div class="form-control">
+            <label class="label"
+                ><span class="label-text">{{
+                    t("marketplace.description_label")
+                }}</span></label
+            >
+            <textarea
+                v-model="description"
+                class="textarea textarea-bordered w-full"
+                rows="4"
+                :placeholder="t('marketplace.description_placeholder')"
+            ></textarea>
+        </div>
+
+        <div class="form-control">
+            <label class="cursor-pointer label">
+                <span class="label-text block">{{
+                    t("marketplace.public_label")
+                }}</span>
+                <input type="checkbox" class="toggle" v-model="isPublic" />
+            </label>
+        </div>
+
+        <div class="flex justify-end gap-2">
+            <button class="btn" @click="$emit('close')">
+                {{ t("common.cancel") }}
+            </button>
+            <button
+                class="btn btn-primary"
+                :disabled="submitting || !title || !selectedPreset"
+                @click="share"
+            >
+                {{
+                    submitting
+                        ? t("marketplace.sharing")
+                        : t("marketplace.share")
+                }}
+            </button>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { usePresets } from "@features/presets/usePresets";
+import type { ThemePreset } from "@features/presets/types";
+import { marketplaceService } from "@features/marketplace/marketplaceService";
+import { useToast } from "@shared/composables/useToast";
+
+const emit = defineEmits(["shared", "close"]);
+
+const { t } = useI18n();
+const { addToast } = useToast();
+const { presets, loading: presetsLoading, loadPresets } = usePresets();
+
+const selectedId = ref<string>("");
+const title = ref("");
+const description = ref("");
+const isPublic = ref(true);
+const submitting = ref(false);
+
+const selectedPreset = computed<ThemePreset | undefined>(() =>
+    presets.value.find((p) => p.id === selectedId.value)
+);
+
+watch(selectedPreset, (p) => {
+    if (p && !title.value) {
+        title.value = p.name;
+        if (!description.value && p.description)
+            description.value = p.description;
+    }
+});
+
+onMounted(() => {
+    loadPresets();
+});
+
+async function share() {
+    if (!selectedPreset.value) return;
+    try {
+        const s = selectedPreset.value;
+        const payload = {
+            name: title.value.trim(),
+            description: description.value.trim(),
+            customCSS: s.customCSS,
+            enableCustomCSS: s.enableCustomCSS,
+            base100: s.base100,
+            base200: s.base200,
+            base300: s.base300,
+            baseContent: s.baseContent,
+            primary: s.primary,
+            primaryContent: s.primaryContent,
+            secondary: s.secondary,
+            secondaryContent: s.secondaryContent,
+            accent: s.accent,
+            accentContent: s.accentContent,
+            neutral: s.neutral,
+            neutralContent: s.neutralContent,
+            info: s.info,
+            infoContent: s.infoContent,
+            success: s.success,
+            successContent: s.successContent,
+            warning: s.warning,
+            warningContent: s.warningContent,
+            error: s.error,
+            errorContent: s.errorContent,
+            backgroundImage: s.backgroundImage,
+            backgroundBlur: s.backgroundBlur,
+            backgroundOpacity: s.backgroundOpacity,
+            is_public: isPublic.value,
+        };
+
+        submitting.value = true;
+        await marketplaceService.createPreset(payload);
+        addToast(t("marketplace.shared_success"), "success");
+        emit("shared");
+        emit("close");
+    } catch (e) {
+        console.error("Failed to share preset:", e);
+        addToast(t("marketplace.shared_failed"), "error");
+    } finally {
+        submitting.value = false;
+    }
+}
+</script>

@@ -3,6 +3,7 @@
     "private": true,
     "version": "1.2.0",
     "author": "dest4590",
+    "license": "GPL-3.0-only",
     "maintainers": [
         {
             "name": "W1xced",

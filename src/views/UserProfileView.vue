@@ -722,21 +722,24 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
-import { userService, type PublicUserProfile } from "../services/userService";
-import { useFriends } from "../composables/useFriends";
-import BlockUnblockConfirmModal from "../components/modals/social/friends/BlockUnblockConfirmModal.vue";
-import RemoveFriendConfirmModal from "../components/modals/social/friends/RemoveFriendConfirmModal.vue";
-import ReportModal from "../components/modals/common/ReportModal.vue";
-import UserAvatar from "../components/ui/UserAvatar.vue";
-import FullscreenAvatarModal from "../components/modals/common/FullscreenAvatarModal.vue";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
+import {
+    userService,
+    type PublicUserProfile,
+} from "@features/auth/userService";
+import { useFriends } from "@features/friends/useFriends";
+import BlockUnblockConfirmModal from "@features/friends/modals/BlockUnblockConfirmModal.vue";
+import RemoveFriendConfirmModal from "@features/friends/modals/RemoveFriendConfirmModal.vue";
+import ReportModal from "@/components/modals/common/ReportModal.vue";
+import UserAvatar from "@shared/components/ui/UserAvatar.vue";
+import FullscreenAvatarModal from "@/components/modals/common/FullscreenAvatarModal.vue";
 import PresetGallery from "../components/presets/PresetGallery.vue";
 import AchievementCard from "../components/features/profile/AchievementCard.vue";
-import DiscordIcon from "../components/ui/icons/DiscordIcon.vue";
-import TelegramIcon from "../components/ui/icons/TelegramIcon.vue";
-import YoutubeIcon from "../components/ui/icons/YoutubeIcon.vue";
-import GithubIcon from "../components/ui/icons/GithubIcon.vue";
+import DiscordIcon from "@shared/components/ui/icons/DiscordIcon.vue";
+import TelegramIcon from "@shared/components/ui/icons/TelegramIcon.vue";
+import YoutubeIcon from "@shared/components/ui/icons/YoutubeIcon.vue";
+import GithubIcon from "@shared/components/ui/icons/GithubIcon.vue";
 import {
     Gamepad2,
     Clock,
@@ -754,10 +757,10 @@ import {
     Timer,
     LayoutList,
 } from "lucide-vue-next";
-import { globalUserStatus } from "../composables/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 import { invoke } from "@tauri-apps/api/core";
 import { localTrackerService } from "../services/localTrackerService";
-import PlaytimeStatsModal from "../components/modals/common/PlaytimeStatsModal.vue";
+import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
 
 interface Client {
     id: number;
@@ -773,16 +776,16 @@ interface Client {
     downloads: number;
     size: number;
 }
-import { useStreamerMode } from "../composables/useStreamerMode";
-import getRoleBadge from "../utils/roleBadge";
-import { resolveApiAssetUrl } from "../utils/url";
-import { marketplaceService } from "../services/marketplaceService";
-import { useUser } from "../composables/useUser";
+import { useStreamerMode } from "@features/social/useStreamerMode";
+import getRoleBadge from "@features/social/utils/roleBadge";
+import { resolveApiAssetUrl } from "@shared/utils/url";
+import { marketplaceService } from "@features/marketplace/marketplaceService";
+import { useUser } from "@features/auth/useUser";
 import {
     achievementService,
     type Achievement,
     type UserAchievement,
-} from "../services/achievementService";
+} from "@features/social/achievementService";
 import { useI18n } from "vue-i18n";
 
 interface Props {

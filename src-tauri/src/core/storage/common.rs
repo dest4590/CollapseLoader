@@ -5,11 +5,19 @@ use std::{
     io::BufReader,
     path::PathBuf,
 };
+/// A trait for types that can be persisted to disk as JSON.
+///
+/// This trait provides default implementations for saving and loading data,
+/// including atomic writes using temporary files and automatic backups on corruption.
 pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
+    /// Returns the path to the file on disk.
     fn file_path(&self) -> &PathBuf;
+    /// Returns a human-readable name for the resource (used in logs).
     fn resource_name() -> &'static str;
+    /// Creates a default instance of the resource.
     fn create_default() -> Self;
 
+    /// Serializes the resource to JSON and saves it to disk atomically.
     fn save_to_disk(&self) {
         let file_path = self.file_path();
 
@@ -50,6 +58,7 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
         }
     }
 
+    /// Loads the resource from disk, falling back to defaults if the file is missing or corrupted.
     fn load_from_disk(file_path: PathBuf) -> Self {
         if !file_path.exists() {
             log_warn!(

@@ -13,6 +13,7 @@ const DISCORD_APP_ID: &str = "1225803664204234772";
 static DISCORD_CLIENT: LazyLock<Mutex<Option<DiscordIpcClient>>> =
     LazyLock::new(|| Mutex::new(None));
 
+/// Initializes the Discord Rich Presence client in a background thread.
 pub fn initialize() -> Result<(), String> {
     std::thread::spawn(|| {
         let mut client = DiscordIpcClient::new(DISCORD_APP_ID);
@@ -34,6 +35,10 @@ pub fn initialize() -> Result<(), String> {
     Ok(())
 }
 
+/// Updates the Discord activity with the provided details and state.
+///
+/// This function checks if Discord RPC is enabled in settings before proceeding.
+/// It also handles automatic reconnection if the connection is lost.
 pub fn update_activity(details: String, state: String) -> Result<(), String> {
     if let Ok(settings) = SETTINGS.try_lock() {
         if !settings.discord_rpc_enabled.value {

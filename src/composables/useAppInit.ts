@@ -2,29 +2,27 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { bootLogService } from "../services/bootLogService";
+import { bootLogService } from "@services/logs/bootLogService";
 import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
-import { applyCursorForEvent, isHalloweenEvent } from "../utils/events";
-import { useToast } from "../services/toastService";
-import { globalUserStatus } from "./useUserStatus";
-import { useUser } from "./useUser";
-import { userService } from "../services/userService";
-import { globalFriends } from "./useFriends";
-import { updaterService } from "../services/updaterService";
+import { useToast } from "@shared/composables/useToast";
+import { globalUserStatus } from "@features/auth/useUserStatus";
+import { useUser } from "@features/auth/useUser";
+import { userService } from "@features/auth/userService";
+import { globalFriends } from "@features/friends/useFriends";
+import { updaterService } from "@services/updater/updaterService";
 import { syncService } from "../services/syncService";
-import { getCurrentLanguage } from "../i18n";
-import { useModal } from "../services/modalService";
-import ClientCrashModal from "../components/modals/clients/ClientCrashModal.vue";
-import { apiGet } from "../services/apiClient";
-import { webSocketService } from "../services/webSocketService";
+import { getCurrentLanguage } from "@services/i18n";
+import { useModal } from "@shared/composables/useModal";
+import ClientCrashModal from "@features/clients/modals/ClientCrashModal.vue";
+import { apiGet } from "@api/clients/internal";
+import { webSocketService } from "@services/network/webSocketService";
+import { wait } from "@shared/utils/utils";
 
 interface Flags {
     disclaimer_shown: { value: boolean };
     first_run: { value: boolean };
     optional_analytics: { value: boolean };
 }
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function useAppInit() {
     const { t, locale } = useI18n();
@@ -36,56 +34,61 @@ export function useAppInit() {
 
     const showPreloader = ref(true);
     const contentVisible = ref(false);
+    const currentProgress = ref(0);
+    const isOnline = ref(true);
+    const initialModalsLoaded = ref(false);
+    const showFirstRunInfo = ref(false);
+    const showInitialDisclaimer = ref(false);
+    const apiInitialized = ref(false);
 
     const loadingStates = [
         t("preloader.initializing"),
         t("preloader.connecting_servers"),
         t("preloader.loading_user_data"),
     ];
-
     const loadingState = ref(loadingStates[0]);
-
-    const currentProgress = ref(0);
-    const isOnline = ref(true);
-    const initialModalsLoaded = ref(false);
-    const showFirstRunInfo = ref(false);
-    const showInitialDisclaimer = ref(false);
-    const halloweenActive = ref(isHalloweenEvent());
 
     const initialTheme =
         (document.documentElement.getAttribute("data-theme") as string) ||
         localStorage.getItem("theme") ||
         "dark";
     const currentTheme = ref(initialTheme);
-    const apiInitialized = ref(false);
 
     const initializeUserDataWrapper = async (isAuthenticated: boolean) => {
         if (!isAuthenticated || !isOnline.value) return;
+
         try {
             const initData = await userService.initializeUserFull();
-            const userInfo = {
-                id: initData.user.id,
-                username: initData.user.username,
-                email: initData.user.email,
-                role: initData.user.role,
-                created_at: initData.user.created_at,
-                updated_at: initData.user.updated_at,
-                last_login_at: initData.user.last_login_at ?? null,
-            };
-            hydrateUser(initData.user.profile, userInfo);
-            hydrateFriends(initData.friends);
+            const { user, friends } = initData;
+
+            hydrateUser(user.profile, {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                created_at: user.created_at,
+                updated_at: user.updated_at,
+                last_login_at: user.last_login_at ?? null,
+            });
+            hydrateFriends(friends);
             initializeStatusSystem();
             await syncService.restoreFromInitData(initData);
         } catch (error) {
             console.error("Init fallback:", error);
-            try {
-                await loadUserData();
-                initializeStatusSystem();
-                await loadFriendsData();
-                await syncService.checkAndRestoreOnStartup();
-            } catch (fallbackError) {
-                console.error(fallbackError);
-            }
+            await performFallbackInit();
+        }
+    };
+
+    const performFallbackInit = async () => {
+        try {
+            await Promise.all([
+                loadUserData(),
+                loadFriendsData(),
+                syncService.checkAndRestoreOnStartup(),
+            ]);
+            initializeStatusSystem();
+        } catch (error) {
+            console.error("Fallback init failed:", error);
         }
     };
 
@@ -102,77 +105,42 @@ export function useAppInit() {
                 },
             });
 
-            let allNews: any[] = [];
-            if (Array.isArray(response)) {
-                allNews = response;
-            } else if (response && Array.isArray((response as any).data)) {
-                allNews = (response as any).data;
-            } else if (response && typeof response === "object") {
-                allNews = Object.values(response).filter(
-                    (v) => typeof v === "object"
-                );
-            }
-
+            const allNews = normalizeNewsResponse(response);
             news.value = allNews.filter(
-                (a: any) => a.language === currentLanguage
+                (item: any) => item.language === currentLanguage
             );
-            const getNewsUniqueId = (a: any) => `news_${a.language}_${a.id}`;
-            const readNews = JSON.parse(
-                localStorage.getItem("readNews") || "[]"
-            );
-            unreadNewsCount.value = news.value.filter(
-                (a: any) => !readNews.includes(getNewsUniqueId(a))
-            ).length;
+
+            updateUnreadCount(news.value, unreadNewsCount);
         } catch (error) {
             console.error("Failed to fetch news:", error);
             unreadNewsCount.value = 0;
         }
     };
 
-    const initApp = async (
-        isAuthenticated: any,
-        checkApiStatus: () => void,
-        news: any,
-        unreadNewsCount: any
-    ) => {
-        bootLogService.start();
-        bootLogService.systemInit();
-
-        loadingState.value = loadingStates[0];
-        currentProgress.value = 5;
-
-        // Listen for theme changes from other windows or settings
-        await listen("theme-mode-update", (event: any) => {
-            if (event.payload) {
-                currentTheme.value = event.payload;
-            }
-        });
-
-        const rpcTask = invoke("initialize_rpc").catch((e) =>
-            bootLogService.addCustomLog("WARN", "rpc", String(e))
-        );
-
-        const themeTask = applyThemeOnStartup().then((theme) => {
-            currentTheme.value = (theme as string) || "dark";
-            bootLogService.themeApplied(currentTheme.value);
-        });
-
-        const languageTask = applyLanguageOnStartup().then(() => {
-            bootLogService.languageApplied(
-                locale.value || getCurrentLanguage() || "en"
+    const normalizeNewsResponse = (response: any): any[] => {
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response?.data)) return response.data;
+        if (response && typeof response === "object") {
+            return Object.values(response).filter(
+                (v) => v && typeof v === "object"
             );
+        }
+        return [];
+    };
+
+    const updateUnreadCount = (newsList: any[], unreadNewsCount: any) => {
+        const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
+        const unread = newsList.filter((item: any) => {
+            const uniqueId = `news_${item.language}_${item.id}`;
+            return !readNews.includes(uniqueId);
         });
+        unreadNewsCount.value = unread.length;
+    };
 
-        const cursorTask = applyCursorForEvent().then(() =>
-            bootLogService.cursorApplied()
-        );
-
-        await Promise.all([rpcTask, themeTask, languageTask, cursorTask]);
-
-        const { getToastPosition } = useToast();
-        getToastPosition();
-
-        bootLogService.eventListenersInit();
+    const setupEventListeners = async () => {
+        await listen("theme-mode-update", (event: any) => {
+            if (event.payload) currentTheme.value = event.payload;
+        });
 
         await listen("client-crashed", (event: any) => {
             addToast(
@@ -202,19 +170,16 @@ export function useAppInit() {
                 }
             );
         });
+    };
 
-        currentProgress.value = 25;
-
-        await wait(1000);
-
-        loadingState.value = loadingStates[1];
-
+    const checkConnectivity = async () => {
         try {
             const connectivity = await invoke<{
                 cdn_online?: boolean;
                 api_online?: boolean;
                 auth_online?: boolean;
             }>("get_server_connectivity_status");
+
             const cdnOnline = connectivity.cdn_online ?? false;
             const apiOnline =
                 connectivity.api_online ?? connectivity.auth_online ?? false;
@@ -230,6 +195,43 @@ export function useAppInit() {
             console.error("Connectivity check failed:", error);
             isOnline.value = false;
         }
+    };
+
+    const initializeCoreSystems = async () => {
+        bootLogService.start();
+        bootLogService.systemInit();
+
+        loadingState.value = loadingStates[0];
+        currentProgress.value = 5;
+
+        await setupEventListeners();
+
+        const rpcTask = invoke("initialize_rpc").catch((e) =>
+            bootLogService.addCustomLog("WARN", "rpc", String(e))
+        );
+
+        const themeTask = applyThemeOnStartup().then((theme) => {
+            currentTheme.value = (theme as string) || "dark";
+            bootLogService.themeApplied(currentTheme.value);
+        });
+
+        const languageTask = applyLanguageOnStartup().then(() => {
+            const lang = locale.value || getCurrentLanguage() || "en";
+            bootLogService.languageApplied(lang);
+        });
+
+        await Promise.all([rpcTask, themeTask, languageTask]);
+
+        useToast().getToastPosition();
+        bootLogService.eventListenersInit();
+
+        currentProgress.value = 25;
+        await wait(1000);
+    };
+
+    const initializeConnectivity = async () => {
+        loadingState.value = loadingStates[1];
+        await checkConnectivity();
 
         try {
             await invoke("initialize_api");
@@ -243,28 +245,37 @@ export function useAppInit() {
 
         currentProgress.value = 50;
         await wait(500);
+    };
 
+    const initializeApiAndAuth = async (
+        isAuthenticated: any,
+        checkApiStatus: () => void
+    ) => {
         loadingState.value = loadingStates[2];
-
         bootLogService.authCheck();
         checkApiStatus();
 
-        if (isAuthenticated.value) {
-            bootLogService.authSuccess();
-            if (isOnline.value) {
-                await initializeUserDataWrapper(isAuthenticated.value);
-                bootLogService.syncReady();
-                webSocketService.connect();
-            }
-        } else {
+        if (!isAuthenticated.value) {
             bootLogService.authSkipped();
+            return;
         }
 
+        bootLogService.authSuccess();
+        if (isOnline.value) {
+            await initializeUserDataWrapper(isAuthenticated.value);
+            bootLogService.syncReady();
+            webSocketService.connect();
+        }
+    };
+
+    const finalizeInitialization = async (news: any, unreadNewsCount: any) => {
         const flagsTask = invoke<Flags>("get_flags")
             .then((currentFlags) => {
-                if (currentFlags.first_run.value) showFirstRunInfo.value = true;
-                else if (!currentFlags.disclaimer_shown.value)
+                if (currentFlags.first_run.value) {
+                    showFirstRunInfo.value = true;
+                } else if (!currentFlags.disclaimer_shown.value) {
                     showInitialDisclaimer.value = true;
+                }
                 initialModalsLoaded.value = true;
             })
             .catch(() => {
@@ -275,14 +286,10 @@ export function useAppInit() {
         await flagsTask;
 
         updaterService.startPeriodicCheck(t);
-
-        loadingState.value = loadingStates[3] ?? loadingStates[2] ?? "";
         currentProgress.value = 100;
-
         await wait(1000);
 
         showPreloader.value = false;
-
         await wait(500);
 
         document.documentElement.classList.add("app-ready");
@@ -290,6 +297,18 @@ export function useAppInit() {
             contentVisible.value = true;
             bootLogService.clear();
         }, 80);
+    };
+
+    const initApp = async (
+        isAuthenticated: any,
+        checkApiStatus: () => void,
+        news: any,
+        unreadNewsCount: any
+    ) => {
+        await initializeCoreSystems();
+        await initializeConnectivity();
+        await initializeApiAndAuth(isAuthenticated, checkApiStatus);
+        await finalizeInitialization(news, unreadNewsCount);
     };
 
     return {
@@ -301,7 +320,6 @@ export function useAppInit() {
         initialModalsLoaded,
         showFirstRunInfo,
         showInitialDisclaimer,
-        halloweenActive,
         currentTheme,
         apiInitialized,
         initApp,

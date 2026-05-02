@@ -1,5 +1,5 @@
 use crate::core::utils::helpers::emit_to_main_window;
-use crate::{log_debug, log_error, log_warn};
+use crate::{log_debug, log_error};
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -29,24 +29,20 @@ pub fn unzip(
             "Zip file not found at expected path: {}",
             zip_path.display()
         );
-    } else {
-        match fs::metadata(zip_path) {
-            Ok(_) => {}
-            Err(e) => log_warn!("Failed to read metadata for {}: {}", zip_path.display(), e),
-        }
+        return Err(format!("Zip file not found: {}", zip_path.display()));
     }
 
-    let mut archive = zip::ZipArchive::new(fs::File::open(zip_path).map_err(|e| {
+    let file = fs::File::open(zip_path).map_err(|e| {
         log_error!("Failed to open zip file {}: {}", zip_path.display(), e);
         e.to_string()
-    })?)
-    .map_err(|e| {
+    })?;
+
+    let mut archive = zip::ZipArchive::new(file).map_err(|e| {
         log_error!("Failed to read zip archive {}: {}", zip_path.display(), e);
         e.to_string()
     })?;
 
     let total_files = archive.len() as u64;
-
     let mut files_extracted: u64 = 0;
     let mut last_percentage: u8 = 0;
 
@@ -59,11 +55,6 @@ pub fn unzip(
         } else {
             if let Some(parent) = outpath.parent() {
                 if !parent.exists() {
-                    log_debug!(
-                        "Creating parent dir for {} -> {}",
-                        file_entry.name(),
-                        parent.display()
-                    );
                     fs::create_dir_all(parent).map_err(|e| {
                         log_error!("Failed to create parent dir {}: {}", parent.display(), e);
                         e.to_string()
@@ -85,36 +76,28 @@ pub fn unzip(
         }
 
         files_extracted += 1;
-
         let percentage = ((files_extracted as f64 / total_files as f64) * 100.0) as u8;
+
         if percentage != last_percentage {
             last_percentage = percentage;
-
             if let Some(handle) = app_handle {
-                let progress_data = serde_json::json!({
-                    "file": emit_name,
-                    "percentage": percentage,
-                    "action": "extracting",
-                    "files_extracted": files_extracted,
-                    "total_files": total_files
-                });
-                emit_to_main_window(handle, "unzip-progress", progress_data);
+                emit_to_main_window(
+                    handle,
+                    "unzip-progress",
+                    serde_json::json!({
+                        "file": emit_name,
+                        "percentage": percentage,
+                        "action": "extracting",
+                        "files_extracted": files_extracted,
+                        "total_files": total_files
+                    }),
+                );
             }
         }
     }
 
-    let sentinel_path = unzip_path.join(".valid");
-    if let Err(e) = std::fs::File::create(&sentinel_path) {
-        log_warn!(
-            "Could not create sentinel in {}: {}",
-            unzip_path.display(),
-            e
-        );
-    }
-
-    if let Err(e) = fs::remove_file(zip_path) {
-        log_debug!("Failed to delete zip file {}: {}", zip_path.display(), e);
-    }
+    let _ = std::fs::File::create(unzip_path.join(".valid"));
+    let _ = fs::remove_file(zip_path);
 
     if let Some(handle) = app_handle {
         emit_to_main_window(handle, "unzip-complete", emit_name);

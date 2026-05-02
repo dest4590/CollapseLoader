@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from "vue";
-import { bootLogService } from "../../services/bootLogService";
+import { bootLogService } from "@services/logs/bootLogService";
 
 interface LogEntry {
     id: number;

@@ -2,7 +2,7 @@
 import { ref, computed, watch, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
-import { settingsService } from "../../services/settingsService";
+import { settingsService } from "@services/settings/settingsService";
 import {
     Home,
     Settings,
@@ -19,7 +19,7 @@ import {
     ChevronRight,
     CheckCircle,
 } from "lucide-vue-next";
-import type { Client } from "../../types/ui";
+import type { Client } from "@shared/types/ui";
 
 interface Account {
     id: string;

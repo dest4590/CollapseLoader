@@ -12,29 +12,43 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 const MAX_SERVER_CHECK_RETRIES: usize = 5;
 const SERVER_CHECK_RETRY_DELAY: Duration = Duration::from_millis(300);
 
+/// Represents a remote server (API or CDN).
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Server {
+    /// The base URL of the server.
     pub url: String,
 }
 
+/// Represents the connectivity status of the application's infrastructure.
 #[derive(Debug, Clone, Serialize)]
 pub struct ServerConnectivityStatus {
+    /// Whether at least one CDN server is reachable.
     pub cdn_online: bool,
+    /// Whether at least one API server is reachable.
     pub api_online: bool,
 }
 
+/// Manages the collection of API and CDN servers, including health checks and selection.
 #[derive(Debug)]
 pub struct Servers {
+    /// List of available CDN servers.
     pub cdns: Vec<Server>,
+    /// List of available API servers.
     pub apis: Vec<Server>,
+    /// The currently selected CDN server for downloads.
     pub selected_cdn: RwLock<Option<Server>>,
+    /// The currently selected API server for requests.
     pub selected_api: RwLock<Option<Server>>,
+    /// The overall connectivity status.
     pub connectivity_status: Mutex<ServerConnectivityStatus>,
+    /// Sender for notifying when the initial server check is complete.
     pub check_complete_tx: watch::Sender<bool>,
+    /// Receiver for waiting on the initial server check.
     pub check_complete_rx: watch::Receiver<bool>,
 }
 
 impl Server {
+    /// Creates a new server instance with the given URL.
     pub fn new(url: &str) -> Self {
         Self {
             url: url.to_string(),
@@ -43,6 +57,7 @@ impl Server {
 }
 
 impl Servers {
+    /// Creates a new `Servers` instance and initializes it with default servers.
     pub fn new() -> Self {
         let cdns = CDN_SERVERS.to_vec();
         let apis = API_SERVERS.to_vec();
@@ -75,6 +90,7 @@ impl Servers {
         }
     }
 
+    /// Performs health checks on all servers and selects the best available ones.
     pub async fn check_servers(&self) {
         let client = super::create_client(REQUEST_TIMEOUT);
 
@@ -87,6 +103,7 @@ impl Servers {
         let _ = self.check_complete_tx.send(true);
     }
 
+    /// Waits until the initial server health check has completed.
     pub async fn wait_for_initial_check(&self) {
         let mut rx = self.check_complete_rx.clone();
         if *rx.borrow_and_update() {

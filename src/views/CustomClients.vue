@@ -15,18 +15,18 @@ import {
     StopCircle,
     Trash2,
 } from "lucide-vue-next";
-import SearchBar from "../components/common/SearchBar.vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import SearchBar from "@shared/components/common/SearchBar.vue";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
-import { formatDate } from "../utils/utils";
-import type { CustomClient } from "../types/ui";
-import AddCustomClientModal from "../components/modals/clients/AddCustomClientModal.vue";
-import EditCustomClientModal from "../components/modals/clients/EditCustomClientModal.vue";
-import DeleteCustomClientConfirmModal from "../components/modals/clients/DeleteCustomClientConfirmModal.vue";
-import CustomClientDisplaySettingsModal from "../components/modals/clients/CustomClientDisplaySettingsModal.vue";
-import LogViewerModal from "../components/modals/clients/LogViewerModal.vue";
-import CustomClientModsModal from "../components/modals/clients/CustomClientModsModal.vue";
+import { formatDate } from "@shared/utils/utils";
+import type { CustomClient } from "@shared/types/ui";
+import AddCustomClientModal from "@features/clients/modals/AddCustomClientModal.vue";
+import EditCustomClientModal from "@features/clients/modals/EditCustomClientModal.vue";
+import DeleteCustomClientConfirmModal from "@features/clients/modals/DeleteCustomClientConfirmModal.vue";
+import CustomClientDisplaySettingsModal from "@features/clients/modals/CustomClientDisplaySettingsModal.vue";
+import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
+import CustomClientModsModal from "@features/clients/modals/CustomClientModsModal.vue";
 
 const { t } = useI18n();
 

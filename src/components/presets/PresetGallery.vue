@@ -262,15 +262,18 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { marketplaceService } from "../../services/marketplaceService";
-import type { MarketplacePreset, MarketplaceTheme } from "../../types/presets";
-import { presetService } from "../../services/presetService";
-import { useUser } from "../../composables/useUser";
-import { useToast } from "../../services/toastService";
-import { useModal } from "../../services/modalService";
-import MarketplaceEditPresetModal from "../modals/social/presets/MarketplaceEditPresetModal.vue";
-import PresetDetailsModal from "../modals/social/presets/PresetDetailsModal.vue";
-import MarketplaceDeleteConfirmModal from "../modals/social/presets/MarketplaceDeleteConfirmModal.vue";
+import { marketplaceService } from "@features/marketplace/marketplaceService";
+import type {
+    MarketplacePreset,
+    MarketplaceTheme,
+} from "@features/presets/types";
+import { presetService } from "@features/presets/presetService";
+import { useUser } from "@features/auth/useUser";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
+import MarketplaceEditPresetModal from "@features/presets/modals/MarketplaceEditPresetModal.vue";
+import PresetDetailsModal from "@features/presets/modals/PresetDetailsModal.vue";
+import MarketplaceDeleteConfirmModal from "@features/presets/modals/MarketplaceDeleteConfirmModal.vue";
 import {
     Download,
     ThumbsUp,
@@ -284,7 +287,7 @@ import {
     Image,
     PaintBucket,
 } from "lucide-vue-next";
-import { buildPresetCreatePayload } from "../../utils/presetPayload";
+import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload";
 import PresetColorPreview from "./PresetColorPreview.vue";
 
 type MarketplacePresetView = MarketplacePreset & {
