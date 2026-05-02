@@ -1,3 +1,5 @@
+//! Client management logic for fetching and handling game clients.
+
 use rand::RngExt;
 use std::sync::{Arc, Mutex};
 use std::{fs::File, io::BufReader};
@@ -20,18 +22,20 @@ use crate::{
 
 type DynError = Box<dyn std::error::Error + Send + Sync>;
 
+/// Manages the collection of game clients, including fetching from remote APIs and local caching.
 #[derive(Default)]
 pub struct ClientManager {
+    /// The list of currently loaded clients.
     pub clients: Vec<Client>,
 }
 
 impl ClientManager {
+    /// Generates a list of mock clients for testing purposes.
     fn mock_clients() -> Vec<Client> {
-        let mut clients = Vec::new();
         let mut rng = rand::rng();
 
-        for i in 1..5 {
-            clients.push(Client {
+        (1..5)
+            .map(|i| Client {
                 id: i,
                 name: format!("Mock client #{i}"),
                 version: "1.16.5".to_string(),
@@ -47,12 +51,11 @@ impl ClientManager {
                     size: rng.random_range(50..=100),
                 },
                 ..Default::default()
-            });
-        }
-
-        clients
+            })
+            .collect()
     }
 
+    /// Fetches clients from a specific API endpoint, falling back to local cache on failure.
     fn fetch_clients_from_endpoint(
         endpoint: &str,
         cache_file: &str,
@@ -78,6 +81,7 @@ impl ClientManager {
         }
     }
 
+    /// Spawns an asynchronous task to fetch clients from an endpoint.
     fn spawn_clients_fetch_task(
         endpoint: &'static str,
         cache_file: &'static str,
@@ -85,6 +89,7 @@ impl ClientManager {
         tokio::task::spawn_blocking(move || Self::fetch_clients_from_endpoint(endpoint, cache_file))
     }
 
+    /// Resolves the result of a client fetch task.
     fn resolve_fetch_task_result(
         result: Result<Result<Vec<Client>, DynError>, tokio::task::JoinError>,
         label: &str,
@@ -122,44 +127,57 @@ impl ClientManager {
         }
     }
 
+    /// Fetches all types of clients (Vanilla, Fabric, Forge) in parallel.
+    ///
+    /// This method orchestrates multiple asynchronous fetch tasks and merges their results.
+    /// If all remote fetches fail, it returns the combined local cache.
     pub async fn fetch_clients() -> Result<Vec<Client>, DynError> {
         if *MOCK_CLIENTS {
             log_info!("Skipping client manager initialization, mock clients enabled, generating client list...");
             return Ok(Self::mock_clients());
         }
 
-        let clients_task = Self::spawn_clients_fetch_task(VANILLA_CLIENTS_URL, "clients.json");
-        let fabric_clients_task =
-            Self::spawn_clients_fetch_task(FABRIC_CLIENTS_URL, "fabric-clients.json");
-        let forge_clients_task =
-            Self::spawn_clients_fetch_task(FORGE_CLIENTS_URL, "forge-clients.json");
+        let vanilla_task = Self::spawn_clients_fetch_task(VANILLA_CLIENTS_URL, "clients.json");
+        let fabric_task = Self::spawn_clients_fetch_task(FABRIC_CLIENTS_URL, "fabric-clients.json");
+        let forge_task = Self::spawn_clients_fetch_task(FORGE_CLIENTS_URL, "forge-clients.json");
 
-        let (clients_res, fabric_res, forge_res) =
-            tokio::join!(clients_task, fabric_clients_task, forge_clients_task);
+        let (vanilla_res, fabric_res, forge_res) =
+            tokio::join!(vanilla_task, fabric_task, forge_task);
 
-        let mut clients = Self::resolve_fetch_task_result(clients_res, "clients")?;
-        let fabric_clients = Self::resolve_fetch_task_result(fabric_res, "fabric clients")?;
-        let forge_clients = Self::resolve_fetch_task_result(forge_res, "forge clients")?;
+        let mut all_clients = Vec::new();
+        let mut any_success = false;
 
-        clients.extend(fabric_clients);
-        clients.extend(forge_clients);
+        let results = [
+            (vanilla_res, "Vanilla"),
+            (fabric_res, "Fabric"),
+            (forge_res, "Forge"),
+        ];
 
-        clients.sort_by_key(|b| std::cmp::Reverse(b.created_at));
+        for (res, label) in results {
+            match Self::resolve_fetch_task_result(res, label) {
+                Ok(clients) => {
+                    all_clients.extend(clients);
+                    any_success = true;
+                }
+                Err(e) => log_error!("Failed to fetch {} clients: {}", label, e),
+            }
+        }
 
-        Self::apply_client_metadata(&mut clients);
+        if !any_success {
+            return Err("Failed to fetch any clients from API or cache".into());
+        }
+
+        all_clients.sort_by_key(|b| std::cmp::Reverse(b.created_at));
+        Self::apply_client_metadata(&mut all_clients);
 
         log_debug!(
-            "Initialized ClientManager with {} clients ({} fabric, {} forge, {} vanilla)",
-            clients.len(),
-            clients.iter().filter(|c| c.meta.is_fabric).count(),
-            clients.iter().filter(|c| c.meta.is_forge).count(),
-            clients
-                .iter()
-                .filter(|c| !c.meta.is_fabric && !c.meta.is_forge)
-                .count()
+            "Initialized ClientManager with {} clients",
+            all_clients.len()
         );
-        Ok(clients)
+
+        Ok(all_clients)
     }
+
 
     fn load_from_cache(filename: &str) -> Result<Vec<Client>, DynError> {
         let cache_path = {

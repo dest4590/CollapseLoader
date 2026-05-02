@@ -169,24 +169,24 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
 import {
     type Friend,
     userService,
     type UserStatus,
-} from "../services/userService";
-import { useFriends } from "../composables/useFriends";
-import AddFriendModal from "../components/modals/social/friends/AddFriendModal.vue";
-import BlockUnblockConfirmModal from "../components/modals/social/friends/BlockUnblockConfirmModal.vue";
-import RemoveFriendConfirmModal from "../components/modals/social/friends/RemoveFriendConfirmModal.vue";
-import ReportModal from "../components/modals/common/ReportModal.vue";
-import FriendCard from "../components/features/friends/FriendCard.vue";
-import FriendRequestCard from "../components/features/friends/FriendRequestCard.vue";
-import UserAvatar from "../components/ui/UserAvatar.vue";
+} from "@features/auth/userService";
+import { useFriends } from "@features/friends/useFriends";
+import AddFriendModal from "@features/friends/modals/AddFriendModal.vue";
+import BlockUnblockConfirmModal from "@features/friends/modals/BlockUnblockConfirmModal.vue";
+import RemoveFriendConfirmModal from "@features/friends/modals/RemoveFriendConfirmModal.vue";
+import ReportModal from "@/components/modals/common/ReportModal.vue";
+import FriendCard from "@features/friends/components/FriendCard.vue";
+import FriendRequestCard from "@features/friends/components/FriendRequestCard.vue";
+import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import { UserCheck, UserPlus, Users } from "lucide-vue-next";
-import { useStreamerMode } from "../composables/useStreamerMode";
+import { useStreamerMode } from "@features/social/useStreamerMode";
 
 const { t } = useI18n();
 const { addToast } = useToast();

@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { useModal } from "../services/modalService";
-import SlowDownloadWarningModal from "../components/modals/common/SlowDownloadWarningModal.vue";
+import { useModal } from "@shared/composables/useModal";
+import SlowDownloadWarningModal from "@/components/modals/common/SlowDownloadWarningModal.vue";
 
 export interface DownloadSpeedConfig {
     slowSpeedThreshold?: number;

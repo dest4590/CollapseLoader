@@ -41,78 +41,61 @@ fn sanitize_version_for_paths(version: &str) -> String {
 
 fn is_minecraft_version_dir_name(name: &str) -> bool {
     let parts: Vec<&str> = name.split('.').collect();
-    if !(2..=3).contains(&parts.len()) {
-        return false;
-    }
-    if parts[0] != "1" {
-        return false;
-    }
-    parts
-        .iter()
-        .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+    (2..=3).contains(&parts.len())
+        && parts[0] == "1"
+        && parts.iter().all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
 fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<PathBuf> {
     let mut jars = Vec::new();
-
     if !dir.exists() {
         return jars;
     }
 
     let mut dirs_to_visit = vec![(dir.to_path_buf(), 0)];
-    let max_depth = 15;
+    const MAX_DEPTH: usize = 15;
 
     while let Some((current_dir, depth)) = dirs_to_visit.pop() {
-        if depth >= max_depth {
+        if depth >= MAX_DEPTH {
             continue;
         }
 
-        if let Ok(entries) = std::fs::read_dir(&current_dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.is_dir() {
-                    if skip_root_mc_version_dirs && current_dir == dir {
-                        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                            if is_minecraft_version_dir_name(name) {
-                                continue;
-                            }
+        let Ok(entries) = std::fs::read_dir(&current_dir) else {
+            continue;
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if skip_root_mc_version_dirs && current_dir == dir {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if is_minecraft_version_dir_name(name) {
+                            continue;
                         }
                     }
-                    dirs_to_visit.push((path, depth + 1));
-                } else if path
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
-                {
-                    let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                }
+                dirs_to_visit.push((path, depth + 1));
+            } else if path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("jar")) {
+                let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
-                    // Filter by platform (only for natives)
-                    let mut should_include = true;
-                    let is_native = filename.contains("natives");
-
-                    if is_native {
-                        if IS_WINDOWS {
-                            if filename.contains("-linux") || filename.contains("-macos") {
-                                should_include = false;
-                            }
-                        } else if IS_LINUX {
-                            if filename.contains("-windows") || filename.contains("-macos") {
-                                should_include = false;
-                            }
-                        } else if IS_MACOS
-                            && (filename.contains("-windows") || filename.contains("-linux")) {
-                                should_include = false;
-                            }
+                // Filter by platform (only for natives)
+                let is_native = filename.contains("natives");
+                let should_include = if is_native {
+                    if IS_WINDOWS {
+                        !filename.contains("-linux") && !filename.contains("-macos")
+                    } else if IS_LINUX {
+                        !filename.contains("-windows") && !filename.contains("-macos")
+                    } else if IS_MACOS {
+                        !filename.contains("-windows") && !filename.contains("-linux")
+                    } else {
+                        true
                     }
+                } else {
+                    true
+                };
 
-                    if should_include {
-                        let filename_lower = filename.to_lowercase();
-                        if filename_lower.contains("slf4j") || filename_lower.contains("log4j") {
-                            //log_info!("Found critical logging library: {}", filename);
-                        } else {
-                            //log_debug!("Found JAR: {}", filename);
-                        }
-                        jars.push(path);
-                    }
+                if should_include {
+                    jars.push(path);
                 }
             }
         }

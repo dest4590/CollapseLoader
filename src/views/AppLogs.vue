@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { useToast } from "../services/toastService";
+import { useToast } from "@shared/composables/useToast";
 import { Copy } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 

@@ -1,3 +1,5 @@
+//! Application settings management using JSON storage.
+
 use super::common::JsonStorage;
 use paste::paste;
 use serde::{Deserialize, Serialize};
@@ -10,9 +12,12 @@ const fn default_show_true() -> bool {
     true
 }
 
+/// A single setting value with an associated visibility flag for the UI.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Setting<T> {
+    /// The actual value of the setting.
     pub value: T,
+    /// Whether this setting should be visible in the UI.
     #[serde(default = "default_show_true")]
     pub show: bool,
 }
@@ -27,6 +32,7 @@ impl<T: Default> Default for Setting<T> {
 }
 
 impl<T> Setting<T> {
+    /// Creates a new setting with the given value and visibility.
     pub fn new(value: T, show: bool) -> Self {
         Self { value, show }
     }
@@ -52,6 +58,10 @@ impl<T: fmt::Display> fmt::Display for Setting<T> {
     }
 }
 
+/// Macro to define the settings structure with default values and UI visibility.
+///
+/// This macro generates the `Settings` struct, an `InputSettings` struct for deserialization,
+/// and implements `Default` and `JsonStorage` for the settings.
 macro_rules! define_settings {
     (
         $(#[$attr:meta])*
@@ -63,11 +73,17 @@ macro_rules! define_settings {
             $(#[$attr])*
             #[derive(Clone, Debug, Serialize, Deserialize)]
             pub struct $name {
-                $(#[serde(default)] pub $field: Setting<$field_type>,)*
+                $(
+                    #[doc = "Setting for " $field]
+                    #[serde(default)]
+                    pub $field: Setting<$field_type>,
+                )*
+                /// The path to the configuration file on disk.
                 #[serde(skip)]
                 pub config_path: PathBuf,
             }
 
+            /// Input structure for deserializing settings from the UI or disk.
             #[derive(Deserialize, Clone, Debug)]
             pub struct [<Input $name>] {
                 $(#[serde(default)] pub $field: Setting<$field_type>,)*
@@ -85,6 +101,7 @@ macro_rules! define_settings {
             }
 
             impl $name {
+                /// Creates a new settings instance from an input structure.
                 pub fn from_input(input: [<Input $name>], config_path: PathBuf) -> Self {
                     Self {
                         $(
@@ -97,6 +114,7 @@ macro_rules! define_settings {
                     }
                 }
 
+                /// Loads settings from a JSON file on disk.
                 pub fn load_from_disk(path: PathBuf) -> Self {
                     // update config_path here, because value is computed at runtime
                     let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
@@ -126,13 +144,13 @@ macro_rules! define_settings {
 }
 
 define_settings! {
+    /// The main application settings structure.
     pub struct Settings {
         ram: Setting<u32> = (2048, true),
         theme: Setting<String> = ("dark".to_string(), false),
         language: Setting<String> = ("en".to_string(), true),
         discord_rpc_enabled: Setting<bool> = (true, true),
         optional_telemetry: Setting<bool> = (true, true),
-        // cordshare: Setting<bool> = (true, true),
         irc_chat: Setting<bool> = (true, true),
         hash_verify: Setting<bool> = (true, true),
         sync_client_settings: Setting<bool> = (true, true),
@@ -147,6 +165,7 @@ define_settings! {
     }
 }
 
+/// Global static access to application settings.
 pub static SETTINGS: LazyLock<StdMutex<Settings>> = LazyLock::new(|| {
     StdMutex::new(Settings::load_from_disk(
         PathBuf::from(&*ROOT_DIR).join("config.json"),

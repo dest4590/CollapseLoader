@@ -24,19 +24,18 @@ import {
     Trash2,
     X,
 } from "lucide-vue-next";
-import SearchBar from "../components/common/SearchBar.vue";
-import ClientCard from "../components/features/clients/ClientCard.vue";
-import FiltersMenu from "../components/common/FiltersMenu.vue";
-import ModsManagerModal from "../components/modals/clients/ModsManagerModal.vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import SearchBar from "@shared/components/common/SearchBar.vue";
+import ClientCard from "@features/clients/components/ClientCard.vue";
+import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
+import ModsManagerModal from "@features/clients/modals/ModsManagerModal.vue";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { syncService } from "../services/syncService";
-import { achievementService } from "../services/achievementService";
+import { achievementService } from "@features/social/achievementService";
 import { useI18n } from "vue-i18n";
-import type { Client, CustomClient, InstallProgress } from "../types/ui";
-import LogViewerModal from "../components/modals/clients/LogViewerModal.vue";
-import InsecureClientWarningModal from "../components/modals/clients/InsecureClientWarningModal.vue";
-import { isHalloweenEvent } from "../utils/events";
+import type { Client, CustomClient, InstallProgress } from "@shared/types/ui";
+import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
+import InsecureClientWarningModal from "@features/clients/modals/InsecureClientWarningModal.vue";
 
 interface Account {
     id: string;
@@ -55,7 +54,6 @@ interface Filters {
 }
 
 const { t } = useI18n();
-const halloweenActive = ref(isHalloweenEvent());
 
 const props = defineProps<{
     isOnline: boolean;
@@ -1780,17 +1778,6 @@ onBeforeUnmount(() => {
             v-model:clientSortKey="clientSortKey"
             v-model:clientSortOrder="clientSortOrder"
         />
-        <div
-            v-if="halloweenActive"
-            class="tooltip tooltip-bottom"
-            :data-tip="t('events.halloween.tooltip')"
-        >
-            <div
-                class="px-3 py-2 bg-warning/10 border border-warning/30 rounded-lg text-warning"
-            >
-                <span class="text-xl">🎃</span>
-            </div>
-        </div>
         <div
             class="tooltip tooltip-bottom"
             :data-tip="t('navigation.custom_clients')"

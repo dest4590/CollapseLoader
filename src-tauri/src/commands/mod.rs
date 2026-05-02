@@ -1,3 +1,5 @@
+//! Tauri command handlers for various application features.
+
 pub mod clients;
 pub mod irc;
 pub mod network;

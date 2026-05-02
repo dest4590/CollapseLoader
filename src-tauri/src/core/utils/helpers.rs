@@ -13,5 +13,5 @@ pub fn emit_to_main_window<S: Serialize + Clone>(app_handle: &AppHandle, event: 
 }
 
 pub fn is_development_enabled() -> bool {
-    env!("DEVELOPMENT").to_lowercase() == "true"
+    env!("DEVELOPMENT").eq_ignore_ascii_case("true")
 }

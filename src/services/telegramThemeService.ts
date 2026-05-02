@@ -1,5 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { MarketplacePreset, MarketplaceTheme } from "../types/presets";
+import type {
+    MarketplacePreset,
+    MarketplaceTheme,
+} from "@features/presets/types";
 
 const TG_CHANNEL = "CollapseTheme";
 const TG_URL = `https://t.me/s/${TG_CHANNEL}`;

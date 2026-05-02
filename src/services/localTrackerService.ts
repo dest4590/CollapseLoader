@@ -1,6 +1,6 @@
-import { achievementService } from "./achievementService";
+import { achievementService } from "@features/social/achievementService";
 import { invoke } from "@tauri-apps/api/core";
-import { getIsDevelopment } from "../utils/isDevelopment";
+import { getIsDevelopment } from "@shared/utils/isDevelopment";
 
 interface LocalStats {
     totalLaunches: number;

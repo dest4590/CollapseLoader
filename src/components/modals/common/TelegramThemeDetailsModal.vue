@@ -90,7 +90,7 @@ import {
     SlidersHorizontal,
     Code,
 } from "lucide-vue-next";
-import type { MarketplacePreset } from "../../../types/presets";
+import type { MarketplacePreset } from "@features/presets/types";
 
 const props = defineProps<{ preset: MarketplacePreset }>();
 defineEmits(["apply", "save", "close"]);

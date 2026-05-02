@@ -1,4 +1,4 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "@api/clients/internal";
 
 export interface CreateReportRequest {
     reportedUserId: number;

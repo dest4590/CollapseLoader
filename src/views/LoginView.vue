@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import LoginForm from "../components/layout/forms/LoginForm.vue";
+import LoginForm from "@layouts/forms/LoginForm.vue";
 
 const { t } = useI18n();
 const emit = defineEmits(["logged-in", "change-view", "show-verify"]);

@@ -56,7 +56,7 @@ import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import * as LucideIcons from "lucide-vue-next";
 import { Lock } from "lucide-vue-next";
-import { formatDate } from "../../../utils/utils";
+import { formatDate } from "@shared/utils/utils";
 
 const props = defineProps<{
     achievementKey: string;

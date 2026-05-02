@@ -15,10 +15,13 @@ use std::sync::Mutex;
 use tokio::fs as tokio_fs;
 use tokio::task;
 
+/// Manages the application's data directory and resource files.
 pub struct Data {
+    /// The root directory where all application data is stored.
     pub root_dir: Mutex<PathBuf>,
 }
 
+/// Global access to the Tauri application handle.
 pub static APP_HANDLE: std::sync::LazyLock<Mutex<Option<tauri::AppHandle>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 
@@ -29,6 +32,7 @@ struct FileInfo {
 }
 
 impl Data {
+    /// Creates a new `Data` instance and ensures the root directory exists.
     pub fn new(root_dir: PathBuf) -> Self {
         if !root_dir.exists() {
             log_debug!(
@@ -47,16 +51,19 @@ impl Data {
         }
     }
 
+    /// Checks if a file path has a specific extension (case-insensitive).
     pub fn has_extension(file_path: &str, extension: &str) -> bool {
         Path::new(file_path)
             .extension()
             .is_some_and(|ext| ext.eq_ignore_ascii_case(extension))
     }
 
+    /// Returns a snapshot of the current root directory path.
     fn root_dir_snapshot(&self) -> PathBuf {
         self.root_dir.lock().unwrap().clone()
     }
 
+    /// Resolves a relative path against a root directory, handling both forward and backward slashes.
     fn get_local_with_root(root_dir: &Path, relative_path: &str) -> PathBuf {
         let parts: Vec<&str> = relative_path.split(|c| ['/', '\\'].contains(&c)).collect();
         let mut path = root_dir.to_path_buf();
@@ -69,11 +76,13 @@ impl Data {
         path
     }
 
+    /// Resolves a relative path against the application's root data directory.
     pub fn get_local(&self, relative_path: &str) -> PathBuf {
         let root_dir = self.root_dir_snapshot();
         Self::get_local_with_root(&root_dir, relative_path)
     }
 
+    /// Unzips a resource file into its corresponding folder.
     pub async fn unzip(&self, file: &str) -> Result<(), String> {
         let info = Self::resolve_local_file_info(file);
         let root_dir = self.root_dir_snapshot();

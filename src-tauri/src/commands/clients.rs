@@ -1,3 +1,5 @@
+//! Command handlers for client-related operations like launching, installing, and managing game clients.
+
 use crate::AppState;
 use core::clients::{
     client::{Client, CLIENT_LOGS},
@@ -32,6 +34,7 @@ use std::io::Read;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
+/// Retrieves a client by its ID from the manager.
 fn get_client_by_id(
     id: u32,
     manager: &std::sync::Arc<std::sync::Mutex<ClientManager>>,
@@ -43,9 +46,10 @@ fn get_client_by_id(
         .iter()
         .find(|c| c.id == id)
         .cloned()
-        .ok_or_else(|| "Client not found".to_string())
+        .ok_or_else(|| format!("Client with ID {id} not found"))
 }
 
+/// Returns the current application logs.
 #[tauri::command]
 pub fn get_app_logs() -> Vec<String> {
     logging::APP_LOGS
@@ -55,6 +59,7 @@ pub fn get_app_logs() -> Vec<String> {
         .into()
 }
 
+/// Initializes the client API by fetching the list of available clients.
 #[tauri::command]
 pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
     let clients = ClientManager::fetch_clients().await.map_err(|e| {
@@ -80,6 +85,7 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
     Ok(())
 }
 
+/// Initializes Discord Rich Presence.
 #[tauri::command]
 pub fn initialize_rpc() -> Result<(), String> {
     log_info!("Initializing Discord RPC");
@@ -89,6 +95,7 @@ pub fn initialize_rpc() -> Result<(), String> {
     Ok(())
 }
 
+/// Returns the current server connectivity status.
 #[tauri::command]
 pub async fn get_server_connectivity_status() -> ServerConnectivityStatus {
     let servers = &SERVERS;
@@ -96,6 +103,7 @@ pub async fn get_server_connectivity_status() -> ServerConnectivityStatus {
     servers.connectivity_status.lock().unwrap().clone()
 }
 
+/// Returns the list of all available clients.
 #[tauri::command]
 pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
     state
@@ -107,6 +115,118 @@ pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
         .unwrap_or_default()
 }
 
+async fn verify_client_hash(
+    client: &Client,
+    jar_path: &std::path::Path,
+    app_handle: &AppHandle,
+    state: &State<'_, AppState>,
+) -> Result<(), String> {
+    let hash_verify_enabled = SETTINGS
+        .lock()
+        .map(|s| s.hash_verify.value)
+        .unwrap_or(true);
+
+    if !hash_verify_enabled {
+        log_debug!(
+            "Hash verification disabled, skipping verification for client {}",
+            client.name
+        );
+        return Ok(());
+    }
+
+    log_info!("Hash verification is enabled for client '{}'", client.name);
+    emit_to_main_window(
+        app_handle,
+        "client-hash-verification-start",
+        &serde_json::json!({ "id": client.id, "name": client.name }),
+    );
+
+    log_info!(
+        "Verifying MD5 hash for client {} before launch",
+        client.name
+    );
+
+    let current_hash = calculate_md5_hash(jar_path)?;
+    if current_hash == client.md5_hash {
+        log_info!(
+            "MD5 hash verification successful for client {}",
+            client.name
+        );
+        emit_to_main_window(
+            app_handle,
+            "client-hash-verification-done",
+            &serde_json::json!({ "id": client.id, "name": client.name }),
+        );
+        return Ok(());
+    }
+
+    log_warn!(
+        "Hash mismatch for client {}. Expected: {}, Got: {}. Redownloading...",
+        client.name,
+        client.md5_hash,
+        current_hash
+    );
+
+    emit_to_main_window(
+        app_handle,
+        "client-hash-verification-failed",
+        &serde_json::json!({
+            "id": client.id,
+            "name": client.name,
+            "expected_hash": client.md5_hash,
+            "actual_hash": current_hash
+        }),
+    );
+
+    let _ = std::fs::remove_file(jar_path);
+    update_client_installed_status(client.id, false, state.clone())?;
+
+    log_info!("Redownloading client: {} (ID: {})", client.name, client.id);
+    client
+        .download(&state.clients.manager)
+        .await
+        .map_err(|e| {
+            if e.contains("Hash verification failed") {
+                format!("Hash verification failed for {}: The downloaded file is corrupted. Please try downloading again.", client.name)
+            } else {
+                format!("Failed to redownload client {}: {}", client.name, e)
+            }
+        })?;
+
+    emit_to_main_window(
+        app_handle,
+        "client-redownload-complete",
+        &serde_json::json!({ "id": client.id, "name": client.name }),
+    );
+
+    log_info!(
+        "Client {} redownloaded and verified successfully",
+        client.name
+    );
+    Ok(())
+}
+
+async fn ensure_agent_overlay() -> Result<(), String> {
+    match AgentOverlayManager::verify_agent_overlay_files().await {
+        Ok(true) => Ok(()),
+        Ok(false) => {
+            if !*SKIP_AGENT_OVERLAY_VERIFICATION {
+                log_warn!("Agent/overlay files verification failed, attempting to download...");
+                AgentOverlayManager::download_agent_overlay_files()
+                    .await
+                    .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))
+            } else {
+                log_debug!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
+                Ok(())
+            }
+        }
+        Err(e) => {
+            log_error!("Error verifying agent/overlay files: {}", e);
+            Ok(()) // Non-fatal error
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn launch_client(
     id: u32,
@@ -115,7 +235,6 @@ pub async fn launch_client(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     let client = get_client_by_id(id, &state.clients.manager)?;
-
     let (_, jar_path) = client.get_launch_paths()?;
 
     if !jar_path.exists() {
@@ -130,13 +249,6 @@ pub async fn launch_client(
         ));
     }
 
-    let hash_verify_enabled = {
-        let settings = SETTINGS
-            .lock()
-            .map_err(|_| "Failed to access settings".to_string())?;
-        settings.hash_verify.value
-    };
-
     log_info!(
         "Launching '{}' (ID: {}, Play Count: {})...",
         client.name,
@@ -144,132 +256,13 @@ pub async fn launch_client(
         client.launches
     );
 
-    log_debug!(
-        "Resolution: Path='{}', HashCheck={}, OverlayCheck={}",
-        jar_path.display(),
-        if hash_verify_enabled {
-            "Enabled"
-        } else {
-            "Disabled"
-        },
-        if *SKIP_AGENT_OVERLAY_VERIFICATION {
-            "Skip"
-        } else {
-            "Run"
-        }
-    );
+    verify_client_hash(&client, &jar_path, &app_handle, &state).await?;
+    ensure_agent_overlay().await?;
 
-    if hash_verify_enabled {
-        log_info!("Hash verification is enabled for client '{}'", client.name);
-        emit_to_main_window(
-            &app_handle,
-            "client-hash-verification-start",
-            &serde_json::json!({
-                "id": id,
-                "name": client.name
-            }),
-        );
-
-        log_info!(
-            "Verifying MD5 hash for client {} before launch",
-            client.name
-        );
-        let current_hash = calculate_md5_hash(&jar_path)?;
-        if current_hash == client.md5_hash {
-            log_info!(
-                "MD5 hash verification successful for client {}",
-                client.name
-            );
-
-            emit_to_main_window(
-                &app_handle,
-                "client-hash-verification-done",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name
-                }),
-            );
-        } else {
-            log_warn!(
-                "Hash mismatch for client {}. Expected: {}, Got: {}. Redownloading...",
-                client.name,
-                client.md5_hash,
-                current_hash
-            );
-
-            emit_to_main_window(
-                &app_handle,
-                "client-hash-verification-failed",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name,
-                    "expected_hash": client.md5_hash,
-                    "actual_hash": current_hash
-                }),
-            );
-
-            if let Err(e) = std::fs::remove_file(&jar_path) {
-                log_warn!("Failed to remove corrupted client file: {}", e);
-            }
-
-            update_client_installed_status(id, false, state.clone())?;
-
-            log_info!("Redownloading client: {} (ID: {})", client.name, id);
-            client
-                .download(&state.clients.manager)
-                .await
-                .map_err(|e| {
-                    if e.contains("Hash verification failed") {
-                        format!("Hash verification failed for {}: The downloaded file is corrupted. Please try downloading again.", client.name)
-                    } else {
-                        format!("Failed to redownload client {}: {}", client.name, e)
-                    }
-                })?;
-
-            emit_to_main_window(
-                &app_handle,
-                "client-redownload-complete",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name
-                }),
-            );
-
-            log_info!(
-                "Client {} redownloaded and verified successfully",
-                client.name
-            );
-        }
-    } else {
-        log_debug!(
-            "Hash verification disabled, skipping verification for client {}",
-            client.name
-        );
-    }
-
-    match AgentOverlayManager::verify_agent_overlay_files().await {
-        Ok(true) => {}
-        Ok(false) => {
-            if !*SKIP_AGENT_OVERLAY_VERIFICATION {
-                log_warn!("Agent/overlay files verification failed, attempting to download...");
-                AgentOverlayManager::download_agent_overlay_files()
-                    .await
-                    .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
-            } else {
-                log_debug!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
-            }
-        }
-        Err(e) => {
-            log_error!("Error verifying agent/overlay files: {}", e);
-        }
-    }
-
-    let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
-
-    let minimize_on_launch = {
-        let settings = SETTINGS.lock().unwrap();
-        settings.minimize_to_tray_on_launch.value
-    };
+    let minimize_on_launch = SETTINGS
+        .lock()
+        .map(|s| s.minimize_to_tray_on_launch.value)
+        .unwrap_or(false);
 
     if minimize_on_launch {
         if let Some(window) = app_handle.get_webview_window("main") {
@@ -277,6 +270,7 @@ pub async fn launch_client(
         }
     }
 
+    let options = LaunchOptions::new(app_handle.clone(), user_token, false);
     client.run(options, state.clients.manager.clone()).await
 }
 
