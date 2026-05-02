@@ -200,9 +200,19 @@ onMounted(async () => {
 
     await initSystemInfo();
 
+    const spotlightHandler = (e: KeyboardEvent) => {
+        if (e.ctrlKey && e.code === "Space") {
+            e.preventDefault();
+            e.stopPropagation();
+            showSpotlight.value = !showSpotlight.value;
+        }
+    };
+    window.addEventListener("keydown", spotlightHandler);
+
     onUnmounted(() => {
         cleanupTauri();
         cleanupWindow();
+        window.removeEventListener("keydown", spotlightHandler);
     });
 });
 
