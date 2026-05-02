@@ -19,6 +19,7 @@ use crate::core::{
     network::{analytics::Analytics, server_ads},
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
     utils::{
+        process::force_high_performance_gpu,
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
             IS_AARCH64, IS_LINUX, IS_MACOS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
@@ -239,6 +240,9 @@ impl Client {
 
         let java_bin = self.resolve_java_bin();
 
+        #[cfg(windows)]
+        force_high_performance_gpu(&java_bin);
+
         let (client_folder, _) = self.get_launch_paths()?;
         let assets_dir = self.resolve_assets_dir();
         let natives_path = self.resolve_natives_path();
@@ -274,6 +278,14 @@ impl Client {
 
         #[cfg(target_os = "macos")]
         cmd.arg("-XstartOnFirstThread");
+
+        #[cfg(target_os = "linux")]
+        {
+            cmd.env("__NV_PRIME_RENDER_OFFLOAD", "1");
+            cmd.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
+            cmd.env("__VK_LAYER_NV_optimus", "NVIDIA_only");
+            cmd.env("DRI_PRIME", "1");
+        }
 
         //let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
         //if self.client_type != ClientType::Forge && !is_legacy_vanilla {
