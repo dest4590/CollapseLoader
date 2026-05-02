@@ -4,22 +4,6 @@ import { getCurrentLanguage } from "@services/i18n";
 import { getApiBaseWithVersion, ensureApiUrl } from "@/config";
 import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 
-export interface ApiResponse<T> {
-    success: boolean;
-    data: T;
-    error: string | null;
-}
-
-export class ApiResponseError extends Error {
-    response: { status: number; data: ApiResponse<any> };
-
-    constructor(resp: ApiResponse<any>, status = 200) {
-        super(resp?.error || "Request failed");
-        this.name = "ApiResponseError";
-        this.response = { status, data: resp };
-    }
-}
-
 class ApiClient {
     async request<T = any>(
         method: string,
@@ -83,7 +67,7 @@ class ApiClient {
                 body: body || null,
             });
 
-            return this.unwrapResponse<T>(response, requestHeaders);
+            return response;
         } catch (error: any) {
             if (headers["X-Skip-Toast"] !== "true") {
                 const { addToast } = useToast();
@@ -91,32 +75,6 @@ class ApiClient {
             }
             throw error;
         }
-    }
-
-    private unwrapResponse<T>(
-        payload: any,
-        headers: Record<string, string>
-    ): T {
-        if (this.isApiResponse(payload)) {
-            if (!payload.success) {
-                if (headers["X-Skip-Toast"] !== "true") {
-                    const { addToast } = useToast();
-                    addToast(payload.error || "Request failed", "error");
-                }
-                throw new ApiResponseError(payload);
-            }
-            return payload.data as T;
-        }
-        return payload as T;
-    }
-
-    private isApiResponse(value: any): value is ApiResponse<any> {
-        return (
-            !!value &&
-            typeof value === "object" &&
-            typeof value.success === "boolean" &&
-            "data" in value
-        );
     }
 
     get<T = any>(url: string, data?: any, config: any = {}): Promise<T> {

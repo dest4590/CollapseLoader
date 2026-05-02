@@ -137,9 +137,11 @@ impl ClientManager {
             return Ok(Self::mock_clients());
         }
 
+        // 1 arg endpoint, 2 arg cache file name
         let vanilla_task = Self::spawn_clients_fetch_task(VANILLA_CLIENTS_URL, "clients.json");
         let fabric_task = Self::spawn_clients_fetch_task(FABRIC_CLIENTS_URL, "fabric-clients.json");
         let forge_task = Self::spawn_clients_fetch_task(FORGE_CLIENTS_URL, "forge-clients.json");
+        // -----------------------------------
 
         let (vanilla_res, fabric_res, forge_res) =
             tokio::join!(vanilla_task, fabric_task, forge_task);
@@ -170,14 +172,19 @@ impl ClientManager {
         all_clients.sort_by_key(|b| std::cmp::Reverse(b.created_at));
         Self::apply_client_metadata(&mut all_clients);
 
-        log_debug!(
-            "Initialized ClientManager with {} clients",
-            all_clients.len()
+        log_info!(
+            "Initialized ClientManager with {} clients (Vanilla: {}, Fabric: {}, Forge: {})",
+            all_clients.len(),
+            all_clients
+                .iter()
+                .filter(|c| c.meta.is_fabric == false && c.meta.is_forge == false)
+                .count(),
+            all_clients.iter().filter(|c| c.meta.is_fabric).count(),
+            all_clients.iter().filter(|c| c.meta.is_forge).count(),
         );
 
         Ok(all_clients)
     }
-
 
     fn load_from_cache(filename: &str) -> Result<Vec<Client>, DynError> {
         let cache_path = {

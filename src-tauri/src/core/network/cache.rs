@@ -50,6 +50,7 @@ pub fn cache_file_path(cache_dir: &Path, path: &str) -> PathBuf {
 /// Reads and deserializes a cached JSON response from disk.
 pub fn read_cached_json(cache_file_path: &Path) -> Option<Value> {
     if !cache_file_path.exists() {
+        log_debug!("API cache miss: {:?}", cache_file_path);
         return None;
     }
 
@@ -104,6 +105,8 @@ pub fn write_cache_if_changed(
                         cache_file_path,
                         e
                     );
+                } else {
+                    log_debug!("Wrote API cache: {:?}", cache_file_path);
                 }
             }
             Err(e) => {

@@ -5,7 +5,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { router } from "@router";
 import { useI18n } from "vue-i18n";
 
-// Components
 import GlobalModal from "@shared/components/common/GlobalModal.vue";
 import DevMenuModal from "./components/core/DevMenuModal.vue";
 import InitialSetupModals from "./components/core/InitialSetupModals.vue";
@@ -19,10 +18,8 @@ import SpotlightSearch from "./components/core/SpotlightSearch.vue";
 import AuthModal from "@layouts/modals/AuthModal.vue";
 import SpotlightTipModal from "./components/modals/common/SpotlightTipModal.vue";
 
-// Views
 import { views, tabOrder } from "@router/views";
 
-// Services & Composables
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { settingsService } from "@services/settings/settingsService";
 import { useToast } from "@shared/composables/useToast";
@@ -34,14 +31,12 @@ import { persistenceService } from "./services/persistenceService";
 import { userService } from "@features/auth/userService";
 import { getIsDevelopment } from "@shared/utils/isDevelopment";
 
-// Types & Utils
 import { updaterService } from "./services/updater/updaterService";
 
 const { t } = useI18n();
 const { addToast } = useToast();
 const { showModal } = useModal();
 
-// State
 const isMacOS = ref(false);
 const isDev = ref(false);
 const isAuthenticated = ref(false);
@@ -221,22 +216,35 @@ onMounted(async () => {
             showSpotlight.value = !showSpotlight.value;
         }
     };
+    const globalKeyHandler = (e: KeyboardEvent) => {
+        if (e.code === "F9") {
+            e.preventDefault();
+            e.stopPropagation();
+            setActiveTab("network_debug");
+        }
+    };
     window.addEventListener("keydown", spotlightHandler);
+    window.addEventListener("keydown", globalKeyHandler);
 
     cleanupTauriGlobal = cleanupTauri;
     cleanupWindowGlobal = cleanupWindow;
     spotlightHandlerGlobal = spotlightHandler;
+    globalKeyHandlerGlobal = globalKeyHandler;
 });
 
 let cleanupTauriGlobal: () => void;
 let cleanupWindowGlobal: () => void;
 let spotlightHandlerGlobal: (e: KeyboardEvent) => void;
+let globalKeyHandlerGlobal: (e: KeyboardEvent) => void;
 
 onUnmounted(() => {
     if (cleanupTauriGlobal) cleanupTauriGlobal();
     if (cleanupWindowGlobal) cleanupWindowGlobal();
     if (spotlightHandlerGlobal) {
         window.removeEventListener("keydown", spotlightHandlerGlobal);
+    }
+    if (globalKeyHandlerGlobal) {
+        window.removeEventListener("keydown", globalKeyHandlerGlobal);
     }
     console.log("App unmounting, stopping systems...");
     globalUserStatus.stopStatusSync();

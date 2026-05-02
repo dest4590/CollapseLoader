@@ -12,7 +12,6 @@ import {
     User,
     UserCheck,
     Newspaper,
-    Package,
     FileText,
     Search,
     Zap,
