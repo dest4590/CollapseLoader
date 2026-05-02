@@ -41,7 +41,8 @@ const username = ref("");
 const isLoading = ref(false);
 
 const handleLocalLogin = async () => {
-    if (!username.value.trim()) {
+    const inputName = username.value.trim();
+    if (!inputName) {
         addToast(
             t("auth.login.enter_username") || "Введите имя пользователя",
             "warning"
@@ -51,11 +52,20 @@ const handleLocalLogin = async () => {
 
     try {
         isLoading.value = true;
-        localUserService.createProfile(username.value.trim());
-        addToast(
-            t("auth.login.local_success") || "Локальный профиль создан!",
-            "success"
-        );
+        const existing = localUserService.getProfiles().find(p => p.username === inputName);
+        if (existing) {
+            localUserService.setActiveProfile(existing.id);
+            addToast(
+                t("auth.login.local_success") || "Локальный профиль загружен!",
+                "success"
+            );
+        } else {
+            localUserService.createProfile(inputName);
+            addToast(
+                t("auth.login.local_success") || "Локальный профиль создан!",
+                "success"
+            );
+        }
         emit("logged-in");
     } catch (e) {
         console.error("Local login failed", e);

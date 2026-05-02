@@ -598,6 +598,22 @@ class UserService {
     }
 
     async initializeUserFull(): Promise<UserInitData> {
+        const localId = this.getLocalId();
+        if (localId !== null) {
+            const init = await this.initializeUser();
+            return {
+                user: {
+                    ...init.user_info,
+                    profile: init.profile,
+                    status: init.status,
+                },
+                preferences: [],
+                favorites: [],
+                accounts: [],
+                friends: { friends: [], requests: { sent: [], received: [], blocked: [] } },
+            };
+        }
+
         try {
             const data = await apiClient.get<any>("/users/init");
 
