@@ -28,7 +28,7 @@ CHECK_FLAGS_JOB = "check-flags"
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Delete GitHub Action runs that were cancelled OR where 'check-flags' "
+            "Delete GitHub Action runs that were cancelled, failed, OR where 'check-flags' "
             "completed and all other jobs were skipped."
         )
     )
@@ -175,6 +175,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     for run in fetch_runs_by_status(headers, "cancelled"):
         runs_to_delete.append((run, "cancelled"))
+
+    for run in fetch_runs_by_status(headers, "failure"):
+        runs_to_delete.append((run, "failure"))
 
     completed_runs = fetch_runs_by_status(headers, "completed", max_runs=30)
     logger.info(
