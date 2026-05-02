@@ -604,13 +604,17 @@ class UserService {
             return {
                 user: {
                     ...init.user_info,
+                    email: init.user_info.email ?? "",
                     profile: init.profile,
                     status: init.status,
                 },
                 preferences: [],
                 favorites: [],
                 accounts: [],
-                friends: { friends: [], requests: { sent: [], received: [], blocked: [] } },
+                friends: {
+                    friends: [],
+                    requests: { sent: [], received: [], blocked: [] },
+                },
             };
         }
 
