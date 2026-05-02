@@ -1,6 +1,6 @@
 //! API client for interacting with remote servers, including caching and retry logic.
 
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Deserialize};
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -18,37 +18,32 @@ pub const API_CACHE_DIR: &str = "cache";
 /// Maximum number of retries for a failed API request.
 pub const API_MAX_RETRIES: usize = 5;
 
+/// Standard API response wrapper.
+#[derive(Deserialize)]
+struct ApiResponse {
+    /// Indicates if the request was successful.
+    success: Option<bool>,
+    /// The actual data payload.
+    data: Option<serde_json::Value>,
+    /// Error message if the request failed.
+    error: Option<String>,
+}
+
 /// Extracts the data payload from a raw API response string.
 ///
 /// This function handles both the standard wrapped response format and
 /// direct JSON payloads for backward compatibility.
 fn extract_api_response(body: &str) -> Result<serde_json::Value, String> {
-    let parsed: serde_json::Value = serde_json::from_str(body).map_err(|e| e.to_string())?;
+    let api_data: ApiResponse = serde_json::from_str(body).map_err(|e| e.to_string())?;
 
-    if let Some(object) = parsed.as_object() {
-        if let Some(success) = object.get("success") {
-            match success.as_bool() {
-                Some(true) => {
-                    return object
-                        .get("data")
-                        .cloned()
-                        .ok_or_else(|| "API response marked successful but missing data".to_string());
-                }
-                Some(false) => {
-                    let err_msg = object
-                        .get("error")
-                        .and_then(|value| value.as_str())
-                        .unwrap_or("Unknown API error");
-                    return Err(format!("API error: {err_msg}"));
-                }
-                None => {
-                    return Err("API response contains a non-boolean success field".to_string());
-                }
-            }
+    match (api_data.success, api_data.data, api_data.error) {
+        (Some(true), Some(data), _) => Ok(data),
+        (Some(false), _, err) => {
+            let err_msg = err.unwrap_or_else(|| "Unknown API error".to_string());
+            Err(format!("API error: {err_msg}"))
         }
+        _ => serde_json::from_str(body).map_err(|e| e.to_string()),
     }
-
-    Ok(parsed)
 }
 
 /// A client for making requests to the application's API servers.
@@ -197,11 +192,6 @@ impl Api {
             }
             Err(err_msg) => {
                 if let Some(cached) = cached_data {
-                    log_warn!(
-                        "Using cached API response for path {} after network failure: {}",
-                        path,
-                        err_msg
-                    );
                     Ok(serde_json::from_value(cached)?)
                 } else {
                     Err(format!("{} and no cache available", err_msg).into())

@@ -9,11 +9,8 @@ pub static CODENAME: &str = "REBORN";
 /// The current API version string.
 pub static API_VERSION: &str = "v1";
 
-/// GitHub repository owner for updates and reporting.
 pub static GITHUB_REPO_OWNER: &str = "dest4590";
-/// GitHub repository name.
 pub static GITHUB_REPO_NAME: &str = "CollapseLoader";
-/// GitHub repository branch to track.
 pub static GITHUB_REPO_BRANCH: &str = "dev";
 
 /// Whether the current OS is Linux.

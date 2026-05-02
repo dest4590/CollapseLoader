@@ -256,7 +256,7 @@ pub fn run() {
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::utils::get_api_url,
-            commands::utils::get_api_version,
+            // commands::utils::get_api_version,
             commands::utils::get_cdn_url,
             commands::utils::get_data_folder,
             commands::utils::get_version,

@@ -10,7 +10,7 @@ use crate::core::storage::flags::FLAGS_MANAGER;
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::discord_rpc;
-use crate::core::utils::globals::{API_SERVERS, API_VERSION, CDN_SERVERS, CODENAME};
+use crate::core::utils::globals::{API_SERVERS, CDN_SERVERS, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
@@ -150,12 +150,16 @@ pub async fn change_data_folder(
                     new_dir
                 );
                 copy_dir_recursive(&current_dir, &new_dir)?;
-                log_debug!("Finished recursive copy. Removing old directory contents (except aci.json).");
+                log_debug!(
+                    "Finished recursive copy. Removing old directory contents (except aci.json)."
+                );
                 if current_dir.exists() {
                     if let Ok(entries) = fs::read_dir(&current_dir) {
                         for entry in entries.flatten() {
                             let path = entry.path();
-                            if path.is_file() && path.file_name().and_then(|n| n.to_str()) == Some("aci.json") {
+                            if path.is_file()
+                                && path.file_name().and_then(|n| n.to_str()) == Some("aci.json")
+                            {
                                 continue;
                             }
                             if path.is_dir() {
@@ -180,7 +184,9 @@ pub async fn change_data_folder(
             if let Ok(entries) = fs::read_dir(&current_dir) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.is_file() && path.file_name().and_then(|n| n.to_str()) == Some("aci.json") {
+                    if path.is_file()
+                        && path.file_name().and_then(|n| n.to_str()) == Some("aci.json")
+                    {
                         log_debug!("Preserving aci.json during wipe");
                         continue;
                     }
@@ -281,10 +287,10 @@ pub async fn get_cdn_url() -> Result<String, String> {
     )
 }
 
-#[tauri::command]
-pub fn get_api_version() -> Result<String, String> {
-    Ok(API_VERSION.to_string())
-}
+// #[tauri::command]
+// pub fn get_api_version() -> Result<String, String> {
+//     Ok(API_VERSION.to_string())
+// }
 
 #[tauri::command]
 pub async fn encode_base64(input: String) -> Result<String, String> {
@@ -339,15 +345,23 @@ pub fn set_window_theme(window: Window, theme: String) {
 
 #[tauri::command]
 pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
-    use tauri::menu::{Menu, MenuItem};
     use tauri::menu::PredefinedMenuItem;
+    use tauri::menu::{Menu, MenuItem};
 
-    let installed_clients: Vec<(u32, String)> = state.clients.manager.lock()
+    let installed_clients: Vec<(u32, String)> = state
+        .clients
+        .manager
+        .lock()
         .map(|m| {
-            m.clients.iter()
+            m.clients
+                .iter()
                 .filter(|c| c.show && c.working && c.meta.installed)
                 .map(|c| {
-                    let ver = c.version.replace('_', ".").trim_start_matches('V').to_string();
+                    let ver = c
+                        .version
+                        .replace('_', ".")
+                        .trim_start_matches('V')
+                        .to_string();
                     (c.id, format!("⚡  {} {}", c.name, ver))
                 })
                 .collect()
@@ -364,8 +378,14 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
     let client_items: Vec<MenuItem<tauri::Wry>> = installed_clients
         .iter()
         .map(|(id, label)| {
-            MenuItem::with_id(&app, format!("launch_{id}"), label.as_str(), true, None::<&str>)
-                .expect("Failed to create client menu item")
+            MenuItem::with_id(
+                &app,
+                format!("launch_{id}"),
+                label.as_str(),
+                true,
+                None::<&str>,
+            )
+            .expect("Failed to create client menu item")
         })
         .collect();
 
@@ -373,8 +393,13 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
         Menu::with_items(&app, &[&show, &sep1, &quit]).map_err(|e| e.to_string())?
     } else {
         let clients_label = MenuItem::with_id(
-            &app, "_clients_header", "── Launch Client ──", false, None::<&str>
-        ).map_err(|e| e.to_string())?;
+            &app,
+            "_clients_header",
+            "── Launch Client ──",
+            false,
+            None::<&str>,
+        )
+        .map_err(|e| e.to_string())?;
 
         let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
             vec![&show, &sep1, &clients_label];
@@ -428,10 +453,18 @@ pub async fn get_storage_usage() -> StorageUsage {
         let root = DATA.root_dir.lock().unwrap().clone();
 
         let known_system_dirs = [
-            "libraries", "libraries-fabric", "libraries-legacy",
-            "natives", "natives-macos-x64", "natives-macos-arm64",
-            "natives-linux", "natives-legacy", "natives-legacy-linux", "natives-fabric",
-            "assets", "assets-fabric",
+            "libraries",
+            "libraries-fabric",
+            "libraries-legacy",
+            "natives",
+            "natives-macos-x64",
+            "natives-macos-arm64",
+            "natives-linux",
+            "natives-legacy",
+            "natives-legacy-linux",
+            "natives-fabric",
+            "assets",
+            "assets-fabric",
             "minecraft-versions",
             "custom_clients",
             "agent_overlay",
@@ -452,8 +485,7 @@ pub async fn get_storage_usage() -> StorageUsage {
             + dir_size(&root.join("natives-legacy-linux"))
             + dir_size(&root.join("natives-fabric"));
 
-        let assets = dir_size(&root.join("assets"))
-            + dir_size(&root.join("assets-fabric"));
+        let assets = dir_size(&root.join("assets")) + dir_size(&root.join("assets-fabric"));
 
         let mc_versions = dir_size(&root.join("minecraft-versions"));
         let custom_clients_size = dir_size(&root.join("custom_clients"));

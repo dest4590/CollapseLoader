@@ -89,7 +89,7 @@ const openTelegram = async () => {
 
 const openDiscord = async () => {
     try {
-        await openUrl("https://collapseloader.org/discord/");
+        await openUrl("https://discord.gg/FyKtnFqs6J");
     } catch (error) {
         console.error("Failed to open discord:", error);
         addToast(t("about.open_failed", { platform: "Discord" }), "error");

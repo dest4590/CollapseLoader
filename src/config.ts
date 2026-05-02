@@ -40,7 +40,6 @@ export const initializeApiUrl = (): Promise<string> => {
             }
         } catch (error) {
             console.error("Failed to get API URL from backend:", error);
-            currentApiUrl = "https://atlas.collapseloader.org";
         }
 
         isInitialized = true;
