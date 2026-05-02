@@ -5,12 +5,6 @@
         :class="{ 'animate-out': animateOut }"
         class="fixed inset-0 bg-base-300 flex items-center justify-center"
     >
-        <BootLogs
-            v-if="isDev"
-            :current-progress="currentProgress / 100"
-            :loading-state="loadingState"
-        />
-
         <div
             class="flex flex-col items-center justify-center h-full w-screen relative z-10"
         >
@@ -73,7 +67,6 @@ import {
     nextTick,
     toRefs,
 } from "vue";
-import BootLogs from "./BootLogs.vue";
 import OdometerText from "./OdometerText.vue";
 import { animations, animationKeys } from "../../services/preloaderAnimations";
 
@@ -86,7 +79,7 @@ const props = defineProps({
     animationType: { type: String, default: "" },
 });
 
-const { isDev, loadingState, currentProgress, currentTheme } = toRefs(props);
+const { loadingState, currentTheme } = toRefs(props);
 
 const displayProgress = ref(0);
 

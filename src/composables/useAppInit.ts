@@ -2,7 +2,6 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { bootLogService } from "@services/logs/bootLogService";
 import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
 import { useToast } from "@shared/composables/useToast";
 import { globalUserStatus } from "@features/auth/useUserStatus";
@@ -185,11 +184,6 @@ export function useAppInit() {
                 connectivity.api_online ?? connectivity.auth_online ?? false;
             isOnline.value = Boolean(cdnOnline && apiOnline);
 
-            if (cdnOnline) bootLogService.cdnOnline();
-            else bootLogService.cdnOffline();
-            if (apiOnline) bootLogService.webApiOnline();
-            else bootLogService.webApiOffline();
-
             if (!isOnline.value) addToast(t("toast.server.offline"), "error");
         } catch (error) {
             console.error("Connectivity check failed:", error);
@@ -198,32 +192,28 @@ export function useAppInit() {
     };
 
     const initializeCoreSystems = async () => {
-        bootLogService.start();
-        bootLogService.systemInit();
-
         loadingState.value = loadingStates[0];
         currentProgress.value = 5;
 
         await setupEventListeners();
 
         const rpcTask = invoke("initialize_rpc").catch((e) =>
-            bootLogService.addCustomLog("WARN", "rpc", String(e))
+            console.error("RPC initialization failed:", e)
         );
 
         const themeTask = applyThemeOnStartup().then((theme) => {
             currentTheme.value = (theme as string) || "dark";
-            bootLogService.themeApplied(currentTheme.value);
+            console.log("Theme applied:", currentTheme.value);
         });
 
         const languageTask = applyLanguageOnStartup().then(() => {
             const lang = locale.value || getCurrentLanguage() || "en";
-            bootLogService.languageApplied(lang);
+            console.log("Language applied:", lang);
         });
 
         await Promise.all([rpcTask, themeTask, languageTask]);
 
         useToast().getToastPosition();
-        bootLogService.eventListenersInit();
 
         currentProgress.value = 25;
         await wait(1000);
@@ -236,11 +226,9 @@ export function useAppInit() {
         try {
             await invoke("initialize_api");
             apiInitialized.value = true;
-            bootLogService.apiInitSuccess();
             invoke("update_tray_menu").catch(() => {});
         } catch (error) {
             console.error("API initialization failed:", error);
-            bootLogService.apiInitFailed();
         }
 
         currentProgress.value = 50;
@@ -252,18 +240,15 @@ export function useAppInit() {
         checkApiStatus: () => void
     ) => {
         loadingState.value = loadingStates[2];
-        bootLogService.authCheck();
         checkApiStatus();
 
         if (!isAuthenticated.value) {
-            bootLogService.authSkipped();
             return;
         }
 
-        bootLogService.authSuccess();
         if (isOnline.value) {
             await initializeUserDataWrapper(isAuthenticated.value);
-            bootLogService.syncReady();
+
             webSocketService.connect();
         }
     };
@@ -295,7 +280,6 @@ export function useAppInit() {
         document.documentElement.classList.add("app-ready");
         setTimeout(() => {
             contentVisible.value = true;
-            bootLogService.clear();
         }, 80);
     };
 
