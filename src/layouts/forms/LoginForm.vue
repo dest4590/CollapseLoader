@@ -31,7 +31,7 @@
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
-import { localUserService } from "@core/auth/localUserService";
+import { localUserService } from "@features/auth/localUserService";
 
 const { t } = useI18n();
 const { addToast } = useToast();

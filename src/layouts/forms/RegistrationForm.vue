@@ -85,7 +85,7 @@ import { ref } from "vue";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
 import { apiPost } from "@api/clients/internal";
-import { getCurrentLanguage } from "@core/i18n";
+import { getCurrentLanguage } from "@services/i18n";
 import { getApiBaseWithVersion } from "@/config";
 
 interface Props {

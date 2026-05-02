@@ -4,7 +4,7 @@ import type {
     CreatePresetInput,
     UpdatePresetInput,
 } from "@features/presets/types";
-import { themeService } from "@core/theme/themeService";
+import { themeService } from "@services/theme/themeService";
 
 export class PresetService {
     async getAllPresets(): Promise<ThemePreset[]> {

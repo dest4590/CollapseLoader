@@ -28,14 +28,24 @@ class SettingsService {
         this.isLoading.value = true;
         try {
             const loaded = await invoke<SettingsMap>("get_settings");
-            Object.keys(this.settings).forEach((k) => delete this.settings[k]);
-            Object.entries(loaded || {}).forEach(([k, v]) => {
-                if (v && typeof v === "object" && "value" in v && "show" in v) {
-                    this.settings[k] = v;
-                } else {
-                    this.settings[k] = { value: v, show: true };
-                }
-            });
+
+            // Clear existing settings
+            Object.keys(this.settings).forEach(
+                (key) => delete this.settings[key]
+            );
+
+            // Populate with new settings
+            for (const [key, val] of Object.entries(loaded || {})) {
+                const isSettingObject =
+                    val &&
+                    typeof val === "object" &&
+                    "value" in val &&
+                    "show" in val;
+
+                this.settings[key] = isSettingObject
+                    ? (val as Setting<any>)
+                    : { value: val, show: true };
+            }
         } catch (err) {
             console.error("Failed to load settings:", err);
             throw err;
@@ -60,10 +70,9 @@ class SettingsService {
     async loadFlags(): Promise<void> {
         try {
             const loaded = await invoke<FlagsMap>("get_flags");
-            Object.keys(this.flags).forEach((k) => delete this.flags[k]);
-            Object.entries(loaded || {}).forEach(([k, v]) => {
-                this.flags[k] = v;
-            });
+
+            Object.keys(this.flags).forEach((key) => delete this.flags[key]);
+            Object.assign(this.flags, loaded || {});
         } catch (err) {
             console.error("Failed to load flags:", err);
             throw err;
@@ -72,7 +81,7 @@ class SettingsService {
 
     setSetting(key: string, value: any) {
         if (!this.settings[key]) {
-            this.settings[key] = { value, show: true } as Setting<any>;
+            this.settings[key] = { value, show: true };
             return;
         }
         this.settings[key].value = value;

@@ -724,7 +724,10 @@
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
-import { userService, type PublicUserProfile } from "@core/auth/userService";
+import {
+    userService,
+    type PublicUserProfile,
+} from "@features/auth/userService";
 import { useFriends } from "@features/friends/useFriends";
 import BlockUnblockConfirmModal from "@features/friends/modals/BlockUnblockConfirmModal.vue";
 import RemoveFriendConfirmModal from "@features/friends/modals/RemoveFriendConfirmModal.vue";
@@ -754,7 +757,7 @@ import {
     Timer,
     LayoutList,
 } from "lucide-vue-next";
-import { globalUserStatus } from "@core/auth/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 import { invoke } from "@tauri-apps/api/core";
 import { localTrackerService } from "../services/localTrackerService";
 import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
@@ -777,7 +780,7 @@ import { useStreamerMode } from "@features/social/useStreamerMode";
 import getRoleBadge from "@features/social/utils/roleBadge";
 import { resolveApiAssetUrl } from "@shared/utils/url";
 import { marketplaceService } from "@features/marketplace/marketplaceService";
-import { useUser } from "@core/auth/useUser";
+import { useUser } from "@features/auth/useUser";
 import {
     achievementService,
     type Achievement,

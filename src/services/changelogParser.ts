@@ -1,4 +1,4 @@
-import i18n from "@core/i18n";
+import i18n from "@services/i18n";
 
 export type Category = "feature" | "improvement" | "bugfix" | "other";
 

@@ -32,7 +32,10 @@ export default defineConfig(async () => ({
             "@shared": path.resolve(__dirname, "./src/shared"),
             "@features": path.resolve(__dirname, "./src/features"),
             "@api": path.resolve(__dirname, "./src/api"),
-            "@core": path.resolve(__dirname, "./src/core"),
+            "@services": path.resolve(__dirname, "./src/services"),
+            "@layouts": path.resolve(__dirname, "./src/layouts"),
+            "@router": path.resolve(__dirname, "./src/router"),
+            "@stores": path.resolve(__dirname, "./src/stores"),
         },
     },
 

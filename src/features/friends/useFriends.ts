@@ -3,7 +3,7 @@ import {
     userService,
     type Friend,
     type FriendRequest,
-} from "@core/auth/userService";
+} from "@features/auth/userService";
 import {
     createPolling,
     type PollingController,

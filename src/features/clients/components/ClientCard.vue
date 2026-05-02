@@ -20,7 +20,7 @@ import ClientCardDetails from "./ClientCardDetails.vue";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
 import { useModal } from "@shared/composables/useModal";
-import { useUser } from "@core/auth/useUser";
+import { useUser } from "@features/auth/useUser";
 
 const { t } = useI18n();
 const { showModal, hideModal } = useModal();

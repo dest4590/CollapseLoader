@@ -32,7 +32,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
-import { useRouter } from "../../services/router";
+import { useRouter } from "@router";
 
 const { addToast } = useToast();
 const { t } = useI18n();

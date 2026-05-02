@@ -3,7 +3,7 @@ import { ref, shallowRef, onMounted, computed } from "vue";
 import { MessageSquare, Send, Trash2 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import { apiDelete, apiGet, apiPost } from "@api/clients/internal";
-import { userService } from "@core/auth/userService";
+import { userService } from "@features/auth/userService";
 import { formatDate } from "@shared/utils/utils";
 import { resolveApiAssetUrl } from "@shared/utils/url";
 import type { ClientComment } from "@shared/types/ui";

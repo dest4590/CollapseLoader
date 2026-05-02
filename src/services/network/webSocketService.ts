@@ -1,7 +1,7 @@
 import { Client } from "@stomp/stompjs";
 import { getApiUrl } from "@/config";
-import { updaterService } from "@core/updater/updaterService";
-import i18n from "@core/i18n";
+import { updaterService } from "@services/updater/updaterService";
+import i18n from "@services/i18n";
 import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 
 class WebSocketService {

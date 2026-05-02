@@ -26,7 +26,11 @@
             "@shared/*": ["src/shared/*"],
             "@features/*": ["src/features/*"],
             "@api/*": ["src/api/*"],
-            "@core/*": ["src/core/*"]
+            "@services/*": ["src/services/*"],
+            "@layouts/*": ["src/layouts/*"],
+            "@router": ["src/router/index.ts"],
+            "@router/*": ["src/router/*"],
+            "@stores/*": ["src/stores/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],

@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { ImageOff } from "lucide-vue-next";
-import { globalUserStatus } from "@core/auth/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 import { resolveApiAssetUrl } from "@shared/utils/url";
 
 interface Props {

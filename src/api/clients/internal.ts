@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
-import { getCurrentLanguage } from "@core/i18n";
+import { getCurrentLanguage } from "@services/i18n";
 import { getApiBaseWithVersion, ensureApiUrl } from "@/config";
 import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 

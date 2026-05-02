@@ -389,7 +389,7 @@ import { useI18n } from "vue-i18n";
 import { formatDate } from "@shared/utils/utils";
 import { resolveApiAssetUrl } from "@shared/utils/url";
 import { marketplaceService } from "@features/marketplace/marketplaceService";
-import { useUser } from "@core/auth/useUser";
+import { useUser } from "@features/auth/useUser";
 import {
     ChevronLeft,
     ChevronRight,

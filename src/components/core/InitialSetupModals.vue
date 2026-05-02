@@ -3,13 +3,13 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
 import { ref, watch, onMounted, onUnmounted, computed } from "vue";
-import i18n from "@core/i18n";
+import i18n from "@services/i18n";
 import HoldButton from "@shared/components/ui/HoldButton.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
     getCurrentLanguage,
-} from "@core/i18n";
+} from "@services/i18n";
 import {
     Languages,
     MemoryStick,
@@ -170,7 +170,7 @@ const handleLanguageChange = async (languageCode: string) => {
 
 const handleSliderChange = () => {};
 
-import { settingsService } from "@core/settings/settingsService";
+import { settingsService } from "@services/settings/settingsService";
 
 const saveRamSettings = async () => {
     try {

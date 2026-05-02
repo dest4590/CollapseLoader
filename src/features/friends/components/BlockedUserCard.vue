@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { UserCheck } from "lucide-vue-next";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
-import type { Friend } from "@core/auth/userService";
+import type { Friend } from "@features/auth/userService";
 import { useStreamerMode } from "@features/social/useStreamerMode";
 import { computed } from "vue";
 

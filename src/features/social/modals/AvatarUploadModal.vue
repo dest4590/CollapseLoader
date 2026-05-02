@@ -25,7 +25,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import AvatarUploader from "@features/friends/components/AvatarUploader.vue";
-import { userService } from "@core/auth/userService";
+import { userService } from "@features/auth/userService";
 import { useToast } from "@shared/composables/useToast";
 
 const props = defineProps<{ title?: string; currentUrl?: string }>();

@@ -23,6 +23,7 @@ fn human_size(bytes: u64) -> String {
     const MB: f64 = KB * 1024.0;
     const GB: f64 = MB * 1024.0;
     let b = bytes as f64;
+
     if b >= GB {
         format!("{:.2} GB", b / GB)
     } else if b >= MB {
@@ -30,7 +31,7 @@ fn human_size(bytes: u64) -> String {
     } else if b >= KB {
         format!("{:.0} KB", b / KB)
     } else {
-        format!("{b} B")
+        format!("{bytes} B")
     }
 }
 

@@ -1,5 +1,5 @@
 import { createI18n } from "vue-i18n";
-import { settingsService } from "@core/settings/settingsService";
+import { settingsService } from "@services/settings/settingsService";
 
 import en from "./locales/en.json";
 import ru from "./locales/ru.json";

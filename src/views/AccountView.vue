@@ -565,8 +565,8 @@ import AvatarUploadModal from "@features/social/modals/AvatarUploadModal.vue";
 import RoleSelectionModal from "@features/social/modals/RoleSelectionModal.vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import AchievementCard from "../components/features/profile/AchievementCard.vue";
-import { useUser } from "@core/auth/useUser";
-import { userService } from "@core/auth/userService";
+import { useUser } from "@features/auth/useUser";
+import { userService } from "@features/auth/userService";
 import {
     achievementService,
     type Achievement,
@@ -585,7 +585,7 @@ import {
 import { localTrackerService } from "../services/localTrackerService";
 import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
 import getRoleBadge from "@features/social/utils/roleBadge";
-import { globalUserStatus } from "@core/auth/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 import { syncService, SyncServiceState } from "../services/syncService";
 import { invoke } from "@tauri-apps/api/core";
 

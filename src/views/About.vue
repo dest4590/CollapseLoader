@@ -4,14 +4,14 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { onMounted, ref } from "vue";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
-import { UpdateInfo, updaterService } from "@core/updater/updaterService";
+import { UpdateInfo, updaterService } from "@services/updater/updaterService";
 import Logo from "../assets/images/logo.svg";
 import IconGitHub from "../assets/icons/github.svg";
 import IconTelegram from "../assets/icons/telegram.svg";
 import IconDiscord from "../assets/icons/discord.svg";
 import { CircleFadingArrowUp } from "lucide-vue-next";
 import { achievementService } from "@features/social/achievementService";
-import { useUser } from "@core/auth/useUser";
+import { useUser } from "@features/auth/useUser";
 
 const { t } = useI18n();
 const LogoUrl = String(Logo);

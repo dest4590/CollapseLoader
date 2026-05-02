@@ -119,7 +119,7 @@ import {
     AlertTriangle,
 } from "lucide-vue-next";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
-import type { Friend } from "@core/auth/userService";
+import type { Friend } from "@features/auth/userService";
 import { useI18n } from "vue-i18n";
 import { useStreamerMode } from "@features/social/useStreamerMode";
 import { useModal } from "@shared/composables/useModal";

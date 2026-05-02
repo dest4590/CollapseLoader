@@ -46,21 +46,19 @@ pub fn handle_startup_error(error: &StartupError) {
         );
 
         if should_install {
-            if let Err(install_error) = crate::core::platform::windows::attempt_install_webview2() {
-                install_error.show_and_exit();
-            } else {
-                let message = "WebView2 has been installed. Please restart the application.";
-                eprintln!("{message}");
-                messagebox::show_message("Restart Required", message);
-
-                std::process::exit(0);
+            match crate::core::platform::windows::attempt_install_webview2() {
+                Ok(_) => {
+                    let message = "WebView2 has been installed. Please restart the application.";
+                    eprintln!("{message}");
+                    messagebox::show_message("Restart Required", message);
+                    std::process::exit(0);
+                }
+                Err(install_error) => install_error.show_and_exit(),
             }
-        } else {
-            error.show_and_exit();
+            return;
         }
-    } else {
-        error.show_and_exit();
     }
+    error.show_and_exit();
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -92,11 +90,7 @@ fn parse_verify_params(url: &str) -> Option<(String, String)> {
         }
     }
 
-    if code.is_empty() {
-        None
-    } else {
-        Some((code, email))
-    }
+    (!code.is_empty()).then_some((code, email))
 }
 
 fn parse_client_name(url: &str) -> Option<&str> {
@@ -122,7 +116,7 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running
         was_already_running
     );
 
-    if !should_handle_deep_link(&url) && was_already_running {
+    if was_already_running && !should_handle_deep_link(&url) {
         log_debug!("Deep link already handled, skipping: {}", url);
         return;
     }
@@ -155,19 +149,16 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running
 fn should_handle_deep_link(url: &str) -> bool {
     static LAST_HANDLED: OnceLock<Mutex<Option<(String, Instant)>>> = OnceLock::new();
     let last = LAST_HANDLED.get_or_init(|| Mutex::new(None));
-    let mut guard = match last.lock() {
-        Ok(guard) => guard,
-        Err(poisoned) => poisoned.into_inner(),
-    };
-    let normalized = url.trim().to_string();
+    let mut guard = last.lock().unwrap_or_else(|p| p.into_inner());
+    let normalized = url.trim();
 
-    if let Some((ref prev, prev_time)) = guard.as_ref() {
-        if prev == &normalized && prev_time.elapsed() < Duration::from_secs(2) {
+    if let Some((ref prev, prev_time)) = *guard {
+        if prev == normalized && prev_time.elapsed() < Duration::from_secs(2) {
             return false;
         }
     }
 
-    *guard = Some((normalized, Instant::now()));
+    *guard = Some((normalized.to_string(), Instant::now()));
     true
 }
 

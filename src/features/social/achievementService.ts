@@ -1,5 +1,5 @@
 import { useToast } from "@shared/composables/useToast";
-import i18n from "@core/i18n";
+import i18n from "@services/i18n";
 
 export interface Achievement {
     id: number;

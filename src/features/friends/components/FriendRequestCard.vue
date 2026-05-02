@@ -66,7 +66,7 @@ import { useI18n } from "vue-i18n";
 import { useModal } from "@shared/composables/useModal";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import CancelFriendRequestConfirmModal from "@features/friends/modals/CancelFriendRequestConfirmModal.vue";
-import type { Friend } from "@core/auth/userService";
+import type { Friend } from "@features/auth/userService";
 import { useStreamerMode } from "@features/social/useStreamerMode";
 import { computed } from "vue";
 

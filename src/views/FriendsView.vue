@@ -176,7 +176,7 @@ import {
     type Friend,
     userService,
     type UserStatus,
-} from "@core/auth/userService";
+} from "@features/auth/userService";
 import { useFriends } from "@features/friends/useFriends";
 import AddFriendModal from "@features/friends/modals/AddFriendModal.vue";
 import BlockUnblockConfirmModal from "@features/friends/modals/BlockUnblockConfirmModal.vue";

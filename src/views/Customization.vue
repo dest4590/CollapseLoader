@@ -838,8 +838,8 @@ import {
     ExternalLink,
 } from "lucide-vue-next";
 import { useToast } from "@shared/composables/useToast";
-import { settingsService } from "@core/settings/settingsService";
-import { themeService } from "@core/theme/themeService";
+import { settingsService } from "@services/settings/settingsService";
+import { themeService } from "@services/theme/themeService";
 import PresetManager from "@features/presets/components/PresetManager.vue";
 import {
     Moon,

@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { UserMinus, X } from "lucide-vue-next";
-import { globalUserStatus } from "@core/auth/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 
 interface Friend {
     id: number;

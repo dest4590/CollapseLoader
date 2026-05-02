@@ -268,7 +268,7 @@ import type {
     MarketplaceTheme,
 } from "@features/presets/types";
 import { presetService } from "@features/presets/presetService";
-import { useUser } from "@core/auth/useUser";
+import { useUser } from "@features/auth/useUser";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import MarketplaceEditPresetModal from "@features/presets/modals/MarketplaceEditPresetModal.vue";

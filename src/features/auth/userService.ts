@@ -1,6 +1,6 @@
 import { apiClient } from "@api/clients/internal";
 import { achievementService } from "@features/social/achievementService";
-import { localUserService } from "@core/auth/localUserService";
+import { localUserService } from "@features/auth/localUserService";
 import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 import { maxIsoTimestamp } from "@shared/utils/utils";
 
@@ -217,27 +217,26 @@ class UserService {
         try {
             const cached = localStorage.getItem(CACHE_KEY);
             if (!cached) return null;
+
             const parsedData: any = JSON.parse(cached);
-            if (
-                !parsedData ||
-                typeof parsedData !== "object" ||
-                !parsedData.lastUpdated
-            ) {
+            if (!parsedData?.lastUpdated) {
                 localStorage.removeItem(CACHE_KEY);
                 return null;
             }
-            const now = new Date();
+
             const cacheTime = new Date(parsedData.lastUpdated);
             if (isNaN(cacheTime.getTime())) {
                 localStorage.removeItem(CACHE_KEY);
                 return null;
             }
+
             const hoursDiff =
-                (now.getTime() - cacheTime.getTime()) / (1000 * 60 * 60);
+                (Date.now() - cacheTime.getTime()) / (1000 * 60 * 60);
             if (hoursDiff > CACHE_EXPIRY_HOURS) {
                 localStorage.removeItem(CACHE_KEY);
                 return null;
             }
+
             return parsedData as CachedUserData;
         } catch (error) {
             console.error("Error reading cached user data:", error);
@@ -253,11 +252,13 @@ class UserService {
                 info: null,
                 lastUpdated: new Date().toISOString(),
             };
+
             const updated = {
                 ...existing,
                 ...data,
                 lastUpdated: new Date().toISOString(),
             };
+
             localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
         } catch (error) {
             console.error("Error caching user data:", error);
@@ -265,18 +266,18 @@ class UserService {
     }
 
     private stripShowFields(input: any): any {
-        if (input === null || input === undefined) return input;
-        if (Array.isArray(input))
+        if (input === null || typeof input !== "object") return input;
+
+        if (Array.isArray(input)) {
             return input.map((v) => this.stripShowFields(v));
-        if (typeof input === "object") {
-            const out: any = {};
-            for (const k of Object.keys(input)) {
-                if (k === "show") continue;
-                out[k] = this.stripShowFields((input as any)[k]);
-            }
-            return out;
         }
-        return input;
+
+        const out: any = {};
+        for (const [k, v] of Object.entries(input)) {
+            if (k === "show") continue;
+            out[k] = this.stripShowFields(v);
+        }
+        return out;
     }
 
     private mapStatus(status: UserStatus | null | undefined): ClientUserStatus {
@@ -338,6 +339,7 @@ class UserService {
             let cached = this.getCachedData();
             if (!cached) {
                 const activeLocal = localUserService.getActiveProfile();
+                const now = new Date().toISOString();
                 cached = {
                     profile: {
                         id: 1,
@@ -345,9 +347,8 @@ class UserService {
                         avatar_url: activeLocal?.avatarUrl || null,
                         role: activeLocal?.role || "USER",
                         social_links: [],
-                        created_at:
-                            activeLocal?.createdAt || new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
+                        created_at: activeLocal?.createdAt || now,
+                        updated_at: now,
                         favorite_client_id: null,
                     },
                     info: {
@@ -355,12 +356,11 @@ class UserService {
                         username: activeLocal?.username || "local_user",
                         email: null,
                         role: activeLocal?.role || "LOCAL_USER",
-                        created_at:
-                            activeLocal?.createdAt || new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
+                        created_at: activeLocal?.createdAt || now,
+                        updated_at: now,
                         last_login_at: null,
                     },
-                    lastUpdated: new Date().toISOString(),
+                    lastUpdated: now,
                 };
             }
 
@@ -369,16 +369,10 @@ class UserService {
                 if (cached.info) cached.info.username = nickname;
 
                 const normalized = nickname.trim().toUpperCase();
-                const roleMap: Record<string, string> = {
-                    OWNER: "OWNER",
-                    DEVELOPER: "DEVELOPER",
-                    ADMIN: "ADMIN",
-                    TESTER: "TESTER",
-                    USER: "USER",
-                };
-                if (roleMap[normalized]) {
-                    cached.profile.role = roleMap[normalized];
-                    if (cached.info) cached.info.role = roleMap[normalized];
+                const roles = ["OWNER", "DEVELOPER", "ADMIN", "TESTER", "USER"];
+                if (roles.includes(normalized)) {
+                    cached.profile.role = normalized;
+                    if (cached.info) cached.info.role = normalized;
                 }
             } else if (cached.profile && cached.info) {
                 cached.info.username =
@@ -442,24 +436,23 @@ class UserService {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const base64 = reader.result as string;
-
                     localUserService.updateProfile(localId, {
                         avatarUrl: base64,
                     });
 
                     const cached = this.getCachedData();
-                    if (!cached || !cached.profile) {
-                        const activeLocal = localUserService.getActiveProfile();
+                    const activeLocal = localUserService.getActiveProfile();
+                    const now = new Date().toISOString();
+
+                    if (!cached?.profile) {
                         const newProfile: UserProfile = {
                             id: 1,
                             nickname: activeLocal?.nickname || "Local User",
                             avatar_url: base64,
                             role: activeLocal?.role || "LOCAL_USER",
                             social_links: [],
-                            created_at:
-                                activeLocal?.createdAt ||
-                                new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
+                            created_at: activeLocal?.createdAt || now,
+                            updated_at: now,
                             favorite_client_id: null,
                         };
                         const newCached: CachedUserData = {
@@ -469,13 +462,11 @@ class UserService {
                                 username: activeLocal?.username || "local_user",
                                 email: "local@user.none",
                                 role: activeLocal?.role || "LOCAL_USER",
-                                created_at:
-                                    activeLocal?.createdAt ||
-                                    new Date().toISOString(),
-                                updated_at: new Date().toISOString(),
+                                created_at: activeLocal?.createdAt || now,
+                                updated_at: now,
                                 last_login_at: null,
                             },
-                            lastUpdated: new Date().toISOString(),
+                            lastUpdated: now,
                         };
                         this.setCachedData(newCached);
                         resolve({ success: true, profile: newProfile });

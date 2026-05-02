@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { themeService } from "@core/theme/themeService";
+import { themeService } from "@services/theme/themeService";
 import { marketplaceService } from "@features/marketplace/marketplaceService";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";

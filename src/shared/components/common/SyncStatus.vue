@@ -43,7 +43,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import { syncService, type SyncServiceState } from "@/services/syncService";
 import { useI18n } from "vue-i18n";
-import { globalUserStatus } from "@core/auth/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 
 const { t } = useI18n();
 const isAuthenticated = globalUserStatus.isAuthenticated;

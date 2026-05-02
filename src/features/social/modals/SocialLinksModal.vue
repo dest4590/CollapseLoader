@@ -142,7 +142,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { globalUserStatus } from "@core/auth/useUserStatus";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { achievementService } from "@features/social/achievementService";

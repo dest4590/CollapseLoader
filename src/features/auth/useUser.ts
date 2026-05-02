@@ -3,8 +3,8 @@ import {
     userService,
     type UserProfile,
     type UserInfo,
-} from "@core/auth/userService";
-import { localUserService } from "@core/auth/localUserService";
+} from "@features/auth/userService";
+import { localUserService } from "@features/auth/localUserService";
 import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 
 interface GlobalUserState {

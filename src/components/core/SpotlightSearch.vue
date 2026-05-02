@@ -2,7 +2,7 @@
 import { ref, computed, watch, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
-import { settingsService } from "@core/settings/settingsService";
+import { settingsService } from "@services/settings/settingsService";
 import {
     Home,
     Settings,

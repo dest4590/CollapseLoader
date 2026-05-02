@@ -1,6 +1,6 @@
-import { changeLanguage } from "@core/i18n";
-import { themeService } from "@core/theme/themeService";
-import { settingsService } from "@core/settings/settingsService";
+import { changeLanguage } from "@services/i18n";
+import { themeService } from "@services/theme/themeService";
+import { settingsService } from "@services/settings/settingsService";
 
 export interface Setting<T> {
     description: string;

@@ -149,41 +149,41 @@ const applyPreset = () => {
 
     Object.entries(varMap).forEach(([key, cssVar]) => {
         const value = settings[key];
+        const isEmpty =
+            value === undefined ||
+            value === null ||
+            (typeof value === "string" && value.trim().length === 0);
 
-        if (
-            value !== undefined &&
-            value !== null &&
-            (typeof value === "string" ? value.trim().length > 0 : true)
-        ) {
-            let cssValue = String(value);
-            if (key === "backgroundBlur") cssValue = `${value}px`;
-            if (key === "backgroundImage") {
-                const trimmed = value.trim();
-                if (
-                    trimmed.startsWith("http://") ||
-                    trimmed.startsWith("https://") ||
-                    trimmed.startsWith("data:") ||
-                    trimmed.startsWith("blob:")
-                ) {
-                    cssValue = `url("${trimmed}")`;
-                } else if (trimmed.length > 0) {
-                    cssValue = `url("${convertFileSrc(trimmed)}")`;
-                } else {
-                    root.style.removeProperty(cssVar);
-                    return;
-                }
-            }
-            root.style.setProperty(cssVar, cssValue);
-        } else {
+        if (isEmpty) {
             root.style.removeProperty(cssVar);
+            return;
         }
+
+        let cssValue = String(value);
+        if (key === "backgroundBlur") cssValue = `${value}px`;
+        if (key === "backgroundImage") {
+            const trimmed = value.trim();
+            const isUrl =
+                trimmed.startsWith("http://") ||
+                trimmed.startsWith("https://") ||
+                trimmed.startsWith("data:") ||
+                trimmed.startsWith("blob:");
+
+            if (isUrl) {
+                cssValue = `url("${trimmed}")`;
+            } else if (trimmed.length > 0) {
+                cssValue = `url("${convertFileSrc(trimmed)}")`;
+            } else {
+                root.style.removeProperty(cssVar);
+                return;
+            }
+        }
+        root.style.setProperty(cssVar, cssValue);
     });
 
-    const bgImage = presetSettings.backgroundImage;
-    const bgOpacity = presetSettings.backgroundOpacity;
-    const effectiveOpacity =
-        bgOpacity !== null && bgOpacity !== undefined ? bgOpacity : 100;
-    const hasBg = bgImage && bgImage.trim().length > 0 && effectiveOpacity > 0;
+    const hasBg =
+        presetSettings.backgroundImage?.trim() &&
+        (presetSettings.backgroundOpacity ?? 100) > 0;
 
     if (hasBg) {
         root.setAttribute("data-has-background", "true");
@@ -191,24 +191,19 @@ const applyPreset = () => {
         root.removeAttribute("data-has-background");
     }
 
-    let styleEl = document.getElementById("custom-theme-styles");
-    if (!styleEl) {
-        styleEl = document.createElement("style");
-        styleEl.id = "custom-theme-styles";
-        document.head.appendChild(styleEl);
-    }
+    const styleEl =
+        document.getElementById("custom-theme-styles") ||
+        (() => {
+            const el = document.createElement("style");
+            el.id = "custom-theme-styles";
+            document.head.appendChild(el);
+            return el;
+        })();
 
-    if (presetSettings.enableCustomCSS) {
-        let customStyles = "";
-
-        if (presetSettings.customCSS) {
-            customStyles += presetSettings.customCSS;
-        }
-
-        styleEl.textContent = customStyles;
-    } else {
-        styleEl.textContent = "";
-    }
+    styleEl.textContent =
+        presetSettings.enableCustomCSS && presetSettings.customCSS
+            ? presetSettings.customCSS
+            : "";
 };
 
 let isApplyingExternalUpdate = false;
@@ -336,125 +331,60 @@ const exportPreset = (): string => {
 const importPreset = (presetJSON: string): void => {
     try {
         const parsed = JSON.parse(presetJSON);
-        updatePresetSettings({
-            customCSS:
-                typeof parsed.customCSS === "string"
-                    ? parsed.customCSS
-                    : presetSettings.customCSS,
-            enableCustomCSS:
-                typeof parsed.enableCustomCSS === "boolean"
-                    ? parsed.enableCustomCSS
-                    : presetSettings.enableCustomCSS,
-            primary:
-                typeof parsed.primaryColorOverride === "string" ||
-                parsed.primaryColorOverride === null
-                    ? parsed.primaryColorOverride
-                    : presetSettings.primary,
+        const newSettings: Partial<ThemeSettings> = {};
 
-            base100:
-                typeof parsed.base100 === "string" || parsed.base100 === null
-                    ? parsed.base100
-                    : presetSettings.base100,
-            base200:
-                typeof parsed.base200 === "string" || parsed.base200 === null
-                    ? parsed.base200
-                    : presetSettings.base200,
-            base300:
-                typeof parsed.base300 === "string" || parsed.base300 === null
-                    ? parsed.base300
-                    : presetSettings.base300,
-            baseContent:
-                typeof parsed.baseContent === "string" ||
-                parsed.baseContent === null
-                    ? parsed.baseContent
-                    : presetSettings.baseContent,
+        const stringFields = [
+            "customCSS",
+            "primary",
+            "base100",
+            "base200",
+            "base300",
+            "baseContent",
+            "primaryContent",
+            "secondary",
+            "secondaryContent",
+            "accent",
+            "accentContent",
+            "neutral",
+            "neutralContent",
+            "info",
+            "infoContent",
+            "success",
+            "successContent",
+            "warning",
+            "warningContent",
+            "error",
+            "errorContent",
+            "backgroundImage",
+        ];
 
-            primaryContent:
-                typeof parsed.primaryContent === "string" ||
-                parsed.primaryContent === null
-                    ? parsed.primaryContent
-                    : presetSettings.primaryContent,
-            secondary:
-                typeof parsed.secondary === "string" ||
-                parsed.secondary === null
-                    ? parsed.secondary
-                    : presetSettings.secondary,
-            secondaryContent:
-                typeof parsed.secondaryContent === "string" ||
-                parsed.secondaryContent === null
-                    ? parsed.secondaryContent
-                    : presetSettings.secondaryContent,
-            accent:
-                typeof parsed.accent === "string" || parsed.accent === null
-                    ? parsed.accent
-                    : presetSettings.accent,
-            accentContent:
-                typeof parsed.accentContent === "string" ||
-                parsed.accentContent === null
-                    ? parsed.accentContent
-                    : presetSettings.accentContent,
-            neutral:
-                typeof parsed.neutral === "string" || parsed.neutral === null
-                    ? parsed.neutral
-                    : presetSettings.neutral,
-            neutralContent:
-                typeof parsed.neutralContent === "string" ||
-                parsed.neutralContent === null
-                    ? parsed.neutralContent
-                    : presetSettings.neutralContent,
-            info:
-                typeof parsed.info === "string" || parsed.info === null
-                    ? parsed.info
-                    : presetSettings.info,
-            infoContent:
-                typeof parsed.infoContent === "string" ||
-                parsed.infoContent === null
-                    ? parsed.infoContent
-                    : presetSettings.infoContent,
-            success:
-                typeof parsed.success === "string" || parsed.success === null
-                    ? parsed.success
-                    : presetSettings.success,
-            successContent:
-                typeof parsed.successContent === "string" ||
-                parsed.successContent === null
-                    ? parsed.successContent
-                    : presetSettings.successContent,
-            warning:
-                typeof parsed.warning === "string" || parsed.warning === null
-                    ? parsed.warning
-                    : presetSettings.warning,
-            warningContent:
-                typeof parsed.warningContent === "string" ||
-                parsed.warningContent === null
-                    ? parsed.warningContent
-                    : presetSettings.warningContent,
-            error:
-                typeof parsed.error === "string" || parsed.error === null
-                    ? parsed.error
-                    : presetSettings.error,
-            errorContent:
-                typeof parsed.errorContent === "string" ||
-                parsed.errorContent === null
-                    ? parsed.errorContent
-                    : presetSettings.errorContent,
+        const numberFields = ["backgroundBlur", "backgroundOpacity"];
+        const booleanFields = ["enableCustomCSS"];
 
-            backgroundImage:
-                typeof parsed.backgroundImage === "string" ||
-                parsed.backgroundImage === null
-                    ? parsed.backgroundImage
-                    : presetSettings.backgroundImage,
-            backgroundBlur:
-                typeof parsed.backgroundBlur === "number" ||
-                parsed.backgroundBlur === null
-                    ? parsed.backgroundBlur
-                    : presetSettings.backgroundBlur,
-            backgroundOpacity:
-                typeof parsed.backgroundOpacity === "number" ||
-                parsed.backgroundOpacity === null
-                    ? parsed.backgroundOpacity
-                    : presetSettings.backgroundOpacity,
+        // Map legacy field names if necessary
+        if (parsed.primaryColorOverride !== undefined) {
+            parsed.primary = parsed.primaryColorOverride;
+        }
+
+        stringFields.forEach((field) => {
+            if (typeof parsed[field] === "string" || parsed[field] === null) {
+                (newSettings as any)[field] = parsed[field];
+            }
         });
+
+        numberFields.forEach((field) => {
+            if (typeof parsed[field] === "number" || parsed[field] === null) {
+                (newSettings as any)[field] = parsed[field];
+            }
+        });
+
+        booleanFields.forEach((field) => {
+            if (typeof parsed[field] === "boolean") {
+                (newSettings as any)[field] = parsed[field];
+            }
+        });
+
+        updatePresetSettings(newSettings);
     } catch (e) {
         console.error("Failed to import theme preset:", e);
         throw e;

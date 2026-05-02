@@ -34,3 +34,27 @@ export function formatDate(dateString: string): string {
         return "N/A";
     }
 }
+
+export const wait = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+export const isObject = (v: any): v is Record<string, any> =>
+    v && typeof v === "object" && !Array.isArray(v);
+
+export function deepMerge<T extends Record<string, any>>(
+    target: T,
+    source: Record<string, any>
+): T {
+    if (!isObject(target)) return source as T;
+    const out: any = { ...target };
+    Object.keys(source).forEach((key) => {
+        const sVal = source[key];
+        const tVal = out[key];
+        if (isObject(sVal) && isObject(tVal)) {
+            out[key] = deepMerge(tVal, sVal);
+        } else {
+            out[key] = sVal;
+        }
+    });
+    return out;
+}

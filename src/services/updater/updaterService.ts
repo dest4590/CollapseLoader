@@ -1,8 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useModal } from "@shared/composables/useModal";
 import { useToast } from "@shared/composables/useToast";
-import UpdateModal from "@core/settings/modals/UpdateModal.vue";
-import i18n from "@core/i18n";
+import UpdateModal from "@services/settings/modals/UpdateModal.vue";
+import i18n from "@services/i18n";
+import { deepMerge } from "@shared/utils/utils";
 
 interface ChangeItem {
     category: string;
@@ -35,74 +36,47 @@ class UpdaterService {
         showNoUpdateToast = true,
         t: any
     ): Promise<UpdateInfo | null> {
-        if (this.isChecking) {
-            return null;
-        }
+        if (this.isChecking) return null;
 
         this.isChecking = true;
 
         try {
             console.log("Checking for updates...");
             const updateInfo = await invoke<UpdateInfo>("check_for_updates");
-            if (
-                updateInfo?.translations &&
-                typeof updateInfo.translations === "object"
-            ) {
-                try {
-                    const translations = updateInfo.translations as Record<
-                        string,
-                        any
-                    >;
-                    const isObject = (v: any) =>
-                        v && typeof v === "object" && !Array.isArray(v);
 
-                    const deepMerge = (target: any, source: any): any => {
-                        if (!isObject(target)) return source;
-                        const out: any = { ...target };
-                        Object.keys(source).forEach((key) => {
-                            const sVal = source[key];
-                            const tVal = out[key];
-                            if (isObject(sVal) && isObject(tVal)) {
-                                out[key] = deepMerge(tVal, sVal);
-                            } else {
-                                out[key] = sVal;
-                            }
-                        });
-                        return out;
-                    };
-
-                    Object.keys(translations).forEach((locale) => {
-                        const existing =
-                            i18n.global.getLocaleMessage(locale) || {};
-                        const merged = deepMerge(
-                            existing,
-                            translations[locale]
-                        );
-                        i18n.global.setLocaleMessage(locale, merged);
-                    });
-                } catch (e) {
-                    console.warn("Failed to merge release translations:", e);
-                }
+            if (updateInfo?.translations) {
+                this.mergeTranslations(updateInfo.translations);
             }
+
             console.log("Update check result:", updateInfo);
 
             if (updateInfo.available) {
                 this.showUpdateNotification(updateInfo, t);
             } else if (showNoUpdateToast) {
-                const { addToast } = useToast();
-                addToast(t("updater.up_to_date"), "success");
+                useToast().addToast(t("updater.up_to_date"), "success");
             }
 
             return updateInfo;
         } catch (error) {
             console.error("Failed to check for updates:", error);
             if (showNoUpdateToast) {
-                const { addToast } = useToast();
-                addToast(`updater.check_failed|${error}`, "error");
+                useToast().addToast(`updater.check_failed|${error}`, "error");
             }
             return null;
         } finally {
             this.isChecking = false;
+        }
+    }
+
+    private mergeTranslations(translations: Record<string, any>): void {
+        try {
+            Object.keys(translations).forEach((locale) => {
+                const existing = i18n.global.getLocaleMessage(locale) || {};
+                const merged = deepMerge(existing, translations[locale]);
+                i18n.global.setLocaleMessage(locale, merged);
+            });
+        } catch (e) {
+            console.warn("Failed to merge release translations:", e);
         }
     }
 

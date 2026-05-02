@@ -237,7 +237,7 @@ import {
 import { useToast } from "@shared/composables/useToast";
 import { useIrcChat } from "../../../composables/useIrcChat";
 import { useI18n } from "vue-i18n";
-import { userService } from "@core/auth/userService";
+import { userService } from "@features/auth/userService";
 
 const emit = defineEmits<{ "show-user-profile": [userId: number] }>();
 

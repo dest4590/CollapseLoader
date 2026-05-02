@@ -16,7 +16,7 @@ import { getIsDevelopment } from "@shared/utils/isDevelopment";
 const { t } = useI18n();
 
 const sidebarHelpVideo = new URL(
-    "../../assets/videos/sidebar-help.mp4",
+    "../assets/videos/sidebar-help.mp4",
     import.meta.url
 ).href;
 const sidebarHelpKey = "sidebar-help-shown";

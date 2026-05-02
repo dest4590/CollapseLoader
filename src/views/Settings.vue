@@ -36,14 +36,17 @@ import {
 import { useToast } from "@shared/composables/useToast";
 import type { ToastPosition } from "@shared/types/toast";
 import { syncService } from "../services/syncService";
-import { settingsService } from "@core/settings/settingsService";
-import { globalUserStatus } from "@core/auth/useUserStatus";
-import { userService, type UserExternalAccount } from "@core/auth/userService";
+import { settingsService } from "@services/settings/settingsService";
+import { globalUserStatus } from "@features/auth/useUserStatus";
+import {
+    userService,
+    type UserExternalAccount,
+} from "@features/auth/userService";
 import AddAccountModal from "@features/social/modals/AddAccountModal.vue";
 import EditAccountModal from "@features/social/modals/EditAccountModal.vue";
-import ResetConfirmModal from "@core/settings/modals/ResetConfirmModal.vue";
+import ResetConfirmModal from "@services/settings/modals/ResetConfirmModal.vue";
 import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue";
-import ChangeRootFolderModal from "@core/settings/modals/ChangeRootFolderModal.vue";
+import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
 import DeleteAccountConfirmModal from "@features/social/modals/DeleteAccountConfirmModal.vue";
 import SettingCard from "../components/settings/SettingCard.vue";
 import AccountCard from "../components/settings/AccountCard.vue";
@@ -51,7 +54,7 @@ import {
     changeLanguage,
     getAvailableLanguages,
     getCurrentLanguage,
-} from "@core/i18n";
+} from "@services/i18n";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@shared/utils/utils";
 import { useModal } from "@shared/composables/useModal";
