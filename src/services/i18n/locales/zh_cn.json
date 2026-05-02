@@ -950,6 +950,8 @@
         "news": "新闻",
         "customization": "个性化",
         "custom_clients": "自定义客户端",
+        "marketplace": "市场",
+        "app_logs": "应用日志",
         "sidebar_help": {
             "title": "提示：",
             "tip": "您可以将侧边栏移动到屏幕的任意一侧。双击侧边栏可移除图标之间的间距。",

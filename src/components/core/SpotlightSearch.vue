@@ -18,6 +18,7 @@ import {
     Zap,
     ChevronRight,
     CheckCircle,
+    Store,
 } from "lucide-vue-next";
 import type { Client } from "@shared/types/ui";
 
@@ -53,7 +54,7 @@ const tabItems = [
     { id: "friends", icon: Users, labelKey: "navigation.friends" },
     { id: "account", icon: User, labelKey: "navigation.account" },
     { id: "news", icon: Newspaper, labelKey: "navigation.news" },
-    { id: "marketplace", icon: Package, labelKey: "navigation.marketplace" },
+    { id: "marketplace", icon: Store, labelKey: "navigation.marketplace" },
     {
         id: "custom_clients",
         icon: FileText,

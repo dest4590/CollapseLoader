@@ -959,6 +959,8 @@
         "news": "Aktualności",
         "customization": "Personalizacja",
         "custom_clients": "Własne klienty",
+        "marketplace": "Marketplace",
+        "app_logs": "Logi aplikacji",
         "sidebar_help": {
             "title": "Porada:",
             "tip": "Możesz przenieść pasek boczny na dowolną stronę ekranu. Podwójne kliknięcie na pasek usunie odstępy między ikonami.",
