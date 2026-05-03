@@ -27,6 +27,15 @@ fn get_history() -> &'static Mutex<Vec<NetworkRequest>> {
     NETWORK_HISTORY.get_or_init(|| Mutex::new(Vec::new()))
 }
 
+fn with_network_history<R>(operation: impl FnOnce(&mut Vec<NetworkRequest>) -> R) -> R {
+    let mut history = get_history().lock().unwrap();
+    operation(&mut history)
+}
+
+fn emit_network_event(app_handle: &AppHandle, event: &str, record: &NetworkRequest) {
+    let _ = app_handle.emit(event, record);
+}
+
 fn mask_auth_headers(
     mut headers: Option<std::collections::HashMap<String, String>>,
 ) -> Option<std::collections::HashMap<String, String>> {
@@ -80,7 +89,7 @@ pub async fn api_request(
         error_message: None,
     };
 
-    let _ = app_handle.emit("network-request", initial_request);
+    emit_network_event(&app_handle, "network-request", &initial_request);
 
     let req_method = reqwest::Method::from_bytes(method.to_ascii_uppercase().as_bytes())
         .map_err(|_| format!("Unsupported method: {}", method))?;
@@ -166,7 +175,7 @@ pub async fn api_request(
                 response_text: None,
                 error_message: Some(e.to_string()),
             };
-            let _ = app_handle.emit("network-response", rec.clone());
+            emit_network_event(&app_handle, "network-response", &rec);
             save_request_history(rec);
             return Err(e.to_string());
         }
@@ -210,7 +219,7 @@ pub async fn api_request(
         error_message: None,
     };
 
-    let _ = app_handle.emit("network-response", rec.clone());
+    emit_network_event(&app_handle, "network-response", &rec);
     save_request_history(rec);
 
     if let Some(j) = response_json {
@@ -222,19 +231,19 @@ pub async fn api_request(
 
 #[tauri::command]
 pub fn clear_network_history() {
-    let mut history = get_history().lock().unwrap();
-    history.clear();
+    with_network_history(|history| history.clear());
 }
 
 #[tauri::command]
 pub fn get_network_history() -> Result<Vec<NetworkRequest>, String> {
-    Ok(get_history().lock().unwrap().clone())
+    Ok(with_network_history(|history| history.clone()))
 }
 
 fn save_request_history(rec: NetworkRequest) {
-    let mut history = get_history().lock().unwrap();
-    history.push(rec);
-    if history.len() > 1000 {
-        history.remove(0);
-    }
+    with_network_history(|history| {
+        history.push(rec);
+        if history.len() > 1000 {
+            history.remove(0);
+        }
+    });
 }

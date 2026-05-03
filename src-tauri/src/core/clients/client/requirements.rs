@@ -34,6 +34,31 @@ struct ModrinthVersion {
     files: Vec<ModrinthFile>,
 }
 
+struct RequirementsDownloadStateGuard<'a> {
+    app_handle: &'a AppHandle,
+}
+
+impl<'a> RequirementsDownloadStateGuard<'a> {
+    fn activate(app_handle: &'a AppHandle) -> Self {
+        {
+            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
+            *downloading = true;
+        }
+        emit_to_main_window(app_handle, "requirements-status", true);
+        Self { app_handle }
+    }
+}
+
+impl Drop for RequirementsDownloadStateGuard<'_> {
+    fn drop(&mut self) {
+        {
+            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
+            *downloading = false;
+        }
+        emit_to_main_window(self.app_handle, "requirements-status", false);
+    }
+}
+
 impl Client {
     pub async fn download(
         &self,
@@ -219,12 +244,7 @@ impl Client {
         if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
-            let mods_folder_abs = DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(&client_base)
-                .join(MODS_FOLDER);
+            let mods_folder_abs = self.client_base_folder().join(MODS_FOLDER);
 
             for req in mods {
                 let name = req.name.clone();
@@ -343,12 +363,7 @@ impl Client {
         if let Some(mods) = &self.dependencies {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
-            let mods_folder_abs = DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(&client_base)
-                .join(MODS_FOLDER);
+            let mods_folder_abs = self.client_base_folder().join(MODS_FOLDER);
 
             for req in mods {
                 let name = req.name.clone();
@@ -541,11 +556,7 @@ impl Client {
         app_handle: &AppHandle,
         files: Vec<String>,
     ) -> Result<(), String> {
-        {
-            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
-            *downloading = true;
-        }
-        emit_to_main_window(app_handle, "requirements-status", true);
+        let _state_guard = RequirementsDownloadStateGuard::activate(app_handle);
 
         for file in files {
             log_info!("Downloading requirement: {}", file);
@@ -565,12 +576,6 @@ impl Client {
         }
 
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-
-        {
-            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
-            *downloading = false;
-        }
-        emit_to_main_window(app_handle, "requirements-status", false);
 
         Ok(())
     }

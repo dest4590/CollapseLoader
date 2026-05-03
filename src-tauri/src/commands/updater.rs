@@ -73,17 +73,17 @@ fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
         return Err("Invalid version format".to_string());
     }
 
-    let major = parts[0]
-        .parse::<u32>()
-        .map_err(|_| "Invalid major version")?;
-    let minor = parts[1]
-        .parse::<u32>()
-        .map_err(|_| "Invalid minor version")?;
-    let patch = parts[2]
-        .parse::<u32>()
-        .map_err(|_| "Invalid patch version")?;
+    let major = parse_version_component(parts[0], "major")?;
+    let minor = parse_version_component(parts[1], "minor")?;
+    let patch = parse_version_component(parts[2], "patch")?;
 
     Ok((major, minor, patch))
+}
+
+fn parse_version_component(component: &str, label: &str) -> Result<u32, String> {
+    component
+        .parse::<u32>()
+        .map_err(|_| format!("Invalid {label} version"))
 }
 
 fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
@@ -382,7 +382,9 @@ pub fn get_changelog() -> Vec<ChangelogEntry> {
 fn extract_changelog_json_block(body: &str) -> Option<String> {
     let marker = if let Some(idx) = body.find("```changelog") {
         Some((idx, "```changelog"))
-    } else { body.find("``` changelog").map(|idx| (idx, "``` changelog")) };
+    } else {
+        body.find("``` changelog").map(|idx| (idx, "``` changelog"))
+    };
 
     if let Some((start_idx, _)) = marker {
         let after_marker = &body[start_idx..];

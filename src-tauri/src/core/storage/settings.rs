@@ -1,25 +1,29 @@
-//! Application settings management using JSON storage.
-
 use super::common::JsonStorage;
+use crate::core::utils::globals::ROOT_DIR;
 use paste::paste;
 use serde::{Deserialize, Serialize};
-use std::{fmt, path::PathBuf, sync::Mutex as StdMutex};
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+    path::PathBuf,
+    sync::{LazyLock, Mutex as StdMutex},
+};
 
-use crate::core::utils::globals::ROOT_DIR;
-use std::sync::LazyLock;
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Setting<T> {
+    pub value: T,
+    #[serde(default = "default_show_true")]
+    pub show: bool,
+}
 
 const fn default_show_true() -> bool {
     true
 }
 
-/// A single setting value with an associated visibility flag for the UI.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Setting<T> {
-    /// The actual value of the setting.
-    pub value: T,
-    /// Whether this setting should be visible in the UI.
-    #[serde(default = "default_show_true")]
-    pub show: bool,
+impl<T> Setting<T> {
+    pub fn new(value: T, show: bool) -> Self {
+        Self { value, show }
+    }
 }
 
 impl<T: Default> Default for Setting<T> {
@@ -31,22 +35,14 @@ impl<T: Default> Default for Setting<T> {
     }
 }
 
-impl<T> Setting<T> {
-    /// Creates a new setting with the given value and visibility.
-    pub fn new(value: T, show: bool) -> Self {
-        Self { value, show }
-    }
-}
-
-impl<T> std::ops::Deref for Setting<T> {
+impl<T> Deref for Setting<T> {
     type Target = T;
-
     fn deref(&self) -> &Self::Target {
         &self.value
     }
 }
 
-impl<T> std::ops::DerefMut for Setting<T> {
+impl<T> DerefMut for Setting<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.value
     }
@@ -58,15 +54,14 @@ impl<T: fmt::Display> fmt::Display for Setting<T> {
     }
 }
 
-/// Macro to define the settings structure with default values and UI visibility.
-///
-/// This macro generates the `Settings` struct, an `InputSettings` struct for deserialization,
-/// and implements `Default` and `JsonStorage` for the settings.
 macro_rules! define_settings {
     (
         $(#[$attr:meta])*
         pub struct $name:ident {
-            $( $field:ident: Setting<$field_type:ty> = ($default_val:expr, $show_val:expr) ),* $(,)?
+            $(
+                $(#[doc = $doc:expr])?
+                $field:ident: $type:ty = ($default_val:expr, $show_val:expr)
+            ),* $(,)?
         }
     ) => {
         paste! {
@@ -74,19 +69,12 @@ macro_rules! define_settings {
             #[derive(Clone, Debug, Serialize, Deserialize)]
             pub struct $name {
                 $(
-                    #[doc = "Setting for " $field]
+                    $(#[doc = $doc])?
                     #[serde(default)]
-                    pub $field: Setting<$field_type>,
+                    pub $field: Setting<$type>,
                 )*
-                /// The path to the configuration file on disk.
-                #[serde(skip)]
+                #[serde(skip, default)]
                 pub config_path: PathBuf,
-            }
-
-            /// Input structure for deserializing settings from the UI or disk.
-            #[derive(Deserialize, Clone, Debug)]
-            pub struct [<Input $name>] {
-                $(#[serde(default)] pub $field: Setting<$field_type>,)*
             }
 
             impl Default for $name {
@@ -95,46 +83,57 @@ macro_rules! define_settings {
                         $(
                             $field: Setting::new($default_val, $show_val),
                         )*
-                        config_path: PathBuf::from(&*ROOT_DIR).join("config.json"),
+                        config_path: Self::config_path(),
                     }
                 }
             }
 
             impl $name {
-                /// Creates a new settings instance from an input structure.
-                pub fn from_input(input: [<Input $name>], config_path: PathBuf) -> Self {
-                    Self {
-                        $(
-                            $field: Setting {
-                                value: input.$field.value,
-                                show: $show_val,
-                            },
-                        )*
-                        config_path,
-                    }
+                pub fn config_path() -> PathBuf {
+                    PathBuf::from(&*ROOT_DIR).join("config.json")
                 }
 
-                /// Loads settings from a JSON file on disk.
-                pub fn load_from_disk(path: PathBuf) -> Self {
-                    // update config_path here, because value is computed at runtime
-                    let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-                    loaded.config_path = path;
-                    $(
-                        loaded.$field.show = $show_val;
-                    )*
-                    loaded
+                fn apply_visibility_defaults(&mut self) {
+                    $( self.$field.show = $show_val; )*
                 }
+
+                pub fn from_input(mut input: Self, config_path: PathBuf) -> Self {
+                    input.config_path = config_path;
+                    input.apply_visibility_defaults();
+                    input
+                }
+
+                pub fn load_from_disk(path: PathBuf) -> Self {
+                    <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+                        loaded.config_path = path;
+                        loaded.apply_visibility_defaults();
+                    })
+                }
+
+                pub fn save(&self) {
+                    <Self as JsonStorage>::save_to_disk(self);
+                }
+
+                $(
+                    pub fn [<get_ $field>]() -> $type {
+                        SETTINGS.lock().unwrap().$field.value.clone()
+                    }
+
+                    pub fn [<set_ $field>](val: $type) {
+                        let mut lock = SETTINGS.lock().unwrap();
+                        lock.$field.value = val;
+                        lock.save();
+                    }
+                )*
             }
 
             impl JsonStorage for $name {
                 fn file_path(&self) -> &PathBuf {
                     &self.config_path
                 }
-
                 fn resource_name() -> &'static str {
                     "config"
                 }
-
                 fn create_default() -> Self {
                     Self::default()
                 }
@@ -144,30 +143,25 @@ macro_rules! define_settings {
 }
 
 define_settings! {
-    /// The main application settings structure.
     pub struct Settings {
-        ram: Setting<u32> = (2048, true),
-        theme: Setting<String> = ("dark".to_string(), false),
-        language: Setting<String> = ("en".to_string(), true),
-        discord_rpc_enabled: Setting<bool> = (true, true),
-        optional_telemetry: Setting<bool> = (true, true),
-        irc_chat: Setting<bool> = (true, true),
-        hash_verify: Setting<bool> = (true, true),
-        sync_client_settings: Setting<bool> = (true, true),
-        dpi_bypass: Setting<bool> = (false, true),
-        minimize_to_tray_on_launch: Setting<bool> = (false, true),
-        close_to_tray: Setting<bool> = (false, true),
-        java_path: Setting<String> = ("".to_string(), true),
-        java_args: Setting<String> = ("".to_string(), true),
-        auto_update: Setting<bool> = (true, true),
-        autostart: Setting<bool> = (false, true),
-        start_minimized: Setting<bool> = (false, true),
+        ram: u32 = (2048, true),
+        theme: String = ("dark".to_string(), false),
+        language: String = ("en".to_string(), true),
+        discord_rpc_enabled: bool = (true, true),
+        optional_telemetry: bool = (true, true),
+        irc_chat: bool = (true, true),
+        hash_verify: bool = (true, true),
+        sync_client_settings: bool = (true, true),
+        dpi_bypass: bool = (false, true),
+        minimize_to_tray_on_launch: bool = (false, true),
+        close_to_tray: bool = (false, true),
+        java_path: String = ("".to_string(), true),
+        java_args: String = ("".to_string(), true),
+        auto_update: bool = (true, true),
+        autostart: bool = (false, true),
+        start_minimized: bool = (false, true),
     }
 }
 
-/// Global static access to application settings.
-pub static SETTINGS: LazyLock<StdMutex<Settings>> = LazyLock::new(|| {
-    StdMutex::new(Settings::load_from_disk(
-        PathBuf::from(&*ROOT_DIR).join("config.json"),
-    ))
-});
+pub static SETTINGS: LazyLock<StdMutex<Settings>> =
+    LazyLock::new(|| StdMutex::new(Settings::load_from_disk(Settings::config_path())));

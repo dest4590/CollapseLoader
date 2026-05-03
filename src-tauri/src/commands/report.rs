@@ -353,152 +353,194 @@ pub async fn generate_network_report(app_handle: AppHandle) -> Result<NetworkRep
     })
 }
 
+fn push_line(buffer: &mut String, args: std::fmt::Arguments<'_>) {
+    use std::fmt::Write;
+
+    let _ = buffer.write_fmt(args);
+    let _ = buffer.write_char('\n');
+}
+
+fn write_report_header(buffer: &mut String, report: &NetworkReport) {
+    push_line(buffer, format_args!("=================================================="));
+    push_line(
+        buffer,
+        format_args!("            NETWORK DIAGNOSTIC REPORT             "),
+    );
+    push_line(buffer, format_args!("=================================================="));
+    push_line(
+        buffer,
+        format_args!("Generated at: {} (Timestamp: {})", report.date, report.timestamp),
+    );
+    push_line(buffer, format_args!(""));
+}
+
+fn write_environment_section(buffer: &mut String, report: &NetworkReport) {
+    push_line(buffer, format_args!("--- SYSTEM & APP ENVIRONMENT ---"));
+    push_line(buffer, format_args!("Hostname: {}", report.system_network.hostname));
+    push_line(
+        buffer,
+        format_args!("OS: {} ({})", report.environment.os, report.environment.os_family),
+    );
+    push_line(buffer, format_args!("Architecture: {}", report.environment.arch));
+    push_line(buffer, format_args!("App Version: {}", report.environment.version));
+    push_line(
+        buffer,
+        format_args!("Executable Path: {}", report.environment.exec_path),
+    );
+    push_line(buffer, format_args!(""));
+}
+
+fn write_local_network_section(buffer: &mut String, report: &NetworkReport) {
+    push_line(buffer, format_args!("--- LOCAL NETWORK SETTINGS ---"));
+    push_line(buffer, format_args!("Local LAN IP: {}", report.system_network.local_ip));
+
+    if let Some(proxies) = &report.system_network.proxy_settings {
+        push_line(buffer, format_args!("System Proxies Detected:"));
+        for (key, value) in proxies {
+            push_line(buffer, format_args!("  {}: {}", key.to_uppercase(), value));
+        }
+    } else {
+        push_line(buffer, format_args!("System Proxies Detected: None"));
+    }
+
+    if report.system_network.local_dns_servers.is_empty() {
+        push_line(buffer, format_args!("Local DNS Servers: Unknown/Failed to parse"));
+        push_line(buffer, format_args!(""));
+    } else {
+        push_line(
+            buffer,
+            format_args!(
+                "Local DNS Servers: {}",
+                report.system_network.local_dns_servers.join(", ")
+            ),
+        );
+        push_line(buffer, format_args!(""));
+    }
+}
+
+fn write_current_configuration_section(buffer: &mut String, report: &NetworkReport) {
+    push_line(buffer, format_args!("--- CURRENT CONFIGURATION ---"));
+    push_line(
+        buffer,
+        format_args!(
+            "Selected API Server: {}",
+            report.selected_api.as_deref().unwrap_or("None")
+        ),
+    );
+    push_line(
+        buffer,
+        format_args!(
+            "Selected CDN Server: {}",
+            report.selected_cdn.as_deref().unwrap_or("None")
+        ),
+    );
+    push_line(buffer, format_args!(""));
+}
+
+fn write_ping_section(buffer: &mut String, report: &NetworkReport) {
+    push_line(buffer, format_args!("--- HTTP SERVER REACHABILITY (PING) ---"));
+
+    for ping in &report.pings {
+        push_line(buffer, format_args!("URL: {}", ping.url));
+
+        if let Some(latency) = ping.latency_ms {
+            push_line(buffer, format_args!("  HTTP Latency: {} ms", latency));
+        }
+
+        if let Some(status) = ping.status_code {
+            push_line(buffer, format_args!("  HTTP Status: {}", status));
+        }
+
+        if let Some(length) = ping.content_length {
+            push_line(buffer, format_args!("  Content Length: {} bytes", length));
+        }
+
+        if let Some(headers) = &ping.headers {
+            push_line(buffer, format_args!("  Response Headers:"));
+            for (key, value) in headers {
+                push_line(buffer, format_args!("    {}: {}", key, value));
+            }
+        }
+
+        if let Some(snippet) = &ping.response_snippet {
+            push_line(buffer, format_args!("  Response Snippet:"));
+            push_line(buffer, format_args!("    {}", snippet.replace('\n', "\\n")));
+        }
+
+        if let Some(error) = &ping.error {
+            push_line(buffer, format_args!("  HTTP Error: {}", error));
+        }
+
+        push_line(buffer, format_args!(""));
+    }
+}
+
+fn write_dns_section(buffer: &mut String, report: &NetworkReport) {
+    push_line(buffer, format_args!("--- DNS RESOLUTION & TCP CHECK ---"));
+
+    for dns in &report.dns {
+        push_line(buffer, format_args!("Host: {}", dns.host));
+
+        if dns.resolved_ips.is_empty() {
+            push_line(
+                buffer,
+                format_args!("  IPs: None resolved (Blocked or DNS down)"),
+            );
+        } else {
+            push_line(buffer, format_args!("  IPs: {}", dns.resolved_ips.join(", ")));
+        }
+
+        push_line(
+            buffer,
+            format_args!(
+                "  TCP 443 Reachable: {}",
+                if dns.tcp_port_443_reachable { "YES" } else { "NO" }
+            ),
+        );
+
+        if let Some(latency) = dns.tcp_latency_ms {
+            push_line(buffer, format_args!("  TCP Latency (best reachable): {} ms", latency));
+        }
+
+        if let Some(dns_ms) = dns.dns_lookup_ms {
+            push_line(buffer, format_args!("  DNS Lookup Time: {} ms", dns_ms));
+        }
+
+        if !dns.ip_latencies.is_empty() {
+            push_line(buffer, format_args!("  Per-IP TCP Latencies:"));
+            for ip in &dns.ip_latencies {
+                push_line(
+                    buffer,
+                    format_args!(
+                        "    {} - {}",
+                        ip.ip,
+                        ip.tcp_latency_ms
+                            .map(|latency| format!("{} ms", latency))
+                            .unwrap_or_else(|| "unreachable".to_string())
+                    ),
+                );
+            }
+        }
+
+        if let Some(error) = &dns.error {
+            push_line(buffer, format_args!("  Error: {}", error));
+        }
+
+        push_line(buffer, format_args!(""));
+    }
+}
+
 #[tauri::command]
 pub async fn export_network_report(app_handle: AppHandle) -> Result<String, String> {
     let report = generate_network_report(app_handle).await?;
 
     let mut txt = String::with_capacity(4096);
-    use std::fmt::Write as _;
-
-    writeln!(txt, "==================================================").unwrap();
-    writeln!(txt, "            NETWORK DIAGNOSTIC REPORT             ").unwrap();
-    writeln!(txt, "==================================================\n").unwrap();
-
-    writeln!(
-        txt,
-        "Generated at: {} (Timestamp: {})\n",
-        report.date, report.timestamp
-    )
-    .unwrap();
-
-    writeln!(txt, "--- SYSTEM & APP ENVIRONMENT ---").unwrap();
-    writeln!(txt, "Hostname: {}", report.system_network.hostname).unwrap();
-    writeln!(
-        txt,
-        "OS: {} ({})",
-        report.environment.os, report.environment.os_family
-    )
-    .unwrap();
-    writeln!(txt, "Architecture: {}", report.environment.arch).unwrap();
-    writeln!(txt, "App Version: {}", report.environment.version).unwrap();
-    writeln!(txt, "Executable Path: {}\n", report.environment.exec_path).unwrap();
-
-    writeln!(txt, "--- LOCAL NETWORK SETTINGS ---").unwrap();
-    writeln!(txt, "Local LAN IP: {}", report.system_network.local_ip).unwrap();
-
-    if let Some(proxies) = &report.system_network.proxy_settings {
-        writeln!(txt, "System Proxies Detected:").unwrap();
-        for (k, v) in proxies {
-            writeln!(txt, "  {}: {}", k.to_uppercase(), v).unwrap();
-        }
-    } else {
-        writeln!(txt, "System Proxies Detected: None").unwrap();
-    }
-
-    if report.system_network.local_dns_servers.is_empty() {
-        writeln!(txt, "Local DNS Servers: Unknown/Failed to parse\n").unwrap();
-    } else {
-        writeln!(
-            txt,
-            "Local DNS Servers: {}\n",
-            report.system_network.local_dns_servers.join(", ")
-        )
-        .unwrap();
-    }
-
-    writeln!(txt, "--- CURRENT CONFIGURATION ---").unwrap();
-    writeln!(
-        txt,
-        "Selected API Server: {}",
-        report.selected_api.as_deref().unwrap_or("None")
-    )
-    .unwrap();
-    writeln!(
-        txt,
-        "Selected CDN Server: {}\n",
-        report.selected_cdn.as_deref().unwrap_or("None")
-    )
-    .unwrap();
-
-    writeln!(txt, "--- HTTP SERVER REACHABILITY (PING) ---").unwrap();
-    for p in &report.pings {
-        writeln!(txt, "URL: {}", p.url).unwrap();
-        if let Some(latency) = p.latency_ms {
-            writeln!(txt, "  HTTP Latency: {} ms", latency).unwrap();
-        }
-        if let Some(status) = p.status_code {
-            writeln!(txt, "  HTTP Status: {}", status).unwrap();
-        }
-        if let Some(len) = p.content_length {
-            writeln!(txt, "  Content Length: {} bytes", len).unwrap();
-        }
-
-        if let Some(headers) = &p.headers {
-            writeln!(txt, "  Response Headers:").unwrap();
-            for (k, v) in headers {
-                writeln!(txt, "    {}: {}", k, v).unwrap();
-            }
-        }
-
-        if let Some(snip) = &p.response_snippet {
-            writeln!(txt, "  Response Snippet:").unwrap();
-            writeln!(txt, "    {}", snip.replace('\n', "\\n")).unwrap();
-        }
-
-        if let Some(err) = &p.error {
-            writeln!(txt, "  HTTP Error: {}", err).unwrap();
-        }
-        writeln!(txt).unwrap();
-    }
-
-    writeln!(txt, "--- DNS RESOLUTION & TCP CHECK ---").unwrap();
-    for d in &report.dns {
-        writeln!(txt, "Host: {}", d.host).unwrap();
-
-        if d.resolved_ips.is_empty() {
-            writeln!(txt, "  IPs: None resolved (Blocked or DNS down)").unwrap();
-        } else {
-            writeln!(txt, "  IPs: {}", d.resolved_ips.join(", ")).unwrap();
-        }
-
-        writeln!(
-            txt,
-            "  TCP 443 Reachable: {}",
-            if d.tcp_port_443_reachable {
-                "YES"
-            } else {
-                "NO"
-            }
-        )
-        .unwrap();
-
-        if let Some(lat) = d.tcp_latency_ms {
-            writeln!(txt, "  TCP Latency (best reachable): {} ms", lat).unwrap();
-        }
-        if let Some(dns_ms) = d.dns_lookup_ms {
-            writeln!(txt, "  DNS Lookup Time: {} ms", dns_ms).unwrap();
-        }
-
-        if !d.ip_latencies.is_empty() {
-            writeln!(txt, "  Per-IP TCP Latencies:").unwrap();
-            for ip in &d.ip_latencies {
-                writeln!(
-                    txt,
-                    "    {} - {}",
-                    ip.ip,
-                    ip.tcp_latency_ms
-                        .map(|l| format!("{} ms", l))
-                        .unwrap_or_else(|| "unreachable".to_string())
-                )
-                .unwrap();
-            }
-        }
-
-        if let Some(err) = &d.error {
-            writeln!(txt, "  Error: {}", err).unwrap();
-        }
-        writeln!(txt).unwrap();
-    }
+    write_report_header(&mut txt, &report);
+    write_environment_section(&mut txt, &report);
+    write_local_network_section(&mut txt, &report);
+    write_current_configuration_section(&mut txt, &report);
+    write_ping_section(&mut txt, &report);
+    write_dns_section(&mut txt, &report);
 
     tokio::task::spawn_blocking(move || -> Result<String, String> {
         let export_dir = DATA

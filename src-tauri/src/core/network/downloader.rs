@@ -128,7 +128,7 @@ async fn perform_download(
     let total_size = response.content_length();
 
     if let Some(total) = total_size {
-        log_info!("Downloading {} ({}) ...", emit_name, human_size(total));
+        log_info!("Downloading {} ({})", emit_name, human_size(total));
     }
 
     let mut temp_path = dest_path.to_path_buf();

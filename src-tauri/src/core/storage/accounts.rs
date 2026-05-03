@@ -37,9 +37,9 @@ pub struct AccountManager {
 
 impl AccountManager {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.accounts_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.accounts_path = path;
+        })
     }
 
     pub fn add_account(&mut self, username: String, tags: Vec<String>) -> String {

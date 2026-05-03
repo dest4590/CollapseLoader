@@ -27,9 +27,21 @@ pub struct Flags {
 
 impl Flags {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.flags_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.flags_path = path;
+        })
+    }
+
+    pub fn set_disclaimer_shown(&mut self, shown: bool) {
+        self.disclaimer_shown.value = shown;
+    }
+
+    pub fn set_first_run(&mut self, shown: bool) {
+        self.first_run.value = shown;
+    }
+
+    pub fn set_telemetry_consent_shown(&mut self, shown: bool) {
+        self.telemetry_consent_shown.value = shown;
     }
 
     pub fn set_custom_clients_display(&mut self, display: String) {

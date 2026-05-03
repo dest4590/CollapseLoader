@@ -78,9 +78,9 @@ impl JsonStorage for PresetManager {
 
 impl PresetManager {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.config_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.config_path = path;
+        })
     }
 
     pub fn add_preset(&mut self, preset: ThemePreset) -> Result<(), String> {

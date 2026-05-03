@@ -16,9 +16,9 @@ pub struct FavoriteManager {
 
 impl FavoriteManager {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.favorites_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.favorites_path = path;
+        })
     }
 
     pub fn add_favorite(&mut self, client_id: u32) {

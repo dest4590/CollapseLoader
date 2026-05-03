@@ -101,4 +101,14 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
             }
         }
     }
+
+    /// Loads the resource and then restores transient fields such as file paths.
+    fn load_from_disk_with(
+        file_path: PathBuf,
+        post_load: impl FnOnce(&mut Self),
+    ) -> Self {
+        let mut loaded = Self::load_from_disk(file_path);
+        post_load(&mut loaded);
+        loaded
+    }
 }

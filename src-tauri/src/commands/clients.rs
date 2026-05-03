@@ -24,6 +24,7 @@ use crate::core::{
     storage::settings::SETTINGS,
     utils::{discord_rpc, hashing::calculate_md5_hash, logging},
 };
+use crate::commands::utils::refresh_tray_menu;
 use crate::{
     core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
@@ -47,6 +48,36 @@ fn get_client_by_id(
         .find(|c| c.id == id)
         .cloned()
         .ok_or_else(|| format!("Client with ID {id} not found"))
+}
+
+fn with_client_manager<R>(
+    state: &State<'_, AppState>,
+    operation: impl FnOnce(&mut ClientManager) -> Result<R, String>,
+) -> Result<R, String> {
+    let mut manager = state
+        .clients
+        .manager
+        .lock()
+        .map_err(|_| "Failed to acquire lock on client manager".to_string())?;
+
+    operation(&mut manager)
+}
+
+fn with_custom_client_manager<R>(
+    state: &State<'_, AppState>,
+    operation: impl FnOnce(
+        &mut crate::core::storage::custom_clients::CustomClientManager,
+    ) -> Result<R, String>,
+) -> Result<R, String> {
+    let mut manager = state.custom_clients.lock();
+    operation(&mut manager)
+}
+
+fn refresh_tray_menu_after_client_change(state: State<'_, AppState>, result: Result<(), String>) -> Result<(), String> {
+    if result.is_ok() {
+        refresh_tray_menu(state);
+    }
+    result
 }
 
 /// Returns the current application logs.
@@ -464,31 +495,16 @@ pub fn update_client_installed_status(
     installed: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let result = if let Some(client) = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to acquire lock on client manager".to_string())?
-        .clients
-        .iter_mut()
-        .find(|c| c.id == id)
-    {
-        client.meta.installed = installed;
-        Ok(())
-    } else {
-        Err("Client not found".to_string())
-    };
-
-    if result.is_ok() {
-        if let Some(app) = crate::core::storage::data::APP_HANDLE
-            .lock()
-            .unwrap()
-            .clone()
-        {
-            let _ = crate::commands::utils::update_tray_menu(app, state);
+    let result = with_client_manager(&state, |manager| {
+        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == id) {
+            client.meta.installed = installed;
+            Ok(())
+        } else {
+            Err("Client not found".to_string())
         }
-    }
-    result
+    });
+
+    refresh_tray_menu_after_client_change(state, result)
 }
 
 #[tauri::command]
@@ -514,15 +530,8 @@ pub fn increment_client_counter(
     counter_type: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let result = if let Some(client) = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to acquire lock on client manager".to_string())?
-        .clients
-        .iter_mut()
-        .find(|c| c.id == id)
-    {
+    let result = with_client_manager(&state, |manager| {
+        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == id) {
         match counter_type.as_str() {
             "download" => {
                 client.downloads += 1;
@@ -535,20 +544,12 @@ pub fn increment_client_counter(
             }
         }
         Ok(())
-    } else {
-        Err("Client not found".to_string())
-    };
-
-    if result.is_ok() {
-        if let Some(app) = crate::core::storage::data::APP_HANDLE
-            .lock()
-            .unwrap()
-            .clone()
-        {
-            let _ = crate::commands::utils::update_tray_menu(app, state);
+        } else {
+            Err("Client not found".to_string())
         }
-    }
-    result
+    });
+
+    refresh_tray_menu_after_client_change(state, result)
 }
 
 #[tauri::command]
@@ -597,8 +598,6 @@ pub fn add_custom_client(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Adding new custom client: '{}'", name);
-    let mut manager = state.custom_clients.lock();
-
     let path_buf = PathBuf::from(file_path);
     let mut custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
     custom_client.java_path = java_path;
@@ -606,15 +605,13 @@ pub fn add_custom_client(
     custom_client.client_type = client_type;
 
     log_debug!("New custom client details: {:?}", custom_client);
-    manager.add_client(custom_client)
+    with_custom_client_manager(&state, |manager| manager.add_client(custom_client))
 }
 
 #[tauri::command]
 pub fn remove_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Removing custom client with ID: {}", id);
-    let mut manager = state.custom_clients.lock();
-
-    manager.remove_client(id)
+    with_custom_client_manager(&state, |manager| manager.remove_client(id))
 }
 
 #[tauri::command]
@@ -629,8 +626,6 @@ pub fn update_custom_client(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Updating custom client with ID: {}", id);
-    let mut manager = state.custom_clients.lock();
-
     let updates = CustomClientUpdate {
         name,
         version,
@@ -641,7 +636,7 @@ pub fn update_custom_client(
     };
 
     log_debug!("Applying updates to custom client ID {}: {:?}", id, updates);
-    manager.update_client(id, updates)
+    with_custom_client_manager(&state, |manager| manager.update_client(id, updates))
 }
 
 #[tauri::command]
@@ -652,9 +647,7 @@ pub async fn launch_custom_client(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Attempting to launch custom client with ID: {}", id);
-    let custom_client = {
-        let mut manager = state.custom_clients.lock();
-
+    let custom_client = with_custom_client_manager(&state, |manager| {
         let client = manager
             .get_client_mut(id)
             .ok_or_else(|| "Custom client not found".to_string())?;
@@ -668,8 +661,8 @@ pub async fn launch_custom_client(
         let client_clone = client.clone();
         manager.save_to_disk();
 
-        client_clone
-    };
+        Ok(client_clone)
+    })?;
 
     custom_client.validate_file()?;
     log_debug!("Custom client file validated for '{}'", custom_client.name);
@@ -794,6 +787,34 @@ pub async fn list_installed_mods(
     }
 
     Ok(mods)
+}
+
+#[tauri::command]
+pub async fn uninstall_mod(
+    id: u32,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let mods_folder = match client.client_type {
+        ClientType::Fabric | ClientType::Forge | ClientType::Default => {
+            let (folder, _) = client.get_launch_paths().map_err(|e| e.to_string())?;
+            folder.join("mods")
+        }
+    };
+
+    let target_file = mods_folder.join(filename);
+
+    if !target_file.exists() {
+        return Err("Mod file does not exist".to_string());
+    }
+
+    tokio::fs::remove_file(target_file)
+        .await
+        .map_err(|e| format!("Failed to delete mod file: {}", e))?;
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -949,5 +970,38 @@ pub async fn install_mod_for_custom_client(
         filename,
         bytes.len()
     );
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn uninstall_mod_custom(
+    id: u32,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let custom_client = {
+        let manager = state.custom_clients.lock();
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let mods_folder = custom_client
+        .file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .join("mods");
+
+    let target_file = mods_folder.join(filename);
+
+    if !target_file.exists() {
+        return Err("Mod file does not exist".to_string());
+    }
+
+    tokio::fs::remove_file(target_file)
+        .await
+        .map_err(|e| format!("Failed to delete mod file: {}", e))?;
+
     Ok(())
 }

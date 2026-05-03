@@ -197,6 +197,8 @@ pub fn run() {
             commands::clients::initialize_rpc,
             commands::clients::install_mod_from_url,
             commands::clients::install_mod_for_custom_client,
+            commands::clients::uninstall_mod,
+            commands::clients::uninstall_mod_custom,
             commands::clients::launch_client,
             commands::clients::launch_custom_client,
             commands::clients::list_installed_mods,

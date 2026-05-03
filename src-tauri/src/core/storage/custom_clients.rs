@@ -22,9 +22,9 @@ pub struct CustomClientManager {
 
 impl CustomClientManager {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.custom_clients_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.custom_clients_path = path;
+        })
     }
 
     pub fn add_client(&mut self, mut custom_client: CustomClient) -> Result<(), String> {

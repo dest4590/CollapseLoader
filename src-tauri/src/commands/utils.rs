@@ -484,6 +484,16 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
     Ok(())
 }
 
+pub fn refresh_tray_menu(state: State<'_, AppState>) {
+    if let Some(app) = crate::core::storage::data::APP_HANDLE
+        .lock()
+        .unwrap()
+        .clone()
+    {
+        let _ = update_tray_menu(app, state);
+    }
+}
+
 #[derive(serde::Serialize)]
 pub struct StorageUsage {
     pub clients: u64,
