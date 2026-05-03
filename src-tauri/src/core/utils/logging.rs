@@ -1,12 +1,9 @@
-//! Logging infrastructure for the application, providing formatted console output and in-memory log storage.
-
 use chrono::Local;
 use colored::Colorize;
 use std::collections::VecDeque;
 use std::fmt;
 use std::sync::{LazyLock, Mutex};
 
-/// Represents the severity level of a log message.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LogLevel {
     Error = 1,
@@ -15,26 +12,18 @@ pub enum LogLevel {
     Debug = 4,
 }
 
-/// A centralized logger that handles message formatting, filtering, and storage.
 pub struct Logger;
 
-/// Global storage for application logs, accessible via the UI.
 pub static APP_LOGS: LazyLock<Mutex<VecDeque<String>>> =
     LazyLock::new(|| Mutex::new(VecDeque::new()));
 
-/// The current global log level filter.
 pub static LOG_LEVEL: LazyLock<Mutex<LogLevel>> = LazyLock::new(|| Mutex::new(LogLevel::Debug));
 
-/// Tracks whether the startup banner has been printed.
 pub static STARTUP_PRINTED: LazyLock<Mutex<bool>> = LazyLock::new(|| Mutex::new(false));
 
 const MAX_APP_LOGS: usize = 1000;
 
 impl Logger {
-    /// Logs a message with a specific level and module tag.
-    ///
-    /// This function handles console output with colors and emojis, and also stores
-    /// a plain-text version in the global `APP_LOGS` buffer.
     pub fn log_with_module(level: LogLevel, tag: &str, message: &str) {
         let timestamp = Local::now().format("%H:%M:%S").to_string();
 
@@ -52,9 +41,9 @@ impl Logger {
         };
 
         let mut shorted_tag = tag
-            .strip_prefix("collapseloader_lib.")
+            .strip_prefix("collapse.module.collapseloader_lib.")
             .unwrap_or(tag)
-            .replace("collapse.module.collapseloader_lib", "core.init");
+            .to_string();
 
         if shorted_tag.starts_with("commands.") {
             shorted_tag.insert_str(0, "tauri.");
@@ -85,15 +74,14 @@ impl Logger {
         }
     }
 
-    /// Returns a representative emoji for a given module tag.
     fn emoji_for_module(tag: &str) -> Option<&'static str> {
         const MAPPINGS: &[(&str, &str)] = &[
-            ("core.network", "\u{2601}"), // Cloud
-            ("core.clients", "\u{2609}"), // Sun
-            ("core.storage", "\u{26C3}"), // Box
-            ("core.utils", "\u{2692}"),   // Hammer and Pick
-            ("core.init", "\u{2699}"),    // Gear
-            ("commands.", "\u{25CF}"),    // Circle
+            ("core.network", "\u{2601}"),
+            ("core.clients", "\u{2609}"),
+            ("core.storage", "\u{26C3}"),
+            ("core.utils", "\u{2692}"),
+            ("core.init", "\u{2699}"),
+            ("commands.", "\u{25CF}"),
         ];
 
         MAPPINGS
