@@ -60,11 +60,13 @@ const props = defineProps<{
     height: 100%;
     width: 100%;
     display: flex;
+    overflow: visible !important;
 }
 
 .settings-card .card-body {
     flex: 1;
     display: flex;
     width: 100%;
+    overflow: visible;
 }
 </style>

@@ -2,6 +2,7 @@
 import { ref, onMounted, watch, computed, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import AnimatedSlider from "@shared/components/ui/AnimatedSlider.vue";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 import {
     RotateCcw,
     Plus,
@@ -1060,27 +1061,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </div>
 
                                 <div v-else-if="key === 'language'">
-                                    <select
-                                        :value="currentLanguage"
-                                        @change="
-                                            handleLanguageChange(
-                                                (
-                                                    $event.target as HTMLSelectElement
-                                                ).value
-                                            )
-                                        "
-                                        class="select select-bordered select-sm w-48 bg-base-100"
-                                    >
-                                        <option
-                                            v-for="lang in availableLanguages"
-                                            :key="lang.code"
-                                            :value="lang.code"
-                                        >
-                                            {{ lang.nativeName }} ({{
-                                                lang.name
-                                            }})
-                                        </option>
-                                    </select>
+                                    <AnimatedDropdown
+                                        :modelValue="currentLanguage"
+                                        :options="availableLanguages.map(l => ({ value: l.code, label: `${l.nativeName} (${l.name})` }))"
+                                        direction="down"
+                                        @change="handleLanguageChange"
+                                    />
                                 </div>
 
                                 <div
@@ -1172,21 +1158,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             {{ $t("settings.toast_position.title") }}
                         </template>
                         <div>
-                            <select
+                            <AnimatedDropdown
                                 v-model="toastPosition"
-                                @change="
-                                    handleToastPositionChange(toastPosition)
-                                "
-                                class="select select-bordered select-sm w-48 bg-base-100"
-                            >
-                                <option
-                                    v-for="option in toastPositionOptions"
-                                    :key="option.value"
-                                    :value="option.value"
-                                >
-                                    {{ option.label }}
-                                </option>
-                            </select>
+                                :options="toastPositionOptions"
+                                direction="up"
+                                @change="handleToastPositionChange"
+                            />
                         </div>
                     </SettingCard>
                     <div
