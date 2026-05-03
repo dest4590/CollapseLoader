@@ -111,7 +111,8 @@ jobs:
                     libssl-dev \
                     libxdo-dev \
                     patchelf \
-                    libfuse2
+                    libfuse2 \
+                    mold
 
                   curl -L -o appimagetool-x86_64.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
                   chmod +x appimagetool-x86_64.AppImage
@@ -124,6 +125,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   RUSTC_WRAPPER: sccache
                   SCCACHE_GHA_ENABLED: "true"
+                  CARGO_INCREMENTAL: 0
               with:
                   args: --bundles msi,nsis
 
@@ -134,6 +136,8 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   RUSTC_WRAPPER: sccache
                   SCCACHE_GHA_ENABLED: "true"
+                  RUSTFLAGS: "-C link-arg=-fuse-ld=mold"
+                  CARGO_INCREMENTAL: 0
 
             - name: Copy portable exe (Windows)
               if: matrix.platform == 'windows-latest'
@@ -201,6 +205,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   RUSTC_WRAPPER: sccache
                   SCCACHE_GHA_ENABLED: "true"
+                  CARGO_INCREMENTAL: 0
               with:
                   args: --target universal-apple-darwin
 

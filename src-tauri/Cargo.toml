@@ -64,9 +64,10 @@ split-debuginfo = "unpacked"
 codegen-units = 256
 
 [profile.release]
-lto = true
-codegen-units = 1
+lto = "thin"
+codegen-units = 16
 strip = true
+panic = "abort"
 
 [profile.dev.package."*"]
 opt-level = 2
