@@ -113,6 +113,17 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         manager.clients = clients;
     }
 
+    let sync_enabled = crate::core::storage::settings::SETTINGS
+        .lock()
+        .map(|s| s.sync_client_settings.value)
+        .unwrap_or(false);
+
+    if sync_enabled {
+        if let Err(e) = crate::core::storage::data::DATA.sync_all_installed_clients().await {
+            log_warn!("Failed to sync all clients on startup: {}", e);
+        }
+    }
+
     Ok(())
 }
 

@@ -7,7 +7,7 @@ use crate::core::storage::settings::{Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
 #[cfg(target_os = "windows")]
 use crate::core::utils::dpi;
-use crate::{log_debug, log_error, log_info, AppState};
+use crate::{log_debug, log_error, log_info, log_warn, AppState};
 use sysinfo::System;
 use tauri::State;
 
@@ -221,6 +221,7 @@ pub fn save_settings(input_settings: Settings) -> Result<(), String> {
 
     let old_discord_rpc_enabled = current_settings.discord_rpc_enabled.value;
     let old_autostart = current_settings.autostart.value;
+    let old_sync_client_settings = current_settings.sync_client_settings.value;
     #[cfg(target_os = "windows")]
     let old_dpi_bypass_enabled = current_settings.dpi_bypass.value;
 
@@ -228,6 +229,8 @@ pub fn save_settings(input_settings: Settings) -> Result<(), String> {
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
     let autostart_changed = old_autostart != input_settings.autostart.value;
     let new_autostart_value = input_settings.autostart.value;
+    let sync_client_settings_changed = old_sync_client_settings != input_settings.sync_client_settings.value;
+    let new_sync_value = input_settings.sync_client_settings.value;
 
     #[cfg(target_os = "windows")]
     let dpi_bypass_changed = old_dpi_bypass_enabled != input_settings.dpi_bypass.value;
@@ -240,6 +243,15 @@ pub fn save_settings(input_settings: Settings) -> Result<(), String> {
     new_settings.save_to_disk();
 
     drop(current_settings);
+
+    if sync_client_settings_changed && new_sync_value {
+        log_info!("Sync client settings enabled — syncing all installed clients");
+        tauri::async_runtime::spawn(async {
+            if let Err(e) = crate::core::storage::data::DATA.sync_all_installed_clients().await {
+                log_warn!("Failed to sync all clients on settings change: {}", e);
+            }
+        });
+    }
 
     if autostart_changed {
         if let Err(e) = set_autostart_registry(new_autostart_value) {

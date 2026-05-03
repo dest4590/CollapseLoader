@@ -312,6 +312,58 @@ impl Data {
         Ok(())
     }
 
+    pub async fn sync_all_installed_clients(&self) -> Result<(), String> {
+        let root_dir = self.root_dir_snapshot();
+        let global_options_dir = root_dir.join("synced_options");
+
+        if !global_options_dir.exists() {
+            return Ok(());
+        }
+
+        let entries = match std::fs::read_dir(&root_dir) {
+            Ok(e) => e,
+            Err(e) => return Err(format!("Failed to read root dir: {e}")),
+        };
+
+        let system_dirs = [
+            "synced_options", "libraries", "libraries-fabric", "libraries-legacy",
+            "natives", "natives-macos-x64", "natives-macos-arm64", "natives-linux",
+            "natives-legacy", "natives-legacy-linux", "natives-fabric",
+            "assets", "assets-fabric", "minecraft-versions", "custom_clients",
+            "agent_overlay", "misc", "cache",
+        ];
+
+        let mut synced = 0u32;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
+            }
+            let name = match path.file_name().and_then(|n| n.to_str()) {
+                Some(n) => n.to_string(),
+                None => continue,
+            };
+
+            if system_dirs.contains(&name.as_str()) {
+                continue;
+            }
+
+            if name.to_lowercase().starts_with("jdk") || name.to_lowercase().starts_with("java") {
+                continue;
+            }
+
+            if let Err(e) = self.ensure_client_synced(&name).await {
+                log_warn!("Failed to sync client {}: {}", name, e);
+            } else {
+                log_info!("Synced client: {}", name);
+                synced += 1;
+            }
+        }
+
+        log_info!("Synced {} client directories", synced);
+        Ok(())
+    }
+
     pub async fn ensure_client_synced(&self, client_base: &str) -> Result<(), String> {
         let root_dir = self.root_dir_snapshot();
         let global_options_dir = root_dir.join("synced_options");
@@ -440,12 +492,15 @@ impl Data {
     }
 
     fn remove_existing_sync_target(path: &Path, is_dir: bool) -> Result<(), String> {
+        if fs::symlink_metadata(path).is_err() {
+            return Ok(());
+        }
+
         #[cfg(target_family = "windows")]
         if is_dir {
-            match junction::exists(path) {
-                Ok(true) => return junction::delete(path).map_err(|e| e.to_string()),
-                Ok(false) => {}
-                Err(e) => return Err(e.to_string()),
+            let _ = junction::delete(path);
+            if !path.exists() {
+                return Ok(());
             }
         }
 
@@ -469,7 +524,6 @@ impl Data {
             Err(e) => Err(e.to_string()),
         }
     }
-
     fn create_link(
         src: &std::path::Path,
         dst: &std::path::Path,
