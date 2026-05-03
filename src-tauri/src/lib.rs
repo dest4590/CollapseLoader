@@ -6,7 +6,6 @@ use crate::{core::storage::data::APP_HANDLE, logging::Logger};
 use std::sync::OnceLock;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
 
@@ -349,56 +348,6 @@ pub fn run() {
                 Analytics::send_start_analytics();
             });
 
-            let show = MenuItem::with_id(app, "show", "▶  Open CollapseLoader", true, None::<&str>)?;
-            let sep1 = tauri::menu::PredefinedMenuItem::separator(app)?;
-            let sep2 = tauri::menu::PredefinedMenuItem::separator(app)?;
-            let quit = MenuItem::with_id(app, "quit", "✕  Quit", true, None::<&str>)?;
-
-            let installed_clients: Vec<(u32, String)> = {
-                use crate::AppState;
-                if let Some(state) = app.try_state::<AppState>() {
-                    state.clients.manager.lock()
-                        .map(|m| {
-                            m.clients.iter()
-                                .filter(|c| c.show && c.working && c.meta.installed)
-                                .map(|c| {
-                                    let ver = c.version.replace('_', ".").trim_start_matches('V').to_string();
-                                    (c.id, format!("⚡  {} {}", c.name, ver))
-                                })
-                                .collect()
-                        })
-                        .unwrap_or_default()
-                } else {
-                    vec![]
-                }
-            };
-
-            let menu = {
-                let client_items: Vec<MenuItem<tauri::Wry>> = installed_clients
-                    .iter()
-                    .map(|(id, label)| {
-                        MenuItem::with_id(app, format!("launch_{id}"), label.as_str(), true, None::<&str>)
-                            .expect("Failed to create client menu item")
-                    })
-                    .collect();
-
-                if client_items.is_empty() {
-                    Menu::with_items(app, &[&show, &sep1, &quit])?
-                } else {
-                    let clients_label = MenuItem::with_id(
-                        app, "_clients_header", "── Launch Client ──", false, None::<&str>
-                    )?;
-                    let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
-                        vec![&show, &sep1, &clients_label];
-                    for item in &client_items {
-                        item_refs.push(item);
-                    }
-                    item_refs.push(&sep2);
-                    item_refs.push(&quit);
-                    Menu::with_items(app, &item_refs)?
-                }
-            };
-
             let tray_icon = app
                 .default_window_icon()
                 .cloned()
@@ -406,7 +355,6 @@ pub fn run() {
 
             let _tray = TrayIconBuilder::with_id("main")
                 .icon(tray_icon)
-                .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app: &tauri::AppHandle, event| {
                     let id = event.id.as_ref();
@@ -451,6 +399,10 @@ pub fn run() {
                     }
                 })
                 .build(app)?;
+
+            if let Some(state) = app.try_state::<AppState>() {
+                let _ = crate::commands::utils::update_tray_menu(app.handle().clone(), state);
+            }
 
             #[cfg(target_os = "windows")]
             {

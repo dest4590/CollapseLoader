@@ -348,14 +348,39 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
     use tauri::menu::PredefinedMenuItem;
     use tauri::menu::{Menu, MenuItem};
 
-    let installed_clients: Vec<(u32, String)> = state
+    let (fav_clients, popular_clients): (Vec<(u32, String)>, Vec<(u32, String)>) = state
         .clients
         .manager
         .lock()
         .map(|m| {
-            m.clients
+            let favorites = FAVORITE_MANAGER.lock().unwrap().favorites.clone();
+
+            let installed: Vec<_> = m
+                .clients
                 .iter()
                 .filter(|c| c.show && c.working && c.meta.installed)
+                .collect();
+
+            let mut favs = Vec::new();
+            let mut others = Vec::new();
+
+            for c in installed {
+                let ver = c
+                    .version
+                    .replace('_', ".")
+                    .trim_start_matches('V')
+                    .to_string();
+                if favorites.contains(&c.id) {
+                    favs.push((c.id, format!("⭐  {} {}", c.name, ver)));
+                } else {
+                    others.push(c);
+                }
+            }
+
+            others.sort_by(|a, b| b.launches.cmp(&a.launches));
+            let popular: Vec<_> = others
+                .into_iter()
+                .take(10)
                 .map(|c| {
                     let ver = c
                         .version
@@ -364,18 +389,22 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
                         .to_string();
                     (c.id, format!("⚡  {} {}", c.name, ver))
                 })
-                .collect()
+                .collect();
+
+            (favs, popular)
         })
         .unwrap_or_default();
 
     let show = MenuItem::with_id(&app, "show", "▶  Open CollapseLoader", true, None::<&str>)
         .map_err(|e| e.to_string())?;
-    let sep1 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
-    let sep2 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
     let quit = MenuItem::with_id(&app, "quit", "✕  Quit", true, None::<&str>)
         .map_err(|e| e.to_string())?;
 
-    let client_items: Vec<MenuItem<tauri::Wry>> = installed_clients
+    let sep1 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    let sep2 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    let sep3 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+
+    let fav_items: Vec<MenuItem<tauri::Wry>> = fav_clients
         .iter()
         .map(|(id, label)| {
             MenuItem::with_id(
@@ -389,27 +418,64 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
         })
         .collect();
 
-    let new_menu = if client_items.is_empty() {
-        Menu::with_items(&app, &[&show, &sep1, &quit]).map_err(|e| e.to_string())?
-    } else {
-        let clients_label = MenuItem::with_id(
-            &app,
-            "_clients_header",
-            "── Launch Client ──",
-            false,
-            None::<&str>,
-        )
-        .map_err(|e| e.to_string())?;
+    let popular_items: Vec<MenuItem<tauri::Wry>> = popular_clients
+        .iter()
+        .map(|(id, label)| {
+            MenuItem::with_id(
+                &app,
+                format!("launch_{id}"),
+                label.as_str(),
+                true,
+                None::<&str>,
+            )
+            .expect("Failed to create client menu item")
+        })
+        .collect();
 
-        let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> =
-            vec![&show, &sep1, &clients_label];
-        for item in &client_items {
-            item_refs.push(item);
+    let fav_header = MenuItem::with_id(
+        &app,
+        "_fav_header",
+        "── Favorited clients ──",
+        false,
+        None::<&str>,
+    )
+    .map_err(|e| e.to_string())?;
+
+    let popular_header = MenuItem::with_id(
+        &app,
+        "_popular_header",
+        "── Popular clients ──",
+        false,
+        None::<&str>,
+    )
+    .map_err(|e| e.to_string())?;
+
+    let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![&show, &sep1];
+
+    if fav_items.is_empty() && popular_items.is_empty() {
+        item_refs = vec![&show, &sep1, &quit];
+    } else {
+        if !fav_items.is_empty() {
+            item_refs.push(&fav_header);
+            for item in &fav_items {
+                item_refs.push(item);
+            }
+            if !popular_items.is_empty() {
+                item_refs.push(&sep2);
+            }
         }
-        item_refs.push(&sep2);
+
+        if !popular_items.is_empty() {
+            item_refs.push(&popular_header);
+            for item in &popular_items {
+                item_refs.push(item);
+            }
+        }
+        item_refs.push(&sep3);
         item_refs.push(&quit);
-        Menu::with_items(&app, &item_refs).map_err(|e| e.to_string())?
-    };
+    }
+
+    let new_menu = Menu::with_items(&app, &item_refs).map_err(|e| e.to_string())?;
 
     if let Some(tray) = app.tray_by_id("0").or_else(|| app.tray_by_id("main")) {
         tray.set_menu(Some(new_menu)).map_err(|e| e.to_string())?;

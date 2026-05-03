@@ -121,10 +121,7 @@ async fn verify_client_hash(
     app_handle: &AppHandle,
     state: &State<'_, AppState>,
 ) -> Result<(), String> {
-    let hash_verify_enabled = SETTINGS
-        .lock()
-        .map(|s| s.hash_verify.value)
-        .unwrap_or(true);
+    let hash_verify_enabled = SETTINGS.lock().map(|s| s.hash_verify.value).unwrap_or(true);
 
     if !hash_verify_enabled {
         log_debug!(
@@ -467,7 +464,7 @@ pub fn update_client_installed_status(
     installed: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Some(client) = state
+    let result = if let Some(client) = state
         .clients
         .manager
         .lock()
@@ -480,7 +477,18 @@ pub fn update_client_installed_status(
         Ok(())
     } else {
         Err("Client not found".to_string())
+    };
+
+    if result.is_ok() {
+        if let Some(app) = crate::core::storage::data::APP_HANDLE
+            .lock()
+            .unwrap()
+            .clone()
+        {
+            let _ = crate::commands::utils::update_tray_menu(app, state);
+        }
     }
+    result
 }
 
 #[tauri::command]
@@ -506,7 +514,7 @@ pub fn increment_client_counter(
     counter_type: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Some(client) = state
+    let result = if let Some(client) = state
         .clients
         .manager
         .lock()
@@ -529,7 +537,18 @@ pub fn increment_client_counter(
         Ok(())
     } else {
         Err("Client not found".to_string())
+    };
+
+    if result.is_ok() {
+        if let Some(app) = crate::core::storage::data::APP_HANDLE
+            .lock()
+            .unwrap()
+            .clone()
+        {
+            let _ = crate::commands::utils::update_tray_menu(app, state);
+        }
     }
+    result
 }
 
 #[tauri::command]
@@ -808,7 +827,9 @@ pub fn open_custom_client_folder(id: u32, state: State<'_, AppState>) -> Result<
         .ok_or_else(|| "Custom client not found".to_string())?;
     drop(manager);
 
-    let folder = custom_client.file_path.parent()
+    let folder = custom_client
+        .file_path
+        .parent()
         .ok_or_else(|| "Cannot determine client folder".to_string())?
         .to_path_buf();
 
@@ -836,7 +857,8 @@ pub async fn list_installed_mods_custom(
             .ok_or_else(|| "Custom client not found".to_string())?
     };
 
-    let mods_folder = custom_client.file_path
+    let mods_folder = custom_client
+        .file_path
         .parent()
         .ok_or_else(|| "Cannot determine client folder".to_string())?
         .join("mods");
@@ -871,7 +893,12 @@ pub async fn install_mod_for_custom_client(
     filename: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    log_info!("Installing mod for custom client {}: {} from {}", id, filename, url);
+    log_info!(
+        "Installing mod for custom client {}: {} from {}",
+        id,
+        filename,
+        url
+    );
 
     let custom_client = {
         let manager = state.custom_clients.lock();
@@ -881,7 +908,8 @@ pub async fn install_mod_for_custom_client(
             .ok_or_else(|| "Custom client not found".to_string())?
     };
 
-    let mods_folder = custom_client.file_path
+    let mods_folder = custom_client
+        .file_path
         .parent()
         .ok_or_else(|| "Cannot determine client folder".to_string())?
         .join("mods");
@@ -901,7 +929,10 @@ pub async fn install_mod_for_custom_client(
         .map_err(|e| format!("Failed to download mod: {e}"))?;
 
     if !response.status().is_success() {
-        return Err(format!("Download failed with status: {}", response.status()));
+        return Err(format!(
+            "Download failed with status: {}",
+            response.status()
+        ));
     }
 
     let bytes = response
@@ -913,6 +944,10 @@ pub async fn install_mod_for_custom_client(
         .await
         .map_err(|e| format!("Failed to write mod file: {e}"))?;
 
-    log_info!("Successfully installed mod: {} ({} bytes)", filename, bytes.len());
+    log_info!(
+        "Successfully installed mod: {} ({} bytes)",
+        filename,
+        bytes.len()
+    );
     Ok(())
 }

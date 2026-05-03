@@ -6,8 +6,9 @@ use crate::core::storage::settings::{InputSettings, Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
 #[cfg(target_os = "windows")]
 use crate::core::utils::dpi;
-use crate::{log_debug, log_error, log_info};
+use crate::{log_debug, log_error, log_info, AppState};
 use sysinfo::System;
+use tauri::State;
 
 #[cfg(target_os = "windows")]
 fn set_autostart_registry(enabled: bool) -> Result<(), String> {
@@ -23,8 +24,8 @@ fn set_autostart_registry(enabled: bool) -> Result<(), String> {
         .map_err(|e| format!("Failed to open registry key: {}", e))?;
 
     if enabled {
-        let exe_path = std::env::current_exe()
-            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let exe_path =
+            std::env::current_exe().map_err(|e| format!("Failed to get exe path: {}", e))?;
         let exe_str = exe_path
             .to_str()
             .ok_or("Failed to convert exe path to string")?;
@@ -52,8 +53,8 @@ fn set_autostart_registry(enabled: bool) -> Result<(), String> {
     let plist_path = format!("{}/org.collapseloader.app.plist", plist_dir);
 
     if enabled {
-        let exe_path = std::env::current_exe()
-            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let exe_path =
+            std::env::current_exe().map_err(|e| format!("Failed to get exe path: {}", e))?;
         let exe_str = exe_path
             .to_str()
             .ok_or("Failed to convert exe path to string")?;
@@ -102,8 +103,8 @@ fn set_autostart_registry(enabled: bool) -> Result<(), String> {
     let desktop_path = format!("{}/collapseloader.desktop", autostart_dir);
 
     if enabled {
-        let exe_path = std::env::current_exe()
-            .map_err(|e| format!("Failed to get exe path: {}", e))?;
+        let exe_path =
+            std::env::current_exe().map_err(|e| format!("Failed to get exe path: {}", e))?;
         let exe_str = exe_path
             .to_str()
             .ok_or("Failed to convert exe path to string")?;
@@ -390,7 +391,7 @@ pub fn get_favorite_clients() -> Result<Vec<u32>, String> {
 }
 
 #[tauri::command]
-pub fn add_favorite_client(client_id: u32) -> Result<(), String> {
+pub fn add_favorite_client(state: State<'_, AppState>, client_id: u32) -> Result<(), String> {
     log_info!("Adding client ID {} to favorites", client_id);
     FAVORITE_MANAGER.lock().map_or_else(
         |e| {
@@ -401,13 +402,20 @@ pub fn add_favorite_client(client_id: u32) -> Result<(), String> {
             favorite_manager.add_favorite(client_id);
             favorite_manager.save_to_disk();
             log_info!("Client ID {} added to favorites and saved", client_id);
+            if let Some(app) = crate::core::storage::data::APP_HANDLE
+                .lock()
+                .unwrap()
+                .clone()
+            {
+                let _ = crate::commands::utils::update_tray_menu(app, state);
+            }
             Ok(())
         },
     )
 }
 
 #[tauri::command]
-pub fn remove_favorite_client(client_id: u32) -> Result<(), String> {
+pub fn remove_favorite_client(state: State<'_, AppState>, client_id: u32) -> Result<(), String> {
     log_info!("Removing client ID {} from favorites", client_id);
     FAVORITE_MANAGER.lock().map_or_else(
         |e| {
@@ -418,13 +426,20 @@ pub fn remove_favorite_client(client_id: u32) -> Result<(), String> {
             favorite_manager.remove_favorite(client_id);
             favorite_manager.save_to_disk();
             log_info!("Client ID {} removed from favorites and saved", client_id);
+            if let Some(app) = crate::core::storage::data::APP_HANDLE
+                .lock()
+                .unwrap()
+                .clone()
+            {
+                let _ = crate::commands::utils::update_tray_menu(app, state);
+            }
             Ok(())
         },
     )
 }
 
 #[tauri::command]
-pub fn set_all_favorites(client_ids: Vec<u32>) -> Result<(), String> {
+pub fn set_all_favorites(state: State<'_, AppState>, client_ids: Vec<u32>) -> Result<(), String> {
     log_info!("Setting all favorites to: {:?}", client_ids);
     FAVORITE_MANAGER.lock().map_or_else(
         |e| {
@@ -435,6 +450,13 @@ pub fn set_all_favorites(client_ids: Vec<u32>) -> Result<(), String> {
             favorite_manager.favorites = client_ids;
             favorite_manager.save_to_disk();
             log_info!("All favorites updated and saved");
+            if let Some(app) = crate::core::storage::data::APP_HANDLE
+                .lock()
+                .unwrap()
+                .clone()
+            {
+                let _ = crate::commands::utils::update_tray_menu(app, state);
+            }
             Ok(())
         },
     )
