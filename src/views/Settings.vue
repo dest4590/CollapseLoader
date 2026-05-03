@@ -859,9 +859,10 @@ const toastPositionOptions = [
     { value: "top-center", label: t("settings.toast_position.top_center") },
 ];
 
-const handleToastPositionChange = (position: ToastPosition) => {
-    toastPosition.value = position;
-    setToastPosition(position);
+const handleToastPositionChange = (position: string) => {
+    const pos = position as ToastPosition;
+    toastPosition.value = pos;
+    setToastPosition(pos);
 
     addToast(t("settings.toast_position.preview_message"), "info", 3000);
 };
@@ -1063,7 +1064,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <div v-else-if="key === 'language'">
                                     <AnimatedDropdown
                                         :modelValue="currentLanguage"
-                                        :options="availableLanguages.map(l => ({ value: l.code, label: `${l.nativeName} (${l.name})` }))"
+                                        :options="
+                                            availableLanguages.map((l) => ({
+                                                value: l.code,
+                                                label: `${l.nativeName} (${l.name})`,
+                                            }))
+                                        "
                                         direction="down"
                                         @change="handleLanguageChange"
                                     />
