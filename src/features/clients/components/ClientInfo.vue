@@ -1,30 +1,29 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { CircleDot, Download, HardDrive, Play } from "lucide-vue-next";
+import { CircleDot, HardDrive } from "lucide-vue-next";
 import { Client } from "@shared/types/ui";
 
-const props = defineProps<{
+defineProps<{
     client: Client;
     expanded: boolean;
 }>();
 
-const formattedDownloads = computed(() => {
-    if (props.client.downloads >= 1000000) {
-        return `${(props.client.downloads / 1000000).toFixed(1)}M`;
-    } else if (props.client.downloads >= 1000) {
-        return `${(props.client.downloads / 1000).toFixed(1)}K`;
-    }
-    return props.client.downloads.toString();
-});
+// const formattedDownloads = computed(() => {
+//     if (props.client.downloads >= 1000000) {
+//         return `${(props.client.downloads / 1000000).toFixed(1)}M`;
+//     } else if (props.client.downloads >= 1000) {
+//         return `${(props.client.downloads / 1000).toFixed(1)}K`;
+//     }
+//     return props.client.downloads.toString();
+// });
 
-const formattedLaunches = computed(() => {
-    if (props.client.launches >= 1000000) {
-        return `${(props.client.launches / 1000000).toFixed(1)}M`;
-    } else if (props.client.launches >= 1000) {
-        return `${(props.client.launches / 1000).toFixed(1)}K`;
-    }
-    return props.client.launches.toString();
-});
+// const formattedLaunches = computed(() => {
+//     if (props.client.launches >= 1000000) {
+//         return `${(props.client.launches / 1000000).toFixed(1)}M`;
+//     } else if (props.client.launches >= 1000) {
+//         return `${(props.client.launches / 1000).toFixed(1)}K`;
+//     }
+//     return props.client.launches.toString();
+// });
 </script>
 
 <template>
@@ -42,7 +41,7 @@ const formattedLaunches = computed(() => {
                 >CUSTOM</span
             >
         </div>
-        <transition name="fade">
+        <!-- <transition name="fade">
             <div v-if="expanded" class="expanded-stats stats">
                 <span class="stat-separator">•</span>
 
@@ -62,7 +61,7 @@ const formattedLaunches = computed(() => {
                     }}</span>
                 </div>
             </div>
-        </transition>
+        </transition> -->
     </div>
 </template>
 
