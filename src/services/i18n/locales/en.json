@@ -686,7 +686,9 @@
     "logs": {
         "copy_logs": "Copy logs",
         "title": "{client} Logs",
-        "view": "View logs"
+        "view": "View logs",
+        "copied": "Logs copied to clipboard",
+        "copy_failed": "Failed to copy logs: {error}"
     },
     "installation": {
         "downloading": "Downloading",
@@ -1093,7 +1095,8 @@
         "time": {},
         "search_placeholder": "News search...",
         "mark_all_read": "Mark everything as read",
-        "refresh": "Refresh"
+        "refresh": "Refresh",
+        "telegram": "Telegram"
     },
     "hold_button": {
         "label": "Hold to begin!",

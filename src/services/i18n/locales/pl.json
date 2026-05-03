@@ -445,7 +445,10 @@
         "click": "Kliknij",
         "show_more": "Pokaż więcej",
         "show_less": "Ukryj",
-        "advanced": "Zaawansowany"
+        "advanced": "Zaawansowany",
+        "send_again": "Wyślij e-mail ponownie",
+        "back_to_login": "Powrót do logowania",
+        "verification_sent": "E-mail weryfikacyjny został wysłany!"
     },
     "friends": {
         "addFriend": "Dodaj znajomego",
@@ -825,6 +828,7 @@
             "preview_message": "Pozycja powiadomień zmieniona!"
         },
         "telemetry_info_title": "Informacje o telemetrii",
+        "telemetry": "Analityka",
         "reset_requirements": "Zresetuj pliki loadera",
         "reset_requirements_success": "Pomyślnie usunięto pliki, teraz pobierz dowolnego klienta",
         "reset_requirements_failed": "Nie udało się usunąć plików, spróbuj ponownie lub zrestartuj loader",
@@ -1088,6 +1092,7 @@
         "mark_all_read": "Oznacz wszystko jako przeczytane",
         "refresh": "Odśwież",
         "search_placeholder": "Szukaj aktualności...",
+        "telegram": "Telegram",
         "time": {}
     },
     "hold_button": {
@@ -1196,6 +1201,10 @@
         "private_label": "Prywatny",
         "make_private": "Ustaw jako prywatny",
         "make_public": "Ustaw jako publiczny",
+        "sort_newest": "Najnowsze",
+        "sort_popular": "Popularne",
+        "sort_downloads": "Najczęściej pobierane",
+        "sort_comments": "Najwięcej komentarzy",
         "edit_modal_title": "Edytuj preset",
         "delete_confirm": "Czy na pewno chcesz usunąć ten preset? Tej operacji nie można cofnąć.",
         "share": "Udostępnij",
@@ -1209,6 +1218,7 @@
         "apply": "Zastosuj",
         "like": "Lubię to",
         "by_user": "od {name}",
+        "by_author": "PRZEZ {name}",
         "no_items": "Na razie brak presetów",
         "preset_details_title": "Szczegóły presetu",
         "preset_details": "Szczegóły presetu",

@@ -687,7 +687,9 @@
     "logs": {
         "copy_logs": "Копіювати логи",
         "title": "Логи {client}",
-        "view": "Переглянути логи"
+        "view": "Переглянути логи",
+        "copied": "Логи скопійовано в буфер обміну",
+        "copy_failed": "Не вдалося скопіювати логи: {error}"
     },
     "installation": {
         "downloading": "Завантаження",
@@ -825,6 +827,8 @@
             "preview_message": "Позицію сповіщень змінено!"
         },
         "telemetry_info_title": "Інформація про телеметрію",
+        "telemetry": "Аналітика",
+        "open_data": "Відкрити папку лоадера",
         "reset_requirements": "Скинути файли лоадера",
         "reset_requirements_success": "Успішно видалено файли, тепер завантажте будь-який клієнт",
         "reset_requirements_failed": "Не вдалося видалити файли, спробуйте ще раз або перезапустіть лоадер",
@@ -1091,7 +1095,8 @@
         "time": {},
         "search_placeholder": "Пошук новин...",
         "mark_all_read": "Позначити все як прочитане",
-        "refresh": "Оновити"
+        "refresh": "Оновити",
+        "telegram": "Telegram"
     },
     "hold_button": {
         "label": "Затисніть, щоб почати!",

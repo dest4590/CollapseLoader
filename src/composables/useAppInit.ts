@@ -13,9 +13,9 @@ import { syncService } from "../services/syncService";
 import { getCurrentLanguage } from "@services/i18n";
 import { useModal } from "@shared/composables/useModal";
 import ClientCrashModal from "@features/clients/modals/ClientCrashModal.vue";
-import { apiGet } from "@api/clients/internal";
 import { webSocketService } from "@services/network/webSocketService";
 import { wait } from "@shared/utils/utils";
+import { telegramNewsService } from "@services/telegramNewsService";
 
 interface Flags {
     disclaimer_shown: { value: boolean };
@@ -24,7 +24,7 @@ interface Flags {
 }
 
 export function useAppInit() {
-    const { t, locale } = useI18n();
+    const { t } = useI18n();
     const { addToast } = useToast();
     const { showModal } = useModal();
     const { loadUserData, hydrateUser } = useUser();
@@ -97,43 +97,14 @@ export function useAppInit() {
     ) => {
         try {
             const currentLanguage = getCurrentLanguage() || "en";
-            const response = await apiGet("/news/", {
-                headers: {
-                    "Accept-Language": currentLanguage,
-                    "Content-Type": "application/json",
-                },
-            });
-
-            const allNews = normalizeNewsResponse(response);
-            news.value = allNews.filter(
-                (item: any) => item.language === currentLanguage
+            news.value = await telegramNewsService.fetchNews(currentLanguage);
+            unreadNewsCount.value = telegramNewsService.getUnreadCount(
+                news.value
             );
-
-            updateUnreadCount(news.value, unreadNewsCount);
         } catch (error) {
             console.error("Failed to fetch news:", error);
             unreadNewsCount.value = 0;
         }
-    };
-
-    const normalizeNewsResponse = (response: any): any[] => {
-        if (Array.isArray(response)) return response;
-        if (Array.isArray(response?.data)) return response.data;
-        if (response && typeof response === "object") {
-            return Object.values(response).filter(
-                (v) => v && typeof v === "object"
-            );
-        }
-        return [];
-    };
-
-    const updateUnreadCount = (newsList: any[], unreadNewsCount: any) => {
-        const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
-        const unread = newsList.filter((item: any) => {
-            const uniqueId = `news_${item.language}_${item.id}`;
-            return !readNews.includes(uniqueId);
-        });
-        unreadNewsCount.value = unread.length;
     };
 
     const setupEventListeners = async () => {
@@ -203,13 +174,9 @@ export function useAppInit() {
 
         const themeTask = applyThemeOnStartup().then((theme) => {
             currentTheme.value = (theme as string) || "dark";
-            console.log("Theme applied:", currentTheme.value);
         });
 
-        const languageTask = applyLanguageOnStartup().then(() => {
-            const lang = locale.value || getCurrentLanguage() || "en";
-            console.log("Language applied:", lang);
-        });
+        const languageTask = applyLanguageOnStartup();
 
         await Promise.all([rpcTask, themeTask, languageTask]);
 

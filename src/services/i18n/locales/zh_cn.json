@@ -813,6 +813,8 @@
             "preview_message": "提示位置已更改！"
         },
         "telemetry_info_title": "关于遥测的说明",
+        "telemetry": "分析",
+        "open_data": "打开数据文件夹",
         "reset_requirements": "重置加载器文件",
         "reset_requirements_success": "已成功移除依赖，现在可以下载任意客户端",
         "reset_requirements_failed": "无法移除依赖，请重试或重启加载器",
@@ -1079,7 +1081,8 @@
         "time": {},
         "search_placeholder": "搜索新闻...",
         "mark_all_read": "标记全部为已读",
-        "refresh": "刷新"
+        "refresh": "刷新",
+        "telegram": "Telegram"
     },
     "hold_button": {
         "label": "长按开始！",
@@ -1227,7 +1230,9 @@
     "logs": {
         "copy_logs": "复制日志",
         "title": "{client} 日志",
-        "view": "查看日志"
+        "view": "查看日志",
+        "copied": "日志已复制到剪贴板",
+        "copy_failed": "复制日志失败: {error}"
     },
     "installation": {
         "downloading": "正在下载",

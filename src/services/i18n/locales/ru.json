@@ -445,7 +445,10 @@
         "click": "Нажмите",
         "show_more": "Показать больше",
         "show_less": "Скрыть",
-        "advanced": "Дополнительные"
+        "advanced": "Дополнительные",
+        "send_again": "Отправить письмо снова",
+        "back_to_login": "Назад к входу",
+        "verification_sent": "Письмо с подтверждением отправлено!"
     },
     "friends": {
         "addFriend": "Добавить друга",
@@ -683,7 +686,9 @@
     "logs": {
         "copy_logs": "Копировать логи",
         "title": "Логи {client}",
-        "view": "Просмотреть логи"
+        "view": "Просмотреть логи",
+        "copied": "Логи скопированы в буфер обмена",
+        "copy_failed": "Не удалось скопировать логи: {error}"
     },
     "installation": {
         "downloading": "Загрузка",
@@ -825,6 +830,7 @@
             "preview_message": "Позиция уведомлений изменена!"
         },
         "telemetry_info_title": "Информация о телеметрии",
+        "telemetry": "Аналитика",
         "reset_requirements": "Сбросить файлы лоадера",
         "reset_requirements_success": "Успешно удалены файлы, теперь скачайте любой клиент",
         "reset_requirements_failed": "Не удалось удалить файлы, попробуйте ещё раз, или перезапустите лоадер",
@@ -1088,6 +1094,7 @@
         "mark_all_read": "Отметить всё как прочитанное",
         "refresh": "Обновить",
         "search_placeholder": "Поиск новостей...",
+        "telegram": "Telegram",
         "time": {}
     },
     "hold_button": {

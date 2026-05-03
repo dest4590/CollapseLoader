@@ -3,7 +3,6 @@ import App from "./App.vue";
 import NetworkWindow from "./windows/NetworkWindow.vue";
 import CustomizationWindow from "./windows/CustomizationWindow.vue";
 import i18n from "@services/i18n";
-import { initializeApiUrl } from "@/config";
 import { loader } from "@guolao/vue-monaco-editor";
 
 loader.config({
@@ -23,6 +22,8 @@ else if (isCustomizationWindow) rootComponent = CustomizationWindow;
 
 const app = createApp(rootComponent).use(i18n);
 
-initializeApiUrl().finally(() => {
-    app.mount("#app");
-});
+// initializeApiUrl().finally(() => {
+
+// });
+
+app.mount("#app");
