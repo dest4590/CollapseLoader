@@ -192,6 +192,11 @@ export function useAppHandlers(props: {
                 await launchOrDownloadClient(target, was_already_running);
         });
 
+        const unlistenExited = await listen("client-exited", () => {
+            localTrackerService.stopPlaytimeTracking();
+            globalUserStatus.setOnline();
+        });
+
         const unlistenLaunched = await listen(
             "client-launched",
             async (event) => {
@@ -228,6 +233,7 @@ export function useAppHandlers(props: {
         return () => {
             unlistenTray();
             unlistenLaunch();
+            unlistenExited();
             unlistenLaunched();
         };
     };
