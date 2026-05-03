@@ -25,19 +25,6 @@ export const initializeApiUrl = (): Promise<string> => {
             } else {
                 throw new Error("Invalid API url from backend");
             }
-            try {
-                const ver = await invoke<string>("get_api_version");
-                if (ver && ver.length > 0) {
-                    currentApiVersion = ver;
-                    console.log("API version from backend:", currentApiVersion);
-                }
-            } catch (e) {
-                console.warn(
-                    "Failed to get API version from backend, defaulting to",
-                    currentApiVersion,
-                    e
-                );
-            }
         } catch (error) {
             console.error("Failed to get API URL from backend:", error);
         }

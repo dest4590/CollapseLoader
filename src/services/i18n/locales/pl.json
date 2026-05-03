@@ -1320,6 +1320,16 @@
         "install": "Zainstaluj",
         "choose_version": "Wybierz wersję",
         "versions_for": "Wersje dla {mod}",
-        "loading_versions": "Ładowanie wersji..."
+        "loading_versions": "Ładowanie wersji...",
+        "sort_by": "Sortowanie",
+        "sort_relevance": "Trafność",
+        "sort_downloads": "Pobrania",
+        "sort_newest": "Najnowsze",
+        "sort_updated": "Niedawno zaktualizowane",
+        "strict_compatibility": "Ścisła kompatybilność klienta",
+        "uninstall": "Odinstaluj",
+        "uninstall_success": "Pomyślnie odinstalowano {mod}",
+        "uninstall_failed": "Nie udało się odinstalować moda: {error}",
+        "open_in_modrinth": "Otwórz w Modrinth"
     }
 }

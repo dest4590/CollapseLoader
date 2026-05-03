@@ -4,6 +4,8 @@ import { listen } from "@tauri-apps/api/event";
 import { useToast } from "@shared/composables/useToast";
 import { formatTime } from "@shared/utils/utils";
 
+const IRC_DISABLED = true;
+
 interface SenderInfo {
     username: string;
     role: string;
@@ -61,8 +63,6 @@ const formatIsoToTime = (isoString?: string): string => {
     if (Number.isNaN(parsed.getTime())) return formatTime();
     return formatTime(parsed);
 };
-
-const IRC_DISABLED = true;
 
 const parseIrcPayload = (payload: unknown): IrcMessage | null => {
     const fallbackTime = formatTime();

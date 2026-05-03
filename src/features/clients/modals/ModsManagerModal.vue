@@ -1,21 +1,62 @@
 <template>
     <div class="space-y-4 flex flex-col h-full overflow-hidden">
-        <div v-if="!selectedVersionsMod" class="flex items-center gap-2">
-            <input
-                v-model="searchQuery"
-                @keyup.enter="handleSearch"
-                type="text"
-                :placeholder="t('mods.search_placeholder')"
-                class="input input-bordered w-full"
-                :disabled="isLoading"
-            />
-            <button
-                @click="handleSearch"
-                class="btn btn-primary"
-                :disabled="isLoading"
+        <div v-if="!selectedVersionsMod" class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <input
+                    v-model="searchQuery"
+                    @keyup.enter="handleSearch"
+                    type="text"
+                    :placeholder="t('mods.search_placeholder')"
+                    class="input input-sm input-bordered w-full"
+                    :disabled="isLoading"
+                />
+                <button
+                    @click="handleSearch"
+                    class="btn btn-sm btn-primary"
+                    :disabled="isLoading"
+                >
+                    <Search class="w-4 h-4" />
+                </button>
+            </div>
+
+            <div
+                class="flex flex-wrap items-center justify-between gap-4 px-1 pb-1"
             >
-                <Search class="w-4 h-4" />
-            </button>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-base-content/70"
+                        >{{ t("mods.sort_by") }}:</span
+                    >
+                    <select
+                        v-model="sortBy"
+                        class="select select-sm select-bordered bg-base-200 h-8 min-h-0 text-xs"
+                        @change="hasSearched && handleSearch()"
+                    >
+                        <option value="relevance">
+                            {{ t("mods.sort_relevance") }}
+                        </option>
+                        <option value="downloads">
+                            {{ t("mods.sort_downloads") }}
+                        </option>
+                        <option value="newest">
+                            {{ t("mods.sort_newest") }}
+                        </option>
+                        <option value="updated">
+                            {{ t("mods.sort_updated") }}
+                        </option>
+                    </select>
+                </div>
+                <label class="cursor-pointer label px-0 py-0 gap-2">
+                    <span class="label-text text-xs font-semibold">{{
+                        t("mods.strict_compatibility")
+                    }}</span>
+                    <input
+                        type="checkbox"
+                        v-model="enforceCompatibility"
+                        class="checkbox checkbox-xs rounded checkbox-primary"
+                        @change="hasSearched && handleSearch()"
+                    />
+                </label>
+            </div>
         </div>
 
         <div
@@ -72,7 +113,11 @@
                         />
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm truncate">
+                                <h4
+                                    class="font-bold text-sm truncate cursor-pointer hover:underline text-primary"
+                                    @click="openInModrinth(mod)"
+                                    :title="t('mods.open_in_modrinth')"
+                                >
                                     {{ mod.title }}
                                 </h4>
                                 <span
@@ -89,17 +134,31 @@
                                 {{ mod.description }}
                             </p>
                         </div>
-                        <button
-                            @click="showVersions(mod)"
-                            class="btn btn-sm btn-primary"
-                            :disabled="installingMods.has(mod.project_id)"
-                        >
-                            <span
-                                v-if="installingMods.has(mod.project_id)"
-                                class="loading loading-spinner loading-xs"
-                            ></span>
-                            <Download v-else class="w-4 h-4" />
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button
+                                v-if="isModInstalled(mod)"
+                                @click="uninstallMod(mod)"
+                                class="btn btn-sm btn-error btn-outline"
+                                :disabled="installingMods.has(mod.project_id)"
+                            >
+                                <span
+                                    v-if="installingMods.has(mod.project_id)"
+                                    class="loading loading-spinner loading-xs"
+                                ></span>
+                                <span v-else>{{ t("mods.uninstall") }}</span>
+                            </button>
+                            <button
+                                @click="showVersions(mod)"
+                                class="btn btn-sm btn-primary"
+                                :disabled="installingMods.has(mod.project_id)"
+                            >
+                                <span
+                                    v-if="installingMods.has(mod.project_id)"
+                                    class="loading loading-spinner loading-xs"
+                                ></span>
+                                <Download v-else class="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -155,10 +214,40 @@
                         </div>
                     </div>
                     <button
+                        v-if="!isVersionInstalled(version)"
                         @click="installVersion(selectedVersionsMod, version)"
                         class="btn btn-sm btn-primary"
+                        :disabled="
+                            installingMods.has(selectedVersionsMod.project_id)
+                        "
                     >
-                        {{ t("mods.install") }}
+                        <span
+                            v-if="
+                                installingMods.has(
+                                    selectedVersionsMod.project_id
+                                )
+                            "
+                            class="loading loading-spinner loading-xs"
+                        ></span>
+                        <span v-else>{{ t("mods.install") }}</span>
+                    </button>
+                    <button
+                        v-else
+                        @click="uninstallMod(selectedVersionsMod)"
+                        class="btn btn-sm btn-error btn-outline"
+                        :disabled="
+                            installingMods.has(selectedVersionsMod.project_id)
+                        "
+                    >
+                        <span
+                            v-if="
+                                installingMods.has(
+                                    selectedVersionsMod.project_id
+                                )
+                            "
+                            class="loading loading-spinner loading-xs"
+                        ></span>
+                        <span v-else>{{ t("mods.uninstall") }}</span>
                     </button>
                 </div>
             </div>
@@ -186,6 +275,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import type { Client } from "@shared/types/ui";
 import { useToast } from "@shared/composables/useToast";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 const props = defineProps<{
     client: Client;
@@ -208,6 +298,11 @@ const selectedVersionsMod = ref<ModrinthSearchResult | null>(null);
 const versions = ref<ModrinthVersion[]>([]);
 const isLoadingVersions = ref(false);
 
+const sortBy = ref<"relevance" | "downloads" | "newest" | "updated">(
+    "relevance"
+);
+const enforceCompatibility = ref(true);
+
 const fetchInstalledMods = async () => {
     try {
         installedModFiles.value = await invoke<string[]>(
@@ -220,10 +315,10 @@ const fetchInstalledMods = async () => {
 };
 
 const isModInstalled = (mod: ModrinthSearchResult) => {
-    const slugLower = mod.slug.toLowerCase();
-    const titleLower = mod.title.toLowerCase().replace(/\s+/g, "-");
+    const slugLower = mod.slug.toLowerCase().replace(/-/g, "");
+    const titleLower = mod.title.toLowerCase().replace(/[^a-z0-9]/g, "");
     return installedModFiles.value.some((file) => {
-        const fileLower = file.toLowerCase();
+        const fileLower = file.toLowerCase().replace(/[^a-z0-9]/g, "");
         return fileLower.includes(slugLower) || fileLower.includes(titleLower);
     });
 };
@@ -241,9 +336,29 @@ const handleSearch = async () => {
     hasSearched.value = true;
 
     try {
+        const facetsArray = [["project_type:mod"]];
+
+        if (enforceCompatibility.value && props.client.version) {
+            facetsArray.push([`versions:${props.client.version}`]);
+
+            if (
+                props.client.client_type &&
+                props.client.client_type !== "default"
+            ) {
+                const loader =
+                    props.client.client_type.toLowerCase() === "forge"
+                        ? "forge"
+                        : "fabric";
+                facetsArray.push([`categories:${loader}`]);
+            } else {
+                facetsArray.push([`categories:fabric`]);
+            }
+        }
+
         const result = await ModrinthService.searchMods(searchQuery.value, {
             limit: 20,
-            facets: JSON.stringify([[`project_type:mod`]]),
+            facets: JSON.stringify(facetsArray),
+            index: sortBy.value,
         });
         mods.value = result.hits;
     } catch (e: any) {
@@ -254,14 +369,24 @@ const handleSearch = async () => {
     }
 };
 
+const isVersionInstalled = (version: ModrinthVersion) => {
+    return version.files.some((file) =>
+        installedModFiles.value.includes(file.filename)
+    );
+};
+
 const showVersions = async (mod: ModrinthSearchResult) => {
     selectedVersionsMod.value = mod;
     isLoadingVersions.value = true;
     try {
         const gameVersion = props.client.version;
+        const loaders =
+            props.client.client_type?.toLowerCase() === "forge"
+                ? ["forge"]
+                : ["fabric"];
         versions.value = await ModrinthService.getModVersions(
             mod.slug,
-            ["fabric"],
+            loaders,
             [gameVersion]
         );
     } catch (e: any) {
@@ -305,6 +430,53 @@ const installVersion = async (
         addToast(t("mods.install_failed", { error: e.message }), "error", 5000);
     } finally {
         installingMods.value.delete(mod.project_id);
+    }
+};
+
+const uninstallMod = async (mod: ModrinthSearchResult) => {
+    if (installingMods.value.has(mod.project_id)) return;
+
+    installingMods.value.add(mod.project_id);
+    try {
+        const slugLower = mod.slug.toLowerCase().replace(/-/g, "");
+        const titleLower = mod.title.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const filename = installedModFiles.value.find((file) => {
+            const fileLower = file.toLowerCase().replace(/[^a-z0-9]/g, "");
+            return (
+                fileLower.includes(slugLower) || fileLower.includes(titleLower)
+            );
+        });
+
+        if (!filename) throw new Error("Mod file not found locally");
+
+        await invoke("uninstall_mod", {
+            id: props.client.id,
+            filename,
+        });
+
+        addToast(
+            t("mods.uninstall_success", { mod: mod.title }),
+            "success",
+            3000
+        );
+        await fetchInstalledMods();
+    } catch (e: any) {
+        console.error("Failed to uninstall", e);
+        addToast(
+            t("mods.uninstall_failed", { error: e.message }),
+            "error",
+            5000
+        );
+    } finally {
+        installingMods.value.delete(mod.project_id);
+    }
+};
+
+const openInModrinth = async (mod: ModrinthSearchResult) => {
+    try {
+        await openUrl(`https://modrinth.com/mod/${mod.slug}`);
+    } catch (e) {
+        console.error("Failed to open URL with Tauri API", e);
     }
 };
 </script>

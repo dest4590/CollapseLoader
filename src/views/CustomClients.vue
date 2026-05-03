@@ -30,6 +30,21 @@ import CustomClientModsModal from "@features/clients/modals/CustomClientModsModa
 
 const { t } = useI18n();
 
+defineProps<{
+    isOnline?: boolean;
+    userId?: number | string | null;
+}>();
+
+defineEmits<{
+    (e: "loggedOut"): void;
+    (e: "loggedIn"): void;
+    (e: "registered"): void;
+    (e: "changeView", view: string): void;
+    (e: "showUserProfile", id: number): void;
+    (e: "backToFriends"): void;
+    (e: "unreadCountUpdated", count: number): void;
+}>();
+
 const customClients = ref<CustomClient[]>([]);
 const error = ref("");
 const loading = ref(true);

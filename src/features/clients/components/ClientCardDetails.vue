@@ -8,7 +8,7 @@ import {
 } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import type { Client, ClientDetails } from "@shared/types/ui";
-import ClientRating from "./ClientRating.vue";
+// import ClientRating from "./ClientRating.vue";
 
 const { t } = useI18n();
 
@@ -93,7 +93,7 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                             <div
                                 class="stats stats-vertical sm:stats-horizontal w-full rounded-xl bg-base-200/40 border border-base-content/5"
                             >
-                                <ClientRating
+                                <!-- <ClientRating
                                     :clientId="client.id"
                                     :ratingAvg="ratingAvg"
                                     :ratingCount="ratingCount"
@@ -108,7 +108,7 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                                     @update:rating-count="
                                         emit('update:rating-count', $event)
                                     "
-                                />
+                                /> -->
 
                                 <div
                                     v-if="clientDetails.created_at"

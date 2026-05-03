@@ -1324,6 +1324,16 @@
         "install": "Встановити",
         "choose_version": "Вибрати версію",
         "versions_for": "Версії для {mod}",
-        "loading_versions": "Завантаження версій..."
+        "loading_versions": "Завантаження версій...",
+        "sort_by": "Сортування",
+        "sort_relevance": "Релевантність",
+        "sort_downloads": "Завантаження",
+        "sort_newest": "Найновіші",
+        "sort_updated": "Нещодавно оновлені",
+        "strict_compatibility": "Сувора сумісність",
+        "uninstall": "Видалити",
+        "uninstall_success": "Успішно видалено {mod}",
+        "uninstall_failed": "Не вдалося видалити мод: {error}",
+        "open_in_modrinth": "Відкрити в Modrinth"
     }
 }

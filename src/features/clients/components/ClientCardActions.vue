@@ -83,8 +83,8 @@ const handleOpenLogViewer = () => {
                 :disabled="isRequirementsInProgress"
                 :class="[
                     clientIsRunning
-                        ? 'btn-error animate-pulse-subtle hover:shadow-lg hover:shadow-error/40'
-                        : 'btn-primary hover:shadow-lg hover:shadow-primary/20',
+                        ? 'btn-error animate-pulse-subtle'
+                        : 'btn-primary',
                 ]"
             >
                 <StopCircle class="w-4 h-4 mr-1" v-if="clientIsRunning" />

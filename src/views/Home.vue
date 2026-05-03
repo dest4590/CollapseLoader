@@ -1801,7 +1801,7 @@ onBeforeUnmount(() => {
     >
         <div
             v-for="(client, idx) in filteredClients"
-            :key="client.id"
+            :key="`${client.id}-${idx}`"
             :class="[
                 'client-card-item',
                 { 'slide-in-animate': playClientSlideAnim },

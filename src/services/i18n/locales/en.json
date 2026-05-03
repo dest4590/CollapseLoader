@@ -1324,6 +1324,16 @@
         "install": "Install",
         "choose_version": "Choose Version",
         "versions_for": "Versions for {mod}",
-        "loading_versions": "Loading versions..."
+        "loading_versions": "Loading versions...",
+        "sort_by": "Sort Options",
+        "sort_relevance": "Relevance",
+        "sort_downloads": "Downloads",
+        "sort_newest": "Newest",
+        "sort_updated": "Recently Updated",
+        "strict_compatibility": "Strict Client Compatibility",
+        "uninstall": "Uninstall",
+        "uninstall_success": "Successfully uninstalled {mod}",
+        "uninstall_failed": "Failed to uninstall mod: {error}",
+        "open_in_modrinth": "Open in Modrinth"
     }
 }
