@@ -1,3 +1,4 @@
+use crate::commands::utils::refresh_tray_menu;
 use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
@@ -6,12 +7,13 @@ use crate::core::storage::settings::{Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
 #[cfg(target_os = "windows")]
 use crate::core::utils::dpi;
-use crate::commands::utils::refresh_tray_menu;
 use crate::{log_debug, log_error, log_info, AppState};
 use sysinfo::System;
 use tauri::State;
 
-fn with_account_manager<R>(operation: impl FnOnce(&mut crate::core::storage::accounts::AccountManager) -> Result<R, String>) -> Result<R, String> {
+fn with_account_manager<R>(
+    operation: impl FnOnce(&mut crate::core::storage::accounts::AccountManager) -> Result<R, String>,
+) -> Result<R, String> {
     let mut account_manager = ACCOUNT_MANAGER.lock().map_err(|e| {
         log_error!("Failed to acquire lock on account manager: {}", e);
         "Failed to acquire lock on account manager".to_string()
@@ -20,13 +22,17 @@ fn with_account_manager<R>(operation: impl FnOnce(&mut crate::core::storage::acc
     operation(&mut account_manager)
 }
 
-fn with_favorite_manager<R>(operation: impl FnOnce(&mut crate::core::storage::favorites::FavoriteManager) -> Result<R, String>) -> Result<R, String> {
+fn with_favorite_manager<R>(
+    operation: impl FnOnce(&mut crate::core::storage::favorites::FavoriteManager) -> Result<R, String>,
+) -> Result<R, String> {
     let mut favorite_manager = FAVORITE_MANAGER.lock().map_err(|e| {
         log_error!("Failed to acquire lock on favorite manager: {}", e);
         "Failed to acquire lock on favorite manager".to_string()
     })?;
 
-    operation(&mut favorite_manager)
+    let result = operation(&mut favorite_manager)?;
+    favorite_manager.save_to_disk();
+    Ok(result)
 }
 
 fn update_flags(operation: impl FnOnce(&mut Flags)) -> Result<(), String> {
@@ -182,7 +188,11 @@ pub fn get_setting_bool(key: String) -> bool {
     let s = SETTINGS.lock().unwrap();
     matches!(
         key.as_str(),
-        "auto_update" | "discord_rpc_enabled" | "hash_verify" | "minimize_to_tray_on_launch" | "close_to_tray"
+        "auto_update"
+            | "discord_rpc_enabled"
+            | "hash_verify"
+            | "minimize_to_tray_on_launch"
+            | "close_to_tray"
     ) && match key.as_str() {
         "auto_update" => s.auto_update.value,
         "discord_rpc_enabled" => s.discord_rpc_enabled.value,
@@ -310,39 +320,39 @@ pub fn get_accounts() -> Vec<Account> {
 pub fn add_account(username: String, tags: Vec<String>) -> Result<String, String> {
     log_info!("Adding new account for user: '{}'", username);
     with_account_manager(|account_manager| {
-            let id = account_manager.add_account(username.clone(), tags);
-            log_debug!("New account created with ID: {}", id);
-            log_info!("Account for '{}' saved to disk", username);
-            Ok(id)
-        })
+        let id = account_manager.add_account(username.clone(), tags);
+        log_debug!("New account created with ID: {}", id);
+        log_info!("Account for '{}' saved to disk", username);
+        Ok(id)
+    })
 }
 
 #[tauri::command]
 pub fn remove_account(id: String) -> Result<(), String> {
     log_info!("Removing account with ID: {}", id);
     with_account_manager(|account_manager| {
-            if account_manager.remove_account(&id) {
-                log_info!("Account ID {} removed and saved to disk", id);
-                Ok(())
-            } else {
-                log_error!("Account with ID {} not found for removal", id);
-                Err("Account not found".to_string())
-            }
-        })
+        if account_manager.remove_account(&id) {
+            log_info!("Account ID {} removed and saved to disk", id);
+            Ok(())
+        } else {
+            log_error!("Account with ID {} not found for removal", id);
+            Err("Account not found".to_string())
+        }
+    })
 }
 
 #[tauri::command]
 pub fn set_active_account(id: String) -> Result<(), String> {
     log_info!("Setting active account to ID: {}", id);
     with_account_manager(|account_manager| {
-            if account_manager.set_active_account(&id) {
-                log_info!("Active account set to {} and saved to disk", id);
-                Ok(())
-            } else {
-                log_error!("Account with ID {} not found to set as active", id);
-                Err("Account not found".to_string())
-            }
-        })
+        if account_manager.set_active_account(&id) {
+            log_info!("Active account set to {} and saved to disk", id);
+            Ok(())
+        } else {
+            log_error!("Account with ID {} not found to set as active", id);
+            Err("Account not found".to_string())
+        }
+    })
 }
 
 #[tauri::command]
@@ -353,14 +363,14 @@ pub fn update_account(
 ) -> Result<(), String> {
     log_info!("Updating account with ID: {}", id);
     with_account_manager(|account_manager| {
-            if account_manager.update_account(&id, username, tags) {
-                log_info!("Account ID {} updated and saved to disk", id);
-                Ok(())
-            } else {
-                log_error!("Account with ID {} not found for update", id);
-                Err("Account not found".to_string())
-            }
-        })
+        if account_manager.update_account(&id, username, tags) {
+            log_info!("Account ID {} updated and saved to disk", id);
+            Ok(())
+        } else {
+            log_error!("Account with ID {} not found for update", id);
+            Err("Account not found".to_string())
+        }
+    })
 }
 
 #[tauri::command]
@@ -390,33 +400,39 @@ pub fn get_favorite_clients() -> Result<Vec<u32>, String> {
 pub fn add_favorite_client(state: State<'_, AppState>, client_id: u32) -> Result<(), String> {
     log_info!("Adding client ID {} to favorites", client_id);
     with_favorite_manager(|favorite_manager| {
-            favorite_manager.add_favorite(client_id);
-            log_info!("Client ID {} added to favorites and saved", client_id);
-            refresh_tray_menu(state);
-            Ok(())
-        })
+        favorite_manager.add_favorite(client_id);
+        log_info!("Client ID {} added to favorites and saved", client_id);
+        Ok(())
+    })?;
+
+    refresh_tray_menu(state);
+    Ok(())
 }
 
 #[tauri::command]
 pub fn remove_favorite_client(state: State<'_, AppState>, client_id: u32) -> Result<(), String> {
     log_info!("Removing client ID {} from favorites", client_id);
     with_favorite_manager(|favorite_manager| {
-            favorite_manager.remove_favorite(client_id);
-            log_info!("Client ID {} removed from favorites and saved", client_id);
-            refresh_tray_menu(state);
-            Ok(())
-        })
+        favorite_manager.remove_favorite(client_id);
+        log_info!("Client ID {} removed from favorites and saved", client_id);
+        Ok(())
+    })?;
+
+    refresh_tray_menu(state);
+    Ok(())
 }
 
 #[tauri::command]
 pub fn set_all_favorites(state: State<'_, AppState>, client_ids: Vec<u32>) -> Result<(), String> {
     log_info!("Setting all favorites to: {:?}", client_ids);
     with_favorite_manager(|favorite_manager| {
-            favorite_manager.favorites = client_ids;
-            log_info!("All favorites updated and saved");
-            refresh_tray_menu(state);
-            Ok(())
-        })
+        favorite_manager.favorites = client_ids;
+        log_info!("All favorites updated and saved");
+        Ok(())
+    })?;
+
+    refresh_tray_menu(state);
+    Ok(())
 }
 
 #[tauri::command]
@@ -435,9 +451,9 @@ pub fn is_client_favorite(client_id: u32) -> Result<bool, String> {
 pub fn reorder_accounts(ordered_ids: Vec<String>) -> Result<(), String> {
     log_info!("Reordering accounts");
     with_account_manager(|account_manager| {
-            account_manager.reorder_accounts(ordered_ids);
-            Ok(())
-        })
+        account_manager.reorder_accounts(ordered_ids);
+        Ok(())
+    })
 }
 
 #[tauri::command]
