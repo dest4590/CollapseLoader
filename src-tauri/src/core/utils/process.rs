@@ -248,3 +248,6 @@ pub fn force_high_performance_gpu(path: &std::path::Path) {
         Err(e) => log_error!("Failed to update GPU preference registry: {}", e),
     }
 }
+
+#[cfg(not(target_os = "windows"))]
+pub fn force_high_performance_gpu(_path: &std::path::Path) {}
