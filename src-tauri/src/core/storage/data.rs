@@ -359,31 +359,18 @@ impl Data {
             }
 
             let client_target = client_dir.join(name);
-            if let Ok(meta) = tokio_fs::symlink_metadata(&client_target).await {
-                let res = if meta.file_type().is_symlink() {
-                    if meta.is_dir() {
-                        tokio_fs::remove_dir(&client_target).await
-                    } else {
-                        tokio_fs::remove_file(&client_target).await
-                    }
-                } else if meta.is_dir() {
-                    tokio_fs::remove_dir_all(&client_target).await
-                } else {
-                    tokio_fs::remove_file(&client_target).await
-                };
-                if let Err(e) = res {
-                    log_warn!(
-                        "Failed to remove existing client {} at {}: {}",
-                        name,
-                        client_target.display(),
-                        e
-                    );
-                }
+            if let Err(e) = Self::remove_existing_sync_target(&client_target, is_dir) {
+                log_warn!(
+                    "Failed to remove existing client {} at {}: {}",
+                    name,
+                    client_target.display(),
+                    e
+                );
             }
 
-            if let Err(e) = Self::create_symlink(&target, &client_target, is_dir) {
+            if let Err(e) = Self::create_link(&target, &client_target, is_dir) {
                 log_warn!(
-                    "Failed to symlink {} for {}: {} -> {}: {}",
+                    "Failed to link {} for {}: {} -> {}: {}",
                     name,
                     client_base,
                     target.display(),
@@ -452,10 +439,41 @@ impl Data {
         }
     }
 
-    fn create_symlink(
+    fn remove_existing_sync_target(path: &Path, is_dir: bool) -> Result<(), String> {
+        #[cfg(target_family = "windows")]
+        if is_dir {
+            match junction::exists(path) {
+                Ok(true) => return junction::delete(path).map_err(|e| e.to_string()),
+                Ok(false) => {}
+                Err(e) => return Err(e.to_string()),
+            }
+        }
+
+        match fs::symlink_metadata(path) {
+            Ok(meta) => {
+                let result = if meta.file_type().is_symlink() {
+                    if is_dir {
+                        fs::remove_dir(path)
+                    } else {
+                        fs::remove_file(path)
+                    }
+                } else if meta.is_dir() {
+                    fs::remove_dir_all(path)
+                } else {
+                    fs::remove_file(path)
+                };
+
+                result.map_err(|e| e.to_string())
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    fn create_link(
         src: &std::path::Path,
         dst: &std::path::Path,
-        _is_dir: bool,
+        is_dir: bool,
     ) -> Result<(), String> {
         #[cfg(target_family = "unix")]
         {
@@ -465,10 +483,26 @@ impl Data {
         #[cfg(target_family = "windows")]
         {
             use std::os::windows::fs::{symlink_dir, symlink_file};
-            if _is_dir {
-                symlink_dir(src, dst).map_err(|e| e.to_string())
+            if is_dir {
+                match symlink_dir(src, dst) {
+                    Ok(()) => Ok(()),
+                    Err(symlink_err) => junction::create(src, dst).map_err(|junction_err| {
+                        format!(
+                            "{}; junction fallback failed: {}",
+                            symlink_err, junction_err
+                        )
+                    }),
+                }
             } else {
-                symlink_file(src, dst).map_err(|e| e.to_string())
+                match symlink_file(src, dst) {
+                    Ok(()) => Ok(()),
+                    Err(symlink_err) => fs::hard_link(src, dst).map_err(|hard_link_err| {
+                        format!(
+                            "{}; hard-link fallback failed: {}",
+                            symlink_err, hard_link_err
+                        )
+                    }),
+                }
             }
         }
     }

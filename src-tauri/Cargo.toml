@@ -53,6 +53,7 @@ regex = "1.12.3"
 flate2 = "1.1.9"
 
 [target.'cfg(windows)'.dependencies]
+junction = "2.0.0"
 winreg = { version = "0.56.0" }
 windows = { version = "0.62.2", features = ["Win32_UI_HiDpi"] }
 
