@@ -63,13 +63,21 @@ const tabItems = [
     { id: "app_logs", icon: FileText, labelKey: "navigation.app_logs" },
 ];
 
-const settingsLabelMap = computed<Record<string, string>>(() => {
-    const map: Record<string, string> = {};
-    for (const s of settingsService.schema.value) {
-        map[s.key] = t(s.labelKey as any) || s.labelKey;
-    }
-    return map;
-});
+const settingsLabelMap = computed<Record<string, string>>(() => ({
+    ram: "RAM",
+    language: t("settings.language"),
+    discord_rpc_enabled: "Discord Rich Presence",
+    hash_verify: t("settings.hash_verify"),
+    sync_client_settings: t("settings.sync_client_settings"),
+    dpi_bypass: "DPI Bypass (Zapret by bol-van)",
+    minimize_to_tray_on_launch: t("settings.minimize_to_tray_on_launch"),
+    close_to_tray: t("settings.close_to_tray"),
+    auto_update: t("settings.auto_update"),
+    autostart: t("settings.autostart"),
+    start_minimized: t("settings.start_minimized"),
+    java_path: t("settings.java_path"),
+    java_args: t("settings.java_args"),
+}));
 
 type ResultItem = {
     type: "tab" | "client" | "setting" | "account" | "separator";
@@ -150,9 +158,34 @@ const results = computed<ResultItem[]>(() => {
         if (!q || s > 0) cls.push({ item, score: s });
     }
 
+    const KEY_ORDER = [
+        "ram",
+        "language",
+        "discord_rpc_enabled",
+        "hash_verify",
+        "sync_client_settings",
+        "dpi_bypass",
+        "minimize_to_tray_on_launch",
+        "close_to_tray",
+        "auto_update",
+        "autostart",
+        "java_path",
+        "java_args",
+    ];
+
     const settings = settingsService.getSettings();
-    for (const [key, field] of Object.entries(settings)) {
+    const sortedSettings = Object.entries(settings).sort(([a], [b]) => {
+        const ai = KEY_ORDER.indexOf(a);
+        const bi = KEY_ORDER.indexOf(b);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+    });
+
+    for (const [key, field] of sortedSettings) {
         if (!field.show) continue;
+        if (key === "irc_chat" || key === "optional_telemetry" || key === "start_minimized") continue;
         const label = settingsLabelMap.value[key] || key.replace(/_/g, " ");
         const s = q ? Math.max(scoreText(label), scoreText(key)) : 1;
         const item = {
@@ -218,7 +251,6 @@ const loadData = async () => {
     try {
         clients.value = await invoke<Client[]>("get_clients");
         accounts.value = await invoke<Account[]>("get_accounts");
-        await settingsService.loadSchema();
     } catch (e) {
         console.error("Failed to load spotlight data", e);
     }

@@ -117,11 +117,23 @@ const currentLanguage = ref(getCurrentLanguage());
 const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 
 const filteredSettingsEntries = computed(() => {
-    const KEY_ORDER = computed(() =>
-        settingsService.schema.value.length
-            ? settingsService.schema.value.map((s) => s.key)
-            : []
-    );
+    const KEY_ORDER = [
+        "ram",
+        "language",
+        "discord_rpc_enabled",
+        "optional_telemetry",
+        "cordshare",
+        "irc_chat",
+        "hash_verify",
+        "sync_client_settings",
+        "dpi_bypass",
+        "minimize_to_tray_on_launch",
+        "close_to_tray",
+        "auto_update",
+        "autostart",
+        "java_path",
+        "java_args",
+    ];
 
     return Object.entries(settings)
         .filter(([, field]) => field.show)
@@ -129,8 +141,8 @@ const filteredSettingsEntries = computed(() => {
         .filter(([key]) => key !== "optional_telemetry")
         .filter(([key]) => key !== "start_minimized")
         .sort(([a], [b]) => {
-            const ai = KEY_ORDER.value.indexOf(a);
-            const bi = KEY_ORDER.value.indexOf(b);
+            const ai = KEY_ORDER.indexOf(a);
+            const bi = KEY_ORDER.indexOf(b);
             if (ai === -1 && bi === -1) return 0;
             if (ai === -1) return 1;
             if (bi === -1) return -1;
@@ -178,10 +190,7 @@ watch(
 const loadSettings = async () => {
     try {
         loading.value = true;
-        await Promise.all([
-            settingsService.loadSettings(),
-            settingsService.loadSchema(),
-        ]);
+        await settingsService.loadSettings();
     } catch (error) {
         console.error("Failed to load settings:", error);
         addToast(t("settings.load_settings_failed", { error }), "error");
