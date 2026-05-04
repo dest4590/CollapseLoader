@@ -165,3 +165,24 @@ define_settings! {
 
 pub static SETTINGS: LazyLock<StdMutex<Settings>> =
     LazyLock::new(|| StdMutex::new(Settings::load_from_disk(Settings::config_path())));
+
+#[rustfmt::skip]
+pub fn settings_schema() -> Vec<(String, String)> {
+    vec![
+        ("ram".to_string(), "settings.ram".to_string()),
+        ("language".to_string(), "settings.language".to_string()),
+        ("discord_rpc_enabled".to_string(), "settings.discord_rpc_enabled".to_string()),
+        ("optional_telemetry".to_string(), "settings.optional_telemetry".to_string()),
+        ("irc_chat".to_string(), "settings.irc_chat".to_string()),
+        ("hash_verify".to_string(), "settings.hash_verify".to_string()),
+        ("sync_client_settings".to_string(), "settings.sync_client_settings".to_string()),
+        ("dpi_bypass".to_string(), "settings.dpi_bypass".to_string()),
+        ("minimize_to_tray_on_launch".to_string(), "settings.minimize_to_tray_on_launch".to_string()),
+        ("close_to_tray".to_string(), "settings.close_to_tray".to_string()),
+        ("auto_update".to_string(), "settings.auto_update".to_string()),
+        ("autostart".to_string(), "settings.autostart".to_string()),
+        ("start_minimized".to_string(), "settings.start_minimized".to_string()),
+        ("java_path".to_string(), "settings.java_path".to_string()),
+        ("java_args".to_string(), "settings.java_args".to_string()),
+    ]
+}

@@ -18,6 +18,7 @@ class SettingsService {
     constructor() {
         this.initAutoSaveWatcher();
     }
+    schema = ref<Array<{ key: string; labelKey: string }>>([]);
     settings = reactive<SettingsMap>({});
     flags = reactive<FlagsMap>({});
     isLoading = ref(false);
@@ -50,6 +51,26 @@ class SettingsService {
         } finally {
             this.isLoading.value = false;
         }
+    }
+
+    async loadSchema(): Promise<void> {
+        try {
+            const s = await invoke<Array<[string, string]>>(
+                "get_settings_schema"
+            );
+            this.schema.value = (s || []).map(([k, l]) => ({
+                key: k,
+                labelKey: l,
+            }));
+        } catch (err) {
+            console.error("Failed to load settings schema:", err);
+            this.schema.value = [];
+        }
+    }
+
+    getLabelForKey(key: string): string | undefined {
+        const found = this.schema.value.find((s) => s.key === key);
+        return found ? found.labelKey : undefined;
     }
 
     async saveSettings(settingsArg?: SettingsMap): Promise<void> {

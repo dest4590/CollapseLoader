@@ -3,7 +3,7 @@ use crate::core::storage::accounts::{Account, ACCOUNT_MANAGER};
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::{Flags, FLAGS_MANAGER};
-use crate::core::storage::settings::{Settings, SETTINGS};
+use crate::core::storage::settings::{settings_schema, Settings, SETTINGS};
 use crate::core::utils::discord_rpc;
 #[cfg(target_os = "windows")]
 use crate::core::utils::dpi;
@@ -181,6 +181,11 @@ fn set_autostart_registry(enabled: bool) -> Result<(), String> {
 #[tauri::command]
 pub fn get_settings() -> Settings {
     SETTINGS.lock().unwrap().clone()
+}
+
+#[tauri::command]
+pub fn get_settings_schema() -> Vec<(String, String)> {
+    settings_schema()
 }
 
 #[tauri::command]

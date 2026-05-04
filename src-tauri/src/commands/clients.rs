@@ -1,5 +1,3 @@
-//! Command handlers for client-related operations like launching, installing, and managing game clients.
-
 use crate::AppState;
 use core::clients::{
     client::{Client, CLIENT_LOGS},
@@ -35,7 +33,6 @@ use std::io::Read;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-/// Retrieves a client by its ID from the manager.
 fn get_client_by_id(
     id: u32,
     manager: &std::sync::Arc<std::sync::Mutex<ClientManager>>,
@@ -83,7 +80,6 @@ fn refresh_tray_menu_after_client_change(
     result
 }
 
-/// Returns the current application logs.
 #[tauri::command]
 pub fn get_app_logs() -> Vec<String> {
     logging::APP_LOGS
@@ -93,7 +89,6 @@ pub fn get_app_logs() -> Vec<String> {
         .into()
 }
 
-/// Initializes the client API by fetching the list of available clients.
 #[tauri::command]
 pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
     let clients = ClientManager::fetch_clients().await.map_err(|e| {
@@ -133,7 +128,6 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
     Ok(())
 }
 
-/// Initializes Discord Rich Presence.
 #[tauri::command]
 pub fn initialize_rpc() -> Result<(), String> {
     log_info!("Initializing Discord RPC");
@@ -143,7 +137,6 @@ pub fn initialize_rpc() -> Result<(), String> {
     Ok(())
 }
 
-/// Returns the current server connectivity status.
 #[tauri::command]
 pub async fn get_server_connectivity_status() -> ServerConnectivityStatus {
     let servers = &SERVERS;
@@ -151,7 +144,6 @@ pub async fn get_server_connectivity_status() -> ServerConnectivityStatus {
     servers.connectivity_status.lock().unwrap().clone()
 }
 
-/// Returns the list of all available clients.
 #[tauri::command]
 pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
     state
@@ -267,7 +259,7 @@ async fn ensure_agent_overlay() -> Result<(), String> {
         }
         Err(e) => {
             log_error!("Error verifying agent/overlay files: {}", e);
-            Ok(()) // Non-fatal error
+            Ok(())
         }
     }
 }
@@ -320,7 +312,6 @@ pub async fn launch_client(
             .await
         {
             if !e.contains("5") {
-                // ignore access denied 5 (when file locked or not exist)
                 log_warn!("Failed to sync client {} before launch: {}", client_base, e);
             }
         }
@@ -402,8 +393,6 @@ pub async fn download_client_only(
 
     let requirements_download = client.download_requirements(&app_handle);
 
-    // log_debug!("Sent client download analytics for ID: {}", id);
-
     tokio::try_join!(client_download, requirements_download)?;
 
     let sync_enabled = crate::core::storage::settings::SETTINGS
@@ -418,7 +407,6 @@ pub async fn download_client_only(
             .await
         {
             if e.contains("5") {
-                // ignore access denied 5 (when file locked or not exist)
                 log_warn!(
                     "Failed to sync client {} after download: {}",
                     client_base,

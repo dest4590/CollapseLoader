@@ -117,23 +117,11 @@ const currentLanguage = ref(getCurrentLanguage());
 const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 
 const filteredSettingsEntries = computed(() => {
-    const KEY_ORDER = [
-        "ram",
-        "language",
-        "discord_rpc_enabled",
-        "optional_telemetry",
-        "cordshare",
-        "irc_chat",
-        "hash_verify",
-        "sync_client_settings",
-        "dpi_bypass",
-        "minimize_to_tray_on_launch",
-        "close_to_tray",
-        "auto_update",
-        "autostart",
-        "java_path",
-        "java_args",
-    ];
+    const KEY_ORDER = computed(() =>
+        settingsService.schema.value.length
+            ? settingsService.schema.value.map((s) => s.key)
+            : []
+    );
 
     return Object.entries(settings)
         .filter(([, field]) => field.show)
@@ -141,8 +129,8 @@ const filteredSettingsEntries = computed(() => {
         .filter(([key]) => key !== "optional_telemetry")
         .filter(([key]) => key !== "start_minimized")
         .sort(([a], [b]) => {
-            const ai = KEY_ORDER.indexOf(a);
-            const bi = KEY_ORDER.indexOf(b);
+            const ai = KEY_ORDER.value.indexOf(a);
+            const bi = KEY_ORDER.value.indexOf(b);
             if (ai === -1 && bi === -1) return 0;
             if (ai === -1) return 1;
             if (bi === -1) return -1;
@@ -190,7 +178,10 @@ watch(
 const loadSettings = async () => {
     try {
         loading.value = true;
-        await settingsService.loadSettings();
+        await Promise.all([
+            settingsService.loadSettings(),
+            settingsService.loadSchema(),
+        ]);
     } catch (error) {
         console.error("Failed to load settings:", error);
         addToast(t("settings.load_settings_failed", { error }), "error");
@@ -582,6 +573,8 @@ const generateRandomAccount = () => {
 
 const selectedTag = ref<string | null>(null);
 
+const highlightedSetting = ref<string | null>(null);
+
 const uniqueTags = computed(() => {
     const tagSet = new Set<string>();
     accounts.value.forEach((account) => {
@@ -813,6 +806,26 @@ onMounted(async () => {
     }
 
     loadStorageUsage();
+
+    try {
+        const requested = localStorage.getItem("spotlight_highlight_setting");
+        if (requested) {
+            localStorage.removeItem("spotlight_highlight_setting");
+            highlightedSetting.value = requested;
+            await nextTick();
+
+            const el = document.querySelector<HTMLElement>(
+                `[data-setting-key="${requested}"]`
+            );
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+
+            setTimeout(() => (highlightedSetting.value = null), 3000);
+        }
+    } catch (e) {
+        console.error("Failed to process spotlight highlight request", e);
+    }
 });
 
 // onUnmounted(() => {
@@ -911,11 +924,15 @@ const handleToastPositionChange = (position: string) => {
                                 [key, field], index
                             ) in filteredSettingsEntries"
                             :key="key"
+                            :data-setting-key="key"
                             :class="[
                                 'flex w-full',
                                 key === 'java_path' || key === 'java_args'
                                     ? 'lg:col-span-2'
                                     : 'h-full',
+                                highlightedSetting === key
+                                    ? 'spotlight-highlight'
+                                    : '',
                             ]"
                         >
                             <SettingCard
@@ -1713,5 +1730,26 @@ html[data-theme="dark"] .discord-icon {
 
 html[data-theme="light"] .discord-icon {
     filter: invert(0%);
+}
+
+.spotlight-highlight {
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.15),
+        0 6px 18px rgba(2, 6, 23, 0.04);
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    transition:
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+    border-radius: 0.5rem;
+    position: relative;
+}
+
+.spotlight-highlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) inset;
 }
 </style>

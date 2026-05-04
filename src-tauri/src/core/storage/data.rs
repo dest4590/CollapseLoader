@@ -247,8 +247,6 @@ impl Data {
 
         let download_urls = Self::get_download_urls(file)?;
 
-        log_debug!("Downloading {} to folder {}", file, dest_folder);
-
         let dest_dir = root_dir.join(dest_folder);
         if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
             log_error!(
@@ -323,10 +321,7 @@ impl Data {
                 });
             }
 
-            if matches!(info.kind, LocalFileKind::FabricJar) {
-                log_debug!("Created fabric mods directory: {}", target_dir.display());
-            } else {
-                log_debug!("Created client local directory: {}", target_dir.display());
+            if !matches!(info.kind, LocalFileKind::FabricJar) {
                 if SETTINGS
                     .lock()
                     .map(|s| s.sync_client_settings.value)

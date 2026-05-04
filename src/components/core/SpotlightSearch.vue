@@ -63,21 +63,13 @@ const tabItems = [
     { id: "app_logs", icon: FileText, labelKey: "navigation.app_logs" },
 ];
 
-const settingsLabelMap = computed<Record<string, string>>(() => ({
-    ram: "RAM",
-    language: t("settings.language"),
-    discord_rpc_enabled: "Discord Rich Presence",
-    hash_verify: t("settings.hash_verify"),
-    sync_client_settings: t("settings.sync_client_settings"),
-    dpi_bypass: "DPI Bypass (Zapret by bol-van)",
-    minimize_to_tray_on_launch: t("settings.minimize_to_tray_on_launch"),
-    close_to_tray: t("settings.close_to_tray"),
-    auto_update: t("settings.auto_update"),
-    autostart: t("settings.autostart"),
-    start_minimized: t("settings.start_minimized"),
-    java_path: t("settings.java_path"),
-    java_args: t("settings.java_args"),
-}));
+const settingsLabelMap = computed<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    for (const s of settingsService.schema.value) {
+        map[s.key] = t(s.labelKey as any) || s.labelKey;
+    }
+    return map;
+});
 
 type ResultItem = {
     type: "tab" | "client" | "setting" | "account" | "separator";
@@ -89,123 +81,115 @@ type ResultItem = {
 };
 
 const results = computed<ResultItem[]>(() => {
-    const q = query.value.trim().toLowerCase();
+    const qRaw = query.value.trim();
+    const q = qRaw.toLowerCase();
     const items: ResultItem[] = [];
 
-    if (!q) {
-        if (accounts.value.length > 0) {
-            items.push({
-                type: "separator",
-                id: "sep-accounts",
-                label: t("spotlight.type_account"),
-            });
-            for (const acc of accounts.value) {
-                items.push({
-                    type: "account",
-                    id: acc.id,
-                    label: acc.username,
-                    subtitle: acc.is_active
-                        ? t("spotlight.account_active")
-                        : t("spotlight.account_switch"),
-                    icon: acc.is_active ? UserCheck : User,
-                    isActive: acc.is_active,
-                });
-            }
-        }
-        return items.slice(0, 10);
-    }
+    const scoreText = (text = "") => {
+        const s = text.toLowerCase();
+        if (!q) return 0;
+        if (s === q) return 100;
+        if (s.startsWith(q)) return 80;
+        if (s.includes(q)) return 50;
+        const tokens = q.split(/\s+/).filter(Boolean);
+        const ok = tokens.every((t) => s.includes(t));
+        return ok ? 30 : 0;
+    };
 
-    const tabs: ResultItem[] = [];
-    const accs: ResultItem[] = [];
-    const cls: ResultItem[] = [];
-    const stgs: ResultItem[] = [];
+    const makeClientItem = (client: Client) => ({
+        type: "client" as const,
+        id: String(client.id),
+        label: client.name,
+        subtitle: client.meta.installed
+            ? `${client.version} · ${t("spotlight.client_launch")}`
+            : `${client.version} · ${t("spotlight.client_download")}`,
+        icon: Zap,
+    });
+
+    const tabs: Array<{ item: ResultItem; score: number }> = [];
+    const accs: Array<{ item: ResultItem; score: number }> = [];
+    const cls: Array<{ item: ResultItem; score: number }> = [];
+    const stgs: Array<{ item: ResultItem; score: number }> = [];
 
     for (const tab of tabItems) {
         const label = t(tab.labelKey);
-        if (label.toLowerCase().includes(q) || tab.id.includes(q)) {
-            tabs.push({ type: "tab", id: tab.id, label, icon: tab.icon });
+        const s = q ? Math.max(scoreText(label), scoreText(tab.id)) : 1;
+        if (!q || s > 0) {
+            tabs.push({
+                item: { type: "tab", id: tab.id, label, icon: tab.icon },
+                score: s,
+            });
         }
     }
 
     for (const acc of accounts.value) {
-        if (acc.username.toLowerCase().includes(q)) {
-            accs.push({
-                type: "account",
-                id: acc.id,
-                label: acc.username,
-                subtitle: acc.is_active
-                    ? t("spotlight.account_active")
-                    : t("spotlight.account_switch"),
-                icon: acc.is_active ? UserCheck : User,
-                isActive: acc.is_active,
-            });
-        }
+        const s = q ? scoreText(acc.username) : 1;
+        const item = {
+            type: "account" as const,
+            id: acc.id,
+            label: acc.username,
+            subtitle: acc.is_active
+                ? t("spotlight.account_active")
+                : t("spotlight.account_switch"),
+            icon: acc.is_active ? UserCheck : User,
+            isActive: acc.is_active,
+        };
+        if (!q || s > 0) accs.push({ item, score: s });
     }
 
     for (const client of clients.value) {
-        if (
-            client.name.toLowerCase().includes(q) ||
-            client.version.toLowerCase().includes(q)
-        ) {
-            cls.push({
-                type: "client",
-                id: String(client.id),
-                label: client.name,
-                subtitle: client.meta.installed
-                    ? `${client.version} · ${t("spotlight.client_launch")}`
-                    : `${client.version} · ${t("spotlight.client_download")}`,
-                icon: Zap,
-            });
-        }
+        const text = `${client.name} ${client.version}`;
+        const s = q
+            ? Math.max(
+                  scoreText(client.name),
+                  scoreText(client.version),
+                  scoreText(text)
+              )
+            : 1;
+        const item = makeClientItem(client);
+        if (!q || s > 0) cls.push({ item, score: s });
     }
 
     const settings = settingsService.getSettings();
     for (const [key, field] of Object.entries(settings)) {
         if (!field.show) continue;
         const label = settingsLabelMap.value[key] || key.replace(/_/g, " ");
-        if (label.toLowerCase().includes(q) || key.includes(q)) {
-            stgs.push({
-                type: "setting",
-                id: key,
-                label,
-                subtitle: t("navigation.settings"),
-                icon: Settings,
-            });
-        }
+        const s = q ? Math.max(scoreText(label), scoreText(key)) : 1;
+        const item = {
+            type: "setting" as const,
+            id: key,
+            label,
+            subtitle: t("navigation.settings"),
+            icon: Settings,
+        };
+        if (!q || s > 0) stgs.push({ item, score: s });
     }
 
-    if (tabs.length > 0) {
+    const appendSection = (
+        list: Array<{ item: ResultItem; score: number }>,
+        sepId: string,
+        sepLabelKey: string
+    ) => {
+        if (list.length === 0) return;
         items.push({
             type: "separator",
-            id: "sep-tabs",
-            label: t("spotlight.type_page"),
+            id: `sep-${sepId}`,
+            label: t(sepLabelKey),
         });
-        items.push(...tabs);
-    }
-    if (accs.length > 0) {
-        items.push({
-            type: "separator",
-            id: "sep-accs",
-            label: t("spotlight.type_account"),
-        });
-        items.push(...accs);
-    }
-    if (cls.length > 0) {
-        items.push({
-            type: "separator",
-            id: "sep-clients",
-            label: t("spotlight.type_client"),
-        });
-        items.push(...cls);
-    }
-    if (stgs.length > 0) {
-        items.push({
-            type: "separator",
-            id: "sep-settings",
-            label: t("spotlight.type_setting"),
-        });
-        items.push(...stgs);
-    }
+        if (q) {
+            list.sort(
+                (a, b) =>
+                    b.score - a.score ||
+                    a.item.label.localeCompare(b.item.label)
+            );
+        }
+        for (const e of list) items.push(e.item);
+    };
+
+    appendSection(tabs, "tabs", "spotlight.type_page");
+    appendSection(accs, "accs", "spotlight.type_account");
+    appendSection(cls, "clients", "spotlight.type_client");
+    appendSection(stgs, "settings", "spotlight.type_setting");
 
     return items;
 });
@@ -222,6 +206,7 @@ const loadData = async () => {
     try {
         clients.value = await invoke<Client[]>("get_clients");
         accounts.value = await invoke<Account[]>("get_accounts");
+        await settingsService.loadSchema();
     } catch (e) {
         console.error("Failed to load spotlight data", e);
     }
@@ -279,6 +264,11 @@ const selectItem = async (item: ResultItem) => {
             }
         }
     } else if (item.type === "setting") {
+        try {
+            localStorage.setItem("spotlight_highlight_setting", item.id);
+        } catch (e) {
+            console.error("Failed to set spotlight highlight setting", e);
+        }
         emit("navigate", "settings");
         emit("close");
     } else if (item.type === "account") {
