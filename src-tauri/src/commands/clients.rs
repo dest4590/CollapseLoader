@@ -298,6 +298,22 @@ pub async fn launch_client(
     verify_client_hash(&client, &jar_path, &app_handle, &state).await?;
     ensure_agent_overlay().await?;
 
+    let sync_enabled = SETTINGS
+        .lock()
+        .map(|s| s.sync_client_settings.value)
+        .unwrap_or(false);
+
+    if sync_enabled {
+        let client_base = std::path::Path::new(&client.filename)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&client.name)
+            .to_string();
+        if let Err(e) = crate::core::storage::data::DATA.ensure_client_synced(&client_base).await {
+            log_warn!("Failed to sync client {} before launch: {}", client_base, e);
+        }
+    }
+
     let minimize_on_launch = SETTINGS
         .lock()
         .map(|s| s.minimize_to_tray_on_launch.value)
@@ -379,6 +395,23 @@ pub async fn download_client_only(
     // log_debug!("Sent client download analytics for ID: {}", id);
 
     tokio::try_join!(client_download, requirements_download)?;
+
+    let sync_enabled = crate::core::storage::settings::SETTINGS
+        .lock()
+        .map(|s| s.sync_client_settings.value)
+        .unwrap_or(false);
+
+    if sync_enabled {
+        let client_base = std::path::Path::new(&client.filename)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&client.name)
+            .to_string();
+        if let Err(e) = crate::core::storage::data::DATA.ensure_client_synced(&client_base).await {
+            log_warn!("Failed to sync client {} after download: {}", client_base, e);
+        }
+    }
+
     Ok(())
 }
 
