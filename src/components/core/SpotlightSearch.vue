@@ -50,7 +50,6 @@ const tabItems = [
         icon: Palette,
         labelKey: "navigation.customization",
     },
-    { id: "friends", icon: Users, labelKey: "navigation.friends" },
     { id: "account", icon: User, labelKey: "navigation.account" },
     { id: "news", icon: Newspaper, labelKey: "navigation.news" },
     { id: "marketplace", icon: Store, labelKey: "navigation.marketplace" },
