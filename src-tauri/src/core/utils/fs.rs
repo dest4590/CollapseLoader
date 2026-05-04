@@ -58,15 +58,27 @@ pub fn atomic_write(path: &Path, contents: &[u8]) -> Result<(), String> {
 }
 
 pub fn remove_path(path: &Path) -> Result<(), String> {
-    if !path.exists() {
+    if fs::symlink_metadata(path).is_err() {
         return Ok(());
     }
 
-    let meta = fs::symlink_metadata(path).map_err(|e| e.to_string())?;
-    if meta.file_type().is_symlink() || meta.is_file() {
-        fs::remove_file(path).map_err(|e| e.to_string())
-    } else {
-        fs::remove_dir_all(path).map_err(|e| e.to_string())
+    #[cfg(target_family = "windows")]
+    {
+        if let Ok(true) = junction::exists(path) {
+            return junction::delete(path).map_err(|e| e.to_string());
+        }
+    }
+
+    match fs::symlink_metadata(path) {
+        Ok(meta) => {
+            if meta.file_type().is_symlink() || meta.is_file() {
+                fs::remove_file(path).map_err(|e| e.to_string())
+            } else {
+                fs::remove_dir_all(path).map_err(|e| e.to_string())
+            }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(e.to_string()),
     }
 }
 

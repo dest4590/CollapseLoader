@@ -452,6 +452,29 @@ impl Data {
             }
         }
 
+        let custom_clients_dir = root_dir.join("custom_clients");
+        if custom_clients_dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&custom_clients_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if !path.is_dir() {
+                        continue;
+                    }
+                    let name = match path.file_name().and_then(|n| n.to_str()) {
+                        Some(n) => n.to_string(),
+                        None => continue,
+                    };
+                    let client_base = format!("custom_clients{}{}", std::path::MAIN_SEPARATOR, name);
+                    if let Err(e) = self.ensure_client_synced(&client_base).await {
+                        log_warn!("Failed to sync custom client {}: {}", name, e);
+                    } else {
+                        log_info!("Synced custom client: {}", name);
+                        synced += 1;
+                    }
+                }
+            }
+        }
+
         log_info!("Synced {} client directories", synced);
         Ok(())
     }
