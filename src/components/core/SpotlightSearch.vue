@@ -39,6 +39,7 @@ const emit = defineEmits<{
 const query = ref("");
 const selectedIndex = ref(0);
 const inputRef = ref<HTMLInputElement | null>(null);
+const resultsListRef = ref<HTMLElement | null>(null);
 const clients = ref<Client[]>([]);
 const accounts = ref<Account[]>([]);
 
@@ -197,6 +198,18 @@ const selectableResults = computed(() =>
     results.value.filter((i) => i.type !== "separator")
 );
 
+watch([selectedIndex, selectableResults], async () => {
+    if (selectedIndex.value < 0) return;
+
+    await nextTick();
+
+    const activeItem = resultsListRef.value?.querySelector<HTMLElement>(
+        `[data-spotlight-index="${selectedIndex.value}"]`
+    );
+
+    activeItem?.scrollIntoView({ block: "nearest" });
+});
+
 watch(query, () => {
     selectedIndex.value = 0;
 });
@@ -341,6 +354,7 @@ const handleKeydown = (e: KeyboardEvent) => {
                     <div
                         v-if="results.length > 0"
                         class="py-2 max-h-80 overflow-y-auto"
+                        ref="resultsListRef"
                         @mouseleave="selectedIndex = -1"
                     >
                         <template
@@ -355,6 +369,7 @@ const handleKeydown = (e: KeyboardEvent) => {
                             </div>
                             <button
                                 v-else
+                                :data-spotlight-index="getSelectableIndex(item)"
                                 class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
                                 :class="
                                     getSelectableIndex(item) === selectedIndex
