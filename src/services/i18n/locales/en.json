@@ -147,6 +147,22 @@
             "copy_logs": "Copy Logs",
             "close": "Close"
         },
+        "client_ram_usage": {
+            "title": "RAM Usage",
+            "subtitle": "Live client footprint",
+            "description": "Updated every 2 seconds while this modal is open.",
+            "running": "Running",
+            "not_running": "Not running",
+            "client_ram": "Client RAM",
+            "system_share": "System share",
+            "processes": "Processes",
+            "no_process_found": "No active process found",
+            "usage_bar": "Usage bar",
+            "last_refresh": "Last refresh",
+            "backend_description": "The backend measures the Java client process memory directly through Rust.",
+            "refresh": "Refresh",
+            "close": "Close"
+        },
         "add_friend": {
             "search_label": "Search for users",
             "search_placeholder": "Enter username...",
@@ -493,6 +509,7 @@
         "download": "Download",
         "stop": "Stop",
         "launch": "Launch",
+        "monitor_ram_usage": "Monitor RAM usage",
         "launch_another": "Launch another instance",
         "start_with": "Start with",
         "selected_clients": "Selected: {count} clients",

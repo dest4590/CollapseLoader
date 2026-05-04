@@ -147,6 +147,22 @@
             "copy_logs": "复制日志",
             "close": "关闭"
         },
+        "client_ram_usage": {
+            "title": "内存使用情况",
+            "subtitle": "客户端实时占用",
+            "description": "在此窗口打开期间，每 2 秒刷新一次。",
+            "running": "运行中",
+            "not_running": "未运行",
+            "client_ram": "客户端内存",
+            "system_share": "系统占比",
+            "processes": "进程",
+            "no_process_found": "未找到活动进程",
+            "usage_bar": "使用条",
+            "last_refresh": "上次刷新",
+            "backend_description": "后端通过 Rust 直接测量 Java 客户端进程内存。",
+            "refresh": "刷新",
+            "close": "关闭"
+        },
         "add_friend": {
             "search_label": "搜索用户",
             "search_placeholder": "输入用户名...",
@@ -493,6 +509,7 @@
         "download": "下载",
         "stop": "停止",
         "launch": "启动",
+        "monitor_ram_usage": "监控内存使用",
         "start_with": "启动方式",
         "selected_clients": "已选中：{count} 个客户端",
         "multiple_clients_selected": "已选择 {count} 个客户端",

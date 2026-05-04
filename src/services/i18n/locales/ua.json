@@ -147,6 +147,22 @@
             "copy_logs": "Копіювати логи",
             "close": "Закрити"
         },
+        "client_ram_usage": {
+            "title": "Використання ОЗП",
+            "subtitle": "Живий стан клієнта",
+            "description": "Оновлюється кожні 2 секунди, поки відкрито це вікно.",
+            "running": "Запущено",
+            "not_running": "Не запущено",
+            "client_ram": "ОЗП клієнта",
+            "system_share": "Частка системи",
+            "processes": "Процеси",
+            "no_process_found": "Активний процес не знайдено",
+            "usage_bar": "Смуга використання",
+            "last_refresh": "Останнє оновлення",
+            "backend_description": "Бекенд вимірює пам'ять процесу клієнта Java безпосередньо через Rust.",
+            "refresh": "Оновити",
+            "close": "Закрити"
+        },
         "add_friend": {
             "search_label": "Пошук користувачів",
             "search_placeholder": "Введіть ім'я користувача...",
@@ -494,6 +510,7 @@
         "download": "Завантажити",
         "stop": "Зупинити",
         "launch": "Запустити",
+        "monitor_ram_usage": "Моніторинг ОЗП",
         "start_with": "Запустити з",
         "selected_clients": "Обрано: {count} клієнтів",
         "multiple_clients_selected": "Обрано {count} клієнтів",

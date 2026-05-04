@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Download, StopCircle, Terminal } from "lucide-vue-next";
+import { Activity, Download, StopCircle, Terminal } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import type { Client, InstallProgress } from "@shared/types/ui";
 
@@ -12,9 +12,10 @@ defineProps<{
     clientIsRunning: boolean;
     isRequirementsInProgress: boolean;
     isAnimatingOrExpanded: boolean;
+    isShiftHeld: boolean;
 }>();
 
-const emit = defineEmits(["launch", "download", "open-log-viewer"]);
+const emit = defineEmits(["launch", "download", "open-log-viewer", "open-ram-viewer"]);
 
 const handleLaunchClick = () => {
     emit("launch");
@@ -26,6 +27,10 @@ const handleDownloadClick = () => {
 
 const handleOpenLogViewer = () => {
     emit("open-log-viewer");
+};
+
+const handleOpenRamViewer = () => {
+    emit("open-ram-viewer");
 };
 </script>
 
@@ -99,6 +104,16 @@ const handleOpenLogViewer = () => {
             class="btn btn-sm btn-ghost btn-circle text-info hover:bg-info/20 ml-2 transition-transform hover:rotate-12 active:scale-90"
         >
             <Terminal class="w-4 h-4" />
+        </button>
+
+        <button
+            v-if="clientIsRunning && !clientIsInstalling && isShiftHeld"
+            key="ram"
+            @click.stop="handleOpenRamViewer"
+            class="btn btn-sm btn-ghost btn-circle text-secondary hover:bg-secondary/20 transition-transform hover:-rotate-6 active:scale-90"
+            :title="t('home.monitor_ram_usage')"
+        >
+            <Activity class="w-4 h-4" />
         </button>
     </transition-group>
 </template>

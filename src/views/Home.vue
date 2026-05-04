@@ -27,6 +27,7 @@ import SearchBar from "@shared/components/common/SearchBar.vue";
 import ClientCard from "@features/clients/components/ClientCard.vue";
 import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
 import ModsManagerModal from "@features/clients/modals/ModsManagerModal.vue";
+import ClientRamUsageModal from "@features/clients/modals/ClientRamUsageModal.vue";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import { syncService } from "../services/syncService";
@@ -293,6 +294,7 @@ const contextMenu = ref({
 const selectedClients = shallowRef<Set<number>>(new Set());
 const isCtrlPressed = ref(false);
 let ctrlPressTimer: number | null = null;
+const isShiftHeld = ref(false);
 
 const blurHandler = () => {
     if (ctrlPressTimer !== null) {
@@ -880,6 +882,24 @@ const openLogViewer = (client: Client) => {
         },
         {
             close: () => hideModal(`log-viewer-${client.id}`),
+        }
+    );
+};
+
+const openRamUsageModal = (client: Client) => {
+    showModal(
+        `ram-usage-${client.id}`,
+        ClientRamUsageModal,
+        {
+            title: t("modals.client_ram_usage.title"),
+            size: "lg",
+        },
+        {
+            clientId: client.id,
+            clientName: client.name,
+        },
+        {
+            close: () => hideModal(`ram-usage-${client.id}`),
         }
     );
 };
@@ -1534,6 +1554,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
         return;
     }
 
+    if (event.key === "Shift") {
+        isShiftHeld.value = true;
+    }
+
     if (event.key === "Control" && expandedClientId.value === null) {
         if (isCtrlPressed.value) return;
 
@@ -1574,6 +1598,10 @@ const handleKeyUp = (event: KeyboardEvent) => {
             ctrlPressTimer = null;
         }
         isCtrlPressed.value = false;
+    }
+
+    if (event.key === "Shift") {
+        isShiftHeld.value = false;
     }
 };
 
@@ -1826,9 +1854,11 @@ onBeforeUnmount(() => {
                 :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
                 :isHashVerifying="hashVerifyingClients.has(client.id)"
                 :isAnyCardExpanded="isAnyCardExpanded"
+                :isShiftHeld="isShiftHeld"
                 @launch="handleLaunchClick"
                 @download="downloadClient"
                 @open-log-viewer="openLogViewer"
+                @open-ram-viewer="openRamUsageModal"
                 @show-context-menu="showContextMenu"
                 @client-click="handleClientClick"
                 @expanded-state-changed="handleExpandedStateChanged"

@@ -66,3 +66,15 @@ export interface InstallProgress {
     action: string;
     isComplete: boolean;
 }
+
+export interface ClientRamUsage {
+    client_id: number;
+    is_running: boolean;
+    process_count: number;
+    pids: number[];
+    total_memory_bytes: number;
+    total_memory_mib: number;
+    system_total_memory_bytes: number;
+    system_total_memory_mib: number;
+    system_memory_percent: number;
+}

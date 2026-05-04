@@ -147,6 +147,22 @@
             "copy_logs": "Копировать логи",
             "close": "Закрыть"
         },
+        "client_ram_usage": {
+            "title": "Использование ОЗУ",
+            "subtitle": "Живой снимок клиента",
+            "description": "Обновляется каждые 2 секунды, пока открыто это окно.",
+            "running": "Запущен",
+            "not_running": "Не запущен",
+            "client_ram": "ОЗУ клиента",
+            "system_share": "Доля системы",
+            "processes": "Процессы",
+            "no_process_found": "Активный процесс не найден",
+            "usage_bar": "Шкала использования",
+            "last_refresh": "Последнее обновление",
+            "backend_description": "Бэкенд измеряет память процесса клиента Java напрямую через Rust.",
+            "refresh": "Обновить",
+            "close": "Закрыть"
+        },
         "add_friend": {
             "search_label": "Поиск пользователей",
             "search_placeholder": "Введите имя пользователя...",
@@ -493,6 +509,7 @@
         "launch": "Запустить",
         "launch_another": "Запустить ещё раз",
         "stop": "Остановить",
+        "monitor_ram_usage": "Мониторинг ОЗУ",
         "unavailable": "Не доступно",
         "start_with": "Запустить с",
         "selected_clients": "Выбрано: {count} клиентов",

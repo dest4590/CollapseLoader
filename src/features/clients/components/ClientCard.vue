@@ -32,6 +32,7 @@ const props = defineProps<{
     installationStatus?: InstallProgress | undefined;
     isRequirementsInProgress: boolean;
     isAnyClientDownloading?: boolean;
+    isShiftHeld?: boolean;
     isFavorite?: boolean;
     isSelected?: boolean;
     isMultiSelectMode?: boolean;
@@ -45,6 +46,7 @@ const emit = defineEmits([
     "launch",
     "download",
     "open-log-viewer",
+    "open-ram-viewer",
     "show-context-menu",
     "client-click",
     "expanded-state-changed",
@@ -220,6 +222,10 @@ const handleDownloadClick = () => {
 
 const handleOpenLogViewer = () => {
     emit("open-log-viewer", props.client);
+};
+
+const handleOpenRamViewer = () => {
+    emit("open-ram-viewer", props.client);
 };
 
 const handleCardClick = (event: MouseEvent) => {
@@ -824,9 +830,11 @@ onBeforeUnmount(() => {
                         :clientIsRunning="clientIsRunning"
                         :isRequirementsInProgress="isRequirementsInProgress"
                         :isAnimatingOrExpanded="isAnimating || isExpanded"
+                        :isShiftHeld="!!props.isShiftHeld"
                         @launch="handleLaunchClick"
                         @download="handleDownloadClick"
                         @open-log-viewer="handleOpenLogViewer"
+                        @open-ram-viewer="handleOpenRamViewer"
                     />
 
                     <ClientCardDetails

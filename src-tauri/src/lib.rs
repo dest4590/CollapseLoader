@@ -279,6 +279,7 @@ pub fn run() {
             commands::clients::reinstall_client,
             commands::clients::remove_custom_client,
             commands::clients::stop_client,
+            commands::clients::get_client_ram_usage,
             commands::clients::stop_custom_client,
             commands::clients::open_custom_client_folder,
             commands::clients::list_installed_mods_custom,

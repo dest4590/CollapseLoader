@@ -147,6 +147,22 @@
             "copy_logs": "Kopiuj logi",
             "close": "Zamknij"
         },
+        "client_ram_usage": {
+            "title": "Użycie RAM",
+            "subtitle": "Podgląd pamięci klienta na żywo",
+            "description": "Aktualizowane co 2 sekundy, gdy to okno jest otwarte.",
+            "running": "Uruchomiony",
+            "not_running": "Nie uruchomiony",
+            "client_ram": "RAM klienta",
+            "system_share": "Udział w systemie",
+            "processes": "Procesy",
+            "no_process_found": "Nie znaleziono aktywnego procesu",
+            "usage_bar": "Pasek użycia",
+            "last_refresh": "Ostatnie odświeżenie",
+            "backend_description": "Backend mierzy pamięć procesu klienta Java bezpośrednio w Rust.",
+            "refresh": "Odśwież",
+            "close": "Zamknij"
+        },
         "add_friend": {
             "search_label": "Wyszukaj użytkowników",
             "search_placeholder": "Wprowadź nazwę użytkownika...",
@@ -492,6 +508,7 @@
         "download": "Pobierz",
         "launch": "Uruchom",
         "stop": "Zatrzymaj",
+        "monitor_ram_usage": "Monitoruj użycie RAM",
         "unavailable": "Niedostępne",
         "start_with": "Uruchom z",
         "selected_clients": "Wybrano: {count} klientów",
