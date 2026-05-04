@@ -1,9 +1,10 @@
-use std::{fs, path::PathBuf, sync::Mutex};
+use std::{path::PathBuf, sync::Mutex};
 
 use crate::core::clients::client::ClientType;
 use crate::core::clients::custom_clients::CustomClient;
 use crate::core::storage::data::DATA;
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::CUSTOM_CLIENTS_FOLDER;
 use crate::log_warn;
 use serde::{Deserialize, Serialize};
@@ -48,16 +49,12 @@ impl CustomClientManager {
         }
 
         let custom_clients_dir = DATA.get_local(CUSTOM_CLIENTS_FOLDER);
-        if !custom_clients_dir.exists() {
-            fs::create_dir_all(&custom_clients_dir)
-                .map_err(|e| format!("Failed to create custom clients directory: {e}"))?;
-        }
+        fs_utils::ensure_dir(&custom_clients_dir)
+            .map_err(|e| format!("Failed to create custom clients directory: {e}"))?;
 
         let client_dir = custom_clients_dir.join(&custom_client.name);
-        if !client_dir.exists() {
-            fs::create_dir_all(&client_dir)
-                .map_err(|e| format!("Failed to create client directory: {e}"))?;
-        }
+        fs_utils::ensure_dir(&client_dir)
+            .map_err(|e| format!("Failed to create client directory: {e}"))?;
 
         let mut target_path = client_dir.clone();
 
@@ -65,14 +62,12 @@ impl CustomClientManager {
             || custom_client.client_type == ClientType::Forge
         {
             target_path = target_path.join("mods");
-            if !target_path.exists() {
-                fs::create_dir_all(&target_path)
-                    .map_err(|e| format!("Failed to create mods directory: {e}"))?;
-            }
+            fs_utils::ensure_dir(&target_path)
+                .map_err(|e| format!("Failed to create mods directory: {e}"))?;
         }
 
         target_path = target_path.join(&custom_client.filename);
-        fs::copy(&custom_client.file_path, &target_path)
+        fs_utils::copy_file(&custom_client.file_path, &target_path)
             .map_err(|e| format!("Failed to copy file: {e}"))?;
 
         custom_client.file_path = target_path;
@@ -102,7 +97,7 @@ impl CustomClientManager {
             let client = &self.clients[index];
 
             if client.file_path.exists() {
-                fs::remove_file(&client.file_path)
+                fs_utils::remove_path(&client.file_path)
                     .map_err(|e| format!("Failed to remove file: {e}"))?;
             }
 

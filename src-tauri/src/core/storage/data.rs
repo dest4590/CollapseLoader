@@ -2,6 +2,7 @@ use crate::core::network::downloader::download_file;
 use crate::core::network::servers::SERVERS;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
+use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::{
     ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK21_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER,
     LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER,
@@ -22,10 +23,105 @@ pub struct Data {
 pub static APP_HANDLE: std::sync::LazyLock<Mutex<Option<tauri::AppHandle>>> =
     std::sync::LazyLock::new(|| Mutex::new(None));
 
-struct FileInfo {
-    local_file: String,
-    file_name: String,
-    is_fabric_client: bool,
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum LocalFileKind {
+    Zip,
+    Jar,
+    FabricJar,
+    Other,
+}
+
+#[derive(Clone, Copy)]
+struct SyncItem {
+    name: &'static str,
+    is_dir: bool,
+}
+
+const SYNC_ITEMS: &[SyncItem] = &[
+    SyncItem {
+        name: "resourcepacks",
+        is_dir: true,
+    },
+    SyncItem {
+        name: "options.txt",
+        is_dir: false,
+    },
+    SyncItem {
+        name: "optionsof.txt",
+        is_dir: false,
+    },
+];
+
+pub(crate) struct FileInfo {
+    pub(crate) local_file: String,
+    pub(crate) file_name: String,
+    pub(crate) kind: LocalFileKind,
+}
+
+impl LocalFileKind {
+    pub(crate) fn is_jar(self) -> bool {
+        matches!(self, Self::Jar | Self::FabricJar)
+    }
+}
+
+impl FileInfo {
+    pub(crate) fn new(file: &str) -> Self {
+        let local_file = if file.starts_with("misc/") {
+            file.strip_prefix("misc/").unwrap().to_string()
+        } else {
+            file.rsplit(['/', '\\']).next().unwrap_or(file).to_string()
+        };
+
+        let file_name = Data::get_filename(&local_file);
+        let kind = if Data::has_extension(&local_file, "zip") {
+            LocalFileKind::Zip
+        } else if (file.starts_with("fabric/") || file.contains("/fabric/jars/"))
+            && Data::has_extension(&local_file, "jar")
+        {
+            LocalFileKind::FabricJar
+        } else if Data::has_extension(&local_file, "jar") {
+            LocalFileKind::Jar
+        } else {
+            LocalFileKind::Other
+        };
+
+        Self {
+            local_file,
+            file_name,
+            kind,
+        }
+    }
+
+    pub(crate) fn is_zip(&self) -> bool {
+        matches!(self.kind, LocalFileKind::Zip)
+    }
+
+    pub(crate) fn is_jar(&self) -> bool {
+        self.kind.is_jar()
+    }
+
+    pub(crate) fn jar_path(&self, root_dir: &Path) -> PathBuf {
+        if matches!(self.kind, LocalFileKind::FabricJar) {
+            root_dir
+                .join(&self.file_name)
+                .join("mods")
+                .join(&self.local_file)
+        } else {
+            root_dir.join(&self.file_name).join(&self.local_file)
+        }
+    }
+
+    pub(crate) fn unzip_path(&self, root_dir: &Path) -> PathBuf {
+        root_dir.join(self.local_file.trim_end_matches(".zip"))
+    }
+
+    pub(crate) fn destination_path(&self, root_dir: &Path) -> PathBuf {
+        match self.kind {
+            LocalFileKind::FabricJar => self.jar_path(root_dir),
+            LocalFileKind::Jar => root_dir.join(&self.file_name).join(&self.local_file),
+            LocalFileKind::Zip | LocalFileKind::Other => root_dir.join(&self.local_file),
+        }
+    }
 }
 
 impl Data {
@@ -78,12 +174,7 @@ impl Data {
         let info = Self::resolve_local_file_info(file);
         let root_dir = self.root_dir_snapshot();
         let zip_path = Self::get_local_with_root(&root_dir, &info.local_file);
-        let unzip_path = Self::get_local_with_root(
-            &root_dir,
-            info.local_file
-                .strip_suffix(".zip")
-                .unwrap_or(&info.local_file),
-        );
+        let unzip_path = info.unzip_path(&root_dir);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         let emit_name = info.local_file.clone();
@@ -122,35 +213,11 @@ impl Data {
     }
 
     fn resolve_local_file_info(file: &str) -> FileInfo {
-        let local_file = if file.starts_with("misc/") {
-            file.strip_prefix("misc/").unwrap().to_string()
-        } else {
-            file.rsplit(['/', '\\']).next().unwrap_or(file).to_string()
-        };
-
-        let file_name = Self::get_filename(&local_file);
-        let is_fabric_client = (file.starts_with("fabric/") || file.contains("/fabric/jars/"))
-            && local_file.ends_with(".jar");
-
-        FileInfo {
-            local_file,
-            file_name,
-            is_fabric_client,
-        }
+        FileInfo::new(file)
     }
 
     fn get_destination_path(root_dir: &Path, info: &FileInfo) -> PathBuf {
-        if info.is_fabric_client {
-            let jar_basename = &info.local_file;
-            root_dir
-                .join(&info.file_name)
-                .join("mods")
-                .join(jar_basename)
-        } else if Self::has_extension(&info.local_file, "jar") {
-            root_dir.join(&info.file_name).join(&info.local_file)
-        } else {
-            root_dir.join(&info.local_file)
-        }
+        info.destination_path(root_dir)
     }
 
     fn is_file_usable(path: &Path) -> bool {
@@ -167,25 +234,56 @@ impl Data {
             && std::fs::read_dir(path).is_ok_and(|mut entries| entries.next().is_some())
     }
 
+    pub async fn download_to_folder(&self, file: &str, dest_folder: &str) -> Result<(), String> {
+        let info = Self::resolve_local_file_info(file);
+        let root_dir = self.root_dir_snapshot();
+        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+            emit_to_main_window(app_handle, "download-start", &info.local_file);
+        }
+
+        let download_urls = Self::get_download_urls(file)?;
+
+        log_debug!("Downloading {} to folder {}", file, dest_folder);
+
+        let dest_dir = root_dir.join(dest_folder);
+        if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
+            log_error!(
+                "Failed to create destination folder {}: {}",
+                dest_dir.display(),
+                e
+            );
+            return Err(format!("Failed to create destination folder: {e}"));
+        }
+
+        let dest_filename = file.rsplit(['/', '\\']).next().unwrap_or(file);
+        let dest_filename = dest_filename
+            .replace("%2B", "+")
+            .replace("%20", " ")
+            .replace("%2b", "+");
+        let dest_path = dest_dir.join(&dest_filename);
+
+        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        download_file(
+            &download_urls,
+            &dest_path,
+            &info.local_file,
+            app_handle.as_ref(),
+        )
+        .await?;
+
+        if let Some(handle) = app_handle.as_ref() {
+            emit_to_main_window(handle, "download-complete", &info.local_file);
+        }
+
+        Ok(())
+    }
     fn should_skip_download(&self, root_dir: &Path, info: &FileInfo) -> bool {
-        if Self::has_extension(&info.local_file, "zip") {
-            let _zip_path = root_dir.join(&info.local_file);
-            let unzip_path = root_dir.join(info.local_file.trim_end_matches(".zip"));
-            Self::is_extracted_folder_usable(&unzip_path)
-        } else if Self::has_extension(&info.local_file, "jar") {
-            if info.is_fabric_client {
-                let jar_basename = &info.local_file;
-                let jar_path = root_dir
-                    .join(&info.file_name)
-                    .join("mods")
-                    .join(jar_basename);
-                Self::is_file_usable(&jar_path)
-            } else {
-                let jar_path = root_dir.join(&info.file_name).join(&info.local_file);
-                Self::is_file_usable(&jar_path)
+        match info.kind {
+            LocalFileKind::Zip => Self::is_extracted_folder_usable(&info.unzip_path(root_dir)),
+            LocalFileKind::Jar | LocalFileKind::FabricJar => {
+                Self::is_file_usable(&info.jar_path(root_dir))
             }
-        } else {
-            false
+            LocalFileKind::Other => false,
         }
     }
 
@@ -204,25 +302,27 @@ impl Data {
             }
         }
 
-        if Self::has_extension(&info.local_file, "jar") {
-            if info.is_fabric_client {
-                let mods_dir = root_dir.join(&info.file_name).join("mods");
-                if let Err(e) = tokio_fs::create_dir_all(&mods_dir).await {
-                    log_error!(
-                        "Failed to create fabric mods directory {}: {}",
-                        mods_dir.display(),
-                        e
-                    );
-                    return Err(format!("Failed to create mods directory: {e}"));
-                }
-                log_debug!("Created fabric mods directory: {}", mods_dir.display());
+        if info.is_jar() {
+            let client_dir = root_dir.join(&info.file_name);
+            let target_dir = if matches!(info.kind, LocalFileKind::FabricJar) {
+                client_dir.join("mods")
             } else {
-                let local_path = root_dir.join(&info.file_name);
-                if let Err(e) = tokio_fs::create_dir_all(&local_path).await {
-                    log_error!("Failed to create directory {}: {}", local_path.display(), e);
-                    return Err(format!("Failed to create directory: {e}"));
-                }
-                log_debug!("Created client local directory: {}", local_path.display());
+                client_dir.clone()
+            };
+
+            if let Err(e) = tokio_fs::create_dir_all(&target_dir).await {
+                log_error!("Failed to create directory {}: {}", target_dir.display(), e);
+                return Err(if matches!(info.kind, LocalFileKind::FabricJar) {
+                    format!("Failed to create mods directory: {e}")
+                } else {
+                    format!("Failed to create directory: {e}")
+                });
+            }
+
+            if matches!(info.kind, LocalFileKind::FabricJar) {
+                log_debug!("Created fabric mods directory: {}", target_dir.display());
+            } else {
+                log_debug!("Created client local directory: {}", target_dir.display());
                 if SETTINGS
                     .lock()
                     .map(|s| s.sync_client_settings.value)
@@ -295,7 +395,7 @@ impl Data {
             emit_to_main_window(handle, "download-complete", &info.local_file);
         }
 
-        if Self::has_extension(&info.local_file, "zip") {
+        if info.is_zip() {
             self.unzip(file).await.map_err(|e| {
                 log_error!("Failed to extract {}: {}", file, e);
                 if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
@@ -325,14 +425,6 @@ impl Data {
             Err(e) => return Err(format!("Failed to read root dir: {e}")),
         };
 
-        let system_dirs = [
-            "synced_options", "libraries", "libraries-fabric", "libraries-legacy",
-            "natives", "natives-macos-x64", "natives-macos-arm64", "natives-linux",
-            "natives-legacy", "natives-legacy-linux", "natives-fabric",
-            "assets", "assets-fabric", "minecraft-versions", "custom_clients",
-            "agent_overlay", "misc", "cache",
-        ];
-
         let mut synced = 0u32;
         for entry in entries.flatten() {
             let path = entry.path();
@@ -344,7 +436,7 @@ impl Data {
                 None => continue,
             };
 
-            if system_dirs.contains(&name.as_str()) {
+            if fs_utils::SYSTEM_DIRS.contains(&name.as_str()) {
                 continue;
             }
 
@@ -380,20 +472,14 @@ impl Data {
                 .map_err(|e| format!("Failed to create client dir: {e}"))?;
         }
 
-        let items = [
-            ("resourcepacks", true),
-            ("options.txt", false),
-            ("optionsof.txt", false),
-        ];
-
-        for (name, is_dir) in items {
-            let target = global_options_dir.join(name);
+        for item in SYNC_ITEMS {
+            let target = global_options_dir.join(item.name);
             if !target.exists() {
-                if is_dir {
+                if item.is_dir {
                     tokio_fs::create_dir_all(&target).await.map_err(|e| {
                         format!(
                             "Failed to create global {} dir: {}: {}",
-                            name,
+                            item.name,
                             target.display(),
                             e
                         )
@@ -402,7 +488,7 @@ impl Data {
                     tokio_fs::write(&target, "").await.map_err(|e| {
                         format!(
                             "Failed to create global {} file at {}: {}",
-                            name,
+                            item.name,
                             target.display(),
                             e
                         )
@@ -410,31 +496,35 @@ impl Data {
                 }
             }
 
-            let client_target = client_dir.join(name);
-            if let Err(e) = Self::remove_existing_sync_target(&client_target, is_dir) {
+            let client_target = client_dir.join(item.name);
+            if let Err(e) = fs_utils::remove_path(&client_target) {
                 log_warn!(
                     "Failed to remove existing client {} at {}: {}",
-                    name,
+                    item.name,
                     client_target.display(),
                     e
                 );
             }
 
-            if let Err(e) = Self::create_link(&target, &client_target, is_dir) {
+            if let Err(e) = fs_utils::create_link(&target, &client_target, item.is_dir) {
                 log_warn!(
                     "Failed to link {} for {}: {} -> {}: {}",
-                    name,
+                    item.name,
                     client_base,
                     target.display(),
                     client_target.display(),
                     e
                 );
 
-                match Self::fallback_link_copy(&target, &client_target, is_dir) {
+                match if item.is_dir {
+                    fs_utils::copy_dir_recursive(&target, &client_target, false)
+                } else {
+                    fs_utils::copy_file(&target, &client_target)
+                } {
                     Ok(_) => {
                         log_warn!(
                             "Used copy fallback for {} sync: {} -> {}",
-                            name,
+                            item.name,
                             target.display(),
                             client_target.display()
                         );
@@ -442,7 +532,7 @@ impl Data {
                     Err(copy_err) => {
                         log_warn!(
                             "Fallback copy also failed for {}: {} -> {}: {}",
-                            name,
+                            item.name,
                             target.display(),
                             client_target.display(),
                             copy_err
@@ -450,156 +540,6 @@ impl Data {
                     }
                 }
             }
-        }
-
-        Ok(())
-    }
-
-    fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
-        if !dst.exists() {
-            fs::create_dir_all(dst).map_err(|e| e.to_string())?;
-        }
-
-        for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
-            let entry = entry.map_err(|e| e.to_string())?;
-            let source_path = entry.path();
-            let target_path = dst.join(entry.file_name());
-
-            if source_path.is_dir() {
-                Self::copy_dir_recursive(&source_path, &target_path)?;
-            } else {
-                if let Some(parent) = target_path.parent() {
-                    fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-                }
-                fs::copy(&source_path, &target_path)
-                    .map(|_| ())
-                    .map_err(|e| e.to_string())?;
-            }
-        }
-
-        Ok(())
-    }
-
-    fn fallback_link_copy(src: &Path, dst: &Path, is_dir: bool) -> Result<(), String> {
-        if is_dir {
-            Self::copy_dir_recursive(src, dst)
-        } else {
-            if let Some(parent) = dst.parent() {
-                fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-            }
-            fs::copy(src, dst).map(|_| ()).map_err(|e| e.to_string())
-        }
-    }
-
-    fn remove_existing_sync_target(path: &Path, is_dir: bool) -> Result<(), String> {
-        if fs::symlink_metadata(path).is_err() {
-            return Ok(());
-        }
-
-        #[cfg(target_family = "windows")]
-        if is_dir {
-            let _ = junction::delete(path);
-            if !path.exists() {
-                return Ok(());
-            }
-        }
-
-        match fs::symlink_metadata(path) {
-            Ok(meta) => {
-                let result = if meta.file_type().is_symlink() {
-                    if is_dir {
-                        fs::remove_dir(path)
-                    } else {
-                        fs::remove_file(path)
-                    }
-                } else if meta.is_dir() {
-                    fs::remove_dir_all(path)
-                } else {
-                    fs::remove_file(path)
-                };
-
-                result.map_err(|e| e.to_string())
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(e) => Err(e.to_string()),
-        }
-    }
-    fn create_link(
-        src: &std::path::Path,
-        dst: &std::path::Path,
-        is_dir: bool,
-    ) -> Result<(), String> {
-        #[cfg(target_family = "unix")]
-        {
-            std::os::unix::fs::symlink(src, dst).map_err(|e| e.to_string())
-        }
-
-        #[cfg(target_family = "windows")]
-        {
-            use std::os::windows::fs::{symlink_dir, symlink_file};
-            if is_dir {
-                match symlink_dir(src, dst) {
-                    Ok(()) => Ok(()),
-                    Err(symlink_err) => junction::create(src, dst).map_err(|junction_err| {
-                        format!(
-                            "{}; junction fallback failed: {}",
-                            symlink_err, junction_err
-                        )
-                    }),
-                }
-            } else {
-                match symlink_file(src, dst) {
-                    Ok(()) => Ok(()),
-                    Err(symlink_err) => fs::hard_link(src, dst).map_err(|hard_link_err| {
-                        format!(
-                            "{}; hard-link fallback failed: {}",
-                            symlink_err, hard_link_err
-                        )
-                    }),
-                }
-            }
-        }
-    }
-
-    pub async fn download_to_folder(&self, file: &str, dest_folder: &str) -> Result<(), String> {
-        let info = Self::resolve_local_file_info(file);
-        let root_dir = self.root_dir_snapshot();
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
-            emit_to_main_window(app_handle, "download-start", &info.local_file);
-        }
-
-        let download_urls = Self::get_download_urls(file)?;
-
-        log_debug!("Downloading {} to folder {}", file, dest_folder);
-
-        let dest_dir = root_dir.join(dest_folder);
-        if let Err(e) = tokio_fs::create_dir_all(&dest_dir).await {
-            log_error!(
-                "Failed to create destination folder {}: {}",
-                dest_dir.display(),
-                e
-            );
-            return Err(format!("Failed to create destination folder: {e}"));
-        }
-
-        let dest_filename = file.rsplit(['/', '\\']).next().unwrap_or(file);
-        let dest_filename = dest_filename
-            .replace("%2B", "+")
-            .replace("%20", " ")
-            .replace("%2b", "+");
-        let dest_path = dest_dir.join(&dest_filename);
-
-        let app_handle = APP_HANDLE.lock().unwrap().clone();
-        download_file(
-            &download_urls,
-            &dest_path,
-            &info.local_file,
-            app_handle.as_ref(),
-        )
-        .await?;
-
-        if let Some(handle) = app_handle.as_ref() {
-            emit_to_main_window(handle, "download-complete", &info.local_file);
         }
 
         Ok(())

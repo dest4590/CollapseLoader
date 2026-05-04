@@ -9,8 +9,12 @@ fn is_webview2_installed() -> bool {
     ];
 
     for subkey in &reg_subkeys {
-        if RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey(subkey).is_ok()
-            || RegKey::predef(HKEY_CURRENT_USER).open_subkey(subkey).is_ok()
+        if RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(subkey)
+            .is_ok()
+            || RegKey::predef(HKEY_CURRENT_USER)
+                .open_subkey(subkey)
+                .is_ok()
         {
             return true;
         }
@@ -40,7 +44,9 @@ fn is_webview2_installed() -> bool {
                 }
             }
 
-            base_path.join(format!(r"{}\msedgewebview2.exe", cand)).exists()
+            base_path
+                .join(format!(r"{}\msedgewebview2.exe", cand))
+                .exists()
         })
     };
 
@@ -56,7 +62,10 @@ fn is_webview2_installed() -> bool {
     }
 
     if let Ok(temp) = std::env::var("TEMP") {
-        if std::path::Path::new(&temp).join("MicrosoftEdgeWebview2Setup.exe").exists() {
+        if std::path::Path::new(&temp)
+            .join("MicrosoftEdgeWebview2Setup.exe")
+            .exists()
+        {
             return true;
         }
     }

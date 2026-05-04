@@ -2,6 +2,7 @@ pub mod archive;
 pub mod args;
 pub mod discord_rpc;
 pub mod dpi;
+pub mod fs;
 pub mod globals;
 pub mod hashing;
 pub mod helpers;

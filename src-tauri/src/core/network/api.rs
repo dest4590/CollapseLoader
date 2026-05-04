@@ -99,7 +99,7 @@ impl Api {
                     }
 
                     let body = response.text().unwrap_or_default();
-                 
+
                     if body.is_empty() {
                         return Err("API returned empty response".to_string());
                     }

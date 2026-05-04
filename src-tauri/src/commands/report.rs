@@ -361,28 +361,49 @@ fn push_line(buffer: &mut String, args: std::fmt::Arguments<'_>) {
 }
 
 fn write_report_header(buffer: &mut String, report: &NetworkReport) {
-    push_line(buffer, format_args!("=================================================="));
+    push_line(
+        buffer,
+        format_args!("=================================================="),
+    );
     push_line(
         buffer,
         format_args!("            NETWORK DIAGNOSTIC REPORT             "),
     );
-    push_line(buffer, format_args!("=================================================="));
     push_line(
         buffer,
-        format_args!("Generated at: {} (Timestamp: {})", report.date, report.timestamp),
+        format_args!("=================================================="),
+    );
+    push_line(
+        buffer,
+        format_args!(
+            "Generated at: {} (Timestamp: {})",
+            report.date, report.timestamp
+        ),
     );
     push_line(buffer, format_args!(""));
 }
 
 fn write_environment_section(buffer: &mut String, report: &NetworkReport) {
     push_line(buffer, format_args!("--- SYSTEM & APP ENVIRONMENT ---"));
-    push_line(buffer, format_args!("Hostname: {}", report.system_network.hostname));
     push_line(
         buffer,
-        format_args!("OS: {} ({})", report.environment.os, report.environment.os_family),
+        format_args!("Hostname: {}", report.system_network.hostname),
     );
-    push_line(buffer, format_args!("Architecture: {}", report.environment.arch));
-    push_line(buffer, format_args!("App Version: {}", report.environment.version));
+    push_line(
+        buffer,
+        format_args!(
+            "OS: {} ({})",
+            report.environment.os, report.environment.os_family
+        ),
+    );
+    push_line(
+        buffer,
+        format_args!("Architecture: {}", report.environment.arch),
+    );
+    push_line(
+        buffer,
+        format_args!("App Version: {}", report.environment.version),
+    );
     push_line(
         buffer,
         format_args!("Executable Path: {}", report.environment.exec_path),
@@ -392,7 +413,10 @@ fn write_environment_section(buffer: &mut String, report: &NetworkReport) {
 
 fn write_local_network_section(buffer: &mut String, report: &NetworkReport) {
     push_line(buffer, format_args!("--- LOCAL NETWORK SETTINGS ---"));
-    push_line(buffer, format_args!("Local LAN IP: {}", report.system_network.local_ip));
+    push_line(
+        buffer,
+        format_args!("Local LAN IP: {}", report.system_network.local_ip),
+    );
 
     if let Some(proxies) = &report.system_network.proxy_settings {
         push_line(buffer, format_args!("System Proxies Detected:"));
@@ -404,7 +428,10 @@ fn write_local_network_section(buffer: &mut String, report: &NetworkReport) {
     }
 
     if report.system_network.local_dns_servers.is_empty() {
-        push_line(buffer, format_args!("Local DNS Servers: Unknown/Failed to parse"));
+        push_line(
+            buffer,
+            format_args!("Local DNS Servers: Unknown/Failed to parse"),
+        );
         push_line(buffer, format_args!(""));
     } else {
         push_line(
@@ -438,7 +465,10 @@ fn write_current_configuration_section(buffer: &mut String, report: &NetworkRepo
 }
 
 fn write_ping_section(buffer: &mut String, report: &NetworkReport) {
-    push_line(buffer, format_args!("--- HTTP SERVER REACHABILITY (PING) ---"));
+    push_line(
+        buffer,
+        format_args!("--- HTTP SERVER REACHABILITY (PING) ---"),
+    );
 
     for ping in &report.pings {
         push_line(buffer, format_args!("URL: {}", ping.url));
@@ -487,19 +517,29 @@ fn write_dns_section(buffer: &mut String, report: &NetworkReport) {
                 format_args!("  IPs: None resolved (Blocked or DNS down)"),
             );
         } else {
-            push_line(buffer, format_args!("  IPs: {}", dns.resolved_ips.join(", ")));
+            push_line(
+                buffer,
+                format_args!("  IPs: {}", dns.resolved_ips.join(", ")),
+            );
         }
 
         push_line(
             buffer,
             format_args!(
                 "  TCP 443 Reachable: {}",
-                if dns.tcp_port_443_reachable { "YES" } else { "NO" }
+                if dns.tcp_port_443_reachable {
+                    "YES"
+                } else {
+                    "NO"
+                }
             ),
         );
 
         if let Some(latency) = dns.tcp_latency_ms {
-            push_line(buffer, format_args!("  TCP Latency (best reachable): {} ms", latency));
+            push_line(
+                buffer,
+                format_args!("  TCP Latency (best reachable): {} ms", latency),
+            );
         }
 
         if let Some(dns_ms) = dns.dns_lookup_ms {

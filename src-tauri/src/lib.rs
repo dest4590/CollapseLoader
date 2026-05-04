@@ -21,6 +21,9 @@ use tauri::async_runtime::spawn;
 pub mod commands;
 pub mod core;
 
+#[cfg(test)]
+mod tests;
+
 use self::core::platform::error::StartupError;
 pub use crate::core::state::AppState;
 use crate::core::utils::helpers::{emit_to_main_window, show_main_window};
@@ -382,7 +385,14 @@ pub fn run() {
 
             let version = env!("CARGO_PKG_VERSION");
             let codename = CODENAME.to_string().to_uppercase();
-            configure_main_window(&app_handle, version, &codename, is_dev, &git_hash, &git_branch);
+            configure_main_window(
+                &app_handle,
+                version,
+                &codename,
+                is_dev,
+                &git_hash,
+                &git_branch,
+            );
 
             Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
 

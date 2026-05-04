@@ -10,6 +10,7 @@ use crate::core::storage::flags::FLAGS_MANAGER;
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::discord_rpc;
+use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::{API_SERVERS, CDN_SERVERS, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
@@ -18,29 +19,6 @@ use crate::{log_debug, log_error, log_info, log_warn};
 use std::{fs, path::PathBuf};
 use tauri::{AppHandle, Emitter, Manager, State, Theme, Window};
 use tokio::task;
-
-fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
-    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
-        let entry = entry.map_err(|e| e.to_string())?;
-        let path = entry.path();
-        let target = dst.join(entry.file_name());
-
-        let file_type = entry.file_type().map_err(|e| e.to_string())?;
-        if file_type.is_symlink() {
-            log_debug!("Skipping symlink during move: {:?}", path);
-            continue;
-        }
-
-        if path.is_dir() {
-            fs::create_dir_all(&target).map_err(|e| e.to_string())?;
-            copy_dir_recursive(&path, &target)?;
-        } else {
-            fs::copy(&path, &target).map_err(|e| e.to_string())?;
-        }
-    }
-
-    Ok(())
-}
 
 #[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
@@ -115,7 +93,7 @@ pub async fn change_data_folder(
             "Target directory does not exist, creating it: {:?}",
             new_dir
         );
-        fs::create_dir_all(&new_dir).map_err(|e| {
+        fs_utils::ensure_dir(&new_dir).map_err(|e| {
             log_error!("Failed to create target directory {:?}: {}", new_dir, e);
             format!("Failed to create target dir: {e}")
         })?;
@@ -148,7 +126,7 @@ pub async fn change_data_folder(
                     current_dir,
                     new_dir
                 );
-                copy_dir_recursive(&current_dir, &new_dir)?;
+                fs_utils::copy_dir_recursive(&current_dir, &new_dir, true)?;
                 log_debug!(
                     "Finished recursive copy. Removing old directory contents (except aci.json)."
                 );
@@ -161,11 +139,7 @@ pub async fn change_data_folder(
                             {
                                 continue;
                             }
-                            if path.is_dir() {
-                                let _ = fs::remove_dir_all(&path);
-                            } else {
-                                let _ = fs::remove_file(&path);
-                            }
+                            let _ = fs_utils::remove_path(&path);
                         }
                     }
                 }
@@ -189,11 +163,7 @@ pub async fn change_data_folder(
                         log_debug!("Preserving aci.json during wipe");
                         continue;
                     }
-                    if path.is_dir() {
-                        let _ = fs::remove_dir_all(&path);
-                    } else {
-                        let _ = fs::remove_file(&path);
-                    }
+                    let _ = fs_utils::remove_path(&path);
                 }
             }
         }
@@ -527,27 +497,6 @@ pub async fn get_storage_usage() -> StorageUsage {
     tokio::task::spawn_blocking(|| {
         let root = DATA.root_dir.lock().unwrap().clone();
 
-        let known_system_dirs = [
-            "libraries",
-            "libraries-fabric",
-            "libraries-legacy",
-            "natives",
-            "natives-macos-x64",
-            "natives-macos-arm64",
-            "natives-linux",
-            "natives-legacy",
-            "natives-legacy-linux",
-            "natives-fabric",
-            "assets",
-            "assets-fabric",
-            "minecraft-versions",
-            "custom_clients",
-            "agent_overlay",
-            "misc",
-            "synced_options",
-            "cache",
-        ];
-
         let libraries = dir_size(&root.join("libraries"))
             + dir_size(&root.join("libraries-fabric"))
             + dir_size(&root.join("libraries-legacy"));
@@ -579,7 +528,7 @@ pub async fn get_storage_usage() -> StorageUsage {
 
                 if name.starts_with("jdk") {
                     java += dir_size(&path);
-                } else if !known_system_dirs.contains(&name.as_str()) {
+                } else if !fs_utils::SYSTEM_DIRS.contains(&name.as_str()) {
                     client_folders += dir_size(&path);
                 }
             }

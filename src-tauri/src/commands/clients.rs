@@ -7,6 +7,7 @@ use core::clients::{
 };
 use tauri::{AppHandle, State};
 
+use crate::commands::utils::refresh_tray_menu;
 use crate::core::{
     clients::client::ClientType,
     network::servers::{ServerConnectivityStatus, SERVERS},
@@ -24,7 +25,6 @@ use crate::core::{
     storage::settings::SETTINGS,
     utils::{discord_rpc, hashing::calculate_md5_hash, helpers::hide_main_window, logging},
 };
-use crate::commands::utils::refresh_tray_menu;
 use crate::{
     core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
@@ -73,7 +73,10 @@ fn with_custom_client_manager<R>(
     operation(&mut manager)
 }
 
-fn refresh_tray_menu_after_client_change(state: State<'_, AppState>, result: Result<(), String>) -> Result<(), String> {
+fn refresh_tray_menu_after_client_change(
+    state: State<'_, AppState>,
+    result: Result<(), String>,
+) -> Result<(), String> {
     if result.is_ok() {
         refresh_tray_menu(state);
     }
@@ -119,7 +122,10 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         .unwrap_or(false);
 
     if sync_enabled {
-        if let Err(e) = crate::core::storage::data::DATA.sync_all_installed_clients().await {
+        if let Err(e) = crate::core::storage::data::DATA
+            .sync_all_installed_clients()
+            .await
+        {
             log_warn!("Failed to sync all clients on startup: {}", e);
         }
     }
@@ -309,7 +315,10 @@ pub async fn launch_client(
             .and_then(|s| s.to_str())
             .unwrap_or(&client.name)
             .to_string();
-        if let Err(e) = crate::core::storage::data::DATA.ensure_client_synced(&client_base).await {
+        if let Err(e) = crate::core::storage::data::DATA
+            .ensure_client_synced(&client_base)
+            .await
+        {
             log_warn!("Failed to sync client {} before launch: {}", client_base, e);
         }
     }
@@ -405,8 +414,15 @@ pub async fn download_client_only(
             .and_then(|s| s.to_str())
             .unwrap_or(&client.name)
             .to_string();
-        if let Err(e) = crate::core::storage::data::DATA.ensure_client_synced(&client_base).await {
-            log_warn!("Failed to sync client {} after download: {}", client_base, e);
+        if let Err(e) = crate::core::storage::data::DATA
+            .ensure_client_synced(&client_base)
+            .await
+        {
+            log_warn!(
+                "Failed to sync client {} after download: {}",
+                client_base,
+                e
+            );
         }
     }
 
@@ -574,18 +590,18 @@ pub fn increment_client_counter(
 ) -> Result<(), String> {
     let result = with_client_manager(&state, |manager| {
         if let Some(client) = manager.clients.iter_mut().find(|c| c.id == id) {
-        match counter_type.as_str() {
-            "download" => {
-                client.downloads += 1;
+            match counter_type.as_str() {
+                "download" => {
+                    client.downloads += 1;
+                }
+                "launch" => {
+                    client.launches += 1;
+                }
+                _ => {
+                    return Err(format!("Invalid counter type: {counter_type}"));
+                }
             }
-            "launch" => {
-                client.launches += 1;
-            }
-            _ => {
-                return Err(format!("Invalid counter type: {counter_type}"));
-            }
-        }
-        Ok(())
+            Ok(())
         } else {
             Err("Client not found".to_string())
         }
@@ -707,7 +723,7 @@ pub async fn launch_custom_client(
     })?;
 
     custom_client.validate_file()?;
-    
+
     log_debug!("Custom client file validated for '{}'", custom_client.name);
 
     log_info!("Launching custom client: {}", custom_client.name);

@@ -229,7 +229,8 @@ pub fn save_settings(input_settings: Settings) -> Result<(), String> {
     let new_discord_rpc_value = input_settings.discord_rpc_enabled.value;
     let autostart_changed = old_autostart != input_settings.autostart.value;
     let new_autostart_value = input_settings.autostart.value;
-    let sync_client_settings_changed = old_sync_client_settings != input_settings.sync_client_settings.value;
+    let sync_client_settings_changed =
+        old_sync_client_settings != input_settings.sync_client_settings.value;
     let new_sync_value = input_settings.sync_client_settings.value;
 
     #[cfg(target_os = "windows")]
@@ -247,7 +248,10 @@ pub fn save_settings(input_settings: Settings) -> Result<(), String> {
     if sync_client_settings_changed && new_sync_value {
         log_info!("Sync client settings enabled — syncing all installed clients");
         tauri::async_runtime::spawn(async {
-            if let Err(e) = crate::core::storage::data::DATA.sync_all_installed_clients().await {
+            if let Err(e) = crate::core::storage::data::DATA
+                .sync_all_installed_clients()
+                .await
+            {
                 log_warn!("Failed to sync all clients on settings change: {}", e);
             }
         });

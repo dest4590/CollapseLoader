@@ -19,14 +19,14 @@ use crate::core::{
     network::{analytics::Analytics, server_ads},
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
     utils::{
-        process::force_high_performance_gpu,
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
-            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX,
-            MACOS_SUFFIX, NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER,
-            NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_FOLDER, PATH_SEPARATOR,
+            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
+            NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
+            NATIVES_MACOS_FOLDER, PATH_SEPARATOR,
         },
         helpers::emit_to_main_window,
+        process::force_high_performance_gpu,
     },
 };
 use crate::{log_debug, log_error, log_info};
@@ -88,7 +88,10 @@ impl Client {
                 root.join(NATIVES_MACOS_ARM64_FOLDER)
             }
         } else if use_legacy_layout {
-            root.join(format!("{}{}{}", NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX))
+            root.join(format!(
+                "{}{}{}",
+                NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX
+            ))
         } else {
             root.join(NATIVES_MACOS_FOLDER)
         }

@@ -1,3 +1,4 @@
+use crate::core::utils::fs as fs_utils;
 use crate::{log_error, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
@@ -31,30 +32,20 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
 
         if let Some(parent) = file_path.parent() {
             if !parent.exists() {
-                if let Err(e) = fs::create_dir_all(parent) {
+                if let Err(e) = fs_utils::ensure_dir(parent) {
                     log_warn!("Failed to create dir for {}: {}", Self::resource_name(), e);
                     return;
                 }
             }
         }
 
-        let tmp_path = file_path.with_extension("tmp");
-        if let Err(e) = fs::write(&tmp_path, &data) {
+        if let Err(e) = fs_utils::atomic_write(file_path, data.as_bytes()) {
             log_error!(
                 "Failed to write temp file for {}: {}",
                 Self::resource_name(),
                 e
             );
             return;
-        }
-
-        if let Err(e) = fs::rename(&tmp_path, file_path) {
-            log_error!(
-                "Failed to finalize save for {}: {}",
-                Self::resource_name(),
-                e
-            );
-            let _ = fs::remove_file(tmp_path);
         }
     }
 
@@ -103,10 +94,7 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
     }
 
     /// Loads the resource and then restores transient fields such as file paths.
-    fn load_from_disk_with(
-        file_path: PathBuf,
-        post_load: impl FnOnce(&mut Self),
-    ) -> Self {
+    fn load_from_disk_with(file_path: PathBuf, post_load: impl FnOnce(&mut Self)) -> Self {
         let mut loaded = Self::load_from_disk(file_path);
         post_load(&mut loaded);
         loaded
