@@ -66,9 +66,15 @@
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         >
             <div
-                v-for="preset in filteredThemes"
+                v-for="(preset, idx) in filteredThemes"
                 :key="preset.id"
-                class="card bg-base-100/50 border border-white/5 shadow-xl hover:bg-base-300 transition-all duration-300 rounded-2xl group cursor-pointer"
+                class="card bg-base-100/50 border border-white/5 shadow-xl hover:bg-base-300 transition-all duration-300 rounded-2xl group cursor-pointer preset-card-item"
+                :class="{ 'slide-in-animate': playAnim }"
+                :style="
+                    playAnim
+                        ? { animationDelay: `${Math.min(idx * 60, 600)}ms` }
+                        : {}
+                "
                 @click="openDetails(preset)"
             >
                 <div class="card-body p-3.5">
@@ -146,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import {
     Search,
@@ -180,6 +186,7 @@ const loading = ref(true);
 const refreshing = ref(false);
 const error = ref<string | null>(null);
 const search = ref("");
+const playAnim = ref(false);
 
 const filteredThemes = computed(() => {
     const q = search.value.trim().toLowerCase();
@@ -189,6 +196,13 @@ const filteredThemes = computed(() => {
             p.name?.toLowerCase().includes(q) ||
             p.description?.toLowerCase().includes(q)
     );
+});
+
+watch(filteredThemes, () => {
+    playAnim.value = false;
+    nextTick(() => {
+        playAnim.value = true;
+    });
 });
 
 async function load(force = false) {
@@ -290,5 +304,39 @@ onMounted(async () => {
     loading.value = true;
     await load();
     loading.value = false;
+    nextTick(() => {
+        playAnim.value = true;
+    });
 });
 </script>
+
+<style scoped>
+.preset-card-item {
+    opacity: 1;
+    transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.3s ease;
+}
+
+.preset-card-item.slide-in-animate {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    animation: slideInFromBottom 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes slideInFromBottom {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .preset-card-item.slide-in-animate {
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+}
+</style>
