@@ -429,7 +429,6 @@ impl Data {
             Err(e) => return Err(format!("Failed to read root dir: {e}")),
         };
 
-        let mut synced = 0u32;
         for entry in entries.flatten() {
             let path = entry.path();
             if !path.is_dir() {
@@ -453,9 +452,6 @@ impl Data {
                     // ignore access denied 5 (when file locked or not exist)
                     log_warn!("Failed to sync client {}: {}", name, e);
                 }
-            } else {
-                log_info!("Synced client: {}", name);
-                synced += 1;
             }
         }
 
@@ -477,13 +473,12 @@ impl Data {
                         log_warn!("Failed to sync custom client {}: {}", name, e);
                     } else {
                         log_info!("Synced custom client: {}", name);
-                        synced += 1;
                     }
                 }
             }
         }
 
-        log_info!("Synced {} client directories", synced);
+        //log_info!("Synced {} client directories", synced);
         Ok(())
     }
 
@@ -505,6 +500,8 @@ impl Data {
 
         for item in SYNC_ITEMS {
             let target = global_options_dir.join(item.name);
+
+            // process all sync folders (like resourcepacks and shaderpacks)
             if !target.exists() {
                 if item.is_dir {
                     tokio_fs::create_dir_all(&target).await.map_err(|e| {
@@ -541,22 +538,25 @@ impl Data {
                 let _ = fs::remove_file(&client_target);
                 if target.exists() {
                     if let Err(e) = fs_utils::copy_file(&target, &client_target) {
-                        log_warn!(
-                            "Failed to copy {} for {}: {}",
-                            item.name, client_base, e
-                        );
+                        log_warn!("Failed to copy {} for {}: {}", item.name, client_base, e);
                     }
                 }
                 continue;
             }
 
-            if let Err(e) = fs_utils::remove_path(&client_target) {
-                log_warn!(
-                    "Failed to remove existing client {} at {}: {}",
-                    item.name,
-                    client_target.display(),
-                    e
-                );
+            // why we need to deleting it? w1xced???
+            // if let Err(e) = fs_utils::remove_path(&client_target) {
+            //     log_warn!(
+            //         "Failed to remove existing client {} at {}: {}",
+            //         item.name,
+            //         client_target.display(),
+            //         e
+            //     );
+            // }
+
+            // do not sync if folder/file already exists in client dir
+            if client_target.exists() {
+                continue;
             }
 
             if let Err(e) = fs_utils::create_link(&target, &client_target, item.is_dir) {
@@ -617,12 +617,8 @@ impl Data {
             }
 
             let should_copy = if global_file.exists() {
-                let client_modified = fs::metadata(&client_file)
-                    .and_then(|m| m.modified())
-                    .ok();
-                let global_modified = fs::metadata(&global_file)
-                    .and_then(|m| m.modified())
-                    .ok();
+                let client_modified = fs::metadata(&client_file).and_then(|m| m.modified()).ok();
+                let global_modified = fs::metadata(&global_file).and_then(|m| m.modified()).ok();
 
                 match (client_modified, global_modified) {
                     (Some(c), Some(g)) => c > g,
@@ -636,7 +632,11 @@ impl Data {
                 if let Err(e) = fs_utils::copy_file(&client_file, &global_file) {
                     log_warn!("Failed to sync {} back from {}: {}", name, client_base, e);
                 } else {
-                    log_info!("Synced {} back from {} to synced_options", name, client_base);
+                    log_info!(
+                        "Synced {} back from {} to synced_options",
+                        name,
+                        client_base
+                    );
                 }
             }
         }
