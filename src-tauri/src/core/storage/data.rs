@@ -520,6 +520,14 @@ impl Data {
             }
 
             let client_target = client_dir.join(item.name);
+
+            #[cfg(target_family = "windows")]
+            if item.is_dir {
+                if let Ok(true) = junction::exists(&client_target) {
+                    continue;
+                }
+            }
+
             if let Err(e) = fs_utils::remove_path(&client_target) {
                 log_warn!(
                     "Failed to remove existing client {} at {}: {}",

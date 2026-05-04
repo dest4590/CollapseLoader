@@ -409,20 +409,12 @@ pub async fn download_client_only(
         .unwrap_or(false);
 
     if sync_enabled {
-        let client_base = std::path::Path::new(&client.filename)
-            .file_stem()
-            .and_then(|s| s.to_str())
-            .unwrap_or(&client.name)
-            .to_string();
+        let client_base = crate::core::storage::data::Data::get_filename(&client.filename);
         if let Err(e) = crate::core::storage::data::DATA
             .ensure_client_synced(&client_base)
             .await
         {
-            log_warn!(
-                "Failed to sync client {} after download: {}",
-                client_base,
-                e
-            );
+            log_warn!("Failed to sync client {} after download: {}", client_base, e);
         }
     }
 
