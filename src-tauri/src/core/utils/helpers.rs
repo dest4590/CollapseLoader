@@ -12,6 +12,19 @@ pub fn emit_to_main_window<S: Serialize + Clone>(app_handle: &AppHandle, event: 
     }
 }
 
+pub fn show_main_window(app_handle: &AppHandle) {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
+pub fn hide_main_window(app_handle: &AppHandle) {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.hide();
+    }
+}
+
 pub fn is_development_enabled() -> bool {
     env!("DEVELOPMENT").eq_ignore_ascii_case("true")
 }

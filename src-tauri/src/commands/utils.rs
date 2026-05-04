@@ -19,6 +19,29 @@ use std::{fs, path::PathBuf};
 use tauri::{AppHandle, Emitter, Manager, State, Theme, Window};
 use tokio::task;
 
+fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
+    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        let target = dst.join(entry.file_name());
+
+        let file_type = entry.file_type().map_err(|e| e.to_string())?;
+        if file_type.is_symlink() {
+            log_debug!("Skipping symlink during move: {:?}", path);
+            continue;
+        }
+
+        if path.is_dir() {
+            fs::create_dir_all(&target).map_err(|e| e.to_string())?;
+            copy_dir_recursive(&path, &target)?;
+        } else {
+            fs::copy(&path, &target).map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
 #[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
     let result = serde_json::json!({
@@ -120,30 +143,6 @@ pub async fn change_data_folder(
         log_info!("Moving data from old folder to new folder");
         if current_dir.exists() {
             task::spawn_blocking(move || -> Result<(), String> {
-                fn copy_dir_recursive(
-                    src: &std::path::Path,
-                    dst: &std::path::Path,
-                ) -> Result<(), String> {
-                    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
-                        let entry = entry.map_err(|e| e.to_string())?;
-                        let path = entry.path();
-                        let target = dst.join(entry.file_name());
-
-                        let file_type = entry.file_type().map_err(|e| e.to_string())?;
-                        if file_type.is_symlink() {
-                            log_debug!("Skipping symlink during move: {:?}", path);
-                            continue;
-                        }
-
-                        if path.is_dir() {
-                            fs::create_dir_all(&target).map_err(|e| e.to_string())?;
-                            copy_dir_recursive(&path, &target)?;
-                        } else {
-                            fs::copy(&path, &target).map_err(|e| e.to_string())?;
-                        }
-                    }
-                    Ok(())
-                }
                 log_debug!(
                     "Starting recursive copy from {:?} to {:?}",
                     current_dir,

@@ -23,7 +23,7 @@ pub mod core;
 
 use self::core::platform::error::StartupError;
 pub use crate::core::state::AppState;
-use crate::core::utils::helpers::emit_to_main_window;
+use crate::core::utils::helpers::{emit_to_main_window, show_main_window};
 pub use crate::core::utils::logging;
 
 pub fn check_dependencies() -> Result<(), StartupError> {
@@ -74,6 +74,79 @@ pub fn handle_startup_error(error: &StartupError) {
     error.show_and_exit();
 }
 
+fn handle_tray_menu_action(app: &tauri::AppHandle, action_id: &str) {
+    if action_id == "show" {
+        show_main_window(app);
+        return;
+    }
+
+    if action_id == "quit" {
+        app.exit(0);
+        return;
+    }
+
+    if let Some(client_id) = action_id
+        .strip_prefix("launch_")
+        .and_then(|id| id.parse::<u32>().ok())
+    {
+        show_main_window(app);
+        crate::core::utils::helpers::emit_to_main_window(
+            app,
+            "tray-launch-client",
+            serde_json::json!({ "id": client_id }),
+        );
+    }
+}
+
+fn build_window_title(
+    version: &str,
+    codename: &str,
+    is_dev: bool,
+    git_hash: &str,
+    git_branch: &str,
+) -> String {
+    let build_label = if is_dev {
+        format!("(development build, {git_hash}, {git_branch} branch)")
+    } else {
+        String::new()
+    };
+
+    format!("CollapseLoader v{version} ({codename}) {build_label}")
+}
+
+fn configure_main_window(
+    app_handle: &tauri::AppHandle,
+    version: &str,
+    codename: &str,
+    is_dev: bool,
+    git_hash: &str,
+    git_branch: &str,
+) {
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let window_title = build_window_title(version, codename, is_dev, git_hash, git_branch);
+
+        if let Err(e) = window.set_title(&window_title) {
+            log_warn!("Failed to set window title: {}", e);
+        }
+
+        #[cfg(target_os = "macos")]
+        if let Err(e) = window.set_decorations(true) {
+            log_warn!("Failed to enable window decorations: {}", e);
+        }
+
+        let start_minimized = {
+            crate::core::storage::settings::SETTINGS
+                .lock()
+                .map(|s| s.start_minimized.value)
+                .unwrap_or(false)
+        };
+
+        if start_minimized {
+            let _ = window.hide();
+        }
+    }
+}
+
 fn parse_verify_params(url: &str) -> Option<(String, String)> {
     let query_part = url.split_once('?')?.1;
     let mut code = String::new();
@@ -103,10 +176,7 @@ fn parse_client_name(url: &str) -> Option<&str> {
 
 fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running: bool) {
     if was_already_running {
-        if let Some(window) = app.get_webview_window("main") {
-            let _ = window.set_focus();
-            let _ = window.show();
-        }
+        show_main_window(app);
     }
 
     log_debug!(
@@ -312,36 +382,7 @@ pub fn run() {
 
             let version = env!("CARGO_PKG_VERSION");
             let codename = CODENAME.to_string().to_uppercase();
-            let window_title = format!(
-                "CollapseLoader v{version} ({codename}) {}",
-                if is_dev {
-                    format!("(development build, {git_hash}, {git_branch} branch)")
-                } else {
-                    String::new()
-                }
-            );
-
-            if let Some(window) = app_handle.get_webview_window("main") {
-                if let Err(e) = window.set_title(&window_title) {
-                    log_warn!("Failed to set window title: {}", e);
-                }
-
-                #[cfg(target_os = "macos")]
-                if let Err(e) = window.set_decorations(true) {
-                    log_warn!("Failed to enable window decorations: {}", e);
-                }
-
-                let start_minimized = {
-                    crate::core::storage::settings::SETTINGS
-                        .lock()
-                        .map(|s| s.start_minimized.value)
-                        .unwrap_or(false)
-                };
-
-                if start_minimized {
-                    let _ = window.hide();
-                }
-            }
+            configure_main_window(&app_handle, version, &codename, is_dev, &git_hash, &git_branch);
 
             Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
 
@@ -359,27 +400,7 @@ pub fn run() {
                 .icon(tray_icon)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app: &tauri::AppHandle, event| {
-                    let id = event.id.as_ref();
-                    if id == "show" {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    } else if id == "quit" {
-                        app.exit(0);
-                    } else if let Some(id_str) = id.strip_prefix("launch_") {
-                        if let Ok(client_id) = id_str.parse::<u32>() {
-                            if let Some(window) = app.get_webview_window("main") {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                            crate::core::utils::helpers::emit_to_main_window(
-                                app,
-                                "tray-launch-client",
-                                serde_json::json!({ "id": client_id }),
-                            );
-                        }
-                    }
+                    handle_tray_menu_action(app, event.id.as_ref());
                 })
                 .on_tray_icon_event(|tray: &tauri::tray::TrayIcon, event| {
                     if let TrayIconEvent::Click {
@@ -392,10 +413,9 @@ pub fn run() {
                         if let Some(window) = app.get_webview_window("main") {
                             let is_visible = window.is_visible().unwrap_or(true);
                             if is_visible {
-                                let _ = window.hide();
+                                crate::core::utils::helpers::hide_main_window(app);
                             } else {
-                                let _ = window.show();
-                                let _ = window.set_focus();
+                                show_main_window(app);
                             }
                         }
                     }

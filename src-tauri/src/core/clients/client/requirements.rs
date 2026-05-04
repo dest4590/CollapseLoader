@@ -604,8 +604,6 @@ impl Client {
                                         path.display(),
                                         e
                                     );
-                                } else {
-                                    log_debug!("Set exec perm on {}", path.display());
                                 }
                             }
                         }

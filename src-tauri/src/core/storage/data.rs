@@ -420,7 +420,7 @@ impl Data {
                 );
             }
 
-            if let Err(e) = Self::create_link(&target, &client_target, is_dir) {
+            if let Err(e) = Self::create_link(&target, &client_target) {
                 log_warn!(
                     "Failed to link {} for {}: {} -> {}: {}",
                     name,
@@ -527,7 +527,6 @@ impl Data {
     fn create_link(
         src: &std::path::Path,
         dst: &std::path::Path,
-        is_dir: bool,
     ) -> Result<(), String> {
         #[cfg(target_family = "unix")]
         {

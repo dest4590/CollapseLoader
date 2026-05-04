@@ -75,8 +75,6 @@ pub fn execute_jps() -> Result<Output, std::io::Error> {
                                             path.display(),
                                             e
                                         );
-                                    } else {
-                                        log_debug!("Set exec perm on {}", path.display());
                                     }
                                 }
                             }

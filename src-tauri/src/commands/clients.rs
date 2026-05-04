@@ -5,7 +5,7 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, State};
 
 use crate::core::{
     clients::client::ClientType,
@@ -22,7 +22,7 @@ use crate::core::{
 };
 use crate::core::{
     storage::settings::SETTINGS,
-    utils::{discord_rpc, hashing::calculate_md5_hash, logging},
+    utils::{discord_rpc, hashing::calculate_md5_hash, helpers::hide_main_window, logging},
 };
 use crate::commands::utils::refresh_tray_menu;
 use crate::{
@@ -320,9 +320,7 @@ pub async fn launch_client(
         .unwrap_or(false);
 
     if minimize_on_launch {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            let _ = window.hide();
-        }
+        hide_main_window(&app_handle);
     }
 
     let options = LaunchOptions::new(app_handle.clone(), user_token, false);
@@ -709,6 +707,7 @@ pub async fn launch_custom_client(
     })?;
 
     custom_client.validate_file()?;
+    
     log_debug!("Custom client file validated for '{}'", custom_client.name);
 
     log_info!("Launching custom client: {}", custom_client.name);
@@ -731,9 +730,7 @@ pub async fn launch_custom_client(
     };
 
     if minimize_on_launch {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            let _ = window.hide();
-        }
+        hide_main_window(&app_handle);
     }
 
     client.run(options, state.clients.manager.clone()).await
