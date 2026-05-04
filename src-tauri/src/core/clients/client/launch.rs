@@ -389,6 +389,21 @@ impl Client {
                         let _ = m.update_status_on_client_exit(&app_handle);
                     }
 
+                    let sync_enabled = SETTINGS
+                        .lock()
+                        .map(|s| s.sync_client_settings.value)
+                        .unwrap_or(false);
+
+                    if sync_enabled {
+                        let client_base = crate::core::storage::data::Data::get_filename(
+                            &self_clone.filename,
+                        );
+                        #[cfg(target_family = "windows")]
+                        if let Err(e) = DATA.sync_options_back(&client_base).await {
+                            log_info!("Failed to sync options back for {}: {}", client_base, e);
+                        }
+                    }
+
                     emit_to_main_window(
                         &app_handle,
                         "client-exited",

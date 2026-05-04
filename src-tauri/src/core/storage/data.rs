@@ -43,6 +43,10 @@ const SYNC_ITEMS: &[SyncItem] = &[
         is_dir: true,
     },
     SyncItem {
+        name: "shaderpacks",
+        is_dir: true,
+    },
+    SyncItem {
         name: "options.txt",
         is_dir: false,
     },
@@ -532,25 +536,109 @@ impl Data {
                 }
             }
 
-            fs_utils::remove_path(&client_target).map_err(|e| {
-                format!(
+            #[cfg(target_family = "windows")]
+            if !item.is_dir {
+                let _ = fs::remove_file(&client_target);
+                if target.exists() {
+                    if let Err(e) = fs_utils::copy_file(&target, &client_target) {
+                        log_warn!(
+                            "Failed to copy {} for {}: {}",
+                            item.name, client_base, e
+                        );
+                    }
+                }
+                continue;
+            }
+
+            if let Err(e) = fs_utils::remove_path(&client_target) {
+                log_warn!(
                     "Failed to remove existing client {} at {}: {}",
                     item.name,
                     client_target.display(),
                     e
-                )
-            })?;
+                );
+            }
 
-            fs_utils::create_link(&target, &client_target, item.is_dir).map_err(|e| {
-                format!(
+            if let Err(e) = fs_utils::create_link(&target, &client_target, item.is_dir) {
+                log_warn!(
                     "Failed to link {} for {}: {} -> {}: {}",
                     item.name,
                     client_base,
                     target.display(),
                     client_target.display(),
                     e
-                )
-            })?;
+                );
+                match if item.is_dir {
+                    fs_utils::copy_dir_recursive(&target, &client_target, false)
+                } else {
+                    fs_utils::copy_file(&target, &client_target)
+                } {
+                    Ok(_) => {
+                        log_warn!(
+                            "Used copy fallback for {} sync: {} -> {}",
+                            item.name,
+                            target.display(),
+                            client_target.display()
+                        );
+                    }
+                    Err(copy_err) => {
+                        log_warn!(
+                            "Fallback copy also failed for {}: {} -> {}: {}",
+                            item.name,
+                            target.display(),
+                            client_target.display(),
+                            copy_err
+                        );
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn sync_options_back(&self, client_base: &str) -> Result<(), String> {
+        let root_dir = self.root_dir_snapshot();
+        let global_options_dir = root_dir.join("synced_options");
+        let client_dir = root_dir.join(client_base);
+
+        if !client_dir.exists() || !global_options_dir.exists() {
+            return Ok(());
+        }
+
+        let file_items = ["options.txt", "optionsof.txt"];
+
+        for name in file_items {
+            let client_file = client_dir.join(name);
+            let global_file = global_options_dir.join(name);
+
+            if !client_file.exists() {
+                continue;
+            }
+
+            let should_copy = if global_file.exists() {
+                let client_modified = fs::metadata(&client_file)
+                    .and_then(|m| m.modified())
+                    .ok();
+                let global_modified = fs::metadata(&global_file)
+                    .and_then(|m| m.modified())
+                    .ok();
+
+                match (client_modified, global_modified) {
+                    (Some(c), Some(g)) => c > g,
+                    _ => true,
+                }
+            } else {
+                true
+            };
+
+            if should_copy {
+                if let Err(e) = fs_utils::copy_file(&client_file, &global_file) {
+                    log_warn!("Failed to sync {} back from {}: {}", name, client_base, e);
+                } else {
+                    log_info!("Synced {} back from {} to synced_options", name, client_base);
+                }
+            }
         }
 
         Ok(())
