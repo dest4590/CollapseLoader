@@ -7,5 +7,6 @@ pub mod globals;
 pub mod hashing;
 pub mod helpers;
 pub mod logging;
+pub mod misc;
 pub mod process;
 pub mod tags;

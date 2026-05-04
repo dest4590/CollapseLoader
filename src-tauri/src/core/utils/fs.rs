@@ -2,6 +2,35 @@ use std::fs;
 use std::io::Write;
 use std::path::Path;
 
+#[cfg(target_family = "windows")]
+fn clear_readonly_recursive(path: &Path) -> Result<(), String> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let file_type = metadata.file_type();
+    if file_type.is_symlink() {
+        return Ok(());
+    }
+
+    let mut permissions = metadata.permissions();
+    if permissions.readonly() {
+        permissions.set_readonly(false);
+        fs::set_permissions(path, permissions).map_err(|e| e.to_string())?;
+    }
+
+    if file_type.is_dir() {
+        for entry in fs::read_dir(path).map_err(|e| e.to_string())? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            clear_readonly_recursive(&entry.path())?;
+        }
+    }
+
+    Ok(())
+}
+
 pub const SYSTEM_DIRS: &[&str] = &[
     "synced_options",
     "libraries",
@@ -69,6 +98,9 @@ pub fn remove_path(path: &Path) -> Result<(), String> {
         }
     }
 
+    #[cfg(target_family = "windows")]
+    clear_readonly_recursive(path)?;
+
     match fs::symlink_metadata(path) {
         Ok(meta) => {
             if meta.file_type().is_symlink() || meta.is_file() {
@@ -122,25 +154,9 @@ pub fn create_link(src: &Path, dst: &Path, is_dir: bool) -> Result<(), String> {
         use std::os::windows::fs::{symlink_dir, symlink_file};
 
         if is_dir {
-            match symlink_dir(src, dst) {
-                Ok(()) => Ok(()),
-                Err(symlink_err) => junction::create(src, dst).map_err(|junction_err| {
-                    format!(
-                        "{}; junction fallback failed: {}",
-                        symlink_err, junction_err
-                    )
-                }),
-            }
+            symlink_dir(src, dst).map_err(|e| e.to_string())
         } else {
-            match symlink_file(src, dst) {
-                Ok(()) => Ok(()),
-                Err(symlink_err) => fs::hard_link(src, dst).map_err(|hard_link_err| {
-                    format!(
-                        "{}; hard-link fallback failed: {}",
-                        symlink_err, hard_link_err
-                    )
-                }),
-            }
+            symlink_file(src, dst).map_err(|e| e.to_string())
         }
     }
 }

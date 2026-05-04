@@ -1,4 +1,4 @@
-use crate::core::utils::fs as fs_utils;
+use crate::core::utils::{fs as fs_utils, misc};
 use crate::{log_error, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
@@ -54,7 +54,7 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
         if !file_path.exists() {
             log_warn!(
                 "{} not found at {}, creating defaults",
-                Self::resource_name(),
+                misc::capitalize_first(Self::resource_name()),
                 file_path.display()
             );
             let default = Self::create_default();

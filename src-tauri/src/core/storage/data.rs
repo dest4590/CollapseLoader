@@ -445,7 +445,10 @@ impl Data {
             }
 
             if let Err(e) = self.ensure_client_synced(&name).await {
-                log_warn!("Failed to sync client {}: {}", name, e);
+                if !e.contains("5") {
+                    // ignore access denied 5 (when file locked or not exist)
+                    log_warn!("Failed to sync client {}: {}", name, e);
+                }
             } else {
                 log_info!("Synced client: {}", name);
                 synced += 1;
@@ -464,7 +467,8 @@ impl Data {
                         Some(n) => n.to_string(),
                         None => continue,
                     };
-                    let client_base = format!("custom_clients{}{}", std::path::MAIN_SEPARATOR, name);
+                    let client_base =
+                        format!("custom_clients{}{}", std::path::MAIN_SEPARATOR, name);
                     if let Err(e) = self.ensure_client_synced(&client_base).await {
                         log_warn!("Failed to sync custom client {}: {}", name, e);
                     } else {
@@ -528,49 +532,25 @@ impl Data {
                 }
             }
 
-            if let Err(e) = fs_utils::remove_path(&client_target) {
-                log_warn!(
+            fs_utils::remove_path(&client_target).map_err(|e| {
+                format!(
                     "Failed to remove existing client {} at {}: {}",
                     item.name,
                     client_target.display(),
                     e
-                );
-            }
+                )
+            })?;
 
-            if let Err(e) = fs_utils::create_link(&target, &client_target, item.is_dir) {
-                log_warn!(
+            fs_utils::create_link(&target, &client_target, item.is_dir).map_err(|e| {
+                format!(
                     "Failed to link {} for {}: {} -> {}: {}",
                     item.name,
                     client_base,
                     target.display(),
                     client_target.display(),
                     e
-                );
-
-                match if item.is_dir {
-                    fs_utils::copy_dir_recursive(&target, &client_target, false)
-                } else {
-                    fs_utils::copy_file(&target, &client_target)
-                } {
-                    Ok(_) => {
-                        log_warn!(
-                            "Used copy fallback for {} sync: {} -> {}",
-                            item.name,
-                            target.display(),
-                            client_target.display()
-                        );
-                    }
-                    Err(copy_err) => {
-                        log_warn!(
-                            "Fallback copy also failed for {}: {} -> {}: {}",
-                            item.name,
-                            target.display(),
-                            client_target.display(),
-                            copy_err
-                        );
-                    }
-                }
-            }
+                )
+            })?;
         }
 
         Ok(())

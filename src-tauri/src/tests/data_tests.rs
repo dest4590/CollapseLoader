@@ -2,6 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::core::storage::data::{Data, FileInfo, LocalFileKind};
+use crate::core::utils::fs as fs_utils;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,25 @@ impl Drop for TempDir {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
     }
+}
+
+#[cfg(target_family = "windows")]
+#[test]
+fn remove_path_deletes_directory_with_readonly_file() {
+    let tmp = TempDir::new("remove_path_readonly_dir");
+    let target_dir = tmp.path().join("resourcepacks");
+    let readonly_file = target_dir.join("pack.mcmeta");
+
+    fs::create_dir_all(&target_dir).unwrap();
+    fs::write(&readonly_file, "test").unwrap();
+
+    let mut permissions = fs::metadata(&readonly_file).unwrap().permissions();
+    permissions.set_readonly(true);
+    fs::set_permissions(&readonly_file, permissions).unwrap();
+
+    fs_utils::remove_path(&target_dir).unwrap();
+
+    assert!(!target_dir.exists());
 }
 
 // ── Data::has_extension ───────────────────────────────────────────────────────

@@ -319,7 +319,10 @@ pub async fn launch_client(
             .ensure_client_synced(&client_base)
             .await
         {
-            log_warn!("Failed to sync client {} before launch: {}", client_base, e);
+            if !e.contains("5") {
+                // ignore access denied 5 (when file locked or not exist)
+                log_warn!("Failed to sync client {} before launch: {}", client_base, e);
+            }
         }
     }
 
@@ -414,7 +417,14 @@ pub async fn download_client_only(
             .ensure_client_synced(&client_base)
             .await
         {
-            log_warn!("Failed to sync client {} after download: {}", client_base, e);
+            if e.contains("5") {
+                // ignore access denied 5 (when file locked or not exist)
+                log_warn!(
+                    "Failed to sync client {} after download: {}",
+                    client_base,
+                    e
+                );
+            }
         }
     }
 
