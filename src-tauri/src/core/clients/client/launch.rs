@@ -291,19 +291,19 @@ impl Client {
             cmd.env("DRI_PRIME", "1");
         }
 
-        //let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
-        //if self.client_type != ClientType::Forge && !is_legacy_vanilla {
-        cmd.arg(format!(
-            "-javaagent:{}={}",
-            agent_overlay_path.join(AGENT_FILE).display(),
-            agent_args.encode()
-        ));
-        //}
+        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+        
+        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
+            cmd.arg(format!(
+                "-javaagent:{}={}",
+                agent_overlay_path.join(AGENT_FILE).display(),
+                agent_args.encode()
+            ));
+        }
 
         self.apply_java_args(&mut cmd);
 
         cmd.arg(format!("-Xmx{ram_mb}M"));
-
         cmd.arg(format!(
             "-Djava.library.path={}{}{}",
             natives_path.display(),
@@ -395,12 +395,15 @@ impl Client {
                         .unwrap_or(false);
 
                     if sync_enabled {
-                        let client_base = crate::core::storage::data::Data::get_filename(
-                            &self_clone.filename,
-                        );
                         #[cfg(target_family = "windows")]
-                        if let Err(e) = DATA.sync_options_back(&client_base).await {
-                            log_info!("Failed to sync options back for {}: {}", client_base, e);
+                        {
+                            let client_base = crate::core::storage::data::Data::get_filename(
+                                &self_clone.filename,
+                            );
+
+                            if let Err(e) = DATA.sync_options_back(&client_base).await {
+                                log_info!("Failed to sync options back for {}: {}", client_base, e);
+                            }
                         }
                     }
 
