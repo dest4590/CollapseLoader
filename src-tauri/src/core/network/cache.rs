@@ -8,7 +8,12 @@ use crate::log_warn;
 
 /// Sanitizes an API path to be used as a filename for caching.
 pub fn sanitize_path_for_filename(path: &str) -> String {
-    path.replace(['/', '\\'], "_") + ".json"
+    let sanitized = path.replace(['/', '\\'], "_");
+    if sanitized.to_lowercase().ends_with(".json") {
+        sanitized
+    } else {
+        format!("{}.json", sanitized)
+    }
 }
 
 /// Ensures that the API cache directory exists on disk.

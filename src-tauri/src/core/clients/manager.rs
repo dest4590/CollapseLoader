@@ -56,37 +56,26 @@ impl ClientManager {
     }
 
     /// Fetches clients from a specific API endpoint, falling back to local cache on failure.
-    fn fetch_clients_from_endpoint(
-        endpoint: &str,
-        cache_file: &str,
-    ) -> Result<Vec<Client>, DynError> {
+    fn fetch_clients_from_endpoint(endpoint: &str) -> Result<Vec<Client>, DynError> {
         let Some(api_instance) = API.as_ref() else {
             log_warn!(
                 "API instance not available. Attempting to load {} from cache.",
                 endpoint
             );
-            return Self::load_from_cache(cache_file);
+            return Self::load_from_cache_by_path(endpoint);
         };
 
-        match api_instance.json::<Vec<Client>>(endpoint) {
-            Ok(clients) => Ok(clients),
-            Err(e) => {
-                log_warn!(
-                    "Failed to fetch {} from API: {}. Attempting to load from cache.",
-                    endpoint,
-                    e
-                );
-                Self::load_from_cache(cache_file)
-            }
-        }
+        api_instance.json::<Vec<Client>>(endpoint).map_err(|e| {
+            log_warn!("Failed to fetch {} from API or cache: {}", endpoint, e);
+            DynError::from(e.to_string())
+        })
     }
 
     /// Spawns an asynchronous task to fetch clients from an endpoint.
     fn spawn_clients_fetch_task(
         endpoint: &'static str,
-        cache_file: &'static str,
     ) -> tokio::task::JoinHandle<Result<Vec<Client>, DynError>> {
-        tokio::task::spawn_blocking(move || Self::fetch_clients_from_endpoint(endpoint, cache_file))
+        tokio::task::spawn_blocking(move || Self::fetch_clients_from_endpoint(endpoint))
     }
 
     /// Resolves the result of a client fetch task.
@@ -137,10 +126,10 @@ impl ClientManager {
             return Ok(Self::mock_clients());
         }
 
-        // 1 arg endpoint, 2 arg cache file name
-        let vanilla_task = Self::spawn_clients_fetch_task(VANILLA_CLIENTS_URL, "clients.json");
-        let fabric_task = Self::spawn_clients_fetch_task(FABRIC_CLIENTS_URL, "fabric-clients.json");
-        let forge_task = Self::spawn_clients_fetch_task(FORGE_CLIENTS_URL, "forge-clients.json");
+        // 1 arg endpoint
+        let vanilla_task = Self::spawn_clients_fetch_task(VANILLA_CLIENTS_URL);
+        let fabric_task = Self::spawn_clients_fetch_task(FABRIC_CLIENTS_URL);
+        let forge_task = Self::spawn_clients_fetch_task(FORGE_CLIENTS_URL);
         // -----------------------------------
 
         let (vanilla_res, fabric_res, forge_res) =
@@ -186,17 +175,21 @@ impl ClientManager {
         Ok(all_clients)
     }
 
-    fn load_from_cache(filename: &str) -> Result<Vec<Client>, DynError> {
+    fn load_from_cache_by_path(path: &str) -> Result<Vec<Client>, DynError> {
         let cache_path = {
             let root_dir = DATA
                 .root_dir
                 .lock()
                 .map_err(|e| std::io::Error::other(format!("Failed to lock root_dir: {e}")))?;
-            root_dir.join(API_CACHE_DIR).join(filename)
+            let cache_dir = root_dir.join(API_CACHE_DIR);
+            crate::core::network::cache::cache_file_path(&cache_dir, path)
         };
 
         if !cache_path.exists() {
-            log_warn!("Clients cache not found. Returning empty client list.");
+            log_warn!(
+                "Clients cache not found at {}. Returning empty client list.",
+                cache_path.display()
+            );
             return Ok(Vec::new());
         }
 

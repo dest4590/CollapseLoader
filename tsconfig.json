@@ -19,18 +19,17 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
-        "ignoreDeprecations": "6.0",
-        "baseUrl": ".",
         "paths": {
-            "@/*": ["src/*"],
-            "@shared/*": ["src/shared/*"],
-            "@features/*": ["src/features/*"],
-            "@api/*": ["src/api/*"],
-            "@services/*": ["src/services/*"],
-            "@layouts/*": ["src/layouts/*"],
-            "@router": ["src/router/index.ts"],
-            "@router/*": ["src/router/*"],
-            "@stores/*": ["src/stores/*"]
+            "*": ["./*"],
+            "@/*": ["./src/*"],
+            "@shared/*": ["./src/shared/*"],
+            "@features/*": ["./src/features/*"],
+            "@api/*": ["./src/api/*"],
+            "@services/*": ["./src/services/*"],
+            "@layouts/*": ["./src/layouts/*"],
+            "@router": ["./src/router/index.ts"],
+            "@router/*": ["./src/router/*"],
+            "@stores/*": ["./src/stores/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
