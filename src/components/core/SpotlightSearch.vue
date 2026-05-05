@@ -7,7 +7,6 @@ import {
     Home,
     Settings,
     Palette,
-    Users,
     Info,
     User,
     UserCheck,
