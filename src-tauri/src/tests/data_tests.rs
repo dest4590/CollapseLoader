@@ -41,7 +41,7 @@ fn remove_path_deletes_directory_with_readonly_file() {
     permissions.set_readonly(true);
     fs::set_permissions(&readonly_file, permissions).unwrap();
 
-    fs_utils::remove_path(&target_dir).unwrap();
+    crate::core::utils::fs::remove_path(&target_dir).unwrap();
 
     assert!(!target_dir.exists());
 }
