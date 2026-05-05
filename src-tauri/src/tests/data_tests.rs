@@ -2,7 +2,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::core::storage::data::{Data, FileInfo, LocalFileKind};
-use crate::core::utils::fs as fs_utils;
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
