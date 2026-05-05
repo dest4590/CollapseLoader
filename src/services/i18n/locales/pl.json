@@ -298,6 +298,10 @@
         "initializing": "Inicjalizacja...",
         "connecting_servers": "Łączenie z serwerami...",
         "loading_user_data": "Ładowanie danych użytkownika...",
+        "greeting_morning": "Dzień dobry, {name}",
+        "greeting_afternoon": "Dzień dobry, {name}",
+        "greeting_evening": "Dobry wieczór, {name}",
+        "greeting_night": "Dobranoc, {name}",
         "setting_up": "Ustawianie...",
         "ready": "Gotowe!",
         "initializing_progress": "INICJALIZACJA LOADERA"

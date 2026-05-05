@@ -300,7 +300,11 @@
         "setting_up": "Налаштування...",
         "ready": "Готово!",
         "initializing_progress": "ІНІЦІАЛІЗАЦІЯ ЛОАДЕРА",
-        "loading_user_data": "Завантаження даних користувача..."
+        "loading_user_data": "Завантаження даних користувача...",
+        "greeting_morning": "Доброго ранку, {name}",
+        "greeting_afternoon": "Добрий день, {name}",
+        "greeting_evening": "Добрий вечір, {name}",
+        "greeting_night": "Доброї ночі, {name}"
     },
     "about": {
         "title": "Про CollapseLoader",

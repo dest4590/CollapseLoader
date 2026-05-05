@@ -300,7 +300,11 @@
         "setting_up": "正在设置...",
         "ready": "就绪！",
         "initializing_progress": "初始化加载程序",
-        "loading_user_data": "正在加载用户数据..."
+        "loading_user_data": "正在加载用户数据...",
+        "greeting_morning": "早上好，{name}",
+        "greeting_afternoon": "下午好，{name}",
+        "greeting_evening": "晚上好，{name}",
+        "greeting_night": "晚安，{name}"
     },
     "about": {
         "title": "关于 CollapseLoader",

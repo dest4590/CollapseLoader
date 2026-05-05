@@ -25,6 +25,19 @@
                 />
             </div>
 
+            <transition name="greeting-fade">
+                <div
+                    v-if="greeting"
+                    class="mt-3 text-sm font-medium tracking-wide"
+                    :class="{
+                        'text-gray-600': currentTheme === 'light',
+                        'text-white/40': currentTheme !== 'light',
+                    }"
+                >
+                    {{ t(greeting.key, { name: greeting.name }) }}
+                </div>
+            </transition>
+
             <div
                 class="w-96 progress-container mt-6 relative"
                 :class="{ invert: currentTheme === 'light' }"
@@ -67,8 +80,11 @@ import {
     nextTick,
     toRefs,
 } from "vue";
+import { useI18n } from "vue-i18n";
 import OdometerText from "./OdometerText.vue";
 import { animations, animationKeys } from "../../services/preloaderAnimations";
+
+const { t } = useI18n();
 
 const props = defineProps({
     show: { type: Boolean, required: true },
@@ -80,6 +96,28 @@ const props = defineProps({
 });
 
 const { loadingState, currentTheme } = toRefs(props);
+
+const greeting = computed(() => {
+    try {
+        const raw = localStorage.getItem("userData");
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        const name = data?.profile?.nickname || data?.info?.username;
+        if (!name) return null;
+        const hour = new Date().getHours();
+        const key =
+            hour >= 5 && hour < 12
+                ? "preloader.greeting_morning"
+                : hour >= 12 && hour < 18
+                  ? "preloader.greeting_afternoon"
+                  : hour >= 18 && hour < 23
+                    ? "preloader.greeting_evening"
+                    : "preloader.greeting_night";
+        return { key, name };
+    } catch {
+        return null;
+    }
+});
 
 const displayProgress = ref(0);
 
@@ -249,5 +287,14 @@ onBeforeUnmount(() => {
     box-shadow:
         0 0 12px rgba(255, 255, 255, 0.6),
         0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+.greeting-fade-enter-active {
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    transition-delay: 0.3s;
+}
+.greeting-fade-enter-from {
+    opacity: 0;
+    transform: translateY(4px);
 }
 </style>

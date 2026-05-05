@@ -300,7 +300,11 @@
         "setting_up": "Настройка...",
         "ready": "Готово!",
         "initializing_progress": "ИНИЦИАЛИЗАЦИЯ ЛОАДЕРА",
-        "loading_user_data": "Загрузка данных юзера..."
+        "loading_user_data": "Загрузка данных юзера...",
+        "greeting_morning": "Доброе утро, {name}",
+        "greeting_afternoon": "Добрый день, {name}",
+        "greeting_evening": "Добрый вечер, {name}",
+        "greeting_night": "Доброй ночи, {name}"
     },
     "about": {
         "codename": "Кодовое имя",

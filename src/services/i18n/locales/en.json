@@ -300,7 +300,11 @@
         "setting_up": "Setting up...",
         "ready": "Ready!",
         "initializing_progress": "INITIALIZING LOADER",
-        "loading_user_data": "Loading user data..."
+        "loading_user_data": "Loading user data...",
+        "greeting_morning": "Good morning, {name}",
+        "greeting_afternoon": "Good afternoon, {name}",
+        "greeting_evening": "Good evening, {name}",
+        "greeting_night": "Good night, {name}"
     },
     "about": {
         "title": "About CollapseLoader",

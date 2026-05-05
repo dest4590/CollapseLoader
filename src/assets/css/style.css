@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+    themes: false;
+}
 
 @plugin "daisyui/theme" {
     name: "dark";
