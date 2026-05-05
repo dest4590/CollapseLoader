@@ -2,11 +2,7 @@
     "$schema": "../gen/schemas/desktop-schema.json",
     "identifier": "default",
     "description": "Capability for the main window",
-    "windows": [
-        "main",
-        "network-debug",
-        "customization-inspector"
-    ],
+    "windows": ["main", "network-debug", "customization-inspector"],
     "permissions": [
         "core:default",
         "core:window:default",
@@ -17,8 +13,52 @@
         "opener:default",
         "notification:default",
         "dialog:default",
+
+        {
+            "identifier": "fs:allow-write-file",
+            "allow": [
+                "$APPDATA/**",
+                "$HOME/AppData/Roaming/CollapseLoader/**",
+                "$HOME/.local/share/CollapseLoader/**",
+                "$HOME/CollapseLoader/**",
+                "$HOME/Library/Application Support/CollapseLoader/**"
+            ]
+        },
+        {
+            "identifier": "fs:allow-read-file",
+            "allow": [
+                "$APPDATA/**",
+                "$HOME/AppData/Roaming/CollapseLoader/**",
+                "$HOME/.local/share/CollapseLoader/**",
+                "$HOME/CollapseLoader/**",
+                "$HOME/Library/Application Support/CollapseLoader/**"
+            ]
+        },
+        {
+            "identifier": "fs:allow-mkdir",
+            "allow": [
+                "$APPDATA/**",
+                "$HOME/AppData/Roaming/CollapseLoader/**",
+                "$HOME/.local/share/CollapseLoader/**",
+                "$HOME/CollapseLoader/**",
+                "$HOME/Library/Application Support/CollapseLoader/**"
+            ]
+        },
+        {
+            "identifier": "fs:allow-exists",
+            "allow": [
+                "$APPDATA/**",
+                "$HOME/AppData/Roaming/CollapseLoader/**",
+                "$HOME/.local/share/CollapseLoader/**",
+                "$HOME/CollapseLoader/**",
+                "$HOME/Library/Application Support/CollapseLoader/**"
+            ]
+        },
+
         "fs:default",
-        "fs:allow-write-text-file",
+        "fs:allow-appdata-read",
+        "fs:allow-appdata-write",
+
         "core:webview:allow-create-webview-window"
     ]
 }

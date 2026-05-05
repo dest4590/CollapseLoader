@@ -1,0 +1,641 @@
+<script setup lang="ts">
+import {
+    Home,
+    Info,
+    Settings,
+    Terminal,
+    LogIn,
+    User,
+    UserCog,
+    SlidersVertical,
+} from "lucide-vue-next";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { getIsDevelopment } from "@shared/utils/isDevelopment";
+
+const { t } = useI18n();
+
+const sidebarHelpVideo = new URL(
+    "../assets/videos/sidebar-help.mp4",
+    import.meta.url
+).href;
+const sidebarHelpKey = "sidebar-help-shown";
+const sidebarCenterKey = "sidebar-centered";
+const showSidebarHelp = ref(false);
+
+const props = defineProps<{
+    activeTab: string;
+    isOnline: boolean;
+    isAuthenticated: boolean;
+    position?: "left" | "right" | "top" | "bottom";
+    isMacOS: boolean;
+}>();
+
+const emit = defineEmits(["changeTab", "open-dev-menu", "update:position"]);
+const visible = ref(false);
+const isAltPressed = ref(false);
+const altPressCount = ref(0);
+const altPressTimeout = ref<number | null>(null);
+
+const isDev = ref(false);
+const isMacOS = computed(() => !!props.isMacOS);
+
+let homeClickCount = 0;
+const homeClickTimeout = ref<number | null>(null);
+
+const changeTab = (tab: string) => {
+    if (tab === "home") {
+        homeClickCount++;
+        if (homeClickTimeout.value) {
+            clearTimeout(homeClickTimeout.value);
+        }
+        homeClickTimeout.value = setTimeout(() => {
+            homeClickCount = 0;
+        }, 1500) as unknown as number;
+
+        if (homeClickCount === 5) {
+            homeClickCount = 0;
+            if (homeClickTimeout.value) {
+                clearTimeout(homeClickTimeout.value);
+            }
+            emit("open-dev-menu");
+        }
+    } else {
+        homeClickCount = 0;
+        if (homeClickTimeout.value) {
+            clearTimeout(homeClickTimeout.value);
+        }
+    }
+
+    emit("changeTab", tab);
+};
+
+const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Alt") {
+        altPressCount.value++;
+
+        if (altPressTimeout.value) {
+            clearTimeout(altPressTimeout.value);
+        }
+
+        altPressTimeout.value = setTimeout(() => {
+            altPressCount.value = 0;
+            altPressTimeout.value = null;
+        }, 600) as unknown as number;
+
+        if (altPressCount.value === 2) {
+            altPressCount.value = 0;
+            if (altPressTimeout.value) {
+                clearTimeout(altPressTimeout.value);
+                altPressTimeout.value = null;
+            }
+            isAltPressed.value = !isAltPressed.value;
+        }
+    }
+};
+
+const isDragging = ref(false);
+const isMouseDown = ref(false);
+const dragTarget = ref<string | null>(null);
+
+const onDrag = (event: MouseEvent) => {
+    if (!isMouseDown.value) return;
+
+    if (!isDragging.value) {
+        isDragging.value = true;
+        document.body.style.cursor = "grabbing";
+        document.body.style.userSelect = "none";
+    }
+
+    const { clientX, clientY } = event;
+    const { innerWidth, innerHeight } = window;
+    const titlebarHeight = 40;
+
+    const distLeft = clientX;
+    const distRight = innerWidth - clientX;
+    const distTop = clientY - titlebarHeight;
+    const distBottom = innerHeight - clientY;
+
+    const min = Math.min(distLeft, distRight, distTop, distBottom);
+    let newPos = "left";
+
+    if (min === distLeft) newPos = "left";
+    else if (min === distRight) newPos = "right";
+    else if (min === distTop) newPos = "top";
+    else if (min === distBottom) newPos = "bottom";
+
+    dragTarget.value = newPos;
+
+    if (newPos !== props.position) {
+        emit("update:position", newPos);
+    }
+};
+
+const startDrag = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest("button")) return;
+
+    isMouseDown.value = true;
+    if (showSidebarHelp.value) {
+        hideSidebarHelp();
+    }
+    document.addEventListener("mouseup", stopDrag);
+    document.addEventListener("mousemove", onDrag);
+};
+
+const stopDrag = () => {
+    isMouseDown.value = false;
+    if (isDragging.value) {
+        isDragging.value = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        dragTarget.value = null;
+    }
+    document.removeEventListener("mouseup", stopDrag);
+    document.removeEventListener("mousemove", onDrag);
+};
+
+const isCentered = ref(false);
+
+const toggleCenter = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (target.closest("button")) return;
+    isCentered.value = !isCentered.value;
+    try {
+        localStorage.setItem(sidebarCenterKey, isCentered.value.toString());
+    } catch {}
+    if (showSidebarHelp.value) {
+        hideSidebarHelp();
+    }
+};
+
+const currentPosition = computed(() => props.position || "left");
+
+const sidebarClasses = computed(() => {
+    const base =
+        "fixed bg-base-300 flex items-center shadow-md border-base-content/10 z-[90] transition-all duration-500 ease-in-out active:cursor-grabbing";
+
+    const pos = currentPosition.value;
+    const isNotMac = !isMacOS.value;
+
+    const verticalOffset = isNotMac ? "top-10" : "top-0";
+    const sidebarHeight = isNotMac ? "h-[calc(100vh-2.5rem)]" : "h-full";
+
+    if (pos === "left") {
+        return `${base} w-20 left-0 ${verticalOffset} flex-col py-6 border-r ${sidebarHeight}`;
+    }
+
+    if (pos === "right") {
+        return `${base} w-20 right-0 ${verticalOffset} flex-col py-6 border-l ${sidebarHeight}`;
+    }
+
+    if (pos === "top") {
+        return `${base} w-full h-20 left-0 ${verticalOffset} flex-row px-6 border-b`;
+    }
+
+    if (pos === "bottom") {
+        return `${base} w-full h-20 left-0 bottom-0 flex-row px-6 border-t`;
+    }
+
+    return "";
+});
+
+const tooltipClass = computed(() => {
+    const pos = currentPosition.value;
+    if (pos === "left") return "tooltip-right";
+    if (pos === "right") return "tooltip-left";
+    if (pos === "top") return "tooltip-bottom";
+    if (pos === "bottom") return "tooltip-top";
+    return "tooltip-right";
+});
+
+const containerClasses = computed(() => {
+    return [
+        "flex",
+        "gap-4",
+        ["top", "bottom"].includes(currentPosition.value)
+            ? "flex-row"
+            : "flex-col",
+    ];
+});
+
+const footerClasses = computed(() => {
+    const isHorizontal = ["top", "bottom"].includes(currentPosition.value);
+    return [isHorizontal ? "flex-row" : "flex-col", "flex", "gap-4"];
+});
+
+const animationClass = computed(() => {
+    if (!visible.value) {
+        if (currentPosition.value === "left") return "sidebar-hidden-left";
+        if (currentPosition.value === "right") return "sidebar-hidden-right";
+        if (currentPosition.value === "top") return "sidebar-hidden-top";
+        if (currentPosition.value === "bottom") return "sidebar-hidden-bottom";
+    }
+    return "sidebar-entered";
+});
+
+const helpTooltipClasses = computed(() => {
+    const pos = currentPosition.value;
+    if (pos === "left") return "left-24 top-16";
+    if (pos === "right") return "right-24 top-16";
+    if (pos === "top") return "left-1/2 top-32 transform -translate-x-1/2";
+    if (pos === "bottom")
+        return "left-1/2 bottom-24 transform -translate-x-1/2";
+    return "left-24 top-16";
+});
+
+const sidebarRef = ref<HTMLElement | null>(null);
+const helpTooltipRef = ref<HTMLElement | null>(null);
+
+const hideSidebarHelp = () => {
+    try {
+        localStorage.setItem(sidebarHelpKey, "true");
+    } catch {}
+    showSidebarHelp.value = false;
+};
+
+const handleDocumentClick = (event: MouseEvent) => {
+    const target = event.target as Node;
+    if (helpTooltipRef.value?.contains(target)) return;
+    if (sidebarRef.value?.contains(target)) return;
+    hideSidebarHelp();
+};
+
+watch(showSidebarHelp, (val) => {
+    if (val) document.addEventListener("click", handleDocumentClick);
+    else document.removeEventListener("click", handleDocumentClick);
+});
+
+onMounted(async () => {
+    window.addEventListener("keydown", handleKeyDown);
+
+    visible.value = false;
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            visible.value = true;
+        }, 40);
+    });
+
+    isDev.value = await getIsDevelopment();
+
+    try {
+        const shown = localStorage.getItem(sidebarHelpKey);
+        if (!shown) {
+            showSidebarHelp.value = true;
+        }
+
+        const centered = localStorage.getItem(sidebarCenterKey);
+        if (centered === "true") {
+            isCentered.value = true;
+        }
+    } catch {}
+});
+
+onUnmounted(() => {
+    window.removeEventListener("keydown", handleKeyDown);
+
+    if (homeClickTimeout.value) {
+        clearTimeout(homeClickTimeout.value);
+    }
+
+    if (altPressTimeout.value) {
+        clearTimeout(altPressTimeout.value);
+    }
+    document.removeEventListener("click", handleDocumentClick);
+});
+</script>
+
+<template>
+    <div v-if="isDragging" class="fixed inset-0 z-40 pointer-events-none">
+        <div
+            class="absolute left-0 top-10 w-20 border-2 border-dashed transition-all duration-200"
+            style="height: calc(100vh - 2.5rem)"
+            :class="[
+                dragTarget === 'left'
+                    ? 'border-primary  scale-105 opacity-100'
+                    : 'border-base-content/10 scale-100 opacity-50',
+            ]"
+        ></div>
+        <div
+            class="absolute right-0 top-10 w-20 border-2 border-dashed transition-all duration-200"
+            style="height: calc(100vh - 2.5rem)"
+            :class="[
+                dragTarget === 'right'
+                    ? 'border-primary  scale-105 opacity-100'
+                    : 'border-base-content/10 scale-100 opacity-50',
+            ]"
+        ></div>
+        <div
+            class="absolute left-0 top-10 w-full h-20 border-2 border-dashed transition-all duration-200"
+            :class="[
+                dragTarget === 'top'
+                    ? 'border-primary  scale-105 opacity-100'
+                    : 'border-base-content/10 scale-100 opacity-50',
+            ]"
+        ></div>
+        <div
+            class="absolute left-0 bottom-0 w-full h-20 border-2 border-dashed transition-all duration-200"
+            :class="[
+                dragTarget === 'bottom'
+                    ? 'border-primary  scale-105 opacity-100'
+                    : 'border-base-content/10 scale-100 opacity-50',
+            ]"
+        ></div>
+    </div>
+
+    <div
+        ref="sidebarRef"
+        :class="[sidebarClasses, animationClass, 'main-sidebar']"
+        @mousedown="startDrag"
+        @dblclick="toggleCenter"
+    >
+        <div
+            v-if="showSidebarHelp"
+            ref="helpTooltipRef"
+            :class="[
+                'sidebar-help-tooltip absolute z-60 p-3 w-80 origin-top-left bg-base-100 rounded-lg ml-3 mt-[100%]',
+                helpTooltipClasses,
+            ]"
+        >
+            <div class="flex flex-col gap-2">
+                <video
+                    class="w-full rounded-md mb-2"
+                    :src="sidebarHelpVideo"
+                    muted
+                    autoplay
+                    loop
+                    playsinline
+                    controls
+                ></video>
+                <div class="text-sm">
+                    <strong>{{ t("navigation.sidebar_help.title") }}</strong
+                    >&nbsp;{{ t("navigation.sidebar_help.tip") }}
+                </div>
+                <div class="flex justify-end mt-1 gap-2">
+                    <button
+                        class="btn btn-ghost btn-xs"
+                        @click.stop="hideSidebarHelp"
+                    >
+                        {{ t("navigation.sidebar_help.got_it") }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div
+            class="transition-all duration-500 ease-in-out basis-0"
+            :class="isCentered ? 'grow' : 'grow-0'"
+        ></div>
+
+        <div :class="[containerClasses, 'sidebar-items-container']">
+            <div
+                class="tooltip"
+                :class="[tooltipClass, 'tooltip-accent']"
+                :data-tip="t('navigation.home')"
+            >
+                <button
+                    class="btn btn-ghost btn-square rounded-lg transition-all relative sidebar-btn"
+                    :class="{
+                        'bg-primary text-primary-content shadow-lg scale-110':
+                            activeTab === 'home',
+                    }"
+                    @click="changeTab('home')"
+                >
+                    <Home class="w-5 h-5transition-transform duration-300" />
+                    <span
+                        v-if="!isOnline"
+                        class="absolute top-0 right-0 w-3 h-3 bg-error rounded-full border-2 border-base-300"
+                    ></span>
+                </button>
+            </div>
+
+            <div
+                class="tooltip tooltip-accent"
+                :class="tooltipClass"
+                :data-tip="t('navigation.settings')"
+            >
+                <button
+                    class="btn btn-ghost btn-square rounded-lg sidebar-btn"
+                    :class="{
+                        'bg-primary text-primary-content shadow-lg scale-110':
+                            activeTab === 'settings',
+                    }"
+                    @click="changeTab('settings')"
+                >
+                    <Settings
+                        class="w-5 h-5 settings-icon"
+                        :style="{
+                            transform:
+                                activeTab === 'settings'
+                                    ? 'rotate(180deg)'
+                                    : 'rotate(0deg)',
+                        }"
+                    />
+                </button>
+            </div>
+            <div
+                class="tooltip tooltip-accent"
+                :class="tooltipClass"
+                :data-tip="t('navigation.customization')"
+            >
+                <button
+                    class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn"
+                    :class="{
+                        'bg-primary text-primary-content shadow-lg scale-110':
+                            activeTab === 'customization',
+                    }"
+                    @click="changeTab('customization')"
+                >
+                    <SlidersVertical class="w-5 h-5" />
+                </button>
+            </div>
+
+            <div
+                v-show="isAltPressed"
+                class="tooltip tooltip-accent"
+                :class="tooltipClass"
+                :data-tip="t('navigation.logs')"
+            >
+                <button
+                    class="btn btn-ghost btn-square rounded-lg sidebar-btn"
+                    :class="{
+                        'bg-primary text-primary-content shadow-lg scale-110':
+                            activeTab === 'app_logs',
+                    }"
+                    @click="changeTab('app_logs')"
+                >
+                    <Terminal class="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+
+        <div
+            class="transition-all duration-500 ease-in-out basis-4"
+            :class="isCentered ? 'grow-0' : 'grow'"
+        ></div>
+
+        <div :class="[footerClasses, 'sidebar-footer-container']">
+            <div
+                class="tooltip tooltip-accent"
+                :class="tooltipClass"
+                :data-tip="
+                    isAuthenticated
+                        ? t('navigation.account')
+                        : t('auth.login.title')
+                "
+            >
+                <button
+                    class="btn btn-ghost btn-square rounded-lg relative sidebar-btn"
+                    :class="{
+                        'bg-primary text-primary-content shadow-lg scale-110': [
+                            'login',
+                            'register',
+                            'account',
+                        ].includes(activeTab),
+                    }"
+                    @click="changeTab(isAuthenticated ? 'account' : 'login')"
+                >
+                    <LogIn v-if="!isAuthenticated" class="w-5 h-5" />
+                    <UserCog v-if="isAuthenticated && isDev" class="w-5 h-5" />
+                    <User v-if="isAuthenticated && !isDev" class="w-5 h-5" />
+                </button>
+            </div>
+
+            <div
+                class="tooltip tooltip-accent"
+                :class="tooltipClass"
+                :data-tip="t('navigation.about')"
+            >
+                <button
+                    class="btn btn-ghost btn-square rounded-lg transition-all sidebar-btn"
+                    @click="changeTab('about')"
+                    :class="{
+                        'bg-primary text-primary-content shadow-lg scale-110':
+                            activeTab === 'about',
+                    }"
+                >
+                    <Info class="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+
+        <div
+            class="transition-all duration-500 ease-in-out basis-0"
+            :class="isCentered ? 'grow' : 'grow-0'"
+        ></div>
+    </div>
+</template>
+
+<style scoped>
+.btn-square {
+    transition:
+        all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-square:hover {
+    transform: scale(1.15);
+}
+
+.btn-square:active {
+    transform: scale(0.95);
+}
+
+.settings-icon {
+    transition: transform 1s ease;
+}
+
+.invert {
+    filter: invert(1);
+}
+
+.sidebar-btn,
+.btn-square.sidebar-btn,
+.btn-square.sidebar-btn > * {
+    border-radius: var(--radius-box, 0.5rem) !important;
+}
+
+.sidebar-btn {
+    will-change: transform, box-shadow;
+}
+
+.sidebar-hidden-left {
+    transform: translateX(-28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-hidden-right {
+    transform: translateX(28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-hidden-top {
+    transform: translateY(-28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-hidden-bottom {
+    transform: translateY(28px);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-entered {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+    transition:
+        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.6s ease;
+}
+
+.sidebar-hidden-left .sidebar-items-container > *,
+.sidebar-hidden-left .sidebar-footer-container > *,
+.sidebar-hidden-right .sidebar-items-container > *,
+.sidebar-hidden-right .sidebar-footer-container > *,
+.sidebar-hidden-top .sidebar-items-container > *,
+.sidebar-hidden-top .sidebar-footer-container > *,
+.sidebar-hidden-bottom .sidebar-items-container > *,
+.sidebar-hidden-bottom .sidebar-footer-container > * {
+    opacity: 0;
+    transform: scale(0.5) translateY(20px) rotate(-10deg);
+}
+
+.sidebar-entered .sidebar-items-container > *,
+.sidebar-entered .sidebar-footer-container > * {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotate(0deg);
+    transition:
+        transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.5s ease;
+}
+
+.sidebar-entered .sidebar-items-container > *:nth-child(1) {
+    transition-delay: 0.15s;
+}
+
+.sidebar-entered .sidebar-items-container > *:nth-child(2) {
+    transition-delay: 0.25s;
+}
+
+.sidebar-entered .sidebar-items-container > *:nth-child(3) {
+    transition-delay: 0.35s;
+}
+
+.sidebar-entered .sidebar-items-container > *:nth-child(4) {
+    transition-delay: 0.45s;
+}
+
+.sidebar-entered .sidebar-footer-container > *:nth-child(1) {
+    transition-delay: 0.55s;
+}
+
+.sidebar-entered .sidebar-footer-container > *:nth-child(2) {
+    transition-delay: 0.65s;
+}
+
+.sidebar-help-tooltip video {
+    max-height: 180px;
+}
+</style>

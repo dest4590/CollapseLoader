@@ -37,9 +37,9 @@ pub struct AccountManager {
 
 impl AccountManager {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.accounts_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.accounts_path = path;
+        })
     }
 
     pub fn add_account(&mut self, username: String, tags: Vec<String>) -> String {
@@ -104,6 +104,23 @@ impl AccountManager {
         } else {
             false
         }
+    }
+
+    pub fn reorder_accounts(&mut self, ordered_ids: Vec<String>) -> bool {
+        let mut reordered: Vec<Account> = Vec::with_capacity(ordered_ids.len());
+        for id in &ordered_ids {
+            if let Some(acc) = self.accounts.iter().find(|a| &a.id == id) {
+                reordered.push(acc.clone());
+            }
+        }
+        for acc in &self.accounts {
+            if !ordered_ids.contains(&acc.id) {
+                reordered.push(acc.clone());
+            }
+        }
+        self.accounts = reordered;
+        self.save_to_disk();
+        true
     }
 }
 

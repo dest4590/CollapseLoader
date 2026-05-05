@@ -3,8 +3,9 @@ use core::clients::{
     client::{Client, CLIENT_LOGS},
     manager::ClientManager,
 };
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, State};
 
+use crate::commands::utils::refresh_tray_menu;
 use crate::core::{
     clients::client::ClientType,
     network::servers::{ServerConnectivityStatus, SERVERS},
@@ -20,19 +21,22 @@ use crate::core::{
 };
 use crate::core::{
     storage::settings::SETTINGS,
-    utils::{discord_rpc, hashing::calculate_md5_hash, logging},
+    utils::{discord_rpc, hashing::calculate_md5_hash, helpers::hide_main_window, logging},
 };
 use crate::{
     core::{self, storage::data::DATA},
     log_debug, log_error, log_info, log_warn,
 };
 
+use serde::Serialize;
+use sysinfo::{Pid, ProcessesToUpdate, System};
+
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-fn get_client_by_id(
+pub(crate) fn get_client_by_id(
     id: u32,
     manager: &std::sync::Arc<std::sync::Mutex<ClientManager>>,
 ) -> Result<Client, String> {
@@ -43,7 +47,91 @@ fn get_client_by_id(
         .iter()
         .find(|c| c.id == id)
         .cloned()
-        .ok_or_else(|| "Client not found".to_string())
+        .ok_or_else(|| format!("Client with ID {id} not found"))
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ClientRamUsage {
+    pub client_id: u32,
+    pub is_running: bool,
+    pub process_count: usize,
+    pub pids: Vec<u32>,
+    pub total_memory_bytes: u64,
+    pub total_memory_mib: f64,
+    pub system_total_memory_bytes: u64,
+    pub system_total_memory_mib: f64,
+    pub system_memory_percent: f64,
+}
+
+fn collect_client_ram_usage(client: &Client) -> ClientRamUsage {
+    let pids = crate::core::utils::process::find_processes_by_filename(&client.filename)
+        .into_iter()
+        .filter_map(|pid| pid.parse::<u32>().ok())
+        .collect::<Vec<_>>();
+
+    let mut system = System::new_all();
+    system.refresh_memory();
+    let _ = system.refresh_processes(ProcessesToUpdate::All, true);
+
+    let total_memory_bytes = pids
+        .iter()
+        .filter_map(|pid| system.process(Pid::from_u32(*pid)))
+        .map(|process| process.memory())
+        .sum::<u64>();
+
+    let system_total_memory_bytes = system.total_memory();
+    let total_memory_mib = total_memory_bytes as f64 / 1024.0 / 1024.0;
+    let system_total_memory_mib = system_total_memory_bytes as f64 / 1024.0 / 1024.0;
+    let system_memory_percent = if system_total_memory_bytes > 0 {
+        (total_memory_bytes as f64 / system_total_memory_bytes as f64) * 100.0
+    } else {
+        0.0
+    };
+
+    ClientRamUsage {
+        client_id: client.id,
+        is_running: !pids.is_empty(),
+        process_count: pids.len(),
+        pids,
+        total_memory_bytes,
+        total_memory_mib,
+        system_total_memory_bytes,
+        system_total_memory_mib,
+        system_memory_percent,
+    }
+}
+
+fn with_client_manager<R>(
+    state: &State<'_, AppState>,
+    operation: impl FnOnce(&mut ClientManager) -> Result<R, String>,
+) -> Result<R, String> {
+    let mut manager = state
+        .clients
+        .manager
+        .lock()
+        .map_err(|_| "Failed to acquire lock on client manager".to_string())?;
+
+    operation(&mut manager)
+}
+
+fn with_custom_client_manager<R>(
+    state: &State<'_, AppState>,
+    operation: impl FnOnce(
+        &mut crate::core::storage::custom_clients::CustomClientManager,
+    ) -> Result<R, String>,
+) -> Result<R, String> {
+    let mut manager = state.custom_clients.lock();
+    operation(&mut manager)
+}
+
+fn refresh_tray_menu_after_client_change(
+    state: State<'_, AppState>,
+    result: Result<(), String>,
+) -> Result<(), String> {
+    if result.is_ok() {
+        refresh_tray_menu(state);
+    }
+    result
 }
 
 #[tauri::command]
@@ -77,6 +165,20 @@ pub async fn initialize_api(state: State<'_, AppState>) -> Result<(), String> {
         manager.clients = clients;
     }
 
+    let sync_enabled = crate::core::storage::settings::SETTINGS
+        .lock()
+        .map(|s| s.sync_client_settings.value)
+        .unwrap_or(false);
+
+    if sync_enabled {
+        if let Err(e) = crate::core::storage::data::DATA
+            .sync_all_installed_clients()
+            .await
+        {
+            log_warn!("Failed to sync all clients on startup: {}", e);
+        }
+    }
+
     Ok(())
 }
 
@@ -107,6 +209,115 @@ pub fn get_clients(state: State<'_, AppState>) -> Vec<Client> {
         .unwrap_or_default()
 }
 
+async fn verify_client_hash(
+    client: &Client,
+    jar_path: &std::path::Path,
+    app_handle: &AppHandle,
+    state: &State<'_, AppState>,
+) -> Result<(), String> {
+    let hash_verify_enabled = SETTINGS.lock().map(|s| s.hash_verify.value).unwrap_or(true);
+
+    if !hash_verify_enabled {
+        log_debug!(
+            "Hash verification disabled, skipping verification for client {}",
+            client.name
+        );
+        return Ok(());
+    }
+
+    log_info!("Hash verification is enabled for client '{}'", client.name);
+    emit_to_main_window(
+        app_handle,
+        "client-hash-verification-start",
+        &serde_json::json!({ "id": client.id, "name": client.name }),
+    );
+
+    log_info!(
+        "Verifying MD5 hash for client {} before launch",
+        client.name
+    );
+
+    let current_hash = calculate_md5_hash(jar_path)?;
+    if current_hash == client.md5_hash {
+        log_info!(
+            "MD5 hash verification successful for client {}",
+            client.name
+        );
+        emit_to_main_window(
+            app_handle,
+            "client-hash-verification-done",
+            &serde_json::json!({ "id": client.id, "name": client.name }),
+        );
+        return Ok(());
+    }
+
+    log_warn!(
+        "Hash mismatch for client {}. Expected: {}, Got: {}. Redownloading...",
+        client.name,
+        client.md5_hash,
+        current_hash
+    );
+
+    emit_to_main_window(
+        app_handle,
+        "client-hash-verification-failed",
+        &serde_json::json!({
+            "id": client.id,
+            "name": client.name,
+            "expected_hash": client.md5_hash,
+            "actual_hash": current_hash
+        }),
+    );
+
+    let _ = std::fs::remove_file(jar_path);
+    update_client_installed_status(client.id, false, state.clone())?;
+
+    log_info!("Redownloading client: {} (ID: {})", client.name, client.id);
+    client
+        .download(&state.clients.manager)
+        .await
+        .map_err(|e| {
+            if e.contains("Hash verification failed") {
+                format!("Hash verification failed for {}: The downloaded file is corrupted. Please try downloading again.", client.name)
+            } else {
+                format!("Failed to redownload client {}: {}", client.name, e)
+            }
+        })?;
+
+    emit_to_main_window(
+        app_handle,
+        "client-redownload-complete",
+        &serde_json::json!({ "id": client.id, "name": client.name }),
+    );
+
+    log_info!(
+        "Client {} redownloaded and verified successfully",
+        client.name
+    );
+    Ok(())
+}
+
+async fn ensure_agent_overlay() -> Result<(), String> {
+    match AgentOverlayManager::verify_agent_overlay_files().await {
+        Ok(true) => Ok(()),
+        Ok(false) => {
+            if !*SKIP_AGENT_OVERLAY_VERIFICATION {
+                log_warn!("Agent/overlay files verification failed, attempting to download...");
+                AgentOverlayManager::download_agent_overlay_files()
+                    .await
+                    .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))
+            } else {
+                log_debug!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
+                Ok(())
+            }
+        }
+        Err(e) => {
+            log_error!("Error verifying agent/overlay files: {}", e);
+            Ok(())
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn launch_client(
     id: u32,
@@ -115,7 +326,6 @@ pub async fn launch_client(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     let client = get_client_by_id(id, &state.clients.manager)?;
-
     let (_, jar_path) = client.get_launch_paths()?;
 
     if !jar_path.exists() {
@@ -130,13 +340,6 @@ pub async fn launch_client(
         ));
     }
 
-    let hash_verify_enabled = {
-        let settings = SETTINGS
-            .lock()
-            .map_err(|_| "Failed to access settings".to_string())?;
-        settings.hash_verify.value
-    };
-
     log_info!(
         "Launching '{}' (ID: {}, Play Count: {})...",
         client.name,
@@ -144,139 +347,40 @@ pub async fn launch_client(
         client.launches
     );
 
-    log_debug!(
-        "Resolution: Path='{}', HashCheck={}, OverlayCheck={}",
-        jar_path.display(),
-        if hash_verify_enabled {
-            "Enabled"
-        } else {
-            "Disabled"
-        },
-        if *SKIP_AGENT_OVERLAY_VERIFICATION {
-            "Skip"
-        } else {
-            "Run"
-        }
-    );
+    verify_client_hash(&client, &jar_path, &app_handle, &state).await?;
+    ensure_agent_overlay().await?;
 
-    if hash_verify_enabled {
-        log_info!("Hash verification is enabled for client '{}'", client.name);
-        emit_to_main_window(
-            &app_handle,
-            "client-hash-verification-start",
-            &serde_json::json!({
-                "id": id,
-                "name": client.name
-            }),
-        );
+    let sync_enabled = SETTINGS
+        .lock()
+        .map(|s| s.sync_client_settings.value)
+        .unwrap_or(false);
 
-        log_info!(
-            "Verifying MD5 hash for client {} before launch",
-            client.name
-        );
-        let current_hash = calculate_md5_hash(&jar_path)?;
-        if current_hash == client.md5_hash {
-            log_info!(
-                "MD5 hash verification successful for client {}",
-                client.name
-            );
-
-            emit_to_main_window(
-                &app_handle,
-                "client-hash-verification-done",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name
-                }),
-            );
-        } else {
-            log_warn!(
-                "Hash mismatch for client {}. Expected: {}, Got: {}. Redownloading...",
-                client.name,
-                client.md5_hash,
-                current_hash
-            );
-
-            emit_to_main_window(
-                &app_handle,
-                "client-hash-verification-failed",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name,
-                    "expected_hash": client.md5_hash,
-                    "actual_hash": current_hash
-                }),
-            );
-
-            if let Err(e) = std::fs::remove_file(&jar_path) {
-                log_warn!("Failed to remove corrupted client file: {}", e);
+    if sync_enabled {
+        let client_base = std::path::Path::new(&client.filename)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(&client.name)
+            .to_string();
+        if let Err(e) = crate::core::storage::data::DATA
+            .ensure_client_synced(&client_base)
+            .await
+        {
+            if !e.contains("5") {
+                log_warn!("Failed to sync client {} before launch: {}", client_base, e);
             }
-
-            update_client_installed_status(id, false, state.clone())?;
-
-            log_info!("Redownloading client: {} (ID: {})", client.name, id);
-            client
-                .download(&state.clients.manager)
-                .await
-                .map_err(|e| {
-                    if e.contains("Hash verification failed") {
-                        format!("Hash verification failed for {}: The downloaded file is corrupted. Please try downloading again.", client.name)
-                    } else {
-                        format!("Failed to redownload client {}: {}", client.name, e)
-                    }
-                })?;
-
-            emit_to_main_window(
-                &app_handle,
-                "client-redownload-complete",
-                &serde_json::json!({
-                    "id": id,
-                    "name": client.name
-                }),
-            );
-
-            log_info!(
-                "Client {} redownloaded and verified successfully",
-                client.name
-            );
-        }
-    } else {
-        log_debug!(
-            "Hash verification disabled, skipping verification for client {}",
-            client.name
-        );
-    }
-
-    match AgentOverlayManager::verify_agent_overlay_files().await {
-        Ok(true) => {}
-        Ok(false) => {
-            if !*SKIP_AGENT_OVERLAY_VERIFICATION {
-                log_warn!("Agent/overlay files verification failed, attempting to download...");
-                AgentOverlayManager::download_agent_overlay_files()
-                    .await
-                    .map_err(|e| format!("Failed to download required agent/overlay files: {e}"))?;
-            } else {
-                log_debug!("Agent/overlay files verification failed, but skipping download due to SKIP_AGENT_OVERLAY_VERIFICATION being enabled.");
-            }
-        }
-        Err(e) => {
-            log_error!("Error verifying agent/overlay files: {}", e);
         }
     }
 
-    let options = LaunchOptions::new(app_handle.clone(), user_token.clone(), false);
-
-    let minimize_on_launch = {
-        let settings = SETTINGS.lock().unwrap();
-        settings.minimize_to_tray_on_launch.value
-    };
+    let minimize_on_launch = SETTINGS
+        .lock()
+        .map(|s| s.minimize_to_tray_on_launch.value)
+        .unwrap_or(false);
 
     if minimize_on_launch {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            let _ = window.hide();
-        }
+        hide_main_window(&app_handle);
     }
 
+    let options = LaunchOptions::new(app_handle.clone(), user_token, false);
     client.run(options, state.clients.manager.clone()).await
 }
 
@@ -343,9 +447,29 @@ pub async fn download_client_only(
 
     let requirements_download = client.download_requirements(&app_handle);
 
-    log_debug!("Sent client download analytics for ID: {}", id);
-
     tokio::try_join!(client_download, requirements_download)?;
+
+    let sync_enabled = crate::core::storage::settings::SETTINGS
+        .lock()
+        .map(|s| s.sync_client_settings.value)
+        .unwrap_or(false);
+
+    if sync_enabled {
+        let client_base = crate::core::storage::data::Data::get_filename(&client.filename);
+        if let Err(e) = crate::core::storage::data::DATA
+            .ensure_client_synced(&client_base)
+            .await
+        {
+            if e.contains("5") {
+                log_warn!(
+                    "Failed to sync client {} after download: {}",
+                    client_base,
+                    e
+                );
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -468,25 +592,31 @@ pub fn get_latest_client_logs(id: u32) -> Result<String, String> {
 }
 
 #[tauri::command]
+pub async fn get_client_ram_usage(id: u32, state: State<'_, AppState>) -> Result<ClientRamUsage, String> {
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let client_clone = client.clone();
+    tokio::task::spawn_blocking(move || collect_client_ram_usage(&client_clone))
+        .await
+        .map_err(|e| format!("Failed to get client RAM usage: {e}"))
+}
+
+#[tauri::command]
 pub fn update_client_installed_status(
     id: u32,
     installed: bool,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Some(client) = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to acquire lock on client manager".to_string())?
-        .clients
-        .iter_mut()
-        .find(|c| c.id == id)
-    {
-        client.meta.installed = installed;
-        Ok(())
-    } else {
-        Err("Client not found".to_string())
-    }
+    let result = with_client_manager(&state, |manager| {
+        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == id) {
+            client.meta.installed = installed;
+            Ok(())
+        } else {
+            Err("Client not found".to_string())
+        }
+    });
+
+    refresh_tray_menu_after_client_change(state, result)
 }
 
 #[tauri::command]
@@ -512,30 +642,26 @@ pub fn increment_client_counter(
     counter_type: String,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    if let Some(client) = state
-        .clients
-        .manager
-        .lock()
-        .map_err(|_| "Failed to acquire lock on client manager".to_string())?
-        .clients
-        .iter_mut()
-        .find(|c| c.id == id)
-    {
-        match counter_type.as_str() {
-            "download" => {
-                client.downloads += 1;
+    let result = with_client_manager(&state, |manager| {
+        if let Some(client) = manager.clients.iter_mut().find(|c| c.id == id) {
+            match counter_type.as_str() {
+                "download" => {
+                    client.downloads += 1;
+                }
+                "launch" => {
+                    client.launches += 1;
+                }
+                _ => {
+                    return Err(format!("Invalid counter type: {counter_type}"));
+                }
             }
-            "launch" => {
-                client.launches += 1;
-            }
-            _ => {
-                return Err(format!("Invalid counter type: {counter_type}"));
-            }
+            Ok(())
+        } else {
+            Err("Client not found".to_string())
         }
-        Ok(())
-    } else {
-        Err("Client not found".to_string())
-    }
+    });
+
+    refresh_tray_menu_after_client_change(state, result)
 }
 
 #[tauri::command]
@@ -580,26 +706,24 @@ pub fn add_custom_client(
     main_class: String,
     java_path: Option<String>,
     java_args: Option<String>,
+    client_type: ClientType,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Adding new custom client: '{}'", name);
-    let mut manager = state.custom_clients.lock();
-
     let path_buf = PathBuf::from(file_path);
     let mut custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
     custom_client.java_path = java_path;
     custom_client.java_args = java_args;
+    custom_client.client_type = client_type;
 
     log_debug!("New custom client details: {:?}", custom_client);
-    manager.add_client(custom_client)
+    with_custom_client_manager(&state, |manager| manager.add_client(custom_client))
 }
 
 #[tauri::command]
 pub fn remove_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Removing custom client with ID: {}", id);
-    let mut manager = state.custom_clients.lock();
-
-    manager.remove_client(id)
+    with_custom_client_manager(&state, |manager| manager.remove_client(id))
 }
 
 #[tauri::command]
@@ -610,21 +734,21 @@ pub fn update_custom_client(
     main_class: Option<String>,
     java_path: Option<String>,
     java_args: Option<String>,
+    client_type: Option<ClientType>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Updating custom client with ID: {}", id);
-    let mut manager = state.custom_clients.lock();
-
     let updates = CustomClientUpdate {
         name,
         version,
         main_class,
         java_path,
         java_args,
+        client_type,
     };
 
     log_debug!("Applying updates to custom client ID {}: {:?}", id, updates);
-    manager.update_client(id, updates)
+    with_custom_client_manager(&state, |manager| manager.update_client(id, updates))
 }
 
 #[tauri::command]
@@ -635,9 +759,7 @@ pub async fn launch_custom_client(
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Attempting to launch custom client with ID: {}", id);
-    let custom_client = {
-        let mut manager = state.custom_clients.lock();
-
+    let custom_client = with_custom_client_manager(&state, |manager| {
         let client = manager
             .get_client_mut(id)
             .ok_or_else(|| "Custom client not found".to_string())?;
@@ -651,10 +773,11 @@ pub async fn launch_custom_client(
         let client_clone = client.clone();
         manager.save_to_disk();
 
-        client_clone
-    };
+        Ok(client_clone)
+    })?;
 
     custom_client.validate_file()?;
+
     log_debug!("Custom client file validated for '{}'", custom_client.name);
 
     log_info!("Launching custom client: {}", custom_client.name);
@@ -677,9 +800,7 @@ pub async fn launch_custom_client(
     };
 
     if minimize_on_launch {
-        if let Some(window) = app_handle.get_webview_window("main") {
-            let _ = window.hide();
-        }
+        hide_main_window(&app_handle);
     }
 
     client.run(options, state.clients.manager.clone()).await
@@ -780,6 +901,34 @@ pub async fn list_installed_mods(
 }
 
 #[tauri::command]
+pub async fn uninstall_mod(
+    id: u32,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let client = get_client_by_id(id, &state.clients.manager)?;
+
+    let mods_folder = match client.client_type {
+        ClientType::Fabric | ClientType::Forge | ClientType::Default => {
+            let (folder, _) = client.get_launch_paths().map_err(|e| e.to_string())?;
+            folder.join("mods")
+        }
+    };
+
+    let target_file = mods_folder.join(filename);
+
+    if !target_file.exists() {
+        return Err("Mod file does not exist".to_string());
+    }
+
+    tokio::fs::remove_file(target_file)
+        .await
+        .map_err(|e| format!("Failed to delete mod file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), String> {
     log_info!("Attempting to stop custom client with ID: {}", id);
     let custom_client = {
@@ -798,4 +947,172 @@ pub async fn stop_custom_client(id: u32, state: State<'_, AppState>) -> Result<(
     handle
         .await
         .map_err(|e| format!("Stop custom client task error: {e}"))?
+}
+
+#[tauri::command]
+pub fn open_custom_client_folder(id: u32, state: State<'_, AppState>) -> Result<(), String> {
+    log_info!("Attempting to open folder for custom client ID: {}", id);
+    let manager = state.custom_clients.lock();
+    let custom_client = manager
+        .get_client(id)
+        .cloned()
+        .ok_or_else(|| "Custom client not found".to_string())?;
+    drop(manager);
+
+    let folder = custom_client
+        .file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .to_path_buf();
+
+    if !folder.exists() {
+        return Err("Custom client folder does not exist".to_string());
+    }
+
+    let folder_absolute = folder
+        .canonicalize()
+        .map_err(|e| format!("Failed to get absolute path: {e}"))?;
+
+    opener::open(&folder_absolute).map_err(|e| format!("Failed to open folder: {e}"))
+}
+
+#[tauri::command]
+pub async fn list_installed_mods_custom(
+    id: u32,
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, String> {
+    let custom_client = {
+        let manager = state.custom_clients.lock();
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let mods_folder = custom_client
+        .file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .join("mods");
+
+    if !mods_folder.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut mods = Vec::new();
+    let mut entries = tokio::fs::read_dir(mods_folder)
+        .await
+        .map_err(|e| format!("Failed to read mods directory: {e}"))?;
+
+    while let Some(entry) = entries.next_entry().await.map_err(|e| e.to_string())? {
+        let path = entry.path();
+        if path.is_file() {
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.ends_with(".jar") {
+                    mods.push(filename.to_string());
+                }
+            }
+        }
+    }
+
+    Ok(mods)
+}
+
+#[tauri::command]
+pub async fn install_mod_for_custom_client(
+    id: u32,
+    url: String,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    log_info!(
+        "Installing mod for custom client {}: {} from {}",
+        id,
+        filename,
+        url
+    );
+
+    let custom_client = {
+        let manager = state.custom_clients.lock();
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let mods_folder = custom_client
+        .file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .join("mods");
+
+    tokio::fs::create_dir_all(&mods_folder)
+        .await
+        .map_err(|e| format!("Failed to create mods folder: {e}"))?;
+
+    let dest = mods_folder.join(&filename);
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&url)
+        .header("User-Agent", "CollapseLoader-Reborn")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download mod: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!(
+            "Download failed with status: {}",
+            response.status()
+        ));
+    }
+
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Failed to read mod response: {e}"))?;
+
+    tokio::fs::write(&dest, &bytes)
+        .await
+        .map_err(|e| format!("Failed to write mod file: {e}"))?;
+
+    log_info!(
+        "Successfully installed mod: {} ({} bytes)",
+        filename,
+        bytes.len()
+    );
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn uninstall_mod_custom(
+    id: u32,
+    filename: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let custom_client = {
+        let manager = state.custom_clients.lock();
+        manager
+            .get_client(id)
+            .cloned()
+            .ok_or_else(|| "Custom client not found".to_string())?
+    };
+
+    let mods_folder = custom_client
+        .file_path
+        .parent()
+        .ok_or_else(|| "Cannot determine client folder".to_string())?
+        .join("mods");
+
+    let target_file = mods_folder.join(filename);
+
+    if !target_file.exists() {
+        return Err("Mod file does not exist".to_string());
+    }
+
+    tokio::fs::remove_file(target_file)
+        .await
+        .map_err(|e| format!("Failed to delete mod file: {}", e))?;
+
+    Ok(())
 }

@@ -3,10 +3,14 @@ use crate::core::utils::globals::API_VERSION;
 use crate::log_debug;
 use std::thread;
 
+/// Handles sending anonymous usage analytics to the application's servers.
+///
+/// Note: Analytics are currently disabled as the project is closed.
 pub struct Analytics;
 
 impl Analytics {
-    // PROJECT CLOSED
+    /// Sends an event indicating that the loader has been launched.
+    // PROJECT CLOSED & ANALYTICS DISABLED
     #[allow(dead_code, unused)]
     pub fn send_start_analytics() {
         return;
@@ -17,7 +21,8 @@ impl Analytics {
         );
     }
 
-    // PROJECT CLOSED
+    /// Sends an event indicating that a specific game client has been launched.
+    // PROJECT CLOSED & ANALYTICS DISABLED
     #[allow(dead_code, unused)]
     pub fn send_client_analytics(client_id: u32, token: &str) {
         return;
@@ -25,7 +30,8 @@ impl Analytics {
         Self::send_analytics(&endpoint, "client analytics", Some(token));
     }
 
-    // PROJECT CLOSED
+    /// Sends an event indicating that a specific game client has been downloaded.
+    // PROJECT CLOSED & ANALYTICS DISABLED
     #[allow(dead_code, unused)]
     pub fn send_client_download_analytics(client_id: u32, token: &str) {
         return;
@@ -33,7 +39,8 @@ impl Analytics {
         Self::send_analytics(&endpoint, "client download analytics", Some(token));
     }
 
-    // PROJECT CLOSED
+    /// Internal helper to send an analytics request in a background thread.
+    // PROJECT CLOSED & ANALYTICS DISABLED
     #[allow(dead_code, unused)]
     fn send_analytics(endpoint: &str, analytics_type: &str, token: Option<&str>) {
         return;
@@ -64,6 +71,7 @@ impl Analytics {
         });
     }
 
+    /// Returns the URL of the currently selected API server.
     fn get_server_url(analytics_type: &str) -> Option<String> {
         let value = SERVERS.selected_api.read().unwrap().clone();
         match value {
@@ -75,6 +83,7 @@ impl Analytics {
         }
     }
 
+    /// Creates a blocking HTTP client for sending analytics.
     fn create_client() -> reqwest::blocking::Client {
         super::create_blocking_client(std::time::Duration::from_secs(10))
     }

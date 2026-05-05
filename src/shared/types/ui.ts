@@ -1,0 +1,80 @@
+export interface Client {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    md5_hash: string;
+    main_class: string;
+    show: boolean;
+    working: boolean;
+    insecure: boolean;
+    rating_avg?: number | null;
+    rating_count?: number;
+    launches: number;
+    downloads: number;
+    client_type?: string; // 'default' | 'fabric'
+    meta: {
+        [key: string]: any;
+        installed?: boolean;
+        is_custom?: boolean;
+        size?: string | number;
+    };
+}
+
+export interface CustomClient {
+    id: number;
+    name: string;
+    version: string;
+    filename: string;
+    file_path: string;
+    main_class: string;
+    description?: string;
+    created_at: string;
+    is_installed: boolean;
+    java_path?: string | null;
+    java_args?: string | null;
+    client_type: string;
+}
+
+export interface ClientDetails {
+    source_link: string;
+    screenshot_urls: string[];
+    created_at: string;
+    comments_count?: number;
+    rating_avg?: number | null;
+    rating_count?: number;
+    changelog_entries?: Array<{
+        version: string;
+        created_at: string;
+        content: string;
+    }>;
+}
+
+export interface ClientComment {
+    id: number;
+    client: number;
+    user: number;
+    author_username: string;
+    author_avatar: string | null;
+    content: string;
+    created_at: string;
+    updated_at?: string;
+}
+
+export interface InstallProgress {
+    percentage: number;
+    action: string;
+    isComplete: boolean;
+}
+
+export interface ClientRamUsage {
+    client_id: number;
+    is_running: boolean;
+    process_count: number;
+    pids: number[];
+    total_memory_bytes: number;
+    total_memory_mib: number;
+    system_total_memory_bytes: number;
+    system_total_memory_mib: number;
+    system_memory_percent: number;
+}

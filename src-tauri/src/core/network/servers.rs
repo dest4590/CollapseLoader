@@ -9,32 +9,46 @@ use std::time::Duration;
 use tokio::sync::watch;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
-const MAX_SERVER_CHECK_RETRIES: usize = 7;
-const SERVER_CHECK_RETRY_DELAY: Duration = Duration::from_millis(100);
+const MAX_SERVER_CHECK_RETRIES: usize = 5;
+const SERVER_CHECK_RETRY_DELAY: Duration = Duration::from_millis(300);
 
+/// Represents a remote server (API or CDN).
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Server {
+    /// The base URL of the server.
     pub url: String,
 }
 
+/// Represents the connectivity status of the application's infrastructure.
 #[derive(Debug, Clone, Serialize)]
 pub struct ServerConnectivityStatus {
+    /// Whether at least one CDN server is reachable.
     pub cdn_online: bool,
+    /// Whether at least one API server is reachable.
     pub api_online: bool,
 }
 
+/// Manages the collection of API and CDN servers, including health checks and selection.
 #[derive(Debug)]
 pub struct Servers {
+    /// List of available CDN servers.
     pub cdns: Vec<Server>,
+    /// List of available API servers.
     pub apis: Vec<Server>,
+    /// The currently selected CDN server for downloads.
     pub selected_cdn: RwLock<Option<Server>>,
+    /// The currently selected API server for requests.
     pub selected_api: RwLock<Option<Server>>,
+    /// The overall connectivity status.
     pub connectivity_status: Mutex<ServerConnectivityStatus>,
+    /// Sender for notifying when the initial server check is complete.
     pub check_complete_tx: watch::Sender<bool>,
+    /// Receiver for waiting on the initial server check.
     pub check_complete_rx: watch::Receiver<bool>,
 }
 
 impl Server {
+    /// Creates a new server instance with the given URL.
     pub fn new(url: &str) -> Self {
         Self {
             url: url.to_string(),
@@ -43,6 +57,7 @@ impl Server {
 }
 
 impl Servers {
+    /// Creates a new `Servers` instance and initializes it with default servers.
     pub fn new() -> Self {
         let cdns = CDN_SERVERS.to_vec();
         let apis = API_SERVERS.to_vec();
@@ -75,6 +90,7 @@ impl Servers {
         }
     }
 
+    /// Performs health checks on all servers and selects the best available ones.
     pub async fn check_servers(&self) {
         let client = super::create_client(REQUEST_TIMEOUT);
 
@@ -83,26 +99,11 @@ impl Servers {
             self.check_group(&client, &self.apis, &self.selected_api, "API")
         );
 
-        log_info!(
-            "Services: API [{}], CDN [{}]",
-            self.selected_api
-                .read()
-                .unwrap()
-                .as_ref()
-                .map(|api| format!("OK: {}", api.url))
-                .unwrap_or_else(|| "OFFLINE".to_string()),
-            self.selected_cdn
-                .read()
-                .unwrap()
-                .as_ref()
-                .map(|cdn| format!("OK: {}", cdn.url))
-                .unwrap_or_else(|| "OFFLINE".to_string()),
-        );
-
         self.set_status();
         let _ = self.check_complete_tx.send(true);
     }
 
+    /// Waits until the initial server health check has completed.
     pub async fn wait_for_initial_check(&self) {
         let mut rx = self.check_complete_rx.clone();
         if *rx.borrow_and_update() {
@@ -131,80 +132,16 @@ impl Servers {
                 server.url.clone()
             };
 
-            let mut ok = false;
+            let mut ok;
 
-            for attempt in 0..MAX_SERVER_CHECK_RETRIES {
-                match client.head(&url).send().await {
-                    Ok(resp) => {
-                        let status = resp.status();
-                        if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
-                            log_info!("{} Server {} is online (HEAD)", name, server.url);
-
-                            ok = true;
-                            break;
-                        } else {
-                            log_warn!(
-                                "{} Server {} returned status (HEAD): {} (attempt {}/{})",
-                                name,
-                                server.url,
-                                status,
-                                attempt + 1,
-                                MAX_SERVER_CHECK_RETRIES
-                            );
-                        }
-                    }
-                    Err(e) => {
-                        log_warn!(
-                            "Failed to connect to {} Server {} (HEAD): {} (attempt {}/{})",
-                            name,
-                            server.url,
-                            e,
-                            attempt + 1,
-                            MAX_SERVER_CHECK_RETRIES
-                        );
-                    }
-                }
-                if attempt + 1 < MAX_SERVER_CHECK_RETRIES {
-                    tokio::time::sleep(SERVER_CHECK_RETRY_DELAY).await;
-                }
-            }
+            ok = self
+                .probe_server(client, &url, "HEAD", &server.url, name)
+                .await;
 
             if !ok {
-                for attempt in 0..MAX_SERVER_CHECK_RETRIES {
-                    match client.get(&url).send().await {
-                        Ok(resp) => {
-                            let status = resp.status();
-                            if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
-                                log_info!("{} Server {} is online (GET)", name, server.url);
-
-                                ok = true;
-                                break;
-                            } else {
-                                log_warn!(
-                                    "{} Server {} returned status (GET): {} (attempt {}/{})",
-                                    name,
-                                    server.url,
-                                    status,
-                                    attempt + 1,
-                                    MAX_SERVER_CHECK_RETRIES
-                                );
-                            }
-                        }
-                        Err(e) => {
-                            log_warn!(
-                                "Failed to connect to {} Server {} (GET): {} (attempt {}/{})",
-                                name,
-                                server.url,
-                                e,
-                                attempt + 1,
-                                MAX_SERVER_CHECK_RETRIES
-                            );
-                        }
-                    }
-                    if attempt + 1 < MAX_SERVER_CHECK_RETRIES {
-                        tokio::time::sleep(SERVER_CHECK_RETRY_DELAY).await;
-                    }
-                }
+                ok = self
+                    .probe_server(client, &url, "GET", &server.url, name)
+                    .await;
             }
 
             if ok {
@@ -216,6 +153,58 @@ impl Servers {
 
         let mut lock = selected.write().unwrap();
         *lock = None;
+        log_warn!(
+            "{} server unreachable – all {} servers failed",
+            name,
+            servers.len()
+        );
+    }
+
+    async fn probe_server(
+        &self,
+        client: &Client,
+        url: &str,
+        method: &str,
+        display_url: &str,
+        name: &str,
+    ) -> bool {
+        let mut last_err: Option<String> = None;
+
+        for attempt in 0..MAX_SERVER_CHECK_RETRIES {
+            let result = if method == "HEAD" {
+                client.head(url).send().await
+            } else {
+                client.get(url).send().await
+            };
+
+            match result {
+                Ok(resp) => {
+                    let status = resp.status();
+                    if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
+                        log_info!("{} [{}] {} – online", name, method, display_url);
+                        return true;
+                    }
+                    last_err = Some(format!("HTTP {}", status.as_u16()));
+                }
+                Err(e) => {
+                    last_err = Some(e.to_string());
+                }
+            }
+
+            if attempt + 1 < MAX_SERVER_CHECK_RETRIES {
+                tokio::time::sleep(SERVER_CHECK_RETRY_DELAY).await;
+            }
+        }
+
+        log_warn!(
+            "{} [{}] {} – unreachable after {} attempts: {}",
+            name,
+            method,
+            display_url,
+            MAX_SERVER_CHECK_RETRIES,
+            last_err.as_deref().unwrap_or("unknown error")
+        );
+        false
     }
 
     pub fn set_status(&self) -> ServerConnectivityStatus {

@@ -5,27 +5,11 @@
         :class="{ 'animate-out': animateOut }"
         class="fixed inset-0 bg-base-300 flex items-center justify-center"
     >
-        <BootLogs
-            v-if="isDev"
-            :current-progress="currentProgress / 100"
-            :loading-state="loadingState"
-        />
-
         <div
             class="flex flex-col items-center justify-center h-full w-screen relative z-10"
         >
-            <div
-                v-if="!halloweenActive"
-                class="logo-wrapper mb-8 relative"
-                :style="maskStyle"
-            >
+            <div class="logo-wrapper mb-8 relative" :style="maskStyle">
                 <canvas ref="matrixCanvas" class="matrix-canvas"></canvas>
-            </div>
-            <div v-else class="w-48 h-48 mb-8">
-                <img
-                    src="../../assets/misc/ghosts.gif"
-                    class="w-full h-full object-contain"
-                />
             </div>
 
             <div class="loading-status mt-2">
@@ -81,20 +65,21 @@ import {
     onBeforeUnmount,
     onMounted,
     nextTick,
+    toRefs,
 } from "vue";
-import BootLogs from "./BootLogs.vue";
 import OdometerText from "./OdometerText.vue";
-import { animations, animationKeys } from "./preloaderAnimations";
+import { animations, animationKeys } from "../../services/preloaderAnimations";
 
 const props = defineProps({
     show: { type: Boolean, required: true },
     isDev: { type: Boolean, default: false },
     loadingState: { type: String, required: true },
     currentProgress: { type: Number, required: true },
-    halloweenActive: { type: Boolean, default: false },
     currentTheme: { type: String, default: "dark" },
     animationType: { type: String, default: "" },
 });
+
+const { loadingState, currentTheme } = toRefs(props);
 
 const displayProgress = ref(0);
 
@@ -172,47 +157,6 @@ watch(
         if (val) {
             animateOut.value = false;
             visible.value = true;
-            if (!props.halloweenActive)
-                nextTick(() => {
-                    pickAnimation();
-                    if (_matrixCleanup.value) {
-                        _matrixCleanup.value();
-                        _matrixCleanup.value = null;
-                    }
-                    const anim =
-                        animations[selectedAnimationKey.value] ||
-                        animations.matrix;
-                    _matrixCleanup.value = anim.initMatrix(
-                        matrixCanvas.value,
-                        props.currentTheme
-                    );
-                });
-        } else {
-            animateOut.value = true;
-            window.setTimeout(() => {
-                animateOut.value = false;
-                visible.value = false;
-            }, ANIMATE_OUT_MS);
-        }
-    }
-);
-
-onMounted(() => {
-    if (!props.halloweenActive)
-        nextTick(() => {
-            pickAnimation();
-            const anim =
-                animations[selectedAnimationKey.value] || animations.matrix;
-            _matrixCleanup.value = anim.initMatrix(
-                matrixCanvas.value,
-                props.currentTheme
-            );
-        });
-});
-watch(
-    () => props.halloweenActive,
-    (val) => {
-        if (!val)
             nextTick(() => {
                 pickAnimation();
                 if (_matrixCleanup.value) {
@@ -226,8 +170,28 @@ watch(
                     props.currentTheme
                 );
             });
+        } else {
+            animateOut.value = true;
+            window.setTimeout(() => {
+                animateOut.value = false;
+                visible.value = false;
+            }, ANIMATE_OUT_MS);
+        }
     }
 );
+
+onMounted(() => {
+    nextTick(() => {
+        pickAnimation();
+        const anim =
+            animations[selectedAnimationKey.value] || animations.matrix;
+        _matrixCleanup.value = anim.initMatrix(
+            matrixCanvas.value,
+            props.currentTheme
+        );
+    });
+});
+
 onBeforeUnmount(() => {
     if (_matrixCleanup.value) {
         _matrixCleanup.value();

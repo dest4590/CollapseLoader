@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
+import { ref, onMounted, watch, computed, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import AnimatedSlider from "../components/ui/AnimatedSlider.vue";
+import AnimatedSlider from "@shared/components/ui/AnimatedSlider.vue";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 import {
     RotateCcw,
     Plus,
@@ -26,35 +27,38 @@ import {
     Search,
     UserIcon,
     LogIn,
-    WifiOff,
     Minimize2,
     MousePointer2,
     Coffee,
     Terminal,
+    HardDrive,
+    RefreshCcw,
 } from "lucide-vue-next";
-import { useToast } from "../services/toastService";
-import type { ToastPosition } from "../types/toast";
-import { syncService, type SyncServiceState } from "../services/syncService";
-import { settingsService } from "../services/settingsService";
-import { globalUserStatus } from "../composables/useUserStatus";
-import { userService, type UserExternalAccount } from "../services/userService";
-import SyncStatus from "../components/common/SyncStatus.vue";
-import AddAccountModal from "../components/modals/social/account/AddAccountModal.vue";
-import EditAccountModal from "../components/modals/social/account/EditAccountModal.vue";
-import ResetConfirmModal from "../components/modals/settings/ResetConfirmModal.vue";
-import TelemetryInfoModal from "../components/modals/clients/TelemetryInfoModal.vue";
-import ChangeRootFolderModal from "../components/modals/settings/ChangeRootFolderModal.vue";
-import DeleteAccountConfirmModal from "../components/modals/social/account/DeleteAccountConfirmModal.vue";
+import { useToast } from "@shared/composables/useToast";
+import type { ToastPosition } from "@shared/types/toast";
+import { syncService } from "../services/syncService";
+import { settingsService } from "@services/settings/settingsService";
+import { globalUserStatus } from "@features/auth/useUserStatus";
+import {
+    userService,
+    type UserExternalAccount,
+} from "@features/auth/userService";
+import AddAccountModal from "@features/social/modals/AddAccountModal.vue";
+import EditAccountModal from "@features/social/modals/EditAccountModal.vue";
+import ResetConfirmModal from "@services/settings/modals/ResetConfirmModal.vue";
+import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue";
+import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
+import DeleteAccountConfirmModal from "@features/social/modals/DeleteAccountConfirmModal.vue";
 import SettingCard from "../components/settings/SettingCard.vue";
 import AccountCard from "../components/settings/AccountCard.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
     getCurrentLanguage,
-} from "../i18n";
+} from "@services/i18n";
 import { useI18n } from "vue-i18n";
-import { formatDate } from "../utils/utils";
-import { useModal } from "../services/modalService";
+import { formatDate } from "@shared/utils/utils";
+import { useModal } from "@shared/composables/useModal";
 
 interface Account {
     id: string;
@@ -113,9 +117,37 @@ const currentLanguage = ref(getCurrentLanguage());
 const isAuthenticated = computed(() => globalUserStatus.isAuthenticated.value);
 
 const filteredSettingsEntries = computed(() => {
+    const KEY_ORDER = [
+        "ram",
+        "language",
+        "discord_rpc_enabled",
+        "optional_telemetry",
+        "cordshare",
+        "irc_chat",
+        "hash_verify",
+        "sync_client_settings",
+        "dpi_bypass",
+        "minimize_to_tray_on_launch",
+        "close_to_tray",
+        "auto_update",
+        "autostart",
+        "java_path",
+        "java_args",
+    ];
+
     return Object.entries(settings)
         .filter(([, field]) => field.show)
-        .filter(([key]) => key !== "irc_chat");
+        .filter(([key]) => key !== "irc_chat")
+        .filter(([key]) => key !== "optional_telemetry")
+        .filter(([key]) => key !== "start_minimized")
+        .sort(([a], [b]) => {
+            const ai = KEY_ORDER.indexOf(a);
+            const bi = KEY_ORDER.indexOf(b);
+            if (ai === -1 && bi === -1) return 0;
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+        });
 });
 
 const handleSliderChange = () => {
@@ -515,6 +547,18 @@ const getFormattedLabel = (key: string) => {
         return "Custom Java Arguments";
     }
 
+    if (key === "auto_update") {
+        return t("settings.auto_update");
+    }
+
+    if (key === "autostart") {
+        return t("settings.autostart");
+    }
+
+    if (key === "start_minimized") {
+        return t("settings.start_minimized");
+    }
+
     return words
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
@@ -537,6 +581,8 @@ const generateRandomAccount = () => {
 };
 
 const selectedTag = ref<string | null>(null);
+
+const highlightedSetting = ref<string | null>(null);
 
 const uniqueTags = computed(() => {
     const tagSet = new Set<string>();
@@ -575,38 +621,7 @@ const selectTag = (tag: string) => {
     }
 };
 
-const syncState = ref<SyncServiceState>(syncService.getState());
-let unsubscribeSyncService: (() => void) | null = null;
-
-const handleUploadToCloud = async () => {
-    if (typeof t !== "function") {
-        console.error("Translation function t is not available");
-        addToast("Sync failed: Translation service not ready", "error");
-        return;
-    }
-
-    const toastAdapter = (message: string, type: string, duration?: number) => {
-        addToast(message, type as any, duration);
-    };
-
-    await syncService.manualSync(toastAdapter, t);
-};
-
-const handleDownloadFromCloud = async () => {
-    try {
-        await syncService.downloadFromCloud();
-        addToast(t("settings.download_success"), "success");
-        await loadSettings();
-        await loadAccounts();
-    } catch (error) {
-        addToast(t("settings.download_failed", { error }), "error");
-    }
-};
-
-const toggleAutoSync = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    syncService.setAutoSyncEnabled(target.checked);
-};
+// let unsubscribeSyncService: (() => void) | null = null;
 
 const handleLanguageChange = async (languageCode: string) => {
     try {
@@ -626,6 +641,36 @@ const openDataFolder = async () => {
     await invoke("open_data_folder");
 };
 
+const storageUsage = ref<{
+    clients: number;
+    libraries: number;
+    natives: number;
+    assets: number;
+    java: number;
+    other: number;
+    total: number;
+} | null>(null);
+const storageLoading = ref(false);
+
+const loadStorageUsage = async () => {
+    storageLoading.value = true;
+    try {
+        storageUsage.value = await invoke("get_storage_usage");
+    } catch (e) {
+        console.error("Failed to get storage usage", e);
+    } finally {
+        storageLoading.value = false;
+    }
+};
+
+const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return "0 B";
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024)
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
 const resetRequirements = async () => {
     try {
         await invoke("reset_requirements");
@@ -636,10 +681,121 @@ const resetRequirements = async () => {
     }
 };
 
+const draggedId = ref<string | null>(null);
+const dragOverId = ref<string | null>(null);
+
+let _ghostEl: HTMLElement | null = null;
+let _ghostOffsetX = 0;
+let _ghostOffsetY = 0;
+
+const _reorderAccounts = async (sourceId: string, targetId: string) => {
+    const fromIndex = accounts.value.findIndex((a) => a.id === sourceId);
+    const toIndex = accounts.value.findIndex((a) => a.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const reordered = [...accounts.value];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    accounts.value = reordered;
+    try {
+        await invoke("reorder_accounts", {
+            orderedIds: reordered.map((a) => a.id),
+        });
+    } catch (e) {
+        console.error("Failed to reorder accounts", e);
+        await loadAccounts();
+    }
+};
+
+const _onMouseMove = (e: MouseEvent) => {
+    if (!_ghostEl) return;
+    _ghostEl.style.top = `${e.clientY - _ghostOffsetY}px`;
+    _ghostEl.style.left = `${e.clientX - _ghostOffsetX}px`;
+
+    const cards = document.querySelectorAll<HTMLElement>("[data-account-id]");
+    let found: string | null = null;
+    for (const card of cards) {
+        const id = card.dataset.accountId;
+        if (!id || id === draggedId.value) continue;
+        const r = card.getBoundingClientRect();
+        if (
+            e.clientX >= r.left &&
+            e.clientX <= r.right &&
+            e.clientY >= r.top &&
+            e.clientY <= r.bottom
+        ) {
+            found = id;
+            break;
+        }
+    }
+    dragOverId.value = found;
+};
+
+const _onMouseUp = async () => {
+    document.removeEventListener("mousemove", _onMouseMove);
+    document.removeEventListener("mouseup", _onMouseUp);
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+
+    if (_ghostEl) {
+        _ghostEl.remove();
+        _ghostEl = null;
+    }
+
+    const sourceId = draggedId.value;
+    const targetId = dragOverId.value;
+    draggedId.value = null;
+    dragOverId.value = null;
+
+    if (sourceId && targetId) {
+        await _reorderAccounts(sourceId, targetId);
+    }
+};
+
+const startDrag = (e: MouseEvent, accountId: string) => {
+    e.preventDefault();
+    draggedId.value = accountId;
+    dragOverId.value = null;
+
+    // Find root card element
+    const cardEl =
+        ((e.currentTarget as HTMLElement)?.closest?.(
+            "[data-account-id]"
+        ) as HTMLElement) ??
+        document.querySelector<HTMLElement>(`[data-account-id="${accountId}"]`);
+
+    if (cardEl) {
+        const rect = cardEl.getBoundingClientRect();
+        _ghostOffsetX = e.clientX - rect.left;
+        _ghostOffsetY = e.clientY - rect.top;
+
+        const clone = cardEl.cloneNode(true) as HTMLElement;
+        clone.style.cssText = [
+            `position:fixed`,
+            `top:${rect.top}px`,
+            `left:${rect.left}px`,
+            `width:${rect.width}px`,
+            `z-index:9999`,
+            `pointer-events:none`,
+            `opacity:0.85`,
+            `transform:rotate(1.5deg) scale(1.03)`,
+            `box-shadow:0 20px 40px rgba(0,0,0,0.35)`,
+            `border-radius:0.5rem`,
+            `transition:none`,
+        ].join(";");
+        document.body.appendChild(clone);
+        _ghostEl = clone;
+    }
+
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "grabbing";
+    document.addEventListener("mousemove", _onMouseMove);
+    document.addEventListener("mouseup", _onMouseUp);
+};
+
 onMounted(async () => {
-    unsubscribeSyncService = syncService.subscribe((state) => {
-        syncState.value = state;
-    });
+    // unsubscribeSyncService = syncService.subscribe((state) => {
+    //     syncState.value = state;
+    // });
 
     await syncService.initializeSyncStatus();
 
@@ -657,13 +813,35 @@ onMounted(async () => {
         console.error("Failed to get system memory:", error);
         systemMemory.value = null;
     }
-});
 
-onUnmounted(() => {
-    if (unsubscribeSyncService) {
-        unsubscribeSyncService();
+    loadStorageUsage();
+
+    try {
+        const requested = localStorage.getItem("spotlight_highlight_setting");
+        if (requested) {
+            localStorage.removeItem("spotlight_highlight_setting");
+            highlightedSetting.value = requested;
+            await nextTick();
+
+            const el = document.querySelector<HTMLElement>(
+                `[data-setting-key="${requested}"]`
+            );
+            if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+
+            setTimeout(() => (highlightedSetting.value = null), 3000);
+        }
+    } catch (e) {
+        console.error("Failed to process spotlight highlight request", e);
     }
 });
+
+// onUnmounted(() => {
+//     if (unsubscribeSyncService) {
+//         unsubscribeSyncService();
+//     }
+// });
 
 watch(
     () => settings.enable_telemetry?.value,
@@ -703,9 +881,10 @@ const toastPositionOptions = [
     { value: "top-center", label: t("settings.toast_position.top_center") },
 ];
 
-const handleToastPositionChange = (position: ToastPosition) => {
-    toastPosition.value = position;
-    setToastPosition(position);
+const handleToastPositionChange = (position: string) => {
+    const pos = position as ToastPosition;
+    toastPosition.value = pos;
+    setToastPosition(pos);
 
     addToast(t("settings.toast_position.preview_message"), "info", 3000);
 };
@@ -728,19 +907,6 @@ const handleToastPositionChange = (position: ToastPosition) => {
                 >
                     <SettingsIcon class="w-4 h-4 mr-2" />
                     {{ t("settings.general") }}
-                </a>
-                <a
-                    @click="activeTab = 'sync'"
-                    class="tab transition-all duration-300"
-                    :class="{
-                        'tab-active transform scale-105 shadow-md bg-base-300':
-                            activeTab === 'sync',
-                        'hover:bg-base-300': activeTab !== 'sync',
-                    }"
-                    disabled
-                >
-                    <Cloud class="w-4 h-4 mr-2" />
-                    {{ t("settings.sync") }}
                 </a>
                 <a
                     @click="activeTab = 'accounts'"
@@ -767,7 +933,16 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 [key, field], index
                             ) in filteredSettingsEntries"
                             :key="key"
-                            class="h-full flex w-full"
+                            :data-setting-key="key"
+                            :class="[
+                                'flex w-full',
+                                key === 'java_path' || key === 'java_args'
+                                    ? 'lg:col-span-2'
+                                    : 'h-full',
+                                highlightedSetting === key
+                                    ? 'spotlight-highlight'
+                                    : '',
+                            ]"
                         >
                             <SettingCard
                                 :field="field"
@@ -831,6 +1006,18 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                     />
                                     <MousePointer2
                                         v-if="key === 'close_to_tray'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <RefreshCcw
+                                        v-if="key === 'auto_update'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <HardDrive
+                                        v-if="key === 'autostart'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <Minimize2
+                                        v-if="key === 'start_minimized'"
                                         class="w-5 h-5 text-primary"
                                     />
                                     <Coffee
@@ -901,38 +1088,64 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 </div>
 
                                 <div v-else-if="key === 'language'">
-                                    <select
-                                        :value="currentLanguage"
-                                        @change="
-                                            handleLanguageChange(
-                                                (
-                                                    $event.target as HTMLSelectElement
-                                                ).value
-                                            )
+                                    <AnimatedDropdown
+                                        :modelValue="currentLanguage"
+                                        :options="
+                                            availableLanguages.map((l) => ({
+                                                value: l.code,
+                                                label: `${l.nativeName} (${l.name})`,
+                                            }))
                                         "
-                                        class="select select-bordered select-sm w-48 bg-base-100"
-                                    >
-                                        <option
-                                            v-for="lang in availableLanguages"
-                                            :key="lang.code"
-                                            :value="lang.code"
-                                        >
-                                            {{ lang.nativeName }} ({{
-                                                lang.name
-                                            }})
-                                        </option>
-                                    </select>
+                                        direction="down"
+                                        @change="handleLanguageChange"
+                                    />
                                 </div>
 
                                 <div
                                     v-else-if="typeof field.value === 'boolean'"
                                 >
+                                    <div
+                                        v-if="key === 'autostart'"
+                                        class="flex flex-col items-end gap-2"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            v-model="field.value"
+                                            class="toggle toggle-primary toggle-sm"
+                                        />
+                                        <transition name="fade-slide">
+                                            <div
+                                                v-if="
+                                                    field.value &&
+                                                    settings.start_minimized
+                                                "
+                                                class="flex items-center gap-2 text-xs text-base-content/70"
+                                            >
+                                                <Minimize2
+                                                    class="w-3.5 h-3.5"
+                                                />
+                                                <span>{{
+                                                    t(
+                                                        "settings.start_minimized"
+                                                    )
+                                                }}</span>
+                                                <input
+                                                    type="checkbox"
+                                                    v-model="
+                                                        settings.start_minimized
+                                                            .value
+                                                    "
+                                                    class="toggle toggle-primary toggle-xs"
+                                                />
+                                            </div>
+                                        </transition>
+                                    </div>
                                     <input
-                                        type="checkbox"
-                                        v-if="
+                                        v-else-if="
                                             !isFeatureOnline(key) ||
                                             isAuthenticated
                                         "
+                                        type="checkbox"
                                         v-model="field.value"
                                         class="toggle toggle-primary toggle-sm"
                                     />
@@ -977,21 +1190,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             {{ $t("settings.toast_position.title") }}
                         </template>
                         <div>
-                            <select
+                            <AnimatedDropdown
                                 v-model="toastPosition"
-                                @change="
-                                    handleToastPositionChange(toastPosition)
-                                "
-                                class="select select-bordered select-sm w-48 bg-base-100"
-                            >
-                                <option
-                                    v-for="option in toastPositionOptions"
-                                    :key="option.value"
-                                    :value="option.value"
-                                >
-                                    {{ option.label }}
-                                </option>
-                            </select>
+                                :options="toastPositionOptions"
+                                direction="up"
+                                @change="handleToastPositionChange"
+                            />
                         </div>
                     </SettingCard>
                     <div
@@ -1037,163 +1241,116 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div
-                    v-else-if="activeTab === 'sync'"
-                    key="sync"
-                    class="space-y-3"
-                >
                     <div
                         class="card bg-base-200 shadow-md border border-base-300"
                     >
                         <div class="card-body p-3">
-                            <h2
-                                class="card-title text-base font-semibold text-primary-focus mb-2 flex items-center gap-2"
-                            >
-                                <Cloud class="w-5 h-5" />
-                                {{ t("settings.sync_status") }}
-                            </h2>
-                            <SyncStatus />
-                        </div>
-                    </div>
-
-                    <div
-                        class="card bg-base-200 shadow-md border border-base-300"
-                    >
-                        <div class="card-body p-4">
-                            <h2
-                                class="card-title text-lg font-semibold text-primary-focus mb-4 flex items-center gap-2"
-                            >
-                                <SettingsIcon class="w-5 h-5" />
-                                {{ t("settings.sync_controls") }}
-                            </h2>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div
-                                    class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors"
+                            <div class="flex items-center justify-between mb-3">
+                                <h2
+                                    class="card-title text-sm font-semibold text-primary-focus flex items-center gap-2"
                                 >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <Upload class="w-5 h-5 text-primary" />
-                                        <h3 class="font-semibold">
-                                            {{ t("settings.upload_title") }}
-                                        </h3>
-                                    </div>
-                                    <p
-                                        class="text-sm text-base-content/70 mb-2"
-                                    >
-                                        {{ t("settings.upload_description") }}
-                                    </p>
-                                    <button
-                                        @click="handleUploadToCloud"
-                                        class="btn btn-primary btn-sm w-full"
-                                        :disabled="
-                                            syncState.isSyncing ||
-                                            !syncState.isOnline ||
-                                            !isAuthenticated
-                                        "
-                                    >
-                                        <Upload class="w-4 h-4 mr-2" />
-                                        {{
-                                            syncState.isSyncing
-                                                ? t("settings.syncing")
-                                                : t("settings.upload_button")
-                                        }}
-                                    </button>
-                                </div>
-
-                                <div
-                                    class="p-3 border border-base-300 rounded-lg hover:bg-base-100 transition-colors"
+                                    <HardDrive class="w-5 h-5" />
+                                    {{ $t("settings.storage_usage") }}
+                                </h2>
+                                <button
+                                    @click="loadStorageUsage"
+                                    class="btn btn-ghost btn-xs btn-square"
                                 >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <Download class="w-5 h-5" />
-                                        <h3 class="font-semibold">
-                                            {{ t("settings.download_title") }}
-                                        </h3>
-                                    </div>
-                                    <p
-                                        class="text-sm text-base-content/70 mb-3"
-                                    >
-                                        {{ t("settings.download_description") }}
-                                    </p>
-                                    <button
-                                        @click="handleDownloadFromCloud"
-                                        class="btn btn-primary btn-sm w-full"
-                                        :disabled="
-                                            syncState.isSyncing ||
-                                            !syncState.isOnline ||
-                                            !syncState.hasCloudData ||
-                                            !isAuthenticated
-                                        "
-                                    >
-                                        <Download class="w-4 h-4 mr-2" />
-                                        {{
-                                            syncState.isSyncing
-                                                ? t("settings.syncing")
-                                                : t("settings.download_button")
-                                        }}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div
-                                class="mt-3 p-3 border border-base-300 rounded-lg"
-                            >
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <h3 class="font-semibold text-sm mb-1">
-                                            {{ t("settings.auto_sync") }}
-                                        </h3>
-                                        <p class="text-sm text-base-content/70">
-                                            {{
-                                                t(
-                                                    "settings.auto_sync_description"
-                                                )
-                                            }}
-                                        </p>
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        :checked="syncState.autoSyncEnabled"
-                                        @change="toggleAutoSync"
-                                        class="toggle toggle-primary"
-                                        :disabled="!isAuthenticated"
+                                    <RotateCcw
+                                        class="w-3.5 h-3.5"
+                                        :class="{
+                                            'animate-spin': storageLoading,
+                                        }"
                                     />
-                                </div>
+                                </button>
                             </div>
 
                             <div
-                                v-if="!isAuthenticated"
-                                class="mt-2 alert alert-warning py-2"
+                                v-if="storageLoading"
+                                class="flex justify-center py-4"
                             >
-                                <div class="flex items-center gap-2">
-                                    <LogIn class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.sync_login_required")
+                                <span
+                                    class="loading loading-spinner loading-sm text-primary"
+                                ></span>
+                            </div>
+
+                            <div v-else-if="storageUsage" class="space-y-2">
+                                <div
+                                    v-for="item in [
+                                        {
+                                            key: 'clients',
+                                            label: $t(
+                                                'settings.storage_clients'
+                                            ),
+                                            value: storageUsage.clients,
+                                        },
+                                        {
+                                            key: 'libraries',
+                                            label: $t(
+                                                'settings.storage_libraries'
+                                            ),
+                                            value: storageUsage.libraries,
+                                        },
+                                        {
+                                            key: 'natives',
+                                            label: $t(
+                                                'settings.storage_natives'
+                                            ),
+                                            value: storageUsage.natives,
+                                        },
+                                        {
+                                            key: 'assets',
+                                            label: $t(
+                                                'settings.storage_assets'
+                                            ),
+                                            value: storageUsage.assets,
+                                        },
+                                        {
+                                            key: 'java',
+                                            label: $t('settings.storage_java'),
+                                            value: storageUsage.java,
+                                        },
+                                        {
+                                            key: 'other',
+                                            label: $t('settings.storage_other'),
+                                            value: storageUsage.other,
+                                        },
+                                    ].sort((a, b) => b.value - a.value)"
+                                    :key="item.key"
+                                    class="flex items-center justify-between text-xs"
+                                >
+                                    <span class="text-base-content/70">{{
+                                        item.label
                                     }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <div
+                                            class="w-20 bg-base-300 rounded-full h-1.5"
+                                        >
+                                            <div
+                                                class="bg-primary h-1.5 rounded-full transition-all"
+                                                :style="{
+                                                    width:
+                                                        storageUsage.total > 0
+                                                            ? `${Math.min(100, (item.value / storageUsage.total) * 100).toFixed(0)}%`
+                                                            : '0%',
+                                                }"
+                                            ></div>
+                                        </div>
+                                        <span
+                                            class="font-mono font-medium w-16 text-right"
+                                            >{{ formatBytes(item.value) }}</span
+                                        >
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div
-                                v-if="!syncState.isOnline"
-                                class="mt-2 alert alert-warning py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <WifiOff class="w-4 h-4" />
+                                <div
+                                    class="border-t border-base-300 pt-2 flex items-center justify-between text-xs font-semibold"
+                                >
                                     <span>{{
-                                        t("settings.offline_warning")
+                                        $t("settings.storage_total")
                                     }}</span>
-                                </div>
-                            </div>
-
-                            <div
-                                v-else-if="!syncState.hasCloudData"
-                                class="mt-2 alert alert-info py-2"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <Cloud class="w-4 h-4" />
-                                    <span>{{
-                                        t("settings.no_cloud_data")
+                                    <span class="font-mono text-primary">{{
+                                        formatBytes(storageUsage.total)
                                     }}</span>
                                 </div>
                             </div>
@@ -1201,7 +1358,11 @@ const handleToastPositionChange = (position: ToastPosition) => {
                     </div>
                 </div>
 
-                <div v-else key="accounts" class="space-y-3 overflow-x-hidden">
+                <div
+                    v-else-if="activeTab === 'accounts'"
+                    key="accounts"
+                    class="space-y-3 overflow-x-hidden"
+                >
                     <div
                         class="card bg-base-200 shadow-md border border-base-300"
                     >
@@ -1232,6 +1393,7 @@ const handleToastPositionChange = (position: ToastPosition) => {
                             </div>
 
                             <div
+                                v-if="false"
                                 class="card bg-base-200 shadow-md border border-base-300 mb-3"
                             >
                                 <div class="card-body p-3 space-y-3">
@@ -1427,8 +1589,12 @@ const handleToastPositionChange = (position: ToastPosition) => {
                                 <AccountCard
                                     v-for="account in filteredAccounts"
                                     :key="account.id"
+                                    :data-account-id="account.id"
                                     :account="account"
                                     :formatDate="formatDate"
+                                    :isDragging="draggedId === account.id"
+                                    :isDragOver="dragOverId === account.id"
+                                    @drag-start="startDrag($event, account.id)"
                                     @set-active="setActiveAccount"
                                     @edit-account="editAccount"
                                     @delete-account="deleteAccount"
@@ -1573,5 +1739,26 @@ html[data-theme="dark"] .discord-icon {
 
 html[data-theme="light"] .discord-icon {
     filter: invert(0%);
+}
+
+.spotlight-highlight {
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.15),
+        0 6px 18px rgba(2, 6, 23, 0.04);
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    transition:
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+    border-radius: 0.5rem;
+    position: relative;
+}
+
+.spotlight-highlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) inset;
 }
 </style>

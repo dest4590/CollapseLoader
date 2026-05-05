@@ -27,6 +27,15 @@ fn get_history() -> &'static Mutex<Vec<NetworkRequest>> {
     NETWORK_HISTORY.get_or_init(|| Mutex::new(Vec::new()))
 }
 
+fn with_network_history<R>(operation: impl FnOnce(&mut Vec<NetworkRequest>) -> R) -> R {
+    let mut history = get_history().lock().unwrap();
+    operation(&mut history)
+}
+
+fn emit_network_event(app_handle: &AppHandle, event: &str, record: &NetworkRequest) {
+    let _ = app_handle.emit(event, record);
+}
+
 fn mask_auth_headers(
     mut headers: Option<std::collections::HashMap<String, String>>,
 ) -> Option<std::collections::HashMap<String, String>> {
@@ -80,7 +89,7 @@ pub async fn api_request(
         error_message: None,
     };
 
-    let _ = app_handle.emit("network-request", initial_request);
+    emit_network_event(&app_handle, "network-request", &initial_request);
 
     let req_method = reqwest::Method::from_bytes(method.to_ascii_uppercase().as_bytes())
         .map_err(|_| format!("Unsupported method: {}", method))?;
@@ -93,56 +102,58 @@ pub async fn api_request(
     }
 
     if let Some(ref b) = body {
-        let mut is_form_data = false;
-        if let Some(obj) = b.as_object() {
-            for (_, val) in obj {
-                if let Some(val_obj) = val.as_object() {
-                    if val_obj.get("__type").and_then(|v| v.as_str()) == Some("file") {
-                        is_form_data = true;
-                        break;
+        if !b.is_null() {
+            let mut is_form_data = false;
+            if let Some(obj) = b.as_object() {
+                for (_, val) in obj {
+                    if let Some(val_obj) = val.as_object() {
+                        if val_obj.get("__type").and_then(|v| v.as_str()) == Some("file") {
+                            is_form_data = true;
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        if is_form_data {
-            let mut form = reqwest::multipart::Form::new();
-            if let Some(obj) = b.as_object() {
-                for (key, val) in obj {
-                    if let Some(val_obj) = val.as_object() {
-                        if val_obj.get("__type").and_then(|v| v.as_str()) == Some("file") {
-                            let name = val_obj
-                                .get("name")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("file");
-                            let mime = val_obj
-                                .get("type")
-                                .and_then(|v| v.as_str())
-                                .unwrap_or("application/octet-stream");
-                            let data_b64 =
-                                val_obj.get("data").and_then(|v| v.as_str()).unwrap_or("");
-                            let data = base64::Engine::decode(
-                                &base64::engine::general_purpose::STANDARD,
-                                data_b64,
-                            )
-                            .map_err(|e| format!("Failed to decode base64: {}", e))?;
+            if is_form_data {
+                let mut form = reqwest::multipart::Form::new();
+                if let Some(obj) = b.as_object() {
+                    for (key, val) in obj {
+                        if let Some(val_obj) = val.as_object() {
+                            if val_obj.get("__type").and_then(|v| v.as_str()) == Some("file") {
+                                let name = val_obj
+                                    .get("name")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("file");
+                                let mime = val_obj
+                                    .get("type")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("application/octet-stream");
+                                let data_b64 =
+                                    val_obj.get("data").and_then(|v| v.as_str()).unwrap_or("");
+                                let data = base64::Engine::decode(
+                                    &base64::engine::general_purpose::STANDARD,
+                                    data_b64,
+                                )
+                                .map_err(|e| format!("Failed to decode base64: {}", e))?;
 
-                            let part = reqwest::multipart::Part::bytes(data)
-                                .file_name(name.to_string())
-                                .mime_str(mime)
-                                .map_err(|e| format!("Invalid mime type: {}", e))?;
-                            form = form.part(key.clone(), part);
+                                let part = reqwest::multipart::Part::bytes(data)
+                                    .file_name(name.to_string())
+                                    .mime_str(mime)
+                                    .map_err(|e| format!("Invalid mime type: {}", e))?;
+                                form = form.part(key.clone(), part);
+                            } else {
+                                form = form.text(key.clone(), val.to_string());
+                            }
                         } else {
                             form = form.text(key.clone(), val.to_string());
                         }
-                    } else {
-                        form = form.text(key.clone(), val.to_string());
                     }
                 }
+                rb = rb.multipart(form);
+            } else {
+                rb = rb.json(b);
             }
-            rb = rb.multipart(form);
-        } else {
-            rb = rb.json(b);
         }
     }
 
@@ -164,7 +175,7 @@ pub async fn api_request(
                 response_text: None,
                 error_message: Some(e.to_string()),
             };
-            let _ = app_handle.emit("network-response", rec.clone());
+            emit_network_event(&app_handle, "network-response", &rec);
             save_request_history(rec);
             return Err(e.to_string());
         }
@@ -179,7 +190,7 @@ pub async fn api_request(
     }
 
     let text = response.text().await.map_err(|e| e.to_string())?;
-    let response_size = Some(text.as_bytes().len() as u64);
+    let response_size = Some(text.len() as u64);
     let mut response_json: Option<serde_json::Value> = None;
 
     if !text.is_empty() {
@@ -208,7 +219,7 @@ pub async fn api_request(
         error_message: None,
     };
 
-    let _ = app_handle.emit("network-response", rec.clone());
+    emit_network_event(&app_handle, "network-response", &rec);
     save_request_history(rec);
 
     if let Some(j) = response_json {
@@ -220,19 +231,19 @@ pub async fn api_request(
 
 #[tauri::command]
 pub fn clear_network_history() {
-    let mut history = get_history().lock().unwrap();
-    history.clear();
+    with_network_history(|history| history.clear());
 }
 
 #[tauri::command]
 pub fn get_network_history() -> Result<Vec<NetworkRequest>, String> {
-    Ok(get_history().lock().unwrap().clone())
+    Ok(with_network_history(|history| history.clone()))
 }
 
 fn save_request_history(rec: NetworkRequest) {
-    let mut history = get_history().lock().unwrap();
-    history.push(rec);
-    if history.len() > 1000 {
-        history.remove(0);
-    }
+    with_network_history(|history| {
+        history.push(rec);
+        if history.len() > 1000 {
+            history.remove(0);
+        }
+    });
 }

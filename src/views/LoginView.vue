@@ -7,7 +7,7 @@
             @logged-in="$emit('logged-in')"
             @unverified="handleUnverified"
         />
-        <div class="text-center mt-6">
+        <div v-if="false" class="text-center mt-6">
             <p class="text-sm text-base-content/70">
                 {{ t("auth.login.register_link") }}
                 <a
@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import LoginForm from "../components/layout/forms/LoginForm.vue";
+import LoginForm from "@layouts/forms/LoginForm.vue";
 
 const { t } = useI18n();
 const emit = defineEmits(["logged-in", "change-view", "show-verify"]);

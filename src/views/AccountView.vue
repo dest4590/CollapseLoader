@@ -38,8 +38,26 @@
                                             :class="
                                                 roleBadge.className + ' text-sm'
                                             "
-                                            >{{ roleBadge.text }}</span
+                                            @click="
+                                                isLocalUser
+                                                    ? openRoleModal()
+                                                    : null
+                                            "
+                                            :style="
+                                                isLocalUser
+                                                    ? 'cursor: pointer'
+                                                    : ''
+                                            "
+                                            :title="
+                                                isLocalUser
+                                                    ? t(
+                                                          'modals.role_selection.description'
+                                                      ) || 'Сменить роль'
+                                                    : ''
+                                            "
                                         >
+                                            {{ roleBadge.text }}
+                                        </span>
                                         <button
                                             @click="openNicknameModal"
                                             class="btn btn-ghost btn-xs p-1"
@@ -165,6 +183,139 @@
                                     />
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+                <div class="card bg-base-200 shadow-md border border-base-300">
+                    <div class="card-body">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2
+                                class="card-title text-lg font-medium text-primary-focus"
+                            >
+                                {{ t("account.playtime_stats") }}
+                            </h2>
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="flex items-center gap-1.5 text-sm text-base-content/60"
+                                >
+                                    <Timer class="w-4 h-4" />
+                                    <span>{{
+                                        formatPlaytime(
+                                            localStats.totalPlaytimeMinutes
+                                        )
+                                    }}</span>
+                                </div>
+                                <button
+                                    v-if="
+                                        Object.keys(localStats.clientStats)
+                                            .length > 3
+                                    "
+                                    @click="openPlaytimeModal"
+                                    class="btn btn-ghost btn-xs gap-1 text-primary"
+                                >
+                                    <LayoutList class="w-3.5 h-3.5" />
+                                    {{
+                                        t("account.playtime_show_all", {
+                                            count: Object.keys(
+                                                localStats.clientStats
+                                            ).length,
+                                        })
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div
+                            v-if="
+                                Object.keys(localStats.clientStats).length === 0
+                            "
+                            class="text-center py-6 text-base-content/50"
+                        >
+                            <Gamepad2
+                                class="w-10 h-10 mx-auto mb-2 opacity-30"
+                            />
+                            <p>{{ t("account.playtime_no_data") }}</p>
+                        </div>
+
+                        <div v-else class="space-y-2">
+                            <div
+                                v-for="(
+                                    [clientName, stats], index
+                                ) in topClientStats"
+                                :key="clientName"
+                                class="flex items-center gap-3 p-3 bg-base-300/50 rounded-lg"
+                            >
+                                <span
+                                    class="text-base-content/30 text-xs font-mono w-4 text-right shrink-0"
+                                    >{{ index + 1 }}</span
+                                >
+                                <Gamepad2
+                                    class="w-4 h-4 text-primary shrink-0"
+                                />
+                                <div class="flex-1 min-w-0">
+                                    <div
+                                        class="flex items-center justify-between gap-2"
+                                    >
+                                        <span
+                                            class="font-medium truncate text-sm"
+                                            >{{ clientName }}</span
+                                        >
+                                        <span
+                                            class="text-primary font-semibold shrink-0 text-sm"
+                                            >{{
+                                                formatPlaytime(
+                                                    stats.playtimeMinutes
+                                                )
+                                            }}</span
+                                        >
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-1">
+                                        <div
+                                            class="flex-1 bg-base-content/10 rounded-full h-1"
+                                        >
+                                            <div
+                                                class="bg-primary h-1 rounded-full transition-all"
+                                                :style="{
+                                                    width:
+                                                        getPlaytimePercent(
+                                                            stats.playtimeMinutes
+                                                        ) + '%',
+                                                }"
+                                            ></div>
+                                        </div>
+                                        <span
+                                            class="text-xs text-base-content/40 shrink-0"
+                                        >
+                                            {{
+                                                t("account.playtime_launches", {
+                                                    count: stats.launches,
+                                                })
+                                            }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                v-if="
+                                    Object.keys(localStats.clientStats).length >
+                                    3
+                                "
+                                @click="openPlaytimeModal"
+                                class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm text-base-content/40 hover:text-base-content/70 hover:bg-base-300/40 transition-colors"
+                            >
+                                <ChevronDown class="w-4 h-4" />
+                                {{
+                                    t("account.playtime_more", {
+                                        count:
+                                            Object.keys(localStats.clientStats)
+                                                .length - 3,
+                                    })
+                                }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -304,7 +455,7 @@
                 </div>
             </div>
 
-            <div class="col-span-1 md:col-span-2">
+            <div v-if="!isLocalUser" class="col-span-1 md:col-span-2">
                 <div class="card bg-base-200 shadow-md border border-base-300">
                     <div class="card-body">
                         <h2
@@ -403,32 +554,38 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, onUnmounted, watch } from "vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
-import EditNicknameModal from "../components/modals/social/account/EditNicknameModal.vue";
-import SocialLinksModal from "../components/modals/social/account/SocialLinksModal.vue";
-import ChangePasswordConfirmModal from "../components/modals/social/account/ChangePasswordConfirmModal.vue";
-import LogoutConfirmModal from "../components/modals/social/account/LogoutConfirmModal.vue";
-import AvatarUploadModal from "../components/modals/social/account/AvatarUploadModal.vue";
-import UserAvatar from "../components/ui/UserAvatar.vue";
+import EditNicknameModal from "@features/social/modals/EditNicknameModal.vue";
+import SocialLinksModal from "@features/social/modals/SocialLinksModal.vue";
+import ChangePasswordConfirmModal from "@features/social/modals/ChangePasswordConfirmModal.vue";
+import LogoutConfirmModal from "@features/social/modals/LogoutConfirmModal.vue";
+import AvatarUploadModal from "@features/social/modals/AvatarUploadModal.vue";
+import RoleSelectionModal from "@features/social/modals/RoleSelectionModal.vue";
+import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import AchievementCard from "../components/features/profile/AchievementCard.vue";
-import { useUser } from "../composables/useUser";
-import { userService } from "../services/userService";
+import { useUser } from "@features/auth/useUser";
+import { userService } from "@features/auth/userService";
 import {
     achievementService,
     type Achievement,
     type UserAchievement,
-} from "../services/achievementService";
+} from "@features/social/achievementService";
 import {
     EditIcon,
     EyeIcon,
     EyeOffIcon,
     ChevronDown,
     ChevronUp,
+    Timer,
+    Gamepad2,
+    LayoutList,
 } from "lucide-vue-next";
-import getRoleBadge from "../utils/roleBadge";
-import { globalUserStatus } from "../composables/useUserStatus";
+import { localTrackerService } from "../services/localTrackerService";
+import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
+import getRoleBadge from "@features/social/utils/roleBadge";
+import { globalUserStatus } from "@features/auth/useUserStatus";
 import { syncService, SyncServiceState } from "../services/syncService";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -468,6 +625,7 @@ const loadingClients = ref(false);
 const selectedFavoriteClientId = ref<number | null>(null);
 const updatingFavoriteClient = ref(false);
 
+const user = useUser();
 const {
     username,
     email,
@@ -477,7 +635,11 @@ const {
     refreshUserData,
     updateUserProfile: updateGlobalUserProfile,
     logout,
-} = useUser();
+} = user;
+
+const isLocalUser = computed(() =>
+    localStorage.getItem("authToken")?.startsWith("local_")
+);
 
 const invisibleMode = computed({
     get: () => globalUserStatus.isInvisible.value,
@@ -526,6 +688,44 @@ const currentFavoriteClient = computed(() => {
 const roleBadge = computed(() => {
     return getRoleBadge(userInfo.value.role, (k: string) => t(k));
 });
+
+const localStats = computed(() => localTrackerService.getStats());
+
+const topClientStats = computed(() => {
+    const stats = localStats.value.clientStats;
+    return Object.entries(stats)
+        .sort(([, a], [, b]) => b.playtimeMinutes - a.playtimeMinutes)
+        .slice(0, 3);
+});
+
+const maxPlaytimeMinutes = computed(() => {
+    const stats = localStats.value.clientStats;
+    if (!Object.keys(stats).length) return 1;
+    return Math.max(...Object.values(stats).map((s) => s.playtimeMinutes), 1);
+});
+
+const getPlaytimePercent = (minutes: number) => {
+    return Math.round((minutes / maxPlaytimeMinutes.value) * 100);
+};
+
+const formatPlaytime = (minutes: number): string => {
+    if (!minutes) return "0m";
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h > 0 && m > 0) return `${h}h ${m}m`;
+    if (h > 0) return `${h}h`;
+    return `${m}m`;
+};
+
+const openPlaytimeModal = () => {
+    showModal(
+        "playtime-stats",
+        PlaytimeStatsModal,
+        { title: t("account.playtime_stats") },
+        {},
+        { close: () => hideModal("playtime-stats") }
+    );
+};
 
 const maskedEmail = computed(() => {
     const email = userInfo.value.email || "";
@@ -581,14 +781,11 @@ const getUnlockedAt = (achievementId: number) => {
 };
 
 const loadAchievements = async () => {
-    const userId = (useUser().info.value as any)?.id;
-    if (!userId) return;
-
     loadingAchievements.value = true;
     try {
         const [all, user] = await Promise.all([
             achievementService.getAllAchievements(),
-            achievementService.getUserAchievements(userId),
+            achievementService.getUserAchievements(),
         ]);
         achievements.value = all || [];
         userAchievements.value = user || [];
@@ -644,8 +841,9 @@ const handleFavoriteClientChange = async () => {
                 result.error || t("account.favorite_client_update_failed"),
                 "error"
             );
-            // Revert selection on error
+
             const profile = useUser().profile.value;
+
             if (profile && (profile as any).favorite_client_id) {
                 selectedFavoriteClientId.value = (
                     profile as any
@@ -767,6 +965,31 @@ const openNicknameModal = () => {
                 }
             },
             close: () => hideModal("edit-nickname"),
+        }
+    );
+};
+
+const openRoleModal = () => {
+    showModal(
+        "role-selection",
+        RoleSelectionModal,
+        { title: t("roles.local_user") },
+        { currentRole: userInfo.value.role },
+        {
+            "role-selected": async (newRole: string) => {
+                const result = await userService.updateUserProfile(
+                    null,
+                    undefined,
+                    newRole
+                );
+                if (result.success) {
+                    await refreshUserData();
+                    addToast(t("account.role_update_success"), "success");
+                } else {
+                    addToast(t("account.role_update_failed"), "error");
+                }
+            },
+            close: () => hideModal("role-selection"),
         }
     );
 };

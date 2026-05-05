@@ -1,14 +1,13 @@
 use super::common::JsonStorage;
+use crate::core::utils::globals::ROOT_DIR;
 use paste::paste;
 use serde::{Deserialize, Serialize};
-use std::{fmt, path::PathBuf, sync::Mutex as StdMutex};
-
-use crate::core::utils::globals::ROOT_DIR;
-use std::sync::LazyLock;
-
-const fn default_show_true() -> bool {
-    true
-}
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+    path::PathBuf,
+    sync::{LazyLock, Mutex as StdMutex},
+};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Setting<T> {
@@ -17,21 +16,33 @@ pub struct Setting<T> {
     pub show: bool,
 }
 
+const fn default_show_true() -> bool {
+    true
+}
+
 impl<T> Setting<T> {
     pub fn new(value: T, show: bool) -> Self {
         Self { value, show }
     }
 }
 
-impl<T> std::ops::Deref for Setting<T> {
-    type Target = T;
+impl<T: Default> Default for Setting<T> {
+    fn default() -> Self {
+        Self {
+            value: T::default(),
+            show: true,
+        }
+    }
+}
 
+impl<T> Deref for Setting<T> {
+    type Target = T;
     fn deref(&self) -> &Self::Target {
         &self.value
     }
 }
 
-impl<T> std::ops::DerefMut for Setting<T> {
+impl<T> DerefMut for Setting<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.value
     }
@@ -47,21 +58,23 @@ macro_rules! define_settings {
     (
         $(#[$attr:meta])*
         pub struct $name:ident {
-            $( $field:ident: Setting<$field_type:ty> = ($default_val:expr, $show_val:expr) ),* $(,)?
+            $(
+                $(#[doc = $doc:expr])?
+                $field:ident: $type:ty = ($default_val:expr, $show_val:expr)
+            ),* $(,)?
         }
     ) => {
         paste! {
             $(#[$attr])*
             #[derive(Clone, Debug, Serialize, Deserialize)]
             pub struct $name {
-                $(pub $field: Setting<$field_type>,)*
-                #[serde(skip)]
+                $(
+                    $(#[doc = $doc])?
+                    #[serde(default)]
+                    pub $field: Setting<$type>,
+                )*
+                #[serde(skip, default)]
                 pub config_path: PathBuf,
-            }
-
-            #[derive(Deserialize, Clone, Debug)]
-            pub struct [<Input $name>] {
-                $(pub $field: Setting<$field_type>,)*
             }
 
             impl Default for $name {
@@ -70,44 +83,57 @@ macro_rules! define_settings {
                         $(
                             $field: Setting::new($default_val, $show_val),
                         )*
-                        config_path: PathBuf::from(&*ROOT_DIR).join("config.json"),
+                        config_path: Self::config_path(),
                     }
                 }
             }
 
             impl $name {
-                pub fn from_input(input: [<Input $name>], config_path: PathBuf) -> Self {
-                    Self {
-                        $(
-                            $field: Setting {
-                                value: input.$field.value,
-                                show: $show_val,
-                            },
-                        )*
-                        config_path,
-                    }
+                pub fn config_path() -> PathBuf {
+                    PathBuf::from(&*ROOT_DIR).join("config.json")
+                }
+
+                fn apply_visibility_defaults(&mut self) {
+                    $( self.$field.show = $show_val; )*
+                }
+
+                pub fn from_input(mut input: Self, config_path: PathBuf) -> Self {
+                    input.config_path = config_path;
+                    input.apply_visibility_defaults();
+                    input
                 }
 
                 pub fn load_from_disk(path: PathBuf) -> Self {
-                    // update config_path here, because value is computed at runtime
-                    let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-                    loaded.config_path = path;
-                    $(
-                        loaded.$field.show = $show_val;
-                    )*
-                    loaded
+                    <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+                        loaded.config_path = path;
+                        loaded.apply_visibility_defaults();
+                    })
                 }
+
+                pub fn save(&self) {
+                    <Self as JsonStorage>::save_to_disk(self);
+                }
+
+                $(
+                    pub fn [<get_ $field>]() -> $type {
+                        SETTINGS.lock().unwrap().$field.value.clone()
+                    }
+
+                    pub fn [<set_ $field>](val: $type) {
+                        let mut lock = SETTINGS.lock().unwrap();
+                        lock.$field.value = val;
+                        lock.save();
+                    }
+                )*
             }
 
             impl JsonStorage for $name {
                 fn file_path(&self) -> &PathBuf {
                     &self.config_path
                 }
-
                 fn resource_name() -> &'static str {
                     "config"
                 }
-
                 fn create_default() -> Self {
                     Self::default()
                 }
@@ -118,25 +144,45 @@ macro_rules! define_settings {
 
 define_settings! {
     pub struct Settings {
-        ram: Setting<u32> = (2048, true),
-        theme: Setting<String> = ("dark".to_string(), false),
-        language: Setting<String> = ("en".to_string(), true),
-        discord_rpc_enabled: Setting<bool> = (true, true),
-        optional_telemetry: Setting<bool> = (true, true),
-        // cordshare: Setting<bool> = (true, true),
-        irc_chat: Setting<bool> = (true, true),
-        hash_verify: Setting<bool> = (true, true),
-        sync_client_settings: Setting<bool> = (true, true),
-        dpi_bypass: Setting<bool> = (false, true),
-        minimize_to_tray_on_launch: Setting<bool> = (false, true),
-        close_to_tray: Setting<bool> = (false, true),
-        java_path: Setting<String> = ("".to_string(), true),
-        java_args: Setting<String> = ("".to_string(), true),
+        ram: u32 = (2048, true),
+        theme: String = ("dark".to_string(), false),
+        language: String = ("en".to_string(), true),
+        discord_rpc_enabled: bool = (true, true),
+        optional_telemetry: bool = (true, true),
+        irc_chat: bool = (true, true),
+        hash_verify: bool = (true, true),
+        sync_client_settings: bool = (true, true),
+        dpi_bypass: bool = (false, true),
+        minimize_to_tray_on_launch: bool = (false, true),
+        close_to_tray: bool = (false, true),
+        java_path: String = ("".to_string(), true),
+        java_args: String = ("".to_string(), true),
+        auto_update: bool = (true, true),
+        autostart: bool = (false, true),
+        start_minimized: bool = (false, true),
     }
 }
 
-pub static SETTINGS: LazyLock<StdMutex<Settings>> = LazyLock::new(|| {
-    StdMutex::new(Settings::load_from_disk(
-        PathBuf::from(&*ROOT_DIR).join("config.json"),
-    ))
-});
+pub static SETTINGS: LazyLock<StdMutex<Settings>> =
+    LazyLock::new(|| StdMutex::new(Settings::load_from_disk(Settings::config_path())));
+
+#[rustfmt::skip]
+pub fn settings_schema() -> Vec<(String, String)> {
+    vec![
+        ("ram".to_string(), "settings.ram".to_string()),
+        ("language".to_string(), "settings.language".to_string()),
+        ("discord_rpc_enabled".to_string(), "settings.discord_rpc_enabled".to_string()),
+        ("optional_telemetry".to_string(), "settings.optional_telemetry".to_string()),
+        ("irc_chat".to_string(), "settings.irc_chat".to_string()),
+        ("hash_verify".to_string(), "settings.hash_verify".to_string()),
+        ("sync_client_settings".to_string(), "settings.sync_client_settings".to_string()),
+        ("dpi_bypass".to_string(), "settings.dpi_bypass".to_string()),
+        ("minimize_to_tray_on_launch".to_string(), "settings.minimize_to_tray_on_launch".to_string()),
+        ("close_to_tray".to_string(), "settings.close_to_tray".to_string()),
+        ("auto_update".to_string(), "settings.auto_update".to_string()),
+        ("autostart".to_string(), "settings.autostart".to_string()),
+        ("start_minimized".to_string(), "settings.start_minimized".to_string()),
+        ("java_path".to_string(), "settings.java_path".to_string()),
+        ("java_args".to_string(), "settings.java_args".to_string()),
+    ]
+}

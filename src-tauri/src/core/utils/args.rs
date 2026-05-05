@@ -1,10 +1,13 @@
 use std::env;
 
+/// Command-line arguments for the application.
 pub struct Args {
+    /// Whether to force the X11 backend on Linux.
     pub backend_fix: bool,
 }
 
 impl Args {
+    /// Parses command-line arguments from the environment.
     pub fn parse() -> Self {
         let args: Vec<String> = env::args().collect();
 
@@ -18,6 +21,7 @@ impl Args {
         Self { backend_fix }
     }
 
+    /// Prints the help message to the console.
     fn print_help() {
         println!("CollapseLoader v{}", env!("CARGO_PKG_VERSION"));
         println!("Usage: collapseloader [OPTIONS]");
@@ -27,6 +31,7 @@ impl Args {
         println!("  --help, -h       Print help information");
     }
 
+    /// Processes the parsed arguments and applies necessary environment fixes.
     pub fn process(&self) {
         #[cfg(target_os = "linux")]
         {

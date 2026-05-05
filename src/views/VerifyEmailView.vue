@@ -77,9 +77,9 @@
 import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { Mail } from "lucide-vue-next";
-import { apiPost, apiGet } from "../services/apiClient";
-import { getApiBaseWithVersion } from "../config";
-import { useToast } from "../services/toastService";
+import { apiPost, apiGet } from "@api/clients/internal";
+import { getApiBaseWithVersion } from "@/config";
+import { useToast } from "@shared/composables/useToast";
 
 const props = defineProps<{
     email: string;

@@ -21,11 +21,12 @@ use crate::core::{
     utils::{
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
-            IS_AARCH64, IS_LINUX, IS_MACOS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
+            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
             NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
             NATIVES_MACOS_FOLDER, PATH_SEPARATOR,
         },
         helpers::emit_to_main_window,
+        process::force_high_performance_gpu,
     },
 };
 use crate::{log_debug, log_error, log_info};
@@ -64,61 +65,60 @@ impl Client {
     }
 
     fn resolve_assets_dir(&self) -> PathBuf {
+        let root = DATA.root_dir.lock().unwrap();
         if self.client_type == ClientType::Fabric {
-            DATA.root_dir.lock().unwrap().join(ASSETS_FABRIC_FOLDER)
+            root.join(ASSETS_FABRIC_FOLDER)
         } else {
-            DATA.root_dir.lock().unwrap().join(ASSETS_FOLDER)
+            root.join(ASSETS_FOLDER)
+        }
+    }
+
+    fn resolve_linux_natives_path(root: &Path) -> PathBuf {
+        root.join(format!("{}{}", NATIVES_FOLDER, LINUX_SUFFIX))
+    }
+
+    fn resolve_macos_natives_path(root: &Path, use_legacy_layout: bool) -> PathBuf {
+        if IS_AARCH64 {
+            if use_legacy_layout {
+                root.join(format!(
+                    "{}{}{}{}",
+                    NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX, ARM64_SUFFIX
+                ))
+            } else {
+                root.join(NATIVES_MACOS_ARM64_FOLDER)
+            }
+        } else if use_legacy_layout {
+            root.join(format!(
+                "{}{}{}",
+                NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX
+            ))
+        } else {
+            root.join(NATIVES_MACOS_FOLDER)
+        }
+    }
+
+    fn resolve_default_natives_path(root: &Path, use_legacy_layout: bool) -> PathBuf {
+        if use_legacy_layout {
+            root.join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
+        } else {
+            root.join(NATIVES_FOLDER)
         }
     }
 
     fn resolve_natives_path(&self) -> PathBuf {
         let root = DATA.root_dir.lock().unwrap();
+        let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
 
-        if self.is_legacy_client() {
-            if IS_LINUX {
+        if IS_LINUX {
+            if self.is_legacy_client() {
                 root.join(NATIVES_LEGACY_LINUX_FOLDER)
-            } else if IS_MACOS {
-                if IS_AARCH64 {
-                    root.join(format!(
-                        "{}{}{}{}",
-                        NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX, ARM64_SUFFIX
-                    ))
-                } else {
-                    root.join(format!(
-                        "{}{}{}",
-                        NATIVES_FOLDER, LEGACY_SUFFIX, MACOS_SUFFIX
-                    ))
-                }
             } else {
-                root.join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
+                Self::resolve_linux_natives_path(&root)
             }
-        } else if self.meta.is_new {
-            if IS_LINUX {
-                root.join(format!("{}{}", NATIVES_FOLDER, LINUX_SUFFIX))
-            } else if IS_MACOS {
-                if IS_AARCH64 {
-                    root.join(NATIVES_MACOS_ARM64_FOLDER)
-                } else {
-                    root.join(NATIVES_MACOS_FOLDER)
-                }
-            } else {
-                root.join(NATIVES_FOLDER)
-            }
+        } else if IS_MACOS {
+            Self::resolve_macos_natives_path(&root, use_legacy_layout)
         } else {
-            if IS_LINUX {
-                root.join(format!("{}{}", NATIVES_FOLDER, LINUX_SUFFIX))
-            } else if IS_MACOS {
-                if IS_AARCH64 {
-                    root.join(format!(
-                        "{}{}{}",
-                        NATIVES_FOLDER, MACOS_SUFFIX, ARM64_SUFFIX
-                    ))
-                } else {
-                    root.join(NATIVES_MACOS_FOLDER)
-                }
-            } else {
-                root.join(format!("{}{}", NATIVES_FOLDER, LEGACY_SUFFIX))
-            }
+            Self::resolve_default_natives_path(&root, use_legacy_layout)
         }
     }
 
@@ -168,6 +168,8 @@ impl Client {
         client_folder: &Path,
         assets_dir: &Path,
     ) {
+        let effective_asset_index = self.effective_asset_index();
+
         cmd.arg("--username")
             .arg(username)
             .arg("--gameDir")
@@ -175,7 +177,7 @@ impl Client {
             .arg("--assetsDir")
             .arg(assets_dir)
             .arg("--assetIndex")
-            .arg(&self.meta.asset_index)
+            .arg(effective_asset_index)
             .arg("--uuid")
             .arg("N/A")
             .arg("--accessToken")
@@ -186,6 +188,22 @@ impl Client {
             .arg(&self.version)
             .arg("--client")
             .arg(&self.filename);
+    }
+
+    fn effective_asset_index(&self) -> String {
+        if !self.meta.asset_index.is_empty() {
+            return self.meta.asset_index.clone();
+        }
+
+        if self.version.contains("1.21") {
+            "1.21".to_string()
+        } else if self.version.contains("1.16") {
+            "1.16".to_string()
+        } else if self.version.contains("1.8.9") {
+            "1.8".to_string()
+        } else {
+            "1.16".to_string()
+        }
     }
 
     fn redact_sensitive_command(command: &str) -> String {
@@ -226,27 +244,30 @@ impl Client {
 
         let java_bin = self.resolve_java_bin();
 
+        #[cfg(windows)]
+        force_high_performance_gpu(&java_bin);
+
         let (client_folder, _) = self.get_launch_paths()?;
         let assets_dir = self.resolve_assets_dir();
         let natives_path = self.resolve_natives_path();
 
         let classpath = self.build_classpath()?;
 
-        let (_analytics, _irc, _lang, ram_mb) = self.get_launch_settings();
+        let (analytics, irc, lang, ram_mb) = self.get_launch_settings();
 
         let username = self.resolve_username();
 
-        //let agent_args = AgentArguments::new(
-        //    options.user_token,
-        //    self.name.clone(),
-        //    if self.meta.is_custom {
-        //        false
-        //    } else {
-        //        analytics
-        //    },
-        //    irc,
-        //    lang,
-        //);
+        let agent_args = AgentArguments::new(
+            options.user_token,
+            self.name.clone(),
+            if self.meta.is_custom {
+                false
+            } else {
+                analytics
+            },
+            irc,
+            lang,
+        );
 
         let agent_overlay_path = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
 
@@ -262,19 +283,27 @@ impl Client {
         #[cfg(target_os = "macos")]
         cmd.arg("-XstartOnFirstThread");
 
-        //let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
-        //if self.client_type != ClientType::Forge && !is_legacy_vanilla {
-        //    cmd.arg(format!(
-        //        "-javaagent:{}={}",
-        //        agent_overlay_path.join(AGENT_FILE).display(),
-        //        agent_args.encode()
-        //    ));
-        //}
+        #[cfg(target_os = "linux")]
+        {
+            cmd.env("__NV_PRIME_RENDER_OFFLOAD", "1");
+            cmd.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
+            cmd.env("__VK_LAYER_NV_optimus", "NVIDIA_only");
+            cmd.env("DRI_PRIME", "1");
+        }
+
+        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+        
+        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
+            cmd.arg(format!(
+                "-javaagent:{}={}",
+                agent_overlay_path.join(AGENT_FILE).display(),
+                agent_args.encode()
+            ));
+        }
 
         self.apply_java_args(&mut cmd);
 
         cmd.arg(format!("-Xmx{ram_mb}M"));
-
         cmd.arg(format!(
             "-Djava.library.path={}{}{}",
             natives_path.display(),
@@ -282,7 +311,13 @@ impl Client {
             agent_overlay_path.display()
         ));
 
-        cmd.arg("-cp").arg(classpath).arg(&self.main_class);
+        let actual_main_class = if self.client_type == ClientType::Forge {
+            "net.minecraft.launchwrapper.Launch".to_string()
+        } else {
+            self.main_class.clone()
+        };
+
+        cmd.arg("-cp").arg(classpath).arg(actual_main_class);
 
         if self.client_type == ClientType::Forge {
             cmd.arg("--tweakClass")
@@ -352,6 +387,24 @@ impl Client {
 
                     if let Ok(m) = manager.lock() {
                         let _ = m.update_status_on_client_exit(&app_handle);
+                    }
+
+                    let sync_enabled = SETTINGS
+                        .lock()
+                        .map(|s| s.sync_client_settings.value)
+                        .unwrap_or(false);
+
+                    if sync_enabled {
+                        #[cfg(target_family = "windows")]
+                        {
+                            let client_base = crate::core::storage::data::Data::get_filename(
+                                &self_clone.filename,
+                            );
+
+                            if let Err(e) = DATA.sync_options_back(&client_base).await {
+                                log_info!("Failed to sync options back for {}: {}", client_base, e);
+                            }
+                        }
                     }
 
                     emit_to_main_window(

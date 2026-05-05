@@ -1,15 +1,20 @@
 use crate::log_error;
 use native_dialog::{DialogBuilder, MessageLevel};
 
+/// Errors that can occur during the application's startup phase.
 #[derive(Debug, thiserror::Error)]
 pub enum StartupError {
+    /// WebView2 is not installed on Windows.
     #[error("WebView2 is not installed. Please install it from https://developer.microsoft.com/en-us/microsoft-edge/webview2/")]
     WebView2NotInstalled,
+    /// Automatic installation of WebView2 failed.
     #[error("Failed to install WebView2. Please install it manually from https://developer.microsoft.com/en-us/microsoft-edge/webview2/")]
     WebView2InstallFailed,
+    /// Failed to check if WebView2 is installed.
     #[error("Failed to check for WebView2: {0}")]
     WebView2CheckFailed(String),
 
+    /// Required Linux dependencies (WebKitGTK) are missing.
     #[cfg(target_os = "linux")]
     #[error(
         "Linux dependencies are missing (WebKitGTK).\n\n\
@@ -24,6 +29,7 @@ pub enum StartupError {
     )]
     LinuxDependenciesMissing,
 
+    /// Warning about WebKit rendering issues on Linux.
     #[cfg(target_os = "linux")]
     #[error(
         "Linux rendering tip: WEBKIT_DISABLE_DMABUF_RENDERER is not set to 1.\n\n\
@@ -34,6 +40,7 @@ pub enum StartupError {
     )]
     LinuxWebKitWarning,
 
+    /// Warning about WebKit rendering issues on Linux with Wayland.
     #[cfg(target_os = "linux")]
     #[error(
         "Linux Wayland rendering tip: WEBKIT_DISABLE_DMABUF_RENDERER is not set to 1.\n\n\
@@ -44,11 +51,13 @@ pub enum StartupError {
     )]
     LinuxWebKitWaylandWarning,
 
+    /// Failed to set DPI awareness on Windows.
     #[error("Failed to set DPI awareness: {0}")]
     DpiAwarenessFailed(String),
 }
 
 impl StartupError {
+    /// Displays the error in a native dialog and exits the application.
     pub fn show_and_exit(&self) {
         let title = "Startup Error";
         let message = self.to_string();
@@ -65,6 +74,7 @@ impl StartupError {
         std::process::exit(1);
     }
 
+    /// Displays the error as a warning in a native dialog without exiting.
     pub fn show_warning(&self) {
         let title = "Warning";
         let message = self.to_string();

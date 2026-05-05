@@ -14,8 +14,8 @@ use crate::core::clients::manager::ClientManager;
 use crate::core::storage::data::{Data, DATA};
 use crate::core::utils::{
     globals::{
-        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, JDK21_FOLDER, JDK8_FOLDER,
-        MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
+        JDK8_FOLDER, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
     },
     process,
 };
@@ -41,48 +41,65 @@ fn sanitize_version_for_paths(version: &str) -> String {
 
 fn is_minecraft_version_dir_name(name: &str) -> bool {
     let parts: Vec<&str> = name.split('.').collect();
-    if !(2..=3).contains(&parts.len()) {
-        return false;
-    }
-    if parts[0] != "1" {
-        return false;
-    }
-    parts
-        .iter()
-        .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+    (2..=3).contains(&parts.len())
+        && parts[0] == "1"
+        && parts
+            .iter()
+            .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
 fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<PathBuf> {
     let mut jars = Vec::new();
-
     if !dir.exists() {
         return jars;
     }
 
     let mut dirs_to_visit = vec![(dir.to_path_buf(), 0)];
-    let max_depth = 8;
+    const MAX_DEPTH: usize = 15;
 
     while let Some((current_dir, depth)) = dirs_to_visit.pop() {
-        if depth >= max_depth {
+        if depth >= MAX_DEPTH {
             continue;
         }
 
-        if let Ok(entries) = std::fs::read_dir(&current_dir) {
-            for entry in entries.flatten() {
-                let path = entry.path();
-                if path.is_dir() {
-                    if skip_root_mc_version_dirs && current_dir == dir {
-                        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                            if is_minecraft_version_dir_name(name) {
-                                continue;
-                            }
+        let Ok(entries) = std::fs::read_dir(&current_dir) else {
+            continue;
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if skip_root_mc_version_dirs && current_dir == dir {
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if is_minecraft_version_dir_name(name) {
+                            continue;
                         }
                     }
-                    dirs_to_visit.push((path, depth + 1));
-                } else if path
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
-                {
+                }
+                dirs_to_visit.push((path, depth + 1));
+            } else if path
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
+            {
+                let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+                // Filter by platform (only for natives)
+                let is_native = filename.contains("natives");
+                let should_include = if is_native {
+                    if IS_WINDOWS {
+                        !filename.contains("-linux") && !filename.contains("-macos")
+                    } else if IS_LINUX {
+                        !filename.contains("-windows") && !filename.contains("-macos")
+                    } else if IS_MACOS {
+                        !filename.contains("-windows") && !filename.contains("-linux")
+                    } else {
+                        true
+                    }
+                } else {
+                    true
+                };
+
+                if should_include {
                     jars.push(path);
                 }
             }
@@ -270,6 +287,23 @@ impl Client {
         semver.major == 1 && semver.minor <= 12
     }
 
+    fn client_base_folder(&self) -> PathBuf {
+        let root = DATA.root_dir.lock().unwrap();
+
+        if self.meta.is_custom {
+            root.join(CUSTOM_CLIENTS_FOLDER).join(&self.name)
+        } else {
+            root.join(Data::get_filename(&self.filename))
+        }
+    }
+
+    fn jar_basename(&self) -> &str {
+        Path::new(&self.filename)
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or(&self.filename)
+    }
+
     fn jdk_folder_name(&self) -> &'static str {
         if self.client_type == ClientType::Forge {
             JDK8_FOLDER
@@ -297,58 +331,44 @@ impl Client {
 
     pub fn get_launch_paths(&self) -> Result<(PathBuf, PathBuf), String> {
         if self.meta.is_custom {
-            let folder = DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(CUSTOM_CLIENTS_FOLDER)
-                .join(&self.name);
+            let folder = self.client_base_folder();
             let jar = folder.join(&self.filename);
             return Ok((folder, jar));
         }
 
-        let base_name = Data::get_filename(&self.filename);
-        let folder = DATA.root_dir.lock().unwrap().join(&base_name);
+        let folder = self.client_base_folder();
 
         match self.client_type {
-            ClientType::Forge | ClientType::Fabric => {
-                let jar_basename = Path::new(&self.filename)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .ok_or("Invalid filename")?;
-                Ok((folder.clone(), folder.join(MODS_FOLDER).join(jar_basename)))
-            }
+            ClientType::Forge | ClientType::Fabric => Ok((
+                folder.clone(),
+                folder.join(MODS_FOLDER).join(self.jar_basename()),
+            )),
             ClientType::Default => {
-                let jar_basename = Path::new(&self.filename)
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or(&self.filename);
                 if self.filename.contains("fabric/") {
-                    Ok((folder.clone(), folder.join(MODS_FOLDER).join(jar_basename)))
+                    Ok((
+                        folder.clone(),
+                        folder.join(MODS_FOLDER).join(self.jar_basename()),
+                    ))
                 } else {
-                    Ok((folder.clone(), folder.join(jar_basename)))
+                    Ok((folder.clone(), folder.join(self.jar_basename())))
                 }
             }
         }
     }
 
     fn get_minecraft_jar_path(&self) -> PathBuf {
-        let safe_ver = sanitize_version_for_paths(&self.version);
-        match self.client_type {
-            ClientType::Fabric => DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(MINECRAFT_VERSIONS_FOLDER)
-                .join(format!("fabric_{}.jar", safe_ver)),
-            ClientType::Forge => DATA
-                .root_dir
-                .lock()
-                .unwrap()
-                .join(MINECRAFT_VERSIONS_FOLDER)
-                .join(format!("forge_{}.jar", safe_ver)),
-            ClientType::Default => self.get_launch_paths().unwrap_or_default().1,
+        if self.meta.is_custom && self.client_type == ClientType::Default {
+            return self.client_base_folder().join(&self.filename);
         }
+
+        let safe_ver = sanitize_version_for_paths(&self.version);
+        let root = DATA.root_dir.lock().unwrap();
+        root.join(MINECRAFT_VERSIONS_FOLDER)
+            .join(match self.client_type {
+                ClientType::Fabric => format!("fabric_{}.jar", safe_ver),
+                ClientType::Forge => format!("forge_{}.jar", safe_ver),
+                ClientType::Default => format!("{}.jar", safe_ver),
+            })
     }
 
     pub fn get_running_clients(manager: &Arc<Mutex<ClientManager>>) -> Vec<Self> {

@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
     computed,
-    nextTick,
     onBeforeUnmount,
     onMounted,
     ref,
@@ -24,18 +23,19 @@ import {
     Trash2,
     X,
 } from "lucide-vue-next";
-import SearchBar from "../components/common/SearchBar.vue";
-import ClientCard from "../components/features/clients/ClientCard.vue";
-import FiltersMenu from "../components/common/FiltersMenu.vue";
-import ModsManagerModal from "../components/modals/clients/ModsManagerModal.vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import SearchBar from "@shared/components/common/SearchBar.vue";
+import ClientCard from "@features/clients/components/ClientCard.vue";
+import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
+import ModsManagerModal from "@features/clients/modals/ModsManagerModal.vue";
+import ClientRamUsageModal from "@features/clients/modals/ClientRamUsageModal.vue";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { syncService } from "../services/syncService";
+import { achievementService } from "@features/social/achievementService";
 import { useI18n } from "vue-i18n";
-import type { Client, CustomClient, InstallProgress } from "../types/ui";
-import LogViewerModal from "../components/modals/clients/LogViewerModal.vue";
-import InsecureClientWarningModal from "../components/modals/clients/InsecureClientWarningModal.vue";
-import { isHalloweenEvent } from "../utils/events";
+import type { Client, CustomClient, InstallProgress } from "@shared/types/ui";
+import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
+import InsecureClientWarningModal from "@features/clients/modals/InsecureClientWarningModal.vue";
 
 interface Account {
     id: string;
@@ -54,7 +54,6 @@ interface Filters {
 }
 
 const { t } = useI18n();
-const halloweenActive = ref(isHalloweenEvent());
 
 const props = defineProps<{
     isOnline: boolean;
@@ -100,16 +99,7 @@ if (hasAnimatedBefore.value) {
     viewVisible.value = true;
 }
 
-const playClientSlideAnim = ref(!hasAnimatedBefore.value);
-
-const STAGGER_KEY = "staggerCardsPlayed";
-const hasStaggerPlayed = ref<boolean>(false);
-try {
-    hasStaggerPlayed.value = sessionStorage.getItem(STAGGER_KEY) === "1";
-} catch (e) {
-    console.error("Failed to read sessionStorage:", e);
-    hasStaggerPlayed.value = false;
-}
+const playClientSlideAnim = ref(true);
 
 const accounts = ref<Account[]>([]);
 const selectedAccountId = ref<string>("");
@@ -304,6 +294,7 @@ const contextMenu = ref({
 const selectedClients = shallowRef<Set<number>>(new Set());
 const isCtrlPressed = ref(false);
 let ctrlPressTimer: number | null = null;
+const isShiftHeld = ref(false);
 
 const blurHandler = () => {
     if (ctrlPressTimer !== null) {
@@ -616,6 +607,10 @@ const toggleFavorite = async (client: Client) => {
             await invoke("add_favorite_client", { clientId: client.id });
             favoriteClients.value = [...favoriteClients.value, client.id];
             addToast(t("home.favorite_added"), "success");
+
+            if (favoriteClients.value.length >= 5) {
+                void achievementService.unlockAchievement("COLLECTOR");
+            }
         }
 
         syncService.uploadToCloud().catch((err) => {
@@ -887,6 +882,24 @@ const openLogViewer = (client: Client) => {
         },
         {
             close: () => hideModal(`log-viewer-${client.id}`),
+        }
+    );
+};
+
+const openRamUsageModal = (client: Client) => {
+    showModal(
+        `ram-usage-${client.id}`,
+        ClientRamUsageModal,
+        {
+            title: t("modals.client_ram_usage.title"),
+            size: "lg",
+        },
+        {
+            clientId: client.id,
+            clientName: client.name,
+        },
+        {
+            close: () => hideModal(`ram-usage-${client.id}`),
         }
     );
 };
@@ -1541,6 +1554,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
         return;
     }
 
+    if (event.key === "Shift") {
+        isShiftHeld.value = true;
+    }
+
     if (event.key === "Control" && expandedClientId.value === null) {
         if (isCtrlPressed.value) return;
 
@@ -1551,7 +1568,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
         ctrlPressTimer = window.setTimeout(() => {
             isCtrlPressed.value = true;
             ctrlPressTimer = null;
-        }, 50);
+        }, 400);
         return;
     }
 
@@ -1581,6 +1598,10 @@ const handleKeyUp = (event: KeyboardEvent) => {
             ctrlPressTimer = null;
         }
         isCtrlPressed.value = false;
+    }
+
+    if (event.key === "Shift") {
+        isShiftHeld.value = false;
     }
 };
 
@@ -1657,6 +1678,8 @@ onMounted(async () => {
 
     await setupEventListeners();
 
+    viewVisible.value = true;
+
     setTimeout(() => {
         if (statusInterval.value === null && !isLeaving.value) {
             statusInterval.value = setInterval(
@@ -1671,52 +1694,6 @@ onMounted(async () => {
     document.addEventListener("click", handleDocumentClick);
     window.addEventListener("blur", blurHandler);
     document.addEventListener("visibilitychange", visibilityHandler);
-
-    if (!hasAnimatedBefore.value) {
-        await nextTick();
-        viewVisible.value = true;
-        if (filteredClients.value.length > 0) {
-            const totalDelay = Math.min(
-                Math.max(0, filteredClients.value.length) * 45 + 500,
-                2000
-            );
-            setTimeout(() => {
-                playClientSlideAnim.value = false;
-                try {
-                    sessionStorage.setItem(HOME_ANIM_KEY, "1");
-                    hasAnimatedBefore.value = true;
-                } catch (e) {
-                    console.error("Failed to set sessionStorage item:", e);
-                }
-            }, totalDelay);
-        } else {
-            try {
-                sessionStorage.setItem(HOME_ANIM_KEY, "1");
-                hasAnimatedBefore.value = true;
-            } catch (e) {
-                console.error("Failed to set sessionStorage item:", e);
-            }
-        }
-    }
-
-    try {
-        if (!hasStaggerPlayed.value) {
-            const maxIndex = Math.max(0, filteredClients.value.length - 1);
-            const perItemDelay = 70;
-            const animDuration = 400;
-            const total = maxIndex * perItemDelay + animDuration + 80;
-            setTimeout(() => {
-                try {
-                    sessionStorage.setItem(STAGGER_KEY, "1");
-                    hasStaggerPlayed.value = true;
-                } catch (e) {
-                    console.error("Failed to set stagger session key:", e);
-                }
-            }, total);
-        }
-    } catch (e) {
-        console.error("Error scheduling stagger flag:", e);
-    }
 });
 
 onBeforeUnmount(() => {
@@ -1770,46 +1747,37 @@ onBeforeUnmount(() => {
             :initial-value="searchQuery"
             :placeholder="t('home.search_placeholder')"
         />
-        <FiltersMenu
-            v-model:activeFilters="activeFilters"
-            v-model:clientSortKey="clientSortKey"
-            v-model:clientSortOrder="clientSortOrder"
-        />
-        <div
-            v-if="halloweenActive"
-            class="tooltip tooltip-bottom"
-            :data-tip="t('events.halloween.tooltip')"
-        >
-            <div
-                class="px-3 py-2 bg-warning/10 border border-warning/30 rounded-lg text-warning"
-            >
-                <span class="text-xl">🎃</span>
-            </div>
+        <div class="home-action-btn">
+            <FiltersMenu
+                v-model:activeFilters="activeFilters"
+                v-model:clientSortKey="clientSortKey"
+                v-model:clientSortOrder="clientSortOrder"
+            />
         </div>
         <div
-            class="tooltip tooltip-bottom"
+            class="tooltip tooltip-bottom home-action-btn"
             :data-tip="t('navigation.custom_clients')"
         >
             <button
                 @click="$emit('change-view', 'custom_clients')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 home-action-btn"
+                class="btn btn-ghost border-base-300 btn-primary gap-2"
                 :style="{
                     border: 'var(--border) solid #0000',
-                    transitionDelay: '0.5s',
                 }"
             >
                 <FileText class="w-4 h-4" />
             </button>
         </div>
-        <div class="tooltip tooltip-bottom" :data-tip="t('navigation.news')">
+        <div
+            class="tooltip tooltip-bottom home-action-btn"
+            :data-tip="t('navigation.news')"
+        >
             <button
                 @click="$emit('change-view', 'news')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 relative home-action-btn"
+                class="btn btn-ghost border-base-300 btn-primary gap-2 relative"
                 :style="{
                     border: 'var(--border) solid #0000',
-                    transitionDelay: '1s',
                 }"
-                disabled
             >
                 <Newspaper class="w-4 h-4" />
                 <span
@@ -1861,7 +1829,7 @@ onBeforeUnmount(() => {
     >
         <div
             v-for="(client, idx) in filteredClients"
-            :key="client.id"
+            :key="`${client.id}-${idx}`"
             :class="[
                 'client-card-item',
                 { 'slide-in-animate': playClientSlideAnim },
@@ -1886,9 +1854,11 @@ onBeforeUnmount(() => {
                 :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
                 :isHashVerifying="hashVerifyingClients.has(client.id)"
                 :isAnyCardExpanded="isAnyCardExpanded"
+                :isShiftHeld="isShiftHeld"
                 @launch="handleLaunchClick"
                 @download="downloadClient"
                 @open-log-viewer="openLogViewer"
+                @open-ram-viewer="openRamUsageModal"
                 @show-context-menu="showContextMenu"
                 @client-click="handleClientClick"
                 @expanded-state-changed="handleExpandedStateChanged"
@@ -2288,24 +2258,24 @@ onBeforeUnmount(() => {
 
 .home-search {
     opacity: 0;
-    transform: translateY(-30px) scale(0.995);
+    transform: translateY(-40px) scale(0.95);
     transition:
-        transform 0.6s cubic-bezier(0.2, 0.9, 0.2, 1),
+        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
         opacity 0.6s ease;
 }
 
 .home-entered .home-search {
     opacity: 1;
     transform: translateY(0) scale(1);
-    transition-delay: 0.08s;
+    transition-delay: 0.1s;
 }
 
 .home-action-btn {
     opacity: 0;
-    transform: translateY(-30px) scale(0.995);
+    transform: translateY(-40px) scale(0.95);
     transition:
-        transform 0.56s cubic-bezier(0.2, 0.9, 0.2, 1),
-        opacity 0.56s ease;
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.7s ease;
 }
 
 .home-entered .home-action-btn {
@@ -2313,40 +2283,36 @@ onBeforeUnmount(() => {
     transform: translateY(0) scale(1);
 }
 
-.home-entered .home-action-btn:nth-child(1) {
-    transition-delay: 0.12s;
+.home-entered .home-action-btn:nth-child(2) {
+    transition-delay: 0.2s;
 }
 
-.home-entered .home-action-btn:nth-child(2) {
-    transition-delay: 0.16s;
+.home-entered .home-action-btn:nth-child(3) {
+    transition-delay: 0.3s;
+}
+
+.home-entered .home-action-btn:nth-child(4) {
+    transition-delay: 0.4s;
 }
 
 .client-card-item {
     opacity: 1;
-}
-
-.client-card-item.stagger-animate {
-    opacity: 0;
-    transform: translateY(15px);
-    animation: fadeInUp 0.4s ease-out forwards;
+    transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.3s ease;
 }
 
 .client-card-item.slide-in-animate {
     opacity: 0;
-    transform: translateX(80px);
-    animation: slideInFromRight 0.42s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    transform: translateY(40px) scale(0.9) rotate(2deg);
+    animation: slideInFromBottom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     will-change: transform, opacity;
 }
 
-@keyframes slideInFromRight {
-    from {
-        opacity: 0;
-        transform: translateX(80px);
-    }
-
+@keyframes slideInFromBottom {
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(0) scale(1) rotate(0deg);
     }
 }
 

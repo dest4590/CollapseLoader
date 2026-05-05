@@ -1,3 +1,4 @@
+use crate::core::utils::{fs as fs_utils, misc};
 use crate::{log_error, log_warn};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
@@ -5,11 +6,19 @@ use std::{
     io::BufReader,
     path::PathBuf,
 };
+/// A trait for types that can be persisted to disk as JSON.
+///
+/// This trait provides default implementations for saving and loading data,
+/// including atomic writes using temporary files and automatic backups on corruption.
 pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
+    /// Returns the path to the file on disk.
     fn file_path(&self) -> &PathBuf;
+    /// Returns a human-readable name for the resource (used in logs).
     fn resource_name() -> &'static str;
+    /// Creates a default instance of the resource.
     fn create_default() -> Self;
 
+    /// Serializes the resource to JSON and saves it to disk atomically.
     fn save_to_disk(&self) {
         let file_path = self.file_path();
 
@@ -23,15 +32,14 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
 
         if let Some(parent) = file_path.parent() {
             if !parent.exists() {
-                if let Err(e) = fs::create_dir_all(parent) {
+                if let Err(e) = fs_utils::ensure_dir(parent) {
                     log_warn!("Failed to create dir for {}: {}", Self::resource_name(), e);
                     return;
                 }
             }
         }
 
-        let tmp_path = file_path.with_extension("tmp");
-        if let Err(e) = fs::write(&tmp_path, &data) {
+        if let Err(e) = fs_utils::atomic_write(file_path, data.as_bytes()) {
             log_error!(
                 "Failed to write temp file for {}: {}",
                 Self::resource_name(),
@@ -39,22 +47,14 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
             );
             return;
         }
-
-        if let Err(e) = fs::rename(&tmp_path, file_path) {
-            log_error!(
-                "Failed to finalize save for {}: {}",
-                Self::resource_name(),
-                e
-            );
-            let _ = fs::remove_file(tmp_path);
-        }
     }
 
+    /// Loads the resource from disk, falling back to defaults if the file is missing or corrupted.
     fn load_from_disk(file_path: PathBuf) -> Self {
         if !file_path.exists() {
             log_warn!(
                 "{} not found at {}, creating defaults",
-                Self::resource_name(),
+                misc::capitalize_first(Self::resource_name()),
                 file_path.display()
             );
             let default = Self::create_default();
@@ -91,5 +91,12 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                 default
             }
         }
+    }
+
+    /// Loads the resource and then restores transient fields such as file paths.
+    fn load_from_disk_with(file_path: PathBuf, post_load: impl FnOnce(&mut Self)) -> Self {
+        let mut loaded = Self::load_from_disk(file_path);
+        post_load(&mut loaded);
+        loaded
     }
 }

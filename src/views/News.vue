@@ -19,6 +19,18 @@
                     class="input input-bordered input-sm w-48 bg-base-100"
                     :placeholder="t('news.search_placeholder')"
                 />
+                <a
+                    href="https://t.me/collapseloader"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-sm btn-ghost gap-2 text-primary"
+                    :title="t('news.telegram')"
+                >
+                    <Send class="w-4 h-4" />
+                    <span class="hidden md:inline">{{
+                        t("news.telegram")
+                    }}</span>
+                </a>
                 <button
                     @click="fetchNews"
                     :disabled="loading"
@@ -82,7 +94,7 @@
             </div>
         </div>
 
-        <div v-else class="space-y-6">
+        <div v-else class="max-w-3xl mx-auto space-y-8 pb-12">
             <div
                 v-for="(article, index) in filteredNews"
                 :key="article.id"
@@ -115,7 +127,7 @@
 
                     <div
                         class="prose prose-sm max-w-none text-base-content/80 news-content"
-                        v-html="renderNewsContent(article.content)"
+                        v-html="article.content"
                     ></div>
 
                     <div
@@ -143,20 +155,14 @@ import {
     nextTick,
 } from "vue";
 import { useI18n } from "vue-i18n";
-import { useToast } from "../services/toastService";
-import { apiGet } from "../services/apiClient";
-import { getCurrentLanguage } from "../i18n";
-import { formatDate } from "../utils/utils";
-import { RefreshCcw } from "lucide-vue-next";
-
-interface NewsArticle {
-    id: number;
-    title: string;
-    content: string;
-    language: string;
-    created_at: string;
-    updated_at: string;
-}
+import { useToast } from "@shared/composables/useToast";
+import { getCurrentLanguage } from "@services/i18n";
+import { formatDate } from "@shared/utils/utils";
+import { RefreshCcw, Send } from "lucide-vue-next";
+import {
+    telegramNewsService,
+    type NewsArticle,
+} from "@services/telegramNewsService";
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -175,51 +181,25 @@ const emit = defineEmits<{
     "unread-count-updated": [count: number];
 }>();
 
-const getNewsUniqueId = (article: NewsArticle): string => {
-    return `news_${article.language}_${article.id}`;
-};
-
 const isNewsRead = (article: NewsArticle): boolean => {
-    const uniqueId = getNewsUniqueId(article);
-    const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
-    return readNews.includes(uniqueId);
+    return telegramNewsService.isRead(article);
 };
 
 const markNewsAsRead = (article: NewsArticle) => {
     if (isNewsRead(article)) return;
-    const uniqueId = getNewsUniqueId(article);
-    const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
-    if (!readNews.includes(uniqueId)) {
-        readNews.push(uniqueId);
-        localStorage.setItem("readNews", JSON.stringify(readNews));
-        updateUnreadCount();
-    }
+    telegramNewsService.markAsRead(article);
+    updateUnreadCount();
 };
 
 const updateUnreadCount = () => {
-    unreadCount.value = news.value.filter(
-        (article) => !isNewsRead(article)
-    ).length;
+    unreadCount.value = telegramNewsService.getUnreadCount(news.value);
     emit("unread-count-updated", unreadCount.value);
 };
 
 const markAllNewsAsRead = () => {
     if (news.value && news.value.length > 0) {
-        const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
-        let updated = false;
-
-        news.value.forEach((article) => {
-            const uniqueId = getNewsUniqueId(article);
-            if (!readNews.includes(uniqueId)) {
-                readNews.push(uniqueId);
-                updated = true;
-            }
-        });
-
-        if (updated) {
-            localStorage.setItem("readNews", JSON.stringify(readNews));
-            updateUnreadCount();
-        }
+        telegramNewsService.markAllAsRead(news.value);
+        updateUnreadCount();
     }
 };
 
@@ -228,27 +208,7 @@ const fetchNews = async () => {
     error.value = null;
 
     try {
-        const response = await apiGet("/news/", {
-            headers: {
-                "Accept-Language": currentLanguage.value,
-                "Content-Type": "application/json",
-            },
-        });
-
-        const allNews = response as NewsArticle[];
-
-        let filteredNews: NewsArticle[] = Array.isArray(allNews)
-            ? allNews.filter(
-                  (article) => article.language === currentLanguage.value
-              )
-            : [];
-
-        news.value = filteredNews.sort(
-            (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
-        );
-
+        news.value = await telegramNewsService.fetchNews(currentLanguage.value);
         updateUnreadCount();
     } catch (err: any) {
         console.error("Failed to fetch news:", err);
@@ -327,24 +287,6 @@ watch(filteredNews, () => {
         setupObserver();
     });
 });
-
-const renderNewsContent = (raw: string): string => {
-    let safe = raw
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-
-    safe = safe.replace(/\r\n|\r|\n/g, "<br>");
-
-    safe = safe.replace(
-        /(https?:\/\/[^\s<>"']+)/g,
-        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-    );
-
-    return safe;
-};
 
 watch(
     () => getCurrentLanguage(),
@@ -454,7 +396,16 @@ onBeforeUnmount(() => {
     word-break: break-word;
 }
 
-.news-content :deep(a),
+.news-content :deep(a) {
+    text-decoration: underline;
+    color: hsl(var(--p));
+    transition: opacity 0.2s;
+}
+
+.news-content :deep(a):hover {
+    opacity: 0.8;
+}
+
 .news-content :deep(span),
 .news-content :deep(div) {
     overflow-wrap: anywhere;

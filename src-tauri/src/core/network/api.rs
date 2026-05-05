@@ -1,4 +1,6 @@
-use serde::{de::DeserializeOwned, Deserialize};
+//! API client for interacting with remote servers, including caching and retry logic.
+
+use serde::de::DeserializeOwned;
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -9,39 +11,21 @@ use crate::{log_info, log_warn};
 use super::cache;
 use super::servers::{Server, SERVERS};
 
+/// Directory name for API response caching.
 pub const API_CACHE_DIR: &str = "cache";
+/// Maximum number of retries for a failed API request.
 pub const API_MAX_RETRIES: usize = 5;
 
-#[derive(Deserialize)]
-struct ApiResponse {
-    success: Option<bool>,
-    data: Option<serde_json::Value>,
-    error: Option<String>,
-}
-
-fn extract_api_response(body: &str) -> Result<serde_json::Value, String> {
-    match serde_json::from_str::<ApiResponse>(body) {
-        Ok(api_data) => {
-            if api_data.success.is_none() || api_data.data.is_none() {
-                serde_json::from_str::<serde_json::Value>(body).map_err(|e| e.to_string())
-            } else if api_data.success.unwrap_or(false) {
-                Ok(api_data.data.unwrap())
-            } else {
-                let err_msg = api_data
-                    .error
-                    .unwrap_or_else(|| "Unknown API error".to_string());
-                Err(format!("API error: {}", err_msg))
-            }
-        }
-        Err(_) => serde_json::from_str::<serde_json::Value>(body).map_err(|e| e.to_string()),
-    }
-}
-
+/// A client for making requests to the application's API servers.
 pub struct Api {
+    /// The primary API server to use.
     pub api_server: Server,
 }
 
 impl Api {
+    /// Performs a GET request to the specified path and deserializes the response.
+    ///
+    /// This method handles caching, server failover, and retries.
     pub fn json<T: DeserializeOwned>(&self, path: &str) -> Result<T, Box<dyn std::error::Error>> {
         let cache_dir = DATA.root_dir.lock().unwrap().join(API_CACHE_DIR);
         cache::ensure_cache_dir(&cache_dir);
@@ -65,11 +49,7 @@ impl Api {
                 .unwrap_or(0);
 
             for server in apis.iter().cycle().skip(start_index).take(apis.len()) {
-                // let url = format!("{}api/{}/{}", server.url, API_VERSION, path);
-
                 let url = format!("{}{}", server.url, path);
-
-                // println!("url is {}", url);
 
                 for attempt in 1..=API_MAX_RETRIES {
                     if attempt > 1 {
@@ -119,16 +99,17 @@ impl Api {
                     }
 
                     let body = response.text().unwrap_or_default();
+
                     if body.is_empty() {
                         return Err("API returned empty response".to_string());
                     }
 
-                    match extract_api_response(&body) {
+                    match serde_json::from_str::<serde_json::Value>(&body) {
                         Ok(data_value) => {
                             *SERVERS.selected_api.write().unwrap() = Some(server.clone());
                             return Ok(data_value);
                         }
-                        Err(e) => return Err(e),
+                        Err(e) => return Err(format!("Failed to parse API response: {}", e)),
                     }
                 }
             }
@@ -231,12 +212,12 @@ impl Api {
                         return Err("API returned empty response".to_string());
                     }
 
-                    match extract_api_response(&body) {
+                    match serde_json::from_str::<serde_json::Value>(&body) {
                         Ok(data_value) => {
                             *SERVERS.selected_api.write().unwrap() = Some(server.clone());
                             return Ok(data_value);
                         }
-                        Err(e) => return Err(e),
+                        Err(e) => return Err(format!("Failed to parse API response: {}", e)),
                     }
                 }
             }

@@ -2,16 +2,16 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { onMounted, ref } from "vue";
-import { useToast } from "../services/toastService";
+import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
-import { UpdateInfo, updaterService } from "../services/updaterService";
+import { UpdateInfo, updaterService } from "@services/updater/updaterService";
 import Logo from "../assets/images/logo.svg";
 import IconGitHub from "../assets/icons/github.svg";
 import IconTelegram from "../assets/icons/telegram.svg";
 import IconDiscord from "../assets/icons/discord.svg";
 import { CircleFadingArrowUp } from "lucide-vue-next";
-import { achievementService } from "../services/achievementService";
-import { useUser } from "../composables/useUser";
+import { achievementService } from "@features/social/achievementService";
+import { useUser } from "@features/auth/useUser";
 
 const { t } = useI18n();
 const LogoUrl = String(Logo);
@@ -71,7 +71,7 @@ const getVersion = async () => {
 
 const openRepository = async () => {
     try {
-        await openUrl("https://github.com/dest4590/CollapseLoader");
+        await openUrl("https://github.com/dest4590/CollapseLoader/tree/dev");
     } catch (error) {
         console.error("Failed to open repository:", error);
         addToast(t("about.open_failed", { platform: "Github" }), "error");
@@ -80,7 +80,7 @@ const openRepository = async () => {
 
 const openTelegram = async () => {
     try {
-        await openUrl("https://t.me/CollapseLoader");
+        await openUrl("https://t.me/collapseloader");
     } catch (error) {
         console.error("Failed to open telegram:", error);
         addToast(t("about.open_failed", { platform: "Telegram" }), "error");
@@ -89,7 +89,7 @@ const openTelegram = async () => {
 
 const openDiscord = async () => {
     try {
-        await openUrl("https://collapseloader.org/discord/");
+        await openUrl("https://discord.gg/FyKtnFqs6J");
     } catch (error) {
         console.error("Failed to open discord:", error);
         addToast(t("about.open_failed", { platform: "Discord" }), "error");
@@ -125,7 +125,7 @@ onMounted(async () => {
             />
 
             <div class="text-center">
-                <h1 class="text-4xl font-bold mb-2">CollapseLoader (THE END)</h1>
+                <h1 class="text-4xl font-bold mb-2">CollapseLoader</h1>
                 <div
                     class="tooltip tooltip-bottom hover:underline cursor-pointer"
                     id="codename"

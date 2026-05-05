@@ -64,28 +64,29 @@ pub struct UpdateInfo {
     pub is_critical: bool,
 }
 
-fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
+pub(crate) fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
     let version = version.trim_start_matches('v');
+    let version = version.split('-').next().unwrap_or(version);
     let parts: Vec<&str> = version.split('.').collect();
 
     if parts.len() != 3 {
         return Err("Invalid version format".to_string());
     }
 
-    let major = parts[0]
-        .parse::<u32>()
-        .map_err(|_| "Invalid major version")?;
-    let minor = parts[1]
-        .parse::<u32>()
-        .map_err(|_| "Invalid minor version")?;
-    let patch = parts[2]
-        .parse::<u32>()
-        .map_err(|_| "Invalid patch version")?;
+    let major = parse_version_component(parts[0], "major")?;
+    let minor = parse_version_component(parts[1], "minor")?;
+    let patch = parse_version_component(parts[2], "patch")?;
 
     Ok((major, minor, patch))
 }
 
-fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
+pub(crate) fn parse_version_component(component: &str, label: &str) -> Result<u32, String> {
+    component
+        .parse::<u32>()
+        .map_err(|_| format!("Invalid {label} version"))
+}
+
+pub(crate) fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
     let (major1, minor1, patch1) = parse_version(v1)?;
     let (major2, minor2, patch2) = parse_version(v2)?;
 
@@ -98,7 +99,7 @@ fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
     }
 }
 
-fn truncate_str(s: &str, max: usize) -> String {
+pub(crate) fn truncate_str(s: &str, max: usize) -> String {
     if s.len() <= max {
         s.to_string()
     } else {
@@ -378,33 +379,43 @@ pub fn get_changelog() -> Vec<ChangelogEntry> {
     Vec::new()
 }
 
-fn extract_changelog_json_block(body: &str) -> Option<String> {
+pub(crate) fn extract_changelog_json_block(body: &str) -> Option<String> {
     let marker = if let Some(idx) = body.find("```changelog") {
-        (idx, "```changelog")
-    } else if let Some(idx) = body.find("``` changelog") {
-        (idx, "``` changelog")
+        Some((idx, "```changelog"))
     } else {
-        return None;
+        body.find("``` changelog").map(|idx| (idx, "``` changelog"))
     };
 
-    let start_idx = marker.0;
+    if let Some((start_idx, _)) = marker {
+        let after_marker = &body[start_idx..];
+        let first_newline = after_marker.find('\n')?;
+        let content_start = start_idx + first_newline + 1;
+        let rest = &body[content_start..];
+        if let Some(closing_rel) = rest.find("```") {
+            let closing_idx = content_start + closing_rel;
+            let content = &body[content_start..closing_idx];
+            return Some(content.trim().to_string());
+        }
+    }
 
-    let after_marker = &body[start_idx..];
-    let first_newline = after_marker.find('\n')?;
-    let content_start = start_idx + first_newline + 1;
-
-    let rest = &body[content_start..];
-    if let Some(closing_rel) = rest.find("```") {
-        let closing_idx = content_start + closing_rel;
-        let content = &body[content_start..closing_idx];
-
-        return Some(content.trim().to_string());
+    if let Some(details_start) = body.find("<details>") {
+        let details_body = &body[details_start..];
+        if let Some(json_marker) = details_body.find("```json") {
+            let after_marker = &details_body[json_marker..];
+            let first_newline = after_marker.find('\n')?;
+            let content_start = json_marker + first_newline + 1;
+            let rest = &details_body[content_start..];
+            if let Some(closing_rel) = rest.find("```") {
+                let content = &details_body[content_start..content_start + closing_rel];
+                return Some(content.trim().to_string());
+            }
+        }
     }
 
     None
 }
 
-fn parse_changelog_and_translations(
+pub(crate) fn parse_changelog_and_translations(
     content: &str,
 ) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
     if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) {

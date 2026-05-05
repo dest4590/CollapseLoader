@@ -10,7 +10,8 @@ use crate::core::storage::flags::FLAGS_MANAGER;
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::discord_rpc;
-use crate::core::utils::globals::{API_SERVERS, API_VERSION, CDN_SERVERS, CODENAME};
+use crate::core::utils::fs as fs_utils;
+use crate::core::utils::globals::{API_SERVERS, CDN_SERVERS, CODENAME};
 use crate::core::utils::helpers::is_development_enabled;
 use crate::core::{network::servers::SERVERS, storage::data::DATA};
 use crate::AppState;
@@ -65,7 +66,7 @@ pub async fn reset_requirements() -> Result<(), String> {
 #[tauri::command]
 pub fn get_data_folder() -> Result<String, String> {
     let path = DATA.root_dir.lock().unwrap().to_string_lossy().to_string();
-    log_debug!("Getting data folder path: {}", path);
+    // log_debug!("Getting data folder path: {}", path);
     Ok(path)
 }
 
@@ -92,7 +93,7 @@ pub async fn change_data_folder(
             "Target directory does not exist, creating it: {:?}",
             new_dir
         );
-        fs::create_dir_all(&new_dir).map_err(|e| {
+        fs_utils::ensure_dir(&new_dir).map_err(|e| {
             log_error!("Failed to create target directory {:?}: {}", new_dir, e);
             format!("Failed to create target dir: {e}")
         })?;
@@ -120,40 +121,27 @@ pub async fn change_data_folder(
         log_info!("Moving data from old folder to new folder");
         if current_dir.exists() {
             task::spawn_blocking(move || -> Result<(), String> {
-                fn copy_dir_recursive(
-                    src: &std::path::Path,
-                    dst: &std::path::Path,
-                ) -> Result<(), String> {
-                    for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
-                        let entry = entry.map_err(|e| e.to_string())?;
-                        let path = entry.path();
-                        let target = dst.join(entry.file_name());
-
-                        let file_type = entry.file_type().map_err(|e| e.to_string())?;
-                        if file_type.is_symlink() {
-                            log_debug!("Skipping symlink during move: {:?}", path);
-                            continue;
-                        }
-
-                        if path.is_dir() {
-                            fs::create_dir_all(&target).map_err(|e| e.to_string())?;
-                            copy_dir_recursive(&path, &target)?;
-                        } else {
-                            fs::copy(&path, &target).map_err(|e| e.to_string())?;
-                        }
-                    }
-                    Ok(())
-                }
                 log_debug!(
                     "Starting recursive copy from {:?} to {:?}",
                     current_dir,
                     new_dir
                 );
-                copy_dir_recursive(&current_dir, &new_dir)?;
-                log_debug!("Finished recursive copy. Removing old directory.");
-                if let Err(e) = fs::remove_dir_all(&current_dir) {
-                    log_warn!("Failed to remove old data directory: {}", e);
-                    let _ = e;
+                fs_utils::copy_dir_recursive(&current_dir, &new_dir, true)?;
+                log_debug!(
+                    "Finished recursive copy. Removing old directory contents (except aci.json)."
+                );
+                if current_dir.exists() {
+                    if let Ok(entries) = fs::read_dir(&current_dir) {
+                        for entry in entries.flatten() {
+                            let path = entry.path();
+                            if path.is_file()
+                                && path.file_name().and_then(|n| n.to_str()) == Some("aci.json")
+                            {
+                                continue;
+                            }
+                            let _ = fs_utils::remove_path(&path);
+                        }
+                    }
                 }
                 Ok(())
             })
@@ -164,12 +152,20 @@ pub async fn change_data_folder(
             })??;
         }
     } else if mode == "wipe" {
-        log_info!("Wiping old data folder");
+        log_info!("Wiping old data folder (preserving aci.json)");
         if current_dir.exists() {
-            fs::remove_dir_all(&current_dir).map_err(|e| {
-                log_error!("Failed to wipe old data folder: {}", e);
-                format!("Failed to wipe old folder: {e}")
-            })?;
+            if let Ok(entries) = fs::read_dir(&current_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file()
+                        && path.file_name().and_then(|n| n.to_str()) == Some("aci.json")
+                    {
+                        log_debug!("Preserving aci.json during wipe");
+                        continue;
+                    }
+                    let _ = fs_utils::remove_path(&path);
+                }
+            }
         }
     } else {
         log_warn!("Invalid mode for changing data folder: {}", mode);
@@ -260,10 +256,10 @@ pub async fn get_cdn_url() -> Result<String, String> {
     )
 }
 
-#[tauri::command]
-pub fn get_api_version() -> Result<String, String> {
-    Ok(API_VERSION.to_string())
-}
+// #[tauri::command]
+// pub fn get_api_version() -> Result<String, String> {
+//     Ok(API_VERSION.to_string())
+// }
 
 #[tauri::command]
 pub async fn encode_base64(input: String) -> Result<String, String> {
@@ -314,4 +310,253 @@ pub fn set_window_theme(window: Window, theme: String) {
     if let Some(t) = target_theme {
         let _ = window.set_theme(Some(t));
     }
+}
+
+#[tauri::command]
+pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    use tauri::menu::PredefinedMenuItem;
+    use tauri::menu::{Menu, MenuItem};
+
+    let (fav_clients, popular_clients): (Vec<(u32, String)>, Vec<(u32, String)>) = state
+        .clients
+        .manager
+        .lock()
+        .map(|m| {
+            let favorites = FAVORITE_MANAGER.lock().unwrap().favorites.clone();
+
+            let installed: Vec<_> = m
+                .clients
+                .iter()
+                .filter(|c| c.show && c.working && c.meta.installed)
+                .collect();
+
+            let mut favs = Vec::new();
+            let mut others = Vec::new();
+
+            for c in installed {
+                let ver = c
+                    .version
+                    .replace('_', ".")
+                    .trim_start_matches('V')
+                    .to_string();
+                if favorites.contains(&c.id) {
+                    favs.push((c.id, format!("⭐  {} {}", c.name, ver)));
+                } else {
+                    others.push(c);
+                }
+            }
+
+            others.sort_by(|a, b| b.launches.cmp(&a.launches));
+            let popular: Vec<_> = others
+                .into_iter()
+                .take(10)
+                .map(|c| {
+                    let ver = c
+                        .version
+                        .replace('_', ".")
+                        .trim_start_matches('V')
+                        .to_string();
+                    (c.id, format!("⚡  {} {}", c.name, ver))
+                })
+                .collect();
+
+            (favs, popular)
+        })
+        .unwrap_or_default();
+
+    let show = MenuItem::with_id(&app, "show", "▶  Open CollapseLoader", true, None::<&str>)
+        .map_err(|e| e.to_string())?;
+    let quit = MenuItem::with_id(&app, "quit", "✕  Quit", true, None::<&str>)
+        .map_err(|e| e.to_string())?;
+
+    let sep1 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    let sep2 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+    let sep3 = PredefinedMenuItem::separator(&app).map_err(|e| e.to_string())?;
+
+    let fav_items: Vec<MenuItem<tauri::Wry>> = fav_clients
+        .iter()
+        .map(|(id, label)| {
+            MenuItem::with_id(
+                &app,
+                format!("launch_{id}"),
+                label.as_str(),
+                true,
+                None::<&str>,
+            )
+            .expect("Failed to create client menu item")
+        })
+        .collect();
+
+    let popular_items: Vec<MenuItem<tauri::Wry>> = popular_clients
+        .iter()
+        .map(|(id, label)| {
+            MenuItem::with_id(
+                &app,
+                format!("launch_{id}"),
+                label.as_str(),
+                true,
+                None::<&str>,
+            )
+            .expect("Failed to create client menu item")
+        })
+        .collect();
+
+    let fav_header = MenuItem::with_id(
+        &app,
+        "_fav_header",
+        "── Favorited clients ──",
+        false,
+        None::<&str>,
+    )
+    .map_err(|e| e.to_string())?;
+
+    let popular_header = MenuItem::with_id(
+        &app,
+        "_popular_header",
+        "── Popular clients ──",
+        false,
+        None::<&str>,
+    )
+    .map_err(|e| e.to_string())?;
+
+    let mut item_refs: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![&show, &sep1];
+
+    if fav_items.is_empty() && popular_items.is_empty() {
+        item_refs = vec![&show, &sep1, &quit];
+    } else {
+        if !fav_items.is_empty() {
+            item_refs.push(&fav_header);
+            for item in &fav_items {
+                item_refs.push(item);
+            }
+            if !popular_items.is_empty() {
+                item_refs.push(&sep2);
+            }
+        }
+
+        if !popular_items.is_empty() {
+            item_refs.push(&popular_header);
+            for item in &popular_items {
+                item_refs.push(item);
+            }
+        }
+        item_refs.push(&sep3);
+        item_refs.push(&quit);
+    }
+
+    let new_menu = Menu::with_items(&app, &item_refs).map_err(|e| e.to_string())?;
+
+    if let Some(tray) = app.tray_by_id("0").or_else(|| app.tray_by_id("main")) {
+        tray.set_menu(Some(new_menu)).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+pub fn refresh_tray_menu(state: State<'_, AppState>) {
+    if let Some(app) = crate::core::storage::data::APP_HANDLE
+        .lock()
+        .unwrap()
+        .clone()
+    {
+        let _ = update_tray_menu(app, state);
+    }
+}
+
+#[derive(serde::Serialize)]
+pub struct StorageUsage {
+    pub clients: u64,
+    pub libraries: u64,
+    pub natives: u64,
+    pub assets: u64,
+    pub java: u64,
+    pub other: u64,
+    pub total: u64,
+}
+
+pub(crate) fn dir_size(path: &std::path::Path) -> u64 {
+    if !path.exists() {
+        return 0;
+    }
+    let mut total = 0u64;
+    if let Ok(entries) = fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_dir() {
+                total += dir_size(&p);
+            } else if let Ok(meta) = fs::metadata(&p) {
+                total += meta.len();
+            }
+        }
+    }
+    total
+}
+
+#[tauri::command]
+pub async fn get_storage_usage() -> StorageUsage {
+    tokio::task::spawn_blocking(|| {
+        let root = DATA.root_dir.lock().unwrap().clone();
+
+        let libraries = dir_size(&root.join("libraries"))
+            + dir_size(&root.join("libraries-fabric"))
+            + dir_size(&root.join("libraries-legacy"));
+
+        let natives = dir_size(&root.join("natives"))
+            + dir_size(&root.join("natives-macos-x64"))
+            + dir_size(&root.join("natives-macos-arm64"))
+            + dir_size(&root.join("natives-linux"))
+            + dir_size(&root.join("natives-legacy"))
+            + dir_size(&root.join("natives-legacy-linux"))
+            + dir_size(&root.join("natives-fabric"));
+
+        let assets = dir_size(&root.join("assets")) + dir_size(&root.join("assets-fabric"));
+
+        let mc_versions = dir_size(&root.join("minecraft-versions"));
+        let custom_clients_size = dir_size(&root.join("custom_clients"));
+
+        let mut java = 0u64;
+        let mut client_folders = 0u64;
+
+        if let Ok(entries) = fs::read_dir(&root) {
+            for entry in entries.flatten() {
+                let name = entry.file_name().to_string_lossy().to_lowercase();
+                let path = entry.path();
+
+                if !path.is_dir() {
+                    continue;
+                }
+
+                if name.starts_with("jdk") {
+                    java += dir_size(&path);
+                } else if !fs_utils::SYSTEM_DIRS.contains(&name.as_str()) {
+                    client_folders += dir_size(&path);
+                }
+            }
+        }
+
+        let clients = mc_versions + custom_clients_size + client_folders;
+        let total = dir_size(&root);
+        let accounted = clients + libraries + natives + assets + java;
+        let other = total.saturating_sub(accounted);
+
+        StorageUsage {
+            clients,
+            libraries,
+            natives,
+            assets,
+            java,
+            other,
+            total,
+        }
+    })
+    .await
+    .unwrap_or(StorageUsage {
+        clients: 0,
+        libraries: 0,
+        natives: 0,
+        assets: 0,
+        java: 0,
+        other: 0,
+        total: 0,
+    })
 }

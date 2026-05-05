@@ -1,6 +1,7 @@
 use crate::core::platform::error::StartupError;
 use winreg::{enums::HKEY_CURRENT_USER, enums::HKEY_LOCAL_MACHINE, RegKey};
 
+/// Checks if WebView2 is installed on the system by searching the registry and common file paths.
 fn is_webview2_installed() -> bool {
     let reg_subkeys = [
         "SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}",
@@ -28,7 +29,7 @@ fn is_webview2_installed() -> bool {
 
     let check_base = |base: &str| -> bool {
         let base_path = std::path::Path::new(base);
-        for cand in &candidates {
+        candidates.iter().any(|cand| {
             let p = base_path.join(cand);
             if p.exists() {
                 if p.is_dir() {
@@ -43,12 +44,10 @@ fn is_webview2_installed() -> bool {
                 }
             }
 
-            let exe = base_path.join(format!(r"{}\msedgewebview2.exe", cand));
-            if exe.exists() {
-                return true;
-            }
-        }
-        false
+            base_path
+                .join(format!(r"{}\msedgewebview2.exe", cand))
+                .exists()
+        })
     };
 
     if let Ok(pf) = std::env::var("ProgramFiles") {
@@ -63,8 +62,10 @@ fn is_webview2_installed() -> bool {
     }
 
     if let Ok(temp) = std::env::var("TEMP") {
-        let temp_path = std::path::Path::new(&temp).join("MicrosoftEdgeWebview2Setup.exe");
-        if temp_path.exists() {
+        if std::path::Path::new(&temp)
+            .join("MicrosoftEdgeWebview2Setup.exe")
+            .exists()
+        {
             return true;
         }
     }

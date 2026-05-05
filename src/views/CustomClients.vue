@@ -4,27 +4,46 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
     AlertTriangle,
     Calendar,
+    Copy,
     Edit3,
     FileText,
+    Folder,
+    Package,
     Play,
     Plus,
     Settings,
     StopCircle,
     Trash2,
 } from "lucide-vue-next";
-import SearchBar from "../components/common/SearchBar.vue";
-import { useToast } from "../services/toastService";
-import { useModal } from "../services/modalService";
+import SearchBar from "@shared/components/common/SearchBar.vue";
+import { useToast } from "@shared/composables/useToast";
+import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
-import { formatDate } from "../utils/utils";
-import type { CustomClient } from "../types/ui";
-import AddCustomClientModal from "../components/modals/clients/AddCustomClientModal.vue";
-import EditCustomClientModal from "../components/modals/clients/EditCustomClientModal.vue";
-import DeleteCustomClientConfirmModal from "../components/modals/clients/DeleteCustomClientConfirmModal.vue";
-import CustomClientDisplaySettingsModal from "../components/modals/clients/CustomClientDisplaySettingsModal.vue";
-import LogViewerModal from "../components/modals/clients/LogViewerModal.vue";
+import { formatDate } from "@shared/utils/utils";
+import type { CustomClient } from "@shared/types/ui";
+import AddCustomClientModal from "@features/clients/modals/AddCustomClientModal.vue";
+import EditCustomClientModal from "@features/clients/modals/EditCustomClientModal.vue";
+import DeleteCustomClientConfirmModal from "@features/clients/modals/DeleteCustomClientConfirmModal.vue";
+import CustomClientDisplaySettingsModal from "@features/clients/modals/CustomClientDisplaySettingsModal.vue";
+import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
+import CustomClientModsModal from "@features/clients/modals/CustomClientModsModal.vue";
 
 const { t } = useI18n();
+
+defineProps<{
+    isOnline?: boolean;
+    userId?: number | string | null;
+}>();
+
+defineEmits<{
+    (e: "loggedOut"): void;
+    (e: "loggedIn"): void;
+    (e: "registered"): void;
+    (e: "changeView", view: string): void;
+    (e: "showUserProfile", id: number): void;
+    (e: "backToFriends"): void;
+    (e: "unreadCountUpdated", count: number): void;
+}>();
 
 const customClients = ref<CustomClient[]>([]);
 const error = ref("");
@@ -34,7 +53,6 @@ const displayMode = ref<"global" | "separate">("separate");
 
 const filteredClients = computed(() => {
     if (!searchQuery.value.trim()) return customClients.value;
-
     const query = searchQuery.value.trim().toLowerCase();
     return customClients.value.filter(
         (client) =>
@@ -48,6 +66,61 @@ const statusInterval = ref<number | null>(null);
 const { addToast } = useToast();
 const { showModal } = useModal();
 
+const contextMenu = ref({
+    visible: false,
+    x: 0,
+    y: 0,
+    client: null as CustomClient | null,
+    animationClass: "",
+});
+
+const showContextMenu = (event: MouseEvent, client: CustomClient) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (contextMenu.value.visible) {
+        hideContextMenu();
+        return;
+    }
+
+    const menuWidth = 224;
+    const menuHeight = 280;
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + menuWidth > window.innerWidth)
+        x = window.innerWidth - menuWidth - 8;
+    if (y + menuHeight > window.innerHeight)
+        y = window.innerHeight - menuHeight - 8;
+
+    contextMenu.value = {
+        visible: true,
+        x,
+        y,
+        client,
+        animationClass: "context-menu-open-animation",
+    };
+
+    setTimeout(() => {
+        contextMenu.value.animationClass = "";
+    }, 150);
+
+    document.addEventListener("click", hideContextMenu);
+};
+
+const hideContextMenu = () => {
+    if (!contextMenu.value.visible) return;
+
+    contextMenu.value.animationClass = "context-menu-close-animation";
+
+    setTimeout(() => {
+        contextMenu.value.visible = false;
+        contextMenu.value.client = null;
+        contextMenu.value.animationClass = "";
+        document.removeEventListener("click", hideContextMenu);
+    }, 150);
+};
+
 const loadCustomClients = async () => {
     try {
         loading.value = true;
@@ -55,8 +128,8 @@ const loadCustomClients = async () => {
             await invoke<CustomClient[]>("get_custom_clients");
         error.value = "";
     } catch (err) {
-        error.value = `Failed to load custom clients: ${err}`;
-        addToast(`Failed to load custom clients: ${err}`, "error");
+        error.value = t("custom_clients.load_failed", { error: err });
+        addToast(t("custom_clients.load_failed", { error: err }), "error");
     } finally {
         loading.value = false;
     }
@@ -76,46 +149,36 @@ const isCustomClientRunning = (id: number): boolean => {
     return runningCustomClients.value.includes(id);
 };
 
-const handleLaunchClick = async (client: CustomClient) => {
-    if (isCustomClientRunning(client.id)) {
-        await stopCustomClient(client.id);
-        return;
-    }
-
-    await handleLaunchClient(client);
-};
-
 const handleLaunchClient = async (client: CustomClient) => {
+    hideContextMenu();
     try {
         const userToken = localStorage.getItem("authToken") || "null";
-
         addToast(t("home.launching", { client: client.name }), "info", 2000);
-
-        await invoke("launch_custom_client", {
-            id: client.id,
-            userToken,
-        });
-
+        await invoke("launch_custom_client", { id: client.id, userToken });
         await new Promise((resolve) => setTimeout(resolve, 500));
         await checkCustomClientRunningStatus();
     } catch (err) {
-        addToast(`Failed to launch ${client.name}: ${err}`, "error");
+        addToast(
+            t("custom_clients.launch_failed", {
+                name: client.name,
+                error: err,
+            }),
+            "error"
+        );
     }
 };
 
 const stopCustomClient = async (id: number) => {
+    hideContextMenu();
     try {
         const client = customClients.value.find((c) => c.id === id);
-        if (client) {
+        if (client)
             addToast(t("home.stopping", { client: client.name }), "info", 2000);
-        }
         await invoke("stop_custom_client", { id });
-
         await new Promise((resolve) => setTimeout(resolve, 1000));
         await checkCustomClientRunningStatus();
     } catch (err) {
-        console.error("Error stopping custom client:", err);
-        addToast(`Error stopping client: ${err}`, "error");
+        addToast(t("custom_clients.stop_failed", { error: err }), "error");
     }
 };
 
@@ -135,6 +198,7 @@ const handleAddClient = () => {
 };
 
 const handleEditClient = (client: CustomClient) => {
+    hideContextMenu();
     showModal(
         "edit-custom-client",
         EditCustomClientModal,
@@ -150,6 +214,7 @@ const handleEditClient = (client: CustomClient) => {
 };
 
 const handleDeleteClient = (client: CustomClient) => {
+    hideContextMenu();
     showModal(
         "delete-custom-client-confirm",
         DeleteCustomClientConfirmModal,
@@ -165,6 +230,7 @@ const handleDeleteClient = (client: CustomClient) => {
 };
 
 const openLogViewer = (client: CustomClient) => {
+    hideContextMenu();
     showModal(
         `log-viewer-${client.id}`,
         LogViewerModal,
@@ -172,29 +238,61 @@ const openLogViewer = (client: CustomClient) => {
             title: t("logs.title", { client: client.name }),
             contentClass: "wide",
         },
-        {
-            clientId: client.id,
-            clientName: client.name,
-        },
-        {
-            close: () => {},
-        }
+        { clientId: client.id, clientName: client.name },
+        { close: () => {} }
     );
+};
+
+const openClientFolder = async (client: CustomClient) => {
+    hideContextMenu();
+    try {
+        await invoke("open_custom_client_folder", { id: client.id });
+    } catch (err) {
+        addToast(
+            t("custom_clients.open_folder_failed", { error: err }),
+            "error"
+        );
+    }
+};
+
+const openModsManager = (client: CustomClient) => {
+    hideContextMenu();
+    showModal(
+        `mods-manager-custom-${client.id}`,
+        CustomClientModsModal,
+        { title: t("mods.manager_title"), contentClass: "wide" },
+        { client },
+        { close: () => {} }
+    );
+};
+
+const copyClientLogs = async (client: CustomClient) => {
+    hideContextMenu();
+    try {
+        const logs = await invoke<string>("get_latest_client_logs", {
+            id: client.id,
+        });
+        await navigator.clipboard.writeText(logs);
+        addToast(t("logs.copied"), "success");
+    } catch (err) {
+        addToast(t("logs.copy_failed", { error: err }), "error");
+    }
 };
 
 const loadDisplayMode = async () => {
     try {
         const flags = await invoke("get_flags");
-        const typedFlags = flags as { custom_clients_display?: string };
+        const typedFlags = flags as {
+            custom_clients_display?: { value: string };
+        };
         displayMode.value =
-            typedFlags.custom_clients_display === "global" ||
-            typedFlags.custom_clients_display === "separate"
-                ? typedFlags.custom_clients_display
+            typedFlags.custom_clients_display?.value === "global" ||
+            typedFlags.custom_clients_display?.value === "separate"
+                ? typedFlags.custom_clients_display.value
                 : "separate";
         return typedFlags;
     } catch (err) {
-        console.error("Error loading flags:", err);
-        addToast(`Failed to load flags: ${err}`, "error");
+        addToast(t("custom_clients.flags_failed", { error: err }), "error");
         return {};
     }
 };
@@ -214,9 +312,7 @@ onMounted(async () => {
     await loadDisplayMode();
     await checkCustomClientRunningStatus();
 
-    if (statusInterval.value !== null) {
-        clearInterval(statusInterval.value);
-    }
+    if (statusInterval.value !== null) clearInterval(statusInterval.value);
 
     statusInterval.value = setInterval(
         checkCustomClientRunningStatus,
@@ -229,6 +325,7 @@ onBeforeUnmount(() => {
         clearInterval(statusInterval.value);
         statusInterval.value = null;
     }
+    hideContextMenu();
 });
 
 const handleSearch = (query: string) => {
@@ -263,7 +360,7 @@ const handleSearch = (query: string) => {
             <SearchBar
                 @search="handleSearch"
                 :initial-value="searchQuery"
-                placeholder="Search custom clients..."
+                :placeholder="t('custom_clients.search_placeholder')"
             />
         </div>
 
@@ -286,7 +383,6 @@ const handleSearch = (query: string) => {
                             : t("custom_clients.no_clients_yet")
                     }}
                 </h3>
-
                 <button
                     v-if="!searchQuery"
                     @click="handleAddClient"
@@ -323,33 +419,12 @@ const handleSearch = (query: string) => {
                                 {{ client.version }}
                             </div>
                         </div>
-                        <div class="dropdown dropdown-end">
-                            <button class="btn btn-ghost btn-sm btn-square">
-                                <Settings class="w-4 h-4" />
-                            </button>
-                            <ul
-                                class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-                            >
-                                <li>
-                                    <button
-                                        @click="handleEditClient(client)"
-                                        class="gap-2"
-                                    >
-                                        <Edit3 class="w-4 h-4" />
-                                        {{ $t("custom_clients.edit") }}
-                                    </button>
-                                </li>
-                                <li>
-                                    <button
-                                        @click="handleDeleteClient(client)"
-                                        class="gap-2 text-error"
-                                    >
-                                        <Trash2 class="w-4 h-4" />
-                                        {{ $t("custom_clients.delete") }}
-                                    </button>
-                                </li>
-                            </ul>
-                        </div>
+                        <button
+                            @click.stop="showContextMenu($event, client)"
+                            class="btn btn-ghost btn-sm btn-square"
+                        >
+                            <Settings class="w-4 h-4" />
+                        </button>
                     </div>
 
                     <div class="space-y-3">
@@ -372,7 +447,11 @@ const handleSearch = (query: string) => {
 
                         <div class="card-actions justify-end">
                             <button
-                                @click="handleLaunchClick(client)"
+                                @click="
+                                    isCustomClientRunning(client.id)
+                                        ? stopCustomClient(client.id)
+                                        : handleLaunchClient(client)
+                                "
                                 class="btn btn-sm gap-2"
                                 :class="
                                     isCustomClientRunning(client.id)
@@ -404,5 +483,84 @@ const handleSearch = (query: string) => {
                 </div>
             </div>
         </div>
+    </div>
+
+    <div
+        v-if="contextMenu.visible"
+        :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
+        class="fixed z-100 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
+        :class="contextMenu.animationClass"
+    >
+        <h3
+            class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30"
+        >
+            {{ contextMenu.client?.name }}
+        </h3>
+        <ul>
+            <li
+                v-if="
+                    contextMenu.client?.is_installed &&
+                    isCustomClientRunning(contextMenu.client.id)
+                "
+            >
+                <a
+                    @click="handleLaunchClient(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30"
+                >
+                    <Plus class="w-4 h-4" />
+                    {{ t("home.launch_another") }}
+                </a>
+            </li>
+            <li v-if="contextMenu.client?.is_installed">
+                <a
+                    @click="openClientFolder(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30"
+                >
+                    <Folder class="w-4 h-4" />
+                    {{ t("theme.actions.open_folder") }}
+                </a>
+            </li>
+            <li
+                v-if="
+                    contextMenu.client?.is_installed &&
+                    contextMenu.client?.client_type?.toLowerCase() === 'fabric'
+                "
+            >
+                <a
+                    @click="openModsManager(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30 text-primary font-medium"
+                >
+                    <Package class="w-4 h-4" />
+                    {{ t("mods.manage_mods") }}
+                </a>
+            </li>
+            <li v-if="contextMenu.client?.is_installed">
+                <a
+                    @click="copyClientLogs(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30"
+                >
+                    <Copy class="w-4 h-4" />
+                    {{ t("logs.copy_logs") }}
+                </a>
+            </li>
+            <li>
+                <a
+                    @click="handleEditClient(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30"
+                >
+                    <Edit3 class="w-4 h-4" />
+                    {{ t("custom_clients.edit") }}
+                </a>
+            </li>
+            <li>
+                <a
+                    @click="handleDeleteClient(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30 text-error"
+                >
+                    <Trash2 class="w-4 h-4" />
+                    {{ t("custom_clients.delete") }}
+                </a>
+            </li>
+        </ul>
     </div>
 </template>

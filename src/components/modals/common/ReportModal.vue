@@ -57,7 +57,7 @@
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { reportService } from "../../../services/reportService";
-import { useToast } from "../../../services/toastService";
+import { useToast } from "@shared/composables/useToast";
 
 const props = defineProps<{
     userId: number;

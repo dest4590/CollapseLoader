@@ -1,0 +1,1116 @@
+import { apiClient } from "@api/clients/internal";
+import { achievementService } from "@features/social/achievementService";
+import { localUserService } from "@features/auth/localUserService";
+import { STORAGE_KEYS } from "@shared/utils/storageKeys";
+import { maxIsoTimestamp } from "@shared/utils/utils";
+
+type FriendshipStatus =
+    | "friends"
+    | "request_sent"
+    | "request_received"
+    | "blocked"
+    | null;
+
+export interface SocialLink {
+    platform: string;
+    url: string;
+}
+
+export interface UserProfile {
+    id: number;
+    nickname: string | null;
+    avatar_url: string | null;
+    role: string | null;
+    social_links: SocialLink[];
+    created_at: string;
+    updated_at: string;
+    favorite_client_id: number | null;
+}
+
+export interface UserInitData {
+    user: {
+        id: number;
+        username: string;
+        email: string;
+        role: string;
+        created_at: string;
+        updated_at: string;
+        last_login_at: string | null;
+        profile: UserProfile;
+        status: UserStatus;
+    };
+    preferences: UserPreference[];
+    favorites: UserFavorite[];
+    accounts: UserExternalAccount[];
+    friends: {
+        friends: any[];
+        requests: {
+            sent: any[];
+            received: any[];
+            blocked: any[];
+        };
+    };
+}
+
+export interface UserInfo {
+    id: number;
+    username: string;
+    email: string | null;
+    role: string;
+    created_at: string;
+    updated_at: string;
+    last_login_at: string | null;
+}
+
+interface CachedUserData {
+    profile: UserProfile | null;
+    info: UserInfo | null;
+    lastUpdated: string;
+}
+
+export interface UserStatus {
+    status: string;
+    client_name: string | null;
+    updated_at: string | null;
+    started_at?: string | null;
+}
+
+export interface ClientUserStatus {
+    is_online: boolean;
+    last_seen: string | null;
+    current_client: string | null;
+    client_version?: string | null;
+    updated_at: string | null;
+    started_at: string | null;
+    raw_status: string | null;
+}
+
+export interface Friend {
+    id: number;
+    username: string;
+    nickname: string | null;
+    avatar_url: string | null;
+    status: ClientUserStatus;
+}
+
+export interface FriendRequest {
+    id: number;
+    requester: Friend;
+    addressee: Friend;
+    status: FriendshipStatus | string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface FriendRequestsBatch {
+    sent: FriendRequest[];
+    received: FriendRequest[];
+    blocked: FriendRequest[];
+}
+
+export interface SearchUser {
+    id: number;
+    username: string;
+    nickname: string | null;
+    avatar_url: string | null;
+    friendship_status: FriendshipStatus;
+}
+
+export interface PublicUserProfile {
+    id: number;
+    username: string;
+    nickname: string | null;
+    friendship_status: FriendshipStatus;
+    status: ClientUserStatus;
+    member_since: string | null;
+    avatar_url: string | null;
+    social_links: SocialLink[];
+    role: string | null;
+    achievements?: any[];
+    presets?: any[];
+    favorite_client_id: number | null;
+}
+
+export interface UserPreference {
+    key: string;
+    value: unknown;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface UserFavorite {
+    id: number;
+    type: string;
+    reference: string;
+    metadata: unknown | null;
+    created_at: string;
+}
+
+export interface UserExternalAccount {
+    id: number;
+    display_name: string | null;
+    metadata: unknown | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface SyncData {
+    settings_data: any;
+    favorites_data: number[];
+    accounts_data: any[];
+    last_sync_timestamp?: string | null;
+}
+
+export interface SyncStatus {
+    last_sync_timestamp: string | null;
+    has_cloud_data: boolean;
+}
+
+const CACHE_KEY = STORAGE_KEYS.USER_DATA;
+const CACHE_EXPIRY_HOURS = 24;
+
+const SYNC_SETTINGS_PREF_KEY = "collapseloader.settings";
+const SYNC_FAVORITE_TYPE = "client";
+
+class UserService {
+    private getLocalId(): string | null {
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        return token?.startsWith("local_") ? token.replace("local_", "") : null;
+    }
+
+    private makeOnlineStatus(): UserStatus {
+        return {
+            status: "ONLINE",
+            client_name: null,
+            updated_at: new Date().toISOString(),
+        };
+    }
+
+    private buildLocalCachedData(localId: string): CachedUserData {
+        const now = new Date().toISOString();
+        const p = localUserService.getProfiles().find((x) => x.id === localId);
+        return {
+            profile: {
+                id: 1,
+                nickname: p?.nickname ?? "Local User",
+                avatar_url: p?.avatarUrl ?? null,
+                role: p?.role ?? "LOCAL_USER",
+                social_links: [],
+                created_at: p?.createdAt ?? now,
+                updated_at: now,
+                favorite_client_id: null,
+            },
+            info: {
+                id: 1,
+                username: p?.username ?? "local_user",
+                email: "local@user.none",
+                role: p?.role ?? "LOCAL_USER",
+                created_at: p?.createdAt ?? now,
+                updated_at: now,
+                last_login_at: now,
+            },
+            lastUpdated: now,
+        };
+    }
+
+    private getCachedData(): CachedUserData | null {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (!cached) return null;
+
+            const parsedData: any = JSON.parse(cached);
+            if (!parsedData?.lastUpdated) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
+            const cacheTime = new Date(parsedData.lastUpdated);
+            if (isNaN(cacheTime.getTime())) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
+            const hoursDiff =
+                (Date.now() - cacheTime.getTime()) / (1000 * 60 * 60);
+            if (hoursDiff > CACHE_EXPIRY_HOURS) {
+                localStorage.removeItem(CACHE_KEY);
+                return null;
+            }
+
+            return parsedData as CachedUserData;
+        } catch (error) {
+            console.error("Error reading cached user data:", error);
+            localStorage.removeItem(CACHE_KEY);
+            return null;
+        }
+    }
+
+    private setCachedData(data: Partial<CachedUserData>): void {
+        try {
+            const existing = this.getCachedData() || {
+                profile: null,
+                info: null,
+                lastUpdated: new Date().toISOString(),
+            };
+
+            const updated = {
+                ...existing,
+                ...data,
+                lastUpdated: new Date().toISOString(),
+            };
+
+            localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+        } catch (error) {
+            console.error("Error caching user data:", error);
+        }
+    }
+
+    private stripShowFields(input: any): any {
+        if (input === null || typeof input !== "object") return input;
+
+        if (Array.isArray(input)) {
+            return input.map((v) => this.stripShowFields(v));
+        }
+
+        const out: any = {};
+        for (const [k, v] of Object.entries(input)) {
+            if (k === "show") continue;
+            out[k] = this.stripShowFields(v);
+        }
+        return out;
+    }
+
+    private mapStatus(status: UserStatus | null | undefined): ClientUserStatus {
+        const raw = status?.status ?? null;
+        const normalized = (raw || "").toUpperCase();
+        const isOnline =
+            normalized.length > 0 &&
+            normalized !== "OFFLINE" &&
+            normalized !== "INVISIBLE";
+        const updatedAt = status?.updated_at ?? null;
+        return {
+            is_online: isOnline,
+            current_client: status?.client_name ?? null,
+            last_seen: isOnline ? null : updatedAt,
+            updated_at: updatedAt,
+            started_at: status?.started_at ?? null,
+            raw_status: raw,
+        };
+    }
+
+    public mapFriend(friend: any): Friend {
+        return {
+            id: friend.id,
+            username: friend.username,
+            nickname: friend.nickname ?? null,
+            avatar_url: friend.avatar_url ?? null,
+            status: this.mapStatus(friend.status),
+        };
+    }
+
+    public mapFriendRequest(request: any): FriendRequest {
+        return {
+            id: request.id,
+            requester: this.mapFriend(request.requester),
+            addressee: this.mapFriend(request.addressee),
+            status: request.status,
+            created_at: request.created_at,
+            updated_at: request.updated_at,
+        };
+    }
+
+    private async getCurrentUserId(): Promise<number | null> {
+        const cached = this.getCachedData();
+        if (cached?.info?.id) return cached.info.id;
+        try {
+            const me = await apiClient.get<any>("/users/me");
+            return typeof me?.id === "number" ? me.id : null;
+        } catch {
+            return null;
+        }
+    }
+
+    async updateUserProfile(
+        nickname: string | null,
+        favoriteClientId?: number | null,
+        role?: string | null
+    ): Promise<{ success: boolean; error?: string }> {
+        try {
+            let cached = this.getCachedData();
+            if (!cached) {
+                const activeLocal = localUserService.getActiveProfile();
+                const now = new Date().toISOString();
+                cached = {
+                    profile: {
+                        id: 1,
+                        nickname: activeLocal?.nickname || "Local User",
+                        avatar_url: activeLocal?.avatarUrl || null,
+                        role: activeLocal?.role || "USER",
+                        social_links: [],
+                        created_at: activeLocal?.createdAt || now,
+                        updated_at: now,
+                        favorite_client_id: null,
+                    },
+                    info: {
+                        id: 1,
+                        username: activeLocal?.username || "local_user",
+                        email: null,
+                        role: activeLocal?.role || "LOCAL_USER",
+                        created_at: activeLocal?.createdAt || now,
+                        updated_at: now,
+                        last_login_at: null,
+                    },
+                    lastUpdated: now,
+                };
+            }
+
+            if (nickname !== null && cached.profile) {
+                cached.profile.nickname = nickname;
+                if (cached.info) cached.info.username = nickname;
+
+                const normalized = nickname.trim().toUpperCase();
+                const roles = ["OWNER", "DEVELOPER", "ADMIN", "TESTER", "USER"];
+                if (roles.includes(normalized)) {
+                    cached.profile.role = normalized;
+                    if (cached.info) cached.info.role = normalized;
+                }
+            } else if (cached.profile && cached.info) {
+                cached.info.username =
+                    cached.profile.nickname || cached.info.username;
+            }
+
+            if (favoriteClientId !== undefined && cached.profile) {
+                cached.profile.favorite_client_id = favoriteClientId;
+
+                if (favoriteClientId !== null) {
+                    const stored = localStorage.getItem(
+                        STORAGE_KEYS.LOCAL_UNIQUE_FAVORITES
+                    );
+                    const favorites = stored ? JSON.parse(stored) : [];
+                    if (!favorites.includes(favoriteClientId)) {
+                        favorites.push(favoriteClientId);
+                        localStorage.setItem(
+                            STORAGE_KEYS.LOCAL_UNIQUE_FAVORITES,
+                            JSON.stringify(favorites)
+                        );
+
+                        if (favorites.length >= 5) {
+                            void achievementService.unlockAchievement(
+                                "COLLECTOR"
+                            );
+                        }
+                    }
+                }
+            }
+
+            if (role !== undefined && cached.profile) {
+                cached.profile.role = role || "USER";
+                if (cached.info) cached.info.role = role || "USER";
+            }
+
+            this.setCachedData(cached);
+
+            const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+            if (token?.startsWith("local_") && cached.profile) {
+                const localId = token.replace("local_", "");
+                localUserService.updateProfile(localId, {
+                    nickname: cached.profile.nickname || undefined,
+                    username: cached.info?.username || undefined,
+                    role: cached.profile.role as any,
+                });
+            }
+
+            return { success: true };
+        } catch (error: any) {
+            console.error("Failed to update user profile locally:", error);
+            return { success: false, error: "Failed to update profile" };
+        }
+    }
+
+    async uploadAvatar(
+        file: File
+    ): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+        const localId = this.getLocalId();
+        if (localId !== null) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64 = reader.result as string;
+                    localUserService.updateProfile(localId, {
+                        avatarUrl: base64,
+                    });
+
+                    const cached = this.getCachedData();
+                    const activeLocal = localUserService.getActiveProfile();
+                    const now = new Date().toISOString();
+
+                    if (!cached?.profile) {
+                        const newProfile: UserProfile = {
+                            id: 1,
+                            nickname: activeLocal?.nickname || "Local User",
+                            avatar_url: base64,
+                            role: activeLocal?.role || "LOCAL_USER",
+                            social_links: [],
+                            created_at: activeLocal?.createdAt || now,
+                            updated_at: now,
+                            favorite_client_id: null,
+                        };
+                        const newCached: CachedUserData = {
+                            profile: newProfile,
+                            info: {
+                                id: 1,
+                                username: activeLocal?.username || "local_user",
+                                email: "local@user.none",
+                                role: activeLocal?.role || "LOCAL_USER",
+                                created_at: activeLocal?.createdAt || now,
+                                updated_at: now,
+                                last_login_at: null,
+                            },
+                            lastUpdated: now,
+                        };
+                        this.setCachedData(newCached);
+                        resolve({ success: true, profile: newProfile });
+                    } else {
+                        cached.profile.avatar_url = base64;
+                        this.setCachedData(cached);
+                        resolve({ success: true, profile: cached.profile });
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        try {
+            const form = new FormData();
+            form.append("avatar", file);
+            await apiClient.post("/users/me/avatar", form);
+            const profile = await this.refreshCachedUser();
+            return { success: true, profile };
+        } catch (error: any) {
+            const errorMessage =
+                error.response?.data?.error || "Failed to upload avatar";
+            return { success: false, error: errorMessage };
+        }
+    }
+
+    async resetAvatar(): Promise<{
+        success: boolean;
+        profile?: UserProfile;
+        error?: string;
+    }> {
+        try {
+            await apiClient.post("/users/me/avatar/reset");
+            const profile = await this.refreshCachedUser();
+            return { success: true, profile };
+        } catch (error: any) {
+            const errorMessage =
+                error.response?.data?.error || "Failed to reset avatar";
+            return { success: false, error: errorMessage };
+        }
+    }
+
+    async getUserStatus(): Promise<UserStatus> {
+        try {
+            return await apiClient.get("/users/me/status");
+        } catch (error) {
+            console.error("Failed to get user status:", error);
+            throw error;
+        }
+    }
+
+    async changePassword(
+        currentPassword: string,
+        newPassword: string
+    ): Promise<{ success: boolean }> {
+        try {
+            await apiClient.post("/auth/setPassword", {
+                newPassword: newPassword,
+                currentPassword: currentPassword,
+            });
+            return { success: true };
+        } catch (error) {
+            console.error("Failed to change password:", error);
+            throw error;
+        }
+    }
+
+    async initializeUser(): Promise<{
+        profile: UserProfile;
+        user_info: UserInfo;
+        status: UserStatus;
+    }> {
+        const localId = this.getLocalId();
+        if (localId !== null) {
+            const cached = this.getCachedData();
+            const localProfile = localUserService
+                .getProfiles()
+                .find((p) => p.id === localId);
+            const persistedAvatar = localProfile?.avatarUrl || null;
+
+            if (cached && cached.profile && cached.info) {
+                if (
+                    persistedAvatar &&
+                    cached.profile.avatar_url !== persistedAvatar
+                ) {
+                    cached.profile.avatar_url = persistedAvatar;
+                    this.setCachedData(cached);
+                }
+                return {
+                    profile: cached.profile,
+                    user_info: cached.info,
+                    status: this.makeOnlineStatus(),
+                };
+            }
+
+            const data = this.buildLocalCachedData(localId);
+            this.setCachedData(data);
+            return {
+                profile: data.profile as UserProfile,
+                user_info: data.info as UserInfo,
+                status: this.makeOnlineStatus(),
+            };
+        }
+
+        try {
+            const data = await apiClient.get<any>("/users/me");
+            const result = {
+                profile: data.profile,
+                user_info: {
+                    id: data.id,
+                    username: data.username,
+                    email: data.email,
+                    role: data.role,
+                    created_at: data.created_at,
+                    updated_at: data.updated_at,
+                    last_login_at: data.last_login_at ?? null,
+                },
+                status: data.status,
+            };
+            this.setCachedData({
+                profile: result.profile,
+                info: result.user_info as UserInfo,
+            });
+            return result;
+        } catch (error) {
+            console.error("Failed to initialize user:", error);
+            throw error;
+        }
+    }
+
+    async initializeUserFull(): Promise<UserInitData> {
+        const localId = this.getLocalId();
+        if (localId !== null) {
+            const init = await this.initializeUser();
+            return {
+                user: {
+                    ...init.user_info,
+                    email: init.user_info.email ?? "",
+                    profile: init.profile,
+                    status: init.status,
+                },
+                preferences: [],
+                favorites: [],
+                accounts: [],
+                friends: {
+                    friends: [],
+                    requests: { sent: [], received: [], blocked: [] },
+                },
+            };
+        }
+
+        try {
+            const data = await apiClient.get<any>("/users/init");
+
+            const user =
+                data && typeof data === "object"
+                    ? data.user || (data.id ? data : null)
+                    : null;
+
+            if (!user) {
+                if (data === "Entry not found") {
+                    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+                    throw new Error("Session expired or user not found");
+                }
+                console.error("Received invalid user data:", data);
+                throw new Error("Invalid user data received from server");
+            }
+
+            const userInfo = {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                created_at: user.created_at,
+                updated_at: user.updated_at,
+                last_login_at: user.last_login_at ?? null,
+            };
+
+            this.setCachedData({
+                profile: user.profile,
+                info: userInfo as UserInfo,
+            });
+
+            return {
+                user: {
+                    ...userInfo,
+                    profile: user.profile,
+                    status: user.status,
+                },
+                preferences: data.preferences || [],
+                favorites: data.favorites || [],
+                accounts: data.accounts || [],
+                friends: data.friends || {
+                    friends: [],
+                    requests: { sent: [], received: [], blocked: [] },
+                },
+            } as UserInitData;
+        } catch (error) {
+            console.error("Failed to initialize user (full):", error);
+            throw error;
+        }
+    }
+
+    async getUserProfile(
+        userId: number,
+        include: string[] = []
+    ): Promise<PublicUserProfile> {
+        const query = include.length > 0 ? `?include=${include.join(",")}` : "";
+        const publicUser = await apiClient.get<any>(`/users/${userId}${query}`);
+
+        const profile = publicUser.profile || null;
+        const base: PublicUserProfile = {
+            id: publicUser.id,
+            username: publicUser.username,
+            nickname: profile?.nickname ?? null,
+            friendship_status: null,
+            status: this.mapStatus(publicUser.status),
+            member_since: profile?.created_at ?? null,
+            avatar_url: profile?.avatar_url ?? null,
+            social_links: profile?.social_links ?? [],
+            role: profile?.role ?? null,
+            achievements: publicUser.achievements,
+            presets: publicUser.presets,
+            favorite_client_id: profile?.favorite_client_id ?? null,
+        };
+
+        if (publicUser.friendship_status) {
+            return { ...base, friendship_status: publicUser.friendship_status };
+        }
+
+        const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        if (!token) return base;
+
+        try {
+            const batch = await this.getFriendsBatch();
+            const isFriend = batch.friends.some((f) => f.id === userId);
+            if (isFriend) return { ...base, friendship_status: "friends" };
+
+            const sent = batch.requests.sent.find(
+                (r) => r.addressee.id === userId
+            );
+            if (sent) {
+                if ((sent.status || "").toString() === "blocked")
+                    return { ...base, friendship_status: "blocked" };
+                return { ...base, friendship_status: "request_sent" };
+            }
+
+            const received = batch.requests.received.find(
+                (r) => r.requester.id === userId
+            );
+            if (received) {
+                if ((received.status || "").toString() === "blocked")
+                    return { ...base, friendship_status: "blocked" };
+                return { ...base, friendship_status: "request_received" };
+            }
+
+            const anyBlocked =
+                batch.requests.sent.some(
+                    (r) => r.status === "blocked" && r.addressee.id === userId
+                ) ||
+                batch.requests.received.some(
+                    (r) => r.status === "blocked" && r.requester.id === userId
+                );
+            return {
+                ...base,
+                friendship_status: anyBlocked ? "blocked" : null,
+            };
+        } catch {
+            return base;
+        }
+    }
+
+    async searchUsers(query: string, limit = 20): Promise<SearchUser[]> {
+        const resp = await apiClient.get<any[]>("/users/search", {
+            q: query,
+            limit: limit.toString(),
+        });
+        return (resp || []).map((u: any) => ({
+            id: u.id,
+            username: u.username,
+            nickname: u.nickname ?? null,
+            avatar_url: u.avatar_url ?? null,
+            friendship_status: (u.friendship_status ??
+                null) as FriendshipStatus,
+        }));
+    }
+
+    async getFriendsBatch(): Promise<{
+        friends: Friend[];
+        requests: FriendRequestsBatch;
+    }> {
+        const localId = this.getLocalId();
+        if (localId !== null) {
+            return {
+                friends: [],
+                requests: { sent: [], received: [], blocked: [] },
+            };
+        }
+
+        const resp = await apiClient.get<any>("/friends/batch");
+
+        const friends: Friend[] = (resp.friends || []).map((f: any) =>
+            this.mapFriend(f)
+        );
+        const requests: FriendRequestsBatch = {
+            sent: (resp.requests?.sent || []).map((r: any) =>
+                this.mapFriendRequest(r)
+            ),
+            received: (resp.requests?.received || []).map((r: any) =>
+                this.mapFriendRequest(r)
+            ),
+            blocked: (resp.requests?.blocked || []).map((r: any) =>
+                this.mapFriendRequest(r)
+            ),
+        };
+
+        return { friends, requests };
+    }
+
+    async getFriends(): Promise<Friend[]> {
+        const batch = await this.getFriendsBatch();
+        return batch.friends;
+    }
+
+    async getFriendRequests(): Promise<FriendRequestsBatch> {
+        const batch = await this.getFriendsBatch();
+        return batch.requests;
+    }
+
+    async sendFriendRequest(userId: number): Promise<FriendRequest> {
+        const resp = await apiClient.post<any>("/friends/requests", {
+            user_id: userId,
+        });
+        const batch = await this.getFriendsBatch();
+        const created =
+            batch.requests.sent.find((r) => r.id === resp?.id) ||
+            batch.requests.sent.find((r) => r.addressee.id === userId);
+        if (created) return created;
+        return this.mapFriendRequest(resp);
+    }
+
+    async respondToFriendRequest(
+        requestId: number,
+        action: "accept" | "reject"
+    ): Promise<void> {
+        if (action === "accept") {
+            await apiClient.post(`/friends/requests/${requestId}/accept`);
+        } else {
+            await apiClient.post(`/friends/requests/${requestId}/decline`);
+        }
+    }
+
+    async cancelFriendRequest(requestId: number): Promise<void> {
+        await apiClient.post(`/friends/requests/${requestId}/decline`);
+    }
+
+    async blockUser(userId: number): Promise<void> {
+        await apiClient.post("/friends/block", { user_id: userId });
+    }
+
+    async unblockUser(userId: number): Promise<void> {
+        await apiClient.post("/friends/unblock", { user_id: userId });
+    }
+
+    async getBlockedUsers(): Promise<Friend[]> {
+        const meId = await this.getCurrentUserId();
+        const batch = await this.getFriendsBatch();
+
+        const blocked: Friend[] = [];
+        const seen = new Set<number>();
+        const add = (f: Friend) => {
+            if (seen.has(f.id)) return;
+            seen.add(f.id);
+            blocked.push(f);
+        };
+
+        const consider = (r: FriendRequest) => {
+            if (meId && r.requester.id === meId) add(r.addressee);
+            else if (meId && r.addressee.id === meId) add(r.requester);
+            else {
+                add(r.requester);
+                add(r.addressee);
+            }
+        };
+
+        batch.requests.blocked.forEach(consider);
+
+        return blocked;
+    }
+
+    async removeFriend(userId: number): Promise<void> {
+        await apiClient.delete(`/friends/${userId}`);
+    }
+
+    async getSocialLinks(): Promise<SocialLink[]> {
+        return await apiClient.get("/users/me/social-links");
+    }
+
+    async updateSocialLinks(links: SocialLink[]): Promise<SocialLink[]> {
+        return await apiClient.put("/users/me/social-links", { links });
+    }
+
+    async getPreferences(): Promise<UserPreference[]> {
+        return await apiClient.get("/users/me/preferences");
+    }
+
+    async setPreference(key: string, value: unknown): Promise<UserPreference> {
+        const safeKey = encodeURIComponent(key);
+        let payloadValue: unknown = value;
+        try {
+            if (
+                key === SYNC_SETTINGS_PREF_KEY &&
+                value &&
+                typeof value === "object"
+            ) {
+                payloadValue = this.stripShowFields(value);
+            }
+        } catch (err) {
+            console.warn(
+                "Failed to strip show fields from settings payload:",
+                err
+            );
+        }
+
+        return await apiClient.put(`/users/me/preferences/${safeKey}`, {
+            value: payloadValue,
+        });
+    }
+
+    async deletePreference(key: string): Promise<void> {
+        const safeKey = encodeURIComponent(key);
+        await apiClient.delete(`/users/me/preferences/${safeKey}`);
+    }
+
+    async getFavorites(): Promise<UserFavorite[]> {
+        return await apiClient.get("/users/me/favorites");
+    }
+
+    async addFavorite(
+        favorite: Omit<UserFavorite, "id" | "created_at">
+    ): Promise<UserFavorite> {
+        return await apiClient.post("/users/me/favorites", favorite);
+    }
+
+    async deleteFavorite(favoriteId: number): Promise<void> {
+        await apiClient.delete(`/users/me/favorites/${favoriteId}`);
+    }
+
+    async getExternalAccounts(): Promise<UserExternalAccount[]> {
+        return await apiClient.get("/users/me/accounts");
+    }
+
+    async addExternalAccount(
+        account: Omit<UserExternalAccount, "id" | "created_at" | "updated_at">
+    ): Promise<UserExternalAccount> {
+        return await apiClient.post("/users/me/accounts", account);
+    }
+
+    async deleteExternalAccount(accountId: number): Promise<void> {
+        await apiClient.delete(`/users/me/accounts/${accountId}`);
+    }
+
+    async getSyncStatus(): Promise<SyncStatus | null> {
+        try {
+            const [preferences, favorites, accounts] = await Promise.all([
+                this.getPreferences(),
+                this.getFavorites(),
+                this.getExternalAccounts(),
+            ]);
+
+            const settingsPref = Array.isArray(preferences)
+                ? preferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ||
+                  null
+                : null;
+
+            const safeFavorites = Array.isArray(favorites) ? favorites : [];
+            const safeAccounts = Array.isArray(accounts) ? accounts : [];
+
+            const lastSync = maxIsoTimestamp([
+                settingsPref?.updated_at ?? null,
+                ...safeFavorites.map((f) => f.created_at ?? null),
+                ...safeAccounts.map((a) => a.updated_at ?? null),
+            ]);
+
+            return {
+                last_sync_timestamp: lastSync,
+                has_cloud_data:
+                    !!settingsPref ||
+                    safeFavorites.length > 0 ||
+                    safeAccounts.length > 0,
+            };
+        } catch (error) {
+            console.error("Failed to get sync status:", error);
+            return null;
+        }
+    }
+
+    async syncToCloud(syncData: SyncData): Promise<void> {
+        await this.setPreference(
+            SYNC_SETTINGS_PREF_KEY,
+            syncData.settings_data ?? {}
+        );
+
+        const [remoteFavorites, remoteAccounts] = await Promise.all([
+            this.getFavorites(),
+            this.getExternalAccounts(),
+        ]);
+
+        const localFavoriteRefs = new Set(
+            (syncData.favorites_data || []).map((id) => String(id))
+        );
+        const remoteClientFavorites = (
+            Array.isArray(remoteFavorites) ? remoteFavorites : []
+        ).filter((f) => f.type === SYNC_FAVORITE_TYPE);
+
+        await Promise.all(
+            remoteClientFavorites
+                .filter((f) => !localFavoriteRefs.has(f.reference))
+                .map((f) => this.deleteFavorite(f.id))
+        );
+
+        const remoteFavoriteRefs = new Set(
+            remoteClientFavorites.map((f) => f.reference)
+        );
+        for (const favRef of localFavoriteRefs) {
+            if (remoteFavoriteRefs.has(favRef)) continue;
+            await this.addFavorite({
+                type: SYNC_FAVORITE_TYPE,
+                reference: favRef,
+                metadata: null,
+            });
+        }
+
+        const localAccounts = (syncData.accounts_data || [])
+            .map((acc: any) => ({
+                username: acc?.username,
+                tags: acc?.tags,
+            }))
+            .filter(
+                (acc) =>
+                    typeof acc.username === "string" && acc.username.length > 0
+            );
+
+        const localAccountNames = new Set(localAccounts.map((a) => a.username));
+
+        await Promise.all(
+            remoteAccounts
+                .filter(
+                    (a) =>
+                        a.display_name && !localAccountNames.has(a.display_name)
+                )
+                .map((a) => this.deleteExternalAccount(a.id))
+        );
+
+        const remoteAccountNames = new Set(
+            remoteAccounts
+                .map((a) => a.display_name)
+                .filter(Boolean) as string[]
+        );
+        for (const acc of localAccounts) {
+            if (remoteAccountNames.has(acc.username)) continue;
+            await this.addExternalAccount({
+                display_name: acc.username,
+                metadata: { tags: acc.tags || [] },
+            });
+        }
+    }
+
+    formatSyncData(
+        preferences: UserPreference[],
+        favorites: UserFavorite[],
+        accounts: UserExternalAccount[]
+    ): SyncData {
+        const safePreferences = Array.isArray(preferences) ? preferences : [];
+        const safeFavorites = Array.isArray(favorites) ? favorites : [];
+        const safeAccounts = Array.isArray(accounts) ? accounts : [];
+
+        const settingsPref =
+            safePreferences.find((p) => p.key === SYNC_SETTINGS_PREF_KEY) ??
+            null;
+
+        const favorites_data = safeFavorites
+            .filter((f) => f.type === SYNC_FAVORITE_TYPE)
+            .map((f) => Number.parseInt(String(f.reference), 10))
+            .filter((n) => Number.isFinite(n));
+
+        const accounts_data = safeAccounts.map((a) => {
+            const meta: any =
+                a.metadata && typeof a.metadata === "object" ? a.metadata : {};
+            return {
+                username: a.display_name,
+                tags: Array.isArray(meta.tags) ? meta.tags : ["cloud-sync"],
+            };
+        });
+
+        const last_sync_timestamp = maxIsoTimestamp([
+            settingsPref?.updated_at ?? null,
+            ...safeFavorites.map((f) => f.created_at ?? null),
+            ...safeAccounts.map((a) => a.updated_at ?? null),
+        ]);
+
+        return {
+            settings_data: (settingsPref?.value ?? {}) as any,
+            favorites_data,
+            accounts_data,
+            last_sync_timestamp,
+        };
+    }
+
+    async downloadFromCloud(): Promise<SyncData | null> {
+        try {
+            const [preferences, favorites, accounts] = await Promise.all([
+                this.getPreferences(),
+                this.getFavorites(),
+                this.getExternalAccounts(),
+            ]);
+
+            return this.formatSyncData(preferences, favorites, accounts);
+        } catch (error) {
+            console.error("Failed to download from cloud:", error);
+            return null;
+        }
+    }
+
+    clearCache(): void {
+        localStorage.removeItem(CACHE_KEY);
+        console.log("User data cache cleared");
+    }
+
+    private async refreshCachedUser(): Promise<UserProfile | undefined> {
+        const data = await apiClient.get<any>("/users/me");
+        const profile = data.profile as UserProfile;
+        const info: UserInfo = {
+            id: data.id,
+            username: data.username,
+            email: data.email,
+            role: data.role,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            last_login_at: data.last_login_at ?? null,
+        };
+        this.setCachedData({ profile, info });
+        return profile;
+    }
+}
+
+export const userService = new UserService();

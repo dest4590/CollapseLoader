@@ -75,8 +75,6 @@ pub fn execute_jps() -> Result<Output, std::io::Error> {
                                             path.display(),
                                             e
                                         );
-                                    } else {
-                                        log_debug!("Set exec perm on {}", path.display());
                                     }
                                 }
                             }
@@ -223,3 +221,31 @@ where
         .filter(|item| lines.iter().any(|line| line.contains(get_filename(item))))
         .collect()
 }
+
+#[cfg(target_os = "windows")]
+pub fn force_high_performance_gpu(path: &std::path::Path) {
+    let path_str = path.to_string_lossy().replace("/", "\\");
+    log_info!("Setting High Performance GPU for: {}", path_str);
+
+    let status = Command::new("reg")
+        .arg("add")
+        .arg("HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences")
+        .arg("/v")
+        .arg(path_str)
+        .arg("/t")
+        .arg("REG_SZ")
+        .arg("/d")
+        .arg("GpuPreference=2;")
+        .arg("/f")
+        .creation_flags(0x0800_0000)
+        .status();
+
+    match status {
+        Ok(s) if s.success() => log_debug!("Successfully set GPU preference"),
+        Ok(s) => log_warn!("Registry update exited with status: {}", s),
+        Err(e) => log_error!("Failed to update GPU preference registry: {}", e),
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+pub fn force_high_performance_gpu(_path: &std::path::Path) {}

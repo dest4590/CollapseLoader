@@ -62,7 +62,6 @@
                             <button
                                 class="btn btn-accent btn-sm flex items-center gap-2"
                                 @click="$emit('change-view', 'marketplace')"
-                                disabled
                             >
                                 <Store class="w-4 h-4" />
                                 <span class="hidden sm:inline">{{
@@ -86,9 +85,9 @@
                                 @click="openInNewWindow"
                             >
                                 <ExternalLink class="w-4 h-4" />
-                                <span class="hidden sm:inline"
-                                    >Open Inspector</span
-                                >
+                                <span class="hidden sm:inline">{{
+                                    $t("theme.actions.open_inspector")
+                                }}</span>
                             </button>
                         </div>
                     </div>
@@ -838,10 +837,10 @@ import {
     SunMoon,
     ExternalLink,
 } from "lucide-vue-next";
-import { useToast } from "../services/toastService";
-import { settingsService } from "../services/settingsService";
-import { themeService } from "../services/themeService";
-import PresetManager from "../components/features/PresetManager.vue";
+import { useToast } from "@shared/composables/useToast";
+import { settingsService } from "@services/settings/settingsService";
+import { themeService } from "@services/theme/themeService";
+import PresetManager from "@features/presets/components/PresetManager.vue";
 import {
     Moon,
     Sun,
@@ -852,8 +851,8 @@ import {
     ChevronUp,
 } from "lucide-vue-next";
 import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
-import ImportExportCssModal from "../components/modals/social/presets/ImportExportCssModal.vue";
-import { useModal } from "../services/modalService";
+import ImportExportCssModal from "@features/presets/modals/ImportExportCssModal.vue";
+import { useModal } from "@shared/composables/useModal";
 
 defineEmits(["change-view"]);
 
@@ -958,7 +957,7 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
     const r = refs[settingKey];
     if (r) {
         if (settingKey === "backgroundImage") {
-            r.value = value && value.trim().length > 0 ? value : null;
+            r.value = value && value.trim().length > 0 ? value.trim() : null;
         } else {
             r.value = value;
         }

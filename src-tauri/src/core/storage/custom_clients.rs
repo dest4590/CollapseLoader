@@ -1,8 +1,10 @@
-use std::{fs, path::PathBuf, sync::Mutex};
+use std::{path::PathBuf, sync::Mutex};
 
+use crate::core::clients::client::ClientType;
 use crate::core::clients::custom_clients::CustomClient;
 use crate::core::storage::data::DATA;
 use crate::core::storage::settings::SETTINGS;
+use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::CUSTOM_CLIENTS_FOLDER;
 use crate::log_warn;
 use serde::{Deserialize, Serialize};
@@ -21,9 +23,9 @@ pub struct CustomClientManager {
 
 impl CustomClientManager {
     pub fn load_from_disk(path: PathBuf) -> Self {
-        let mut loaded = <Self as JsonStorage>::load_from_disk(path.clone());
-        loaded.custom_clients_path = path;
-        loaded
+        <Self as JsonStorage>::load_from_disk_with(path.clone(), |loaded| {
+            loaded.custom_clients_path = path;
+        })
     }
 
     pub fn add_client(&mut self, mut custom_client: CustomClient) -> Result<(), String> {
@@ -47,19 +49,25 @@ impl CustomClientManager {
         }
 
         let custom_clients_dir = DATA.get_local(CUSTOM_CLIENTS_FOLDER);
-        if !custom_clients_dir.exists() {
-            fs::create_dir_all(&custom_clients_dir)
-                .map_err(|e| format!("Failed to create custom clients directory: {e}"))?;
-        }
+        fs_utils::ensure_dir(&custom_clients_dir)
+            .map_err(|e| format!("Failed to create custom clients directory: {e}"))?;
 
         let client_dir = custom_clients_dir.join(&custom_client.name);
-        if !client_dir.exists() {
-            fs::create_dir_all(&client_dir)
-                .map_err(|e| format!("Failed to create client directory: {e}"))?;
+        fs_utils::ensure_dir(&client_dir)
+            .map_err(|e| format!("Failed to create client directory: {e}"))?;
+
+        let mut target_path = client_dir.clone();
+
+        if custom_client.client_type == ClientType::Fabric
+            || custom_client.client_type == ClientType::Forge
+        {
+            target_path = target_path.join("mods");
+            fs_utils::ensure_dir(&target_path)
+                .map_err(|e| format!("Failed to create mods directory: {e}"))?;
         }
 
-        let target_path = client_dir.join(&custom_client.filename);
-        fs::copy(&custom_client.file_path, &target_path)
+        target_path = target_path.join(&custom_client.filename);
+        fs_utils::copy_file(&custom_client.file_path, &target_path)
             .map_err(|e| format!("Failed to copy file: {e}"))?;
 
         custom_client.file_path = target_path;
@@ -70,7 +78,8 @@ impl CustomClientManager {
             .map(|s| s.sync_client_settings.value)
             .unwrap_or(false)
         {
-            if let Err(e) = block_on(DATA.ensure_client_synced(&custom_client.name)) {
+            let client_base = format!("custom_clients{}{}", std::path::MAIN_SEPARATOR, custom_client.name);
+            if let Err(e) = block_on(DATA.ensure_client_synced(&client_base)) {
                 log_warn!(
                     "Failed to ensure client sync for custom client {}: {}",
                     custom_client.name,
@@ -89,7 +98,7 @@ impl CustomClientManager {
             let client = &self.clients[index];
 
             if client.file_path.exists() {
-                fs::remove_file(&client.file_path)
+                fs_utils::remove_path(&client.file_path)
                     .map_err(|e| format!("Failed to remove file: {e}"))?;
             }
 
@@ -137,6 +146,10 @@ impl CustomClientManager {
                 client.java_args = Some(java_args);
             }
 
+            if let Some(client_type) = updates.client_type {
+                client.client_type = client_type;
+            }
+
             self.save_to_disk();
             Ok(())
         } else {
@@ -152,6 +165,7 @@ pub struct CustomClientUpdate {
     pub main_class: Option<String>,
     pub java_path: Option<String>,
     pub java_args: Option<String>,
+    pub client_type: Option<ClientType>,
 }
 
 impl JsonStorage for CustomClientManager {
