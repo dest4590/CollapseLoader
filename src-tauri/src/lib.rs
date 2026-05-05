@@ -1,18 +1,14 @@
 use crate::core::clients::manager::ClientManager;
+use crate::core::app_runtime::{
+    DeepLinkAction, DeepLinkDeduplicator, StartupMetadata, StartupRuntime, TrayMenuAction,
+};
 #[cfg(target_os = "windows")]
 use crate::core::platform::messagebox;
 use crate::core::utils::discord_rpc;
-use crate::{core::storage::data::APP_HANDLE, logging::Logger};
-use std::sync::OnceLock;
+use crate::core::storage::data::APP_HANDLE;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
-
-use crate::core::{platform::check_platform_dependencies, utils::globals::CODENAME};
-
-#[cfg(target_os = "linux")]
-use crate::core::platform::check_webkit_environment;
 
 use self::core::network::analytics::Analytics;
 use crate::core::network::servers::SERVERS;
@@ -29,14 +25,8 @@ pub use crate::core::state::AppState;
 use crate::core::utils::helpers::{emit_to_main_window, show_main_window};
 pub use crate::core::utils::logging;
 
-pub fn check_dependencies() -> Result<(), StartupError> {
-    check_platform_dependencies()
-}
-
-#[cfg(target_os = "linux")]
-pub fn check_webkit_warning() -> Result<(), StartupError> {
-    log_info!("Checking WebKit environment variables...");
-    check_webkit_environment()
+pub fn prepare_startup() -> Result<(), StartupError> {
+    StartupRuntime::prepare()
 }
 
 #[cfg(target_os = "windows")]
@@ -78,103 +68,21 @@ pub fn handle_startup_error(error: &StartupError) {
 }
 
 fn handle_tray_menu_action(app: &tauri::AppHandle, action_id: &str) {
-    if action_id == "show" {
-        show_main_window(app);
-        return;
-    }
-
-    if action_id == "quit" {
-        app.exit(0);
-        return;
-    }
-
-    if let Some(client_id) = action_id
-        .strip_prefix("launch_")
-        .and_then(|id| id.parse::<u32>().ok())
-    {
-        show_main_window(app);
-        crate::core::utils::helpers::emit_to_main_window(
-            app,
-            "tray-launch-client",
-            serde_json::json!({ "id": client_id }),
-        );
-    }
-}
-
-fn build_window_title(
-    version: &str,
-    codename: &str,
-    is_dev: bool,
-    git_hash: &str,
-    git_branch: &str,
-) -> String {
-    let build_label = if is_dev {
-        format!("(development build, {git_hash}, {git_branch} branch)")
-    } else {
-        String::new()
-    };
-
-    format!("CollapseLoader v{version} ({codename}) {build_label}")
-}
-
-fn configure_main_window(
-    app_handle: &tauri::AppHandle,
-    version: &str,
-    codename: &str,
-    is_dev: bool,
-    git_hash: &str,
-    git_branch: &str,
-) {
-    if let Some(window) = app_handle.get_webview_window("main") {
-        let window_title = build_window_title(version, codename, is_dev, git_hash, git_branch);
-
-        if let Err(e) = window.set_title(&window_title) {
-            log_warn!("Failed to set window title: {}", e);
+    match TrayMenuAction::parse(action_id) {
+        TrayMenuAction::Show => show_main_window(app),
+        TrayMenuAction::Quit => {
+            app.exit(0);
         }
-
-        #[cfg(target_os = "macos")]
-        if let Err(e) = window.set_decorations(true) {
-            log_warn!("Failed to enable window decorations: {}", e);
+        TrayMenuAction::LaunchClient(client_id) => {
+            show_main_window(app);
+            crate::core::utils::helpers::emit_to_main_window(
+                app,
+                "tray-launch-client",
+                serde_json::json!({ "id": client_id }),
+            );
         }
-
-        let start_minimized = {
-            crate::core::storage::settings::SETTINGS
-                .lock()
-                .map(|s| s.start_minimized.value)
-                .unwrap_or(false)
-        };
-
-        if start_minimized {
-            let _ = window.hide();
-        }
+        TrayMenuAction::Ignore => {}
     }
-}
-
-fn parse_verify_params(url: &str) -> Option<(String, String)> {
-    let query_part = url.split_once('?')?.1;
-    let mut code = String::new();
-    let mut email = String::new();
-
-    for pair in query_part.split('&') {
-        if let Some((key, value)) = pair.split_once('=') {
-            match key {
-                "code" => code = value.to_string(),
-                "email" => email = value.to_string(),
-                _ => {}
-            }
-        }
-    }
-
-    (!code.is_empty()).then_some((code, email))
-}
-
-fn parse_client_name(url: &str) -> Option<&str> {
-    let (_, query_part) = url.split_once('?')?;
-
-    query_part
-        .split('&')
-        .find_map(|pair| pair.split_once('='))
-        .and_then(|(key, value)| (key == "client").then_some(value))
 }
 
 fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running: bool) {
@@ -188,50 +96,33 @@ fn handle_deep_link_url(app: &tauri::AppHandle, url: String, was_already_running
         was_already_running
     );
 
-    if was_already_running && !should_handle_deep_link(&url) {
+    if was_already_running && !DeepLinkDeduplicator::should_handle(&url) {
         log_debug!("Deep link already handled, skipping: {}", url);
         return;
     }
 
-    if url.contains("verify") {
-        if let Some((code, email)) = parse_verify_params(&url) {
+    match DeepLinkAction::parse(&url) {
+        Some(DeepLinkAction::VerifyEmail { code, email }) => {
             log_debug!("Emitting verify-email event for code: {}", code);
             emit_to_main_window(
                 app,
                 "verify-email",
                 serde_json::json!({ "code": code, "email": email }),
             );
-            return;
         }
-    }
-
-    if let Some(client_name) = parse_client_name(&url) {
-        log_debug!("Launching client from deep link: {}", client_name);
-        emit_to_main_window(
-            app,
-            "launch-client",
-            serde_json::json!({
-                "id": client_name,
-                "was_already_running": was_already_running
-            }),
-        );
-    }
-}
-
-fn should_handle_deep_link(url: &str) -> bool {
-    static LAST_HANDLED: OnceLock<Mutex<Option<(String, Instant)>>> = OnceLock::new();
-    let last = LAST_HANDLED.get_or_init(|| Mutex::new(None));
-    let mut guard = last.lock().unwrap_or_else(|p| p.into_inner());
-    let normalized = url.trim();
-
-    if let Some((ref prev, prev_time)) = *guard {
-        if prev == normalized && prev_time.elapsed() < Duration::from_secs(2) {
-            return false;
+        Some(DeepLinkAction::LaunchClient { client_id }) => {
+            log_debug!("Launching client from deep link: {}", client_id);
+            emit_to_main_window(
+                app,
+                "launch-client",
+                serde_json::json!({
+                    "id": client_id,
+                    "was_already_running": was_already_running
+                }),
+            );
         }
+        None => {}
     }
-
-    *guard = Some((normalized.to_string(), Instant::now()));
-    true
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -376,26 +267,9 @@ pub fn run() {
             let app_handle = app.handle();
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
-            let is_dev = env!("DEVELOPMENT") == "true";
-            let git_hash = env!("GIT_HASH")
-                .to_string()
-                .chars()
-                .take(7)
-                .collect::<String>();
-            let git_branch = env!("GIT_BRANCH").to_string();
-
-            let version = env!("CARGO_PKG_VERSION");
-            let codename = CODENAME.to_string().to_uppercase();
-            configure_main_window(
-                &app_handle,
-                version,
-                &codename,
-                is_dev,
-                &git_hash,
-                &git_branch,
-            );
-
-            Logger::print_startup_banner(version, &codename, is_dev, &git_hash, &git_branch);
+            let startup_metadata = StartupMetadata::from_env();
+            startup_metadata.configure_main_window(&app_handle);
+            startup_metadata.print_banner();
 
             spawn(async {
                 SERVERS.check_servers().await;

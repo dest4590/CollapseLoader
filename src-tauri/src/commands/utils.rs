@@ -474,7 +474,7 @@ pub struct StorageUsage {
     pub total: u64,
 }
 
-fn dir_size(path: &std::path::Path) -> u64 {
+pub(crate) fn dir_size(path: &std::path::Path) -> u64 {
     if !path.exists() {
         return 0;
     }

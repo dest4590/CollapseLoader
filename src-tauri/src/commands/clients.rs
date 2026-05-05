@@ -36,7 +36,7 @@ use std::io::Read;
 use std::path::PathBuf;
 use zip::ZipArchive;
 
-fn get_client_by_id(
+pub(crate) fn get_client_by_id(
     id: u32,
     manager: &std::sync::Arc<std::sync::Mutex<ClientManager>>,
 ) -> Result<Client, String> {

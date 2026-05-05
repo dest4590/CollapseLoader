@@ -31,7 +31,7 @@ reqwest = { version = "0.13.3", features = [
 ] }
 semver = "1.0.28"
 zip = "8.6.0"
-tokio = { version = "1.52.1", features = ["macros", "process"] }
+tokio = { version = "1.52.2", features = ["macros", "process"] }
 opener = "0.8.4"
 uuid = { version = "1.23.1", features = ["v4"] }
 chrono = { version = "0.4.44", features = ["serde"] }
@@ -41,9 +41,9 @@ md5 = "0.8.0"
 discord-rich-presence = "1.1.0"
 futures-util = "0.3.32"
 base64 = "0.22.1"
-tauri-plugin-dialog = "2.7.0"
+tauri-plugin-dialog = "2.7.1"
 dotenvy = "0.15.7"
-tauri-plugin-fs = "2.5.0"
+tauri-plugin-fs = "2.5.1"
 thiserror = "2.0.18"
 native-dialog = "0.9.6"
 sysinfo = "0.38.4"

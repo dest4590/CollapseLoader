@@ -184,7 +184,12 @@ const results = computed<ResultItem[]>(() => {
 
     for (const [key, field] of sortedSettings) {
         if (!field.show) continue;
-        if (key === "irc_chat" || key === "optional_telemetry" || key === "start_minimized") continue;
+        if (
+            key === "irc_chat" ||
+            key === "optional_telemetry" ||
+            key === "start_minimized"
+        )
+            continue;
         const label = settingsLabelMap.value[key] || key.replace(/_/g, " ");
         const s = q ? Math.max(scoreText(label), scoreText(key)) : 1;
         const item = {

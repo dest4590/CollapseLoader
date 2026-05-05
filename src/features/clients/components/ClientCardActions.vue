@@ -15,7 +15,12 @@ defineProps<{
     isShiftHeld: boolean;
 }>();
 
-const emit = defineEmits(["launch", "download", "open-log-viewer", "open-ram-viewer"]);
+const emit = defineEmits([
+    "launch",
+    "download",
+    "open-log-viewer",
+    "open-ram-viewer",
+]);
 
 const handleLaunchClick = () => {
     emit("launch");

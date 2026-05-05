@@ -64,7 +64,7 @@ pub struct UpdateInfo {
     pub is_critical: bool,
 }
 
-fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
+pub(crate) fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
     let version = version.trim_start_matches('v');
     let version = version.split('-').next().unwrap_or(version);
     let parts: Vec<&str> = version.split('.').collect();
@@ -80,13 +80,13 @@ fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
     Ok((major, minor, patch))
 }
 
-fn parse_version_component(component: &str, label: &str) -> Result<u32, String> {
+pub(crate) fn parse_version_component(component: &str, label: &str) -> Result<u32, String> {
     component
         .parse::<u32>()
         .map_err(|_| format!("Invalid {label} version"))
 }
 
-fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
+pub(crate) fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
     let (major1, minor1, patch1) = parse_version(v1)?;
     let (major2, minor2, patch2) = parse_version(v2)?;
 
@@ -99,7 +99,7 @@ fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
     }
 }
 
-fn truncate_str(s: &str, max: usize) -> String {
+pub(crate) fn truncate_str(s: &str, max: usize) -> String {
     if s.len() <= max {
         s.to_string()
     } else {
@@ -379,7 +379,7 @@ pub fn get_changelog() -> Vec<ChangelogEntry> {
     Vec::new()
 }
 
-fn extract_changelog_json_block(body: &str) -> Option<String> {
+pub(crate) fn extract_changelog_json_block(body: &str) -> Option<String> {
     let marker = if let Some(idx) = body.find("```changelog") {
         Some((idx, "```changelog"))
     } else {
@@ -415,7 +415,7 @@ fn extract_changelog_json_block(body: &str) -> Option<String> {
     None
 }
 
-fn parse_changelog_and_translations(
+pub(crate) fn parse_changelog_and_translations(
     content: &str,
 ) -> Result<(Vec<ChangelogEntry>, Option<JsonValue>), String> {
     if let Ok(v) = serde_json::from_str::<Vec<ChangelogEntry>>(content) {

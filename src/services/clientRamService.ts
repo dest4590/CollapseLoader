@@ -22,7 +22,8 @@ class ClientRamService {
             unitIndex += 1;
         }
 
-        const digits = unitIndex === 0 || value >= 100 ? 0 : value >= 10 ? 1 : 2;
+        const digits =
+            unitIndex === 0 || value >= 100 ? 0 : value >= 10 ? 1 : 2;
         return `${value.toFixed(digits)} ${units[unitIndex]}`;
     }
 

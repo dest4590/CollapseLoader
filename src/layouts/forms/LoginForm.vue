@@ -52,7 +52,9 @@ const handleLocalLogin = async () => {
 
     try {
         isLoading.value = true;
-        const existing = localUserService.getProfiles().find(p => p.username === inputName);
+        const existing = localUserService
+            .getProfiles()
+            .find((p) => p.username === inputName);
         if (existing) {
             localUserService.setActiveProfile(existing.id);
             addToast(

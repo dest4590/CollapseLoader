@@ -148,7 +148,9 @@ onBeforeUnmount(() => {
     height: 1rem;
     opacity: 0.5;
     flex-shrink: 0;
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
+    transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.15s ease;
 }
 
 .trigger-chevron.rotated {
@@ -157,10 +159,14 @@ onBeforeUnmount(() => {
 }
 
 .dropdown-enter-active {
-    transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+    transition:
+        opacity 0.2s ease,
+        transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 .dropdown-leave-active {
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
 }
 .dropdown-enter-from {
     opacity: 0;
@@ -188,7 +194,10 @@ onBeforeUnmount(() => {
     color: inherit;
     font-size: 0.8125rem;
     cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
     outline: none;
 }
 
@@ -248,7 +257,9 @@ onBeforeUnmount(() => {
     font-size: 0.75rem;
     text-align: left;
     cursor: pointer;
-    transition: background 0.1s ease, color 0.1s ease;
+    transition:
+        background 0.1s ease,
+        color 0.1s ease;
 }
 
 [data-theme="light"] .animated-dropdown-item {

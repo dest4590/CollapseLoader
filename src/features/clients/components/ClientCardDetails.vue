@@ -65,13 +65,17 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                 >
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div
-                            v-for="(screenshot, index) in clientDetails.screenshot_urls"
+                            v-for="(
+                                screenshot, index
+                            ) in clientDetails.screenshot_urls"
                             :key="index"
                             class="screenshot-container group"
                         >
                             <div
                                 class="relative overflow-hidden rounded border border-base-content/10 cursor-pointer"
-                                @click.stop="handleScreenshotClick($event, index)"
+                                @click.stop="
+                                    handleScreenshotClick($event, index)
+                                "
                             >
                                 <img
                                     :src="screenshot"
@@ -80,7 +84,10 @@ const handleScreenshotClick = (event: MouseEvent, index: number) => {
                                     @error="
                                         ($event.target as HTMLImageElement)
                                             .closest('.screenshot-container')
-                                            ?.setAttribute('style', 'display:none')
+                                            ?.setAttribute(
+                                                'style',
+                                                'display:none'
+                                            )
                                     "
                                 />
                                 <div

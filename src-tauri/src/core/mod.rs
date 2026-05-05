@@ -1,5 +1,6 @@
 //! Core application logic, including client management, networking, and storage.
 
+pub mod app_runtime;
 pub mod clients;
 pub mod network;
 pub mod platform;

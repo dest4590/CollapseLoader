@@ -1,4 +1,4 @@
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, type ComputedRef, type Ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -17,34 +17,105 @@ import { localTrackerService } from "@services/localTrackerService";
 import type { Client } from "@shared/types/ui";
 import notificationSound from "@/assets/misc/notification.mp3";
 
-export function useAppHandlers(props: {
-    isAuthenticated: any;
-    showPreloader: any;
-    showFirstRunInfo: any;
-    showInitialDisclaimer: any;
-    showRegistrationPrompt: any;
-    activeTab: any;
-    currentUserId: any;
-    previousTab: any;
-    authModalView: any;
-    showAuthModal: any;
+type SidebarPosition = "left" | "right" | "top" | "bottom";
+type AuthModalView = "LOGIN" | "REGISTER" | "VERIFY";
+
+interface AppHandlerProps {
+    isAuthenticated: Ref<boolean>;
+    showPreloader: Ref<boolean>;
+    showFirstRunInfo: Ref<boolean>;
+    showInitialDisclaimer: Ref<boolean>;
+    showRegistrationPrompt: Ref<boolean>;
+    activeTab: ComputedRef<string>;
+    currentUserId: Ref<number | null>;
+    previousTab: Ref<string>;
+    authModalView: Ref<AuthModalView>;
+    showAuthModal: Ref<boolean>;
     initializeUserDataWrapper?: (auth: boolean) => Promise<void>;
-}) {
+}
+
+interface TrayLaunchPayload {
+    id: number;
+}
+
+interface LaunchClientPayload {
+    id: string;
+    was_already_running: boolean;
+}
+
+interface ClientLaunchedPayload {
+    id: number;
+    name: string;
+    version?: string;
+}
+
+export function useAppHandlers(props: AppHandlerProps) {
     const { t, locale } = useI18n();
     const { addToast } = useToast();
     const { clearUserData } = useUser();
 
+    class ListenerGroup {
+        private readonly cleanups: Array<() => void> = [];
+
+        add(cleanup: () => void) {
+            this.cleanups.push(cleanup);
+        }
+
+        dispose() {
+            for (const cleanup of this.cleanups.splice(0)) {
+                cleanup();
+            }
+        }
+    }
+
+    class ClientLaunchCoordinator {
+        async findClientById(id: number | string) {
+            const clientId = typeof id === "string" ? Number(id) : id;
+            if (!clientId) {
+                return null;
+            }
+
+            const clients = await invoke<Client[]>("get_clients");
+            return clients.find((client) => client.id === clientId) || null;
+        }
+
+        async launch(target: Client, wasAlreadyRunning: boolean = false) {
+            try {
+                const userToken = localStorage.getItem("authToken") || "null";
+
+                if (!target.meta.installed) {
+                    addToast(
+                        t("home.starting_download", { name: target.name }),
+                        "info",
+                        3000
+                    );
+                    await invoke("download_client_only", { id: target.id });
+                    target.meta.installed = true;
+                }
+
+                addToast(
+                    t("home.launching", { client: target.name }),
+                    "info",
+                    2000
+                );
+                await invoke("launch_client", { id: target.id, userToken });
+
+                if (!wasAlreadyRunning) {
+                    await getCurrentWindow().minimize();
+                }
+            } catch (error) {
+                addToast(String(error), "error", 5000);
+            }
+        }
+    }
+
+    const clientLaunchCoordinator = new ClientLaunchCoordinator();
+
     const sidebarPosition = ref(
-        (localStorage.getItem("sidebarPosition") as
-            | "left"
-            | "right"
-            | "top"
-            | "bottom") || "left"
+        (localStorage.getItem("sidebarPosition") as SidebarPosition) || "left"
     );
 
-    const updateSidebarPosition = (
-        newPosition: "left" | "right" | "top" | "bottom"
-    ) => {
+    const updateSidebarPosition = (newPosition: SidebarPosition) => {
         sidebarPosition.value = newPosition;
         localStorage.setItem("sidebarPosition", newPosition);
     };
@@ -69,7 +140,7 @@ export function useAppHandlers(props: {
 
     const markFlagShown = async (
         flag: "first_run" | "disclaimer",
-        refToUpdate: any
+        refToUpdate: Ref<boolean>
     ) => {
         try {
             const command =
@@ -132,79 +203,51 @@ export function useAppHandlers(props: {
         webSocketService.connect();
     };
 
+    const findClientById = async (id: number | string) => {
+        return clientLaunchCoordinator.findClientById(id);
+    };
+
     const launchOrDownloadClient = async (
         target: Client,
         wasAlreadyRunning: boolean = false
     ) => {
-        try {
-            const userToken = localStorage.getItem("authToken") || "null";
-
-            if (!target.meta.installed) {
-                addToast(
-                    t("home.starting_download", { name: target.name }),
-                    "info",
-                    3000
-                );
-                await invoke("download_client_only", { id: target.id });
-                target.meta.installed = true;
-            }
-
-            addToast(
-                t("home.launching", { client: target.name }),
-                "info",
-                2000
-            );
-            await invoke("launch_client", { id: target.id, userToken });
-
-            if (!wasAlreadyRunning) {
-                await getCurrentWindow().minimize();
-            }
-        } catch (e) {
-            addToast(String(e), "error", 5000);
-        }
-    };
-
-    const findClientById = async (id: number | string) => {
-        const clientId = typeof id === "string" ? Number(id) : id;
-        if (!clientId) return null;
-
-        const clients = await invoke<Client[]>("get_clients");
-        return clients.find((c) => c.id === clientId) || null;
+        await clientLaunchCoordinator.launch(target, wasAlreadyRunning);
     };
 
     const setupTauriListeners = async () => {
-        const unlistenTray = await listen(
-            "tray-launch-client",
-            async (event) => {
-                const { id } = event.payload as { id: number };
+        const listeners = new ListenerGroup();
+
+        listeners.add(
+            await listen("tray-launch-client", async (event) => {
+                const { id } = event.payload as TrayLaunchPayload;
                 const target = await findClientById(id);
-                if (target) await launchOrDownloadClient(target);
-            }
+                if (target) {
+                    await launchOrDownloadClient(target);
+                }
+            })
         );
 
-        const unlistenLaunch = await listen("launch-client", async (event) => {
-            const { id, was_already_running } = event.payload as {
-                id: string;
-                was_already_running: boolean;
-            };
-            const target = await findClientById(id);
-            if (target)
-                await launchOrDownloadClient(target, was_already_running);
-        });
+        listeners.add(
+            await listen("launch-client", async (event) => {
+                const { id, was_already_running } =
+                    event.payload as LaunchClientPayload;
+                const target = await findClientById(id);
+                if (target) {
+                    await launchOrDownloadClient(target, was_already_running);
+                }
+            })
+        );
 
-        const unlistenExited = await listen("client-exited", () => {
-            localTrackerService.stopPlaytimeTracking();
-            globalUserStatus.setOnline();
-        });
+        listeners.add(
+            await listen("client-exited", () => {
+                localTrackerService.stopPlaytimeTracking();
+                globalUserStatus.setOnline();
+            })
+        );
 
-        const unlistenLaunched = await listen(
-            "client-launched",
-            async (event) => {
-                const payload = event.payload as {
-                    id: number;
-                    name: string;
-                    version?: string;
-                };
+        listeners.add(
+            await listen("client-launched", async (event) => {
+                const payload = event.payload as ClientLaunchedPayload;
 
                 localTrackerService.trackLaunch(payload.name);
                 localTrackerService.startPlaytimeTracking(payload.name);
@@ -227,14 +270,11 @@ export function useAppHandlers(props: {
                 } catch (error) {
                     console.error("Failed to update playing status:", error);
                 }
-            }
+            })
         );
 
         return () => {
-            unlistenTray();
-            unlistenLaunch();
-            unlistenExited();
-            unlistenLaunched();
+            listeners.dispose();
         };
     };
 
@@ -305,37 +345,36 @@ export function useAppHandlers(props: {
     };
 
     const setupWindowListeners = () => {
-        window.addEventListener(
+        const listeners = new ListenerGroup();
+        const registerListener = (
+            eventName: string,
+            handler: EventListener
+        ) => {
+            window.addEventListener(eventName, handler);
+            listeners.add(() => {
+                window.removeEventListener(eventName, handler);
+            });
+        };
+
+        registerListener(
             "achievement-unlocked",
-            handleAchievementUnlocked
+            handleAchievementUnlocked as EventListener
         );
-        window.addEventListener(
+        registerListener(
             "friend-request-received",
-            handleFriendRequestReceived
+            handleFriendRequestReceived as EventListener
         );
-        window.addEventListener(
+        registerListener(
             "friend-request-accepted",
-            handleFriendRequestAccepted
+            handleFriendRequestAccepted as EventListener
         );
-        window.addEventListener("system-broadcast", handleSystemBroadcast);
+        registerListener(
+            "system-broadcast",
+            handleSystemBroadcast as EventListener
+        );
 
         return () => {
-            window.removeEventListener(
-                "achievement-unlocked",
-                handleAchievementUnlocked
-            );
-            window.removeEventListener(
-                "friend-request-received",
-                handleFriendRequestReceived
-            );
-            window.removeEventListener(
-                "friend-request-accepted",
-                handleFriendRequestAccepted
-            );
-            window.removeEventListener(
-                "system-broadcast",
-                handleSystemBroadcast
-            );
+            listeners.dispose();
         };
     };
 
