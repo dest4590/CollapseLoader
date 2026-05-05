@@ -1,0 +1,7 @@
+{
+    "$schema": "https://app.kilo.ai/config.json",
+
+    "commit_message": {
+        "prompt": "Generate commit messages like this: feat(clients): new clients system, fix(sync): fixed client syncing, and etc.",
+    },
+}
