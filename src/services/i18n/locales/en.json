@@ -474,6 +474,24 @@
         "title": "Blocked Users ({count})",
         "noBlockedUsers": "No blocked users. Blocked users will appear here."
     },
+    "chat": {
+        "title": "Chat",
+        "no_messages": "No messages yet. Be the first!",
+        "input_placeholder": "Message as {username}...",
+        "connecting_placeholder": "Connecting...",
+        "send_hint": "Press Enter to send",
+        "send_failed": "Failed to send message",
+        "status": {
+            "connected": "Connected",
+            "connecting": "Connecting...",
+            "disconnected": "Disconnected",
+            "error": "Connection error"
+        },
+        "error": {
+            "login_required": "Log in to send messages",
+            "banned": "You are banned from chat"
+        }
+    },
     "friends": {
         "addFriend": "Add Friend",
         "noFriends": "No friends yet. \nAdd some friends to get started!",
@@ -997,6 +1015,7 @@
         "custom_clients": "Custom Clients",
         "marketplace": "Marketplace",
         "app_logs": "App Logs",
+        "chat": "Chat",
         "sidebar_help": {
             "title": "Tip:",
             "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",

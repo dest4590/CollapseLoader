@@ -26,6 +26,7 @@
     "dependencies": {
         "@guolao/vue-monaco-editor": "1.6.0",
         "@stomp/stompjs": "^7.3.0",
+        "@supabase/supabase-js": "^2.49.4",
         "@tauri-apps/api": "2.11.0",
         "@tauri-apps/plugin-dialog": "2.7.0",
         "@tauri-apps/plugin-fs": "2.5.0",

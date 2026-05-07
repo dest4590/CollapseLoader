@@ -14,6 +14,7 @@ export const VALID_TABS = [
     "news",
     "marketplace",
     "network_debug",
+    "chat",
 ];
 
 export type TabName = (typeof VALID_TABS)[number];

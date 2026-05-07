@@ -26,6 +26,7 @@ import {
 import SearchBar from "@shared/components/common/SearchBar.vue";
 import ClientCard from "@features/clients/components/ClientCard.vue";
 import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
+import ChatPanel from "@features/chat/components/ChatPanel.vue";
 import ModsManagerModal from "@features/clients/modals/ModsManagerModal.vue";
 import ClientRamUsageModal from "@features/clients/modals/ClientRamUsageModal.vue";
 import { useToast } from "@shared/composables/useToast";
@@ -1791,6 +1792,8 @@ onBeforeUnmount(() => {
             </button>
         </div>
     </div>
+
+    <ChatPanel />
 
     <div
         v-if="filteredClients.length === 0 && !error && clientsLoaded"

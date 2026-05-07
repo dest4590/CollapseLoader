@@ -13,6 +13,7 @@ import FriendsView from "../views/FriendsView.vue";
 import UserProfileView from "../views/UserProfileView.vue";
 import Marketplace from "../views/Marketplace.vue";
 import NetworkDebug from "../views/NetworkDebug.vue";
+import ChatView from "../views/ChatView.vue";
 
 export const views: Record<string, any> = {
     home: Home,
@@ -30,12 +31,14 @@ export const views: Record<string, any> = {
     "user-profile": UserProfileView,
     marketplace: Marketplace,
     network_debug: NetworkDebug,
+    chat: ChatView,
 };
 
 export const tabOrder = [
     "home",
     "custom_clients",
     "friends",
+    "chat",
     "settings",
     "customization",
     "app_logs",
