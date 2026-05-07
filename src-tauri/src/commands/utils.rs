@@ -21,6 +21,11 @@ use tauri::{AppHandle, Emitter, Manager, State, Theme, Window};
 use tokio::task;
 
 #[tauri::command]
+pub fn cancel_download(name: String) -> Result<bool, String> {
+    Ok(crate::core::network::downloader::cancel_download(&name))
+}
+
+#[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
     let result = serde_json::json!({
       "version":  env!("CARGO_PKG_VERSION").to_string(),

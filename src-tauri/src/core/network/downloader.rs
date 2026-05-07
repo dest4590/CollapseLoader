@@ -4,11 +4,13 @@ use crate::log_info;
 use crate::log_warn;
 use futures_util::StreamExt;
 use reqwest::Client;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::sync::LazyLock;
+use std::sync::{LazyLock, Mutex};
 use std::time::{Duration, Instant};
 use tokio::fs;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncWriteExt, BufWriter};
+use tokio::sync::oneshot;
 
 const MAX_RETRIES: u32 = 3;
 const BASE_RETRY_DELAY: Duration = Duration::from_secs(2);
@@ -17,6 +19,21 @@ const PROGRESS_EMIT_INTERVAL: Duration = Duration::from_millis(200);
 
 static HTTP_CLIENT: LazyLock<Client> =
     LazyLock::new(|| super::create_client(Duration::from_secs(600)));
+
+static ACTIVE_DOWNLOADS: LazyLock<Mutex<HashSet<String>>> =
+    LazyLock::new(|| Mutex::new(HashSet::new()));
+
+static CANCEL_CHANNELS: LazyLock<Mutex<HashMap<String, oneshot::Sender<()>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub fn cancel_download(name: &str) -> bool {
+    let mut lock = CANCEL_CHANNELS.lock().unwrap();
+    if let Some(tx) = lock.remove(name) {
+        let _ = tx.send(());
+        return true;
+    }
+    false
+}
 
 fn human_size(bytes: u64) -> String {
     const KB: f64 = 1024.0;
@@ -48,6 +65,24 @@ pub async fn download_file(
     emit_name: &str,
     app_handle: Option<&tauri::AppHandle>,
 ) -> Result<(), String> {
+    {
+        let mut active = ACTIVE_DOWNLOADS.lock().unwrap();
+        if active.contains(emit_name) {
+            log_info!("Download already in progress for {}, skipping", emit_name);
+            return Ok(());
+        }
+        active.insert(emit_name.to_string());
+    }
+
+    struct ActiveGuard(String);
+    impl Drop for ActiveGuard {
+        fn drop(&mut self) {
+            let mut active = ACTIVE_DOWNLOADS.lock().unwrap();
+            active.remove(&self.0);
+        }
+    }
+    let _active_guard = ActiveGuard(emit_name.to_string());
+
     let mut last_error = String::from("Unknown error");
 
     for (url_idx, url) in urls.iter().enumerate() {
@@ -97,8 +132,11 @@ pub async fn download_file(
     }
 
     Err(format!(
-        "Failed to download {} after {} attempts: {}",
-        emit_name, MAX_RETRIES, last_error
+        "Failed to download {} after {} attempts across {} URL(s): {}",
+        emit_name,
+        MAX_RETRIES * urls.len() as u32,
+        urls.len(),
+        last_error
     ))
 }
 
@@ -129,6 +167,27 @@ async fn perform_download(
 
     if let Some(total) = total_size {
         log_info!("Downloading {} ({})", emit_name, human_size(total));
+
+        // Disk space check
+        if let Some(parent) = dest_path.parent() {
+            let disks = sysinfo::Disks::new_with_refreshed_list();
+            if let Some(disk) = disks
+                .list()
+                .iter()
+                .find(|d| parent.starts_with(d.mount_point()))
+            {
+                if disk.available_space() < (total as f64 * 1.1) as u64 {
+                    let err = format!(
+                        "Insufficient disk space on {}. Required: {}, Available: {}",
+                        disk.mount_point().display(),
+                        human_size((total as f64 * 1.1) as u64),
+                        human_size(disk.available_space())
+                    );
+                    log_error!("{}", err);
+                    return Err(err);
+                }
+            }
+        }
     }
 
     let mut temp_path = dest_path.to_path_buf();
@@ -138,10 +197,11 @@ async fn perform_download(
     };
     temp_path.set_extension(temp_extension);
 
-    let mut dest = fs::File::create(&temp_path).await.map_err(|e| {
+    let dest_file = fs::File::create(&temp_path).await.map_err(|e| {
         log_error!("Failed to create temp file {}: {}", temp_path.display(), e);
         format!("Temp file creation error: {e}")
     })?;
+    let mut dest = BufWriter::new(dest_file);
 
     let mut downloaded: u64 = 0;
     let mut last_emitted_pct: u8 = 0;
@@ -150,10 +210,36 @@ async fn perform_download(
     let mut speed_window_bytes: u64 = 0;
     let mut speed_window_start = Instant::now();
     let mut current_speed_bps: f64 = 0.0;
+    let mut first_chunk = true;
     let mut stream = response.bytes_stream();
 
+    let (tx, mut rx) = oneshot::channel();
+    {
+        let mut lock = CANCEL_CHANNELS.lock().unwrap();
+        lock.insert(emit_name.to_string(), tx);
+    }
+
+    struct CancelGuard(String);
+    impl Drop for CancelGuard {
+        fn drop(&mut self) {
+            let mut lock = CANCEL_CHANNELS.lock().unwrap();
+            lock.remove(&self.0);
+        }
+    }
+    let _guard = CancelGuard(emit_name.to_string());
+
     let write_result: Result<(), String> = async {
-        while let Some(chunk) = stream.next().await {
+        loop {
+            let chunk = tokio::select! {
+                _ = &mut rx => {
+                    log_warn!("Download for {} was cancelled by user", emit_name);
+                    return Err("Cancelled".to_string());
+                }
+                res = stream.next() => res,
+            };
+
+            let Some(chunk) = chunk else { break };
+
             let chunk = chunk.map_err(|e| {
                 log_error!("Stream read error for {}: {}", emit_name, e);
                 format!("Network stream error: {e}")
@@ -167,6 +253,11 @@ async fn perform_download(
             let chunk_len = chunk.len() as u64;
             downloaded += chunk_len;
             speed_window_bytes += chunk_len;
+
+            if first_chunk {
+                first_chunk = false;
+                speed_window_start = Instant::now();
+            }
 
             let speed_elapsed = speed_window_start.elapsed();
             if speed_elapsed >= Duration::from_millis(500) {

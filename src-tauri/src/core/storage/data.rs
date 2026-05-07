@@ -10,6 +10,7 @@ use crate::core::utils::globals::{
 };
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};
+use rand::seq::SliceRandom;
 use std::fs;
 use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::Mutex;
@@ -75,6 +76,11 @@ impl FileInfo {
         } else {
             file.rsplit(['/', '\\']).next().unwrap_or(file).to_string()
         };
+
+        let local_file = local_file
+            .replace("%2B", "+")
+            .replace("%20", " ")
+            .replace("%2b", "+");
 
         let file_name = Data::get_filename(&local_file);
         let kind = if Data::has_extension(&local_file, "zip") {
@@ -257,12 +263,7 @@ impl Data {
             return Err(format!("Failed to create destination folder: {e}"));
         }
 
-        let dest_filename = file.rsplit(['/', '\\']).next().unwrap_or(file);
-        let dest_filename = dest_filename
-            .replace("%2B", "+")
-            .replace("%20", " ")
-            .replace("%2b", "+");
-        let dest_path = dest_dir.join(&dest_filename);
+        let dest_path = dest_dir.join(&info.local_file);
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         download_file(
@@ -347,12 +348,16 @@ impl Data {
                 urls.push(format!("{}{}", selected.url, file));
             }
 
+            let mut fallbacks = Vec::new();
             for cdn in &SERVERS.cdns {
                 let url = format!("{}{}", cdn.url, file);
                 if !urls.contains(&url) {
-                    urls.push(url);
+                    fallbacks.push(url);
                 }
             }
+
+            fallbacks.shuffle(&mut rand::rng());
+            urls.extend(fallbacks);
 
             if urls.is_empty() {
                 log_error!("No CDN server available for download");

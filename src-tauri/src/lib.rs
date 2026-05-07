@@ -219,6 +219,7 @@ pub fn run() {
             commands::updater::get_changelog,
             // utils commands
             commands::utils::change_data_folder,
+            commands::utils::cancel_download,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::utils::get_api_url,
