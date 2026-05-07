@@ -56,14 +56,11 @@ const loadUsername = async () => {
 watch([isAuthenticated, displayName, username], loadUsername);
 
 // ── collapse state ────────────────────────────────────────────────────────
-const COLLAPSE_KEY = "chatPanelCollapsed";
-// Default: collapsed. Only open if user explicitly opened it before (value === "false")
-const stored = localStorage.getItem(COLLAPSE_KEY);
-const isCollapsed = ref(stored === null ? true : stored !== "false");
+// Always start collapsed on app launch — no persistence
+const isCollapsed = ref(true);
 
 const toggleCollapse = () => {
     isCollapsed.value = !isCollapsed.value;
-    localStorage.setItem(COLLAPSE_KEY, String(isCollapsed.value));
     if (!isCollapsed.value) nextTick(() => scrollToBottom());
 };
 
