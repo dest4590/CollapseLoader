@@ -359,21 +359,20 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 <template>
     <Teleport to="body">
-        <Transition name="spotlight">
+        <div v-if="show"
+            class="spotlight-overlay fixed inset-0 z-9999 flex items-start justify-center pt-[15vh] spotlight-overlay--visible"
+            @click.self="emit('close')"
+        >
             <div
-                v-if="show"
-                class="fixed inset-0 z-9999 flex items-start justify-center pt-[15vh]"
-                @click.self="emit('close')"
-            >
-                <div
-                    class="absolute inset-0 bg-black/50"
-                    @click="emit('close')"
-                />
+                class="absolute inset-0 bg-black/20"
+                @click="emit('close')"
+            />
 
-                <div
-                    class="relative w-full max-w-xl mx-4 bg-base-100 rounded-2xl shadow-2xl border border-base-300 overflow-hidden"
-                    @keydown="handleKeydown"
-                >
+            <div
+                class="spotlight-panel relative w-full max-w-xl mx-4 rounded-2xl shadow-2xl border border-base-300/60 overflow-hidden"
+                :class="show ? 'spotlight-panel--visible' : 'spotlight-panel--hidden'"
+                @keydown="handleKeydown"
+            >
                     <div
                         class="flex items-center gap-3 px-4 py-3 border-b border-base-300"
                     >
@@ -389,7 +388,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 
                     <div
                         v-if="results.length > 0"
-                        class="py-2 max-h-80 overflow-y-auto"
+                        class="py-2 px-2 max-h-80 overflow-y-auto overflow-x-hidden"
                         ref="resultsListRef"
                         @mouseleave="selectedIndex = -1"
                     >
@@ -406,8 +405,7 @@ const handleKeydown = (e: KeyboardEvent) => {
                             <button
                                 v-else
                                 :data-spotlight-index="getSelectableIndex(item)"
-                                class="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors"
-                                :class="
+                                class="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors rounded-lg"                                :class="
                                     getSelectableIndex(item) === selectedIndex
                                         ? 'bg-primary/10 text-primary'
                                         : 'hover:bg-base-200'
@@ -493,43 +491,42 @@ const handleKeydown = (e: KeyboardEvent) => {
                     </div>
                 </div>
             </div>
-        </Transition>
     </Teleport>
 </template>
 
 <style scoped>
-.spotlight-enter-active {
+.spotlight-overlay {
     transition: opacity 0.15s ease;
 }
 
-.spotlight-leave-active {
-    transition: opacity 0.1s ease;
+.spotlight-overlay--hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
-.spotlight-enter-active .relative {
+.spotlight-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.spotlight-panel {
+    background-color: color-mix(in srgb, var(--color-base-100) 45%, transparent);
+    backdrop-filter: blur(24px) saturate(1.6) brightness(1.05);
+    -webkit-backdrop-filter: blur(24px) saturate(1.6) brightness(1.05);
     transition:
-        transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.15s ease;
+        opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.spotlight-leave-active .relative {
-    transition:
-        transform 0.1s ease,
-        opacity 0.1s ease;
-}
-
-.spotlight-enter-from,
-.spotlight-leave-to {
+.spotlight-panel--hidden {
     opacity: 0;
-}
-
-.spotlight-enter-from .relative {
     transform: scale(0.96) translateY(-6px);
-    opacity: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
-.spotlight-leave-to .relative {
-    transform: scale(0.96) translateY(-6px);
-    opacity: 0;
+.spotlight-panel--visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
 }
 </style>

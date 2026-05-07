@@ -702,7 +702,15 @@
             }
         },
         "dark": "黑暗的",
-        "light": "光"
+        "light": "光",
+        "schedule": {
+            "title": "自动",
+            "description": "根据一天中的时间自动切换亮色和暗色主题。",
+            "light_window": "亮色主题时段",
+            "from": "从",
+            "to": "到",
+            "now_active": "当前激活"
+        }
     },
     "errors": {
         "clients_load_failed": "加载客户端列表失败：{error}",

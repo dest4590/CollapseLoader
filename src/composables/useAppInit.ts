@@ -3,6 +3,7 @@ import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
+import { themeScheduler } from "@services/theme/themeScheduler";
 import { useToast } from "@shared/composables/useToast";
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { useUser } from "@features/auth/useUser";
@@ -210,6 +211,7 @@ export function useAppInit() {
 
             const themeTask = applyThemeOnStartup().then((theme) => {
                 currentTheme.value = (theme as string) || "dark";
+                themeScheduler.startScheduler();
             });
 
             const languageTask = applyLanguageOnStartup();

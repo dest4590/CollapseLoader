@@ -702,7 +702,15 @@
             }
         },
         "dark": "Ciemny",
-        "light": "Jasny"
+        "light": "Jasny",
+        "schedule": {
+            "title": "Automatycznie",
+            "description": "Automatycznie przełączaj między jasnym a ciemnym motywem w zależności od pory dnia.",
+            "light_window": "Godziny jasnego motywu",
+            "from": "Od",
+            "to": "Do",
+            "now_active": "Aktywny teraz"
+        }
     },
     "logs": {
         "copy_logs": "Kopiuj logi",

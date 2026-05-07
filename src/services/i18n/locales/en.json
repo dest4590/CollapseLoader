@@ -702,7 +702,15 @@
             }
         },
         "dark": "Dark",
-        "light": "Light"
+        "light": "Light",
+        "schedule": {
+            "title": "Automatic",
+            "description": "Automatically switch between light and dark themes based on time of day.",
+            "light_window": "Light theme hours",
+            "from": "From",
+            "to": "To",
+            "now_active": "Active now"
+        }
     },
     "logs": {
         "copy_logs": "Copy logs",
