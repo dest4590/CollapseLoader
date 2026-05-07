@@ -418,6 +418,7 @@ const handleCreatePreset = async (data: {
     await saveCurrentAsPreset(data.name, data.description);
 
     await achievementService.unlockAchievement("PRESET_MAX");
+    await achievementService.unlockAchievement("THEME_CHANGER");
 };
 
 const handleUpdatePreset = async (data: any) => {

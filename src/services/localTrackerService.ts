@@ -14,6 +14,8 @@ class LocalTrackerService {
     private storageKey = "local_user_stats";
     private stats: LocalStats;
     private playtimeTimer: ReturnType<typeof setInterval> | null = null;
+    private appOpenTime: number = Date.now();
+    private sessionClients: Set<string> = new Set();
 
     constructor() {
         const stored = localStorage.getItem(this.storageKey);
@@ -48,7 +50,7 @@ class LocalTrackerService {
         this.stats.clientStats[clientName].launches++;
 
         this.save();
-        this.checkLaunchAchievements();
+        this.checkLaunchAchievements(clientName);
     }
 
     startPlaytimeTracking(clientName: string) {
@@ -71,7 +73,7 @@ class LocalTrackerService {
         }
     }
 
-    private async checkLaunchAchievements() {
+    private async checkLaunchAchievements(clientName?: string) {
         if (this.stats.totalLaunches >= 1) {
             await achievementService.unlockAchievement("FIRST_GAME");
 
@@ -91,6 +93,9 @@ class LocalTrackerService {
         if (this.stats.totalLaunches >= 50) {
             await achievementService.unlockAchievement("FREQUENT_FLYER");
         }
+        if (this.stats.totalLaunches >= 100) {
+            await achievementService.unlockAchievement("LOYAL_USER");
+        }
 
         const now = new Date();
         const hour = now.getHours();
@@ -104,6 +109,19 @@ class LocalTrackerService {
         }
         if (day === 0 || day === 6) {
             await achievementService.unlockAchievement("WEEKEND_WARRIOR");
+        }
+        if (hour >= 0 && hour < 4) {
+            await achievementService.unlockAchievement("NIGHT_SESSION");
+        }
+        const secondsSinceOpen = (Date.now() - this.appOpenTime) / 1000;
+        if (secondsSinceOpen <= 10) {
+            await achievementService.unlockAchievement("SPEED_RUNNER");
+        }
+        if (clientName) {
+            this.sessionClients.add(clientName);
+            if (this.sessionClients.size >= 3) {
+                await achievementService.unlockAchievement("MULTI_CLIENT");
+            }
         }
     }
 

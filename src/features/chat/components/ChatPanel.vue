@@ -22,6 +22,7 @@ import { useChatService, MESSAGE_MAX_LENGTH } from "@services/chat/useChatServic
 import { useToast } from "@shared/composables/useToast";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import { useUser } from "@features/auth/useUser";
+import { achievementService } from "@features/social/achievementService";
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -36,7 +37,6 @@ const {
     sendMessage,
 } = useChatService();
 
-// ── username resolution ───────────────────────────────────────────────────
 const resolvedUsername = ref("Guest");
 
 const loadUsername = async () => {
@@ -55,8 +55,6 @@ const loadUsername = async () => {
 
 watch([isAuthenticated, displayName, username], loadUsername);
 
-// ── collapse state ────────────────────────────────────────────────────────
-// Always start collapsed on app launch — no persistence
 const isCollapsed = ref(true);
 
 const toggleCollapse = () => {
@@ -64,7 +62,6 @@ const toggleCollapse = () => {
     if (!isCollapsed.value) nextTick(() => scrollToBottom());
 };
 
-// ── input & scroll ────────────────────────────────────────────────────────
 const inputText = ref("");
 const isSending = ref(false);
 const messagesContainerRef = ref<HTMLElement | null>(null);
@@ -85,17 +82,16 @@ watch(() => messages.value.length, () => {
     if (!isCollapsed.value) scrollToBottom();
 });
 
-// ── send ──────────────────────────────────────────────────────────────────
 const handleSend = async () => {
     const text = inputText.value.trim();
     if (!text || isSending.value || isOverLimit.value) return;
     isSending.value = true;
     try {
-        // Pass authToken regardless of account type (local_ or server)
         const userId = localStorage.getItem("authToken");
         await sendMessage(text, resolvedUsername.value, userId);
         inputText.value = "";
         inputRef.value?.focus();
+        void achievementService.unlockAchievement("CHAT_FIRST_MESSAGE");
     } catch (e: any) {
         const msg: string = e.message ?? "";
         if (msg === "chat.error.login_required") {
@@ -115,7 +111,6 @@ const handleKeydown = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
 };
 
-// ── status helpers ────────────────────────────────────────────────────────
 const statusDotClass = computed(() => {
     switch (status.value) {
         case "connected":  return "bg-success shadow-[0_0_6px_1px] shadow-success/60";
@@ -133,7 +128,6 @@ const roleBadgeClass = (role: string) => {
     return "";
 };
 
-// ── expand/collapse animation hooks ──────────────────────────────────────
 const onBeforeEnter = (el: Element) => {
     const e = el as HTMLElement;
     e.style.maxHeight = "0";
@@ -142,7 +136,6 @@ const onBeforeEnter = (el: Element) => {
 
 const onEnter = (el: Element, done: () => void) => {
     const e = el as HTMLElement;
-    // measure natural height
     e.style.maxHeight = "none";
     const h = e.scrollHeight;
     e.style.maxHeight = "0";
@@ -180,7 +173,6 @@ const onLeave = (el: Element, done: () => void) => {
     e.addEventListener("transitionend", done, { once: true });
 };
 
-// ── lifecycle ─────────────────────────────────────────────────────────────
 onMounted(async () => {
     await loadUsername();
     await connect(resolvedUsername.value, isAuthenticated.value ? localStorage.getItem("authToken") : null);

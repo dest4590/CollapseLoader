@@ -1334,6 +1334,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "Po pracy",
                 "description": "Graj w weekend."
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "Witaj, świecie!",
+                "description": "Wyślij pierwszą wiadomość na czacie."
+            },
+            "THEME_CHANGER": {
+                "name": "Projektant",
+                "description": "Utwórz swój pierwszy preset motywu."
+            },
+            "NIGHT_SESSION": {
+                "name": "Nocna zmiana",
+                "description": "Uruchom klienta po północy. (Ukryte)"
+            },
+            "SPEED_RUNNER": {
+                "name": "Speedrunner",
+                "description": "Uruchom klienta w ciągu 10 sekund od otwarcia loadera."
+            },
+            "LOYAL_USER": {
+                "name": "Lojalny użytkownik",
+                "description": "Uruchom klienta 100 razy."
+            },
+            "MULTI_CLIENT": {
+                "name": "Multitasking",
+                "description": "Uruchom 3 różnych klientów w jednej sesji."
             }
         }
     },

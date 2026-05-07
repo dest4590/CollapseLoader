@@ -1337,6 +1337,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "下班后",
                 "description": "在周末游玩。"
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "你好，世界！",
+                "description": "在聊天中发送第一条消息。"
+            },
+            "THEME_CHANGER": {
+                "name": "设计师",
+                "description": "创建您的第一个主题预设。"
+            },
+            "NIGHT_SESSION": {
+                "name": "夜班",
+                "description": "在午夜后启动客户端。（隐藏）"
+            },
+            "SPEED_RUNNER": {
+                "name": "速通者",
+                "description": "在打开加载器后10秒内启动客户端。"
+            },
+            "LOYAL_USER": {
+                "name": "忠实用户",
+                "description": "启动客户端100次。"
+            },
+            "MULTI_CLIENT": {
+                "name": "多任务处理",
+                "description": "在一个会话中启动3个不同的客户端。"
             }
         }
     },

@@ -10,7 +10,6 @@ export interface ChatMessage {
     content: string;
     user_id: string | null;
     role: string;
-    // local-only display field
     time: string;
 }
 
@@ -20,7 +19,6 @@ const HISTORY_LIMIT = 50;
 const MAX_MESSAGES = 200;
 export const MESSAGE_MAX_LENGTH = 500;
 
-// Module-level singletons so state persists across component mounts
 const messages = ref<ChatMessage[]>([]);
 const status = ref<ChatStatus>("disconnected");
 const onlineCount = ref(0);
@@ -75,10 +73,8 @@ export function useChatService() {
     };
 
     const connect = async (username: string, userId?: string | null) => {
-        // If already connected with same user — just reload history
         if (channel && connectedUsername === username) return;
 
-        // Disconnect previous session if username changed
         if (channel) await disconnect();
 
         connectedUsername = username;
@@ -87,7 +83,6 @@ export function useChatService() {
 
         await loadHistory();
 
-        // Realtime channel for new messages via postgres changes
         channel = supabase
             .channel("chat_messages_realtime")
             .on(
@@ -114,7 +109,6 @@ export function useChatService() {
                 }
             });
 
-        // Presence channel to count online users
         presenceChannel = supabase
             .channel("chat_presence", {
                 config: { presence: { key: userId ?? username } },
@@ -177,7 +171,6 @@ export function useChatService() {
             throw new Error(`chat.error.banned${reason}`);
         }
 
-        // Fetch role from chat_roles table
         const { data: roleData } = await supabase
             .from("chat_roles")
             .select("role")

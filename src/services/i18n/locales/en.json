@@ -1357,6 +1357,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "After job",
                 "description": "Play on a weekend."
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "Hello, World!",
+                "description": "Send your first message in chat."
+            },
+            "THEME_CHANGER": {
+                "name": "Designer",
+                "description": "Create your first theme preset."
+            },
+            "NIGHT_SESSION": {
+                "name": "Night Shift",
+                "description": "Launch a client after midnight. (Hidden)"
+            },
+            "SPEED_RUNNER": {
+                "name": "Speedrunner",
+                "description": "Launch a client within 10 seconds of opening the loader."
+            },
+            "LOYAL_USER": {
+                "name": "Loyal User",
+                "description": "Launch a client 100 times."
+            },
+            "MULTI_CLIENT": {
+                "name": "Multitasker",
+                "description": "Launch 3 different clients in one session."
             }
         }
     },

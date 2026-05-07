@@ -85,6 +85,48 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
         hidden: false,
         receivePercentage: 0,
     },
+    {
+        id: 13,
+        key: "CHAT_FIRST_MESSAGE",
+        icon: "MessageSquare",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 14,
+        key: "THEME_CHANGER",
+        icon: "Palette",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 15,
+        key: "NIGHT_SESSION",
+        icon: "Coffee",
+        hidden: true,
+        receivePercentage: 0,
+    },
+    {
+        id: 16,
+        key: "SPEED_RUNNER",
+        icon: "Timer",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 17,
+        key: "LOYAL_USER",
+        icon: "Heart",
+        hidden: false,
+        receivePercentage: 0,
+    },
+    {
+        id: 18,
+        key: "MULTI_CLIENT",
+        icon: "Layers",
+        hidden: false,
+        receivePercentage: 0,
+    },
 ];
 
 class AchievementService {
