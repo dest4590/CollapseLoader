@@ -197,30 +197,46 @@ onMounted(async () => {
                    hover:bg-base-300/40 active:bg-base-300/70 transition-colors duration-150"
             @click="toggleCollapse"
         >
-            <div class="flex items-center gap-2.5">
-                <!-- Icon with subtle glow when connected -->
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                <!-- Icon -->
                 <MessageSquare
-                    class="w-4 h-4 transition-colors duration-300"
+                    class="w-4 h-4 shrink-0 transition-colors duration-300"
                     :class="status === 'connected' ? 'text-primary' : 'text-base-content/40'"
                 />
-                <span class="text-sm font-medium">{{ t("chat.title") }}</span>
+
+                <!-- Title always visible -->
+                <span class="text-sm font-medium shrink-0">{{ t("chat.title") }}</span>
 
                 <!-- Status dot -->
-                <span class="w-2 h-2 rounded-full transition-all duration-300" :class="statusDotClass" />
+                <span class="w-2 h-2 rounded-full shrink-0 transition-all duration-300" :class="statusDotClass" />
 
                 <!-- Online count -->
-                <transition name="fade-count">
-                    <span
-                        v-if="status === 'connected' && onlineCount > 0"
-                        class="flex items-center gap-1 text-xs text-base-content/40"
+                <span
+                    v-if="status === 'connected' && onlineCount > 0"
+                    class="flex items-center gap-1 text-xs text-base-content/40 shrink-0"
+                >
+                    <Users class="w-3 h-3" />
+                    {{ onlineCount }}
+                </span>
+
+                <!-- Last message preview (only when collapsed) -->
+                <transition name="preview-switch" mode="out-in">
+                    <div
+                        v-if="isCollapsed && messages.length > 0"
+                        key="preview"
+                        class="flex items-center gap-1.5 min-w-0 ml-1 pl-2 border-l border-base-300"
                     >
-                        <Users class="w-3 h-3" />
-                        {{ onlineCount }}
-                    </span>
+                        <span class="text-xs font-semibold text-base-content/50 shrink-0">
+                            {{ messages[messages.length - 1].username }}:
+                        </span>
+                        <span class="text-xs text-base-content/40 truncate">
+                            {{ messages[messages.length - 1].content }}
+                        </span>
+                    </div>
                 </transition>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <Loader2 v-if="status === 'connecting'" class="w-3.5 h-3.5 animate-spin text-warning" />
                 <Wifi     v-else-if="status === 'connected'"   class="w-3.5 h-3.5 text-success" />
                 <WifiOff  v-else class="w-3.5 h-3.5 text-base-content/25" />
@@ -371,6 +387,20 @@ onMounted(async () => {
 .fade-count-leave-to {
     opacity: 0;
     transform: translateX(-4px);
+}
+
+/* Preview ↔ title switch */
+.preview-switch-enter-active,
+.preview-switch-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.preview-switch-enter-from {
+    opacity: 0;
+    transform: translateY(4px);
+}
+.preview-switch-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
 }
 
 /* Message row pop-in */
