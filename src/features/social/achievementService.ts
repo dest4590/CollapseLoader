@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from "@shared/utils/storageKeys";
+
 export interface Achievement {
     id: number;
     key: string;
@@ -127,36 +129,72 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
 ];
 
 class AchievementService {
-    private storageKey = "local_achievements";
+    private storageKey = STORAGE_KEYS.LOCAL_ACHIEVEMENTS;
+    private cachedUnlockedKeys: Record<string, string> | null = null;
+
+    private parseUnlockedKeys(stored: string | null): Record<string, string> {
+        if (!stored) return {};
+
+        try {
+            const parsed = JSON.parse(stored);
+            if (
+                typeof parsed === "object" &&
+                parsed !== null &&
+                !Array.isArray(parsed)
+            ) {
+                return Object.entries(parsed).reduce(
+                    (result, [key, value]) => {
+                        if (typeof key === "string" && typeof value === "string") {
+                            result[key] = value;
+                        }
+                        return result;
+                    },
+                    {} as Record<string, string>
+                );
+            }
+        } catch (e) {
+            console.warn("Invalid local achievement storage, resetting:", e);
+        }
+
+        return {};
+    }
+
+    private getUnlockedKeys(): Record<string, string> {
+        if (this.cachedUnlockedKeys) {
+            return this.cachedUnlockedKeys;
+        }
+
+        const stored = localStorage.getItem(this.storageKey);
+        const unlockedKeys = this.parseUnlockedKeys(stored);
+        this.cachedUnlockedKeys = unlockedKeys;
+        return unlockedKeys;
+    }
+
+    private saveUnlockedKeys(unlockedKeys: Record<string, string>): void {
+        this.cachedUnlockedKeys = { ...unlockedKeys };
+        localStorage.setItem(this.storageKey, JSON.stringify(this.cachedUnlockedKeys));
+    }
 
     async getAllAchievements(): Promise<Achievement[]> {
         return ALL_ACHIEVEMENTS;
     }
 
     async getUserAchievements(_userId?: number): Promise<UserAchievement[]> {
-        const stored = localStorage.getItem(this.storageKey);
-        if (!stored) return [];
-
-        try {
-            const unlockedKeys = JSON.parse(stored) as Record<string, string>;
-            return Object.entries(unlockedKeys)
-                .map(([key, unlockedAt]) => {
-                    const achievement = ALL_ACHIEVEMENTS.find(
-                        (a) => a.key === key
-                    );
-                    if (!achievement) return null;
-                    return { achievement, unlockedAt };
-                })
-                .filter((ua): ua is UserAchievement => ua !== null);
-        } catch (e) {
-            console.error("Failed to parse local achievements", e);
-            return [];
-        }
+        const unlockedKeys = this.getUnlockedKeys();
+        return Object.entries(unlockedKeys)
+            .map(([key, unlockedAt]) => {
+                const achievement = ALL_ACHIEVEMENTS.find(
+                    (a) => a.key === key
+                );
+                if (!achievement) return null;
+                return { achievement, unlockedAt };
+            })
+            .filter((ua): ua is UserAchievement => ua !== null);
     }
 
     async unlockAchievement(key: string): Promise<void> {
-        const userAchievements = await this.getUserAchievements();
-        if (userAchievements.some((ua) => ua.achievement.key === key)) {
+        const unlockedKeys = this.getUnlockedKeys();
+        if (key in unlockedKeys) {
             return;
         }
 
@@ -164,10 +202,8 @@ class AchievementService {
         if (!achievement) return;
 
         const unlockedAt = new Date().toISOString();
-        const stored = localStorage.getItem(this.storageKey);
-        const unlockedKeys = stored ? JSON.parse(stored) : {};
         unlockedKeys[key] = unlockedAt;
-        localStorage.setItem(this.storageKey, JSON.stringify(unlockedKeys));
+        this.saveUnlockedKeys(unlockedKeys);
 
         window.dispatchEvent(
             new CustomEvent("achievement-unlocked", {
