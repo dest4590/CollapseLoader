@@ -10,3 +10,4 @@ pub mod logging;
 pub mod misc;
 pub mod process;
 pub mod tags;
+pub mod taskbar;

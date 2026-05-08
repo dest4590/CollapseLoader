@@ -1,4 +1,5 @@
 use crate::core::utils::helpers::emit_to_main_window;
+use crate::core::utils::taskbar;
 use crate::log_error;
 use crate::log_info;
 use crate::log_warn;
@@ -278,6 +279,7 @@ async fn perform_download(
             if should_emit {
                 last_emitted_pct = percentage;
                 last_emit_time = now;
+                taskbar::set_progress(percentage);
                 if let Some(handle) = app_handle {
                     let progress_data = serde_json::json!({
                         "file": emit_name,
@@ -335,6 +337,7 @@ async fn perform_download(
     } else {
         0.0
     };
+    taskbar::clear_progress();
     log_info!(
         "Downloaded {} – {} in {:.1}s (avg {}ps)",
         emit_name,

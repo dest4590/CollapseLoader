@@ -1,4 +1,5 @@
 use crate::core::utils::helpers::emit_to_main_window;
+use crate::core::utils::taskbar;
 use crate::{log_debug, log_error};
 use std::fs;
 use std::io;
@@ -80,6 +81,7 @@ pub fn unzip(
 
         if percentage != last_percentage {
             last_percentage = percentage;
+            taskbar::set_progress(percentage);
             if let Some(handle) = app_handle {
                 emit_to_main_window(
                     handle,
@@ -98,6 +100,8 @@ pub fn unzip(
 
     let _ = std::fs::File::create(unzip_path.join(".valid"));
     let _ = fs::remove_file(zip_path);
+
+    taskbar::clear_progress();
 
     if let Some(handle) = app_handle {
         emit_to_main_window(handle, "unzip-complete", emit_name);
