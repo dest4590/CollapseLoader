@@ -223,7 +223,6 @@ pub fn run() {
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::utils::get_api_url,
-            // commands::utils::get_api_version,
             commands::utils::get_cdn_url,
             commands::utils::get_data_folder,
             commands::utils::get_version,
@@ -235,6 +234,9 @@ pub fn run() {
             commands::utils::is_macos,
             commands::utils::set_window_theme,
             commands::utils::update_tray_menu,
+            commands::utils::get_launch_history,
+            commands::utils::clear_launch_history,
+            commands::utils::record_launch,
             // network commands
             commands::network::api_request,
             commands::network::get_network_history,

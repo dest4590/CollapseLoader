@@ -1003,6 +1003,18 @@
         "hours_ago": "{count}h ago",
         "days_ago": "{count}d ago"
     },
+    "history": {
+        "title": "Launch History",
+        "empty": "No launches yet",
+        "clear": "Clear",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "earlier": "Earlier",
+        "just_now": "Just now",
+        "minutes_ago": "{n}m ago",
+        "hours_ago": "{n}h ago",
+        "days_ago": "{n}d ago"
+    },
     "navigation": {
         "home": "Home",
         "friends": "Friends",

@@ -971,6 +971,18 @@
         "hours_ago": "{count} 小时前",
         "days_ago": "{count} 天前"
     },
+    "history": {
+        "title": "启动历史",
+        "empty": "暂无启动记录",
+        "clear": "清除",
+        "today": "今天",
+        "yesterday": "昨天",
+        "earlier": "更早",
+        "just_now": "刚刚",
+        "minutes_ago": "{n}分钟前",
+        "hours_ago": "{n}小时前",
+        "days_ago": "{n}天前"
+    },
     "navigation": {
         "home": "首页",
         "friends": "好友",

@@ -7,6 +7,7 @@ use crate::core::storage::accounts::ACCOUNT_MANAGER;
 use crate::core::storage::custom_clients::CUSTOM_CLIENT_MANAGER;
 use crate::core::storage::favorites::FAVORITE_MANAGER;
 use crate::core::storage::flags::FLAGS_MANAGER;
+use crate::core::storage::launch_history::{LaunchEntry, LAUNCH_HISTORY};
 use crate::core::storage::presets::PRESET_MANAGER;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::discord_rpc;
@@ -564,4 +565,41 @@ pub async fn get_storage_usage() -> StorageUsage {
         other: 0,
         total: 0,
     })
+}
+
+#[tauri::command]
+pub fn get_launch_history() -> Vec<LaunchEntry> {
+    LAUNCH_HISTORY
+        .lock()
+        .map(|h| h.entries.clone())
+        .unwrap_or_default()
+}
+
+#[tauri::command]
+pub fn clear_launch_history() -> Result<(), String> {
+    LAUNCH_HISTORY
+        .lock()
+        .map_err(|e| e.to_string())
+        .map(|mut h| h.clear())
+}
+
+#[tauri::command]
+pub fn record_launch(
+    client_id: u32,
+    client_name: String,
+    client_version: String,
+    account_name: Option<String>,
+) -> Result<(), String> {
+    let launched_at = chrono::Utc::now().to_rfc3339();
+    let entry = LaunchEntry {
+        client_id,
+        client_name,
+        client_version,
+        launched_at,
+        account_name,
+    };
+    LAUNCH_HISTORY
+        .lock()
+        .map_err(|e| e.to_string())
+        .map(|mut h| h.record(entry))
 }

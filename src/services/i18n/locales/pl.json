@@ -982,6 +982,18 @@
         "hours_ago": "{count}godz. temu",
         "days_ago": "{count}dni temu"
     },
+    "history": {
+        "title": "Historia uruchomień",
+        "empty": "Brak uruchomień",
+        "clear": "Wyczyść",
+        "today": "Dzisiaj",
+        "yesterday": "Wczoraj",
+        "earlier": "Wcześniej",
+        "just_now": "Przed chwilą",
+        "minutes_ago": "{n}min temu",
+        "hours_ago": "{n}godz. temu",
+        "days_ago": "{n}dni temu"
+    },
     "navigation": {
         "home": "Główna",
         "friends": "Znajomi",

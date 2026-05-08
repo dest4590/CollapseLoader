@@ -985,6 +985,18 @@
         "hours_ago": "{count}год тому",
         "days_ago": "{count}д тому"
     },
+    "history": {
+        "title": "Історія запусків",
+        "empty": "Запусків ще не було",
+        "clear": "Очистити",
+        "today": "Сьогодні",
+        "yesterday": "Вчора",
+        "earlier": "Раніше",
+        "just_now": "Щойно",
+        "minutes_ago": "{n}хв тому",
+        "hours_ago": "{n}год тому",
+        "days_ago": "{n}д тому"
+    },
     "navigation": {
         "home": "Головна",
         "friends": "Друзі",

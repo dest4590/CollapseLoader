@@ -14,6 +14,7 @@ import {
     Download,
     FileText,
     Folder,
+    History,
     Newspaper,
     Package,
     Plus,
@@ -27,6 +28,7 @@ import SearchBar from "@shared/components/common/SearchBar.vue";
 import ClientCard from "@features/clients/components/ClientCard.vue";
 import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
 import ChatPanel from "@features/chat/components/ChatPanel.vue";
+import LaunchHistoryPanel from "@features/clients/components/LaunchHistoryPanel.vue";
 import ModsManagerModal from "@features/clients/modals/ModsManagerModal.vue";
 import ClientRamUsageModal from "@features/clients/modals/ClientRamUsageModal.vue";
 import { useToast } from "@shared/composables/useToast";
@@ -87,6 +89,8 @@ const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
 const searchBarRef = ref<any>(null);
+const showHistory = ref(false);
+const historyPanelRef = ref<HTMLElement | null>(null);
 
 const HOME_ANIM_KEY = "homeAnimPlayed";
 const hasAnimatedBefore = ref<boolean>(false);
@@ -769,11 +773,23 @@ const launchClient = async (id: number) => {
         await invoke("increment_client_counter", { id, counterType: "launch" });
         await getClients();
 
+        const activeAccount = accounts.value.find((a) => a.is_active);
+
         try {
             await invoke("launch_client", { id, userToken });
         } catch (invokeErr) {
             runningClients.value = runningClients.value.filter((i) => i !== id);
             throw invokeErr;
+        }
+
+        const launchedClient = clients.value.find((c) => c.id === id);
+        if (launchedClient) {
+            invoke("record_launch", {
+                clientId: id,
+                clientName: launchedClient.name,
+                clientVersion: launchedClient.version,
+                accountName: activeAccount?.username ?? null,
+            }).catch(() => {});
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -1611,6 +1627,9 @@ const handleDocumentClick = (event: MouseEvent) => {
     if (!target.closest(".client-card")) {
         clearSelection();
     }
+    if (showHistory.value && historyPanelRef.value && !historyPanelRef.value.contains(target)) {
+        showHistory.value = false;
+    }
 };
 
 const loadWarnedInsecureClients = () => {
@@ -1790,6 +1809,28 @@ onBeforeUnmount(() => {
                     }}
                 </span>
             </button>
+        </div>
+        <div
+            class="home-action-btn relative"
+            ref="historyPanelRef"
+            style="isolation: isolate;"
+        >
+            <button
+                @click.stop="showHistory = !showHistory"
+                class="btn btn-ghost border-base-300 gap-2 btn-primary"
+                :class="{ 'tooltip tooltip-bottom': !showHistory }"
+                :data-tip="!showHistory ? t('history.title') : undefined"
+                :style="{
+                    border: 'var(--border) solid #0000',
+                }"
+            >
+                <History class="w-4 h-4" />
+            </button>
+            <LaunchHistoryPanel
+                v-if="showHistory"
+                @close="showHistory = false"
+                @launch="(id) => { showHistory = false; launchClient(id); }"
+            />
         </div>
     </div>
 
