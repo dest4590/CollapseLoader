@@ -959,7 +959,6 @@ const { t } = i18n;
 const { addToast } = useToast();
 const { showModal } = useModal();
 
-const themes = ["dark", "light"];
 const selectedTheme = ref(
     document.documentElement.getAttribute("data-theme") || "dark"
 );

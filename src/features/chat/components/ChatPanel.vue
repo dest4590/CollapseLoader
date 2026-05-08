@@ -10,7 +10,6 @@ import {
     Loader2,
     MessageSquare,
     ChevronDown,
-    ChevronUp,
 } from "lucide-vue-next";
 import {
     useChatService,
@@ -314,7 +313,7 @@ onMounted(async () => {
                         >
                             <UserAvatar
                                 :name="msg.username"
-                                size="xs"
+                                size="sm"
                                 class="shrink-0"
                             />
 
