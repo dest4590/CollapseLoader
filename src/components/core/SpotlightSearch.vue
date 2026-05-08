@@ -511,8 +511,8 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 .spotlight-panel {
     background-color: color-mix(in srgb, var(--color-base-100) 45%, transparent);
-    backdrop-filter: blur(24px) saturate(1.6) brightness(1.05);
-    -webkit-backdrop-filter: blur(24px) saturate(1.6) brightness(1.05);
+    backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6) brightness(1.05);
+    -webkit-backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6) brightness(1.05);
     transition:
         opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);

@@ -1180,7 +1180,11 @@
         "background_image_help": "Obsługuje jpg, png, webp, adresy URL danych",
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_blur": "Rozmycie",
-        "background_opacity": "Nieprzezroczystość"
+        "background_opacity": "Nieprzezroczystość",
+        "panel_blur_title": "Ustawienia rozmycia elementów",
+        "panel_blur_preview": "Podgląd",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "Historia uruchomień"
     },
     "updater": {
         "update_available": "Dostępna aktualizacja",

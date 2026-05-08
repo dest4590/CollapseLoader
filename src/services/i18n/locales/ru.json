@@ -1201,7 +1201,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "Поддерживает jpg, png, webp, data-urls",
         "background_blur": "Размытие",
-        "background_opacity": "Прозрачность"
+        "background_opacity": "Прозрачность",
+        "panel_blur_title": "Настройка размытия элементов",
+        "panel_blur_preview": "Превью",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "История запусков"
     },
     "updater": {
         "update_available": "Доступно обновление",

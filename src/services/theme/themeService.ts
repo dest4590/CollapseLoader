@@ -36,6 +36,8 @@ interface ThemeSettings {
     backgroundImage?: string | null;
     backgroundBlur?: number | null;
     backgroundOpacity?: number | null;
+    spotlightBlur?: number | null;
+    historyBlur?: number | null;
 }
 
 const defaultSettings: ThemeSettings = {
@@ -67,6 +69,8 @@ const defaultSettings: ThemeSettings = {
     backgroundImage: null,
     backgroundBlur: 0,
     backgroundOpacity: 100,
+    spotlightBlur: 24,
+    historyBlur: 20,
 };
 
 const presetSettings = reactive<ThemeSettings>({ ...defaultSettings });
@@ -145,6 +149,8 @@ const applyPreset = () => {
         backgroundImage: "--background-image",
         backgroundBlur: "--background-blur",
         backgroundOpacity: "--background-opacity",
+        spotlightBlur: "--spotlight-blur",
+        historyBlur: "--history-blur",
     };
 
     Object.entries(varMap).forEach(([key, cssVar]) => {
@@ -161,6 +167,8 @@ const applyPreset = () => {
 
         let cssValue = String(value);
         if (key === "backgroundBlur") cssValue = `${value}px`;
+        if (key === "spotlightBlur") cssValue = `${value}px`;
+        if (key === "historyBlur") cssValue = `${value}px`;
         if (key === "backgroundImage") {
             const trimmed = value.trim();
             const isUrl =

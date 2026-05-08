@@ -726,6 +726,63 @@
 
             <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
                 <div class="card-body">
+                    <h2 class="card-title flex items-center gap-2 mb-4">
+                        <Blend class="w-5 h-5 text-primary" />
+                        {{ t("customization.panel_blur_title") }}
+                    </h2>
+
+                    <div class="flex flex-col gap-4 max-w-md">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-sm font-medium text-base-content">
+                                    {{ t("customization.spotlight_blur") }}
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-base-content/60">{{ spotlightBlur }}px</span>
+                                    <button class="btn btn-ghost btn-xs opacity-50 hover:opacity-100" @click="handlePanelBlurInput('spotlightBlur', 24)">
+                                        <RotateCcw class="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="60"
+                                step="1"
+                                class="range range-primary range-sm"
+                                :value="spotlightBlur"
+                                @input="handlePanelBlurInput('spotlightBlur', Number(($event.target as HTMLInputElement).value))"
+                            />
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-sm font-medium text-base-content">
+                                    {{ t("customization.history_blur") }}
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-base-content/60">{{ historyBlur }}px</span>
+                                    <button class="btn btn-ghost btn-xs opacity-50 hover:opacity-100" @click="handlePanelBlurInput('historyBlur', 20)">
+                                        <RotateCcw class="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="60"
+                                step="1"
+                                class="range range-primary range-sm"
+                                :value="historyBlur"
+                                @input="handlePanelBlurInput('historyBlur', Number(($event.target as HTMLInputElement).value))"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
+                <div class="card-body">
                     <div
                         @click="toggleExpertMode"
                         class="cursor-pointer flex items-center justify-between"
@@ -933,6 +990,7 @@ import {
     SunMoon,
     ExternalLink,
     Clock,
+    Blend,
 } from "lucide-vue-next";
 import { useToast } from "@shared/composables/useToast";
 import { settingsService } from "@services/settings/settingsService";
@@ -1028,6 +1086,8 @@ const {
     backgroundImage,
     backgroundBlur,
     backgroundOpacity,
+    spotlightBlur,
+    historyBlur,
 } = toRefs(themeService.presetSettings);
 
 watch(
@@ -1093,6 +1153,12 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
             r.value = value;
         }
     }
+};
+
+const handlePanelBlurInput = (settingKey: "spotlightBlur" | "historyBlur", value: number): void => {
+    const refs: Record<string, any> = { spotlightBlur, historyBlur };
+    const r = refs[settingKey];
+    if (r) r.value = value;
 };
 
 const changeTheme = async (theme: string) => {
@@ -1321,6 +1387,94 @@ textarea.textarea-bordered {
 .schedule-slide-leave-to {
     opacity: 0;
     transform: none;
+}
+
+.blur-preview-wrapper {
+    border-radius: 10px;
+    border: 1px solid hsl(var(--b3));
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: hsl(var(--b3) / 0.4);
+    min-height: 140px;
+}
+
+.blur-preview-spotlight,
+.blur-preview-history {
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid hsl(var(--b3));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.blur-preview-spotlight-bg,
+.blur-preview-history-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, hsl(var(--p)) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 30%, hsl(var(--a)) 0%, transparent 60%),
+        radial-gradient(ellipse at 60% 80%, hsl(var(--s)) 0%, transparent 50%);
+    opacity: 0.5;
+    transition: filter 0.1s;
+}
+
+.blur-preview-spotlight-content,
+.blur-preview-history-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: hsl(var(--b2) / 0.5);
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.blur-preview-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--bc) / 0.7);
+    margin-bottom: 2px;
+}
+
+.blur-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.blur-preview-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: hsl(var(--p) / 0.5);
+    flex-shrink: 0;
+}
+
+.blur-preview-icon--sm {
+    width: 16px;
+    height: 16px;
+}
+
+.blur-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.blur-preview-line {
+    height: 6px;
+    border-radius: 3px;
+    background: hsl(var(--bc) / 0.3);
 }
 
 

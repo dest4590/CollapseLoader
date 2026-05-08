@@ -1202,7 +1202,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "Supports jpg, png, webp, data-urls",
         "background_blur": "Blur",
-        "background_opacity": "Opacity"
+        "background_opacity": "Opacity",
+        "panel_blur_title": "UI Element Blur Settings",
+        "panel_blur_preview": "Preview",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "Launch History"
     },
     "updater": {
         "update_available": "Update Available",

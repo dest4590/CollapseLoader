@@ -1169,7 +1169,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "支持 jpg、png、webp、data-url",
         "background_blur": "模糊",
-        "background_opacity": "不透明度"
+        "background_opacity": "不透明度",
+        "panel_blur_title": "界面元素模糊设置",
+        "panel_blur_preview": "预览",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "启动历史"
     },
     "updater": {
         "update_available": "有可用更新",
