@@ -66,6 +66,23 @@
                     </span>
                 </div>
             </div>
+
+            <transition name="version-fade">
+                <div
+                    v-if="version"
+                    class="absolute bottom-6 left-0 right-0 flex justify-center"
+                >
+                    <span
+                        class="text-[11px] font-mono tracking-widest select-none"
+                        :class="{
+                            'text-gray-400': currentTheme === 'light',
+                            'text-white/20': currentTheme !== 'light',
+                        }"
+                    >
+                        v{{ version }}<template v-if="codename"> · {{ codename }}</template>
+                    </span>
+                </div>
+            </transition>
         </div>
     </div>
 </template>
@@ -81,6 +98,7 @@ import {
     toRefs,
 } from "vue";
 import { useI18n } from "vue-i18n";
+import { invoke } from "@tauri-apps/api/core";
 import OdometerText from "./OdometerText.vue";
 import { animations, animationKeys } from "../../services/preloaderAnimations";
 
@@ -96,6 +114,9 @@ const props = defineProps({
 });
 
 const { loadingState, currentTheme } = toRefs(props);
+
+const version = ref("");
+const codename = ref("");
 
 const greeting = computed(() => {
     try {
@@ -228,6 +249,13 @@ onMounted(() => {
             props.currentTheme
         );
     });
+
+    invoke<{ version: string; codename: string }>("get_version")
+        .then((data) => {
+            version.value = data.version || "";
+            codename.value = data.codename || "";
+        })
+        .catch(() => {});
 });
 
 onBeforeUnmount(() => {
@@ -296,5 +324,13 @@ onBeforeUnmount(() => {
 .greeting-fade-enter-from {
     opacity: 0;
     transform: translateY(4px);
+}
+
+.version-fade-enter-active {
+    transition: opacity 1s ease;
+    transition-delay: 0.5s;
+}
+.version-fade-enter-from {
+    opacity: 0;
 }
 </style>
