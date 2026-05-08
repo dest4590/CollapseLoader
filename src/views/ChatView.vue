@@ -37,7 +37,6 @@ const {
     sendMessage,
 } = useChatService();
 
-// ── local username (from active account or auth) ──────────────────────────
 const localUsername = computed<string>(() => {
     try {
         const accounts = JSON.parse(
@@ -57,7 +56,6 @@ const userId = computed<string | null>(() => {
     return localStorage.getItem("authToken") ? "auth" : null;
 });
 
-// ── input ─────────────────────────────────────────────────────────────────
 const inputText = ref("");
 const isSending = ref(false);
 const messagesEndRef = ref<HTMLElement | null>(null);
@@ -67,7 +65,6 @@ const MAX_LENGTH = 500;
 const charCount = computed(() => inputText.value.length);
 const isOverLimit = computed(() => charCount.value > MAX_LENGTH);
 
-// ── scroll to bottom ──────────────────────────────────────────────────────
 const scrollToBottom = (smooth = true) => {
     nextTick(() => {
         messagesEndRef.value?.scrollIntoView({
@@ -81,7 +78,6 @@ watch(
     () => scrollToBottom()
 );
 
-// ── send ──────────────────────────────────────────────────────────────────
 const handleSend = async () => {
     const text = inputText.value.trim();
     if (!text || isSending.value || isOverLimit.value) return;
@@ -105,7 +101,6 @@ const handleKeydown = (e: KeyboardEvent) => {
     }
 };
 
-// ── status helpers ────────────────────────────────────────────────────────
 const statusColor = computed(() => {
     switch (status.value) {
         case "connected":
@@ -132,7 +127,6 @@ const statusLabel = computed(() => {
     }
 });
 
-// ── role badge ────────────────────────────────────────────────────────────
 const roleBadgeClass = (role: string) => {
     switch (role) {
         case "admin":
@@ -144,11 +138,9 @@ const roleBadgeClass = (role: string) => {
     }
 };
 
-// ── own message ───────────────────────────────────────────────────────────
 const isOwnMessage = (username: string) =>
     username === localUsername.value;
 
-// ── lifecycle ─────────────────────────────────────────────────────────────
 onMounted(async () => {
     await connect(localUsername.value, userId.value);
     scrollToBottom(false);
@@ -162,9 +154,8 @@ onUnmounted(() => {
 
 <template>
     <div class="flex flex-col h-full max-h-[calc(100vh-6rem)] slide-up">
-        <!-- Header -->
         <div
-            class="flex items-center justify-between mb-4 flex-shrink-0"
+            class="flex items-center justify-between mb-4 shrink-0"
         >
             <div class="flex items-center gap-3">
                 <MessageSquare class="w-6 h-6 text-primary" />
@@ -174,7 +165,6 @@ onUnmounted(() => {
             </div>
 
             <div class="flex items-center gap-3">
-                <!-- Online count -->
                 <div
                     v-if="status === 'connected'"
                     class="flex items-center gap-1.5 text-sm text-base-content/60"
@@ -183,7 +173,6 @@ onUnmounted(() => {
                     <span>{{ onlineCount }}</span>
                 </div>
 
-                <!-- Connection status -->
                 <div
                     class="flex items-center gap-1.5 text-sm"
                     :class="statusColor"
@@ -199,20 +188,17 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- Error banner -->
         <div
             v-if="error"
-            class="flex items-center gap-2 p-3 mb-3 bg-error/10 border border-error/20 rounded-lg text-sm text-error flex-shrink-0"
+            class="flex items-center gap-2 p-3 mb-3 bg-error/10 border border-error/20 rounded-lg text-sm text-error shrink-0"
         >
             <AlertCircle class="w-4 h-4 shrink-0" />
             {{ error }}
         </div>
 
-        <!-- Messages area -->
         <div
             class="flex-1 overflow-y-auto bg-base-200 rounded-xl border border-base-300 p-4 space-y-3 min-h-0"
         >
-            <!-- Loading skeleton -->
             <div v-if="isLoading" class="space-y-3">
                 <div
                     v-for="i in 5"
@@ -232,7 +218,6 @@ onUnmounted(() => {
                 </div>
             </div>
 
-            <!-- Empty state -->
             <div
                 v-else-if="messages.length === 0"
                 class="flex flex-col items-center justify-center h-full py-12 text-base-content/40"
@@ -241,7 +226,6 @@ onUnmounted(() => {
                 <p>{{ t("chat.no_messages") }}</p>
             </div>
 
-            <!-- Message list -->
             <template v-else>
                 <div
                     v-for="msg in messages"
@@ -249,7 +233,6 @@ onUnmounted(() => {
                     class="flex items-start gap-3 group"
                     :class="{ 'flex-row-reverse': isOwnMessage(msg.username) }"
                 >
-                    <!-- Avatar -->
                     <div class="shrink-0">
                         <UserAvatar
                             :name="msg.username"
@@ -257,7 +240,6 @@ onUnmounted(() => {
                         />
                     </div>
 
-                    <!-- Bubble -->
                     <div
                         class="flex flex-col max-w-[75%]"
                         :class="
@@ -266,7 +248,6 @@ onUnmounted(() => {
                                 : 'items-start'
                         "
                     >
-                        <!-- Meta row -->
                         <div
                             class="flex items-center gap-1.5 mb-1"
                             :class="
@@ -293,9 +274,8 @@ onUnmounted(() => {
                             </span>
                         </div>
 
-                        <!-- Text bubble -->
                         <div
-                            class="px-3 py-2 rounded-2xl text-sm break-words"
+                            class="px-3 py-2 rounded-2xl text-sm wrap-break-word"
                             :class="
                                 isOwnMessage(msg.username)
                                     ? 'bg-primary text-primary-content rounded-tr-sm'
@@ -308,12 +288,10 @@ onUnmounted(() => {
                 </div>
             </template>
 
-            <!-- Scroll anchor -->
             <div ref="messagesEndRef" />
         </div>
 
-        <!-- Input area -->
-        <div class="mt-3 flex-shrink-0">
+        <div class="mt-3 shrink-0">
             <div
                 class="flex items-end gap-2 bg-base-200 border border-base-300 rounded-xl p-2"
                 :class="{ 'border-error': isOverLimit }"
@@ -335,7 +313,6 @@ onUnmounted(() => {
                         @keydown="handleKeydown"
                         maxlength="520"
                     />
-                    <!-- Char counter -->
                     <span
                         v-if="charCount > 400"
                         class="absolute right-2 bottom-2 text-[10px]"
@@ -367,7 +344,6 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <!-- Hint -->
             <p class="text-[11px] text-base-content/30 mt-1 ml-1">
                 {{ t("chat.send_hint") }}
             </p>

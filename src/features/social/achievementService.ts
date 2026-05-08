@@ -1,6 +1,3 @@
-import { useToast } from "@shared/composables/useToast";
-import i18n from "@services/i18n";
-
 export interface Achievement {
     id: number;
     key: string;
@@ -176,17 +173,6 @@ class AchievementService {
             new CustomEvent("achievement-unlocked", {
                 detail: { key, achievement },
             })
-        );
-
-        const { addToast } = useToast();
-
-        const achievementName = i18n.global.t(`achievements.list.${key}.name`);
-
-        addToast(
-            i18n.global.t("achievements.unlocked_title", {
-                name: achievementName,
-            }),
-            "success"
         );
     }
 }
