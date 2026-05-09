@@ -130,7 +130,17 @@ impl DeepLinkAction {
             return Some(Self::VerifyEmail { code, email });
         }
 
-        query_value(url, "client").map(|client_id| Self::LaunchClient { client_id })
+        if url.contains("launch-client") {
+            let client_id = query_value(url, "client").or_else(|| {
+                url.split("launch-client/")
+                    .nth(1)
+                    .map(|s| s.split(['?', '#', '&']).next().unwrap_or(s).trim().to_string())
+                    .filter(|s| !s.is_empty())
+            })?;
+            return Some(Self::LaunchClient { client_id });
+        }
+
+        None
     }
 }
 

@@ -176,6 +176,7 @@ pub fn run() {
             commands::clients::list_installed_mods_custom,
             commands::clients::update_client_installed_status,
             commands::clients::update_custom_client,
+            commands::clients::create_client_shortcut,
             // irc commands
             commands::irc::connect_irc,
             commands::irc::disconnect_irc,
@@ -262,7 +263,7 @@ pub fn run() {
                 let handle = app.handle().clone();
                 let url_clone = url.clone();
                 spawn(async move {
-                    tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+                    tokio::time::sleep(std::time::Duration::from_millis(6000)).await;
                     handle_deep_link_url(&handle, url_clone, false);
                 });
             }

@@ -290,6 +290,21 @@
             "deleting": "Deleting...",
             "delete_client": "Delete Client"
         },
+        "create_shortcut": {
+            "title": "Create Desktop Shortcut",
+            "menu_item": "Create Shortcut",
+            "name_label": "Shortcut Name (optional)",
+            "name_hint": "Leave empty to use the client name",
+            "icon_label": "Icon (optional)",
+            "icon_placeholder": "Click to choose an icon",
+            "icon_formats": ".ico or .png",
+            "icon_hint": "Leave empty to use the app icon",
+            "icon_filter_name": "Image Files",
+            "creating": "Creating...",
+            "create": "Create Shortcut",
+            "success": "Shortcut \"{name}\" created on Desktop",
+            "error": "Failed to create shortcut: {error}"
+        },
         "role_selection": {
             "description": "Select your role for the local profile"
         }

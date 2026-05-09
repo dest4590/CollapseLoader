@@ -293,6 +293,21 @@
             "deleting": "正在删除...",
             "delete_client": "删除客户端"
         },
+        "create_shortcut": {
+            "title": "创建桌面快捷方式",
+            "menu_item": "创建快捷方式",
+            "name_label": "快捷方式名称（可选）",
+            "name_hint": "留空则使用客户端名称",
+            "icon_label": "图标（可选）",
+            "icon_placeholder": "点击选择图标",
+            "icon_formats": ".ico 或 .png",
+            "icon_hint": "留空则使用应用图标",
+            "icon_filter_name": "图片文件",
+            "creating": "正在创建...",
+            "create": "创建快捷方式",
+            "success": "快捷方式 \"{name}\" 已创建在桌面",
+            "error": "创建快捷方式失败：{error}"
+        },
         "role_selection": {
             "description": "为本地配置文件选择您的角色"
         }

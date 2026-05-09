@@ -75,8 +75,19 @@ export function useAppHandlers(props: AppHandlerProps) {
                 return null;
             }
 
-            const clients = await invoke<Client[]>("get_clients");
-            return clients.find((client) => client.id === clientId) || null;
+            for (let attempt = 0; attempt < 5; attempt++) {
+                try {
+                    const clients = await invoke<Client[]>("get_clients");
+                    const found = clients.find((c) => c.id === clientId);
+                    if (found) return found;
+                } catch {
+                    // ignore
+                }
+                if (attempt < 4) {
+                    await new Promise((r) => setTimeout(r, 1000));
+                }
+            }
+            return null;
         }
 
         async launch(target: Client, wasAlreadyRunning: boolean = false) {

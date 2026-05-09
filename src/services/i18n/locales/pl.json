@@ -293,6 +293,21 @@
             "deleting": "Usuwanie...",
             "delete_client": "Usuń klienta"
         },
+        "create_shortcut": {
+            "title": "Utwórz skrót na pulpicie",
+            "menu_item": "Utwórz skrót",
+            "name_label": "Nazwa skrótu (opcjonalnie)",
+            "name_hint": "Pozostaw puste, aby użyć nazwy klienta",
+            "icon_label": "Ikona (opcjonalnie)",
+            "icon_placeholder": "Kliknij, aby wybrać ikonę",
+            "icon_formats": ".ico lub .png",
+            "icon_hint": "Pozostaw puste, aby użyć ikony aplikacji",
+            "icon_filter_name": "Pliki graficzne",
+            "creating": "Tworzenie...",
+            "create": "Utwórz skrót",
+            "success": "Skrót \"{name}\" został utworzony na pulpicie",
+            "error": "Nie udało się utworzyć skrótu: {error}"
+        },
         "role_selection": {
             "description": "Wybierz swoją rolę dla profilu lokalnego"
         }

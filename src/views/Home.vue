@@ -15,6 +15,7 @@ import {
     FileText,
     Folder,
     History,
+    Link,
     Newspaper,
     Package,
     Plus,
@@ -39,6 +40,7 @@ import { useI18n } from "vue-i18n";
 import type { Client, CustomClient, InstallProgress } from "@shared/types/ui";
 import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
 import InsecureClientWarningModal from "@features/clients/modals/InsecureClientWarningModal.vue";
+import CreateShortcutModal from "@features/clients/modals/CreateShortcutModal.vue";
 
 interface Account {
     id: string;
@@ -85,6 +87,7 @@ const runningClients = shallowRef<number[]>([]);
 const skipNextRunningCheck = ref<Set<number>>(new Set());
 const isLeaving = ref(false);
 const viewVisible = ref(false);
+const isMacOS = ref(false);
 const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
@@ -1285,6 +1288,17 @@ const openModsManager = (client: Client) => {
     );
 };
 
+const openCreateShortcut = (client: Client) => {
+    hideContextMenu();
+    showModal(
+        `create-shortcut-${client.id}`,
+        CreateShortcutModal,
+        { title: t("modals.create_shortcut.title") },
+        { client },
+        { close: () => hideModal(`create-shortcut-${client.id}`) }
+    );
+};
+
 const reinstallClient = async (client: Client) => {
     try {
         if (props.isOnline) {
@@ -1688,6 +1702,8 @@ const loadCustomClientsDisplayMode = async () => {
 onMounted(async () => {
     debouncedSearchQuery.value = searchQuery.value;
 
+    isMacOS.value = await invoke<boolean>("is_macos").catch(() => false);
+
     await getClients();
     await loadFavorites();
     await loadCustomClients();
@@ -2027,6 +2043,15 @@ onBeforeUnmount(() => {
                 >
                     <Copy class="w-4 h-4" />
                     {{ t("logs.copy_logs") }}
+                </a>
+            </li>
+            <li v-if="contextMenu.client?.meta.installed && !isMacOS">
+                <a
+                    @click="openCreateShortcut(contextMenu.client!)"
+                    class="flex items-center gap-2 text-sm active:bg-primary/30"
+                >
+                    <Link class="w-4 h-4" />
+                    {{ t("modals.create_shortcut.menu_item") }}
                 </a>
             </li>
         </ul>
