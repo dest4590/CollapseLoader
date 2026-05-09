@@ -15,7 +15,9 @@
         @pointercancel="stopDrag"
         @keydown="onKeydown"
     >
-        <div class="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-base-300" />
+        <div
+            class="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-base-300"
+        />
 
         <div
             class="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-primary transition-all duration-200"
@@ -48,15 +50,16 @@ const slider = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
 const internalValue = ref(props.modelValue ?? 0);
 
-const min = computed(() => Number.isFinite(props.min) ? props.min! : 0);
-const max = computed(() => Number.isFinite(props.max) ? props.max! : 100);
-const step = computed(() => props.step && props.step > 0 ? props.step : 1);
+const min = computed(() => (Number.isFinite(props.min) ? props.min! : 0));
+const max = computed(() => (Number.isFinite(props.max) ? props.max! : 100));
+const step = computed(() => (props.step && props.step > 0 ? props.step : 1));
 const label = computed(() => props.label ?? "Slider control");
 
 const clampedValue = (value: number) => {
     const minValue = Math.min(min.value, max.value);
     const maxValue = Math.max(min.value, max.value);
-    const stepped = minValue + Math.round((value - minValue) / step.value) * step.value;
+    const stepped =
+        minValue + Math.round((value - minValue) / step.value) * step.value;
     return Math.min(maxValue, Math.max(minValue, stepped));
 };
 

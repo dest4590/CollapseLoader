@@ -11,6 +11,12 @@ export interface ChatMessage {
     user_id: string | null;
     role: string;
     time: string;
+    replyToId: number | null;
+}
+
+export interface ChatReplyTarget {
+    id: number;
+    username: string;
 }
 
 type ChatStatus = "disconnected" | "connecting" | "connected" | "error";
@@ -35,6 +41,15 @@ const formatMessageTime = (isoString: string): string => {
     return formatTime(date);
 };
 
+const normalizeMessage = (row: Record<string, any>): ChatMessage => {
+    return {
+        ...row,
+        content: String(row.content ?? ""),
+        replyToId: row.reply_to_id ?? row.replyToId ?? null,
+        time: formatMessageTime(row.created_at),
+    } as ChatMessage;
+};
+
 const appendMessage = (msg: ChatMessage) => {
     if (messages.value.some((m) => m.id === msg.id)) return;
     messages.value.push(msg);
@@ -57,10 +72,7 @@ export function useChatService() {
             if (err) throw err;
 
             if (data) {
-                const historical = [...data].reverse().map((row) => ({
-                    ...row,
-                    time: formatMessageTime(row.created_at),
-                }));
+                const historical = [...data].reverse().map(normalizeMessage);
                 messages.value = [];
                 historical.forEach(appendMessage);
             }
@@ -93,11 +105,8 @@ export function useChatService() {
                     table: "chat_messages",
                 },
                 (payload) => {
-                    const row = payload.new as Omit<ChatMessage, "time">;
-                    appendMessage({
-                        ...row,
-                        time: formatMessageTime(row.created_at),
-                    });
+                    const row = payload.new as Record<string, any>;
+                    appendMessage(normalizeMessage(row));
                 }
             )
             .subscribe((s) => {
@@ -146,7 +155,8 @@ export function useChatService() {
         content: string,
         username: string,
         userId?: string | null,
-        role = "user"
+        role = "user",
+        replyTo?: ChatReplyTarget | null
     ) => {
         const trimmed = content.trim();
         if (!trimmed) return;
@@ -184,6 +194,7 @@ export function useChatService() {
             username,
             user_id: userId ?? null,
             role: resolvedRole,
+            reply_to_id: replyTo?.id ?? null,
         });
 
         if (err) throw err;

@@ -1627,7 +1627,11 @@ const handleDocumentClick = (event: MouseEvent) => {
     if (!target.closest(".client-card")) {
         clearSelection();
     }
-    if (showHistory.value && historyPanelRef.value && !historyPanelRef.value.contains(target)) {
+    if (
+        showHistory.value &&
+        historyPanelRef.value &&
+        !historyPanelRef.value.contains(target)
+    ) {
         showHistory.value = false;
     }
 };
@@ -1813,7 +1817,7 @@ onBeforeUnmount(() => {
         <div
             class="home-action-btn relative"
             ref="historyPanelRef"
-            style="isolation: isolate;"
+            style="isolation: isolate"
         >
             <button
                 @click.stop="showHistory = !showHistory"
@@ -1829,7 +1833,12 @@ onBeforeUnmount(() => {
             <LaunchHistoryPanel
                 v-if="showHistory"
                 @close="showHistory = false"
-                @launch="(id) => { showHistory = false; launchClient(id); }"
+                @launch="
+                    (id) => {
+                        showHistory = false;
+                        launchClient(id);
+                    }
+                "
             />
         </div>
     </div>

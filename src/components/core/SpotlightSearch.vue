@@ -359,138 +359,138 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 <template>
     <Teleport to="body">
-        <div v-if="show"
+        <div
+            v-if="show"
             class="spotlight-overlay fixed inset-0 z-9999 flex items-start justify-center pt-[15vh] spotlight-overlay--visible"
             @click.self="emit('close')"
         >
-            <div
-                class="absolute inset-0 bg-black/20"
-                @click="emit('close')"
-            />
+            <div class="absolute inset-0 bg-black/20" @click="emit('close')" />
 
             <div
                 class="spotlight-panel relative w-full max-w-xl mx-4 rounded-2xl shadow-2xl border border-base-300/60 overflow-hidden"
-                :class="show ? 'spotlight-panel--visible' : 'spotlight-panel--hidden'"
+                :class="
+                    show
+                        ? 'spotlight-panel--visible'
+                        : 'spotlight-panel--hidden'
+                "
                 @keydown="handleKeydown"
             >
-                    <div
-                        class="flex items-center gap-3 px-4 py-3 border-b border-base-300"
-                    >
-                        <Search class="w-5 h-5 text-base-content/40 shrink-0" />
-                        <input
-                            ref="inputRef"
-                            v-model="query"
-                            :placeholder="t('spotlight.placeholder')"
-                            class="flex-1 bg-transparent outline-none text-base-content text-sm placeholder:text-base-content/40"
-                        />
-                        <kbd class="kbd kbd-sm opacity-50">Esc</kbd>
-                    </div>
+                <div
+                    class="flex items-center gap-3 px-4 py-3 border-b border-base-300"
+                >
+                    <Search class="w-5 h-5 text-base-content/40 shrink-0" />
+                    <input
+                        ref="inputRef"
+                        v-model="query"
+                        :placeholder="t('spotlight.placeholder')"
+                        class="flex-1 bg-transparent outline-none text-base-content text-sm placeholder:text-base-content/40"
+                    />
+                    <kbd class="kbd kbd-sm opacity-50">Esc</kbd>
+                </div>
 
-                    <div
-                        v-if="results.length > 0"
-                        class="py-2 px-2 max-h-80 overflow-y-auto overflow-x-hidden"
-                        ref="resultsListRef"
-                        @mouseleave="selectedIndex = -1"
+                <div
+                    v-if="results.length > 0"
+                    class="py-2 px-2 max-h-80 overflow-y-auto overflow-x-hidden"
+                    ref="resultsListRef"
+                    @mouseleave="selectedIndex = -1"
+                >
+                    <template
+                        v-for="item in results"
+                        :key="item.type + item.id"
                     >
-                        <template
-                            v-for="item in results"
-                            :key="item.type + item.id"
+                        <div
+                            v-if="item.type === 'separator'"
+                            class="px-4 pt-3 pb-1 text-xs font-semibold text-base-content/30 uppercase tracking-wider"
+                        >
+                            {{ item.label }}
+                        </div>
+                        <button
+                            v-else
+                            :data-spotlight-index="getSelectableIndex(item)"
+                            class="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors rounded-lg"
+                            :class="
+                                getSelectableIndex(item) === selectedIndex
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'hover:bg-base-200'
+                            "
+                            @click="selectItem(item)"
+                            @mouseenter="
+                                selectedIndex = getSelectableIndex(item)
+                            "
                         >
                             <div
-                                v-if="item.type === 'separator'"
-                                class="px-4 pt-3 pb-1 text-xs font-semibold text-base-content/30 uppercase tracking-wider"
-                            >
-                                {{ item.label }}
-                            </div>
-                            <button
-                                v-else
-                                :data-spotlight-index="getSelectableIndex(item)"
-                                class="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors rounded-lg"                                :class="
+                                class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                :class="[
                                     getSelectableIndex(item) === selectedIndex
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'hover:bg-base-200'
-                                "
-                                @click="selectItem(item)"
-                                @mouseenter="
-                                    selectedIndex = getSelectableIndex(item)
-                                "
+                                        ? 'bg-primary/20'
+                                        : 'bg-base-300',
+                                    item.isActive
+                                        ? 'ring-1 ring-success/50'
+                                        : '',
+                                ]"
                             >
+                                <component
+                                    :is="item.icon"
+                                    class="w-4 h-4"
+                                    :class="item.isActive ? 'text-success' : ''"
+                                />
+                            </div>
+                            <div class="flex-1 min-w-0">
                                 <div
-                                    class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                                    :class="[
-                                        getSelectableIndex(item) ===
-                                        selectedIndex
-                                            ? 'bg-primary/20'
-                                            : 'bg-base-300',
-                                        item.isActive
-                                            ? 'ring-1 ring-success/50'
-                                            : '',
-                                    ]"
+                                    class="text-sm font-medium truncate flex items-center gap-1.5"
                                 >
-                                    <component
-                                        :is="item.icon"
-                                        class="w-4 h-4"
-                                        :class="
-                                            item.isActive ? 'text-success' : ''
-                                        "
+                                    {{ item.label }}
+                                    <CheckCircle
+                                        v-if="item.isActive"
+                                        class="w-3.5 h-3.5 text-success shrink-0"
                                     />
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <div
-                                        class="text-sm font-medium truncate flex items-center gap-1.5"
-                                    >
-                                        {{ item.label }}
-                                        <CheckCircle
-                                            v-if="item.isActive"
-                                            class="w-3.5 h-3.5 text-success shrink-0"
-                                        />
-                                    </div>
-                                    <div
-                                        v-if="item.subtitle"
-                                        class="text-xs text-base-content/50 truncate"
-                                    >
-                                        {{ item.subtitle }}
-                                    </div>
+                                <div
+                                    v-if="item.subtitle"
+                                    class="text-xs text-base-content/50 truncate"
+                                >
+                                    {{ item.subtitle }}
                                 </div>
-                                <ChevronRight
-                                    class="w-3.5 h-3.5 text-base-content/30 shrink-0"
-                                />
-                            </button>
-                        </template>
-                    </div>
+                            </div>
+                            <ChevronRight
+                                class="w-3.5 h-3.5 text-base-content/30 shrink-0"
+                            />
+                        </button>
+                    </template>
+                </div>
 
-                    <div
-                        v-else-if="query.trim()"
-                        class="py-10 text-center text-base-content/40 text-sm"
-                    >
-                        {{ t("spotlight.no_results") }}
-                    </div>
+                <div
+                    v-else-if="query.trim()"
+                    class="py-10 text-center text-base-content/40 text-sm"
+                >
+                    {{ t("spotlight.no_results") }}
+                </div>
 
-                    <div
-                        v-else
-                        class="py-6 text-center text-base-content/30 text-xs"
-                    >
-                        {{ t("spotlight.hint") }}
-                    </div>
+                <div
+                    v-else
+                    class="py-6 text-center text-base-content/30 text-xs"
+                >
+                    {{ t("spotlight.hint") }}
+                </div>
 
-                    <div
-                        class="px-4 py-2 border-t border-base-300 flex items-center gap-4 text-xs text-base-content/30"
+                <div
+                    class="px-4 py-2 border-t border-base-300 flex items-center gap-4 text-xs text-base-content/30"
+                >
+                    <span
+                        ><kbd class="kbd kbd-xs">↑↓</kbd>
+                        {{ t("spotlight.navigate") }}</span
                     >
-                        <span
-                            ><kbd class="kbd kbd-xs">↑↓</kbd>
-                            {{ t("spotlight.navigate") }}</span
-                        >
-                        <span
-                            ><kbd class="kbd kbd-xs">↵</kbd>
-                            {{ t("spotlight.select") }}</span
-                        >
-                        <span
-                            ><kbd class="kbd kbd-xs">Esc</kbd>
-                            {{ t("spotlight.close") }}</span
-                        >
-                    </div>
+                    <span
+                        ><kbd class="kbd kbd-xs">↵</kbd>
+                        {{ t("spotlight.select") }}</span
+                    >
+                    <span
+                        ><kbd class="kbd kbd-xs">Esc</kbd>
+                        {{ t("spotlight.close") }}</span
+                    >
                 </div>
             </div>
+        </div>
     </Teleport>
 </template>
 
@@ -510,9 +510,15 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 .spotlight-panel {
-    background-color: color-mix(in srgb, var(--color-base-100) 45%, transparent);
-    backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6) brightness(1.05);
-    -webkit-backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6) brightness(1.05);
+    background-color: color-mix(
+        in srgb,
+        var(--color-base-100) 45%,
+        transparent
+    );
+    backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6)
+        brightness(1.05);
+    -webkit-backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6)
+        brightness(1.05);
     transition:
         opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);

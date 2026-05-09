@@ -1,8 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
-import type {
-    CreatePresetInput,
-    ThemePreset,
-} from "@features/presets/types";
+import type { CreatePresetInput, ThemePreset } from "@features/presets/types";
 
 export interface ThemeSettings {
     customCSS: string;
@@ -125,7 +122,10 @@ const themePresetStringFields = [
     "backgroundImage",
 ] as const;
 
-const themePresetNumberFields = ["backgroundBlur", "backgroundOpacity"] as const;
+const themePresetNumberFields = [
+    "backgroundBlur",
+    "backgroundOpacity",
+] as const;
 const themePresetBooleanFields = ["enableCustomCSS"] as const;
 
 const remoteImagePrefixes = ["http://", "https://", "data:", "blob:"];
@@ -187,7 +187,9 @@ const readThemeSettingFromStorage = (storageKey: string): ThemeSettings => {
             return { ...defaultThemeSettings };
         }
 
-        const parsedSettings = JSON.parse(savedSettings) as Partial<ThemeSettings>;
+        const parsedSettings = JSON.parse(
+            savedSettings
+        ) as Partial<ThemeSettings>;
 
         return {
             ...defaultThemeSettings,
@@ -213,9 +215,7 @@ export const saveThemeSettings = (
     localStorage.setItem(storageKey, JSON.stringify(settings));
 };
 
-export const applyThemeSettingsToDocument = (
-    settings: ThemeSettings
-): void => {
+export const applyThemeSettingsToDocument = (settings: ThemeSettings): void => {
     const root = document.documentElement;
 
     themeCssVariables.forEach(([key, cssVar]) => {

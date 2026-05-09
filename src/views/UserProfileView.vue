@@ -1101,7 +1101,8 @@ const handleRemoveFriend = async () => {
     const confirmedRemove = await showConfirm({
         title: t("userProfile.remove_friend"),
         message: t("modals.remove_friend_confirm.message", {
-            displayName: userProfile.value.nickname || userProfile.value.username,
+            displayName:
+                userProfile.value.nickname || userProfile.value.username,
         }),
         confirmLabel: t("modals.remove_friend_confirm.yes_remove"),
         cancelLabel: t("common.cancel"),
@@ -1170,7 +1171,8 @@ const handleBlockUser = async () => {
     const confirmedBlock = await showConfirm({
         title: t("userProfile.block_user"),
         message: t("modals.block_unblock_confirm.block_message", {
-            displayName: userProfile.value.nickname || userProfile.value.username,
+            displayName:
+                userProfile.value.nickname || userProfile.value.username,
         }),
         confirmLabel: t("modals.block_unblock_confirm.yes_block"),
         cancelLabel: t("common.cancel"),

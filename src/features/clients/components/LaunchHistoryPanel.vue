@@ -58,7 +58,11 @@ const groupedEntries = computed(() => {
     const older: LaunchEntry[] = [];
 
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+    );
     const yesterdayStart = new Date(todayStart.getTime() - 86400000);
 
     for (const entry of entries.value) {
@@ -69,8 +73,10 @@ const groupedEntries = computed(() => {
     }
 
     if (today.length) groups.push({ label: t("history.today"), items: today });
-    if (yesterday.length) groups.push({ label: t("history.yesterday"), items: yesterday });
-    if (older.length) groups.push({ label: t("history.earlier"), items: older });
+    if (yesterday.length)
+        groups.push({ label: t("history.yesterday"), items: yesterday });
+    if (older.length)
+        groups.push({ label: t("history.earlier"), items: older });
 
     return groups;
 });
@@ -84,7 +90,9 @@ onMounted(loadHistory);
             <div class="history-header">
                 <div class="flex items-center gap-2">
                     <History class="w-4 h-4 text-primary" />
-                    <span class="font-semibold text-sm">{{ t("history.title") }}</span>
+                    <span class="font-semibold text-sm">{{
+                        t("history.title")
+                    }}</span>
                 </div>
                 <div class="flex items-center gap-1">
                     <button
@@ -96,19 +104,21 @@ onMounted(loadHistory);
                         <Trash2 class="w-3 h-3" />
                         {{ t("history.clear") }}
                     </button>
-                    <button @click="emit('close')" class="btn btn-ghost btn-xs btn-circle">
+                    <button
+                        @click="emit('close')"
+                        class="btn btn-ghost btn-xs btn-circle"
+                    >
                         <X class="w-4 h-4" />
                     </button>
                 </div>
             </div>
 
             <div class="history-body">
-                <div
-                    v-if="entries.length === 0"
-                    class="history-empty"
-                >
+                <div v-if="entries.length === 0" class="history-empty">
                     <Clock class="w-8 h-8 opacity-20 mb-2" />
-                    <p class="text-sm text-base-content/40">{{ t("history.empty") }}</p>
+                    <p class="text-sm text-base-content/40">
+                        {{ t("history.empty") }}
+                    </p>
                 </div>
 
                 <div v-else class="history-list">
@@ -128,10 +138,17 @@ onMounted(loadHistory);
                                 <Play class="w-3 h-3 text-primary" />
                             </div>
                             <div class="history-entry-info">
-                                <div class="history-entry-name">{{ entry.client_name }}</div>
+                                <div class="history-entry-name">
+                                    {{ entry.client_name }}
+                                </div>
                                 <div class="history-entry-meta">
-                                    <span class="history-entry-version">{{ entry.client_version }}</span>
-                                    <span v-if="entry.account_name" class="history-entry-account">
+                                    <span class="history-entry-version">{{
+                                        entry.client_version
+                                    }}</span>
+                                    <span
+                                        v-if="entry.account_name"
+                                        class="history-entry-account"
+                                    >
                                         · {{ entry.account_name }}
                                     </span>
                                 </div>
@@ -159,7 +176,9 @@ onMounted(loadHistory);
     -webkit-backdrop-filter: blur(var(--history-blur, 20px));
     border: 1px solid hsl(var(--b3));
     border-radius: 12px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 2px 8px rgba(0, 0, 0, 0.2);
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -268,7 +287,9 @@ onMounted(loadHistory);
 
 .history-panel-enter-active,
 .history-panel-leave-active {
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease;
 }
 
 .history-panel-enter-from,

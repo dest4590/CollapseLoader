@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-    ref,
-    computed,
-    onMounted,
-    onUnmounted,
-    nextTick,
-    watch,
-} from "vue";
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import {
     Send,
@@ -16,8 +9,14 @@ import {
     Loader2,
     MessageSquare,
     AlertCircle,
+    CornerUpLeft,
+    X,
 } from "lucide-vue-next";
-import { useChatService } from "@services/chat/useChatService";
+import {
+    useChatService,
+    type ChatMessage,
+    type ChatReplyTarget,
+} from "@services/chat/useChatService";
 import { useToast } from "@shared/composables/useToast";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import { useStreamerMode } from "@features/social/useStreamerMode";
@@ -60,6 +59,7 @@ const inputText = ref("");
 const isSending = ref(false);
 const messagesEndRef = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
+const replyTarget = ref<ChatReplyTarget | null>(null);
 const MAX_LENGTH = 500;
 
 const charCount = computed(() => inputText.value.length);
@@ -84,8 +84,15 @@ const handleSend = async () => {
 
     isSending.value = true;
     try {
-        await sendMessage(text, localUsername.value, userId.value);
+        await sendMessage(
+            text,
+            localUsername.value,
+            userId.value,
+            "user",
+            replyTarget.value
+        );
         inputText.value = "";
+        replyTarget.value = null;
         inputRef.value?.focus();
     } catch (e: any) {
         addToast(e.message ?? t("chat.send_failed"), "error");
@@ -138,8 +145,60 @@ const roleBadgeClass = (role: string) => {
     }
 };
 
-const isOwnMessage = (username: string) =>
-    username === localUsername.value;
+const isOwnMessage = (username: string) => username === localUsername.value;
+
+const startReply = (message: ChatMessage) => {
+    replyTarget.value = {
+        id: message.id,
+        username: message.username,
+    };
+    inputRef.value?.focus();
+};
+
+const clearReplyTarget = () => {
+    replyTarget.value = null;
+};
+
+const getReplyPreview = (message: ChatMessage) => {
+    if (!message.replyToId) return null;
+
+    const sourceMessage = messages.value.find(
+        (item) => item.id === message.replyToId
+    );
+
+    return {
+        username: sourceMessage?.username ?? "Unknown",
+        content: sourceMessage?.content ?? null,
+    };
+};
+
+const scrollToMessage = (id?: number | null) => {
+    if (!id) return;
+    nextTick(() => {
+        const el = document.querySelector(`[data-msg-id="${id}"]`);
+        if (el instanceof HTMLElement) {
+            el.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+            el.classList.remove("reply-highlight", "reply-highlight-fade");
+            void el.offsetWidth;
+            el.classList.add("reply-highlight");
+            window.setTimeout(
+                () => el.classList.add("reply-highlight-fade"),
+                400
+            );
+            window.setTimeout(
+                () =>
+                    el.classList.remove(
+                        "reply-highlight",
+                        "reply-highlight-fade"
+                    ),
+                5200
+            );
+        }
+    });
+};
 
 onMounted(async () => {
     await connect(localUsername.value, userId.value);
@@ -154,9 +213,7 @@ onUnmounted(() => {
 
 <template>
     <div class="flex flex-col h-full max-h-[calc(100vh-6rem)] slide-up">
-        <div
-            class="flex items-center justify-between mb-4 shrink-0"
-        >
+        <div class="flex items-center justify-between mb-4 shrink-0">
             <div class="flex items-center gap-3">
                 <MessageSquare class="w-6 h-6 text-primary" />
                 <h1 class="text-2xl font-semibold text-primary-focus">
@@ -230,14 +287,12 @@ onUnmounted(() => {
                 <div
                     v-for="msg in messages"
                     :key="msg.id"
+                    :data-msg-id="msg.id"
                     class="flex items-start gap-3 group"
                     :class="{ 'flex-row-reverse': isOwnMessage(msg.username) }"
                 >
                     <div class="shrink-0">
-                        <UserAvatar
-                            :name="msg.username"
-                            size="sm"
-                        />
+                        <UserAvatar :name="msg.username" size="sm" />
                     </div>
 
                     <div
@@ -256,7 +311,9 @@ onUnmounted(() => {
                                     : 'flex-row'
                             "
                         >
-                            <span class="text-xs font-medium text-base-content/70">
+                            <span
+                                class="text-xs font-medium text-base-content/70"
+                            >
                                 {{
                                     isOwnMessage(msg.username)
                                         ? displayUsername
@@ -272,6 +329,40 @@ onUnmounted(() => {
                             <span class="text-[10px] text-base-content/30">
                                 {{ msg.time }}
                             </span>
+                            <button
+                                class="btn btn-ghost btn-xs h-5 min-h-5 px-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                :class="
+                                    isOwnMessage(msg.username)
+                                        ? 'ml-0.5'
+                                        : 'mr-0.5'
+                                "
+                                @click="startReply(msg)"
+                                type="button"
+                                aria-label="Reply to message"
+                            >
+                                <CornerUpLeft class="w-3 h-3" />
+                            </button>
+                        </div>
+
+                        <div
+                            v-if="getReplyPreview(msg)"
+                            class="mb-1.5 max-w-full rounded-xl border border-base-300/70 bg-base-100/70 px-2 py-1 text-[11px] text-base-content/60"
+                        >
+                            <button
+                                class="w-full text-left"
+                                type="button"
+                                @click="scrollToMessage(msg.replyToId)"
+                            >
+                                <div class="font-medium text-base-content/70">
+                                    @{{ getReplyPreview(msg)?.username }}
+                                </div>
+                                <div class="truncate text-base-content/45">
+                                    {{
+                                        getReplyPreview(msg)?.content ??
+                                        t("chat.reply_unknown")
+                                    }}
+                                </div>
+                            </button>
                         </div>
 
                         <div
@@ -281,6 +372,7 @@ onUnmounted(() => {
                                     ? 'bg-primary text-primary-content rounded-tr-sm'
                                     : 'bg-base-300 text-base-content rounded-tl-sm'
                             "
+                            :data-msg-id="msg.id"
                         >
                             {{ msg.content }}
                         </div>
@@ -292,6 +384,27 @@ onUnmounted(() => {
         </div>
 
         <div class="mt-3 shrink-0">
+            <div
+                v-if="replyTarget"
+                class="mb-2 flex items-center justify-between gap-3 rounded-xl border border-base-300 bg-base-100/80 px-3 py-2 text-xs"
+            >
+                <div
+                    class="min-w-0 flex items-center gap-2 text-base-content/70"
+                >
+                    <CornerUpLeft class="w-3.5 h-3.5 shrink-0 text-primary" />
+                    <span class="truncate">
+                        Replying to @{{ replyTarget.username }}
+                    </span>
+                </div>
+                <button
+                    class="btn btn-ghost btn-xs h-6 min-h-6 px-2"
+                    type="button"
+                    @click="clearReplyTarget"
+                >
+                    <X class="w-3 h-3" />
+                </button>
+            </div>
+
             <div
                 class="flex items-end gap-2 bg-base-200 border border-base-300 rounded-xl p-2"
                 :class="{ 'border-error': isOverLimit }"
@@ -317,9 +430,7 @@ onUnmounted(() => {
                         v-if="charCount > 400"
                         class="absolute right-2 bottom-2 text-[10px]"
                         :class="
-                            isOverLimit
-                                ? 'text-error'
-                                : 'text-base-content/30'
+                            isOverLimit ? 'text-error' : 'text-base-content/30'
                         "
                     >
                         {{ charCount }}/{{ MAX_LENGTH }}
@@ -336,10 +447,7 @@ onUnmounted(() => {
                     "
                     @click="handleSend"
                 >
-                    <Loader2
-                        v-if="isSending"
-                        class="w-4 h-4 animate-spin"
-                    />
+                    <Loader2 v-if="isSending" class="w-4 h-4 animate-spin" />
                     <Send v-else class="w-4 h-4" />
                 </button>
             </div>
@@ -365,5 +473,14 @@ onUnmounted(() => {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.reply-highlight {
+    background-color: rgba(96, 165, 250, 0.26);
+    transition: background-color 1.2s ease-out;
+}
+
+.reply-highlight.reply-highlight-fade {
+    background-color: transparent;
 }
 </style>

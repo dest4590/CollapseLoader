@@ -17,6 +17,9 @@
         "success_message": "举报提交成功。感谢您！",
         "error_message": "提交举报失败，请稍后再试。"
     },
+    "chat": {
+        "reply_unknown": "原始消息不可用"
+    },
     "modals": {
         "initial_setup": {
             "welcome": {

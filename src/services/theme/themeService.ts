@@ -47,7 +47,10 @@ const applyPreset = () => {
 let isApplyingExternalUpdate = false;
 
 const loadSettings = () => {
-    Object.assign(presetSettings, loadThemeSettings(THEME_SETTINGS_STORAGE_KEY));
+    Object.assign(
+        presetSettings,
+        loadThemeSettings(THEME_SETTINGS_STORAGE_KEY)
+    );
     applyPreset();
 };
 

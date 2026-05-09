@@ -3,7 +3,9 @@
         <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div
                 class="card bg-base-200 shadow-md border border-base-300 p-6 transition-all duration-300"
-                :class="themeMode === 'schedule' ? 'lg:col-span-7' : 'lg:col-span-4'"
+                :class="
+                    themeMode === 'schedule' ? 'lg:col-span-7' : 'lg:col-span-4'
+                "
             >
                 <h2 class="card-title flex items-center gap-2">
                     <SunMoon class="w-5 h-5 text-primary" />
@@ -13,21 +15,36 @@
                     {{ t("theme.description") }}
                 </p>
 
-                <div :class="['grid', themeMode === 'schedule' ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-1', 'gap-4', 'items-start']">
+                <div
+                    :class="[
+                        'grid',
+                        themeMode === 'schedule'
+                            ? 'grid-cols-2 sm:grid-cols-2'
+                            : 'grid-cols-1',
+                        'gap-4',
+                        'items-start',
+                    ]"
+                >
                     <div class="flex flex-col gap-3">
                         <button
                             @click="selectThemeMode('dark')"
                             class="btn border flex items-center justify-between px-6 py-3"
                             :class="{
-                                'border-primary/50 bg-primary/10': themeMode === 'dark',
+                                'border-primary/50 bg-primary/10':
+                                    themeMode === 'dark',
                                 'border-base-content/10': themeMode !== 'dark',
                             }"
                         >
                             <div class="flex items-center gap-2">
                                 <Moon class="w-5 h-5 text-indigo-400" />
-                                <span class="font-medium">{{ t("theme.dark") }}</span>
+                                <span class="font-medium">{{
+                                    t("theme.dark")
+                                }}</span>
                             </div>
-                            <div v-if="themeMode === 'dark'" class="badge badge-primary">
+                            <div
+                                v-if="themeMode === 'dark'"
+                                class="badge badge-primary"
+                            >
                                 {{ t("theme.selected") }}
                             </div>
                         </button>
@@ -36,15 +53,21 @@
                             @click="selectThemeMode('light')"
                             class="btn border flex items-center justify-between px-6 py-3"
                             :class="{
-                                'border-primary/50 bg-primary/10': themeMode === 'light',
+                                'border-primary/50 bg-primary/10':
+                                    themeMode === 'light',
                                 'border-base-content/10': themeMode !== 'light',
                             }"
                         >
                             <div class="flex items-center gap-2">
                                 <Sun class="w-5 h-5 text-amber-400" />
-                                <span class="font-medium">{{ t("theme.light") }}</span>
+                                <span class="font-medium">{{
+                                    t("theme.light")
+                                }}</span>
                             </div>
-                            <div v-if="themeMode === 'light'" class="badge badge-primary">
+                            <div
+                                v-if="themeMode === 'light'"
+                                class="badge badge-primary"
+                            >
                                 {{ t("theme.selected") }}
                             </div>
                         </button>
@@ -53,24 +76,39 @@
                             @click="selectThemeMode('schedule')"
                             class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
                             :class="{
-                                'border-primary/50 bg-primary/10': themeMode === 'schedule',
-                                'border-base-content/10': themeMode !== 'schedule',
+                                'border-primary/50 bg-primary/10':
+                                    themeMode === 'schedule',
+                                'border-base-content/10':
+                                    themeMode !== 'schedule',
                             }"
                         >
                             <div class="flex items-center gap-2">
                                 <div class="relative w-5 h-5 shrink-0">
                                     <Sun
                                         class="absolute inset-0 w-5 h-5 text-amber-400 transition-all duration-500"
-                                        :class="themeMode === 'schedule' ? 'opacity-100 scale-100' : 'opacity-60 scale-90'"
+                                        :class="
+                                            themeMode === 'schedule'
+                                                ? 'opacity-100 scale-100'
+                                                : 'opacity-60 scale-90'
+                                        "
                                     />
                                     <Moon
                                         class="absolute inset-0 w-3 h-3 text-indigo-400 transition-all duration-500"
-                                        :class="themeMode === 'schedule' ? 'opacity-100 translate-x-2.5 translate-y-2.5' : 'opacity-0 translate-x-1 translate-y-1'"
+                                        :class="
+                                            themeMode === 'schedule'
+                                                ? 'opacity-100 translate-x-2.5 translate-y-2.5'
+                                                : 'opacity-0 translate-x-1 translate-y-1'
+                                        "
                                     />
                                 </div>
-                                <span class="font-medium">{{ t("theme.schedule.title") }}</span>
+                                <span class="font-medium">{{
+                                    t("theme.schedule.title")
+                                }}</span>
                             </div>
-                            <div v-if="themeMode === 'schedule'" class="badge badge-primary">
+                            <div
+                                v-if="themeMode === 'schedule'"
+                                class="badge badge-primary"
+                            >
                                 {{ t("theme.selected") }}
                             </div>
                         </button>
@@ -80,63 +118,69 @@
                         v-if="themeMode === 'schedule'"
                         class="flex flex-col gap-3 border border-primary/20 bg-primary/5 rounded-lg p-4"
                     >
-                            <div class="flex items-center gap-2 font-medium text-sm text-primary">
-                                <Clock class="w-4 h-4 shrink-0" />
-                                <span>{{ t("theme.schedule.light_window") }}</span>
-                            </div>
+                        <div
+                            class="flex items-center gap-2 font-medium text-sm text-primary"
+                        >
+                            <Clock class="w-4 h-4 shrink-0" />
+                            <span>{{ t("theme.schedule.light_window") }}</span>
+                        </div>
 
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="flex flex-col gap-1">
-                                    <label class="text-sm text-base-content/60">{{
-                                        t("theme.schedule.from")
-                                    }}</label>
-                                    <input
-                                        type="time"
-                                        class="input input-sm input-bordered w-full"
-                                        :value="scheduleLightStart"
-                                        @change="
-                                            updateScheduleTime(
-                                                'lightStart',
-                                                ($event.target as HTMLInputElement).value
-                                            )
-                                        "
-                                    />
-                                </div>
-                                <div class="flex flex-col gap-1">
-                                    <label class="text-sm text-base-content/60">{{
-                                        t("theme.schedule.to")
-                                    }}</label>
-                                    <input
-                                        type="time"
-                                        class="input input-sm input-bordered w-full"
-                                        :value="scheduleLightEnd"
-                                        @change="
-                                            updateScheduleTime(
-                                                'lightEnd',
-                                                ($event.target as HTMLInputElement).value
-                                            )
-                                        "
-                                    />
-                                </div>
-                            </div>
-
-                            <div class="flex items-center gap-2 p-2 rounded-md bg-base-100/60">
-                                <div
-                                    class="w-2 h-2 rounded-full shrink-0 transition-colors duration-500"
-                                    :class="
-                                        schedulePreviewTheme === 'light'
-                                            ? 'bg-amber-400'
-                                            : 'bg-indigo-400'
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm text-base-content/60">{{
+                                    t("theme.schedule.from")
+                                }}</label>
+                                <input
+                                    type="time"
+                                    class="input input-sm input-bordered w-full"
+                                    :value="scheduleLightStart"
+                                    @change="
+                                        updateScheduleTime(
+                                            'lightStart',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
                                     "
-                                ></div>
-                                <span class="text-sm text-base-content/60">
-                                    {{ t("theme.schedule.now_active") }}:
-                                    <span class="font-medium text-base-content">{{
-                                        t(`theme.${schedulePreviewTheme}`)
-                                    }}</span>
-                                </span>
+                                />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm text-base-content/60">{{
+                                    t("theme.schedule.to")
+                                }}</label>
+                                <input
+                                    type="time"
+                                    class="input input-sm input-bordered w-full"
+                                    :value="scheduleLightEnd"
+                                    @change="
+                                        updateScheduleTime(
+                                            'lightEnd',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
                             </div>
                         </div>
+
+                        <div
+                            class="flex items-center gap-2 p-2 rounded-md bg-base-100/60"
+                        >
+                            <div
+                                class="w-2 h-2 rounded-full shrink-0 transition-colors duration-500"
+                                :class="
+                                    schedulePreviewTheme === 'light'
+                                        ? 'bg-amber-400'
+                                        : 'bg-indigo-400'
+                                "
+                            ></div>
+                            <span class="text-sm text-base-content/60">
+                                {{ t("theme.schedule.now_active") }}:
+                                <span class="font-medium text-base-content">{{
+                                    t(`theme.${schedulePreviewTheme}`)
+                                }}</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -734,12 +778,24 @@
                     <div class="flex flex-col gap-4 max-w-md">
                         <div>
                             <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm font-medium text-base-content">
+                                <label
+                                    class="text-sm font-medium text-base-content"
+                                >
                                     {{ t("customization.spotlight_blur") }}
                                 </label>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm text-base-content/60">{{ spotlightBlur }}px</span>
-                                    <button class="btn btn-ghost btn-xs opacity-50 hover:opacity-100" @click="handlePanelBlurInput('spotlightBlur', 24)">
+                                    <span class="text-sm text-base-content/60"
+                                        >{{ spotlightBlur }}px</span
+                                    >
+                                    <button
+                                        class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
+                                        @click="
+                                            handlePanelBlurInput(
+                                                'spotlightBlur',
+                                                24
+                                            )
+                                        "
+                                    >
                                         <RotateCcw class="w-3 h-3" />
                                     </button>
                                 </div>
@@ -751,18 +807,38 @@
                                 step="1"
                                 class="range range-primary range-sm"
                                 :value="spotlightBlur"
-                                @input="handlePanelBlurInput('spotlightBlur', Number(($event.target as HTMLInputElement).value))"
+                                @input="
+                                    handlePanelBlurInput(
+                                        'spotlightBlur',
+                                        Number(
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    )
+                                "
                             />
                         </div>
 
                         <div>
                             <div class="flex justify-between items-center mb-2">
-                                <label class="text-sm font-medium text-base-content">
+                                <label
+                                    class="text-sm font-medium text-base-content"
+                                >
                                     {{ t("customization.history_blur") }}
                                 </label>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm text-base-content/60">{{ historyBlur }}px</span>
-                                    <button class="btn btn-ghost btn-xs opacity-50 hover:opacity-100" @click="handlePanelBlurInput('historyBlur', 20)">
+                                    <span class="text-sm text-base-content/60"
+                                        >{{ historyBlur }}px</span
+                                    >
+                                    <button
+                                        class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
+                                        @click="
+                                            handlePanelBlurInput(
+                                                'historyBlur',
+                                                20
+                                            )
+                                        "
+                                    >
                                         <RotateCcw class="w-3 h-3" />
                                     </button>
                                 </div>
@@ -774,7 +850,15 @@
                                 step="1"
                                 class="range range-primary range-sm"
                                 :value="historyBlur"
-                                @input="handlePanelBlurInput('historyBlur', Number(($event.target as HTMLInputElement).value))"
+                                @input="
+                                    handlePanelBlurInput(
+                                        'historyBlur',
+                                        Number(
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    )
+                                "
                             />
                         </div>
                     </div>
@@ -1027,7 +1111,10 @@ type ThemeMode = "dark" | "light" | "schedule";
 
 const _getInitialThemeMode = (): ThemeMode => {
     if (themeScheduler.schedule.value.enabled) return "schedule";
-    return (document.documentElement.getAttribute("data-theme") as ThemeMode) || "dark";
+    return (
+        (document.documentElement.getAttribute("data-theme") as ThemeMode) ||
+        "dark"
+    );
 };
 
 const themeMode = ref<ThemeMode>(_getInitialThemeMode());
@@ -1155,7 +1242,10 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
     }
 };
 
-const handlePanelBlurInput = (settingKey: "spotlightBlur" | "historyBlur", value: number): void => {
+const handlePanelBlurInput = (
+    settingKey: "spotlightBlur" | "historyBlur",
+    value: number
+): void => {
     const refs: Record<string, any> = { spotlightBlur, historyBlur };
     const r = refs[settingKey];
     if (r) r.value = value;
@@ -1476,6 +1566,4 @@ textarea.textarea-bordered {
     border-radius: 3px;
     background: hsl(var(--bc) / 0.3);
 }
-
-
 </style>

@@ -480,6 +480,7 @@
         "input_placeholder": "Message as {username}...",
         "connecting_placeholder": "Connecting...",
         "send_hint": "Press Enter to send",
+        "reply_unknown": "Original message not available",
         "send_failed": "Failed to send message",
         "status": {
             "connected": "Connected",

@@ -440,6 +440,7 @@
         "input_placeholder": "Сообщение от {username}...",
         "connecting_placeholder": "Подключение...",
         "send_hint": "Enter — отправить",
+        "reply_unknown": "Исходное сообщение недоступно",
         "send_failed": "Не удалось отправить сообщение",
         "status": {
             "connected": "Подключено",

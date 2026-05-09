@@ -99,7 +99,10 @@ const confirmCancel = async () => {
     const confirmed = await showConfirm({
         title: t("friends.cancel_friend_request"),
         message: t("modals.cancel_friend_request_confirm.message", {
-            displayName: streamer.getDisplayName(props.user.nickname, props.user.username),
+            displayName: streamer.getDisplayName(
+                props.user.nickname,
+                props.user.username
+            ),
         }),
         confirmLabel: t("modals.cancel_friend_request_confirm.yes_cancel"),
         cancelLabel: t("modals.cancel_friend_request_confirm.keep_request"),

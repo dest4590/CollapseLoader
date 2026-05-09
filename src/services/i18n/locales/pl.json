@@ -17,6 +17,9 @@
         "success_message": "Zgłoszenie zostało wysłane pomyślnie. Dziękujemy!",
         "error_message": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie później."
     },
+    "chat": {
+        "reply_unknown": "Oryginalna wiadomość niedostępna"
+    },
     "modals": {
         "initial_setup": {
             "welcome": {

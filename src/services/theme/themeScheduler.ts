@@ -118,9 +118,7 @@ const updateSchedule = (patch: Partial<ThemeSchedule>): void => {
     }
 };
 
-const previewTheme = computed<"light" | "dark">(() =>
-    getScheduledTheme()
-);
+const previewTheme = computed<"light" | "dark">(() => getScheduledTheme());
 
 export const themeScheduler = {
     schedule,

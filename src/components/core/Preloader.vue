@@ -79,7 +79,8 @@
                             'text-white/20': currentTheme !== 'light',
                         }"
                     >
-                        v{{ version }}<template v-if="codename"> · {{ codename }}</template>
+                        v{{ version
+                        }}<template v-if="codename"> · {{ codename }}</template>
                     </span>
                 </div>
             </transition>
@@ -318,7 +319,9 @@ onBeforeUnmount(() => {
 }
 
 .greeting-fade-enter-active {
-    transition: opacity 0.6s ease, transform 0.6s ease;
+    transition:
+        opacity 0.6s ease,
+        transform 0.6s ease;
     transition-delay: 0.3s;
 }
 .greeting-fade-enter-from {

@@ -349,7 +349,10 @@ const removeFriend = async (friend: Friend) => {
     const confirmedRemove = await showConfirm({
         title: t("userProfile.remove_friend"),
         message: t("modals.remove_friend_confirm.message", {
-            displayName: streamer.getDisplayName(friend.nickname, friend.username),
+            displayName: streamer.getDisplayName(
+                friend.nickname,
+                friend.username
+            ),
         }),
         confirmLabel: t("modals.remove_friend_confirm.yes_remove"),
         cancelLabel: t("common.cancel"),
@@ -378,7 +381,10 @@ const blockFriend = async (friend: Friend) => {
     const confirmedBlock = await showConfirm({
         title: t("userProfile.block_user"),
         message: t("modals.block_unblock_confirm.block_message", {
-            displayName: streamer.getDisplayName(friend.nickname, friend.username),
+            displayName: streamer.getDisplayName(
+                friend.nickname,
+                friend.username
+            ),
         }),
         confirmLabel: t("modals.block_unblock_confirm.yes_block"),
         cancelLabel: t("common.cancel"),

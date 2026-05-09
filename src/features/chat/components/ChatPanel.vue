@@ -10,10 +10,14 @@ import {
     Loader2,
     MessageSquare,
     ChevronDown,
+    CornerUpLeft,
+    X,
 } from "lucide-vue-next";
 import {
     useChatService,
     MESSAGE_MAX_LENGTH,
+    type ChatMessage,
+    type ChatReplyTarget,
 } from "@services/chat/useChatService";
 import { useToast } from "@shared/composables/useToast";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
@@ -63,6 +67,7 @@ const inputText = ref("");
 const isSending = ref(false);
 const messagesContainerRef = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
+const replyTarget = ref<ChatReplyTarget | null>(null);
 
 const charCount = computed(() => inputText.value.length);
 const isOverLimit = computed(() => charCount.value > MESSAGE_MAX_LENGTH);
@@ -89,8 +94,15 @@ const handleSend = async () => {
     isSending.value = true;
     try {
         const userId = localStorage.getItem("authToken");
-        await sendMessage(text, resolvedUsername.value, userId);
+        await sendMessage(
+            text,
+            resolvedUsername.value,
+            userId,
+            "user",
+            replyTarget.value
+        );
         inputText.value = "";
+        replyTarget.value = null;
         inputRef.value?.focus();
         void achievementService.unlockAchievement("CHAT_FIRST_MESSAGE");
     } catch (e: any) {
@@ -129,6 +141,59 @@ const statusDotClass = computed(() => {
 });
 
 const isOwnMessage = (u: string) => u === resolvedUsername.value;
+
+const startReply = (message: ChatMessage) => {
+    replyTarget.value = {
+        id: message.id,
+        username: message.username,
+    };
+    inputRef.value?.focus();
+};
+
+const clearReplyTarget = () => {
+    replyTarget.value = null;
+};
+
+const getReplyPreview = (message: ChatMessage) => {
+    if (!message.replyToId) return null;
+
+    const sourceMessage = messages.value.find(
+        (item) => item.id === message.replyToId
+    );
+
+    return {
+        username: sourceMessage?.username ?? "Unknown",
+        content: sourceMessage?.content ?? null,
+    };
+};
+
+const scrollToMessage = (id?: number | null) => {
+    if (!id) return;
+    nextTick(() => {
+        const el = document.querySelector(`[data-msg-id=\"${id}\"]`);
+        if (el instanceof HTMLElement) {
+            el.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+            el.classList.remove("reply-highlight", "reply-highlight-fade");
+            void el.offsetWidth;
+            el.classList.add("reply-highlight");
+            window.setTimeout(
+                () => el.classList.add("reply-highlight-fade"),
+                400
+            );
+            window.setTimeout(
+                () =>
+                    el.classList.remove(
+                        "reply-highlight",
+                        "reply-highlight-fade"
+                    ),
+                5200
+            );
+        }
+    });
+};
 
 const roleBadgeClass = (role: string) => {
     if (role === "admin") return "badge badge-error badge-xs ml-1";
@@ -306,7 +371,8 @@ onMounted(async () => {
                         <div
                             v-for="msg in messages"
                             :key="msg.id"
-                            class="flex items-end gap-2 msg-row"
+                            :data-msg-id="msg.id"
+                            class="flex items-end gap-2 msg-row group"
                             :class="{
                                 'flex-row-reverse': isOwnMessage(msg.username),
                             }"
@@ -348,6 +414,41 @@ onMounted(async () => {
                                         class="text-[9px] text-base-content/20"
                                         >{{ msg.time }}</span
                                     >
+                                    <button
+                                        class="btn btn-ghost btn-xs h-4 min-h-4 px-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        @click="startReply(msg)"
+                                        type="button"
+                                        aria-label="Reply to message"
+                                    >
+                                        <CornerUpLeft class="w-2.5 h-2.5" />
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-if="getReplyPreview(msg)"
+                                    class="mb-1 w-full max-w-full rounded-lg border border-base-300/70 bg-base-100/80 px-2 py-1 text-[10px] text-base-content/60"
+                                >
+                                    <button
+                                        class="w-full text-left"
+                                        type="button"
+                                        @click="scrollToMessage(msg.replyToId)"
+                                    >
+                                        <div
+                                            class="font-medium text-base-content/70"
+                                        >
+                                            @{{
+                                                getReplyPreview(msg)?.username
+                                            }}
+                                        </div>
+                                        <div
+                                            class="truncate text-base-content/45"
+                                        >
+                                            {{
+                                                getReplyPreview(msg)?.content ??
+                                                t("chat.reply_unknown")
+                                            }}
+                                        </div>
+                                    </button>
                                 </div>
 
                                 <div
@@ -357,6 +458,7 @@ onMounted(async () => {
                                             ? 'bg-primary text-primary-content rounded-2xl rounded-br-sm'
                                             : 'bg-base-300 text-base-content rounded-2xl rounded-bl-sm'
                                     "
+                                    :data-msg-id="msg.id"
                                 >
                                     {{ msg.content }}
                                 </div>
@@ -366,6 +468,29 @@ onMounted(async () => {
                 </div>
 
                 <div class="px-3 py-2 border-t border-base-300/50">
+                    <div
+                        v-if="replyTarget"
+                        class="mb-2 flex items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100/80 px-2.5 py-1.5 text-[10px]"
+                    >
+                        <div
+                            class="min-w-0 flex items-center gap-1.5 text-base-content/70"
+                        >
+                            <CornerUpLeft
+                                class="w-3 h-3 shrink-0 text-primary"
+                            />
+                            <span class="truncate">
+                                Replying to @{{ replyTarget.username }}
+                            </span>
+                        </div>
+                        <button
+                            class="btn btn-ghost btn-xs h-5 min-h-5 px-1.5"
+                            type="button"
+                            @click="clearReplyTarget"
+                        >
+                            <X class="w-3 h-3" />
+                        </button>
+                    </div>
+
                     <div
                         class="flex items-center gap-2 bg-base-100 rounded-lg px-3 py-1.5 border border-base-300 transition-colors duration-150 focus-within:border-primary/50"
                         :class="{ 'border-error!': isOverLimit }"
@@ -462,6 +587,15 @@ onMounted(async () => {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.reply-highlight {
+    background-color: rgba(96, 165, 250, 0.28);
+    transition: background-color 1.2s ease-out;
+}
+
+.reply-highlight.reply-highlight-fade {
+    background-color: transparent;
 }
 
 .scrollbar-thin {
