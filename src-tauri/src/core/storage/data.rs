@@ -263,7 +263,10 @@ impl Data {
             return Err(format!("Failed to create destination folder: {e}"));
         }
 
-        let dest_path = dest_dir.join(&info.local_file);
+        let dest_path = dest_dir.join(Self::download_target_relative_path(
+            dest_folder,
+            &info.local_file,
+        ));
 
         let app_handle = APP_HANDLE.lock().unwrap().clone();
         download_file(
@@ -280,6 +283,18 @@ impl Data {
 
         Ok(())
     }
+
+    pub(crate) fn download_target_relative_path(dest_folder: &str, local_file: &str) -> PathBuf {
+        let local_path = Path::new(local_file);
+        let folder_path = Path::new(dest_folder);
+
+        if let Ok(stripped) = local_path.strip_prefix(folder_path) {
+            stripped.to_path_buf()
+        } else {
+            local_path.to_path_buf()
+        }
+    }
+
     fn should_skip_download(&self, root_dir: &Path, info: &FileInfo) -> bool {
         match info.kind {
             LocalFileKind::Zip => Self::is_extracted_folder_usable(&info.unzip_path(root_dir)),
