@@ -81,7 +81,6 @@ export function useAppHandlers(props: AppHandlerProps) {
                     const found = clients.find((c) => c.id === clientId);
                     if (found) return found;
                 } catch {
-                    // ignore
                 }
                 if (attempt < 4) {
                     await new Promise((r) => setTimeout(r, 1000));
