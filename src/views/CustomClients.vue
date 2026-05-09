@@ -102,7 +102,7 @@ const showContextMenu = (event: MouseEvent, client: CustomClient) => {
 
     setTimeout(() => {
         contextMenu.value.animationClass = "";
-    }, 150);
+    }, 600);
 
     document.addEventListener("click", hideContextMenu);
 };
@@ -117,7 +117,7 @@ const hideContextMenu = () => {
         contextMenu.value.client = null;
         contextMenu.value.animationClass = "";
         document.removeEventListener("click", hideContextMenu);
-    }, 150);
+    }, 220);
 };
 
 const loadCustomClients = async () => {
