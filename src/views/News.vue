@@ -1,52 +1,58 @@
 <template>
     <div class="slide-up">
         <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+            class="card bg-base-200 border border-base-300 rounded-3xl p-5 mb-6 shadow-sm"
         >
-            <h1 class="text-2xl font-semibold text-primary-focus">
-                {{ t("navigation.news") }}
-                <span
-                    v-if="unreadCount > 0"
-                    class="ml-2 badge badge-primary badge-sm align-middle animate-pulse"
-                >
-                    {{ unreadCount }}
-                </span>
-            </h1>
-            <div class="flex gap-2 items-center">
-                <input
-                    v-model="searchQuery"
-                    type="text"
-                    class="input input-bordered input-sm w-48 bg-base-100"
-                    :placeholder="t('news.search_placeholder')"
-                />
-                <a
-                    href="https://t.me/collapseloader"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-sm btn-ghost gap-2 text-primary"
-                    :title="t('news.telegram')"
-                >
-                    <Send class="w-4 h-4" />
-                    <span class="hidden md:inline">{{
-                        t("news.telegram")
-                    }}</span>
-                </a>
-                <button
-                    @click="fetchNews"
-                    :disabled="loading"
-                    class="btn btn-sm btn-ghost"
-                    :title="t('news.refresh')"
-                >
-                    <RefreshCcw class="w-4 h-4" />
-                </button>
-                <button
-                    v-if="unreadCount > 0"
-                    @click="markAllNewsAsRead"
-                    class="btn btn-primary btn-sm"
-                    :disabled="loading"
-                >
-                    {{ t("news.mark_all_read") }}
-                </button>
+            <div
+                class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+                <div>
+                    <h1 class="text-2xl font-semibold text-primary-focus">
+                        {{ t("navigation.news") }}
+                        <span
+                            v-if="unreadCount > 0"
+                            class="ml-2 badge badge-primary badge-sm align-middle animate-pulse"
+                        >
+                            {{ unreadCount }}
+                        </span>
+                    </h1>
+                </div>
+                <div class="flex flex-wrap gap-2 items-center justify-end">
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        class="input input-bordered input-md w-full sm:w-60 bg-base-100"
+                        :placeholder="t('news.search_placeholder')"
+                    />
+                    <a
+                        href="https://t.me/collapseloader"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn btn-sm btn-ghost gap-2 text-primary"
+                        :title="t('news.telegram')"
+                    >
+                        <Send class="w-4 h-4" />
+                        <span class="hidden md:inline">{{
+                            t("news.telegram")
+                        }}</span>
+                    </a>
+                    <button
+                        @click="fetchNews"
+                        :disabled="loading"
+                        class="btn btn-sm btn-ghost"
+                        :title="t('news.refresh')"
+                    >
+                        <RefreshCcw class="w-4 h-4" />
+                    </button>
+                    <button
+                        v-if="unreadCount > 0"
+                        @click="markAllNewsAsRead"
+                        class="btn btn-primary btn-sm"
+                        :disabled="loading"
+                    >
+                        {{ t("news.mark_all_read") }}
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -99,29 +105,36 @@
                 v-for="(article, index) in filteredNews"
                 :key="article.id"
                 :ref="(el) => (newsCardRefs[article.id] = el)"
-                class="card bg-base-200 shadow-md border border-base-300 news-card hover:shadow-lg transition-all duration-300"
+                class="card bg-base-200 shadow-md border border-base-300 news-card hover:shadow-lg transition-all duration-300 overflow-hidden"
                 :class="{ 'unread-article': !isNewsRead(article) }"
                 :style="{ 'animation-delay': index * 0.1 + 's' }"
             >
                 <div class="card-body p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-2">
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4"
+                    >
+                        <div class="min-w-0">
                             <h2
-                                class="card-title text-xl font-bold text-primary-focus"
+                                class="card-title text-xl font-semibold text-primary-focus wrap-break-word"
                             >
                                 {{ article.title }}
                             </h2>
-                            <div
+                        </div>
+                        <div
+                            class="flex items-center gap-2 text-xs text-base-content/60 whitespace-nowrap"
+                        >
+                            <span>{{ formatDate(article.created_at) }}</span>
+                            <span
+                                v-if="!isNewsRead(article)"
+                                class="hidden sm:inline"
+                                >·</span
+                            >
+                            <span
                                 v-if="!isNewsRead(article)"
                                 class="badge badge-sm badge-primary animate-pulse"
                             >
                                 {{ t("news.new") }}
-                            </div>
-                        </div>
-                        <div
-                            class="text-xs text-base-content/60 whitespace-nowrap ml-4"
-                        >
-                            {{ formatDate(article.created_at) }}
+                            </span>
                         </div>
                     </div>
 
