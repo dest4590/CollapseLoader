@@ -156,7 +156,6 @@
                                     :locked="!isUnlocked(ach.id)"
                                     :unlocked-at="getUnlockedAt(ach.id)"
                                     :hidden="ach.hidden"
-                                    :receive-percentage="ach.receivePercentage"
                                 />
                             </div>
 

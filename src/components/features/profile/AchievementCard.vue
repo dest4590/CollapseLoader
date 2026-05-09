@@ -30,7 +30,7 @@
                         })
                     }}
                 </p>
-                <p
+                <!-- <p
                     v-if="receivePercentage !== undefined"
                     class="text-[10px] text-base-content/40 mt-0.5"
                 >
@@ -39,7 +39,7 @@
                             percent: Number(receivePercentage).toFixed(1),
                         })
                     }}
-                </p>
+                </p> -->
             </div>
             <div
                 v-if="locked"
@@ -64,7 +64,6 @@ const props = defineProps<{
     locked: boolean;
     unlockedAt?: string | null;
     hidden?: boolean;
-    receivePercentage?: number;
 }>();
 
 const { t } = useI18n();
