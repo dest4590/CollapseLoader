@@ -17,6 +17,8 @@ const defaultSchedule: ThemeSchedule = {
     lightEnd: "18:00",
 };
 
+const SCHEDULE_POLL_INTERVAL_MS = 60_000;
+
 const schedule = ref<ThemeSchedule>({ ...defaultSchedule });
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -45,21 +47,29 @@ const toMinutes = (time: string): number => {
     return h * 60 + m;
 };
 
+const isTimeWithinSchedule = (
+    currentMinutes: number,
+    startMinutes: number,
+    endMinutes: number
+): boolean => {
+    if (startMinutes < endMinutes) {
+        return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+    }
+
+    return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+};
+
 const getScheduledTheme = (): "light" | "dark" => {
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     const startMinutes = toMinutes(schedule.value.lightStart);
     const endMinutes = toMinutes(schedule.value.lightEnd);
 
-    let isLight: boolean;
-
-    if (startMinutes < endMinutes) {
-        isLight =
-            currentMinutes >= startMinutes && currentMinutes < endMinutes;
-    } else {
-        isLight =
-            currentMinutes >= startMinutes || currentMinutes < endMinutes;
-    }
+    const isLight = isTimeWithinSchedule(
+        currentMinutes,
+        startMinutes,
+        endMinutes
+    );
 
     return isLight ? "light" : "dark";
 };
@@ -89,7 +99,7 @@ const startScheduler = (): void => {
     if (intervalId !== null) clearInterval(intervalId);
     intervalId = setInterval(() => {
         void applyScheduledTheme();
-    }, 60_000);
+    }, SCHEDULE_POLL_INTERVAL_MS);
 };
 
 const stopScheduler = (): void => {
