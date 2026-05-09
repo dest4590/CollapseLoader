@@ -3,15 +3,19 @@ use crate::core::utils::taskbar;
 use crate::log_error;
 use crate::log_info;
 use crate::log_warn;
+use futures_util::stream::FuturesUnordered;
 use futures_util::StreamExt;
 use reqwest::Client;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::sync::{LazyLock, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, LazyLock, Mutex,
+};
 use std::time::{Duration, Instant};
 use tokio::fs;
 use tokio::io::{AsyncWriteExt, BufWriter};
-use tokio::sync::oneshot;
+use tokio::sync::watch;
 
 const MAX_RETRIES: u32 = 3;
 const BASE_RETRY_DELAY: Duration = Duration::from_secs(2);
@@ -24,13 +28,13 @@ static HTTP_CLIENT: LazyLock<Client> =
 static ACTIVE_DOWNLOADS: LazyLock<Mutex<HashSet<String>>> =
     LazyLock::new(|| Mutex::new(HashSet::new()));
 
-static CANCEL_CHANNELS: LazyLock<Mutex<HashMap<String, oneshot::Sender<()>>>> =
+static CANCEL_CHANNELS: LazyLock<Mutex<HashMap<String, watch::Sender<bool>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub fn cancel_download(name: &str) -> bool {
     let mut lock = CANCEL_CHANNELS.lock().unwrap();
     if let Some(tx) = lock.remove(name) {
-        let _ = tx.send(());
+        let _ = tx.send(true);
         return true;
     }
     false
@@ -60,6 +64,40 @@ fn backoff_delay(attempt: u32) -> Duration {
     Duration::from_secs_f64((capped + jitter).max(0.1))
 }
 
+fn candidate_temp_path(dest_path: &Path, candidate_index: usize) -> std::path::PathBuf {
+    let temp_extension = match dest_path.extension().and_then(|ext| ext.to_str()) {
+        Some(ext) => format!("{ext}.{candidate_index}.part"),
+        None => format!("part.{candidate_index}"),
+    };
+
+    let mut temp_path = dest_path.to_path_buf();
+    temp_path.set_extension(temp_extension);
+    temp_path
+}
+
+struct TempFileGuard {
+    path: std::path::PathBuf,
+    keep: bool,
+}
+
+impl TempFileGuard {
+    fn new(path: std::path::PathBuf) -> Self {
+        Self { path, keep: false }
+    }
+
+    fn keep(&mut self) {
+        self.keep = true;
+    }
+}
+
+impl Drop for TempFileGuard {
+    fn drop(&mut self) {
+        if !self.keep {
+            let _ = std::fs::remove_file(&self.path);
+        }
+    }
+}
+
 pub async fn download_file(
     urls: &[String],
     dest_path: &Path,
@@ -84,51 +122,70 @@ pub async fn download_file(
     }
     let _active_guard = ActiveGuard(emit_name.to_string());
 
-    let mut last_error = String::from("Unknown error");
+    if urls.is_empty() {
+        return Err(format!(
+            "Failed to download {} because no URLs were provided",
+            emit_name
+        ));
+    }
+
+    let (cancel_tx, _) = watch::channel(false);
+    {
+        let mut lock = CANCEL_CHANNELS.lock().unwrap();
+        lock.insert(emit_name.to_string(), cancel_tx.clone());
+    }
+
+    struct CancelGuard(String);
+    impl Drop for CancelGuard {
+        fn drop(&mut self) {
+            let mut lock = CANCEL_CHANNELS.lock().unwrap();
+            lock.remove(&self.0);
+        }
+    }
+    let _cancel_guard = CancelGuard(emit_name.to_string());
+
+    let mut attempts = FuturesUnordered::new();
+    let winner = Arc::new(AtomicBool::new(false));
+    let app_handle = app_handle.cloned();
 
     for (url_idx, url) in urls.iter().enumerate() {
-        for attempt in 1..=MAX_RETRIES {
-            if attempt > 1 {
-                let delay = backoff_delay(attempt);
-                log_warn!(
-                    "Retrying download for {} (attempt {}/{}, waiting {:.1}s) ...",
-                    emit_name,
-                    attempt,
-                    MAX_RETRIES,
-                    delay.as_secs_f64()
-                );
-                tokio::time::sleep(delay).await;
-            }
+        let url = url.clone();
+        let dest_path = dest_path.to_path_buf();
+        let emit_name = emit_name.to_string();
+        let app_handle = app_handle.clone();
+        let winner = Arc::clone(&winner);
+        let cancel_rx = cancel_tx.subscribe();
+        let temp_path = candidate_temp_path(dest_path.as_path(), url_idx);
 
-            match perform_download(url, dest_path, emit_name, app_handle).await {
-                Ok(_) => return Ok(()),
-                Err(e) => {
+        attempts.push(async move {
+            perform_download(
+                &url,
+                &dest_path,
+                &temp_path,
+                &emit_name,
+                app_handle.as_ref(),
+                cancel_rx,
+                winner,
+            )
+            .await
+        });
+    }
+
+    let mut last_error = String::from("Unknown error");
+    while let Some(result) = attempts.next().await {
+        match result {
+            Ok(_) => {
+                let _ = cancel_tx.send(true);
+                return Ok(());
+            }
+            Err(e) => {
+                if e != "Cancelled" {
+                    log_warn!("Parallel download attempt for {} failed: {}", emit_name, e);
                     last_error = e;
-                    log_error!(
-                        "Download failed for {} (attempt {}/{}): {}",
-                        emit_name,
-                        attempt,
-                        MAX_RETRIES,
-                        last_error
-                    );
+                } else if last_error == "Unknown error" {
+                    last_error = e;
                 }
             }
-        }
-
-        if url_idx + 1 < urls.len() {
-            log_warn!(
-                "All {} attempts failed for {} on URL {}. Trying next URL...",
-                MAX_RETRIES,
-                emit_name,
-                url
-            );
-        } else {
-            log_warn!(
-                "All {} attempts failed for {} on URL {}. No more URLs available.",
-                MAX_RETRIES,
-                emit_name,
-                url
-            );
         }
     }
 
@@ -144,95 +201,104 @@ pub async fn download_file(
 async fn perform_download(
     url: &str,
     dest_path: &Path,
+    temp_path: &Path,
     emit_name: &str,
     app_handle: Option<&tauri::AppHandle>,
+    mut cancel_rx: watch::Receiver<bool>,
+    winner: Arc<AtomicBool>,
 ) -> Result<(), String> {
-    let response = HTTP_CLIENT.get(url).send().await.map_err(|e| {
-        log_error!("Network request failed for {}: {}", emit_name, e);
-        format!("Network request failed: {e}")
-    })?;
+    let mut last_error = String::from("Unknown error");
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_msg = format!(
-            "HTTP {} ({}) downloading {}",
-            status.as_u16(),
-            status.canonical_reason().unwrap_or("Unknown"),
-            emit_name,
-        );
-        log_error!("{}", error_msg);
-        return Err(error_msg);
-    }
+    for attempt in 1..=MAX_RETRIES {
+        if attempt > 1 {
+            let delay = backoff_delay(attempt);
+            log_warn!(
+                "Retrying download for {} (attempt {}/{}, waiting {:.1}s) ...",
+                emit_name,
+                attempt,
+                MAX_RETRIES,
+                delay.as_secs_f64()
+            );
 
-    let total_size = response.content_length();
+            tokio::select! {
+                _ = cancel_rx.changed() => {
+                    return Err("Cancelled".to_string());
+                }
+                _ = tokio::time::sleep(delay) => {}
+            }
+        }
 
-    if let Some(total) = total_size {
-        log_info!("Downloading {} ({})", emit_name, human_size(total));
+        let response = tokio::select! {
+            _ = cancel_rx.changed() => {
+                return Err("Cancelled".to_string());
+            }
+            res = HTTP_CLIENT.get(url).send() => res.map_err(|e| {
+                log_error!("Network request failed for {}: {}", emit_name, e);
+                format!("Network request failed: {e}")
+            })?,
+        };
 
-        // Disk space check
-        if let Some(parent) = dest_path.parent() {
-            let disks = sysinfo::Disks::new_with_refreshed_list();
-            if let Some(disk) = disks
-                .list()
-                .iter()
-                .find(|d| parent.starts_with(d.mount_point()))
-            {
-                if disk.available_space() < (total as f64 * 1.1) as u64 {
-                    let err = format!(
-                        "Insufficient disk space on {}. Required: {}, Available: {}",
-                        disk.mount_point().display(),
-                        human_size((total as f64 * 1.1) as u64),
-                        human_size(disk.available_space())
-                    );
-                    log_error!("{}", err);
-                    return Err(err);
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_msg = format!(
+                "HTTP {} ({}) downloading {}",
+                status.as_u16(),
+                status.canonical_reason().unwrap_or("Unknown"),
+                emit_name,
+            );
+            log_error!("{}", error_msg);
+            last_error = error_msg;
+            continue;
+        }
+
+        let total_size = response.content_length();
+
+        if let Some(total) = total_size {
+            log_info!("Downloading {} ({})", emit_name, human_size(total));
+
+            // Disk space check
+            if let Some(parent) = dest_path.parent() {
+                let disks = sysinfo::Disks::new_with_refreshed_list();
+                if let Some(disk) = disks
+                    .list()
+                    .iter()
+                    .find(|d| parent.starts_with(d.mount_point()))
+                {
+                    if disk.available_space() < (total as f64 * 1.1) as u64 {
+                        let err = format!(
+                            "Insufficient disk space on {}. Required: {}, Available: {}",
+                            disk.mount_point().display(),
+                            human_size((total as f64 * 1.1) as u64),
+                            human_size(disk.available_space())
+                        );
+                        log_error!("{}", err);
+                        last_error = err;
+                        continue;
+                    }
                 }
             }
         }
-    }
 
-    let mut temp_path = dest_path.to_path_buf();
-    let temp_extension = match dest_path.extension().and_then(|ext| ext.to_str()) {
-        Some(ext) => format!("{ext}.part"),
-        None => "part".to_string(),
-    };
-    temp_path.set_extension(temp_extension);
+        let temp_file = fs::File::create(temp_path).await.map_err(|e| {
+            log_error!("Failed to create temp file {}: {}", temp_path.display(), e);
+            format!("Temp file creation error: {e}")
+        })?;
+        let mut dest = BufWriter::new(temp_file);
+        let mut downloaded: u64 = 0;
+        let mut last_emitted_pct: u8 = 0;
+        let mut last_emit_time = Instant::now();
+        let download_start = Instant::now();
+        let mut speed_window_bytes: u64 = 0;
+        let mut speed_window_start = Instant::now();
+        let mut current_speed_bps: f64 = 0.0;
+        let mut first_chunk = true;
+        let mut stream = response.bytes_stream();
 
-    let dest_file = fs::File::create(&temp_path).await.map_err(|e| {
-        log_error!("Failed to create temp file {}: {}", temp_path.display(), e);
-        format!("Temp file creation error: {e}")
-    })?;
-    let mut dest = BufWriter::new(dest_file);
+        let mut temp_guard = TempFileGuard::new(temp_path.to_path_buf());
 
-    let mut downloaded: u64 = 0;
-    let mut last_emitted_pct: u8 = 0;
-    let mut last_emit_time = Instant::now();
-    let download_start = Instant::now();
-    let mut speed_window_bytes: u64 = 0;
-    let mut speed_window_start = Instant::now();
-    let mut current_speed_bps: f64 = 0.0;
-    let mut first_chunk = true;
-    let mut stream = response.bytes_stream();
-
-    let (tx, mut rx) = oneshot::channel();
-    {
-        let mut lock = CANCEL_CHANNELS.lock().unwrap();
-        lock.insert(emit_name.to_string(), tx);
-    }
-
-    struct CancelGuard(String);
-    impl Drop for CancelGuard {
-        fn drop(&mut self) {
-            let mut lock = CANCEL_CHANNELS.lock().unwrap();
-            lock.remove(&self.0);
-        }
-    }
-    let _guard = CancelGuard(emit_name.to_string());
-
-    let write_result: Result<(), String> = async {
         loop {
             let chunk = tokio::select! {
-                _ = &mut rx => {
+                _ = cancel_rx.changed() => {
                     log_warn!("Download for {} was cancelled by user", emit_name);
                     return Err("Cancelled".to_string());
                 }
@@ -300,51 +366,56 @@ async fn perform_download(
             format!("File flush error: {e}")
         })?;
 
-        Ok(())
-    }
-    .await;
+        drop(dest);
 
-    if let Err(e) = write_result {
-        let _ = fs::remove_file(&temp_path).await;
-        return Err(e);
-    }
+        if winner
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return Err("Another download finished first".to_string());
+        }
 
-    if fs::try_exists(dest_path).await.unwrap_or(false) {
-        fs::remove_file(dest_path).await.map_err(|e| {
+        if fs::try_exists(dest_path).await.unwrap_or(false) {
+            fs::remove_file(dest_path).await.map_err(|e| {
+                log_error!(
+                    "Failed to replace destination file {}: {}",
+                    dest_path.display(),
+                    e
+                );
+                format!("Failed to replace destination file: {e}")
+            })?;
+        }
+
+        fs::rename(temp_path, dest_path).await.map_err(|e| {
             log_error!(
-                "Failed to replace destination file {}: {}",
+                "Failed to finalize {} ({} -> {}): {}",
+                emit_name,
+                temp_path.display(),
                 dest_path.display(),
                 e
             );
-            format!("Failed to replace destination file: {e}")
+            format!("Failed to finalize downloaded file: {e}")
         })?;
+
+        temp_guard.keep();
+
+        let elapsed = download_start.elapsed();
+        let avg_speed = if elapsed.as_secs_f64() > 0.0 {
+            downloaded as f64 / elapsed.as_secs_f64()
+        } else {
+            0.0
+        };
+        taskbar::clear_progress();
+        log_info!(
+            "Downloaded {} – {} in {:.1}s (avg {}ps)",
+            emit_name,
+            human_size(downloaded),
+            elapsed.as_secs_f64(),
+            human_size(avg_speed as u64)
+        );
+
+        return Ok(());
     }
 
-    fs::rename(&temp_path, dest_path).await.map_err(|e| {
-        log_error!(
-            "Failed to finalize {} ({} -> {}): {}",
-            emit_name,
-            temp_path.display(),
-            dest_path.display(),
-            e
-        );
-        format!("Failed to finalize downloaded file: {e}")
-    })?;
-
-    let elapsed = download_start.elapsed();
-    let avg_speed = if elapsed.as_secs_f64() > 0.0 {
-        downloaded as f64 / elapsed.as_secs_f64()
-    } else {
-        0.0
-    };
-    taskbar::clear_progress();
-    log_info!(
-        "Downloaded {} – {} in {:.1}s (avg {}ps)",
-        emit_name,
-        human_size(downloaded),
-        elapsed.as_secs_f64(),
-        human_size(avg_speed as u64)
-    );
-
-    Ok(())
+    Err(last_error)
 }

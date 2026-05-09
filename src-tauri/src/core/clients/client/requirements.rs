@@ -1,5 +1,7 @@
 use std::path::{Path, MAIN_SEPARATOR};
 
+use futures_util::FutureExt;
+use futures_util::future::try_join_all;
 use tauri::AppHandle;
 
 use super::{
@@ -245,23 +247,32 @@ impl Client {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
             let mods_folder_abs = self.client_base_folder().join(MODS_FOLDER);
-
-            for req in mods {
+            let downloads = mods.iter().map(|req| {
+                let client = self.clone();
+                let mods_folder_rel = mods_folder_rel.clone();
+                let mods_folder_abs = mods_folder_abs.clone();
+                let expected_md5 = req.md5_hash.clone();
                 let name = req.name.clone();
-                let mod_basename = name.trim_end_matches(".jar");
-                let decoded_basename = mod_basename.replace("%2B", "+").replace("%2b", "+");
-                let dest = mods_folder_abs.join(format!("{decoded_basename}.jar"));
-                let remote_path = format!("{FABRIC_DEPS_URL}/{mod_basename}.jar");
 
-                self.download_dependency(
-                    &remote_path,
-                    &mods_folder_rel,
-                    &dest,
-                    req.md5_hash.as_ref(),
-                    &decoded_basename,
-                )
-                .await?;
-            }
+                async move {
+                    let mod_basename = name.trim_end_matches(".jar").to_string();
+                    let decoded_basename = mod_basename.replace("%2B", "+").replace("%2b", "+");
+                    let dest = mods_folder_abs.join(format!("{decoded_basename}.jar"));
+                    let remote_path = format!("{FABRIC_DEPS_URL}/{mod_basename}.jar");
+
+                    client
+                        .download_dependency(
+                            &remote_path,
+                            &mods_folder_rel,
+                            &dest,
+                            expected_md5.as_ref(),
+                            &decoded_basename,
+                        )
+                        .await
+                }
+            });
+
+            try_join_all(downloads).await?;
         }
 
         self.ensure_fabric_api().await?;
@@ -364,22 +375,31 @@ impl Client {
             let client_base = Data::get_filename(&self.filename);
             let mods_folder_rel = format!("{client_base}{MAIN_SEPARATOR}{MODS_FOLDER}");
             let mods_folder_abs = self.client_base_folder().join(MODS_FOLDER);
-
-            for req in mods {
+            let downloads = mods.iter().map(|req| {
+                let client = self.clone();
+                let mods_folder_rel = mods_folder_rel.clone();
+                let mods_folder_abs = mods_folder_abs.clone();
+                let expected_md5 = req.md5_hash.clone();
                 let name = req.name.clone();
-                let mod_basename = name.trim_end_matches(".jar");
-                let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
-                let remote_path = format!("{FORGE_DEPS_URL}/{mod_basename}.jar");
 
-                self.download_dependency(
-                    &remote_path,
-                    &mods_folder_rel,
-                    &dest,
-                    req.md5_hash.as_ref(),
-                    mod_basename,
-                )
-                .await?;
-            }
+                async move {
+                    let mod_basename = name.trim_end_matches(".jar").to_string();
+                    let dest = mods_folder_abs.join(format!("{mod_basename}.jar"));
+                    let remote_path = format!("{FORGE_DEPS_URL}/{mod_basename}.jar");
+
+                    client
+                        .download_dependency(
+                            &remote_path,
+                            &mods_folder_rel,
+                            &dest,
+                            expected_md5.as_ref(),
+                            &mod_basename,
+                        )
+                        .await
+                }
+            });
+
+            try_join_all(downloads).await?;
         }
         Ok(())
     }
@@ -558,15 +578,20 @@ impl Client {
     ) -> Result<(), String> {
         let _state_guard = RequirementsDownloadStateGuard::activate(app_handle);
 
-        for file in files {
+        let needs_java_permission_fix = (IS_LINUX || IS_MACOS)
+            && files.iter().any(|file| file.starts_with(self.jdk_folder_name()));
+
+        let downloads = files.into_iter().map(|file| async move {
             log_info!("Downloading requirement: {}", file);
             DATA.download(&file)
                 .await
-                .map_err(|e| format!("Failed {file}: {e}"))?;
+                .map_err(|e| format!("Failed {file}: {e}"))
+        });
 
-            if (IS_LINUX || IS_MACOS) && file.starts_with(self.jdk_folder_name()) {
-                self.fix_java_permissions();
-            }
+        try_join_all(downloads).await?;
+
+        if needs_java_permission_fix {
+            self.fix_java_permissions();
         }
 
         self.download_type_mods().await?;
@@ -671,10 +696,7 @@ impl Client {
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
         let common_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
 
-        if !dir_has_any_jars(&common_dir, true) {
-            log_info!("Downloading common Fabric libraries");
-            DATA.download(LIBRARIES_FABRIC_ZIP).await?;
-        }
+        let need_common = !dir_has_any_jars(&common_dir, true);
 
         let versioned_zip = format!(
             "misc/{}/{}.zip",
@@ -688,11 +710,32 @@ impl Client {
                 .unwrap_or(&versioned_zip)
                 .replace(".zip", ""),
         );
+        let need_versioned = !dir_has_any_jars(&versioned_dir, false);
 
-        if !dir_has_any_jars(&versioned_dir, false) {
-            log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);
-            DATA.download(&versioned_zip).await?;
+        let mut downloads: Vec<futures_util::future::BoxFuture<'_, Result<(), String>>> =
+            Vec::new();
+
+        if need_common {
+            downloads.push(
+                async {
+                    log_info!("Downloading common Fabric libraries");
+                    DATA.download(LIBRARIES_FABRIC_ZIP).await
+                }
+                .boxed(),
+            );
         }
+
+        if need_versioned {
+            downloads.push(
+                async move {
+                    log_info!("Downloading versioned Fabric libraries: {}", versioned_zip);
+                    DATA.download(&versioned_zip).await
+                }
+                .boxed(),
+            );
+        }
+
+        try_join_all(downloads).await?;
 
         self.ensure_slf4j().await?;
 

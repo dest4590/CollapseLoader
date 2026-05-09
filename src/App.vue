@@ -109,7 +109,6 @@ const checkAuthStatus = () => {
 
 const handleOpenDevMenu = () => {
     showDevMenu.value = true;
-    addToast(t("toast.dev.menu_opened"), "info");
 };
 
 const closeDevMenu = () => {
@@ -217,6 +216,13 @@ onMounted(async () => {
         }
     };
     const globalKeyHandler = (e: KeyboardEvent) => {
+        if (e.code === "F4") {
+            e.preventDefault();
+            e.stopPropagation();
+            showDevMenu.value = true;
+            return;
+        }
+
         if (e.code === "F9") {
             e.preventDefault();
             e.stopPropagation();

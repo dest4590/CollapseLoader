@@ -60,7 +60,6 @@ pub fn open_data_folder() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn reset_requirements() -> Result<(), String> {
-    log_info!("Resetting client requirements");
     if let Err(e) = DATA.reset_requirements().await {
         log_error!("Failed to reset requirements: {}", e);
         return Err(format!("Failed to reset requirements: {e}"));
