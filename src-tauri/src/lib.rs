@@ -1,11 +1,11 @@
-use crate::core::clients::manager::ClientManager;
 use crate::core::app_runtime::{
     DeepLinkAction, DeepLinkDeduplicator, StartupMetadata, StartupRuntime, TrayMenuAction,
 };
+use crate::core::clients::manager::ClientManager;
 #[cfg(target_os = "windows")]
 use crate::core::platform::messagebox;
-use crate::core::utils::discord_rpc;
 use crate::core::storage::data::APP_HANDLE;
+use crate::core::utils::discord_rpc;
 use std::sync::{Arc, Mutex};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;

@@ -66,7 +66,10 @@ pub struct UpdateInfo {
 
 pub(crate) fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
     let version = version.trim_start_matches('v');
-    let version = version.split('-').next().unwrap_or(version);
+    let version = version
+        .split(|c| c == '-' || c == '+')
+        .next()
+        .unwrap_or(version);
     let parts: Vec<&str> = version.split('.').collect();
 
     if parts.len() != 3 {
@@ -107,20 +110,20 @@ pub(crate) fn truncate_str(s: &str, max: usize) -> String {
     }
 }
 
-#[tauri::command]
-pub async fn check_for_updates() -> Result<UpdateInfo, String> {
-    let current_version = env!("CARGO_PKG_VERSION");
-    log_info!("Checking for updates. Current version: {}", current_version);
-
-    let client = reqwest::Client::new();
-    let url = if std::env::var("LOCAL_UPDATER_URL").unwrap_or_default() == "true" {
+fn build_github_release_url() -> String {
+    if std::env::var("LOCAL_UPDATER_URL").unwrap_or_default() == "true" {
         log_debug!("Using local updater URL for development");
         "http://127.0.0.1:8000/repos/dest4590/CollapseLoader/releases/latest".to_string()
     } else {
         format!(
             "https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
         )
-    };
+    }
+}
+
+async fn fetch_latest_release() -> Result<GitHubRelease, String> {
+    let client = reqwest::Client::new();
+    let url = build_github_release_url();
     log_debug!("Fetching latest release from: {}", url);
 
     let response = client
@@ -143,23 +146,70 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         return Err(format!("GitHub API error: {}", response.status()));
     }
 
-    let release: GitHubRelease = response.json().await.map_err(|e| {
+    response.json().await.map_err(|e| {
         log_warn!("Failed to parse release data from GitHub API: {}", e);
         format!("Failed to parse release data: {e}")
-    })?;
+    })
+}
+
+fn select_download_asset(assets: &[GitHubAsset], extensions: &[&str]) -> Option<String> {
+    assets
+        .iter()
+        .find(|asset| {
+            extensions
+                .iter()
+                .any(|ext| Data::has_extension(&asset.name, ext))
+        })
+        .map(|asset| asset.browser_download_url.clone())
+}
+
+fn parse_release_changelog(body: &str) -> (Vec<ChangelogEntry>, Option<JsonValue>) {
+    if let Some(content) = extract_changelog_json_block(body) {
+        match parse_changelog_and_translations(&content) {
+            Ok((changelog, translations)) => (changelog, translations),
+            Err(e) => {
+                log_debug!(
+                    "Changelog block parsing failed: {}. Block content (truncated): {}",
+                    e,
+                    truncate_str(&content, 512)
+                );
+                Default::default()
+            }
+        }
+    } else {
+        log_debug!(
+            "No changelog JSON block found in release notes. Release body (truncated): {}",
+            truncate_str(body, 512)
+        );
+        Default::default()
+    }
+}
+
+fn is_critical_release(body: &str) -> bool {
+    let body_lower = body.to_lowercase();
+    body_lower.contains("security") || body_lower.contains("critical")
+}
+
+#[tauri::command]
+pub async fn check_for_updates() -> Result<UpdateInfo, String> {
+    let current_version = env!("CARGO_PKG_VERSION");
+    log_info!("Checking for updates. Current version: {}", current_version);
+
+    let release = fetch_latest_release().await?;
+    let (parsed_changelog, parsed_translations) = parse_release_changelog(&release.body);
 
     if release.prerelease {
-        log_info!("Latest release is a pre-release, skipping update check.");
+        log_info!("Latest release is a prerelease, skipping update check.");
         return Ok(UpdateInfo {
             available: false,
             current_version: current_version.to_string(),
             latest_version: release.tag_name.clone(),
-            release_notes: "Latest release is a prerelease".to_string(),
+            release_notes: release.body.clone(),
             download_url: String::new(),
-            changelog: get_changelog(),
-            translations: None,
+            changelog: parsed_changelog,
+            translations: parsed_translations,
             release_date: release.published_at,
-            is_critical: false,
+            is_critical: is_critical_release(&release.body),
         });
     }
 
@@ -181,50 +231,15 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     }
 
     let download_url = if cfg!(target_os = "windows") {
-        release
-            .assets
-            .iter()
-            .find(|asset| Data::has_extension(&asset.name, "msi"))
-            .or_else(|| {
-                release
-                    .assets
-                    .iter()
-                    .find(|asset| Data::has_extension(&asset.name, "exe"))
-            })
-            .map(|asset| asset.browser_download_url.clone())
-            .unwrap_or_else(|| {
-                log_warn!("No MSI or EXE asset found for release");
-                String::new()
-            })
+        select_download_asset(&release.assets, &["msi"])
+            .or_else(|| select_download_asset(&release.assets, &["exe"]))
+            .unwrap_or_default()
     } else {
-        log_warn!("Auto-update not supported on this platform, no download URL will be provided.");
         String::new()
     };
 
-    let (parsed_changelog, parsed_translations) = match extract_changelog_json_block(&release.body)
-    {
-        None => {
-            log_warn!(
-                "No changelog JSON block found in release notes. Release body (truncated): {}",
-                truncate_str(&release.body, 512)
-            );
-            Default::default()
-        }
-        Some(content) => {
-            match parse_changelog_and_translations(&content) {
-                Ok((changelog, translations)) => (changelog, translations),
-                Err(e) => {
-                    log_warn!("Changelog block found but failed to parse: {}. Block content (truncated): {}", e, truncate_str(&content, 512));
-                    Default::default()
-                }
-            }
-        }
-    };
-
-    let is_critical = release.body.to_lowercase().contains("security")
-        || release.body.to_lowercase().contains("critical");
-    if is_critical {
-        log_warn!("Update is marked as critical.");
+    if download_url.is_empty() && cfg!(target_os = "windows") {
+        log_warn!("No MSI or EXE asset found for release");
     }
 
     Ok(UpdateInfo {
@@ -236,7 +251,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         changelog: parsed_changelog,
         translations: parsed_translations,
         release_date: release.published_at,
-        is_critical,
+        is_critical: is_critical_release(&release.body),
     })
 }
 
@@ -276,12 +291,19 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
     log_debug!("Downloaded {} MB", bytes.len() / (1024 * 1024));
 
     let temp_dir = std::env::temp_dir();
-    let file_name = download_url.split('/').next_back().unwrap_or("update.msi");
+    let file_name = download_url
+        .rsplit('/')
+        .next()
+        .unwrap_or("update.msi")
+        .split(|c| c == '?' || c == '#')
+        .next()
+        .unwrap_or("update.msi")
+        .trim_end_matches(|c| c == '/' || c == '\\');
     let temp_file = temp_dir.join(file_name);
 
     log_debug!("Writing update to temp file: {:?}", temp_file);
 
-    if !file_name.ends_with(".msi") {
+    if !file_name.to_lowercase().ends_with(".msi") {
         log_error!("Downloaded file is not an MSI installer: {}", file_name);
         return Err(format!(
             "Downloaded file is not an MSI. Please download manually from {download_url}"
@@ -375,8 +397,10 @@ exit
 }
 
 #[tauri::command]
-pub fn get_changelog() -> Vec<ChangelogEntry> {
-    Vec::new()
+pub async fn get_changelog() -> Result<Vec<ChangelogEntry>, String> {
+    let release = fetch_latest_release().await?;
+    let (changelog, _) = parse_release_changelog(&release.body);
+    Ok(changelog)
 }
 
 pub(crate) fn extract_changelog_json_block(body: &str) -> Option<String> {

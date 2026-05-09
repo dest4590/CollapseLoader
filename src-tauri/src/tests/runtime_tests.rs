@@ -2,7 +2,10 @@ use crate::core::app_runtime::{DeepLinkAction, DeepLinkDeduplicator, TrayMenuAct
 
 #[test]
 fn tray_menu_action_parses_show() {
-    assert!(matches!(TrayMenuAction::parse("show"), TrayMenuAction::Show));
+    assert!(matches!(
+        TrayMenuAction::parse("show"),
+        TrayMenuAction::Show
+    ));
 }
 
 #[test]
@@ -23,7 +26,8 @@ fn tray_menu_action_ignores_invalid_launch_id() {
 
 #[test]
 fn deep_link_action_parses_verify_email() {
-    let action = DeepLinkAction::parse("collapseloader://verify?code=abc123&email=user@example.com");
+    let action =
+        DeepLinkAction::parse("collapseloader://verify?code=abc123&email=user@example.com");
 
     assert!(matches!(
         action,

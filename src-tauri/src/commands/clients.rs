@@ -592,7 +592,10 @@ pub fn get_latest_client_logs(id: u32) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn get_client_ram_usage(id: u32, state: State<'_, AppState>) -> Result<ClientRamUsage, String> {
+pub async fn get_client_ram_usage(
+    id: u32,
+    state: State<'_, AppState>,
+) -> Result<ClientRamUsage, String> {
     let client = get_client_by_id(id, &state.clients.manager)?;
 
     let client_clone = client.clone();

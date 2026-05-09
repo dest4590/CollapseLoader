@@ -5,11 +5,11 @@ static LAST_PROGRESS: LazyLock<AtomicU8> = LazyLock::new(|| AtomicU8::new(255));
 
 pub fn set_progress(percentage: u8) {
     let last = LAST_PROGRESS.load(Ordering::Relaxed);
-    
+
     if last == percentage {
         return;
     }
-    
+
     if percentage > 0 && percentage < 100 && last != 255 {
         let diff = if percentage > last {
             percentage - last
@@ -20,7 +20,7 @@ pub fn set_progress(percentage: u8) {
             return;
         }
     }
-    
+
     LAST_PROGRESS.store(percentage, Ordering::Relaxed);
 
     #[cfg(target_os = "windows")]
@@ -96,7 +96,9 @@ where
         let mut borrow = cell.borrow_mut();
         if borrow.is_none() {
             unsafe {
-                if let Ok(tb) = CoCreateInstance::<_, ITaskbarList3>(&TaskbarList, None, CLSCTX_INPROC_SERVER) {
+                if let Ok(tb) =
+                    CoCreateInstance::<_, ITaskbarList3>(&TaskbarList, None, CLSCTX_INPROC_SERVER)
+                {
                     let _ = tb.HrInit();
                     *borrow = Some(tb);
                 }
@@ -173,9 +175,9 @@ fn clear_progress_linux() {
 
 #[cfg(target_os = "linux")]
 async fn update_unity_launcher(progress: f64, visible: bool) -> Result<(), zbus::Error> {
-    use zbus::Connection;
-    use zbus::zvariant::Value;
     use std::collections::HashMap;
+    use zbus::zvariant::Value;
+    use zbus::Connection;
 
     let conn = Connection::session().await?;
 

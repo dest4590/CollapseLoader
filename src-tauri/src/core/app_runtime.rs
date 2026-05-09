@@ -1,6 +1,6 @@
-use crate::core::platform::{check_platform_dependencies, error::StartupError};
 #[cfg(target_os = "linux")]
 use crate::core::platform::check_webkit_environment;
+use crate::core::platform::{check_platform_dependencies, error::StartupError};
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::globals::CODENAME;
 use crate::logging::Logger;
@@ -141,9 +141,7 @@ impl DeepLinkDeduplicator {
         static LAST_HANDLED: OnceLock<Mutex<Option<(String, Instant)>>> = OnceLock::new();
 
         let last_handled = LAST_HANDLED.get_or_init(|| Mutex::new(None));
-        let mut guard = last_handled
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
+        let mut guard = last_handled.lock().unwrap_or_else(PoisonError::into_inner);
         let normalized = url.trim();
 
         if let Some((previous_url, previous_time)) = guard.as_ref() {

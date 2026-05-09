@@ -6,8 +6,10 @@ struct TempDir(PathBuf);
 
 impl TempDir {
     fn new(name: &str) -> Self {
-        let path = std::env::temp_dir()
-            .join(format!("collapseloader_utils_test_{name}_{}", std::process::id()));
+        let path = std::env::temp_dir().join(format!(
+            "collapseloader_utils_test_{name}_{}",
+            std::process::id()
+        ));
         let _ = fs::remove_dir_all(&path);
         fs::create_dir_all(&path).expect("failed to create temp dir");
         Self(path)
@@ -29,9 +31,7 @@ async fn encode_and_decode_base64_round_trip() {
     let encoded = encode_base64("CollapseLoader".to_string())
         .await
         .expect("encode should succeed");
-    let decoded = decode_base64(encoded)
-        .await
-        .expect("decode should succeed");
+    let decoded = decode_base64(encoded).await.expect("decode should succeed");
 
     assert_eq!(decoded, "CollapseLoader");
 }

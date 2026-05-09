@@ -48,10 +48,7 @@ fn get_app_logs_returns_log_buffer_snapshot() {
 
     {
         let mut logs = APP_LOGS.lock().expect("log buffer lock");
-        *logs = VecDeque::from([
-            "first entry".to_string(),
-            "second entry".to_string(),
-        ]);
+        *logs = VecDeque::from(["first entry".to_string(), "second entry".to_string()]);
     }
 
     let collected = get_app_logs();

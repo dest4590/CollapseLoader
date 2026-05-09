@@ -25,7 +25,10 @@ fn parse_version_component_reports_label() {
 #[test]
 fn compare_versions_orders_versions_correctly() {
     assert_eq!(compare_versions("1.2.3", "1.3.0").unwrap(), Ordering::Less);
-    assert_eq!(compare_versions("2.0.0", "1.9.9").unwrap(), Ordering::Greater);
+    assert_eq!(
+        compare_versions("2.0.0", "1.9.9").unwrap(),
+        Ordering::Greater
+    );
     assert_eq!(compare_versions("1.2.3", "1.2.3").unwrap(), Ordering::Equal);
 }
 
@@ -82,8 +85,7 @@ fn parse_changelog_and_translations_reads_both_sections() {
     assert_eq!(changelog[0].version, "1.2.3");
     assert_eq!(changelog[0].highlights, vec!["Faster startup"]);
     assert_eq!(
-        translations
-            .expect("translations should exist")["en"]["updates.feature.one"],
+        translations.expect("translations should exist")["en"]["updates.feature.one"],
         "Feature one"
     );
 }
