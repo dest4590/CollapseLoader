@@ -60,13 +60,6 @@ const formatPlaytime = (minutes:number)=>{
 </script>
 
 <style scoped>
-.list-fade-enter-active,
-.list-fade-appear-active{
-  transition:opacity .3s, transform .3s;
-  transition-delay:calc(var(--i) * 50ms);
-}
-.list-fade-enter-from,
-.list-fade-appear-from{opacity:0;transform:translateY(-10px)}
-.list-fade-enter-to,
-.list-fade-appear-to{opacity:1;transform:translateY(0)}
+.list-fade-enter-active,.list-fade-leave-active{transition:opacity .3s}
+.list-fade-enter-from,.list-fade-leave-to{opacity:0}
 </style>
