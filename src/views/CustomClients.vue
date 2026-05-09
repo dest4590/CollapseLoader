@@ -23,7 +23,6 @@ import { formatDate } from "@shared/utils/utils";
 import type { CustomClient } from "@shared/types/ui";
 import AddCustomClientModal from "@features/clients/modals/AddCustomClientModal.vue";
 import EditCustomClientModal from "@features/clients/modals/EditCustomClientModal.vue";
-import DeleteCustomClientConfirmModal from "@features/clients/modals/DeleteCustomClientConfirmModal.vue";
 import CustomClientDisplaySettingsModal from "@features/clients/modals/CustomClientDisplaySettingsModal.vue";
 import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
 import CustomClientModsModal from "@features/clients/modals/CustomClientModsModal.vue";
@@ -64,7 +63,7 @@ const filteredClients = computed(() => {
 const runningCustomClients = ref<number[]>([]);
 const statusInterval = ref<number | null>(null);
 const { addToast } = useToast();
-const { showModal } = useModal();
+const { showModal, showConfirm } = useModal();
 
 const contextMenu = ref({
     visible: false,
@@ -213,20 +212,33 @@ const handleEditClient = (client: CustomClient) => {
     );
 };
 
-const handleDeleteClient = (client: CustomClient) => {
+const handleDeleteClient = async (client: CustomClient) => {
     hideContextMenu();
-    showModal(
-        "delete-custom-client-confirm",
-        DeleteCustomClientConfirmModal,
-        { title: t("modals.delete_custom_client") },
-        { client },
-        {
-            "client-deleted": () => {
-                addToast(t("modals.client_deleted"), "success");
-                loadCustomClients();
-            },
-        }
-    );
+    const confirmedDelete = await showConfirm({
+        title: t("modals.delete_custom_client"),
+        message: t("modals.delete_custom_client_confirm_modal.description"),
+        confirmLabel: t(
+            "modals.delete_custom_client_confirm_modal.delete_client"
+        ),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedDelete) {
+        return;
+    }
+
+    try {
+        await invoke("remove_custom_client", { id: client.id });
+        addToast(t("modals.client_deleted"), "success");
+        await loadCustomClients();
+    } catch (error) {
+        console.error("Failed to delete custom client:", error);
+        addToast(
+            t("modals.client_delete_failed", { error: String(error) }) ||
+                `Failed to delete custom client: ${error}`,
+            "error"
+        );
+    }
 };
 
 const openLogViewer = (client: CustomClient) => {

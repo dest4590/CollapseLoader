@@ -1,10 +1,17 @@
 import { reactive, markRaw } from "vue";
+import ConfirmModal from "@shared/components/common/ConfirmModal.vue";
 
 export interface ModalOptions {
     title?: string;
     contentClass?: string;
     size?: "sm" | "md" | "lg" | "xl" | "full";
     [key: string]: any;
+}
+
+export interface ConfirmOptions extends ModalOptions {
+    message?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
 }
 
 export interface ModalConfig extends ModalOptions {
@@ -49,9 +56,41 @@ export function useModal() {
 
     const getModals = () => modals;
 
+    const showConfirm = (options: ConfirmOptions = {}) => {
+        const confirmId = `confirm-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        return new Promise<boolean>((resolve) => {
+            showModal(
+                confirmId,
+                ConfirmModal,
+                {
+                    title: options.title,
+                    size: options.size,
+                    contentClass: options.contentClass,
+                },
+                {
+                    title: options.title,
+                    message: options.message,
+                    confirmLabel: options.confirmLabel,
+                    cancelLabel: options.cancelLabel,
+                },
+                {
+                    confirm: () => {
+                        hideModal(confirmId);
+                        resolve(true);
+                    },
+                    cancel: () => {
+                        hideModal(confirmId);
+                        resolve(false);
+                    },
+                }
+            );
+        });
+    };
+
     return {
         showModal,
         hideModal,
         getModals,
+        showConfirm,
     };
 }

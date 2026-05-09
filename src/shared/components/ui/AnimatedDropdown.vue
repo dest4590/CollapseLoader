@@ -11,7 +11,7 @@ const props = defineProps<{
     modelValue: string;
     options: Option[];
     width?: string;
-    direction?: "up" | "down";
+    direction?: "up" | "down" | "auto";
 }>();
 
 const emit = defineEmits<{
@@ -21,25 +21,47 @@ const emit = defineEmits<{
 
 const isOpen = ref(false);
 const triggerRef = ref<HTMLElement | null>(null);
+const menuRef = ref<HTMLElement | null>(null);
 const menuStyle = ref<Record<string, string>>({});
+const computedDirection = ref<"up" | "down">("down");
 let intersectionObserver: IntersectionObserver | null = null;
 
 const selectedLabel = computed(
     () => props.options.find((o) => o.value === props.modelValue)?.label ?? ""
 );
 
+const getDirection = (): "up" | "down" => {
+    if (props.direction === "up") return "up";
+    return "down";
+};
+
 const updateMenuPosition = () => {
     if (!triggerRef.value) return;
     const rect = triggerRef.value.getBoundingClientRect();
+    let direction: "up" | "down" = getDirection();
+
+    if (props.direction === "auto" && menuRef.value) {
+        const availableBelow = window.innerHeight - rect.bottom - 6;
+        const availableAbove = rect.top - 6;
+        const menuHeight = menuRef.value.offsetHeight;
+
+        direction =
+            menuHeight <= availableBelow || availableBelow >= availableAbove
+                ? "down"
+                : "up";
+    }
+
+    computedDirection.value = direction;
 
     const style: Record<string, string> = {
         position: "fixed",
         width: `${rect.width}px`,
         zIndex: "99999",
         right: `${window.innerWidth - rect.right}px`,
+        visibility: "visible",
     };
 
-    if (props.direction === "up") {
+    if (direction === "up") {
         style.bottom = `${window.innerHeight - rect.top + 6}px`;
     } else {
         style.top = `${rect.bottom + 6}px`;
@@ -50,10 +72,27 @@ const updateMenuPosition = () => {
 
 const toggle = async () => {
     if (!isOpen.value) {
-        updateMenuPosition();
+        if (!triggerRef.value) {
+            isOpen.value = true;
+            return;
+        }
+
+        const rect = triggerRef.value.getBoundingClientRect();
+        menuStyle.value = {
+            position: "fixed",
+            width: `${rect.width}px`,
+            zIndex: "99999",
+            right: `${window.innerWidth - rect.right}px`,
+            visibility: "hidden",
+            top: `${rect.bottom + 6}px`,
+        };
+
+        isOpen.value = true;
         await nextTick();
+        updateMenuPosition();
+    } else {
+        isOpen.value = false;
     }
-    isOpen.value = !isOpen.value;
 };
 
 const select = (option: Option) => {
@@ -113,9 +152,10 @@ onBeforeUnmount(() => {
             <Transition name="dropdown">
                 <div
                     v-if="isOpen"
+                    ref="menuRef"
                     class="animated-dropdown-menu-inner"
                     :style="menuStyle"
-                    :data-direction="direction ?? 'down'"
+                    :data-direction="computedDirection"
                 >
                     <button
                         v-for="option in options"

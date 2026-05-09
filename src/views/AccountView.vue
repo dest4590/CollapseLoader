@@ -558,8 +558,6 @@ import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
 import EditNicknameModal from "@features/social/modals/EditNicknameModal.vue";
 import SocialLinksModal from "@features/social/modals/SocialLinksModal.vue";
-import ChangePasswordConfirmModal from "@features/social/modals/ChangePasswordConfirmModal.vue";
-import LogoutConfirmModal from "@features/social/modals/LogoutConfirmModal.vue";
 import AvatarUploadModal from "@features/social/modals/AvatarUploadModal.vue";
 import RoleSelectionModal from "@features/social/modals/RoleSelectionModal.vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
@@ -605,7 +603,7 @@ interface Client {
 
 const { t } = useI18n();
 const { addToast } = useToast();
-const { showModal, hideModal } = useModal();
+const { showModal, hideModal, showConfirm } = useModal();
 
 const currentPassword = ref("");
 const newPassword = ref("");
@@ -1016,55 +1014,53 @@ const handleChangePassword = async () => {
         return;
     }
 
-    showModal(
-        "change-password-confirm",
-        ChangePasswordConfirmModal,
-        { title: t("account.change_password_confirm_title") },
-        {
-            currentPassword: currentPassword.value,
-            newPassword: newPassword.value,
-        },
-        {
-            confirm: async (passwordData: {
-                currentPassword: string;
-                newPassword: string;
-            }) => {
-                try {
-                    await userService.changePassword(
-                        passwordData.currentPassword,
-                        passwordData.newPassword
-                    );
-                    addToast(t("account.password_change_success"), "success");
-                    currentPassword.value = "";
-                    newPassword.value = "";
-                    confirmNewPassword.value = "";
-                } catch (e) {
-                    console.log("Failed to change password:", e);
-                    addToast(t("account.password_change_failed"), "error");
-                }
-                hideModal("change-password-confirm");
-            },
-            close: () => hideModal("change-password-confirm"),
-        }
-    );
+    const confirmedChange = await showConfirm({
+        title: t("account.change_password_confirm_title"),
+        message:
+            t("modals.change_password_confirm.message") +
+            "\n\n" +
+            t("modals.change_password_confirm.warning"),
+        confirmLabel: t("modals.change_password_confirm.yes_change"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedChange) {
+        return;
+    }
+
+    try {
+        await userService.changePassword(
+            currentPassword.value,
+            newPassword.value
+        );
+        addToast(t("account.password_change_success"), "success");
+        currentPassword.value = "";
+        newPassword.value = "";
+        confirmNewPassword.value = "";
+    } catch (e) {
+        console.log("Failed to change password:", e);
+        addToast(t("account.password_change_failed"), "error");
+    }
 };
 
-const handleLogout = () => {
-    showModal(
-        "logout-confirm",
-        LogoutConfirmModal,
-        { title: t("account.logout_confirm_title") },
-        {},
-        {
-            confirm: () => {
-                logout();
-                emit("logged-out");
-                addToast(t("auth.logout.success"), "success");
-                hideModal("logout-confirm");
-            },
-            close: () => hideModal("logout-confirm"),
-        }
-    );
+const handleLogout = async () => {
+    const confirmedLogout = await showConfirm({
+        title: t("account.logout_confirm_title"),
+        message:
+            t("modals.logout_confirm.message") +
+            "\n\n" +
+            t("modals.logout_confirm.info"),
+        confirmLabel: t("modals.logout_confirm.yes_logout"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedLogout) {
+        return;
+    }
+
+    logout();
+    emit("logged-out");
+    addToast(t("auth.logout.success"), "success");
 };
 
 const openAvatarModal = () => {

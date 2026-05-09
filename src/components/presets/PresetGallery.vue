@@ -273,7 +273,6 @@ import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import MarketplaceEditPresetModal from "@features/presets/modals/MarketplaceEditPresetModal.vue";
 import PresetDetailsModal from "@features/presets/modals/PresetDetailsModal.vue";
-import MarketplaceDeleteConfirmModal from "@features/presets/modals/MarketplaceDeleteConfirmModal.vue";
 import {
     Download,
     ThumbsUp,
@@ -332,7 +331,7 @@ export default defineComponent({
         const { username } = useUser();
         const { addToast } = useToast();
 
-        const { showModal, hideModal } = useModal();
+        const { showModal, hideModal, showConfirm } = useModal();
 
         const sortBy = ref("newest");
 
@@ -560,21 +559,23 @@ export default defineComponent({
             }
         }
 
-        function askDelete(p: MarketplacePreset) {
-            const id = `delete-preset-${p.id}`;
-            showModal(
-                id,
-                MarketplaceDeleteConfirmModal,
-                { title: t("common.delete") },
-                { id: p.id },
-                {
-                    deleted: async () => {
-                        const list = presets.value;
-                        presets.value = list.filter((x) => x.id !== p.id);
-                        hideModal(id);
-                    },
-                }
-            );
+        async function askDelete(p: MarketplacePreset) {
+            const confirmedDelete = await showConfirm({
+                title: t("common.delete"),
+                message:
+                    t("theme.presets.delete_modal.message", { name: p.name }) +
+                    "\n\n" +
+                    t("theme.presets.delete_modal.warning"),
+                confirmLabel: t("theme.presets.delete_modal.delete_button"),
+                cancelLabel: t("common.cancel"),
+            });
+
+            if (!confirmedDelete) {
+                return;
+            }
+
+            const list = presets.value;
+            presets.value = list.filter((x) => x.id !== p.id);
         }
 
         onMounted(load);

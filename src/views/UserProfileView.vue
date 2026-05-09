@@ -729,8 +729,6 @@ import {
     type PublicUserProfile,
 } from "@features/auth/userService";
 import { useFriends } from "@features/friends/useFriends";
-import BlockUnblockConfirmModal from "@features/friends/modals/BlockUnblockConfirmModal.vue";
-import RemoveFriendConfirmModal from "@features/friends/modals/RemoveFriendConfirmModal.vue";
 import ReportModal from "@/components/modals/common/ReportModal.vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import FullscreenAvatarModal from "@/components/modals/common/FullscreenAvatarModal.vue";
@@ -797,7 +795,7 @@ defineEmits(["change-view"]);
 
 const { t } = useI18n();
 const { addToast } = useToast();
-const { showModal, hideModal } = useModal();
+const { showModal, hideModal, showConfirm } = useModal();
 const streamer = useStreamerMode();
 
 const userProfile = ref<PublicUserProfile | null>(null);
@@ -1100,33 +1098,32 @@ const loadClients = async () => {
 const handleRemoveFriend = async () => {
     if (!userProfile.value) return;
 
-    showModal(
-        "remove-friend-confirm",
-        RemoveFriendConfirmModal,
-        { title: t("userProfile.remove_friend") },
-        { friend: userProfile.value },
-        {
-            confirm: async (confirmedFriend: any) => {
-                try {
-                    await userService.removeFriend(confirmedFriend.id);
-                    addToast(
-                        t("userProfile.friend_removed_success", {
-                            name:
-                                confirmedFriend.nickname ||
-                                confirmedFriend.username,
-                        }),
-                        "success"
-                    );
-                    userProfile.value!.friendship_status = null;
-                } catch (error) {
-                    console.error("Failed to remove friend:", error);
-                    addToast(t("userProfile.friend_remove_failed"), "error");
-                }
-                hideModal("remove-friend-confirm");
-            },
-            close: () => hideModal("remove-friend-confirm"),
-        }
-    );
+    const confirmedRemove = await showConfirm({
+        title: t("userProfile.remove_friend"),
+        message: t("modals.remove_friend_confirm.message", {
+            displayName: userProfile.value.nickname || userProfile.value.username,
+        }),
+        confirmLabel: t("modals.remove_friend_confirm.yes_remove"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedRemove) {
+        return;
+    }
+
+    try {
+        await userService.removeFriend(userProfile.value.id);
+        addToast(
+            t("userProfile.friend_removed_success", {
+                name: userProfile.value.nickname || userProfile.value.username,
+            }),
+            "success"
+        );
+        userProfile.value!.friendship_status = null;
+    } catch (error) {
+        console.error("Failed to remove friend:", error);
+        addToast(t("userProfile.friend_remove_failed"), "error");
+    }
 };
 
 const handleRespondToRequest = async (action: "accept" | "reject") => {
@@ -1170,31 +1167,32 @@ const handleRespondToRequest = async (action: "accept" | "reject") => {
 const handleBlockUser = async () => {
     if (!userProfile.value) return;
 
-    showModal(
-        "block-confirm",
-        BlockUnblockConfirmModal,
-        { title: t("userProfile.block_user") },
-        { user: userProfile.value, action: "block" },
-        {
-            confirm: async (user: any) => {
-                try {
-                    await userService.blockUser(user.id);
-                    addToast(
-                        t("userProfile.user_blocked_success", {
-                            name: user.nickname || user.username,
-                        }),
-                        "success"
-                    );
-                    userProfile.value!.friendship_status = "blocked";
-                } catch (error) {
-                    console.error("Failed to block user:", error);
-                    addToast(t("userProfile.user_block_failed"), "error");
-                }
-                hideModal("block-confirm");
-            },
-            close: () => hideModal("block-confirm"),
-        }
-    );
+    const confirmedBlock = await showConfirm({
+        title: t("userProfile.block_user"),
+        message: t("modals.block_unblock_confirm.block_message", {
+            displayName: userProfile.value.nickname || userProfile.value.username,
+        }),
+        confirmLabel: t("modals.block_unblock_confirm.yes_block"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedBlock) {
+        return;
+    }
+
+    try {
+        await userService.blockUser(userProfile.value.id);
+        addToast(
+            t("userProfile.user_blocked_success", {
+                name: userProfile.value.nickname || userProfile.value.username,
+            }),
+            "success"
+        );
+        userProfile.value!.friendship_status = "blocked";
+    } catch (error) {
+        console.error("Failed to block user:", error);
+        addToast(t("userProfile.user_block_failed"), "error");
+    }
 };
 
 const handleReportUser = () => {

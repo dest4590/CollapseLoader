@@ -298,7 +298,6 @@ import { usePresets } from "@features/presets/usePresets";
 import { useModal } from "@shared/composables/useModal";
 import CreatePresetModal from "@features/presets/modals/CreatePresetModal.vue";
 import ImportPresetModal from "@features/presets/modals/ImportPresetModal.vue";
-import DeletePresetConfirmModal from "@features/presets/modals/DeletePresetConfirmModal.vue";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@shared/utils/utils";
 import { useToast } from "@shared/composables/useToast";
@@ -316,7 +315,7 @@ const {
     exportPreset: exportPresetAction,
 } = usePresets();
 
-const { showModal } = useModal();
+const { showModal, showConfirm } = useModal();
 const { t } = useI18n();
 const { addToast } = useToast();
 
@@ -397,18 +396,22 @@ const openImportModal = () => {
     );
 };
 
-const openDeleteModal = (preset: ThemePreset) => {
-    showModal(
-        "delete-preset",
-        DeletePresetConfirmModal,
-        {
-            title: "Delete Preset",
-        },
-        { preset, id: preset.id },
-        {
-            "preset-deleted": handleDeletePreset,
-        }
-    );
+const openDeleteModal = async (preset: ThemePreset) => {
+    const confirmedDelete = await showConfirm({
+        title: t("common.delete"),
+        message:
+            t("theme.presets.delete_modal.message", { name: preset.name }) +
+            "\n\n" +
+            t("theme.presets.delete_modal.warning"),
+        confirmLabel: t("theme.presets.delete_modal.delete_button"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedDelete) {
+        return;
+    }
+
+    await handleDeletePreset(preset.id);
 };
 
 const handleCreatePreset = async (data: {
