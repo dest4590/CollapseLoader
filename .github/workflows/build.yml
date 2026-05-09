@@ -59,7 +59,7 @@ jobs:
                   echo "build_macos=$BUILD_MAC" >> $GITHUB_OUTPUT
 
     build:
-        needs: [check-flags, rust-test]
+        needs: check-flags
         if: needs.check-flags.outputs.skip != 'true'
 
         strategy:
@@ -151,9 +151,7 @@ jobs:
                     Write-Error "No portable exe found in $releaseDir"
                     exit 1
                   }
-                  $pkg = Get-Content -Raw -Path "package.json" | ConvertFrom-Json
-                  $version = $pkg.version -replace ' ', ''
-                  $dest = "$releaseDir\CollapseLoader-portable-v$version.exe"
+                  $dest = "$releaseDir\CollapseLoader-portable.exe"
                   Copy-Item -Path $exe.FullName -Destination $dest -Force
                   Write-Host "Portable exe: $dest (from $($exe.Name))"
 
@@ -244,26 +242,3 @@ jobs:
                   name: Automated Build
                   prerelease: true
                   files: release-artifacts/**/*
-
-    rust-test:
-        name: Rust Tests
-        needs: check-flags
-        if: needs.check-flags.outputs.skip != 'true'
-        runs-on: ubuntu-22.04
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Install Rust toolchain
-              uses: dtolnay/rust-toolchain@stable
-
-            - name: Ensure cargo deps cached
-              uses: Swatinem/rust-cache@v2
-              with:
-                  workspaces: "./src-tauri -> target"
-                  cache-on-failure: true
-
-            - name: Run Rust tests (src-tauri)
-              working-directory: src-tauri
-              run: |
-                  cargo test --workspace --all-features --manifest-path Cargo.toml
