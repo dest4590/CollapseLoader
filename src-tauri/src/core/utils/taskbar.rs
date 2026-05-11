@@ -131,31 +131,37 @@ fn clear_progress_windows() {
 
 #[cfg(target_os = "macos")]
 fn set_progress_macos(percentage: u8) {
+    use objc2::MainThreadMarker;
     use objc2_app_kit::NSApplication;
     use objc2_foundation::NSString;
 
     unsafe {
-        let app = NSApplication::sharedApplication();
-        let dock_tile = app.dockTile();
-        let label = if percentage > 0 && percentage < 100 {
-            NSString::from_str(&format!("{}%", percentage))
-        } else {
-            NSString::from_str("")
-        };
-        dock_tile.setBadgeLabel(Some(&label));
+        if let Some(mtm) = MainThreadMarker::new() {
+            let app = NSApplication::sharedApplication(mtm);
+            let dock_tile = app.dockTile();
+            let label = if percentage > 0 && percentage < 100 {
+                NSString::from_str(&format!("{}%", percentage))
+            } else {
+                NSString::from_str("")
+            };
+            dock_tile.setBadgeLabel(Some(&label));
+        }
     }
 }
 
 #[cfg(target_os = "macos")]
 fn clear_progress_macos() {
+    use objc2::MainThreadMarker;
     use objc2_app_kit::NSApplication;
     use objc2_foundation::NSString;
 
     unsafe {
-        let app = NSApplication::sharedApplication();
-        let dock_tile = app.dockTile();
-        let empty = NSString::from_str("");
-        dock_tile.setBadgeLabel(Some(&empty));
+        if let Some(mtm) = MainThreadMarker::new() {
+            let app = NSApplication::sharedApplication(mtm);
+            let dock_tile = app.dockTile();
+            let empty = NSString::from_str("");
+            dock_tile.setBadgeLabel(Some(&empty));
+        }
     }
 }
 
