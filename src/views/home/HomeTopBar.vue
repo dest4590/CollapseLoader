@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
                 <History class="w-4 h-4" />
             </button>
             <LaunchHistoryPanel
-                v-if="showHistory"
+                :show="showHistory"
                 @close="emit('update:showHistory', false)"
                 @launch="handleLaunchFromHistory"
             />

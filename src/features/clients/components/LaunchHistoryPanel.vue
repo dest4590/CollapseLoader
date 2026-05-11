@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
 import { History, Trash2, X, Play, Clock } from "lucide-vue-next";
@@ -11,6 +11,8 @@ interface LaunchEntry {
     launched_at: string;
     account_name: string | null;
 }
+
+const props = defineProps<{ show: boolean }>();
 
 const emit = defineEmits<{
     close: [];
@@ -52,7 +54,7 @@ const formatTime = (iso: string): string => {
 };
 
 const groupedEntries = computed(() => {
-    const groups: { label: string; items: LaunchEntry[] }[] = [];
+    const groups: { label: string; items: (LaunchEntry & { globalIndex: number })[] }[] = [];
     const today: LaunchEntry[] = [];
     const yesterday: LaunchEntry[] = [];
     const older: LaunchEntry[] = [];
@@ -72,21 +74,30 @@ const groupedEntries = computed(() => {
         else older.push(entry);
     }
 
-    if (today.length) groups.push({ label: t("history.today"), items: today });
+    let globalIndex = 0;
+    const mapWithIndex = (items: LaunchEntry[]) => {
+        return items.map(item => ({ ...item, globalIndex: globalIndex++ }));
+    };
+
+    if (today.length) groups.push({ label: t("history.today"), items: mapWithIndex(today) });
     if (yesterday.length)
-        groups.push({ label: t("history.yesterday"), items: yesterday });
+        groups.push({ label: t("history.yesterday"), items: mapWithIndex(yesterday) });
     if (older.length)
-        groups.push({ label: t("history.earlier"), items: older });
+        groups.push({ label: t("history.earlier"), items: mapWithIndex(older) });
 
     return groups;
 });
 
-onMounted(loadHistory);
+watch(() => props.show, (newVal) => {
+    if (newVal) {
+        loadHistory();
+    }
+}, { immediate: true });
 </script>
 
 <template>
     <Transition name="history-panel">
-        <div class="history-panel">
+        <div v-if="show" class="history-panel">
             <div class="history-header">
                 <div class="flex items-center gap-2">
                     <History class="w-4 h-4 text-primary" />
@@ -132,6 +143,7 @@ onMounted(loadHistory);
                             v-for="(entry, idx) in group.items"
                             :key="idx"
                             class="history-entry"
+                            :style="{ animationDelay: `${entry.globalIndex * 35}ms` }"
                             @click="emit('launch', entry.client_id)"
                         >
                             <div class="history-entry-icon">
@@ -235,6 +247,18 @@ onMounted(loadHistory);
     transition: background 0.15s;
     border-radius: 6px;
     margin: 0 4px;
+    animation: slideInUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideInUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .history-entry:hover {
@@ -288,13 +312,14 @@ onMounted(loadHistory);
 .history-panel-enter-active,
 .history-panel-leave-active {
     transition:
-        opacity 0.15s ease,
-        transform 0.15s ease;
+        opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .history-panel-enter-from,
 .history-panel-leave-to {
     opacity: 0;
-    transform: translateY(-6px) scale(0.98);
+    transform: translateY(-8px) scale(0.96);
+    pointer-events: none;
 }
 </style>

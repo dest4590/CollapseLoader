@@ -1752,12 +1752,12 @@ onBeforeUnmount(() => {
 <template>
     <HomeTopBar
         :search-query="searchQuery"
-        :active-filters="activeFilters"
-        :client-sort-key="clientSortKey"
-        :client-sort-order="clientSortOrder"
+        v-model:active-filters="activeFilters"
+        v-model:client-sort-key="clientSortKey"
+        v-model:client-sort-order="clientSortOrder"
         :unread-news-count="props.unreadNewsCount"
         :view-visible="viewVisible"
-        :showHistory="showHistory"
+        v-model:showHistory="showHistory"
         :search-bar-ref="searchBarRef"
         @change-view="$emit('change-view', $event)"
         @search="handleSearch"
