@@ -1260,7 +1260,7 @@ fn create_shortcut_platform(
 #[cfg(target_os = "macos")]
 fn create_shortcut_platform(
     display_name: &str,
-    exe_path: &std::path::Path,
+    _exe_path: &std::path::Path,
     id: u32,
     custom_id: Option<u32>,
     is_custom: bool,
