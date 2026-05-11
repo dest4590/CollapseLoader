@@ -290,6 +290,21 @@
             "deleting": "Удаление...",
             "delete_client": "Удалить клиент"
         },
+        "create_shortcut": {
+            "title": "Создать ярлык на рабочем столе",
+            "menu_item": "Создать ярлык",
+            "name_label": "Название ярлыка (необязательно)",
+            "name_hint": "Оставьте пустым, чтобы использовать имя клиента",
+            "icon_label": "Иконка (необязательно)",
+            "icon_placeholder": "Нажмите, чтобы выбрать иконку",
+            "icon_formats": ".ico или .png",
+            "icon_hint": "Оставьте пустым, чтобы использовать иконку приложения",
+            "icon_filter_name": "Файлы изображений",
+            "creating": "Создание...",
+            "create": "Создать ярлык",
+            "success": "Ярлык \"{name}\" создан на рабочем столе",
+            "error": "Не удалось создать ярлык: {error}"
+        },
         "role_selection": {
             "description": "Выберите вашу роль для локального профиля"
         }
@@ -300,7 +315,11 @@
         "setting_up": "Настройка...",
         "ready": "Готово!",
         "initializing_progress": "ИНИЦИАЛИЗАЦИЯ ЛОАДЕРА",
-        "loading_user_data": "Загрузка данных юзера..."
+        "loading_user_data": "Загрузка данных юзера...",
+        "greeting_morning": "Доброе утро, {name}",
+        "greeting_afternoon": "Добрый день, {name}",
+        "greeting_evening": "Добрый вечер, {name}",
+        "greeting_night": "Доброй ночи, {name}"
     },
     "about": {
         "codename": "Кодовое имя",
@@ -429,6 +448,25 @@
     "blockedUsers": {
         "noBlockedUsers": "Нет заблокированных пользователей. \nЗаблокированные пользователи появятся здесь.",
         "title": "Заблокированные пользователи ({count})"
+    },
+    "chat": {
+        "title": "Чат",
+        "no_messages": "Сообщений пока нет. Будь первым!",
+        "input_placeholder": "Сообщение от {username}...",
+        "connecting_placeholder": "Подключение...",
+        "send_hint": "Enter — отправить",
+        "reply_unknown": "Исходное сообщение недоступно",
+        "send_failed": "Не удалось отправить сообщение",
+        "status": {
+            "connected": "Подключено",
+            "connecting": "Подключение...",
+            "disconnected": "Отключено",
+            "error": "Ошибка соединения"
+        },
+        "error": {
+            "login_required": "Войдите в аккаунт чтобы писать",
+            "banned": "Вы заблокированы в чате"
+        }
     },
     "common": {
         "back": "Назад",
@@ -698,7 +736,15 @@
             }
         },
         "dark": "Темная",
-        "light": "Светлая"
+        "light": "Светлая",
+        "schedule": {
+            "title": "Автоматически",
+            "description": "Автоматически переключать тему в зависимости от времени суток.",
+            "light_window": "Часы светлой темы",
+            "from": "С",
+            "to": "До",
+            "now_active": "Сейчас активна"
+        }
     },
     "logs": {
         "copy_logs": "Копировать логи",
@@ -972,6 +1018,18 @@
         "hours_ago": "{count}ч назад",
         "days_ago": "{count}д назад"
     },
+    "history": {
+        "title": "История запусков",
+        "empty": "Запусков ещё не было",
+        "clear": "Очистить",
+        "today": "Сегодня",
+        "yesterday": "Вчера",
+        "earlier": "Ранее",
+        "just_now": "Только что",
+        "minutes_ago": "{n}м назад",
+        "hours_ago": "{n}ч назад",
+        "days_ago": "{n}д назад"
+    },
     "navigation": {
         "home": "Главная",
         "friends": "Друзья",
@@ -984,6 +1042,7 @@
         "custom_clients": "Свои клиенты",
         "marketplace": "Маркетплейс",
         "app_logs": "Логи приложения",
+        "chat": "Чат",
         "sidebar_help": {
             "title": "Совет:",
             "tip": "Вы можете переместить боковую панель на любую сторону экрана. Двойной щелчок по панели уберет отступы между иконками.",
@@ -1158,7 +1217,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "Поддерживает jpg, png, webp, data-urls",
         "background_blur": "Размытие",
-        "background_opacity": "Прозрачность"
+        "background_opacity": "Прозрачность",
+        "panel_blur_title": "Настройка размытия элементов",
+        "panel_blur_preview": "Превью",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "История запусков"
     },
     "updater": {
         "update_available": "Доступно обновление",
@@ -1324,6 +1387,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "После завода",
                 "description": "Играйте в выходные."
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "Привет, мир!",
+                "description": "Отправьте первое сообщение в чат."
+            },
+            "THEME_CHANGER": {
+                "name": "Дизайнер",
+                "description": "Создайте свой первый пресет темы."
+            },
+            "NIGHT_SESSION": {
+                "name": "Ночная смена",
+                "description": "Запустите клиент после полуночи. (Скрытая)"
+            },
+            "SPEED_RUNNER": {
+                "name": "Спидраннер",
+                "description": "Запустите клиент в течение 10 секунд после открытия лоадера."
+            },
+            "LOYAL_USER": {
+                "name": "Верный пользователь",
+                "description": "Запустите клиент 100 раз."
+            },
+            "MULTI_CLIENT": {
+                "name": "Мультизадачность",
+                "description": "Запустите 3 разных клиента за одну сессию."
             }
         }
     },

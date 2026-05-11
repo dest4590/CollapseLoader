@@ -1,11 +1,11 @@
-use crate::core::clients::manager::ClientManager;
 use crate::core::app_runtime::{
     DeepLinkAction, DeepLinkDeduplicator, StartupMetadata, StartupRuntime, TrayMenuAction,
 };
+use crate::core::clients::manager::ClientManager;
 #[cfg(target_os = "windows")]
 use crate::core::platform::messagebox;
-use crate::core::utils::discord_rpc;
 use crate::core::storage::data::APP_HANDLE;
+use crate::core::utils::discord_rpc;
 use std::sync::{Arc, Mutex};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
@@ -176,6 +176,7 @@ pub fn run() {
             commands::clients::list_installed_mods_custom,
             commands::clients::update_client_installed_status,
             commands::clients::update_custom_client,
+            commands::clients::create_client_shortcut,
             // irc commands
             commands::irc::connect_irc,
             commands::irc::disconnect_irc,
@@ -219,10 +220,10 @@ pub fn run() {
             commands::updater::get_changelog,
             // utils commands
             commands::utils::change_data_folder,
+            commands::utils::cancel_download,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::utils::get_api_url,
-            // commands::utils::get_api_version,
             commands::utils::get_cdn_url,
             commands::utils::get_data_folder,
             commands::utils::get_version,
@@ -234,6 +235,9 @@ pub fn run() {
             commands::utils::is_macos,
             commands::utils::set_window_theme,
             commands::utils::update_tray_menu,
+            commands::utils::get_launch_history,
+            commands::utils::clear_launch_history,
+            commands::utils::record_launch,
             // network commands
             commands::network::api_request,
             commands::network::get_network_history,
@@ -259,7 +263,7 @@ pub fn run() {
                 let handle = app.handle().clone();
                 let url_clone = url.clone();
                 spawn(async move {
-                    tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
+                    tokio::time::sleep(std::time::Duration::from_millis(6000)).await;
                     handle_deep_link_url(&handle, url_clone, false);
                 });
             }

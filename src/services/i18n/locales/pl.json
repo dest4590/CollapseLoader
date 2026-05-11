@@ -17,6 +17,9 @@
         "success_message": "Zgłoszenie zostało wysłane pomyślnie. Dziękujemy!",
         "error_message": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie później."
     },
+    "chat": {
+        "reply_unknown": "Oryginalna wiadomość niedostępna"
+    },
     "modals": {
         "initial_setup": {
             "welcome": {
@@ -290,6 +293,21 @@
             "deleting": "Usuwanie...",
             "delete_client": "Usuń klienta"
         },
+        "create_shortcut": {
+            "title": "Utwórz skrót na pulpicie",
+            "menu_item": "Utwórz skrót",
+            "name_label": "Nazwa skrótu (opcjonalnie)",
+            "name_hint": "Pozostaw puste, aby użyć nazwy klienta",
+            "icon_label": "Ikona (opcjonalnie)",
+            "icon_placeholder": "Kliknij, aby wybrać ikonę",
+            "icon_formats": ".ico lub .png",
+            "icon_hint": "Pozostaw puste, aby użyć ikony aplikacji",
+            "icon_filter_name": "Pliki graficzne",
+            "creating": "Tworzenie...",
+            "create": "Utwórz skrót",
+            "success": "Skrót \"{name}\" został utworzony na pulpicie",
+            "error": "Nie udało się utworzyć skrótu: {error}"
+        },
         "role_selection": {
             "description": "Wybierz swoją rolę dla profilu lokalnego"
         }
@@ -298,6 +316,10 @@
         "initializing": "Inicjalizacja...",
         "connecting_servers": "Łączenie z serwerami...",
         "loading_user_data": "Ładowanie danych użytkownika...",
+        "greeting_morning": "Dzień dobry, {name}",
+        "greeting_afternoon": "Dzień dobry, {name}",
+        "greeting_evening": "Dobry wieczór, {name}",
+        "greeting_night": "Dobranoc, {name}",
         "setting_up": "Ustawianie...",
         "ready": "Gotowe!",
         "initializing_progress": "INICJALIZACJA LOADERA"
@@ -698,7 +720,15 @@
             }
         },
         "dark": "Ciemny",
-        "light": "Jasny"
+        "light": "Jasny",
+        "schedule": {
+            "title": "Automatycznie",
+            "description": "Automatycznie przełączaj między jasnym a ciemnym motywem w zależności od pory dnia.",
+            "light_window": "Godziny jasnego motywu",
+            "from": "Od",
+            "to": "Do",
+            "now_active": "Aktywny teraz"
+        }
     },
     "logs": {
         "copy_logs": "Kopiuj logi",
@@ -970,6 +1000,18 @@
         "hours_ago": "{count}godz. temu",
         "days_ago": "{count}dni temu"
     },
+    "history": {
+        "title": "Historia uruchomień",
+        "empty": "Brak uruchomień",
+        "clear": "Wyczyść",
+        "today": "Dzisiaj",
+        "yesterday": "Wczoraj",
+        "earlier": "Wcześniej",
+        "just_now": "Przed chwilą",
+        "minutes_ago": "{n}min temu",
+        "hours_ago": "{n}godz. temu",
+        "days_ago": "{n}dni temu"
+    },
     "navigation": {
         "home": "Główna",
         "friends": "Znajomi",
@@ -1156,7 +1198,11 @@
         "background_image_help": "Obsługuje jpg, png, webp, adresy URL danych",
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_blur": "Rozmycie",
-        "background_opacity": "Nieprzezroczystość"
+        "background_opacity": "Nieprzezroczystość",
+        "panel_blur_title": "Ustawienia rozmycia elementów",
+        "panel_blur_preview": "Podgląd",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "Historia uruchomień"
     },
     "updater": {
         "update_available": "Dostępna aktualizacja",
@@ -1322,6 +1368,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "Po pracy",
                 "description": "Graj w weekend."
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "Witaj, świecie!",
+                "description": "Wyślij pierwszą wiadomość na czacie."
+            },
+            "THEME_CHANGER": {
+                "name": "Projektant",
+                "description": "Utwórz swój pierwszy preset motywu."
+            },
+            "NIGHT_SESSION": {
+                "name": "Nocna zmiana",
+                "description": "Uruchom klienta po północy. (Ukryte)"
+            },
+            "SPEED_RUNNER": {
+                "name": "Speedrunner",
+                "description": "Uruchom klienta w ciągu 10 sekund od otwarcia loadera."
+            },
+            "LOYAL_USER": {
+                "name": "Lojalny użytkownik",
+                "description": "Uruchom klienta 100 razy."
+            },
+            "MULTI_CLIENT": {
+                "name": "Multitasking",
+                "description": "Uruchom 3 różnych klientów w jednej sesji."
             }
         }
     },

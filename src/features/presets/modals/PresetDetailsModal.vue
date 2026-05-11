@@ -402,7 +402,6 @@ import { presetService } from "@features/presets/presetService";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import MarketplaceEditPresetModal from "./MarketplaceEditPresetModal.vue";
-import MarketplaceDeleteConfirmModal from "./MarketplaceDeleteConfirmModal.vue";
 import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload";
 import type {
     MarketplacePreset,
@@ -418,7 +417,7 @@ const emit = defineEmits(["close", "show-user-profile"]);
 const { t } = useI18n();
 const { username } = useUser();
 const { addToast } = useToast();
-const { showModal, hideModal } = useModal();
+const { showModal, hideModal, showConfirm } = useModal();
 
 const loading = ref(false);
 const preset = ref<MarketplacePreset | null>(null);
@@ -681,21 +680,25 @@ async function toggleVisibility() {
     }
 }
 
-function askDelete() {
+async function askDelete() {
     if (!preset.value) return;
-    const cid = `delete-preset-${preset.value.id}`;
-    showModal(
-        cid,
-        MarketplaceDeleteConfirmModal,
-        { title: t("common.delete") },
-        { id: preset.value.id },
-        {
-            deleted: async () => {
-                hideModal(cid);
-                emit("close");
-            },
-        }
-    );
+    const confirmedDelete = await showConfirm({
+        title: t("common.delete"),
+        message:
+            t("theme.presets.delete_modal.message", {
+                name: preset.value.title || preset.value.name || "",
+            }) +
+            "\n\n" +
+            t("theme.presets.delete_modal.warning"),
+        confirmLabel: t("theme.presets.delete_modal.delete_button"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedDelete) {
+        return;
+    }
+
+    emit("close");
 }
 
 watch(

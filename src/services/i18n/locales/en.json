@@ -290,6 +290,21 @@
             "deleting": "Deleting...",
             "delete_client": "Delete Client"
         },
+        "create_shortcut": {
+            "title": "Create Desktop Shortcut",
+            "menu_item": "Create Shortcut",
+            "name_label": "Shortcut Name (optional)",
+            "name_hint": "Leave empty to use the client name",
+            "icon_label": "Icon (optional)",
+            "icon_placeholder": "Click to choose an icon",
+            "icon_formats": ".ico or .png",
+            "icon_hint": "Leave empty to use the app icon",
+            "icon_filter_name": "Image Files",
+            "creating": "Creating...",
+            "create": "Create Shortcut",
+            "success": "Shortcut \"{name}\" created on Desktop",
+            "error": "Failed to create shortcut: {error}"
+        },
         "role_selection": {
             "description": "Select your role for the local profile"
         }
@@ -300,7 +315,11 @@
         "setting_up": "Setting up...",
         "ready": "Ready!",
         "initializing_progress": "INITIALIZING LOADER",
-        "loading_user_data": "Loading user data..."
+        "loading_user_data": "Loading user data...",
+        "greeting_morning": "Good morning, {name}",
+        "greeting_afternoon": "Good afternoon, {name}",
+        "greeting_evening": "Good evening, {name}",
+        "greeting_night": "Good night, {name}"
     },
     "about": {
         "title": "About CollapseLoader",
@@ -469,6 +488,25 @@
     "blockedUsers": {
         "title": "Blocked Users ({count})",
         "noBlockedUsers": "No blocked users. Blocked users will appear here."
+    },
+    "chat": {
+        "title": "Chat",
+        "no_messages": "No messages yet. Be the first!",
+        "input_placeholder": "Message as {username}...",
+        "connecting_placeholder": "Connecting...",
+        "send_hint": "Press Enter to send",
+        "reply_unknown": "Original message not available",
+        "send_failed": "Failed to send message",
+        "status": {
+            "connected": "Connected",
+            "connecting": "Connecting...",
+            "disconnected": "Disconnected",
+            "error": "Connection error"
+        },
+        "error": {
+            "login_required": "Log in to send messages",
+            "banned": "You are banned from chat"
+        }
     },
     "friends": {
         "addFriend": "Add Friend",
@@ -698,7 +736,15 @@
             }
         },
         "dark": "Dark",
-        "light": "Light"
+        "light": "Light",
+        "schedule": {
+            "title": "Automatic",
+            "description": "Automatically switch between light and dark themes based on time of day.",
+            "light_window": "Light theme hours",
+            "from": "From",
+            "to": "To",
+            "now_active": "Active now"
+        }
     },
     "logs": {
         "copy_logs": "Copy logs",
@@ -973,6 +1019,18 @@
         "hours_ago": "{count}h ago",
         "days_ago": "{count}d ago"
     },
+    "history": {
+        "title": "Launch History",
+        "empty": "No launches yet",
+        "clear": "Clear",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "earlier": "Earlier",
+        "just_now": "Just now",
+        "minutes_ago": "{n}m ago",
+        "hours_ago": "{n}h ago",
+        "days_ago": "{n}d ago"
+    },
     "navigation": {
         "home": "Home",
         "friends": "Friends",
@@ -985,6 +1043,7 @@
         "custom_clients": "Custom Clients",
         "marketplace": "Marketplace",
         "app_logs": "App Logs",
+        "chat": "Chat",
         "sidebar_help": {
             "title": "Tip:",
             "tip": "You can move the sidebar to any side of the screen. Double-click the sidebar to remove margin between icons.",
@@ -1159,7 +1218,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "Supports jpg, png, webp, data-urls",
         "background_blur": "Blur",
-        "background_opacity": "Opacity"
+        "background_opacity": "Opacity",
+        "panel_blur_title": "UI Element Blur Settings",
+        "panel_blur_preview": "Preview",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "Launch History"
     },
     "updater": {
         "update_available": "Update Available",
@@ -1326,6 +1389,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "After job",
                 "description": "Play on a weekend."
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "Hello, World!",
+                "description": "Send your first message in chat."
+            },
+            "THEME_CHANGER": {
+                "name": "Designer",
+                "description": "Create your first theme preset."
+            },
+            "NIGHT_SESSION": {
+                "name": "Night Shift",
+                "description": "Launch a client after midnight. (Hidden)"
+            },
+            "SPEED_RUNNER": {
+                "name": "Speedrunner",
+                "description": "Launch a client within 10 seconds of opening the loader."
+            },
+            "LOYAL_USER": {
+                "name": "Loyal User",
+                "description": "Launch a client 100 times."
+            },
+            "MULTI_CLIENT": {
+                "name": "Multitasker",
+                "description": "Launch 3 different clients in one session."
             }
         }
     },

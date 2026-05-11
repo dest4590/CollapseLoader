@@ -166,6 +166,17 @@ fn file_info_strips_misc_prefix_for_local_file() {
     assert_eq!(info.local_file, "optifine.jar");
 }
 
+#[test]
+fn download_target_relative_path_strips_duplicate_dest_folder() {
+    assert_eq!(
+        Data::download_target_relative_path(
+            "minecraft-versions",
+            "minecraft-versions/forge_1.8.9.jar"
+        ),
+        PathBuf::from("forge_1.8.9.jar")
+    );
+}
+
 // ── FileInfo path helpers ─────────────────────────────────────────────────────
 
 #[test]

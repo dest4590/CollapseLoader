@@ -2,7 +2,10 @@ use crate::core::app_runtime::{DeepLinkAction, DeepLinkDeduplicator, TrayMenuAct
 
 #[test]
 fn tray_menu_action_parses_show() {
-    assert!(matches!(TrayMenuAction::parse("show"), TrayMenuAction::Show));
+    assert!(matches!(
+        TrayMenuAction::parse("show"),
+        TrayMenuAction::Show
+    ));
 }
 
 #[test]
@@ -23,7 +26,8 @@ fn tray_menu_action_ignores_invalid_launch_id() {
 
 #[test]
 fn deep_link_action_parses_verify_email() {
-    let action = DeepLinkAction::parse("collapseloader://verify?code=abc123&email=user@example.com");
+    let action =
+        DeepLinkAction::parse("collapseloader://verify?code=abc123&email=user@example.com");
 
     assert!(matches!(
         action,
@@ -35,10 +39,27 @@ fn deep_link_action_parses_verify_email() {
 #[test]
 fn deep_link_action_parses_launch_client() {
     let action = DeepLinkAction::parse("collapseloader://launch?client=7");
-
     assert!(matches!(
         action,
         Some(DeepLinkAction::LaunchClient { client_id }) if client_id == "7"
+    ));
+
+    let action2 = DeepLinkAction::parse("collapseloader://launch/?client=56");
+    assert!(matches!(
+        action2,
+        Some(DeepLinkAction::LaunchClient { client_id }) if client_id == "56"
+    ));
+
+    let action3 = DeepLinkAction::parse("collapseloader://launch/99");
+    assert!(matches!(
+        action3,
+        Some(DeepLinkAction::LaunchClient { client_id }) if client_id == "99"
+    ));
+
+    let action4 = DeepLinkAction::parse("collapseloader://launch-client/123");
+    assert!(matches!(
+        action4,
+        Some(DeepLinkAction::LaunchClient { client_id }) if client_id == "123"
     ));
 }
 

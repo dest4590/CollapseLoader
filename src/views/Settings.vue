@@ -45,10 +45,8 @@ import {
 } from "@features/auth/userService";
 import AddAccountModal from "@features/social/modals/AddAccountModal.vue";
 import EditAccountModal from "@features/social/modals/EditAccountModal.vue";
-import ResetConfirmModal from "@services/settings/modals/ResetConfirmModal.vue";
 import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue";
 import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
-import DeleteAccountConfirmModal from "@features/social/modals/DeleteAccountConfirmModal.vue";
 import SettingCard from "../components/settings/SettingCard.vue";
 import AccountCard from "../components/settings/AccountCard.vue";
 import {
@@ -78,12 +76,10 @@ const activeTab = ref<"general" | "sync" | "accounts">("general");
 const loading = ref(true);
 const isRefreshing = ref(false);
 const { addToast, setToastPosition, getToastPosition } = useToast();
+const { showModal, showConfirm } = useModal();
 
 const editingAccount = ref<Account | null>(null);
-const accountToDelete = ref<Account | null>(null);
 const searchQuery = ref("");
-
-const { showModal } = useModal();
 
 const ramOptions = [
     { mb: 2048, label: "2 GB" },
@@ -407,33 +403,50 @@ const showEditAccountDialog = (account: Account) => {
     );
 };
 
-const showResetConfirmDialog = () => {
-    showModal(
-        "reset-confirm",
-        ResetConfirmModal,
-        {
-            title: t("settings.reset_title"),
-        },
-        {},
-        {
-            "settings-reset": handleSettingsReset,
-        }
-    );
+const showResetConfirmDialog = async () => {
+    const confirmedReset = await showConfirm({
+        title: t("settings.reset_title"),
+        message: t("modals.reset_confirm.message"),
+        confirmLabel: t("modals.reset_confirm.yes_reset"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedReset) {
+        return;
+    }
+
+    try {
+        await invoke("reset_settings");
+        addToast(t("toast.modal.settings_reset_success"), "success");
+        handleSettingsReset();
+    } catch (error) {
+        console.error("Failed to reset settings:", error);
+        addToast(t("toast.modal.settings_reset_failed", { error }), "error");
+    }
 };
 
-const showDeleteConfirmDialog = (account: Account) => {
-    accountToDelete.value = account;
-    showModal(
-        "delete-confirm",
-        DeleteAccountConfirmModal,
-        {
-            title: t("settings.delete_account_title"),
-        },
-        { account },
-        {
-            "account-deleted": handleAccountDeleted,
-        }
-    );
+const showDeleteConfirmDialog = async (account: Account) => {
+    const confirmedDelete = await showConfirm({
+        title: t("settings.delete_account_title"),
+        message: t("modals.delete_account_confirm.message", {
+            username: account.username,
+        }),
+        confirmLabel: t("modals.delete_account_confirm.yes_delete"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedDelete) {
+        return;
+    }
+
+    try {
+        await invoke("remove_account", { id: account.id });
+        addToast(t("toast.account.account_deleted"), "success");
+        await handleAccountDeleted();
+    } catch (error) {
+        console.error("Failed to delete account:", error);
+        addToast(t("toast.account.account_delete_failed", { error }), "error");
+    }
 };
 
 const showTelemetryModal = () => {
@@ -1096,7 +1109,7 @@ const handleToastPositionChange = (position: string) => {
                                                 label: `${l.nativeName} (${l.name})`,
                                             }))
                                         "
-                                        direction="down"
+                                        direction="auto"
                                         @change="handleLanguageChange"
                                     />
                                 </div>
@@ -1193,7 +1206,7 @@ const handleToastPositionChange = (position: string) => {
                             <AnimatedDropdown
                                 v-model="toastPosition"
                                 :options="toastPositionOptions"
-                                direction="up"
+                                direction="auto"
                                 @change="handleToastPositionChange"
                             />
                         </div>

@@ -103,6 +103,7 @@ export const telegramNewsService = {
                             /href="([^"]+)"/g,
                             'href="$1" target="_blank" rel="noopener noreferrer"'
                         );
+                        textHtml = textHtml.replace(/\r?\n/g, "<br />");
                         contentHtml += textHtml;
                     }
 

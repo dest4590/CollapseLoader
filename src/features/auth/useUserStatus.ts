@@ -283,14 +283,15 @@ export function useUserStatus() {
 
     const initializeStatusSystem = () => {
         checkAuthStatus();
-        if (isAuthenticated.value) {
-            setOnline(false);
-            startStatusSync();
-        } else {
-            console.log(
-                "User not authenticated, skipping status system initialization"
-            );
-        }
+        // fully disabled status system
+        // if (isAuthenticated.value) {
+        //     setOnline(false);
+        //     startStatusSync();
+        // } else {
+        //     console.log(
+        //         "User not authenticated, skipping status system initialization"
+        //     );
+        // }
     };
 
     const restartStatusSystem = async () => {

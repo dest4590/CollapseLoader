@@ -17,6 +17,9 @@
         "success_message": "Скаргу успішно надіслано. Дякуємо!",
         "error_message": "Не вдалося надіслати скаргу. Спробуйте ще раз пізніше."
     },
+    "chat": {
+        "reply_unknown": "Оригінальне повідомлення недоступне"
+    },
     "modals": {
         "initial_setup": {
             "welcome": {
@@ -290,6 +293,21 @@
             "deleting": "Видалення...",
             "delete_client": "Видалити клієнт"
         },
+        "create_shortcut": {
+            "title": "Створити ярлик на робочому столі",
+            "menu_item": "Створити ярлик",
+            "name_label": "Назва ярлика (необов'язково)",
+            "name_hint": "Залиште порожнім, щоб використати ім'я клієнта",
+            "icon_label": "Іконка (необов'язково)",
+            "icon_placeholder": "Натисніть, щоб вибрати іконку",
+            "icon_formats": ".ico або .png",
+            "icon_hint": "Залиште порожнім, щоб використати іконку застосунку",
+            "icon_filter_name": "Файли зображень",
+            "creating": "Створення...",
+            "create": "Створити ярлик",
+            "success": "Ярлик \"{name}\" створено на робочому столі",
+            "error": "Не вдалося створити ярлик: {error}"
+        },
         "role_selection": {
             "description": "Оберіть вашу роль для локального профілю"
         }
@@ -300,7 +318,11 @@
         "setting_up": "Налаштування...",
         "ready": "Готово!",
         "initializing_progress": "ІНІЦІАЛІЗАЦІЯ ЛОАДЕРА",
-        "loading_user_data": "Завантаження даних користувача..."
+        "loading_user_data": "Завантаження даних користувача...",
+        "greeting_morning": "Доброго ранку, {name}",
+        "greeting_afternoon": "Добрий день, {name}",
+        "greeting_evening": "Добрий вечір, {name}",
+        "greeting_night": "Доброї ночі, {name}"
     },
     "about": {
         "title": "Про CollapseLoader",
@@ -408,7 +430,6 @@
         "send": "Надіслати",
         "copied_to_clipboard": "Колір {color} скопійовано до буфера обміну",
         "done": "Готово",
-        "or": "або",
         "click": "Натисніть",
         "show_more": "Показати більше",
         "show_less": "Сховати",
@@ -699,7 +720,15 @@
             }
         },
         "dark": "Темна",
-        "light": "Світла"
+        "light": "Світла",
+        "schedule": {
+            "title": "Автоматично",
+            "description": "Автоматично перемикати тему залежно від часу доби.",
+            "light_window": "Години світлої теми",
+            "from": "З",
+            "to": "До",
+            "now_active": "Зараз активна"
+        }
     },
     "logs": {
         "copy_logs": "Копіювати логи",
@@ -973,6 +1002,18 @@
         "hours_ago": "{count}год тому",
         "days_ago": "{count}д тому"
     },
+    "history": {
+        "title": "Історія запусків",
+        "empty": "Запусків ще не було",
+        "clear": "Очистити",
+        "today": "Сьогодні",
+        "yesterday": "Вчора",
+        "earlier": "Раніше",
+        "just_now": "Щойно",
+        "minutes_ago": "{n}хв тому",
+        "hours_ago": "{n}год тому",
+        "days_ago": "{n}д тому"
+    },
     "navigation": {
         "home": "Головна",
         "friends": "Друзі",
@@ -1159,7 +1200,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "Підтримує jpg, png, webp, data-urls",
         "background_blur": "Розмиття",
-        "background_opacity": "Прозорість"
+        "background_opacity": "Прозорість",
+        "panel_blur_title": "Налаштування розмиття елементів",
+        "panel_blur_preview": "Попередній перегляд",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "Історія запусків"
     },
     "updater": {
         "update_available": "Доступне оновлення",
@@ -1326,6 +1371,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "Після заводу",
                 "description": "Грайте у вихідні."
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "Привіт, світе!",
+                "description": "Надішліть перше повідомлення в чат."
+            },
+            "THEME_CHANGER": {
+                "name": "Дизайнер",
+                "description": "Створіть свій перший пресет теми."
+            },
+            "NIGHT_SESSION": {
+                "name": "Нічна зміна",
+                "description": "Запустіть клієнт після опівночі. (Прихована)"
+            },
+            "SPEED_RUNNER": {
+                "name": "Спідранер",
+                "description": "Запустіть клієнт протягом 10 секунд після відкриття лоадера."
+            },
+            "LOYAL_USER": {
+                "name": "Вірний користувач",
+                "description": "Запустіть клієнт 100 разів."
+            },
+            "MULTI_CLIENT": {
+                "name": "Багатозадачність",
+                "description": "Запустіть 3 різних клієнти за одну сесію."
             }
         }
     },

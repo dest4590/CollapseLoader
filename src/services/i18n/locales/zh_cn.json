@@ -17,6 +17,9 @@
         "success_message": "举报提交成功。感谢您！",
         "error_message": "提交举报失败，请稍后再试。"
     },
+    "chat": {
+        "reply_unknown": "原始消息不可用"
+    },
     "modals": {
         "initial_setup": {
             "welcome": {
@@ -290,6 +293,21 @@
             "deleting": "正在删除...",
             "delete_client": "删除客户端"
         },
+        "create_shortcut": {
+            "title": "创建桌面快捷方式",
+            "menu_item": "创建快捷方式",
+            "name_label": "快捷方式名称（可选）",
+            "name_hint": "留空则使用客户端名称",
+            "icon_label": "图标（可选）",
+            "icon_placeholder": "点击选择图标",
+            "icon_formats": ".ico 或 .png",
+            "icon_hint": "留空则使用应用图标",
+            "icon_filter_name": "图片文件",
+            "creating": "正在创建...",
+            "create": "创建快捷方式",
+            "success": "快捷方式 \"{name}\" 已创建在桌面",
+            "error": "创建快捷方式失败：{error}"
+        },
         "role_selection": {
             "description": "为本地配置文件选择您的角色"
         }
@@ -300,7 +318,11 @@
         "setting_up": "正在设置...",
         "ready": "就绪！",
         "initializing_progress": "初始化加载程序",
-        "loading_user_data": "正在加载用户数据..."
+        "loading_user_data": "正在加载用户数据...",
+        "greeting_morning": "早上好，{name}",
+        "greeting_afternoon": "下午好，{name}",
+        "greeting_evening": "晚上好，{name}",
+        "greeting_night": "晚安，{name}"
     },
     "about": {
         "title": "关于 CollapseLoader",
@@ -698,7 +720,15 @@
             }
         },
         "dark": "黑暗的",
-        "light": "光"
+        "light": "光",
+        "schedule": {
+            "title": "自动",
+            "description": "根据一天中的时间自动切换亮色和暗色主题。",
+            "light_window": "亮色主题时段",
+            "from": "从",
+            "to": "到",
+            "now_active": "当前激活"
+        }
     },
     "errors": {
         "clients_load_failed": "加载客户端列表失败：{error}",
@@ -959,6 +989,18 @@
         "hours_ago": "{count} 小时前",
         "days_ago": "{count} 天前"
     },
+    "history": {
+        "title": "启动历史",
+        "empty": "暂无启动记录",
+        "clear": "清除",
+        "today": "今天",
+        "yesterday": "昨天",
+        "earlier": "更早",
+        "just_now": "刚刚",
+        "minutes_ago": "{n}分钟前",
+        "hours_ago": "{n}小时前",
+        "days_ago": "{n}天前"
+    },
     "navigation": {
         "home": "首页",
         "friends": "好友",
@@ -1145,7 +1187,11 @@
         "background_image_placeholder": "https://example.com/image.jpg",
         "background_image_help": "支持 jpg、png、webp、data-url",
         "background_blur": "模糊",
-        "background_opacity": "不透明度"
+        "background_opacity": "不透明度",
+        "panel_blur_title": "界面元素模糊设置",
+        "panel_blur_preview": "预览",
+        "spotlight_blur": "Spotlight",
+        "history_blur": "启动历史"
     },
     "updater": {
         "update_available": "有可用更新",
@@ -1325,6 +1371,30 @@
             "WEEKEND_WARRIOR": {
                 "name": "下班后",
                 "description": "在周末游玩。"
+            },
+            "CHAT_FIRST_MESSAGE": {
+                "name": "你好，世界！",
+                "description": "在聊天中发送第一条消息。"
+            },
+            "THEME_CHANGER": {
+                "name": "设计师",
+                "description": "创建您的第一个主题预设。"
+            },
+            "NIGHT_SESSION": {
+                "name": "夜班",
+                "description": "在午夜后启动客户端。（隐藏）"
+            },
+            "SPEED_RUNNER": {
+                "name": "速通者",
+                "description": "在打开加载器后10秒内启动客户端。"
+            },
+            "LOYAL_USER": {
+                "name": "忠实用户",
+                "description": "启动客户端100次。"
+            },
+            "MULTI_CLIENT": {
+                "name": "多任务处理",
+                "description": "在一个会话中启动3个不同的客户端。"
             }
         }
     },

@@ -9,23 +9,11 @@ import {
     shallowRef,
     watch,
 } from "vue";
-import {
-    Copy,
-    Download,
-    FileText,
-    Folder,
-    Newspaper,
-    Package,
-    Plus,
-    RefreshCcw,
-    Star,
-    StopCircle,
-    Trash2,
-    X,
-} from "lucide-vue-next";
-import SearchBar from "@shared/components/common/SearchBar.vue";
-import ClientCard from "@features/clients/components/ClientCard.vue";
-import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
+import ClientCardContextMenu from "@features/clients/components/ClientCardContextMenu.vue";
+import HomeTopBar from "@/views/home/HomeTopBar.vue";
+import HomeClientGrid from "@/views/home/HomeClientGrid.vue";
+import HomeSelectionBar from "@/views/home/HomeSelectionBar.vue";
+import ChatPanel from "@features/chat/components/ChatPanel.vue";
 import ModsManagerModal from "@features/clients/modals/ModsManagerModal.vue";
 import ClientRamUsageModal from "@features/clients/modals/ClientRamUsageModal.vue";
 import { useToast } from "@shared/composables/useToast";
@@ -36,6 +24,7 @@ import { useI18n } from "vue-i18n";
 import type { Client, CustomClient, InstallProgress } from "@shared/types/ui";
 import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
 import InsecureClientWarningModal from "@features/clients/modals/InsecureClientWarningModal.vue";
+import CreateShortcutModal from "@features/clients/modals/CreateShortcutModal.vue";
 
 interface Account {
     id: string;
@@ -82,10 +71,12 @@ const runningClients = shallowRef<number[]>([]);
 const skipNextRunningCheck = ref<Set<number>>(new Set());
 const isLeaving = ref(false);
 const viewVisible = ref(false);
+const isMacOS = ref(false);
 const { addToast } = useToast();
 const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
 const searchBarRef = ref<any>(null);
+const showHistory = ref(false);
 
 const HOME_ANIM_KEY = "homeAnimPlayed";
 const hasAnimatedBefore = ref<boolean>(false);
@@ -768,11 +759,23 @@ const launchClient = async (id: number) => {
         await invoke("increment_client_counter", { id, counterType: "launch" });
         await getClients();
 
+        const activeAccount = accounts.value.find((a) => a.is_active);
+
         try {
             await invoke("launch_client", { id, userToken });
         } catch (invokeErr) {
             runningClients.value = runningClients.value.filter((i) => i !== id);
             throw invokeErr;
+        }
+
+        const launchedClient = clients.value.find((c) => c.id === id);
+        if (launchedClient) {
+            invoke("record_launch", {
+                clientId: id,
+                clientName: launchedClient.name,
+                clientVersion: launchedClient.version,
+                accountName: activeAccount?.username ?? null,
+            }).catch(() => {});
         }
 
         await new Promise((resolve) => setTimeout(resolve, 500));
@@ -1218,7 +1221,7 @@ const showContextMenu = (event: MouseEvent, client: Client) => {
     setTimeout(() => {
         contextMenu.value.isAnimating = false;
         contextMenu.value.animationClass = "";
-    }, 150);
+    }, 600);
 
     document.addEventListener("click", hideContextMenu);
 };
@@ -1244,7 +1247,7 @@ const hideContextMenu = () => {
         contextMenu.value.animationClass = "";
         contextMenu.value.showAccountsDropdown = false;
         document.removeEventListener("click", hideContextMenu);
-    }, 150);
+    }, 220);
 };
 
 const openClientFolder = async (client: Client) => {
@@ -1265,6 +1268,17 @@ const openModsManager = (client: Client) => {
         ModsManagerModal,
         { title: t("mods.manager_title"), size: "lg" },
         { client }
+    );
+};
+
+const openCreateShortcut = (client: Client) => {
+    hideContextMenu();
+    showModal(
+        `create-shortcut-${client.id}`,
+        CreateShortcutModal,
+        { title: t("modals.create_shortcut.title") },
+        { client },
+        { close: () => hideModal(`create-shortcut-${client.id}`) }
     );
 };
 
@@ -1664,6 +1678,8 @@ const loadCustomClientsDisplayMode = async () => {
 onMounted(async () => {
     debouncedSearchQuery.value = searchQuery.value;
 
+    isMacOS.value = await invoke<boolean>("is_macos").catch(() => false);
+
     await getClients();
     await loadFavorites();
     await loadCustomClients();
@@ -1734,63 +1750,21 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div
-        :class="[
-            'flex items-center gap-2 mb-6 top-menu',
-            viewVisible ? 'home-entered' : 'home-hidden',
-        ]"
-    >
-        <SearchBar
-            ref="searchBarRef"
-            @search="handleSearch"
-            class="flex-1 mr-2 home-search"
-            :initial-value="searchQuery"
-            :placeholder="t('home.search_placeholder')"
-        />
-        <div class="home-action-btn">
-            <FiltersMenu
-                v-model:activeFilters="activeFilters"
-                v-model:clientSortKey="clientSortKey"
-                v-model:clientSortOrder="clientSortOrder"
-            />
-        </div>
-        <div
-            class="tooltip tooltip-bottom home-action-btn"
-            :data-tip="t('navigation.custom_clients')"
-        >
-            <button
-                @click="$emit('change-view', 'custom_clients')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2"
-                :style="{
-                    border: 'var(--border) solid #0000',
-                }"
-            >
-                <FileText class="w-4 h-4" />
-            </button>
-        </div>
-        <div
-            class="tooltip tooltip-bottom home-action-btn"
-            :data-tip="t('navigation.news')"
-        >
-            <button
-                @click="$emit('change-view', 'news')"
-                class="btn btn-ghost border-base-300 btn-primary gap-2 relative"
-                :style="{
-                    border: 'var(--border) solid #0000',
-                }"
-            >
-                <Newspaper class="w-4 h-4" />
-                <span
-                    v-if="props.unreadNewsCount && props.unreadNewsCount > 0"
-                    class="absolute -top-2 -right-2 bg-primary text-primary-content text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center border-2 border-base-100 px-1"
-                >
-                    {{
-                        props.unreadNewsCount > 9 ? "9+" : props.unreadNewsCount
-                    }}
-                </span>
-            </button>
-        </div>
-    </div>
+    <HomeTopBar
+        :search-query="searchQuery"
+        :active-filters="activeFilters"
+        :client-sort-key="clientSortKey"
+        :client-sort-order="clientSortOrder"
+        :unread-news-count="props.unreadNewsCount"
+        :view-visible="viewVisible"
+        :showHistory="showHistory"
+        :search-bar-ref="searchBarRef"
+        @change-view="$emit('change-view', $event)"
+        @search="handleSearch"
+        @launch-client="launchClient"
+    />
+
+    <ChatPanel />
 
     <div
         v-if="filteredClients.length === 0 && !error && clientsLoaded"
@@ -1820,243 +1794,65 @@ onBeforeUnmount(() => {
         <span>{{ error }}</span>
     </div>
 
-    <div
-        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 relative overflow-hidden"
-        :class="{
-            'multi-select-mode': isCtrlPressed && expandedClientId === null,
-        }"
-        :style="{ paddingBottom: selectedClients.size > 0 ? '80px' : '0px' }"
-    >
-        <div
-            v-for="(client, idx) in filteredClients"
-            :key="`${client.id}-${idx}`"
-            :class="[
-                'client-card-item',
-                { 'slide-in-animate': playClientSlideAnim },
-            ]"
-            :style="
-                playClientSlideAnim
-                    ? { animationDelay: `${Math.min(idx * 100, 600)}ms` }
-                    : {}
-            "
-        >
-            <ClientCard
-                :client="client"
-                :isClientRunning="isClientRunning(client.id)"
-                :isClientInstalling="isClientInstalling(client)"
-                :installationStatus="
-                    installationStatus.get(getFileBasename(client.filename))
-                "
-                :isRequirementsInProgress="requirementsInProgress"
-                :isAnyClientDownloading="isAnyClientDownloading"
-                :isFavorite="isClientFavorite(client.id)"
-                :isSelected="isClientSelected(client.id)"
-                :isMultiSelectMode="isCtrlPressed && expandedClientId === null"
-                :isHashVerifying="hashVerifyingClients.has(client.id)"
-                :isAnyCardExpanded="isAnyCardExpanded"
-                :isShiftHeld="isShiftHeld"
-                @launch="handleLaunchClick"
-                @download="downloadClient"
-                @open-log-viewer="openLogViewer"
-                @open-ram-viewer="openRamUsageModal"
-                @show-context-menu="showContextMenu"
-                @client-click="handleClientClick"
-                @expanded-state-changed="handleExpandedStateChanged"
-                @show-user-profile="$emit('show-user-profile', $event)"
-            />
-        </div>
-    </div>
+    <HomeClientGrid
+        :filtered-clients="filteredClients"
+        :play-client-slide-anim="playClientSlideAnim"
+        :is-ctrl-pressed="isCtrlPressed"
+        :expanded-client-id="expandedClientId"
+        :requirements-in-progress="requirementsInProgress"
+        :is-any-client-downloading="isAnyClientDownloading"
+        :hash-verifying-clients="hashVerifyingClients"
+        :is-any-card-expanded="isAnyCardExpanded"
+        :is-shift-held="isShiftHeld"
+        :installation-status="installationStatus"
+        :selected-clients-size="selectedClients.size"
+        :get-file-basename="getFileBasename"
+        :is-client-running="isClientRunning"
+        :is-client-installing="isClientInstalling"
+        :is-client-favorite="isClientFavorite"
+        :is-client-selected="isClientSelected"
+        @launch="handleLaunchClick"
+        @download="downloadClient"
+        @open-log-viewer="openLogViewer"
+        @open-ram-viewer="openRamUsageModal"
+        @show-context-menu="showContextMenu"
+        @client-click="handleClientClick"
+        @expanded-state-changed="handleExpandedStateChanged"
+        @show-user-profile="$emit('show-user-profile', $event)"
+    />
 
-    <div
-        v-if="contextMenu.visible"
-        :style="{ top: `${contextMenu.y}px`, left: `${contextMenu.x}px` }"
-        class="fixed z-100 menu p-0 bg-base-200 w-56 rounded-box shadow-xl border border-base-300 dropdown-content"
-        :class="contextMenu.animationClass"
-    >
-        <h3
-            v-if="selectedClients.size <= 1"
-            class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30"
-        >
-            {{ contextMenu.client?.name }}
-        </h3>
+    <ClientCardContextMenu
+        :visible="contextMenu.visible"
+        :x="contextMenu.x"
+        :y="contextMenu.y"
+        :client="contextMenu.client"
+        :selectedClientsSize="selectedClients.size"
+        :isFavorite="isClientFavorite(contextMenu.client?.id || 0)"
+        :isRunning="isClientRunning(contextMenu.client?.id || 0)"
+        :isMacOS="isMacOS"
+        :animationClass="contextMenu.animationClass"
+        @open-mods-manager="openModsManager"
+        @toggle-favorite="toggleFavorite"
+        @launch-another-instance="launchAnotherInstance"
+        @reinstall-client="reinstallClient"
+        @delete-client="deleteClient"
+        @open-client-folder="openClientFolder"
+        @copy-client-logs="copyClientLogs"
+        @open-create-shortcut="openCreateShortcut"
+    />
 
-        <h3
-            v-else
-            class="font-medium text-sm px-4 py-2 border-b border-base-300 text-base-content/80 bg-base-300/30"
-        >
-            {{
-                t("home.multiple_clients_selected", {
-                    count: selectedClients.size,
-                })
-            }}
-        </h3>
-
-        <ul v-if="selectedClients.size <= 1">
-            <li
-                v-if="
-                    contextMenu.client?.client_type?.toLowerCase() ===
-                        'fabric' && contextMenu.client?.meta.installed
-                "
-            >
-                <a
-                    @click="openModsManager(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30 text-primary font-medium"
-                >
-                    <Package class="w-4 h-4" />
-                    {{ t("mods.manage_mods") }}
-                </a>
-            </li>
-            <li>
-                <a
-                    @click="toggleFavorite(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30"
-                >
-                    <Star
-                        class="w-4 h-4"
-                        :class="{
-                            'fill-yellow-400 text-yellow-400': isClientFavorite(
-                                contextMenu.client?.id || 0
-                            ),
-                        }"
-                    />
-                    {{
-                        isClientFavorite(contextMenu.client?.id || 0)
-                            ? t("theme.actions.remove_favorite")
-                            : t("theme.actions.add_favorite")
-                    }}
-                </a>
-            </li>
-            <li
-                v-if="
-                    contextMenu.client?.meta.installed &&
-                    isClientRunning(contextMenu.client!.id)
-                "
-            >
-                <a
-                    @click="launchAnotherInstance(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30"
-                >
-                    <Plus class="w-4 h-4" />
-                    {{ t("home.launch_another") }}
-                </a>
-            </li>
-            <li v-if="contextMenu.client?.meta.installed">
-                <a
-                    @click="reinstallClient(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30"
-                >
-                    <RefreshCcw class="w-4 h-4" />
-                    {{ t("common.reinstall") }}
-                </a>
-            </li>
-            <li v-if="contextMenu.client?.meta.installed">
-                <a
-                    @click="deleteClient(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30"
-                >
-                    <Trash2 class="w-4 h-4" />
-                    {{ t("common.delete") }}
-                </a>
-            </li>
-            <li v-if="contextMenu.client?.meta.installed">
-                <a
-                    @click="openClientFolder(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30"
-                >
-                    <Folder class="w-4 h-4" />
-                    {{ t("theme.actions.open_folder") }}
-                </a>
-            </li>
-            <li v-if="contextMenu.client?.meta.installed">
-                <a
-                    @click="copyClientLogs(contextMenu.client!)"
-                    class="flex items-center gap-2 text-sm active:bg-primary/30"
-                >
-                    <Copy class="w-4 h-4" />
-                    {{ t("logs.copy_logs") }}
-                </a>
-            </li>
-        </ul>
-    </div>
-
-    <transition name="slide-up-bottom">
-        <div
-            v-if="selectedClients.size > 0"
-            class="fixed left-1/2 transform -translate-x-1/2 w-auto max-w-[calc(100%-2rem)] bg-neutral text-neutral-content px-4 py-3 rounded-lg shadow-xl z-30 flex items-center gap-3 sm:gap-4"
-            :style="{
-                bottom: `calc(1rem + var(--sidebar-bottom-height, 0px))`,
-            }"
-        >
-            <span class="font-medium text-xs sm:text-sm whitespace-nowrap">{{
-                t("home.selected_clients", {
-                    count: selectedClients.size,
-                })
-            }}</span>
-
-            <div class="flex items-center gap-1 sm:gap-2">
-                <transition name="button-fade" mode="out-in">
-                    <button
-                        v-if="canStopSelected"
-                        @click="stopMultipleClients"
-                        :title="t('home.stop_selected')"
-                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square"
-                    >
-                        <StopCircle class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                </transition>
-
-                <transition name="button-fade" mode="out-in">
-                    <button
-                        v-if="canDownloadSelected"
-                        @click="downloadMultipleClients"
-                        :title="t('home.download_selected')"
-                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square"
-                    >
-                        <Download class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                </transition>
-
-                <transition name="button-fade" mode="out-in">
-                    <button
-                        v-if="canReinstallSelected"
-                        @click="reinstallMultipleClients"
-                        :title="t('home.reinstall_selected')"
-                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square"
-                    >
-                        <RefreshCcw class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                </transition>
-
-                <transition name="button-fade" mode="out-in">
-                    <button
-                        v-if="canDeleteSelected"
-                        @click="deleteMultipleClients"
-                        :title="t('home.delete_selected')"
-                        class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square"
-                    >
-                        <Trash2 class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                </transition>
-            </div>
-
-            <div
-                v-if="
-                    canStopSelected ||
-                    canDownloadSelected ||
-                    canReinstallSelected ||
-                    canDeleteSelected
-                "
-                class="border-l border-neutral-content/30 h-5 sm:h-6 mx-1"
-            ></div>
-
-            <button
-                @click="clearSelection"
-                class="btn btn-sm btn-ghost hover:bg-neutral-focus p-2 aspect-square"
-            >
-                <X class="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-        </div>
-    </transition>
+    <HomeSelectionBar
+        :selected-clients-size="selectedClients.size"
+        :can-stop-selected="canStopSelected"
+        :can-download-selected="canDownloadSelected"
+        :can-reinstall-selected="canReinstallSelected"
+        :can-delete-selected="canDeleteSelected"
+        @stop-multiple="stopMultipleClients"
+        @download-multiple="downloadMultipleClients"
+        @reinstall-multiple="reinstallMultipleClients"
+        @delete-multiple="deleteMultipleClients"
+        @clear-selection="clearSelection"
+    />
 </template>
 
 <style>

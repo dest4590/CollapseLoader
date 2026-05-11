@@ -3,11 +3,10 @@ import { useI18n } from "vue-i18n";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
+import { themeScheduler } from "@services/theme/themeScheduler";
 import { useToast } from "@shared/composables/useToast";
-import { globalUserStatus } from "@features/auth/useUserStatus";
 import { useUser } from "@features/auth/useUser";
 import { userService } from "@features/auth/userService";
-import { globalFriends } from "@features/friends/useFriends";
 import { updaterService } from "@services/updater/updaterService";
 import { syncService } from "../services/syncService";
 import { getCurrentLanguage } from "@services/i18n";
@@ -51,8 +50,6 @@ export function useAppInit() {
     const { addToast } = useToast();
     const { showModal } = useModal();
     const { loadUserData, hydrateUser } = useUser();
-    const { loadFriendsData, hydrateFriends } = globalFriends;
-    const { initializeStatusSystem } = globalUserStatus;
 
     const showPreloader = ref(true);
     const contentVisible = ref(false);
@@ -84,7 +81,7 @@ export function useAppInit() {
 
             try {
                 const initData = await userService.initializeUserFull();
-                const { user, friends } = initData;
+                const { user } = initData;
 
                 hydrateUser(user.profile, {
                     id: user.id,
@@ -95,8 +92,8 @@ export function useAppInit() {
                     updated_at: user.updated_at,
                     last_login_at: user.last_login_at ?? null,
                 });
-                hydrateFriends(friends);
-                initializeStatusSystem();
+                // hydrateFriends(friends);
+                // initializeStatusSystem();
                 await syncService.restoreFromInitData(initData);
             } catch (error) {
                 console.error("Init fallback:", error);
@@ -108,10 +105,10 @@ export function useAppInit() {
             try {
                 await Promise.all([
                     loadUserData(),
-                    loadFriendsData(),
+                    // loadFriendsData(),
                     syncService.checkAndRestoreOnStartup(),
                 ]);
-                initializeStatusSystem();
+                // initializeStatusSystem();
             } catch (error) {
                 console.error("Fallback init failed:", error);
             }
@@ -210,6 +207,7 @@ export function useAppInit() {
 
             const themeTask = applyThemeOnStartup().then((theme) => {
                 currentTheme.value = (theme as string) || "dark";
+                themeScheduler.startScheduler();
             });
 
             const languageTask = applyLanguageOnStartup();

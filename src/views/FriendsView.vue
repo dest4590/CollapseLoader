@@ -179,8 +179,6 @@ import {
 } from "@features/auth/userService";
 import { useFriends } from "@features/friends/useFriends";
 import AddFriendModal from "@features/friends/modals/AddFriendModal.vue";
-import BlockUnblockConfirmModal from "@features/friends/modals/BlockUnblockConfirmModal.vue";
-import RemoveFriendConfirmModal from "@features/friends/modals/RemoveFriendConfirmModal.vue";
 import ReportModal from "@/components/modals/common/ReportModal.vue";
 import FriendCard from "@features/friends/components/FriendCard.vue";
 import FriendRequestCard from "@features/friends/components/FriendRequestCard.vue";
@@ -190,7 +188,7 @@ import { useStreamerMode } from "@features/social/useStreamerMode";
 
 const { t } = useI18n();
 const { addToast } = useToast();
-const { showModal, hideModal } = useModal();
+const { showModal, hideModal, showConfirm } = useModal();
 
 defineProps<{
     isOnline: boolean;
@@ -348,68 +346,67 @@ const cancelRequest = async (requestId: number) => {
 };
 
 const removeFriend = async (friend: Friend) => {
-    showModal(
-        "remove-friend-confirm",
-        RemoveFriendConfirmModal,
-        { title: t("userProfile.remove_friend") },
-        { friend: friend },
-        {
-            confirm: async (confirmedFriend: Friend) => {
-                try {
-                    await userService.removeFriend(confirmedFriend.id);
-                    addToast(
-                        t("friends.remove_success", {
-                            name: streamer.getDisplayName(
-                                confirmedFriend.nickname,
-                                confirmedFriend.username
-                            ),
-                        }),
-                        "success"
-                    );
-                    await loadFriendsData(true);
-                } catch (error) {
-                    console.error("Failed to remove friend:", error);
-                    addToast(t("friends.remove_failed"), "error");
-                }
-                hideModal("remove-friend-confirm");
-            },
-            close: () => hideModal("remove-friend-confirm"),
-        }
-    );
+    const confirmedRemove = await showConfirm({
+        title: t("userProfile.remove_friend"),
+        message: t("modals.remove_friend_confirm.message", {
+            displayName: streamer.getDisplayName(
+                friend.nickname,
+                friend.username
+            ),
+        }),
+        confirmLabel: t("modals.remove_friend_confirm.yes_remove"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedRemove) {
+        return;
+    }
+
+    try {
+        await userService.removeFriend(friend.id);
+        addToast(
+            t("friends.remove_success", {
+                name: streamer.getDisplayName(friend.nickname, friend.username),
+            }),
+            "success"
+        );
+        await loadFriendsData(true);
+    } catch (error) {
+        console.error("Failed to remove friend:", error);
+        addToast(t("friends.remove_failed"), "error");
+    }
 };
 
 const blockFriend = async (friend: Friend) => {
-    showModal(
-        "block-confirm",
-        BlockUnblockConfirmModal,
-        { title: t("userProfile.block_user") },
-        { user: friend, action: "block" },
-        {
-            confirm: async (user: Friend) => {
-                try {
-                    await userService.blockUser(user.id);
-                    addToast(
-                        t("friends.block_success", {
-                            name: streamer.getDisplayName(
-                                user.nickname,
-                                user.username
-                            ),
-                        }),
-                        "success"
-                    );
-                    await Promise.all([
-                        loadFriendsData(true),
-                        loadBlockedUsers(),
-                    ]);
-                } catch (error) {
-                    console.error("Failed to block user:", error);
-                    addToast(t("friends.block_failed"), "error");
-                }
-                hideModal("block-confirm");
-            },
-            close: () => hideModal("block-confirm"),
-        }
-    );
+    const confirmedBlock = await showConfirm({
+        title: t("userProfile.block_user"),
+        message: t("modals.block_unblock_confirm.block_message", {
+            displayName: streamer.getDisplayName(
+                friend.nickname,
+                friend.username
+            ),
+        }),
+        confirmLabel: t("modals.block_unblock_confirm.yes_block"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedBlock) {
+        return;
+    }
+
+    try {
+        await userService.blockUser(friend.id);
+        addToast(
+            t("friends.block_success", {
+                name: streamer.getDisplayName(friend.nickname, friend.username),
+            }),
+            "success"
+        );
+        await Promise.all([loadFriendsData(true), loadBlockedUsers()]);
+    } catch (error) {
+        console.error("Failed to block user:", error);
+        addToast(t("friends.block_failed"), "error");
+    }
 };
 
 const reportUser = (user: Friend) => {
@@ -433,34 +430,32 @@ const reportUser = (user: Friend) => {
 };
 
 const unblockUser = async (user: Friend) => {
-    showModal(
-        "unblock-confirm",
-        BlockUnblockConfirmModal,
-        { title: t("userProfile.unblock_user") },
-        { user: user, action: "unblock" },
-        {
-            confirm: async (confirmedUser: Friend) => {
-                try {
-                    await userService.unblockUser(confirmedUser.id);
-                    addToast(
-                        t("friends.unblock_success", {
-                            name: streamer.getDisplayName(
-                                confirmedUser.nickname,
-                                confirmedUser.username
-                            ),
-                        }),
-                        "success"
-                    );
-                    await loadBlockedUsers();
-                } catch (error) {
-                    console.error("Failed to unblock user:", error);
-                    addToast(t("friends.unblock_failed"), "error");
-                }
-                hideModal("unblock-confirm");
-            },
-            close: () => hideModal("unblock-confirm"),
-        }
-    );
+    const confirmedUnblock = await showConfirm({
+        title: t("userProfile.unblock_user"),
+        message: t("modals.block_unblock_confirm.unblock_message", {
+            displayName: streamer.getDisplayName(user.nickname, user.username),
+        }),
+        confirmLabel: t("modals.block_unblock_confirm.yes_unblock"),
+        cancelLabel: t("common.cancel"),
+    });
+
+    if (!confirmedUnblock) {
+        return;
+    }
+
+    try {
+        await userService.unblockUser(user.id);
+        addToast(
+            t("friends.unblock_success", {
+                name: streamer.getDisplayName(user.nickname, user.username),
+            }),
+            "success"
+        );
+        await loadBlockedUsers();
+    } catch (error) {
+        console.error("Failed to unblock user:", error);
+        addToast(t("friends.unblock_failed"), "error");
+    }
 };
 </script>
 

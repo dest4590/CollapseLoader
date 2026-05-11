@@ -69,7 +69,7 @@ const handleOpenRamViewer = () => {
                 v-if="!client.meta.installed"
                 @click="handleDownloadClick"
                 class="btn btn-sm btn-primary relative overflow-hidden group"
-                :disabled="isRequirementsInProgress || !client.working"
+                :disabled="!client.working"
             >
                 <span
                     class="flex items-center justify-center w-full transition-all duration-300 group-hover:opacity-0 group-hover:-translate-y-3"
@@ -90,7 +90,6 @@ const handleOpenRamViewer = () => {
                 v-else
                 @click="handleLaunchClick"
                 class="btn btn-sm min-w-20 transition-all duration-300 active:scale-90"
-                :disabled="isRequirementsInProgress"
                 :class="[
                     clientIsRunning
                         ? 'btn-error animate-pulse-subtle'

@@ -1,6 +1,6 @@
-use crate::core::platform::{check_platform_dependencies, error::StartupError};
 #[cfg(target_os = "linux")]
 use crate::core::platform::check_webkit_environment;
+use crate::core::platform::{check_platform_dependencies, error::StartupError};
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::globals::CODENAME;
 use crate::logging::Logger;
@@ -130,7 +130,18 @@ impl DeepLinkAction {
             return Some(Self::VerifyEmail { code, email });
         }
 
-        query_value(url, "client").map(|client_id| Self::LaunchClient { client_id })
+        if url.contains("launch-client") || url.contains("launch") {
+            let client_id = query_value(url, "client").or_else(|| {
+                url.split("launch-client/")
+                    .nth(1)
+                    .or_else(|| url.split("launch/").nth(1))
+                    .map(|s| s.split(['?', '#', '&']).next().unwrap_or(s).trim().to_string())
+                    .filter(|s| !s.is_empty())
+            })?;
+            return Some(Self::LaunchClient { client_id });
+        }
+
+        None
     }
 }
 
@@ -141,9 +152,7 @@ impl DeepLinkDeduplicator {
         static LAST_HANDLED: OnceLock<Mutex<Option<(String, Instant)>>> = OnceLock::new();
 
         let last_handled = LAST_HANDLED.get_or_init(|| Mutex::new(None));
-        let mut guard = last_handled
-            .lock()
-            .unwrap_or_else(PoisonError::into_inner);
+        let mut guard = last_handled.lock().unwrap_or_else(PoisonError::into_inner);
         let normalized = url.trim();
 
         if let Some((previous_url, previous_time)) = guard.as_ref() {

@@ -2,7 +2,10 @@
     <div class="container mx-auto mt-4">
         <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div
-                class="card bg-base-200 shadow-md border border-base-300 lg:col-span-4 p-6"
+                class="card bg-base-200 shadow-md border border-base-300 p-6 transition-all duration-300"
+                :class="
+                    themeMode === 'schedule' ? 'lg:col-span-7' : 'lg:col-span-4'
+                "
             >
                 <h2 class="card-title flex items-center gap-2">
                     <SunMoon class="w-5 h-5 text-primary" />
@@ -12,35 +15,172 @@
                     {{ t("theme.description") }}
                 </p>
 
-                <div class="flex flex-col gap-4">
-                    <button
-                        v-for="theme in themes"
-                        :key="theme"
-                        @click="changeTheme(theme)"
-                        class="btn border flex items-center justify-between px-6 py-3"
-                        :class="{
-                            'border-primary/50 bg-primary/10':
-                                selectedTheme === theme,
-                            'border-base-content/10': selectedTheme !== theme,
-                        }"
-                    >
-                        <div class="flex items-center gap-2">
-                            <Sun
-                                v-if="theme === 'light'"
-                                class="w-5 h-5 text-amber-400"
-                            />
-                            <Moon v-else class="w-5 h-5 text-indigo-400" />
-                            <span class="font-medium capitalize">{{
-                                t(`theme.${theme}`)
-                            }}</span>
-                        </div>
-                        <div
-                            v-if="selectedTheme === theme"
-                            class="badge badge-primary"
+                <div
+                    :class="[
+                        'grid',
+                        themeMode === 'schedule'
+                            ? 'grid-cols-2 sm:grid-cols-2'
+                            : 'grid-cols-1',
+                        'gap-4',
+                        'items-start',
+                    ]"
+                >
+                    <div class="flex flex-col gap-3">
+                        <button
+                            @click="selectThemeMode('dark')"
+                            class="btn border flex items-center justify-between px-6 py-3"
+                            :class="{
+                                'border-primary/50 bg-primary/10':
+                                    themeMode === 'dark',
+                                'border-base-content/10': themeMode !== 'dark',
+                            }"
                         >
-                            {{ t("theme.selected") }}
+                            <div class="flex items-center gap-2">
+                                <Moon class="w-5 h-5 text-indigo-400" />
+                                <span class="font-medium">{{
+                                    t("theme.dark")
+                                }}</span>
+                            </div>
+                            <div
+                                v-if="themeMode === 'dark'"
+                                class="badge badge-primary"
+                            >
+                                {{ t("theme.selected") }}
+                            </div>
+                        </button>
+
+                        <button
+                            @click="selectThemeMode('light')"
+                            class="btn border flex items-center justify-between px-6 py-3"
+                            :class="{
+                                'border-primary/50 bg-primary/10':
+                                    themeMode === 'light',
+                                'border-base-content/10': themeMode !== 'light',
+                            }"
+                        >
+                            <div class="flex items-center gap-2">
+                                <Sun class="w-5 h-5 text-amber-400" />
+                                <span class="font-medium">{{
+                                    t("theme.light")
+                                }}</span>
+                            </div>
+                            <div
+                                v-if="themeMode === 'light'"
+                                class="badge badge-primary"
+                            >
+                                {{ t("theme.selected") }}
+                            </div>
+                        </button>
+
+                        <button
+                            @click="selectThemeMode('schedule')"
+                            class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
+                            :class="{
+                                'border-primary/50 bg-primary/10':
+                                    themeMode === 'schedule',
+                                'border-base-content/10':
+                                    themeMode !== 'schedule',
+                            }"
+                        >
+                            <div class="flex items-center gap-2">
+                                <div class="relative w-5 h-5 shrink-0">
+                                    <Sun
+                                        class="absolute inset-0 w-5 h-5 text-amber-400 transition-all duration-500"
+                                        :class="
+                                            themeMode === 'schedule'
+                                                ? 'opacity-100 scale-100'
+                                                : 'opacity-60 scale-90'
+                                        "
+                                    />
+                                    <Moon
+                                        class="absolute inset-0 w-3 h-3 text-indigo-400 transition-all duration-500"
+                                        :class="
+                                            themeMode === 'schedule'
+                                                ? 'opacity-100 translate-x-2.5 translate-y-2.5'
+                                                : 'opacity-0 translate-x-1 translate-y-1'
+                                        "
+                                    />
+                                </div>
+                                <span class="font-medium">{{
+                                    t("theme.schedule.title")
+                                }}</span>
+                            </div>
+                            <div
+                                v-if="themeMode === 'schedule'"
+                                class="badge badge-primary"
+                            >
+                                {{ t("theme.selected") }}
+                            </div>
+                        </button>
+                    </div>
+
+                    <div
+                        v-if="themeMode === 'schedule'"
+                        class="flex flex-col gap-3 border border-primary/20 bg-primary/5 rounded-lg p-4"
+                    >
+                        <div
+                            class="flex items-center gap-2 font-medium text-sm text-primary"
+                        >
+                            <Clock class="w-4 h-4 shrink-0" />
+                            <span>{{ t("theme.schedule.light_window") }}</span>
                         </div>
-                    </button>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm text-base-content/60">{{
+                                    t("theme.schedule.from")
+                                }}</label>
+                                <input
+                                    type="time"
+                                    class="input input-sm input-bordered w-full"
+                                    :value="scheduleLightStart"
+                                    @change="
+                                        updateScheduleTime(
+                                            'lightStart',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-sm text-base-content/60">{{
+                                    t("theme.schedule.to")
+                                }}</label>
+                                <input
+                                    type="time"
+                                    class="input input-sm input-bordered w-full"
+                                    :value="scheduleLightEnd"
+                                    @change="
+                                        updateScheduleTime(
+                                            'lightEnd',
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    "
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            class="flex items-center gap-2 p-2 rounded-md bg-base-100/60"
+                        >
+                            <div
+                                class="w-2 h-2 rounded-full shrink-0 transition-colors duration-500"
+                                :class="
+                                    schedulePreviewTheme === 'light'
+                                        ? 'bg-amber-400'
+                                        : 'bg-indigo-400'
+                                "
+                            ></div>
+                            <span class="text-sm text-base-content/60">
+                                {{ t("theme.schedule.now_active") }}:
+                                <span class="font-medium text-base-content">{{
+                                    t(`theme.${schedulePreviewTheme}`)
+                                }}</span>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -630,6 +770,103 @@
 
             <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
                 <div class="card-body">
+                    <h2 class="card-title flex items-center gap-2 mb-4">
+                        <Blend class="w-5 h-5 text-primary" />
+                        {{ t("customization.panel_blur_title") }}
+                    </h2>
+
+                    <div class="flex flex-col gap-4 max-w-md">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label
+                                    class="text-sm font-medium text-base-content"
+                                >
+                                    {{ t("customization.spotlight_blur") }}
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-base-content/60"
+                                        >{{ spotlightBlur }}px</span
+                                    >
+                                    <button
+                                        class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
+                                        @click="
+                                            handlePanelBlurInput(
+                                                'spotlightBlur',
+                                                24
+                                            )
+                                        "
+                                    >
+                                        <RotateCcw class="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="60"
+                                step="1"
+                                class="range range-primary range-sm"
+                                :value="spotlightBlur"
+                                @input="
+                                    handlePanelBlurInput(
+                                        'spotlightBlur',
+                                        Number(
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    )
+                                "
+                            />
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label
+                                    class="text-sm font-medium text-base-content"
+                                >
+                                    {{ t("customization.history_blur") }}
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-base-content/60"
+                                        >{{ historyBlur }}px</span
+                                    >
+                                    <button
+                                        class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
+                                        @click="
+                                            handlePanelBlurInput(
+                                                'historyBlur',
+                                                20
+                                            )
+                                        "
+                                    >
+                                        <RotateCcw class="w-3 h-3" />
+                                    </button>
+                                </div>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="60"
+                                step="1"
+                                class="range range-primary range-sm"
+                                :value="historyBlur"
+                                @input="
+                                    handlePanelBlurInput(
+                                        'historyBlur',
+                                        Number(
+                                            ($event.target as HTMLInputElement)
+                                                .value
+                                        )
+                                    )
+                                "
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
+                <div class="card-body">
                     <div
                         @click="toggleExpertMode"
                         class="cursor-pointer flex items-center justify-between"
@@ -824,9 +1061,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, toRefs } from "vue";
+import { ref, onMounted, onUnmounted, watch, toRefs, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { emit as emitAppEvent } from "@tauri-apps/api/event";
+import { emit as emitAppEvent, listen } from "@tauri-apps/api/event";
 import { useI18n } from "vue-i18n";
 import {
     ClipboardCopy,
@@ -836,6 +1073,8 @@ import {
     Store,
     SunMoon,
     ExternalLink,
+    Clock,
+    Blend,
 } from "lucide-vue-next";
 import { useToast } from "@shared/composables/useToast";
 import { settingsService } from "@services/settings/settingsService";
@@ -853,6 +1092,7 @@ import {
 import { VueMonacoEditor } from "@guolao/vue-monaco-editor";
 import ImportExportCssModal from "@features/presets/modals/ImportExportCssModal.vue";
 import { useModal } from "@shared/composables/useModal";
+import { themeScheduler } from "@services/theme/themeScheduler";
 
 defineEmits(["change-view"]);
 
@@ -861,12 +1101,48 @@ const { t } = i18n;
 const { addToast } = useToast();
 const { showModal } = useModal();
 
-const themes = ["dark", "light"];
 const selectedTheme = ref(
     document.documentElement.getAttribute("data-theme") || "dark"
 );
 const showExpertOptions = ref(false);
 const expertAnimationActive = ref(false);
+
+type ThemeMode = "dark" | "light" | "schedule";
+
+const _getInitialThemeMode = (): ThemeMode => {
+    if (themeScheduler.schedule.value.enabled) return "schedule";
+    return (
+        (document.documentElement.getAttribute("data-theme") as ThemeMode) ||
+        "dark"
+    );
+};
+
+const themeMode = ref<ThemeMode>(_getInitialThemeMode());
+
+const selectThemeMode = async (mode: ThemeMode) => {
+    themeMode.value = mode;
+
+    if (mode === "schedule") {
+        themeScheduler.updateSchedule({ enabled: true });
+        selectedTheme.value = themeScheduler.previewTheme.value;
+    } else {
+        themeScheduler.updateSchedule({ enabled: false });
+        await changeTheme(mode);
+    }
+};
+
+const scheduleLightStart = computed(
+    () => themeScheduler.schedule.value.lightStart
+);
+const scheduleLightEnd = computed(() => themeScheduler.schedule.value.lightEnd);
+const schedulePreviewTheme = themeScheduler.previewTheme;
+
+const updateScheduleTime = (
+    field: "lightStart" | "lightEnd",
+    value: string
+) => {
+    themeScheduler.updateSchedule({ [field]: value });
+};
 const isExternalWindow = window.location.search.includes(
     "window=customization"
 );
@@ -897,6 +1173,8 @@ const {
     backgroundImage,
     backgroundBlur,
     backgroundOpacity,
+    spotlightBlur,
+    historyBlur,
 } = toRefs(themeService.presetSettings);
 
 watch(
@@ -962,6 +1240,15 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
             r.value = value;
         }
     }
+};
+
+const handlePanelBlurInput = (
+    settingKey: "spotlightBlur" | "historyBlur",
+    value: number
+): void => {
+    const refs: Record<string, any> = { spotlightBlur, historyBlur };
+    const r = refs[settingKey];
+    if (r) r.value = value;
 };
 
 const changeTheme = async (theme: string) => {
@@ -1086,10 +1373,23 @@ const openImportModal = () => {
 
 onMounted(() => {
     document.addEventListener("keydown", handleKeyDown);
+    listen<string>("theme-mode-update", (event) => {
+        if (event.payload) {
+            selectedTheme.value = event.payload;
+            if (!themeScheduler.schedule.value.enabled) {
+                themeMode.value = event.payload as "dark" | "light";
+            }
+        }
+    }).then((unlisten) => {
+        _unlistenThemeMode = unlisten;
+    });
 });
+
+let _unlistenThemeMode: (() => void) | null = null;
 
 onUnmounted(() => {
     document.removeEventListener("keydown", handleKeyDown);
+    _unlistenThemeMode?.();
 });
 </script>
 
@@ -1138,5 +1438,132 @@ textarea.textarea-bordered {
     font-family: "Fira Code", "Menlo", "Monaco", "Courier New", monospace;
     line-height: 1.5;
     tab-size: 2;
+}
+</style>
+
+<style scoped>
+.schedule-expand-enter-active,
+.schedule-expand-leave-active {
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease,
+        max-height 0.3s ease;
+    overflow: hidden;
+    max-height: 300px;
+}
+
+.schedule-expand-enter-from,
+.schedule-expand-leave-to {
+    opacity: 0;
+    transform: translateY(-6px);
+    max-height: 0;
+}
+
+.schedule-slide-enter-active {
+    transition:
+        opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.schedule-slide-leave-active {
+    transition: none;
+}
+
+.schedule-slide-enter-from {
+    opacity: 0;
+    transform: translateX(20px) scale(0.97);
+}
+
+.schedule-slide-leave-to {
+    opacity: 0;
+    transform: none;
+}
+
+.blur-preview-wrapper {
+    border-radius: 10px;
+    border: 1px solid hsl(var(--b3));
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    background: hsl(var(--b3) / 0.4);
+    min-height: 140px;
+}
+
+.blur-preview-spotlight,
+.blur-preview-history {
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid hsl(var(--b3));
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.blur-preview-spotlight-bg,
+.blur-preview-history-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, hsl(var(--p)) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 30%, hsl(var(--a)) 0%, transparent 60%),
+        radial-gradient(ellipse at 60% 80%, hsl(var(--s)) 0%, transparent 50%);
+    opacity: 0.5;
+    transition: filter 0.1s;
+}
+
+.blur-preview-spotlight-content,
+.blur-preview-history-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: hsl(var(--b2) / 0.5);
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+
+.blur-preview-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--bc) / 0.7);
+    margin-bottom: 2px;
+}
+
+.blur-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.blur-preview-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: hsl(var(--p) / 0.5);
+    flex-shrink: 0;
+}
+
+.blur-preview-icon--sm {
+    width: 16px;
+    height: 16px;
+}
+
+.blur-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+}
+
+.blur-preview-line {
+    height: 6px;
+    border-radius: 3px;
+    background: hsl(var(--bc) / 0.3);
 }
 </style>

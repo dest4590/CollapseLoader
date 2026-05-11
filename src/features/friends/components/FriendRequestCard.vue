@@ -65,13 +65,12 @@ import { Check, Flag, X } from "lucide-vue-next";
 import { useI18n } from "vue-i18n";
 import { useModal } from "@shared/composables/useModal";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
-import CancelFriendRequestConfirmModal from "@features/friends/modals/CancelFriendRequestConfirmModal.vue";
 import type { Friend } from "@features/auth/userService";
 import { useStreamerMode } from "@features/social/useStreamerMode";
 import { computed } from "vue";
 
 const { t } = useI18n();
-const { showModal, hideModal } = useModal();
+const { showConfirm } = useModal();
 const streamer = useStreamerMode();
 
 const props = defineProps<{
@@ -96,19 +95,23 @@ const displayUsername = computed(() => {
     return streamer.getDisplayUsername(props.user.username);
 });
 
-const confirmCancel = () => {
-    showModal(
-        "cancel-friend-request-confirm",
-        CancelFriendRequestConfirmModal,
-        { title: t("friends.cancel_friend_request") },
-        { user: props.user, requestId: props.requestId },
-        {
-            confirm: (requestId: number) => {
-                emit("cancel", requestId);
-                hideModal("cancel-friend-request-confirm");
-            },
-            close: () => hideModal("cancel-friend-request-confirm"),
-        }
-    );
+const confirmCancel = async () => {
+    const confirmed = await showConfirm({
+        title: t("friends.cancel_friend_request"),
+        message: t("modals.cancel_friend_request_confirm.message", {
+            displayName: streamer.getDisplayName(
+                props.user.nickname,
+                props.user.username
+            ),
+        }),
+        confirmLabel: t("modals.cancel_friend_request_confirm.yes_cancel"),
+        cancelLabel: t("modals.cancel_friend_request_confirm.keep_request"),
+    });
+
+    if (!confirmed) {
+        return;
+    }
+
+    emit("cancel", props.requestId);
 };
 </script>

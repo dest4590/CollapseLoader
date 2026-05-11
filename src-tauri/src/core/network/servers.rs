@@ -2,6 +2,7 @@ use crate::{
     core::utils::globals::{API_SERVERS, CDN_SERVERS},
     log_info, log_warn,
 };
+use futures_util::StreamExt;
 use reqwest::Client;
 use serde::Serialize;
 use std::sync::{LazyLock, Mutex, RwLock};
@@ -119,8 +120,9 @@ impl Servers {
         selected: &RwLock<Option<Server>>,
         name: &str,
     ) {
+        let mut set = futures_util::stream::FuturesUnordered::new();
+
         for server in servers {
-            // if CDN located on same server as API we should check API server instead of CDN, to reduce unused requests
             let url = if name == "CDN" {
                 if let Some(api_server) = self.apis.iter().find(|s| server.url.starts_with(&s.url))
                 {
@@ -132,21 +134,25 @@ impl Servers {
                 server.url.clone()
             };
 
-            let mut ok;
+            let client = client.clone();
+            let server = server.clone();
+            let name = name.to_string();
 
-            ok = self
-                .probe_server(client, &url, "HEAD", &server.url, name)
-                .await;
+            set.push(async move {
+                if Self::probe_server(&client, &url, "HEAD", &server.url, &name).await {
+                    return Some(server);
+                }
+                if Self::probe_server(&client, &url, "GET", &server.url, &name).await {
+                    return Some(server);
+                }
+                None
+            });
+        }
 
-            if !ok {
-                ok = self
-                    .probe_server(client, &url, "GET", &server.url, name)
-                    .await;
-            }
-
-            if ok {
+        while let Some(res) = set.next().await {
+            if let Some(server) = res {
                 let mut lock = selected.write().unwrap();
-                *lock = Some(server.clone());
+                *lock = Some(server);
                 return;
             }
         }
@@ -161,7 +167,6 @@ impl Servers {
     }
 
     async fn probe_server(
-        &self,
         client: &Client,
         url: &str,
         method: &str,
