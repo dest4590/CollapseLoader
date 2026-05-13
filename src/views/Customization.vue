@@ -15,179 +15,211 @@
                     {{ t("theme.description") }}
                 </p>
 
-                <div
-                    :class="[
-                        'grid',
-                        themeMode === 'schedule'
-                            ? 'grid-cols-2 sm:grid-cols-2'
-                            : 'grid-cols-1',
-                        'gap-4',
-                        'items-start',
-                    ]"
-                >
-                    <div class="flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row gap-4 items-start relative overflow-hidden flex-nowrap">
+                    <div 
+                        class="flex flex-col gap-3 w-full shrink-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-10"
+                        :class="themeMode === 'schedule' ? 'sm:w-[calc(50%-0.5rem)]' : 'sm:w-full'"
+                    >
                         <button
                             @click="selectThemeMode('dark')"
-                            class="btn border flex items-center justify-between px-6 py-3"
+                            class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
                             :class="{
-                                'border-primary/50 bg-primary/10':
-                                    themeMode === 'dark',
+                                'border-primary/50 bg-primary/10': themeMode === 'dark',
                                 'border-base-content/10': themeMode !== 'dark',
                             }"
                         >
                             <div class="flex items-center gap-2">
-                                <Moon class="w-5 h-5 text-indigo-400" />
-                                <span class="font-medium">{{
-                                    t("theme.dark")
-                                }}</span>
+                                <Moon
+                                    class="w-5 h-5 text-indigo-400 transition-transform duration-300"
+                                    :class="themeMode === 'dark' ? 'scale-110' : 'scale-100'"
+                                />
+                                <span class="font-medium">{{ t("theme.dark") }}</span>
                             </div>
-                            <div
-                                v-if="themeMode === 'dark'"
-                                class="badge badge-primary"
-                            >
-                                {{ t("theme.selected") }}
-                            </div>
+                            <transition name="badge-pop">
+                                <div v-if="themeMode === 'dark'" class="badge badge-primary">
+                                    {{ t("theme.selected") }}
+                                </div>
+                            </transition>
                         </button>
 
                         <button
                             @click="selectThemeMode('light')"
-                            class="btn border flex items-center justify-between px-6 py-3"
+                            class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
                             :class="{
-                                'border-primary/50 bg-primary/10':
-                                    themeMode === 'light',
+                                'border-primary/50 bg-primary/10': themeMode === 'light',
                                 'border-base-content/10': themeMode !== 'light',
                             }"
                         >
                             <div class="flex items-center gap-2">
-                                <Sun class="w-5 h-5 text-amber-400" />
-                                <span class="font-medium">{{
-                                    t("theme.light")
-                                }}</span>
+                                <Sun
+                                    class="w-5 h-5 text-amber-400 transition-transform duration-300"
+                                    :class="themeMode === 'light' ? 'scale-110' : 'scale-100'"
+                                />
+                                <span class="font-medium">{{ t("theme.light") }}</span>
                             </div>
-                            <div
-                                v-if="themeMode === 'light'"
-                                class="badge badge-primary"
-                            >
-                                {{ t("theme.selected") }}
-                            </div>
+                            <transition name="badge-pop">
+                                <div v-if="themeMode === 'light'" class="badge badge-primary">
+                                    {{ t("theme.selected") }}
+                                </div>
+                            </transition>
                         </button>
 
                         <button
                             @click="selectThemeMode('schedule')"
                             class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
                             :class="{
-                                'border-primary/50 bg-primary/10':
-                                    themeMode === 'schedule',
-                                'border-base-content/10':
-                                    themeMode !== 'schedule',
+                                'border-primary/50 bg-primary/10': themeMode === 'schedule',
+                                'border-base-content/10': themeMode !== 'schedule',
                             }"
                         >
                             <div class="flex items-center gap-2">
                                 <div class="relative w-5 h-5 shrink-0">
                                     <Sun
                                         class="absolute inset-0 w-5 h-5 text-amber-400 transition-all duration-500"
-                                        :class="
-                                            themeMode === 'schedule'
-                                                ? 'opacity-100 scale-100'
-                                                : 'opacity-60 scale-90'
-                                        "
+                                        :class="themeMode === 'schedule' ? 'opacity-100 scale-100' : 'opacity-60 scale-90'"
                                     />
                                     <Moon
                                         class="absolute inset-0 w-3 h-3 text-indigo-400 transition-all duration-500"
-                                        :class="
-                                            themeMode === 'schedule'
-                                                ? 'opacity-100 translate-x-2.5 translate-y-2.5'
-                                                : 'opacity-0 translate-x-1 translate-y-1'
-                                        "
+                                        :class="themeMode === 'schedule' ? 'opacity-100 translate-x-2.5 translate-y-2.5' : 'opacity-0 translate-x-1 translate-y-1'"
                                     />
                                 </div>
-                                <span class="font-medium">{{
-                                    t("theme.schedule.title")
-                                }}</span>
+                                <span class="font-medium">{{ t("theme.schedule.title") }}</span>
                             </div>
-                            <div
-                                v-if="themeMode === 'schedule'"
-                                class="badge badge-primary"
-                            >
-                                {{ t("theme.selected") }}
-                            </div>
+                            <transition name="badge-pop">
+                                <div v-if="themeMode === 'schedule'" class="badge badge-primary">
+                                    {{ t("theme.selected") }}
+                                </div>
+                            </transition>
                         </button>
                     </div>
 
+                    <transition name="schedule-slide">
+                        <div
+                            v-if="themeMode === 'schedule'"
+                            class="w-full sm:w-[calc(50%-0.5rem)] shrink-0 z-0 flex flex-col gap-3 border border-base-300 bg-base-200 rounded-lg p-4"
+                        >
+                            <div class="flex items-center gap-2 font-medium text-sm text-primary">
+                                <Clock class="w-4 h-4 shrink-0" />
+                                <span>{{ t("theme.schedule.light_window") }}</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-sm text-base-content/60">{{ t("theme.schedule.from") }}</label>
+                                    <input
+                                        type="time"
+                                        class="input input-bordered w-full"
+                                        :value="scheduleLightStart"
+                                        @change="updateScheduleTime('lightStart', ($event.target as HTMLInputElement).value)"
+                                    />
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <label class="text-sm text-base-content/60">{{ t("theme.schedule.to") }}</label>
+                                    <input
+                                        type="time"
+                                        class="input input-bordered w-full"
+                                        :value="scheduleLightEnd"
+                                        @change="updateScheduleTime('lightEnd', ($event.target as HTMLInputElement).value)"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between gap-2 p-2 mt-1 rounded-lg bg-base-100 border border-base-content/10">
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="w-2 h-2 rounded-full shrink-0 transition-colors duration-500"
+                                        :class="schedulePreviewTheme === 'light' ? 'bg-amber-400' : 'bg-indigo-400'"
+                                    ></div>
+                                    <span class="text-xs text-base-content/60">
+                                        {{ t("theme.schedule.now_active") }}
+                                    </span>
+                                </div>
+                                <span class="text-xs font-bold uppercase text-primary">
+                                    {{ t(`theme.${schedulePreviewTheme}`) }}
+                                </span>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+            </div>
+            <div
+                class="card bg-base-200 shadow-md border border-base-300 p-4 overflow-hidden transition-all duration-300"
+                :class="
+                    themeMode === 'schedule' ? 'lg:col-span-5' : 'lg:col-span-8'
+                "
+            >
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="card-title text-sm flex items-center gap-2">
+                        <Palette class="w-4 h-4 text-primary" />
+                        {{ t("theme.color_accent") }}
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <button 
+                            @click="resetAccentColor" 
+                            class="btn btn-ghost btn-xs text-base-content/20 hover:text-primary transition-all duration-300 group/reset"
+                            :title="t('theme.reset_button')"
+                        >
+                            <RotateCcw class="w-3 h-3 group-hover/reset:rotate-[-90deg] transition-transform duration-500" />
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
                     <div
-                        v-if="themeMode === 'schedule'"
-                        class="flex flex-col gap-3 border border-primary/20 bg-primary/5 rounded-lg p-4"
+                        v-for="(row, rowIndex) in accentRows"
+                        :key="rowIndex"
+                        class="bg-base-300/50 p-1 rounded-xl border border-base-content/5 relative"
+                        :class="{'mt-2': rowIndex > 0}"
                     >
                         <div
-                            class="flex items-center gap-2 font-medium text-sm text-primary"
-                        >
-                            <Clock class="w-4 h-4 shrink-0" />
-                            <span>{{ t("theme.schedule.light_window") }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="flex flex-col gap-1">
-                                <label class="text-sm text-base-content/60">{{
-                                    t("theme.schedule.from")
-                                }}</label>
-                                <input
-                                    type="time"
-                                    class="input input-sm input-bordered w-full"
-                                    :value="scheduleLightStart"
-                                    @change="
-                                        updateScheduleTime(
-                                            'lightStart',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <label class="text-sm text-base-content/60">{{
-                                    t("theme.schedule.to")
-                                }}</label>
-                                <input
-                                    type="time"
-                                    class="input input-sm input-bordered w-full"
-                                    :value="scheduleLightEnd"
-                                    @change="
-                                        updateScheduleTime(
-                                            'lightEnd',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                        </div>
-
-                        <div
-                            class="flex items-center gap-2 p-2 rounded-md bg-base-100/60"
-                        >
-                            <div
-                                class="w-2 h-2 rounded-full shrink-0 transition-colors duration-500"
-                                :class="
-                                    schedulePreviewTheme === 'light'
-                                        ? 'bg-amber-400'
-                                        : 'bg-indigo-400'
-                                "
-                            ></div>
-                            <span class="text-sm text-base-content/60">
-                                {{ t("theme.schedule.now_active") }}:
-                                <span class="font-medium text-base-content">{{
-                                    t(`theme.${schedulePreviewTheme}`)
-                                }}</span>
-                            </span>
+                            class="absolute top-1 bottom-1 transition-all duration-500 ease-in-out bg-primary/20 rounded-lg z-0 pointer-events-none"
+                            :style="{
+                                width: 'calc((100% - 0.5rem) / 5)',
+                                left: selectedAccentColumn >= 0 
+                                    ? `calc(0.25rem + (100% - 0.5rem) / 5 * ${selectedAccentColumn})` 
+                                    : '0.25rem',
+                                opacity: selectedAccentRow === rowIndex && selectedAccentColumn >= 0 ? 1 : 0,
+                            }"
+                        ></div>
+                        <div class="grid grid-cols-5 gap-1 relative z-10">
+                            <button
+                                v-for="accent in row"
+                                :key="accent.color"
+                                class="flex flex-col items-center justify-center gap-2 py-2.5 px-1 w-full rounded-lg transition-all duration-300 group outline-none"
+                                :class="primaryColor === accent.color ? '' : 'hover:bg-base-content/5'"
+                                @click="primaryColor = accent.color"
+                            >
+                                <div
+                                    class="relative flex items-center justify-center transition-all duration-500"
+                                    :class="primaryColor === accent.color ? 'scale-110' : 'scale-100 group-hover:scale-105'"
+                                >
+                                    <div
+                                        class="w-7 h-7 rounded-full shadow-sm transition-all duration-500"
+                                        :style="{ backgroundColor: accent.color }"
+                                        :class="primaryColor === accent.color ? 'ring-2 ring-white/60 ring-offset-1 ring-offset-transparent' : ''"
+                                    ></div>
+                                    <transition name="check-pop">
+                                        <div v-if="primaryColor === accent.color" class="absolute inset-0 flex items-center justify-center">
+                                            <div class="w-full h-full rounded-full bg-black/20 flex items-center justify-center backdrop-blur-[1px]">
+                                                <Check class="w-4 h-4 text-white drop-shadow-md" stroke-width="3" />
+                                            </div>
+                                        </div>
+                                    </transition>
+                                </div>
+                                <span
+                                    class="text-[9px] font-bold uppercase tracking-wider text-center w-full transition-all duration-200"
+                                    :class="primaryColor === accent.color ? 'text-primary' : 'text-base-content/30 group-hover:text-base-content/60'"
+                                >
+                                    {{ t(accent.name).split('.').pop() }}
+                                </span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div
-            class="card bg-base-200 shadow-md border border-base-300 mb-6 mt-6"
-        >
+        <div class="card bg-base-200 shadow-md border border-base-300 mb-6 mt-6">
             <div class="card-body">
                 <div
                     class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
@@ -236,825 +268,250 @@
         </div>
 
         <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-            <div class="card-body">
+            <div class="card-body p-0">
                 <PresetManager />
             </div>
         </div>
 
-        <div class="lg:col-span-8">
-            <div class="card bg-base-200 shadow-md border border-base-300">
-                <div class="card-body p-6">
-                    <h2 class="card-title flex items-center gap-2">
-                        <Palette class="w-6 h-6 text-primary" />
-                        {{ t("theme.colors") }}
-                    </h2>
+        <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
+            <div class="card-body p-6">
+                <h2 class="card-title flex items-center gap-2 mb-6">
+                    <Palette class="w-6 h-6 text-primary" />
+                    {{ t("theme.colors") }}
+                </h2>
 
-                    <div class="mb-8">
-                        <h3
-                            class="text-xl font-semibold mb-4 text-base-content"
-                        >
-                            {{ t("theme.base_colors") }}
-                        </h3>
-                        <div
-                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-                        >
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.base100") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="base100"
-                                    @input="
-                                        handleColorInput(
-                                            'base100',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.base200") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="base200"
-                                    @input="
-                                        handleColorInput(
-                                            'base200',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.base300") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="base300"
-                                    @input="
-                                        handleColorInput(
-                                            'base300',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.base_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="baseContent"
-                                    @input="
-                                        handleColorInput(
-                                            'baseContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-base-content">
+                        {{ t("theme.base_colors") }}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.base100") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="base100" @input="handleColorInput('base100', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.base200") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="base200" @input="handleColorInput('base200', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.base300") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="base300" @input="handleColorInput('base300', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.base_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="baseContent" @input="handleColorInput('baseContent', ($event.target as HTMLInputElement).value)" />
                         </div>
                     </div>
+                </div>
 
-                    <div class="mb-8">
-                        <h3
-                            class="text-xl font-semibold mb-4 text-base-content"
-                        >
-                            {{ t("theme.primary_secondary_accent") }}
-                        </h3>
-                        <div
-                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
-                        >
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.primary") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="primaryColor"
-                                    @input="
-                                        handleColorInput(
-                                            'primaryColorOverride',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-base-content">
+                        {{ t("theme.primary_secondary_accent") }}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.primary") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="primaryColor" @input="handleColorInput('primaryColorOverride', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.primary_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="primaryContent" @input="handleColorInput('primaryContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.secondary") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="secondary" @input="handleColorInput('secondary', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.secondary_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="secondaryContent" @input="handleColorInput('secondaryContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.accent") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="accent" @input="handleColorInput('accent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-base-content">
+                        {{ t("theme.semantic_colors") }}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.neutral") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="neutral" @input="handleColorInput('neutral', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.neutral_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="neutralContent" @input="handleColorInput('neutralContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.info") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="info" @input="handleColorInput('info', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.info_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="infoContent" @input="handleColorInput('infoContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.success") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="success" @input="handleColorInput('success', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.success_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="successContent" @input="handleColorInput('successContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.warning") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="warning" @input="handleColorInput('warning', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.warning_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="warningContent" @input="handleColorInput('warningContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.error") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="error" @input="handleColorInput('error', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                        <div class="form-control">
+                            <label class="label text-sm font-medium text-base-content">{{ t("theme.error_content") }}</label>
+                            <input type="color" class="input input-bordered w-full h-10 p-0 rounded-md border-base-300" :value="errorContent" @input="handleColorInput('errorContent', ($event.target as HTMLInputElement).value)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-semibold mb-4 text-base-content">
+                        {{ t("customization.background_title") }}
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <div class="lg:col-span-12">
+                            <label class="label text-sm font-medium text-base-content">{{ t("customization.background_image") }}</label>
+                            <div class="relative">
+                                <input type="text" class="input input-bordered w-full pr-10" :value="backgroundImage" :placeholder="t('customization.background_image_placeholder')" @input="handleBackgroundInput('backgroundImage', ($event.target as HTMLInputElement).value)" />
+                                <button v-if="backgroundImage" class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost" @click="handleBackgroundInput('backgroundImage', '')">&times;</button>
                             </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.primary_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="primaryContent"
-                                    @input="
-                                        handleColorInput(
-                                            'primaryContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
+                            <p class="text-xs text-base-content/50 mt-1">{{ t("customization.background_image_help") }}</p>
+                        </div>
+
+                        <div class="lg:col-span-6">
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-medium text-base-content">{{ t("customization.background_blur") }}</label>
+                                <span class="text-xs font-mono">{{ backgroundBlur ?? 0 }}px</span>
                             </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.secondary") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="secondary"
-                                    @input="
-                                        handleColorInput(
-                                            'secondary',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
+                            <input type="range" min="0" max="20" step="1" class="range range-primary range-sm" :value="backgroundBlur ?? 0" @input="handleBackgroundInput('backgroundBlur', Number(($event.target as HTMLInputElement).value))" />
+                        </div>
+
+                        <div class="lg:col-span-6">
+                            <div class="flex justify-between mb-2">
+                                <label class="text-sm font-medium text-base-content">{{ t("customization.background_opacity") }}</label>
+                                <span class="text-xs font-mono">{{ backgroundOpacity ?? 100 }}%</span>
                             </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.secondary_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="secondaryContent"
-                                    @input="
-                                        handleColorInput(
-                                            'secondaryContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.accent") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="accent"
-                                    @input="
-                                        handleColorInput(
-                                            'accent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.accent_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="accentContent"
-                                    @input="
-                                        handleColorInput(
-                                            'accentContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
+                            <input type="range" min="0" max="100" step="1" class="range range-primary range-sm" :value="backgroundOpacity ?? 100" @input="handleBackgroundInput('backgroundOpacity', Number(($event.target as HTMLInputElement).value))" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
+            <div class="card-body">
+                <h2 class="card-title flex items-center gap-2 mb-4">
+                    <Blend class="w-5 h-5 text-primary" />
+                    {{ t("customization.panel_blur_title") }}
+                </h2>
+
+                <div class="flex flex-col gap-4 max-w-md">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-medium text-base-content">{{ t("customization.spotlight_blur") }}</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-base-content/60">{{ spotlightBlur }}px</span>
+                                <button class="btn btn-ghost btn-xs opacity-50 hover:opacity-100" @click="handlePanelBlurInput('spotlightBlur', 24)"><RotateCcw class="w-3 h-3" /></button>
                             </div>
                         </div>
+                        <input type="range" min="0" max="60" step="1" class="range range-primary range-sm" :value="spotlightBlur" @input="handlePanelBlurInput('spotlightBlur', Number(($event.target as HTMLInputElement).value))" />
                     </div>
 
                     <div>
-                        <h3
-                            class="text-xl font-semibold mb-4 text-base-content"
-                        >
-                            {{ t("theme.semantic_colors") }}
-                        </h3>
-                        <div
-                            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-                        >
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.neutral") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="neutral"
-                                    @input="
-                                        handleColorInput(
-                                            'neutral',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.neutral_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="neutralContent"
-                                    @input="
-                                        handleColorInput(
-                                            'neutralContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.info") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="info"
-                                    @input="
-                                        handleColorInput(
-                                            'info',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.info_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="infoContent"
-                                    @input="
-                                        handleColorInput(
-                                            'infoContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.success") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="success"
-                                    @input="
-                                        handleColorInput(
-                                            'success',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.success_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="successContent"
-                                    @input="
-                                        handleColorInput(
-                                            'successContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.warning") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="warning"
-                                    @input="
-                                        handleColorInput(
-                                            'warning',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.warning_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="warningContent"
-                                    @input="
-                                        handleColorInput(
-                                            'warningContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.error") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="error"
-                                    @input="
-                                        handleColorInput(
-                                            'error',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
-                            </div>
-                            <div class="form-control">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{ t("theme.error_content") }}</label
-                                >
-                                <input
-                                    type="color"
-                                    class="input input-bordered w-full h-10 p-0 rounded-md border-base-300"
-                                    :value="errorContent"
-                                    @input="
-                                        handleColorInput(
-                                            'errorContent',
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    "
-                                />
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-medium text-base-content">{{ t("customization.history_blur") }}</label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-base-content/60">{{ historyBlur }}px</span>
+                                <button class="btn btn-ghost btn-xs opacity-50 hover:opacity-100" @click="handlePanelBlurInput('historyBlur', 20)"><RotateCcw class="w-3 h-3" /></button>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="mt-8">
-                        <h3
-                            class="text-xl font-semibold mb-4 text-base-content"
-                        >
-                            {{ t("customization.background_title") }}
-                        </h3>
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            <div class="lg:col-span-12">
-                                <label
-                                    class="label text-sm font-medium text-base-content"
-                                    >{{
-                                        t("customization.background_image")
-                                    }}</label
-                                >
-                                <div class="relative">
-                                    <input
-                                        type="text"
-                                        class="input input-bordered w-full pr-10"
-                                        :value="backgroundImage"
-                                        :placeholder="
-                                            t(
-                                                'customization.background_image_placeholder'
-                                            )
-                                        "
-                                        @input="
-                                            handleBackgroundInput(
-                                                'backgroundImage',
-                                                (
-                                                    $event.target as HTMLInputElement
-                                                ).value
-                                            )
-                                        "
-                                    />
-                                    <button
-                                        v-if="backgroundImage"
-                                        class="absolute right-2 top-1/2 -translate-y-1/2 btn btn-xs btn-ghost"
-                                        @click="
-                                            handleBackgroundInput(
-                                                'backgroundImage',
-                                                ''
-                                            )
-                                        "
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-                                <p class="text-xs text-base-content/50 mt-1">
-                                    {{
-                                        t("customization.background_image_help")
-                                    }}
-                                </p>
-                            </div>
-
-                            <div class="lg:col-span-6">
-                                <div class="flex justify-between mb-2">
-                                    <label
-                                        class="text-sm font-medium text-base-content"
-                                        >{{
-                                            t("customization.background_blur")
-                                        }}</label
-                                    >
-                                    <span class="text-xs font-mono"
-                                        >{{ backgroundBlur ?? 0 }}px</span
-                                    >
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="20"
-                                    step="1"
-                                    class="range range-primary range-sm"
-                                    :value="backgroundBlur ?? 0"
-                                    @input="
-                                        handleBackgroundInput(
-                                            'backgroundBlur',
-                                            Number(
-                                                (
-                                                    $event.target as HTMLInputElement
-                                                ).value
-                                            )
-                                        )
-                                    "
-                                />
-                            </div>
-
-                            <div class="lg:col-span-6">
-                                <div class="flex justify-between mb-2">
-                                    <label
-                                        class="text-sm font-medium text-base-content"
-                                        >{{
-                                            t(
-                                                "customization.background_opacity"
-                                            )
-                                        }}</label
-                                    >
-                                    <span class="text-xs font-mono"
-                                        >{{ backgroundOpacity ?? 100 }}%</span
-                                    >
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    step="1"
-                                    class="range range-primary range-sm"
-                                    :value="backgroundOpacity ?? 100"
-                                    @input="
-                                        handleBackgroundInput(
-                                            'backgroundOpacity',
-                                            Number(
-                                                (
-                                                    $event.target as HTMLInputElement
-                                                ).value
-                                            )
-                                        )
-                                    "
-                                />
-                            </div>
-                        </div>
+                        <input type="range" min="0" max="60" step="1" class="range range-primary range-sm" :value="historyBlur" @input="handlePanelBlurInput('historyBlur', Number(($event.target as HTMLInputElement).value))" />
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
-                <div class="card-body">
-                    <h2 class="card-title flex items-center gap-2 mb-4">
-                        <Blend class="w-5 h-5 text-primary" />
-                        {{ t("customization.panel_blur_title") }}
+        <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
+            <div class="card-body">
+                <div @click="toggleExpertMode" class="cursor-pointer flex items-center justify-between">
+                    <h2 class="card-title flex items-center gap-2">
+                        <Code class="w-5 h-5 text-primary" />
+                        {{ t("theme.expert_css_title") }}
                     </h2>
-
-                    <div class="flex flex-col gap-4 max-w-md">
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <label
-                                    class="text-sm font-medium text-base-content"
-                                >
-                                    {{ t("customization.spotlight_blur") }}
-                                </label>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm text-base-content/60"
-                                        >{{ spotlightBlur }}px</span
-                                    >
-                                    <button
-                                        class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
-                                        @click="
-                                            handlePanelBlurInput(
-                                                'spotlightBlur',
-                                                24
-                                            )
-                                        "
-                                    >
-                                        <RotateCcw class="w-3 h-3" />
-                                    </button>
-                                </div>
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="60"
-                                step="1"
-                                class="range range-primary range-sm"
-                                :value="spotlightBlur"
-                                @input="
-                                    handlePanelBlurInput(
-                                        'spotlightBlur',
-                                        Number(
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    )
-                                "
-                            />
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <label
-                                    class="text-sm font-medium text-base-content"
-                                >
-                                    {{ t("customization.history_blur") }}
-                                </label>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm text-base-content/60"
-                                        >{{ historyBlur }}px</span
-                                    >
-                                    <button
-                                        class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
-                                        @click="
-                                            handlePanelBlurInput(
-                                                'historyBlur',
-                                                20
-                                            )
-                                        "
-                                    >
-                                        <RotateCcw class="w-3 h-3" />
-                                    </button>
-                                </div>
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="60"
-                                step="1"
-                                class="range range-primary range-sm"
-                                :value="historyBlur"
-                                @input="
-                                    handlePanelBlurInput(
-                                        'historyBlur',
-                                        Number(
-                                            ($event.target as HTMLInputElement)
-                                                .value
-                                        )
-                                    )
-                                "
-                            />
-                        </div>
-                    </div>
+                    <button class="btn btn-sm btn-ghost">
+                        <ChevronDown v-if="!showExpertOptions" class="w-5 h-5" />
+                        <ChevronUp v-else class="w-5 h-5" />
+                        {{ showExpertOptions ? t("theme.hide_expert") : t("theme.show_expert") }}
+                    </button>
                 </div>
-            </div>
 
-            <div class="card bg-base-200 shadow-md border border-base-300 mt-6">
-                <div class="card-body">
-                    <div
-                        @click="toggleExpertMode"
-                        class="cursor-pointer flex items-center justify-between"
-                    >
-                        <h2 class="card-title flex items-center gap-2">
-                            <Code class="w-5 h-5 text-primary" />
-                            {{ t("theme.expert_css_title") }}
-                        </h2>
-                        <button class="btn btn-sm btn-ghost">
-                            <ChevronDown
-                                v-if="!showExpertOptions"
-                                class="w-5 h-5"
-                            />
-                            <ChevronUp v-else class="w-5 h-5" />
-                            {{
-                                showExpertOptions
-                                    ? t("theme.hide_expert")
-                                    : t("theme.show_expert")
-                            }}
-                        </button>
-                    </div>
+                <transition name="expert-fade" @before-enter="expertAnimationActive = true" @after-leave="expertAnimationActive = false">
+                    <div v-if="showExpertOptions" class="mt-4">
+                        <div class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
+                            <div class="flex items-start gap-2">
+                                <HelpCircle class="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                                <p class="text-sm text-warning">{{ t("theme.expert_warning") }}</p>
+                            </div>
+                        </div>
 
-                    <transition
-                        name="expert-fade"
-                        @before-enter="expertAnimationActive = true"
-                        @after-leave="expertAnimationActive = false"
-                    >
-                        <div v-if="showExpertOptions" class="mt-4">
-                            <div
-                                class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4"
-                            >
-                                <div class="flex items-start gap-2">
-                                    <HelpCircle
-                                        class="w-5 h-5 text-warning shrink-0 mt-0.5"
-                                    />
-                                    <p class="text-sm text-warning">
-                                        {{ t("theme.expert_warning") }}
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" class="checkbox" v-model="enableCustomCSS" @change="handleEnableCustomCSS(($event.target as HTMLInputElement)?.checked ?? false)" />
+                                <span>{{ t("theme.enable_custom_css") }}</span>
+                            </label>
+                        </div>
 
-                            <div class="flex items-center justify-between mb-2">
-                                <label class="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        class="checkbox"
-                                        v-model="enableCustomCSS"
-                                        @change="
-                                            handleEnableCustomCSS(
-                                                (
-                                                    $event.target as HTMLInputElement
-                                                )?.checked ?? false
-                                            )
-                                        "
-                                    />
-                                    <span>{{
-                                        t("theme.enable_custom_css")
-                                    }}</span>
-                                </label>
+                        <div class="flex flex-col gap-2 mb-4">
+                            <label class="font-medium mb-1">{{ t("theme.available_classes_label") }}</label>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer" :data-tip="t('theme.tooltip_client_card')" @click="addExample('.client-card')">client-card</span>
+                                <span class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer" :data-tip="t('theme.tooltip_sidebar_btn')" @click="addExample('.sidebar-btn')">sidebar-btn</span>
+                                <span class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer" :data-tip="t('theme.tooltip_launch_download_btn')" @click="addExample('.launch-btn, .download-btn')">download-btn | launch-btn</span>
                             </div>
-                            <div class="flex flex-col gap-2 mb-4">
-                                <label class="font-medium mb-1">{{
-                                    t("theme.available_classes_label")
-                                }}</label>
-                                <div class="flex flex-wrap gap-2">
-                                    <span
-                                        class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                        :data-tip="
-                                            t('theme.tooltip_client_card')
-                                        "
-                                        @click="addExample('.client-card')"
-                                    >
-                                        client-card
-                                    </span>
-                                    <span
-                                        class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                        :data-tip="
-                                            t('theme.tooltip_sidebar_btn')
-                                        "
-                                        @click="addExample('.sidebar-btn')"
-                                    >
-                                        sidebar-btn
-                                    </span>
-                                    <span
-                                        class="bg-base-300 text-xs px-3 py-1 rounded-full font-mono text-base-content/80 border border-base-200 tooltip tooltip-right cursor-pointer"
-                                        :data-tip="
-                                            t(
-                                                'theme.tooltip_launch_download_btn'
-                                            )
-                                        "
-                                        @click="
-                                            addExample(
-                                                '.launch-btn, .download-btn'
-                                            )
-                                        "
-                                    >
-                                        download-btn | launch-btn
-                                    </span>
-                                </div>
-                            </div>
+                        </div>
 
-                            <div
-                                class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4"
-                            >
-                                <div>
-                                    <label class="block mb-2 font-medium">{{
-                                        t("theme.custom_css_label")
-                                    }}</label>
-                                    <VueMonacoEditor
-                                        v-model:value="customCSS"
-                                        language="css"
-                                        :theme="
-                                            selectedTheme === 'dark'
-                                                ? 'vs-dark'
-                                                : 'vs'
-                                        "
-                                        :options="{
-                                            readOnly: !enableCustomCSS,
-                                            minimap: { enabled: false },
-                                            fontSize: 14,
-                                            lineNumbers: 'on',
-                                            wordWrap: 'on',
-                                            automaticLayout: true,
-                                            scrollBeyondLastLine: false,
-                                        }"
-                                        style="
-                                            height: 300px;
-                                            border-radius: 0.5rem;
-                                            border: 1px solid
-                                                rgba(255, 255, 255, 0.1);
-                                        "
-                                    />
-                                </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label class="block mb-2 font-medium">{{ t("theme.custom_css_label") }}</label>
+                                <VueMonacoEditor v-model:value="customCSS" language="css" :theme="selectedTheme === 'dark' ? 'vs-dark' : 'vs'" :options="{ readOnly: !enableCustomCSS, minimap: { enabled: false }, fontSize: 14, lineNumbers: 'on', wordWrap: 'on', automaticLayout: true, scrollBeyondLastLine: false }" style="height: 300px; border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);" />
                             </div>
-                            <div class="flex gap-2 mt-4">
-                                <button
-                                    class="btn btn-primary btn-sm flex items-center gap-2"
-                                    @click="openExportModal"
-                                >
-                                    <ClipboardCopy class="w-4 h-4" />
-                                    {{ t("theme.export_css_btn") }}
-                                </button>
-                                <button
-                                    class="btn btn-secondary btn-sm flex items-center gap-2"
-                                    @click="openImportModal"
-                                >
-                                    <ClipboardPaste class="w-4 h-4" />
-                                    {{ t("theme.import_css_btn") }}
-                                </button>
-                            </div>
-                            <div class="mt-6">
-                                <h3 class="font-medium text-sm mb-3">
-                                    {{ t("theme.css_examples_title") }}
-                                </h3>
-                                <div
-                                    class="grid grid-cols-1 md:grid-cols-3 gap-4"
-                                >
-                                    <div
-                                        v-for="(example, index) in cssExamples"
-                                        :key="index"
-                                        class="card shadow-md border border-base-300"
-                                    >
-                                        <div class="card-body p-4">
-                                            <h4 class="card-title text-sm">
-                                                {{ example.title }}
-                                            </h4>
-                                            <pre
-                                                class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"
-                                            ><code>{{ example.code }}</code></pre>
-                                            <button
-                                                @click="
-                                                    insertExample(example.code)
-                                                "
-                                                class="btn btn-xs btn-primary mt-2"
-                                                :disabled="!enableCustomCSS"
-                                            >
-                                                <ClipboardPaste
-                                                    class="w-4 h-4"
-                                                />
-                                                {{ t("theme.insert_example") }}
-                                            </button>
-                                        </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-4">
+                            <button class="btn btn-primary btn-sm flex items-center gap-2" @click="openExportModal"><ClipboardCopy class="w-4 h-4" /> {{ t("theme.export_css_btn") }}</button>
+                            <button class="btn btn-secondary btn-sm flex items-center gap-2" @click="openImportModal"><ClipboardPaste class="w-4 h-4" /> {{ t("theme.import_css_btn") }}</button>
+                        </div>
+
+                        <div class="mt-6">
+                            <h3 class="font-medium text-sm mb-3">{{ t("theme.css_examples_title") }}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div v-for="(example, index) in cssExamples" :key="index" class="card shadow-md border border-base-300">
+                                    <div class="card-body p-4">
+                                        <h4 class="card-title text-sm">{{ example.title }}</h4>
+                                        <pre class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"><code>{{ example.code }}</code></pre>
+                                        <button @click="insertExample(example.code)" class="btn btn-xs btn-primary mt-2" :disabled="!enableCustomCSS"><ClipboardPaste class="w-4 h-4" /> {{ t("theme.insert_example") }}</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </transition>
-                </div>
+                    </div>
+                </transition>
             </div>
         </div>
     </div>
@@ -1075,6 +532,7 @@ import {
     ExternalLink,
     Clock,
     Blend,
+    Check,
 } from "lucide-vue-next";
 import { useToast } from "@shared/composables/useToast";
 import { settingsService } from "@services/settings/settingsService";
@@ -1097,6 +555,10 @@ import { themeScheduler } from "@services/theme/themeScheduler";
 defineEmits(["change-view"]);
 
 const i18n = useI18n();
+
+defineOptions({
+  name: "Customization",
+});
 const { t } = i18n;
 const { addToast } = useToast();
 const { showModal } = useModal();
@@ -1106,6 +568,39 @@ const selectedTheme = ref(
 );
 const showExpertOptions = ref(false);
 const expertAnimationActive = ref(false);
+
+const accentColors = [
+    { name: "theme.accent_colors.blue", color: "#3b82f6" },
+    { name: "theme.accent_colors.red", color: "#ef4444" },
+    { name: "theme.accent_colors.green", color: "#22c55e" },
+    { name: "theme.accent_colors.purple", color: "#a855f7" },
+    { name: "theme.accent_colors.orange", color: "#f97316" },
+    { name: "theme.accent_colors.pink", color: "#ec4899" },
+    { name: "theme.accent_colors.cyan", color: "#06b6d4" },
+    { name: "theme.accent_colors.yellow", color: "#eab308" },
+    { name: "theme.accent_colors.rose", color: "#f43f5e" },
+    { name: "theme.accent_colors.lime", color: "#84cc16" },
+];
+
+const selectedAccentIndex = computed(() =>
+    accentColors.findIndex((a) => a.color === primaryColor.value)
+);
+
+const selectedAccentColumn = computed(() =>
+    selectedAccentIndex.value >= 0 ? selectedAccentIndex.value % 5 : -1
+);
+
+const selectedAccentRow = computed(() =>
+    selectedAccentIndex.value >= 0 ? Math.floor(selectedAccentIndex.value / 5) : -1
+);
+
+const accentRows = computed(() => {
+    const rows = [];
+    for (let i = 0; i < accentColors.length; i += 5) {
+        rows.push(accentColors.slice(i, i + 5));
+    }
+    return rows;
+});
 
 type ThemeMode = "dark" | "light" | "schedule";
 
@@ -1129,6 +624,10 @@ const selectThemeMode = async (mode: ThemeMode) => {
         themeScheduler.updateSchedule({ enabled: false });
         await changeTheme(mode);
     }
+};
+
+const resetAccentColor = () => {
+    primaryColor.value = null;
 };
 
 const scheduleLightStart = computed(
@@ -1394,6 +893,46 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.check-pop-enter-active {
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.check-pop-leave-active {
+    transition: all 0.15s ease-in;
+}
+
+.check-pop-enter-from,
+.check-pop-leave-to {
+    opacity: 0;
+    transform: scale(0);
+}
+
+.check-pop-enter-to,
+.check-pop-leave-from {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.badge-pop-enter-active {
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.badge-pop-leave-active {
+    transition: all 0.15s ease-in;
+}
+
+.badge-pop-enter-from,
+.badge-pop-leave-to {
+    opacity: 0;
+    transform: scale(0.6) translateX(6px);
+}
+
+.badge-pop-enter-to,
+.badge-pop-leave-from {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+}
+
 .animate-fadeInUp {
     animation: fadeInUp 0.5s ease-out forwards;
     opacity: 0;
@@ -1439,44 +978,24 @@ textarea.textarea-bordered {
     line-height: 1.5;
     tab-size: 2;
 }
-</style>
-
-<style scoped>
-.schedule-expand-enter-active,
-.schedule-expand-leave-active {
-    transition:
-        opacity 0.25s ease,
-        transform 0.25s ease,
-        max-height 0.3s ease;
-    overflow: hidden;
-    max-height: 300px;
-}
-
-.schedule-expand-enter-from,
-.schedule-expand-leave-to {
-    opacity: 0;
-    transform: translateY(-6px);
-    max-height: 0;
-}
 
 .schedule-slide-enter-active {
-    transition:
-        opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-        transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
 .schedule-slide-leave-active {
-    transition: none;
 }
 
-.schedule-slide-enter-from {
-    opacity: 0;
-    transform: translateX(20px) scale(0.97);
-}
-
+.schedule-slide-enter-from,
 .schedule-slide-leave-to {
     opacity: 0;
-    transform: none;
+    transform: scale(0.96) translateX(10px);
+}
+
+.schedule-slide-enter-to,
+.schedule-slide-leave-from {
+    opacity: 1;
+    transform: scale(1) translateX(0);
 }
 
 .blur-preview-wrapper {
