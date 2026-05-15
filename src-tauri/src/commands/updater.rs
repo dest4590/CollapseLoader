@@ -402,15 +402,7 @@ exit
         std::process::exit(0);
     }
 
-    #[cfg(target_os = "windows")]
-    {
-        let mut cmd = std::process::Command::new("cmd.exe");
-        cmd.args(["/C", "start", "", &script_path.to_string_lossy()]);
-        const DETACHED_PROCESS: u32 = 0x0000_0008;
-        cmd.creation_flags(DETACHED_PROCESS);
-        cmd.spawn().map_err(|e| format!("Failed to launch updater script: {e}"))?;
-        std::process::exit(0);
-    }
+
     #[cfg(target_os = "macos")]
     {
         let mount_point = "/Volumes/CollapseLoaderTmp";
