@@ -4,6 +4,14 @@ use std::sync::LazyLock;
 static LAST_PROGRESS: LazyLock<AtomicU8> = LazyLock::new(|| AtomicU8::new(255));
 
 pub fn set_progress(percentage: u8) {
+    use std::sync::{Mutex, OnceLock};
+    static LAST: OnceLock<Mutex<u8>> = OnceLock::new();
+    let lock = LAST.get_or_init(|| Mutex::new(255));
+    let mut last = lock.lock().unwrap();
+    if *last != 255 && (percentage as i16 - *last as i16).abs() < 2 {
+        return;
+    }
+    *last = percentage;
     let last = LAST_PROGRESS.load(Ordering::Relaxed);
 
     if last == percentage {
