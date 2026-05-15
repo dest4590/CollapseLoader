@@ -234,12 +234,24 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
         select_download_asset(&release.assets, &["msi"])
             .or_else(|| select_download_asset(&release.assets, &["exe"]))
             .unwrap_or_default()
+    } else if cfg!(target_os = "macos") {
+        select_download_asset(&release.assets, &["dmg"])
+            .or_else(|| select_download_asset(&release.assets, &["zip"]))
+            .unwrap_or_default()
+    } else if cfg!(target_os = "linux") {
+        select_download_asset(&release.assets, &["AppImage", "deb", "rpm"])
+            .unwrap_or_default()
     } else {
         String::new()
     };
 
-    if download_url.is_empty() && cfg!(target_os = "windows") {
+    if download_url.is_empty() {
+        #[cfg(target_os = "windows")]
         log_warn!("No MSI or EXE asset found for release");
+        #[cfg(target_os = "macos")]
+        log_warn!("No DMG or ZIP asset found for release");
+        #[cfg(target_os = "linux")]
+        log_warn!("No suitable Linux asset found for release");
     }
 
     Ok(UpdateInfo {
@@ -390,7 +402,64 @@ exit
         std::process::exit(0);
     }
 
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "windows")]
+    {
+        let mut cmd = std::process::Command::new("cmd.exe");
+        cmd.args(["/C", "start", "", &script_path.to_string_lossy()]);
+        const DETACHED_PROCESS: u32 = 0x0000_0008;
+        cmd.creation_flags(DETACHED_PROCESS);
+        cmd.spawn().map_err(|e| format!("Failed to launch updater script: {e}"))?;
+        std::process::exit(0);
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let mount_point = "/Volumes/CollapseLoaderTmp";
+        let status = std::process::Command::new("hdiutil")
+            .args(["attach", temp_file.to_str().unwrap(), "-mountpoint", mount_point])
+            .status()
+            .map_err(|e| format!("Failed to mount dmg: {e}"))?;
+        if !status.success() { return Err("Failed to mount dmg".into()); }
+        let app_src = format!("{mount_point}/CollapseLoader.app");
+        let status = std::process::Command::new("cp")
+            .args(["-R", &app_src, "/Applications/"])
+            .status()
+            .map_err(|e| format!("Failed to copy app: {e}"))?;
+        if !status.success() {
+            let _ = std::process::Command::new("hdiutil").args(["detach", mount_point]).status();
+            return Err("Не удалось скопировать приложение".into());
+        }
+        let _ = std::process::Command::new("hdiutil").args(["detach", mount_point]).status();
+        let _ = std::process::Command::new("open").arg("/Applications/CollapseLoader.app").status();
+        std::process::exit(0);
+    }
+    #[cfg(target_os = "linux")]
+    {
+        if file_name.ends_with(".AppImage") {
+            std::process::Command::new("chmod")
+                .args(["+x", temp_file.to_str().unwrap()])
+                .status()
+                .map_err(|e| format!("chmod failed: {e}"))?;
+            std::process::Command::new(temp_file.to_str().unwrap())
+                .spawn()
+                .map_err(|e| format!("failed to start AppImage: {e}"))?;
+        } else if file_name.ends_with(".deb") {
+            let status = std::process::Command::new("sudo")
+                .args(["dpkg", "-i", temp_file.to_str().unwrap()])
+                .status()
+                .map_err(|e| format!("dpkg install failed: {e}"))?;
+            if !status.success() { return Err("dpkg error".into()); }
+        } else if file_name.ends_with(".rpm") {
+            let status = std::process::Command::new("sudo")
+                .args(["rpm", "-i", temp_file.to_str().unwrap()])
+                .status()
+                .map_err(|e| format!("rpm install failed: {e}"))?;
+            if !status.success() { return Err("rpm error".into()); }
+        } else {
+            return Err(format!("Unsupported Linux asset: {file_name}"));
+        }
+        std::process::exit(0);
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     {
         Err("Auto-update not supported on this platform".to_string())
     }
