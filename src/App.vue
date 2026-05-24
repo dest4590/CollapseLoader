@@ -11,7 +11,7 @@ import InitialSetupModals from "./components/core/InitialSetupModals.vue";
 import DownloadProgress from "@features/download/components/DownloadProgress.vue";
 import Sidebar from "@layouts/Sidebar.vue";
 import Titlebar from "@layouts/Titlebar.vue";
-import RegisterPromptModal from "@features/social/modals/RegisterPromptModal.vue";
+// import RegisterPromptModal from "@features/social/modals/RegisterPromptModal.vue";
 import ToastContainer from "@shared/components/notifications/ToastContainer.vue";
 import Preloader from "./components/core/Preloader.vue";
 import SpotlightSearch from "./components/core/SpotlightSearch.vue";
@@ -40,7 +40,7 @@ const { showModal } = useModal();
 const isMacOS = ref(false);
 const isDev = ref(false);
 const isAuthenticated = ref(false);
-const showRegistrationPrompt = ref(false);
+// const showRegistrationPrompt = ref(false);
 const showAuthModal = ref(false);
 const authModalView = ref<"LOGIN" | "REGISTER" | "VERIFY">("LOGIN");
 const pendingVerifyEmail = ref("");
@@ -84,7 +84,7 @@ const {
     showPreloader,
     showFirstRunInfo,
     showInitialDisclaimer,
-    showRegistrationPrompt,
+    // showRegistrationPrompt,
     activeTab,
     currentUserId,
     previousTab,
@@ -126,10 +126,10 @@ watch(isAuthenticated, (newVal) => {
     if (newVal) showRegistrationPrompt.value = false;
 });
 
-const hideRegistrationPrompt = () => {
-    showRegistrationPrompt.value = false;
-    localStorage.setItem("registrationPromptShown", new Date().toISOString());
-};
+// const hideRegistrationPrompt = () => {
+//     showRegistrationPrompt.value = false;
+//     localStorage.setItem("registrationPromptShown", new Date().toISOString());
+// };
 
 const handleRegisterPrompt = () => {
     authModalView.value = "REGISTER";
@@ -389,11 +389,11 @@ const getTransitionName = () => {
                 }
             "
         />
-        <RegisterPromptModal
+        <!-- <RegisterPromptModal
             v-model="showRegistrationPrompt"
             @register="handleRegisterPrompt"
             @cancel="hideRegistrationPrompt"
-        />
+        /> -->
         <AuthModal
             v-model="showAuthModal"
             :initial-view="authModalView"
