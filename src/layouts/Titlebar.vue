@@ -2,7 +2,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import { Minus, Square, X } from "lucide-vue-next";
+import { Minus, Square, X } from "@lucide/vue";
 
 const appWindow = getCurrentWindow();
 const minimize = async () => appWindow.minimize();

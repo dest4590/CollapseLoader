@@ -255,7 +255,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import { Search, Download, AlertCircle, ChevronLeft } from "lucide-vue-next";
+import { Search, Download, AlertCircle, ChevronLeft } from "@lucide/vue";
 import {
     ModrinthService,
     type ModrinthSearchResult,

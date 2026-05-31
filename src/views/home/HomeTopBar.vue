@@ -2,7 +2,7 @@
 import type { Ref } from "vue";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { FileText, History, Newspaper } from "lucide-vue-next";
+import { FileText, History, Newspaper } from "@lucide/vue";
 import SearchBar from "@shared/components/common/SearchBar.vue";
 import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
 import LaunchHistoryPanel from "@features/clients/components/LaunchHistoryPanel.vue";
@@ -30,7 +30,9 @@ const props = defineProps<{
 const emit = defineEmits<{
     search: [string];
     "update:activeFilters": [Filters];
-    "update:clientSortKey": ["popularity" | "name" | "newest" | "version" | "rating"];
+    "update:clientSortKey": [
+        "popularity" | "name" | "newest" | "version" | "rating",
+    ];
     "update:clientSortOrder": ["asc" | "desc"];
     "update:showHistory": [boolean];
     "change-view": [string];
@@ -71,11 +73,7 @@ const handleLaunchFromHistory = (id: number) => {
 
 const onDocumentClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
-    if (
-        props.showHistory &&
-        rootRef.value &&
-        !rootRef.value.contains(target)
-    ) {
+    if (props.showHistory && rootRef.value && !rootRef.value.contains(target)) {
         emit("update:showHistory", false);
     }
 };
@@ -141,14 +139,11 @@ onBeforeUnmount(() => {
                     v-if="unreadNewsCount && unreadNewsCount > 0"
                     class="absolute -top-2 -right-2 bg-primary text-primary-content text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center border-2 border-base-100 px-1"
                 >
-                    {{ unreadNewsCount > 9 ? '9+' : unreadNewsCount }}
+                    {{ unreadNewsCount > 9 ? "9+" : unreadNewsCount }}
                 </span>
             </button>
         </div>
-        <div
-            class="home-action-btn relative"
-            style="isolation: isolate"
-        >
+        <div class="home-action-btn relative" style="isolation: isolate">
             <button
                 @click.stop="toggleHistory"
                 class="btn btn-ghost border-base-300 gap-2 btn-primary"

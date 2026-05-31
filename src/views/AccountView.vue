@@ -578,7 +578,7 @@ import {
     Timer,
     Gamepad2,
     LayoutList,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { localTrackerService } from "../services/localTrackerService";
 import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
 import getRoleBadge from "@features/social/utils/roleBadge";

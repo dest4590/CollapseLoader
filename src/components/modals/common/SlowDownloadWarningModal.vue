@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { WifiOff } from "lucide-vue-next";
+import { WifiOff } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps<{

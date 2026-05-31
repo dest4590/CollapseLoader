@@ -18,7 +18,11 @@
         "error_message": "Не вдалося надіслати скаргу. Спробуйте ще раз пізніше."
     },
     "chat": {
-        "reply_unknown": "Оригінальне повідомлення недоступне"
+        "reply_unknown": "Оригінальне повідомлення недоступне",
+        "notification": {
+            "mention_title": "Вас згадали {user}",
+            "mention_body": "{content}"
+        }
     },
     "modals": {
         "initial_setup": {

@@ -9,7 +9,7 @@ import Logo from "../assets/images/logo.svg";
 import IconGitHub from "../assets/icons/github.svg";
 import IconTelegram from "../assets/icons/telegram.svg";
 import IconDiscord from "../assets/icons/discord.svg";
-import { CircleFadingArrowUp } from "lucide-vue-next";
+import { CircleFadingArrowUp } from "@lucide/vue";
 import { achievementService } from "@features/social/achievementService";
 import { useUser } from "@features/auth/useUser";
 

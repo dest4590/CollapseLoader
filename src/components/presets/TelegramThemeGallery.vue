@@ -162,7 +162,7 @@ import {
     PaintBucket,
     Download,
     Palette,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import TelegramIcon from "@shared/components/ui/icons/TelegramIcon.vue";
 import PresetColorPreview from "./PresetColorPreview.vue";
 import { telegramThemeService } from "../../services/telegramThemeService";

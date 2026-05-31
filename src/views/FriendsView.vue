@@ -183,7 +183,7 @@ import ReportModal from "@/components/modals/common/ReportModal.vue";
 import FriendCard from "@features/friends/components/FriendCard.vue";
 import FriendRequestCard from "@features/friends/components/FriendRequestCard.vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
-import { UserCheck, UserPlus, Users } from "lucide-vue-next";
+import { UserCheck, UserPlus, Users } from "@lucide/vue";
 import { useStreamerMode } from "@features/social/useStreamerMode";
 
 const { t } = useI18n();

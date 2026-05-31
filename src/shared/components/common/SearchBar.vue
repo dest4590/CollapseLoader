@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
-import { Search, X } from "lucide-vue-next";
+import { Search, X } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps<{

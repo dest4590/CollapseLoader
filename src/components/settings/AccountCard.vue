@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { GripVertical } from "lucide-vue-next";
+import { GripVertical } from "@lucide/vue";
 
 const { t } = useI18n();
 

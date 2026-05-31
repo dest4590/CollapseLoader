@@ -8,7 +8,7 @@ import {
     shallowRef,
     watch,
 } from "vue";
-import { AlertTriangle, Star, X } from "lucide-vue-next";
+import { AlertTriangle, Star, X } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 import gsap from "gsap";
 import type { Client, ClientDetails, InstallProgress } from "@shared/types/ui";

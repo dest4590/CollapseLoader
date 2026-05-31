@@ -754,7 +754,7 @@ import {
     ChevronUp,
     Timer,
     LayoutList,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { invoke } from "@tauri-apps/api/core";
 import { localTrackerService } from "../services/localTrackerService";

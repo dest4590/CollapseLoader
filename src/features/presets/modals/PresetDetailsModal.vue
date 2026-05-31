@@ -397,7 +397,7 @@ import {
     ThumbsUp,
     MessageSquare,
     Image as ImageIcon,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { presetService } from "@features/presets/presetService";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";

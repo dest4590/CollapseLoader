@@ -11,7 +11,7 @@ import {
     AlertCircle,
     CornerUpLeft,
     X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import {
     useChatService,
     type ChatMessage,

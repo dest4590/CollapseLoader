@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { MarketplacePreset } from "@features/presets/types";
-import { Image } from "lucide-vue-next";
+import { Image } from "@lucide/vue";
 
 const props = defineProps<{
     preset: MarketplacePreset;

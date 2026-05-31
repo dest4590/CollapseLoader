@@ -110,7 +110,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { Mail } from "lucide-vue-next";
+import { Mail } from "@lucide/vue";
 import LoginForm from "../forms/LoginForm.vue";
 import RegistrationForm from "../forms/RegistrationForm.vue";
 import { apiPost } from "@api/clients/internal";

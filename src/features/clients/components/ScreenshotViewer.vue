@@ -7,7 +7,7 @@ import {
     X,
     ZoomIn,
     ZoomOut,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 const props = defineProps<{

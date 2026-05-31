@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleDot, HardDrive } from "lucide-vue-next";
+import { CircleDot, HardDrive } from "@lucide/vue";
 import { Client } from "@shared/types/ui";
 
 defineProps<{

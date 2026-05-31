@@ -18,7 +18,11 @@
         "error_message": "提交举报失败，请稍后再试。"
     },
     "chat": {
-        "reply_unknown": "原始消息不可用"
+        "reply_unknown": "原始消息不可用",
+        "notification": {
+            "mention_title": "{user} 提到了你",
+            "mention_body": "{content}"
+        }
     },
     "modals": {
         "initial_setup": {

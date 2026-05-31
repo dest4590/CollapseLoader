@@ -117,7 +117,7 @@ import {
     UserMinus,
     Shield,
     AlertTriangle,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import type { Friend } from "@features/auth/userService";
 import { useI18n } from "vue-i18n";

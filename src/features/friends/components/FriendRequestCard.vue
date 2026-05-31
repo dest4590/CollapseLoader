@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, Flag, X } from "lucide-vue-next";
+import { Check, Flag, X } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 import { useModal } from "@shared/composables/useModal";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";

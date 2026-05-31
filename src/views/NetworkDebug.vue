@@ -347,7 +347,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { Globe, Trash2, DownloadCloud, X, ExternalLink } from "lucide-vue-next";
+import { Globe, Trash2, DownloadCloud, X, ExternalLink } from "@lucide/vue";
 import {
     getRequestsRef,
     exportReport,

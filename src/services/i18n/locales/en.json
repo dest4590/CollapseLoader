@@ -497,6 +497,10 @@
         "send_hint": "Press Enter to send",
         "reply_unknown": "Original message not available",
         "send_failed": "Failed to send message",
+        "notification": {
+            "mention_title": "{user} mentioned you",
+            "mention_body": "{content}"
+        },
         "status": {
             "connected": "Connected",
             "connecting": "Connecting...",

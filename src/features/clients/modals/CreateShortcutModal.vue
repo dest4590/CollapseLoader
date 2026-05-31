@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
-import { ImagePlus, X } from "lucide-vue-next";
+import { ImagePlus, X } from "@lucide/vue";
 import type { Client, CustomClient } from "@shared/types/ui";
 
 const { addToast } = useToast();
@@ -71,15 +71,14 @@ const handleSubmit = async () => {
         });
 
         addToast(
-            t("modals.create_shortcut.success", { name: form.name || client.name }),
+            t("modals.create_shortcut.success", {
+                name: form.name || client.name,
+            }),
             "success"
         );
         emit("close");
     } catch (err) {
-        addToast(
-            t("modals.create_shortcut.error", { error: err }),
-            "error"
-        );
+        addToast(t("modals.create_shortcut.error", { error: err }), "error");
     } finally {
         loading.value = false;
     }
@@ -91,7 +90,9 @@ const handleSubmit = async () => {
         <!-- Shortcut name -->
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ t("modals.create_shortcut.name_label") }}</span>
+                <span class="label-text">{{
+                    t("modals.create_shortcut.name_label")
+                }}</span>
             </label>
             <input
                 v-model="form.name"
@@ -109,7 +110,9 @@ const handleSubmit = async () => {
         <!-- Icon picker -->
         <div class="form-control">
             <label class="label">
-                <span class="label-text">{{ t("modals.create_shortcut.icon_label") }}</span>
+                <span class="label-text">{{
+                    t("modals.create_shortcut.icon_label")
+                }}</span>
             </label>
 
             <div
@@ -160,11 +163,7 @@ const handleSubmit = async () => {
             >
                 {{ t("common.cancel") }}
             </button>
-            <button
-                type="submit"
-                class="btn btn-primary"
-                :disabled="loading"
-            >
+            <button type="submit" class="btn btn-primary" :disabled="loading">
                 <span
                     v-if="loading"
                     class="loading loading-spinner loading-sm"

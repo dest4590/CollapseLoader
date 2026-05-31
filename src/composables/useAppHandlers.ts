@@ -80,8 +80,7 @@ export function useAppHandlers(props: AppHandlerProps) {
                     const clients = await invoke<Client[]>("get_clients");
                     const found = clients.find((c) => c.id === clientId);
                     if (found) return found;
-                } catch {
-                }
+                } catch {}
                 if (attempt < 4) {
                     await new Promise((r) => setTimeout(r, 1000));
                 }

@@ -20,7 +20,7 @@ import {
     Headset,
     NotebookPen,
     HeartHandshake,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import AnimatedSlider from "@shared/components/ui/AnimatedSlider.vue";
 import { invoke } from "@tauri-apps/api/core";
 

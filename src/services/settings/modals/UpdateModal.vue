@@ -213,7 +213,7 @@ import {
     Shield,
     Plus,
     Bug,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 
 interface ChangeItem {
     category: string;

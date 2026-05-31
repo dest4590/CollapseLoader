@@ -285,7 +285,7 @@ import {
     EyeOff,
     Image,
     PaintBucket,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload";
 import PresetColorPreview from "./PresetColorPreview.vue";
 

@@ -155,7 +155,7 @@
 import { ref } from "vue";
 import { useToast } from "@shared/composables/useToast";
 import { type SearchUser, userService } from "@features/auth/userService";
-import { UserPlus, Users } from "lucide-vue-next";
+import { UserPlus, Users } from "@lucide/vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
 import { useI18n } from "vue-i18n";
 import { useStreamerMode } from "@features/social/useStreamerMode";

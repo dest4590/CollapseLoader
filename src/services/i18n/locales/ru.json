@@ -457,6 +457,10 @@
         "send_hint": "Enter — отправить",
         "reply_unknown": "Исходное сообщение недоступно",
         "send_failed": "Не удалось отправить сообщение",
+        "notification": {
+            "mention_title": "Вас упомянул {user}",
+            "mention_body": "{content}"
+        },
         "status": {
             "connected": "Подключено",
             "connecting": "Подключение...",

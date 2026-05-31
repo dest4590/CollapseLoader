@@ -116,7 +116,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { FileText, Upload } from "lucide-vue-next";
+import { FileText, Upload } from "@lucide/vue";
 import { usePresets } from "@features/presets/usePresets";
 
 const { t } = useI18n();

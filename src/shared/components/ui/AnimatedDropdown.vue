@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
-import { ChevronDown, Check } from "lucide-vue-next";
+import { ChevronDown, Check } from "@lucide/vue";
 
 interface Option {
     value: string;

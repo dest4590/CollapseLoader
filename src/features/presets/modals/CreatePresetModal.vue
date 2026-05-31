@@ -74,7 +74,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from "vue";
-import { Save, Info } from "lucide-vue-next";
+import { Save, Info } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 import type { ThemePreset, UpdatePresetInput } from "@features/presets/types";
 

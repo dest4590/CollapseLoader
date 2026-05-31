@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import { Check } from "lucide-vue-next";
+import { Check } from "@lucide/vue";
 import getRoleBadge from "@features/social/utils/roleBadge";
 
 const props = defineProps<{

@@ -292,7 +292,7 @@ import {
     Download,
     Trash2,
     X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import type { ThemePreset } from "@features/presets/types";
 import { usePresets } from "@features/presets/usePresets";
 import { useModal } from "@shared/composables/useModal";

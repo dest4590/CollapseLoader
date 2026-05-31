@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { ChevronDown, Funnel } from "lucide-vue-next";
+import { ChevronDown, Funnel } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 interface Filters {

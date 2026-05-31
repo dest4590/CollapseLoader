@@ -233,7 +233,7 @@ import {
     WifiOff,
     AtSign,
     Copy,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import { useIrcChat } from "../../../composables/useIrcChat";
 import { useI18n } from "vue-i18n";

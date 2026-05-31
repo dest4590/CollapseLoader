@@ -18,7 +18,11 @@
         "error_message": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie później."
     },
     "chat": {
-        "reply_unknown": "Oryginalna wiadomość niedostępna"
+        "reply_unknown": "Oryginalna wiadomość niedostępna",
+        "notification": {
+            "mention_title": "Masz wzmiankę od {user}",
+            "mention_body": "{content}"
+        }
     },
     "modals": {
         "initial_setup": {

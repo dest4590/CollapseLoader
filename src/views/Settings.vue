@@ -33,7 +33,7 @@ import {
     Terminal,
     HardDrive,
     RefreshCcw,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import type { ToastPosition } from "@shared/types/toast";
 import { syncService } from "../services/syncService";

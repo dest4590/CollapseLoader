@@ -2,7 +2,7 @@
 import { ref, computed, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
-import { History, Trash2, X, Play, Clock } from "lucide-vue-next";
+import { History, Trash2, X, Play, Clock } from "@lucide/vue";
 
 interface LaunchEntry {
     client_id: number;
@@ -54,7 +54,10 @@ const formatTime = (iso: string): string => {
 };
 
 const groupedEntries = computed(() => {
-    const groups: { label: string; items: (LaunchEntry & { globalIndex: number })[] }[] = [];
+    const groups: {
+        label: string;
+        items: (LaunchEntry & { globalIndex: number })[];
+    }[] = [];
     const today: LaunchEntry[] = [];
     const yesterday: LaunchEntry[] = [];
     const older: LaunchEntry[] = [];
@@ -76,23 +79,34 @@ const groupedEntries = computed(() => {
 
     let globalIndex = 0;
     const mapWithIndex = (items: LaunchEntry[]) => {
-        return items.map(item => ({ ...item, globalIndex: globalIndex++ }));
+        return items.map((item) => ({ ...item, globalIndex: globalIndex++ }));
     };
 
-    if (today.length) groups.push({ label: t("history.today"), items: mapWithIndex(today) });
+    if (today.length)
+        groups.push({ label: t("history.today"), items: mapWithIndex(today) });
     if (yesterday.length)
-        groups.push({ label: t("history.yesterday"), items: mapWithIndex(yesterday) });
+        groups.push({
+            label: t("history.yesterday"),
+            items: mapWithIndex(yesterday),
+        });
     if (older.length)
-        groups.push({ label: t("history.earlier"), items: mapWithIndex(older) });
+        groups.push({
+            label: t("history.earlier"),
+            items: mapWithIndex(older),
+        });
 
     return groups;
 });
 
-watch(() => props.show, (newVal) => {
-    if (newVal) {
-        loadHistory();
-    }
-}, { immediate: true });
+watch(
+    () => props.show,
+    (newVal) => {
+        if (newVal) {
+            loadHistory();
+        }
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
@@ -143,7 +157,9 @@ watch(() => props.show, (newVal) => {
                             v-for="(entry, idx) in group.items"
                             :key="idx"
                             class="history-entry"
-                            :style="{ animationDelay: `${entry.globalIndex * 35}ms` }"
+                            :style="{
+                                animationDelay: `${entry.globalIndex * 35}ms`,
+                            }"
                             @click="emit('launch', entry.client_id)"
                         >
                             <div class="history-entry-icon">
