@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { router } from "@router";
 import { useI18n } from "vue-i18n";
 
@@ -11,7 +11,6 @@ import InitialSetupModals from "./components/core/InitialSetupModals.vue";
 import DownloadProgress from "@features/download/components/DownloadProgress.vue";
 import Sidebar from "@layouts/Sidebar.vue";
 import Titlebar from "@layouts/Titlebar.vue";
-// import RegisterPromptModal from "@features/social/modals/RegisterPromptModal.vue";
 import ToastContainer from "@shared/components/notifications/ToastContainer.vue";
 import Preloader from "./components/core/Preloader.vue";
 import SpotlightSearch from "./components/core/SpotlightSearch.vue";
@@ -40,7 +39,6 @@ const { showModal } = useModal();
 const isMacOS = ref(false);
 const isDev = ref(false);
 const isAuthenticated = ref(false);
-// const showRegistrationPrompt = ref(false);
 const showAuthModal = ref(false);
 const authModalView = ref<"LOGIN" | "REGISTER" | "VERIFY">("LOGIN");
 const pendingVerifyEmail = ref("");
@@ -84,7 +82,6 @@ const {
     showPreloader,
     showFirstRunInfo,
     showInitialDisclaimer,
-    // showRegistrationPrompt,
     activeTab,
     currentUserId,
     previousTab,
@@ -121,21 +118,6 @@ const handleRegistered = () => {
 };
 
 const currentView = computed(() => views[activeTab.value] || views.home);
-
-watch(isAuthenticated, (newVal) => {
-    if (newVal) showRegistrationPrompt.value = false;
-});
-
-// const hideRegistrationPrompt = () => {
-//     showRegistrationPrompt.value = false;
-//     localStorage.setItem("registrationPromptShown", new Date().toISOString());
-// };
-
-const handleRegisterPrompt = () => {
-    authModalView.value = "REGISTER";
-    showAuthModal.value = true;
-    hideRegistrationPrompt();
-};
 
 const handleShowVerify = (email: string, code?: string) => {
     pendingVerifyEmail.value = email;
@@ -301,11 +283,7 @@ const getTransitionName = () => {
             @auto-login="handleLoggedIn"
         />
 
-        <DevMenuModal
-            :show-dev-menu="showDevMenu"
-            :registerPrompt="showRegistrationPrompt"
-            @close="closeDevMenu"
-        />
+        <DevMenuModal :show-dev-menu="showDevMenu" @close="closeDevMenu" />
 
         <div
             class="flex h-screen flex-col overflow-hidden"
@@ -389,11 +367,6 @@ const getTransitionName = () => {
                 }
             "
         />
-        <!-- <RegisterPromptModal
-            v-model="showRegistrationPrompt"
-            @register="handleRegisterPrompt"
-            @cancel="hideRegistrationPrompt"
-        /> -->
         <AuthModal
             v-model="showAuthModal"
             :initial-view="authModalView"
