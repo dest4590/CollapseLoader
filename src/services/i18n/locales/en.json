@@ -1239,7 +1239,8 @@
         "panel_blur_title": "UI Element Blur Settings",
         "panel_blur_preview": "Preview",
         "spotlight_blur": "Spotlight",
-        "history_blur": "Launch History"
+        "history_blur": "Launch History",
+        "notifications_blur": "Notifications History"
     },
     "updater": {
         "update_available": "Update Available",
@@ -1340,6 +1341,10 @@
 
     "login": "You need to log in to your account.",
     "notifications": {
+        "title": "Notifications History",
+        "clear_all": "Clear All",
+        "mark_read": "Mark Read",
+        "empty": "No notifications yet",
         "friend_request_received": {
             "title": "Friend Request",
             "message": "{name} sent you a friend request!"

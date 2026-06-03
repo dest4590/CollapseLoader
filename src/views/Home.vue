@@ -77,6 +77,7 @@ const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
 const searchBarRef = ref<any>(null);
 const showHistory = ref(false);
+const showNotifications = ref(false);
 
 const HOME_ANIM_KEY = "homeAnimPlayed";
 const hasAnimatedBefore = ref<boolean>(false);
@@ -1758,6 +1759,7 @@ onBeforeUnmount(() => {
         :unread-news-count="props.unreadNewsCount"
         :view-visible="viewVisible"
         v-model:showHistory="showHistory"
+        v-model:showNotifications="showNotifications"
         :search-bar-ref="searchBarRef"
         @change-view="$emit('change-view', $event)"
         @search="handleSearch"

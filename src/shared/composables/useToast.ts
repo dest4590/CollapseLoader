@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import type { ToastMessage, ToastType } from "@shared/types/toast";
+import { useNotificationHistory } from "./useNotificationHistory";
 
 const toasts = ref<ToastMessage[]>([]);
 let nextId = 0;
@@ -46,6 +47,9 @@ function addToast(
 
         return;
     }
+
+    const { addNotificationHistory } = useNotificationHistory();
+    addNotificationHistory(message, type);
 
     const id = nextId++;
     const toast: ToastMessage = {

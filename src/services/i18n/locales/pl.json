@@ -1219,7 +1219,8 @@
         "panel_blur_title": "Ustawienia rozmycia elementów",
         "panel_blur_preview": "Podgląd",
         "spotlight_blur": "Spotlight",
-        "history_blur": "Historia uruchomień"
+        "history_blur": "Historia uruchomień",
+        "notifications_blur": "Historia powiadomień"
     },
     "updater": {
         "update_available": "Dostępna aktualizacja",
@@ -1319,6 +1320,10 @@
 
     "login": "Musisz zalogować się na swoje konto.",
     "notifications": {
+        "title": "Historia powiadomień",
+        "clear_all": "Wyczyść wszystko",
+        "mark_read": "Oznacz jako przeczytane",
+        "empty": "Brak powiadomień",
         "friend_request_received": {
             "title": "Zaproszenie do znajomych",
             "message": "{name} wysłał Ci zaproszenie do znajomych!"

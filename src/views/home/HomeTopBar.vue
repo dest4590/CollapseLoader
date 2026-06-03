@@ -2,10 +2,12 @@
 import type { Ref } from "vue";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { FileText, History, Newspaper } from "@lucide/vue";
+import { FileText, History, Newspaper, Bell } from "@lucide/vue";
 import SearchBar from "@shared/components/common/SearchBar.vue";
 import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
 import LaunchHistoryPanel from "@features/clients/components/LaunchHistoryPanel.vue";
+import NotificationCenterPanel from "@shared/components/notifications/NotificationCenterPanel.vue";
+import { useNotificationHistory } from "@shared/composables/useNotificationHistory";
 
 interface Filters {
     fabric: boolean;
@@ -24,6 +26,7 @@ const props = defineProps<{
     unreadNewsCount?: number | null;
     viewVisible: boolean;
     showHistory: boolean;
+    showNotifications: boolean;
     searchBarRef: Ref<any>;
 }>();
 
@@ -35,9 +38,12 @@ const emit = defineEmits<{
     ];
     "update:clientSortOrder": ["asc" | "desc"];
     "update:showHistory": [boolean];
+    "update:showNotifications": [boolean];
     "change-view": [string];
     "launch-client": [number];
 }>();
+
+const { unreadCount } = useNotificationHistory();
 
 const rootRef = ref<HTMLElement | null>(null);
 
@@ -64,6 +70,12 @@ const handleSearch = (value: string) => {
 
 const toggleHistory = () => {
     emit("update:showHistory", !props.showHistory);
+    if (!props.showHistory) emit("update:showNotifications", false);
+};
+
+const toggleNotifications = () => {
+    emit("update:showNotifications", !props.showNotifications);
+    if (!props.showNotifications) emit("update:showHistory", false);
 };
 
 const handleLaunchFromHistory = (id: number) => {
@@ -75,6 +87,9 @@ const onDocumentClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     if (props.showHistory && rootRef.value && !rootRef.value.contains(target)) {
         emit("update:showHistory", false);
+    }
+    if (props.showNotifications && rootRef.value && !rootRef.value.contains(target)) {
+        emit("update:showNotifications", false);
     }
 };
 
@@ -142,6 +157,27 @@ onBeforeUnmount(() => {
                     {{ unreadNewsCount > 9 ? "9+" : unreadNewsCount }}
                 </span>
             </button>
+        </div>
+        <div class="home-action-btn relative" style="isolation: isolate">
+            <button
+                @click.stop="toggleNotifications"
+                class="btn btn-ghost border-base-300 gap-2 btn-primary relative"
+                :class="{ 'tooltip tooltip-bottom': !showNotifications }"
+                :data-tip="!showNotifications ? t('notifications.title') : undefined"
+                :style="{
+                    border: 'var(--border) solid #0000',
+                }"
+            >
+                <Bell class="w-4 h-4" />
+                <span
+                    v-if="unreadCount > 0"
+                    class="absolute -top-1 -right-1 w-3 h-3 bg-error rounded-full border-2 border-base-100"
+                ></span>
+            </button>
+            <NotificationCenterPanel
+                :show="showNotifications"
+                @close="emit('update:showNotifications', false)"
+            />
         </div>
         <div class="home-action-btn relative" style="isolation: isolate">
             <button

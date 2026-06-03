@@ -962,6 +962,45 @@
                             "
                         />
                     </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label
+                                class="text-sm font-medium text-base-content"
+                                >{{ t("customization.notifications_blur") }}</label
+                            >
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-base-content/60"
+                                    >{{ notificationsBlur }}px</span
+                                >
+                                <button
+                                    class="btn btn-ghost btn-xs opacity-50 hover:opacity-100"
+                                    @click="
+                                        handlePanelBlurInput('notificationsBlur', 20)
+                                    "
+                                >
+                                    <RotateCcw class="w-3 h-3" />
+                                </button>
+                            </div>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="60"
+                            step="1"
+                            class="range range-primary range-sm"
+                            :value="notificationsBlur"
+                            @input="
+                                handlePanelBlurInput(
+                                    'notificationsBlur',
+                                    Number(
+                                        ($event.target as HTMLInputElement)
+                                            .value
+                                    )
+                                )
+                            "
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -1300,6 +1339,7 @@ const {
     backgroundOpacity,
     spotlightBlur,
     historyBlur,
+    notificationsBlur,
 } = toRefs(themeService.presetSettings);
 
 watch(
@@ -1368,10 +1408,10 @@ const handleBackgroundInput = (settingKey: string, value: any): void => {
 };
 
 const handlePanelBlurInput = (
-    settingKey: "spotlightBlur" | "historyBlur",
+    settingKey: "spotlightBlur" | "historyBlur" | "notificationsBlur",
     value: number
 ): void => {
-    const refs: Record<string, any> = { spotlightBlur, historyBlur };
+    const refs: Record<string, any> = { spotlightBlur, historyBlur, notificationsBlur };
     const r = refs[settingKey];
     if (r) r.value = value;
 };

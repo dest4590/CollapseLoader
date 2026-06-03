@@ -41,7 +41,7 @@ import { useI18n } from "vue-i18n";
 import { Check } from "@lucide/vue";
 import getRoleBadge from "@features/social/utils/roleBadge";
 
-const props = defineProps<{
+defineProps<{
     currentRole: string;
 }>();
 

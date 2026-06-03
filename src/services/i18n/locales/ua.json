@@ -1221,7 +1221,8 @@
         "panel_blur_title": "Налаштування розмиття елементів",
         "panel_blur_preview": "Попередній перегляд",
         "spotlight_blur": "Spotlight",
-        "history_blur": "Історія запусків"
+        "history_blur": "Історія запусків",
+        "notifications_blur": "Історія сповіщень"
     },
     "updater": {
         "update_available": "Доступне оновлення",
@@ -1322,6 +1323,10 @@
 
     "login": "Вам потрібно увійти у свій обліковий запис.",
     "notifications": {
+        "title": "Історія сповіщень",
+        "clear_all": "Очистити все",
+        "mark_read": "Відзначити як прочитане",
+        "empty": "Сповіщень поки немає",
         "friend_request_received": {
             "title": "Запит у друзі",
             "message": "{name} надіслав вам запит у друзі!"

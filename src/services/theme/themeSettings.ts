@@ -32,6 +32,7 @@ export interface ThemeSettings {
     backgroundOpacity?: number | null;
     spotlightBlur?: number | null;
     historyBlur?: number | null;
+    notificationsBlur?: number | null;
 }
 
 export const THEME_SETTINGS_STORAGE_KEY = "presetSettings";
@@ -67,6 +68,7 @@ export const defaultThemeSettings: ThemeSettings = {
     backgroundOpacity: 100,
     spotlightBlur: 24,
     historyBlur: 20,
+    notificationsBlur: 20,
 };
 
 const themeCssVariables: Array<[keyof ThemeSettings, string]> = [
@@ -95,6 +97,7 @@ const themeCssVariables: Array<[keyof ThemeSettings, string]> = [
     ["backgroundOpacity", "--background-opacity"],
     ["spotlightBlur", "--spotlight-blur"],
     ["historyBlur", "--history-blur"],
+    ["notificationsBlur", "--notifications-blur"],
 ];
 
 const themePresetStringFields = [
@@ -171,7 +174,8 @@ const getThemeCssValue = (
         key === "backgroundBlur" ||
         key === "backgroundOpacity" ||
         key === "spotlightBlur" ||
-        key === "historyBlur"
+        key === "historyBlur" ||
+        key === "notificationsBlur"
     ) {
         return key === "backgroundOpacity" ? String(value) : `${value}px`;
     }

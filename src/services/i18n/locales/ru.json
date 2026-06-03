@@ -1238,7 +1238,8 @@
         "panel_blur_title": "Настройка размытия элементов",
         "panel_blur_preview": "Превью",
         "spotlight_blur": "Spotlight",
-        "history_blur": "История запусков"
+        "history_blur": "История запусков",
+        "notifications_blur": "История уведомлений"
     },
     "updater": {
         "update_available": "Доступно обновление",
@@ -1338,6 +1339,10 @@
 
     "login": "Вам необходимо войти в свою учетную запись.",
     "notifications": {
+        "title": "История уведомлений",
+        "clear_all": "Очистить всё",
+        "mark_read": "Отметить прочитанным",
+        "empty": "Пока нет уведомлений",
         "friend_request_received": {
             "title": "Запрос в друзья",
             "message": "{name} отправил вам запрос в друзья!"

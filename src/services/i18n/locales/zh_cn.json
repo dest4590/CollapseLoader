@@ -1208,7 +1208,8 @@
         "panel_blur_title": "界面元素模糊设置",
         "panel_blur_preview": "预览",
         "spotlight_blur": "Spotlight",
-        "history_blur": "启动历史"
+        "history_blur": "启动历史",
+        "notifications_blur": "通知历史"
     },
     "updater": {
         "update_available": "有可用更新",
@@ -1322,6 +1323,10 @@
     },
     "login": "您需要登录您的帐户。",
     "notifications": {
+        "title": "通知历史",
+        "clear_all": "全部清除",
+        "mark_read": "标为已读",
+        "empty": "暂无通知",
         "friend_request_received": {
             "title": "好友请求",
             "message": "{name} 向你发送了好友请求！"
