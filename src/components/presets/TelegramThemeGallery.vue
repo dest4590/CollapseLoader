@@ -99,7 +99,7 @@
                             >
                                 {{
                                     t("marketplace.by_author", {
-                                        name: `@${TG_CHANNEL}`.toUpperCase(),
+                                        name: getPresetAuthor(preset).toUpperCase(),
                                     })
                                 }}
                             </p>
@@ -128,10 +128,10 @@
                         <PresetColorPreview :preset="preset" class="mt-0!" />
 
                         <p
-                            v-if="preset.description"
+                            v-if="getPresetDescription(preset)"
                             class="text-[11px] text-base-content/50 line-clamp-2 mt-2 leading-snug min-h-8"
                         >
-                            {{ preset.description }}
+                            {{ getPresetDescription(preset) }}
                         </p>
                         <div v-else class="min-h-8"></div>
                     </div>
@@ -186,6 +186,14 @@ import TelegramThemeDetailsModal from "@/components/modals/common/TelegramThemeD
 import AddThemeModal from "@features/presets/modals/AddThemeModal.vue";
 
 const TG_CHANNEL = "CollapseTheme";
+
+function getPresetAuthor(preset: MarketplacePreset): string {
+    return preset.author?.displayName ?? `@${TG_CHANNEL}`;
+}
+
+function getPresetDescription(preset: MarketplacePreset): string {
+    return preset.description ?? "";
+}
 
 const { t } = useI18n();
 const { addToast } = useToast();
