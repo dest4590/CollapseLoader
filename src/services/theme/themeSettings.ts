@@ -344,6 +344,10 @@ export const extractThemeSettingsFromPreset = (
             (extractedSettings as Record<string, string | null | undefined>)[
                 field
             ] = preset[field] as string | null;
+        } else {
+            (extractedSettings as Record<string, string | null | undefined>)[
+                field
+            ] = null;
         }
     });
 
@@ -352,6 +356,10 @@ export const extractThemeSettingsFromPreset = (
             (extractedSettings as Record<string, number | null | undefined>)[
                 field
             ] = preset[field] as number | null;
+        } else {
+            (extractedSettings as Record<string, number | null | undefined>)[
+                field
+            ] = defaultThemeSettings[field] as number | null;
         }
     });
 
@@ -359,6 +367,9 @@ export const extractThemeSettingsFromPreset = (
         if (typeof preset[field] === "boolean") {
             (extractedSettings as Record<string, boolean | undefined>)[field] =
                 preset[field] as boolean;
+        } else {
+            (extractedSettings as Record<string, boolean | undefined>)[field] =
+                defaultThemeSettings[field] as boolean;
         }
     });
 
