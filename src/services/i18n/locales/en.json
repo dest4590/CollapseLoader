@@ -1336,7 +1336,11 @@
         "tg_retry": "Try again",
         "tg_load_failed": "Failed to load themes from Telegram. Check your connection.",
         "tg_colors": "Colors",
-        "tg_has_css": "Includes custom CSS"
+        "tg_has_css": "Includes custom CSS",
+        "add_theme_button": "Add Your Theme",
+        "add_theme_title": "Add Your Theme",
+        "add_theme_info": "If you want to add your preset to the marketplace, write to the Telegram channel:",
+        "contact_channel": "Contact Channel"
     },
 
     "login": "You need to log in to your account.",

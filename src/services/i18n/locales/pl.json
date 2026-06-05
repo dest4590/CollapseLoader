@@ -1315,7 +1315,11 @@
         "tg_retry": "Spróbuj ponownie",
         "tg_load_failed": "Nie udało się załadować motywów z Telegram. Sprawdź połączenie.",
         "tg_colors": "Kolory",
-        "tg_has_css": "Zawiera niestandardowy CSS"
+        "tg_has_css": "Zawiera niestandardowy CSS",
+        "add_theme_button": "Dodaj własną motyw",
+        "add_theme_title": "Dodaj własną motyw",
+        "add_theme_info": "Jeśli chcesz dodać swój preset do marketplace, napisz na czat kanału:",
+        "contact_channel": "Napisz do kanału"
     },
 
     "login": "Musisz zalogować się na swoje konto.",

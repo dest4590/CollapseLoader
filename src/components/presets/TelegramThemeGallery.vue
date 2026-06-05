@@ -14,15 +14,24 @@
                     >
                 </span>
             </div>
-            <button
-                class="btn btn-ghost btn-xs gap-1"
-                :class="{ 'loading loading-spinner': refreshing }"
-                @click="refresh"
-                :disabled="refreshing"
-            >
-                <RefreshCw v-if="!refreshing" class="w-3.5 h-3.5" />
-                {{ t("marketplace.tg_refresh") }}
-            </button>
+            <div class="flex gap-1">
+                <button
+                    class="btn btn-ghost btn-xs gap-1"
+                    @click="showAddModal"
+                >
+                    <Plus class="w-3.5 h-3.5" />
+                    {{ t("marketplace.add_theme_button") }}
+                </button>
+                <button
+                    class="btn btn-ghost btn-xs gap-1"
+                    :class="{ 'loading loading-spinner': refreshing }"
+                    @click="refresh"
+                    :disabled="refreshing"
+                >
+                    <RefreshCw v-if="!refreshing" class="w-3.5 h-3.5" />
+                    {{ t("marketplace.tg_refresh") }}
+                </button>
+            </div>
         </div>
 
         <div class="relative mb-4">
@@ -162,6 +171,7 @@ import {
     PaintBucket,
     Download,
     Palette,
+    Plus,
 } from "@lucide/vue";
 import TelegramIcon from "@shared/components/ui/icons/TelegramIcon.vue";
 import PresetColorPreview from "./PresetColorPreview.vue";
@@ -173,6 +183,7 @@ import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload"
 import { usePresets } from "@features/presets/usePresets";
 import type { MarketplacePreset } from "@features/presets/types";
 import TelegramThemeDetailsModal from "@/components/modals/common/TelegramThemeDetailsModal.vue";
+import AddThemeModal from "@features/presets/modals/AddThemeModal.vue";
 
 const TG_CHANNEL = "CollapseTheme";
 
@@ -295,6 +306,19 @@ function openDetails(preset: MarketplacePreset) {
                 saveLocal(preset);
                 hideModal(id);
             },
+            close: () => hideModal(id),
+        }
+    );
+}
+
+function showAddModal() {
+    const id = "add-theme";
+    showModal(
+        id,
+        AddThemeModal,
+        { title: t("marketplace.add_theme_title") },
+        {},
+        {
             close: () => hideModal(id),
         }
     );

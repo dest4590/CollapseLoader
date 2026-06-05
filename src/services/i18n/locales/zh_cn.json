@@ -1305,7 +1305,11 @@
         "tg_retry": "重试",
         "tg_load_failed": "无法从 Telegram 加载主题，请检查网络连接。",
         "tg_colors": "颜色",
-        "tg_has_css": "包含自定义 CSS"
+        "tg_has_css": "包含自定义 CSS",
+        "add_theme_button": "添加您的主题",
+        "add_theme_title": "添加您的主题",
+        "add_theme_info": "如果您想要将自己的预设添加到市场，请向频道发送私信：",
+        "contact_channel": "联系频道"
     },
 
     "logs": {
