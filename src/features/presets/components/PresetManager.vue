@@ -1,6 +1,6 @@
 <template>
     <div class="space-y-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-start justify-between">
             <div>
                 <h2 class="text-xl font-semibold text-primary-focus">
                     {{ $t("theme.presets.title") }}

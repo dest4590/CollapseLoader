@@ -376,7 +376,7 @@
         </div>
 
         <div class="card bg-base-200 shadow-md border border-base-300 mb-6">
-            <div class="card-body p-0">
+            <div class="card-body p-6">
                 <PresetManager />
             </div>
         </div>
