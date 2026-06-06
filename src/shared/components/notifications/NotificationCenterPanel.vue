@@ -1,18 +1,39 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, toRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { Bell, Trash2, X, CheckCircle2, AlertTriangle, Info, AlertCircle, Check } from "@lucide/vue";
+import {
+    Bell,
+    Trash2,
+    X,
+    CheckCircle2,
+    AlertTriangle,
+    Info,
+    AlertCircle,
+    Check,
+} from "@lucide/vue";
 import { useNotificationHistory } from "@shared/composables/useNotificationHistory";
 import type { ToastType } from "@shared/types/toast";
 
-defineProps<{ show: boolean }>();
+const props = defineProps<{ show: boolean }>();
+const show = toRef(props, "show");
 
 const emit = defineEmits<{
     close: [];
 }>();
 
 const { t } = useI18n();
-const { history, clearHistory, markAllAsRead, markAsRead } = useNotificationHistory();
+const { history, clearHistory, markAllAsRead, markAsRead } =
+    useNotificationHistory();
+
+watch(
+    () => props.show,
+    (show) => {
+        if (show) {
+            markAllAsRead();
+        }
+    },
+    { immediate: false }
+);
 
 const formatTime = (ts: number): string => {
     const date = new Date(ts);
@@ -77,9 +98,12 @@ const groupedEntries = computed(() => {
 
 const getIconForType = (type: ToastType) => {
     switch (type) {
-        case "success": return CheckCircle2;
-        case "error": return AlertTriangle;
-        case "warning": return AlertCircle;
+        case "success":
+            return CheckCircle2;
+        case "error":
+            return AlertTriangle;
+        case "warning":
+            return AlertCircle;
         case "info":
         default:
             return Info;
@@ -88,9 +112,12 @@ const getIconForType = (type: ToastType) => {
 
 const getColorForType = (type: ToastType) => {
     switch (type) {
-        case "success": return "text-success";
-        case "error": return "text-error";
-        case "warning": return "text-warning";
+        case "success":
+            return "text-success";
+        case "error":
+            return "text-error";
+        case "warning":
+            return "text-warning";
         case "info":
         default:
             return "text-info";
@@ -99,9 +126,12 @@ const getColorForType = (type: ToastType) => {
 
 const getBgForType = (type: ToastType) => {
     switch (type) {
-        case "success": return "bg-success/10";
-        case "error": return "bg-error/10";
-        case "warning": return "bg-warning/10";
+        case "success":
+            return "bg-success/10";
+        case "error":
+            return "bg-error/10";
+        case "warning":
+            return "bg-warning/10";
         case "info":
         default:
             return "bg-info/10";
@@ -170,8 +200,15 @@ const getBgForType = (type: ToastType) => {
                             }"
                             @click="markAsRead(entry.id)"
                         >
-                            <div class="history-entry-icon" :class="getBgForType(entry.type)">
-                                <component :is="getIconForType(entry.type)" class="w-3 h-3" :class="getColorForType(entry.type)" />
+                            <div
+                                class="history-entry-icon"
+                                :class="getBgForType(entry.type)"
+                            >
+                                <component
+                                    :is="getIconForType(entry.type)"
+                                    class="w-3 h-3"
+                                    :class="getColorForType(entry.type)"
+                                />
                             </div>
                             <div class="history-entry-info">
                                 <div class="history-entry-name">
@@ -179,7 +216,10 @@ const getBgForType = (type: ToastType) => {
                                 </div>
                             </div>
                             <div class="history-entry-time">
-                                <div v-if="!entry.isRead" class="w-2 h-2 rounded-full bg-primary mb-1 ml-auto"></div>
+                                <div
+                                    v-if="!entry.isRead"
+                                    class="w-2 h-2 rounded-full bg-primary mb-1 ml-auto"
+                                ></div>
                                 {{ formatTime(entry.timestamp) }}
                             </div>
                         </div>
@@ -258,7 +298,9 @@ const getBgForType = (type: ToastType) => {
     gap: 10px;
     padding: 7px 14px;
     cursor: pointer;
-    transition: background 0.15s, opacity 0.2s;
+    transition:
+        background 0.15s,
+        opacity 0.2s;
     border-radius: 6px;
     margin: 0 4px;
     animation: slideInUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
