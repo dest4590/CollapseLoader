@@ -1209,7 +1209,9 @@
         "panel_blur_preview": "预览",
         "spotlight_blur": "Spotlight",
         "history_blur": "启动历史",
-        "notifications_blur": "通知历史"
+        "notifications_blur": "通知历史",
+        "disable_blur": "禁用模糊",
+        "blur_disabled": "模糊已禁用"
     },
     "updater": {
         "update_available": "有可用更新",

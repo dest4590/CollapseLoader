@@ -1239,7 +1239,9 @@
         "panel_blur_preview": "Превью",
         "spotlight_blur": "Spotlight",
         "history_blur": "История запусков",
-        "notifications_blur": "История уведомлений"
+        "notifications_blur": "История уведомлений",
+        "disable_blur": "Отключить блюр",
+        "blur_disabled": "Блюр отключён"
     },
     "updater": {
         "update_available": "Доступно обновление",

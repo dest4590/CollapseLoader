@@ -205,6 +205,13 @@ onMounted(async () => {
             return;
         }
 
+        if (e.code === "F5") {
+            e.preventDefault();
+            e.stopPropagation();
+            window.location.reload();
+            return;
+        }
+
         if (e.code === "F9") {
             e.preventDefault();
             e.stopPropagation();

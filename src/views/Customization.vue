@@ -879,6 +879,15 @@
                 <h2 class="card-title flex items-center gap-2 mb-4">
                     <Blend class="w-5 h-5 text-primary" />
                     {{ t("customization.panel_blur_title") }}
+                    <button
+                        class="btn btn-xs ml-auto"
+                        :class="disableBlur ? 'btn-error' : 'btn-ghost opacity-60 hover:opacity-100'"
+                        @click="disableBlur = !disableBlur"
+                    >
+                        <EyeOff v-if="disableBlur" class="w-3.5 h-3.5" />
+                        <Eye v-else class="w-3.5 h-3.5" />
+                        {{ disableBlur ? t("customization.blur_disabled") : t("customization.disable_blur") }}
+                    </button>
                 </h2>
 
                 <div class="flex flex-col gap-4 max-w-md">
@@ -1196,6 +1205,8 @@ import {
     Clock,
     Blend,
     Check,
+    Eye,
+    EyeOff,
 } from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import { settingsService } from "@services/settings/settingsService";
@@ -1340,6 +1351,7 @@ const {
     spotlightBlur,
     historyBlur,
     notificationsBlur,
+    disableBlur,
 } = toRefs(themeService.presetSettings);
 
 watch(

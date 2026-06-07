@@ -237,10 +237,10 @@ const getBgForType = (type: ToastType) => {
     right: 0;
     width: 320px;
     max-height: 420px;
-    background: hsl(var(--b2));
+    background: var(--color-base-200);
     backdrop-filter: blur(var(--notifications-blur, 20px));
     -webkit-backdrop-filter: blur(var(--notifications-blur, 20px));
-    border: 1px solid hsl(var(--b3));
+    border: 1px solid var(--color-base-300);
     border-radius: 12px;
     box-shadow:
         0 12px 40px rgba(0, 0, 0, 0.4),

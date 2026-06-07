@@ -33,6 +33,7 @@ export interface ThemeSettings {
     spotlightBlur?: number | null;
     historyBlur?: number | null;
     notificationsBlur?: number | null;
+    disableBlur?: boolean;
 }
 
 export const THEME_SETTINGS_STORAGE_KEY = "presetSettings";
@@ -69,6 +70,7 @@ export const defaultThemeSettings: ThemeSettings = {
     spotlightBlur: 24,
     historyBlur: 20,
     notificationsBlur: 20,
+    disableBlur: false,
 };
 
 const themeCssVariables: Array<[keyof ThemeSettings, string]> = [
@@ -129,7 +131,7 @@ const themePresetNumberFields = [
     "backgroundBlur",
     "backgroundOpacity",
 ] as const;
-const themePresetBooleanFields = ["enableCustomCSS"] as const;
+const themePresetBooleanFields = ["enableCustomCSS", "disableBlur"] as const;
 
 const remoteImagePrefixes = ["http://", "https://", "data:", "blob:"];
 
@@ -222,7 +224,19 @@ export const saveThemeSettings = (
 export const applyThemeSettingsToDocument = (settings: ThemeSettings): void => {
     const root = document.documentElement;
 
+    const blurKeys: Array<keyof ThemeSettings> = [
+        "spotlightBlur",
+        "historyBlur",
+        "notificationsBlur",
+        "backgroundBlur",
+    ];
+
     themeCssVariables.forEach(([key, cssVar]) => {
+        if (settings.disableBlur && blurKeys.includes(key)) {
+            root.style.setProperty(cssVar, "0px");
+            return;
+        }
+
         const cssValue = getThemeCssValue(key, settings[key]);
 
         if (cssValue === null) {
@@ -232,6 +246,12 @@ export const applyThemeSettingsToDocument = (settings: ThemeSettings): void => {
 
         root.style.setProperty(cssVar, cssValue);
     });
+
+    if (settings.disableBlur) {
+        root.setAttribute("data-no-blur", "true");
+    } else {
+        root.removeAttribute("data-no-blur");
+    }
 
     const hasBackgroundImage =
         settings.backgroundImage?.trim() &&

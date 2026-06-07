@@ -1240,7 +1240,9 @@
         "panel_blur_preview": "Preview",
         "spotlight_blur": "Spotlight",
         "history_blur": "Launch History",
-        "notifications_blur": "Notifications History"
+        "notifications_blur": "Notifications History",
+        "disable_blur": "Disable blur",
+        "blur_disabled": "Blur disabled"
     },
     "updater": {
         "update_available": "Update Available",

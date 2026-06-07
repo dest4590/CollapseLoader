@@ -1220,7 +1220,9 @@
         "panel_blur_preview": "Podgląd",
         "spotlight_blur": "Spotlight",
         "history_blur": "Historia uruchomień",
-        "notifications_blur": "Historia powiadomień"
+        "notifications_blur": "Historia powiadomień",
+        "disable_blur": "Wyłącz rozmycie",
+        "blur_disabled": "Rozmycie wyłączone"
     },
     "updater": {
         "update_available": "Dostępna aktualizacja",

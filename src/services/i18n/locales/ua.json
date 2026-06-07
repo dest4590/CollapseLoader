@@ -1222,7 +1222,9 @@
         "panel_blur_preview": "Попередній перегляд",
         "spotlight_blur": "Spotlight",
         "history_blur": "Історія запусків",
-        "notifications_blur": "Історія сповіщень"
+        "notifications_blur": "Історія сповіщень",
+        "disable_blur": "Вимкнути розмиття",
+        "blur_disabled": "Розмиття вимкнено"
     },
     "updater": {
         "update_available": "Доступне оновлення",

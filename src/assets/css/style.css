@@ -103,13 +103,13 @@ body::before {
         opacity 0.3s ease;
 }
 
-html[data-has-background="true"] {
+html[data-has-background="true"]:not([data-no-blur]) {
     background-color: transparent !important;
 }
 
-html[data-has-background="true"] .main-content,
-html[data-has-background="true"] .main-sidebar,
-html[data-has-background="true"] .titlebar {
+html[data-has-background="true"]:not([data-no-blur]) .main-content,
+html[data-has-background="true"]:not([data-no-blur]) .main-sidebar,
+html[data-has-background="true"]:not([data-no-blur]) .titlebar {
     background-color: color-mix(
         in srgb,
         var(--color-base-100, #1f1f1f),
@@ -120,33 +120,57 @@ html[data-has-background="true"] .titlebar {
     border-color: rgba(255, 255, 255, 0.03) !important;
 }
 
-html[data-has-background="true"] .irc-chat > div,
-html[data-has-background="true"] .irc-chat > button {
+html[data-has-background="true"]:not([data-no-blur]) .irc-chat > div,
+html[data-has-background="true"]:not([data-no-blur]) .irc-chat > button {
     background-color: transparent !important;
 }
 
-html[data-has-background="true"] .card,
-html[data-has-background="true"] .irc-chat {
+html[data-has-background="true"]:not([data-no-blur]) .card,
+html[data-has-background="true"]:not([data-no-blur]) .irc-chat {
     background-color: rgba(255, 255, 255, 0.04) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-html[data-has-background="true"] .main-sidebar {
+html[data-has-background="true"]:not([data-no-blur]) .main-sidebar {
     border-right-color: rgba(255, 255, 255, 0.05) !important;
     border-left-color: rgba(255, 255, 255, 0.05) !important;
 }
 
-html[data-has-background="true"] .dropdown-content,
-html[data-has-background="true"] .menu,
-html[data-has-background="true"] .modal-box,
-html[data-has-background="true"] .input,
-html[data-has-background="true"] .select,
-html[data-has-background="true"] .textarea {
+html[data-has-background="true"]:not([data-no-blur]) .dropdown-content,
+html[data-has-background="true"]:not([data-no-blur]) .menu,
+html[data-has-background="true"]:not([data-no-blur]) .modal-box,
+html[data-has-background="true"]:not([data-no-blur]) .input,
+html[data-has-background="true"]:not([data-no-blur]) .select,
+html[data-has-background="true"]:not([data-no-blur]) .textarea {
     background-color: var(--color-base-100, #141414) !important;
     backdrop-filter: none !important;
     opacity: 1 !important;
+}
+
+html[data-no-blur] body::before {
+    filter: none;
+}
+
+html[data-no-blur] .main-content,
+html[data-no-blur] .main-sidebar,
+html[data-no-blur] .titlebar,
+html[data-no-blur] .card,
+html[data-no-blur] .irc-chat {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html[data-no-blur] .dropdown-content,
+html[data-no-blur] .menu,
+html[data-no-blur] .modal-box,
+html[data-no-blur] .history-panel,
+html[data-no-blur] .notification-panel,
+html[data-no-blur] .spotlight-panel {
+    background-color: var(--color-base-100) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 .slide-up {
