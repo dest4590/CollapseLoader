@@ -332,10 +332,37 @@ impl Client {
             ));
         }
 
-        let versions: Vec<ModrinthVersion> = response
+        let mut versions: Vec<ModrinthVersion> = response
             .json()
             .await
             .map_err(|e| format!("Failed to parse Modrinth API response: {e}"))?;
+
+        if versions.is_empty() && self.meta.is_custom {
+            let parts: Vec<&str> = self.version.split('.').collect();
+            if parts.len() >= 2 {
+                let fallback_version = format!("{}.{}", parts[0], parts[1]);
+                log_info!("Exact version {} not found, trying fallback version {} for custom client", self.version, fallback_version);
+                
+                let fallback_url = format!(
+                    "https://api.modrinth.com/v2/project/P7dR8mSH/version?game_versions=[\"{}\"]&loaders=[\"fabric\"]",
+                    fallback_version
+                );
+                
+                let fallback_response = client
+                    .get(&fallback_url)
+                    .header(
+                        "User-Agent",
+                        "CollapseLauncher-Reborn (github.com/dest4590/CollapseLoader)",
+                    )
+                    .send()
+                    .await
+                    .map_err(|e| format!("Failed to fetch Fabric API info from Modrinth (fallback): {e}"))?;
+                    
+                if fallback_response.status().is_success() {
+                    versions = fallback_response.json().await.unwrap_or_default();
+                }
+            }
+        }
 
         let best_version = versions.first().ok_or_else(|| {
             format!(

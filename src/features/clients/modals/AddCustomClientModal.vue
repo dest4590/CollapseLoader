@@ -5,6 +5,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
+import { useCustomClientVersions } from "../composables/useCustomClientVersions";
 
 const { addToast } = useToast();
 const { t } = useI18n();
@@ -14,11 +15,7 @@ const emit = defineEmits<{
     close: [];
 }>();
 
-const VERSION_MAP = {
-    default: ["1.16.5"],
-    forge: ["1.8.9"],
-    fabric: ["1.21.4", "1.21.8", "1.21.11"],
-};
+const { fetchVersions, getAvailableVersions, versionsLoading } = useCustomClientVersions();
 
 const form = reactive({
     name: "",
@@ -51,23 +48,45 @@ const applyJarFile = async (filePath: string) => {
         form.name = form.fileName.replace(".jar", "");
     }
 
-    try {
-        const mainClass = await invoke<string>("detect_main_class", {
-            filePath,
-        });
-        if (mainClass) {
-            form.mainClass = mainClass;
-            addToast(
-                t("modals.add_custom_client_modal.main_class_detected"),
-                "success"
-            );
+    // Auto-detect client type from filename
+    const lowerName = form.fileName.toLowerCase();
+    if (lowerName.includes("fabric")) {
+        form.clientType = "fabric";
+    } else if (lowerName.includes("forge")) {
+        form.clientType = "forge";
+    }
+
+    // Attempt to auto-select the version if it exists in the name
+    const versions = availableVersions.value;
+    for (const v of versions) {
+        if (form.fileName.includes(v)) {
+            form.version = v;
+            break;
         }
-    } catch (e) {
-        console.log("Failed to detect main class:", e);
+    }
+
+    // Only detect main class for 'default' vanilla/custom jars
+    if (form.clientType === "default") {
+        try {
+            const mainClass = await invoke<string>("detect_main_class", {
+                filePath,
+            });
+            if (mainClass) {
+                form.mainClass = mainClass;
+                addToast(
+                    t("modals.add_custom_client_modal.main_class_detected"),
+                    "success"
+                );
+            }
+        } catch (e) {
+            console.log("Failed to detect main class:", e);
+        }
     }
 };
 
 onMounted(async () => {
+    await fetchVersions();
+
     unlistenDrop = await getCurrentWebview().onDragDropEvent(async (event) => {
         if (event.payload.type === "over") {
             isDragging.value = true;
@@ -89,8 +108,8 @@ onUnmounted(() => {
 const errors = ref<Record<string, string>>({});
 const loading = ref(false);
 
-const availableVersions = computed(() => {
-    return VERSION_MAP[form.clientType as keyof typeof VERSION_MAP] || [];
+const availableVersions = computed<string[]>(() => {
+    return getAvailableVersions(form.clientType);
 });
 
 watch(
@@ -102,9 +121,9 @@ watch(
             form.mainClass = "net.minecraft.client.main.Main";
         }
 
-        const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
-        if (versions && versions.length > 0) {
-            form.version = versions[0];
+        const versions = availableVersions.value;
+        if (versions.length > 0) {
+            form.version = versions[versions.length - 1]; // последняя = новейшая
         }
     }
 );
@@ -242,7 +261,16 @@ const handleSubmit = async () => {
                     v-model="form.version"
                     class="select select-bordered w-full"
                     :class="{ 'select-error': errors.version }"
+                    :disabled="versionsLoading"
                 >
+                    <option
+                        v-if="versionsLoading"
+                        value=""
+                        disabled
+                        selected
+                    >
+                        {{ t("common.loading") }}...
+                    </option>
                     <option v-for="v in availableVersions" :key="v" :value="v">
                         {{ v }}
                     </option>

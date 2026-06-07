@@ -313,6 +313,8 @@ impl Client {
 
         let actual_main_class = if self.client_type == ClientType::Forge {
             "net.minecraft.launchwrapper.Launch".to_string()
+        } else if self.meta.is_custom && self.client_type == ClientType::Fabric {
+            "net.fabricmc.loader.impl.launch.knot.KnotClient".to_string()
         } else {
             self.main_class.clone()
         };
