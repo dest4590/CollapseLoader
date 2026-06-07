@@ -48,7 +48,6 @@ const applyJarFile = async (filePath: string) => {
         form.name = form.fileName.replace(".jar", "");
     }
 
-    // Auto-detect client type from filename
     const lowerName = form.fileName.toLowerCase();
     if (lowerName.includes("fabric")) {
         form.clientType = "fabric";
@@ -56,7 +55,6 @@ const applyJarFile = async (filePath: string) => {
         form.clientType = "forge";
     }
 
-    // Attempt to auto-select the version if it exists in the name
     const versions = availableVersions.value;
     for (const v of versions) {
         if (form.fileName.includes(v)) {
@@ -65,7 +63,6 @@ const applyJarFile = async (filePath: string) => {
         }
     }
 
-    // Only detect main class for 'default' vanilla/custom jars
     if (form.clientType === "default") {
         try {
             const mainClass = await invoke<string>("detect_main_class", {
@@ -123,7 +120,7 @@ watch(
 
         const versions = availableVersions.value;
         if (versions.length > 0) {
-            form.version = versions[versions.length - 1]; // последняя = новейшая
+            form.version = versions[versions.length - 1];
         }
     }
 );
