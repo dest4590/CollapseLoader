@@ -340,6 +340,7 @@
                     <div class="flex flex-wrap items-center gap-2 justify-end">
                         <div class="flex gap-2 flex-wrap">
                             <button
+                                v-if="!isExternalWindow"
                                 class="btn btn-accent btn-sm flex items-center gap-2"
                                 @click="$emit('change-view', 'marketplace')"
                             >
@@ -1186,6 +1187,52 @@
                 </transition>
             </div>
         </div>
+
+        <div
+            v-if="isExternalWindow"
+            class="card bg-base-200 shadow-md border border-base-300 mt-6"
+        >
+            <div class="card-body">
+                <h2 class="card-title flex items-center gap-2 mb-2">
+                    <Bell class="w-5 h-5 text-primary" />
+                    {{ t("theme.notifications.title") }}
+                </h2>
+                <p class="text-sm text-base-content/60 mb-4">
+                    {{ t("theme.notifications.description") }}
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <button
+                        class="btn btn-success btn-sm flex items-center gap-2"
+                        @click="triggerNotification('success')"
+                    >
+                        <CheckCircle class="w-4 h-4" />
+                        {{ t("theme.notifications.success") }}
+                    </button>
+                    <button
+                        class="btn btn-error btn-sm flex items-center gap-2"
+                        @click="triggerNotification('error')"
+                    >
+                        <XCircle class="w-4 h-4" />
+                        {{ t("theme.notifications.error") }}
+                    </button>
+                    <button
+                        class="btn btn-info btn-sm flex items-center gap-2"
+                        @click="triggerNotification('info')"
+                    >
+                        <AlertCircle class="w-4 h-4" />
+                        {{ t("theme.notifications.info") }}
+                    </button>
+                    <button
+                        class="btn btn-warning btn-sm flex items-center gap-2"
+                        @click="triggerNotification('warning')"
+                    >
+                        <AlertTriangle class="w-4 h-4" />
+                        {{ t("theme.notifications.warning") }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -1207,6 +1254,11 @@ import {
     Check,
     Eye,
     EyeOff,
+    Bell,
+    CheckCircle,
+    XCircle,
+    AlertCircle,
+    AlertTriangle,
 } from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import { settingsService } from "@services/settings/settingsService";
@@ -1492,6 +1544,24 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 const resetStyles = () => {
     themeService.resetPresetSettings();
+};
+
+const triggerNotification = (type: "success" | "error" | "info" | "warning") => {
+    const messages: Record<string, string> = {
+        success: t("theme.notifications.success_message"),
+        error: t("theme.notifications.error_message"),
+        info: t("theme.notifications.info_message"),
+        warning: t("theme.notifications.warning_message"),
+    };
+
+    const toastTypeMap: Record<string, "success" | "error" | "info" | "warning"> = {
+        success: "success",
+        error: "error",
+        info: "info",
+        warning: "warning",
+    };
+
+    addToast(messages[type], toastTypeMap[type]);
 };
 
 const openInNewWindow = async () => {
