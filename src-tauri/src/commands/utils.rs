@@ -306,15 +306,17 @@ pub fn is_macos() -> bool {
 
 #[tauri::command]
 pub fn set_window_theme(window: Window, theme: String) {
-    let target_theme = match theme.as_str() {
-        "dark" => Some(Theme::Dark),
-        "light" => Some(Theme::Light),
-        _ => None,
-    };
+    std::thread::spawn(move || {
+        let target_theme = match theme.as_str() {
+            "dark" => Some(Theme::Dark),
+            "light" => Some(Theme::Light),
+            _ => None,
+        };
 
-    if let Some(t) = target_theme {
-        let _ = window.set_theme(Some(t));
-    }
+        if let Some(t) = target_theme {
+            let _ = window.set_theme(Some(t));
+        }
+    });
 }
 
 #[tauri::command]

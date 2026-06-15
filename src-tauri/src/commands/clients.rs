@@ -29,7 +29,7 @@ use crate::{
 };
 
 use serde::Serialize;
-use sysinfo::{Pid, ProcessesToUpdate, System};
+use sysinfo::{Pid, ProcessesToUpdate, System, RefreshKind, MemoryRefreshKind, ProcessRefreshKind};
 
 use std::fs::File;
 use std::io::Read;
@@ -69,7 +69,11 @@ fn collect_client_ram_usage(client: &Client) -> ClientRamUsage {
         .filter_map(|pid| pid.parse::<u32>().ok())
         .collect::<Vec<_>>();
 
-    let mut system = System::new_all();
+    let mut system = System::new_with_specifics(
+        RefreshKind::nothing()
+            .with_memory(MemoryRefreshKind::nothing().with_ram())
+            .with_processes(ProcessRefreshKind::nothing().with_memory())
+    );
     system.refresh_memory();
     let _ = system.refresh_processes(ProcessesToUpdate::All, true);
 
