@@ -25,6 +25,7 @@
     },
     "dependencies": {
         "@guolao/vue-monaco-editor": "1.6.0",
+        "@lucide/vue": "1.23.0",
         "@stomp/stompjs": "^7.3.0",
         "@supabase/supabase-js": "^2.110.0",
         "@tauri-apps/api": "2.11.1",
@@ -34,9 +35,9 @@
         "@tauri-apps/plugin-opener": "2.5.4",
         "axios": "1.18.1",
         "gsap": "3.15.0",
-        "@lucide/vue": "1.23.0",
         "monaco-editor": "^0.55.1",
         "tls": "^0.0.1",
+        "unique-names-generator": "^4.7.1",
         "vue": "3.5.39",
         "vue-i18n": "11.4.6"
     },

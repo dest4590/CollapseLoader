@@ -16,15 +16,24 @@
                     {{ username.length }}/16
                 </span>
             </label>
-            <input
-                v-model="username"
-                type="text"
-                :maxlength="16"
-                class="input input-bordered w-full bg-base-100"
-                :class="{ 'input-error': usernameError }"
-                :placeholder="t('modals.add_account.username_placeholder')"
-                @input="validateUsername"
-            />
+            <div class="flex gap-2">
+                <input
+                    v-model="username"
+                    type="text"
+                    :maxlength="16"
+                    class="input input-bordered w-full bg-base-100"
+                    :class="{ 'input-error': usernameError }"
+                    :placeholder="t('modals.add_account.username_placeholder')"
+                    @input="validateUsername"
+                />
+                <button
+                    class="btn btn-square btn-ghost border border-base-200 shrink-0"
+                    @click="generateRandomName"
+                    type="button"
+                >
+                    <Dices class="w-5 h-5" />
+                </button>
+            </div>
             <div v-if="usernameError" class="label">
                 <span class="label-text-alt text-error">{{
                     usernameError
@@ -71,6 +80,8 @@ import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
+import { Dices } from "@lucide/vue";
+import { uniqueNamesGenerator, adjectives, animals, colors } from "unique-names-generator";
 
 const emit = defineEmits(["close", "account-added"]);
 const { addToast } = useToast();
@@ -81,6 +92,23 @@ const tags = ref("");
 const usernameError = ref("");
 
 const MC_REGEX = /^[a-zA-Z0-9_]+$/;
+
+const generateRandomName = () => {
+    let generated = "";
+    do {
+        generated = uniqueNamesGenerator({
+            dictionaries: [Math.random() > 0.5 ? colors : adjectives, animals],
+            separator: '',
+            style: 'capital'
+        });
+        if (Math.random() > 0.5 && generated.length <= 13) {
+            generated += Math.floor(Math.random() * 999).toString();
+        }
+    } while (generated.length > 16 || generated.length < 3);
+    
+    username.value = generated;
+    validateUsername();
+};
 
 const validateUsername = () => {
     const val = username.value.trim();
