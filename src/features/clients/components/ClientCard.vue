@@ -897,7 +897,7 @@ onBeforeUnmount(() => {
     border-radius: 0.5rem;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     -webkit-overflow-scrolling: touch;
-    will-change: transform, width, height, top, left;
+    padding: var(--card-padding, 0px);
 }
 
 .custom-scrollbar-hide {

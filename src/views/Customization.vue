@@ -1554,6 +1554,14 @@ const cssExamples = [
   border: 1px solid rgba(255, 255, 255, 0.1);
 }`,
     },
+    {
+        title: t("theme.example_2"),
+        code: `.client-card {
+  /* Use --card-padding instead of padding
+     to avoid breaking card layout */
+  --card-padding: 12px;
+}`,
+    },
 ];
 
 const _colorRefs: Record<string, any> = {

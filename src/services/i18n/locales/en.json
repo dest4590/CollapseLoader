@@ -665,6 +665,7 @@
                   "enable_custom_css":  "Enable custom CSS",
                   "css_examples_title":  "Examples",
                   "example_1":  "Add backdrop blur to cards",
+                  "example_2":  "Adjust card padding",
                   "example_inserted":  "Example inserted",
                   "enable_custom_css_first":  "Enable custom css first",
                   "selected":  "Selected",

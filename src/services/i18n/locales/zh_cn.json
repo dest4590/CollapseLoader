@@ -637,6 +637,7 @@
                   "enable_custom_css":  "启用自定义 CSS",
                   "css_examples_title":  "示例",
                   "example_1":  "为卡片添加毛玻璃模糊",
+                  "example_2":  "调整卡片内边距",
                   "example_inserted":  "示例已插入",
                   "enable_custom_css_first":  "请先启用自定义 CSS",
                   "selected":  "已选择",
