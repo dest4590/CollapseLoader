@@ -23,14 +23,14 @@
                             "
                             class="w-5 h-5 rounded-full overflow-hidden border border-white/10 shrink-0 cursor-pointer"
                             @click="
-                                emit('show-user-profile', preset.author?.id)
+                                emit('show-user-profile', preset?.author?.id)
                             "
                         >
                             <img
                                 :src="
                                     resolveApiAssetUrl(
-                                        preset.author.author_avatar ||
-                                            preset.author.avatar
+                                        preset?.author?.author_avatar ||
+                                            preset?.author?.avatar || ''
                                     )
                                 "
                                 class="w-full h-full object-cover"
@@ -40,7 +40,7 @@
                         <p
                             class="text-xs text-base-content/60 truncate cursor-pointer hover:text-base-content/80 transition-colors"
                             @click="
-                                emit('show-user-profile', preset.author?.id)
+                                emit('show-user-profile', preset?.author?.id)
                             "
                         >
                             {{

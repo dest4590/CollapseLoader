@@ -114,8 +114,8 @@
                                 @contextmenu.prevent="
                                     openContextMenu(
                                         $event,
-                                        msg.sender.username,
-                                        msg.sender.username
+                                        msg.sender?.username || '',
+                                        msg.sender?.username || ''
                                     )
                                 "
                             >

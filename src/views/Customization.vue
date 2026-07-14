@@ -1202,7 +1202,6 @@
                 </p>
 
                 <div class="flex flex-row gap-6 items-start">
-                    <!-- Left: ClientCard -->
                     <div class="w-[420px] shrink-0">
                         <ClientCard
                             :client="mockClient"
@@ -1214,10 +1213,8 @@
                         />
                     </div>
 
-                    <!-- Right: UI Elements Preview -->
                     <div class="flex-1 flex flex-col gap-5 min-w-0">
 
-                        <!-- Card State Toggles -->
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">
                                 {{ t("theme.ui_preview.card_state") }}
@@ -1318,7 +1315,6 @@
 
                         <div class="divider my-0"></div>
 
-                        <!-- Alerts -->
                         <div>
                             <h3 class="text-xs font-bold uppercase tracking-widest opacity-60 mb-2">
                                 {{ t("theme.ui_preview.alerts") }}

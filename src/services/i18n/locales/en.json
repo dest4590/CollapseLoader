@@ -177,17 +177,21 @@
                                       "search_hint":  "Enter at least 2 characters to search",
                                       "close":  "Close"
                                   },
-                   "add_account":  {
-                                       "username_label":  "Username",
-                                       "username_placeholder":  "Enter username",
-                                       "tags_label":  "Tags (comma separated)",
-                                       "tags_placeholder":  "e.g. funtime, spookytime",
-                                       "add_account":  "Add Account",
-                                       "username_hint":  "3–16 characters, only a-z, 0-9, _",
-                                       "username_too_short":  "Minimum 3 characters",
-                                       "username_too_long":  "Maximum 16 characters (Minecraft limit)",
-                                       "username_invalid_chars":  "Only letters, digits and _ (underscore)"
-                                   },
+                    "add_account":  {
+                                        "username_label":  "Username",
+                                        "username_placeholder":  "Enter username",
+                                        "tags_label":  "Tags (comma separated)",
+                                        "tags_placeholder":  "e.g. funtime, spookytime",
+                                        "add_account":  "Add Account",
+                                        "username_hint":  "3–16 characters, only a-z, 0-9, _",
+                                        "username_too_short":  "Minimum 3 characters",
+                                        "username_too_long":  "Maximum 16 characters (Minecraft limit)",
+                                        "username_invalid_chars":  "Only letters, digits and _ (underscore)",
+                                        "generate_random":  "Generate random nickname",
+                                        "generation_mode":  "Generation mode",
+                                        "mode_simple":  "Simple",
+                                        "mode_advanced":  "Advanced"
+                                    },
                    "telemetry_consent":  {
                                              "title":  "Optional Analytics Consent",
                                              "description":  "To improve your CollapseLoader experience, we may collect additional analytics. This data helps us understand how the application is being used and make it better.",

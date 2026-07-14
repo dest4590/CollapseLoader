@@ -184,17 +184,21 @@
                                       "search_hint":  "Wpisz co najmniej 2 znaki, aby wyszukać",
                                       "close":  "Zamknij"
                                   },
-                   "add_account":  {
-                                       "username_label":  "Nazwa użytkownika",
-                                       "username_placeholder":  "Wprowadź nazwę użytkownika",
-                                       "tags_label":  "Tagi (oddzielone przecinkami)",
-                                       "tags_placeholder":  "np.: funtime, spookytime",
-                                       "add_account":  "Dodaj konto",
-                                       "username_hint":  "3–16 znaków, tylko a-z, 0-9, _",
-                                       "username_too_short":  "Minimum 3 znaki",
-                                       "username_too_long":  "Maksimum 16 znaków (limit Minecraft)",
-                                       "username_invalid_chars":  "Tylko litery, cyfry i _ (podkreślenie)"
-                                   },
+                    "add_account":  {
+                                        "username_label":  "Nazwa użytkownika",
+                                        "username_placeholder":  "Wprowadź nazwę użytkownika",
+                                        "tags_label":  "Tagi (oddzielone przecinkami)",
+                                        "tags_placeholder":  "np.: funtime, spookytime",
+                                        "add_account":  "Dodaj konto",
+                                        "username_hint":  "3–16 znaków, tylko a-z, 0-9, _",
+                                        "username_too_short":  "Minimum 3 znaki",
+                                        "username_too_long":  "Maksimum 16 znaków (limit Minecraft)",
+                                        "username_invalid_chars":  "Tylko litery, cyfry i _ (podkreślenie)",
+                                        "generate_random":  "Wygeneruj losową nazwę",
+                                        "generation_mode":  "Tryb generowania",
+                                        "mode_simple":  "Prosty",
+                                        "mode_advanced":  "Zaawansowany"
+                                    },
                    "telemetry_consent":  {
                                              "title":  "Zgoda na dodatkową telemetrię",
                                              "description":  "Aby poprawić Twoje doświadczenia z korzystania z CollapseLoader, możemy zbierać dodatkową analitykę. Dane te pomogą nam zrozumieć, jak aplikacja jest używana, i ją ulepszyć.",
