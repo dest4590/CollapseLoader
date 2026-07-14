@@ -598,6 +598,44 @@
                                   "open_folder":  "Open Folder",
                                   "open_inspector":  "Open Inspector"
                               },
+                  "client_card_preview":  {
+                                            "title":  "UI Elements Preview",
+                                            "description":  "Full preview of all themed UI elements: client card, buttons, forms, badges and alerts. Click on alerts to test toast notifications.",
+                                            "controls":  {
+                                                            "running":  "Running",
+                                                            "installing":  "Installing",
+                                                            "requirements":  "Requirements",
+                                                            "favorite":  "Favorite",
+                                                            "selected":  "Selected"
+                                                        }
+                                        },
+                  "ui_preview":  {
+                                    "card_state":  "Card State",
+                                    "buttons":  "Buttons",
+                                    "forms":  "Form Elements",
+                                    "badges":  "Badges",
+                                    "alerts":  "Alerts",
+                                    "primary":  "Primary",
+                                    "secondary":  "Secondary",
+                                    "accent":  "Accent",
+                                    "ghost":  "Ghost",
+                                    "outline":  "Outline",
+                                    "success":  "Success",
+                                    "warning":  "Warning",
+                                    "error":  "Error",
+                                    "info":  "Info",
+                                    "neutral":  "Neutral",
+                                    "with_icon":  "With Icon",
+                                    "delete":  "Delete",
+                                    "confirm":  "Confirm",
+                                    "disabled":  "Disabled",
+                                    "input_placeholder":  "Type here...",
+                                    "select_label":  "Select option",
+                                    "alert_success":  "Operation completed successfully!",
+                                    "alert_error":  "An error occurred while processing.",
+                                    "alert_warning":  "Warning: please review carefully.",
+                                    "alert_info":  "Here is some useful information."
+                                },
                   "notifications":  {
                                         "title":  "Notification Preview",
                                         "description":  "Test how notifications look with the current theme.",
