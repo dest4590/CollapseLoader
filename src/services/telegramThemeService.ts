@@ -5,7 +5,7 @@ import type {
 } from "@features/presets/types";
 
 const TG_CHANNEL = "CollapseTheme";
-const TG_URL = `https://t.me/s/${TG_CHANNEL}`;
+const TG_URL = `https://telegram.me/s/${TG_CHANNEL}`;
 const CACHE_KEY = "tg_themes_cache";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 

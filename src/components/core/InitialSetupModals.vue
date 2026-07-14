@@ -141,7 +141,7 @@ const acceptDisclaimer = () => {
 
 const openTelegram = async () => {
     try {
-        await openUrl("https://t.me/CollapseLoader");
+        await openUrl("https://telegram.me/CollapseLoader");
     } catch (error) {
         console.error("Failed to open telegram:", error);
         addToast(t("about.open_failed", { platform: "Telegram" }), "error");

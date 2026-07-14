@@ -80,7 +80,7 @@ const openRepository = async () => {
 
 const openTelegram = async () => {
     try {
-        await openUrl("https://t.me/collapseloader");
+        await openUrl("https://telegram.me/collapseloader");
     } catch (error) {
         console.error("Failed to open telegram:", error);
         addToast(t("about.open_failed", { platform: "Telegram" }), "error");

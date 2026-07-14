@@ -6,7 +6,7 @@
                 <span class="text-sm font-medium text-base-content/70">
                     {{ t("marketplace.tg_source") }}
                     <a
-                        :href="`https://t.me/${TG_CHANNEL}`"
+                        :href="`https://telegram.me/${TG_CHANNEL}`"
                         target="_blank"
                         rel="noreferrer"
                         class="text-primary hover:underline ml-1"

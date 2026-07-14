@@ -27,5 +27,5 @@ defineEmits<{
 }>();
 
 const { t } = useI18n();
-const telegramLink = "https://t.me/CollapseTheme";
+const telegramLink = "https://telegram.me/CollapseTheme";
 </script>

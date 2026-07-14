@@ -25,7 +25,7 @@
                         :placeholder="t('news.search_placeholder')"
                     />
                     <a
-                        href="https://t.me/collapseloader"
+                        href="https://telegram.me/collapseloader"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="btn btn-sm btn-ghost gap-2 text-primary"
