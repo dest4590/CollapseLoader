@@ -5,5 +5,6 @@ pub mod data;
 pub mod favorites;
 pub mod flags;
 pub mod launch_history;
+pub mod mod_builds;
 pub mod presets;
 pub mod settings;

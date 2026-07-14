@@ -2,6 +2,7 @@
 
 pub mod clients;
 pub mod irc;
+pub mod mod_builds;
 pub mod network;
 pub mod presets;
 pub mod report;

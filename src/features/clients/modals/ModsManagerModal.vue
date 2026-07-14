@@ -1,23 +1,37 @@
 <template>
     <div class="space-y-4 flex flex-col h-full overflow-hidden">
-        <div v-if="!selectedVersionsMod" class="flex flex-col gap-2">
-            <div class="flex items-center gap-2">
-                <input
-                    v-model="searchQuery"
-                    @keyup.enter="handleSearch"
-                    type="text"
-                    :placeholder="t('mods.search_placeholder')"
-                    class="input input-sm input-bordered w-full"
-                    :disabled="isLoading"
-                />
-                <button
-                    @click="handleSearch"
-                    class="btn btn-sm btn-primary"
-                    :disabled="isLoading"
-                >
-                    <Search class="w-4 h-4" />
-                </button>
-            </div>
+        <ModBuildsModal
+            v-if="showBuilds"
+            :client="client"
+            @close="showBuilds = false"
+        />
+
+        <template v-else>
+            <div v-if="!selectedVersionsMod" class="flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                    <input
+                        v-model="searchQuery"
+                        @keyup.enter="handleSearch"
+                        type="text"
+                        :placeholder="t('mods.search_placeholder')"
+                        class="input input-sm input-bordered w-full"
+                        :disabled="isLoading"
+                    />
+                    <button
+                        @click="handleSearch"
+                        class="btn btn-sm btn-primary"
+                        :disabled="isLoading"
+                    >
+                        <Search class="w-4 h-4" />
+                    </button>
+                    <button
+                        @click="showBuilds = true"
+                        class="btn btn-sm btn-ghost border border-base-200"
+                        :title="t('mod_builds.title')"
+                    >
+                        <PackageOpen class="w-4 h-4" />
+                    </button>
+                </div>
 
             <div
                 class="flex flex-wrap items-center justify-between gap-4 px-1 pb-1"
@@ -260,18 +274,20 @@
                 {{ t("common.close") }}
             </button>
         </div>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import { Search, Download, AlertCircle, ChevronLeft } from "@lucide/vue";
+import { Search, Download, AlertCircle, ChevronLeft, PackageOpen } from "@lucide/vue";
 import {
     ModrinthService,
     type ModrinthSearchResult,
     type ModrinthVersion,
 } from "@features/clients/modrinthService";
+import ModBuildsModal from "@features/clients/modals/ModBuildsModal.vue";
 import { invoke } from "@tauri-apps/api/core";
 import type { Client } from "@shared/types/ui";
 import { useToast } from "@shared/composables/useToast";
@@ -293,6 +309,7 @@ const hasSearched = ref(false);
 const installingMods = ref(new Set<string>());
 
 const installedModFiles = ref<string[]>([]);
+const showBuilds = ref(false);
 
 const selectedVersionsMod = ref<ModrinthSearchResult | null>(null);
 const versions = ref<ModrinthVersion[]>([]);
