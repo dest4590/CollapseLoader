@@ -36,6 +36,7 @@ export default defineConfig(async () => ({
             "@layouts": path.resolve(__dirname, "./src/layouts"),
             "@router": path.resolve(__dirname, "./src/router"),
             "@stores": path.resolve(__dirname, "./src/stores"),
+            "@components": path.resolve(__dirname, "./src/components"),
         },
     },
 

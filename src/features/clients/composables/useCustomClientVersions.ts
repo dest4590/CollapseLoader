@@ -47,7 +47,9 @@ export function useCustomClientVersions() {
                 if (item.type === "file" && item.path) {
                     const filename = item.path.split("/").pop();
                     if (filename) {
-                        const match = filename.match(/^(fabric|forge)_(.+)\.jar$/);
+                        const match = filename.match(
+                            /^(fabric|forge)_(.+)\.jar$/
+                        );
                         if (match) {
                             const type = match[1];
                             const version = match[2];

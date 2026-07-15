@@ -29,7 +29,8 @@
             "@layouts/*": ["./src/layouts/*"],
             "@router": ["./src/router/index.ts"],
             "@router/*": ["./src/router/*"],
-            "@stores/*": ["./src/stores/*"]
+            "@stores/*": ["./src/stores/*"],
+            "@components/*": ["./src/components/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],

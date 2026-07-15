@@ -275,8 +275,7 @@
                                         null,
                                         2
                                     )
-                                }}</pre
-                            >
+                                }}</pre>
                         </div>
                         <div
                             v-else
@@ -312,8 +311,7 @@
                                         null,
                                         2
                                     )
-                                }}</pre
-                            >
+                                }}</pre>
                         </div>
                         <div
                             v-else-if="selectedRequest.response_text"
@@ -321,8 +319,7 @@
                         >
                             <pre
                                 class="bg-base-200 p-3 rounded-md overflow-auto whitespace-pre-wrap break-all h-full border border-base-300"
-                                >{{ selectedRequest.response_text }}</pre
-                            >
+                                >{{ selectedRequest.response_text }}</pre>
                         </div>
                         <div
                             v-else-if="!selectedRequest.status"

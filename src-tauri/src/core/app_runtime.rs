@@ -135,7 +135,13 @@ impl DeepLinkAction {
                 url.split("launch-client/")
                     .nth(1)
                     .or_else(|| url.split("launch/").nth(1))
-                    .map(|s| s.split(['?', '#', '&']).next().unwrap_or(s).trim().to_string())
+                    .map(|s| {
+                        s.split(['?', '#', '&'])
+                            .next()
+                            .unwrap_or(s)
+                            .trim()
+                            .to_string()
+                    })
                     .filter(|s| !s.is_empty())
             })?;
             return Some(Self::LaunchClient { client_id });

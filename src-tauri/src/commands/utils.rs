@@ -324,6 +324,7 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
     use tauri::menu::PredefinedMenuItem;
     use tauri::menu::{Menu, MenuItem};
 
+    #[allow(clippy::type_complexity)]
     let (fav_clients, popular_clients): (Vec<(u32, String)>, Vec<(u32, String)>) = state
         .clients
         .manager
@@ -353,7 +354,7 @@ pub fn update_tray_menu(app: AppHandle, state: State<'_, AppState>) -> Result<()
                 }
             }
 
-            others.sort_by(|a, b| b.launches.cmp(&a.launches));
+            others.sort_by_key(|b| std::cmp::Reverse(b.launches));
             let popular: Vec<_> = others
                 .into_iter()
                 .take(10)

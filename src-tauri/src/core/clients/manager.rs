@@ -166,7 +166,7 @@ impl ClientManager {
             all_clients.len(),
             all_clients
                 .iter()
-                .filter(|c| c.meta.is_fabric == false && c.meta.is_forge == false)
+                .filter(|c| !c.meta.is_fabric && !c.meta.is_forge)
                 .count(),
             all_clients.iter().filter(|c| c.meta.is_fabric).count(),
             all_clients.iter().filter(|c| c.meta.is_forge).count(),

@@ -93,8 +93,5 @@ impl Default for ModBuildManager {
     }
 }
 
-pub static MOD_BUILDS: LazyLock<Mutex<ModBuildManager>> = LazyLock::new(|| {
-    Mutex::new(ModBuildManager::load(
-        DATA.get_local("mod_builds.json"),
-    ))
-});
+pub static MOD_BUILDS: LazyLock<Mutex<ModBuildManager>> =
+    LazyLock::new(|| Mutex::new(ModBuildManager::load(DATA.get_local("mod_builds.json"))));

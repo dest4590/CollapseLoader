@@ -280,7 +280,7 @@ pub fn run() {
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
             let startup_metadata = StartupMetadata::from_env();
-            startup_metadata.configure_main_window(&app_handle);
+            startup_metadata.configure_main_window(app_handle);
             startup_metadata.print_banner();
 
             spawn(async {

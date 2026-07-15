@@ -57,7 +57,9 @@
                 <div class="join">
                     <button
                         class="btn btn-xs join-item"
-                        :class="nameMode === 'simple' ? 'btn-primary' : 'btn-ghost'"
+                        :class="
+                            nameMode === 'simple' ? 'btn-primary' : 'btn-ghost'
+                        "
                         @click="nameMode = 'simple'"
                         type="button"
                     >
@@ -65,7 +67,11 @@
                     </button>
                     <button
                         class="btn btn-xs join-item"
-                        :class="nameMode === 'advanced' ? 'btn-primary' : 'btn-ghost'"
+                        :class="
+                            nameMode === 'advanced'
+                                ? 'btn-primary'
+                                : 'btn-ghost'
+                        "
                         @click="nameMode = 'advanced'"
                         type="button"
                     >

@@ -19,11 +19,7 @@ pub fn set_progress(percentage: u8) {
     }
 
     if percentage > 0 && percentage < 100 && last != 255 {
-        let diff = if percentage > last {
-            percentage - last
-        } else {
-            last - percentage
-        };
+        let diff = percentage.abs_diff(last);
         if diff < 3 {
             return;
         }
@@ -95,7 +91,7 @@ where
     use windows::Win32::UI::Shell::{ITaskbarList3, TaskbarList};
 
     thread_local! {
-        static TASKBAR: RefCell<Option<ITaskbarList3>> = RefCell::new(None);
+        static TASKBAR: RefCell<Option<ITaskbarList3>> = const { RefCell::new(None) };
     }
 
     let Some(hwnd) = find_main_hwnd() else { return };
