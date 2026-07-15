@@ -5,11 +5,7 @@ import { STORAGE_KEYS } from "@shared/utils/storageKeys";
 import { maxIsoTimestamp } from "@shared/utils/utils";
 
 type FriendshipStatus =
-    | "friends"
-    | "request_sent"
-    | "request_received"
-    | "blocked"
-    | null;
+    "friends" | "request_sent" | "request_received" | "blocked" | null;
 
 export interface SocialLink {
     platform: string;

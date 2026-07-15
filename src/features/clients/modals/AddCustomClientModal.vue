@@ -15,7 +15,8 @@ const emit = defineEmits<{
     close: [];
 }>();
 
-const { fetchVersions, getAvailableVersions, versionsLoading } = useCustomClientVersions();
+const { fetchVersions, getAvailableVersions, versionsLoading } =
+    useCustomClientVersions();
 
 const form = reactive({
     name: "",
@@ -260,12 +261,7 @@ const handleSubmit = async () => {
                     :class="{ 'select-error': errors.version }"
                     :disabled="versionsLoading"
                 >
-                    <option
-                        v-if="versionsLoading"
-                        value=""
-                        disabled
-                        selected
-                    >
+                    <option v-if="versionsLoading" value="" disabled selected>
                         {{ t("common.loading") }}...
                     </option>
                     <option v-for="v in availableVersions" :key="v" :value="v">

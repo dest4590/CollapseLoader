@@ -30,7 +30,8 @@
                                 :src="
                                     resolveApiAssetUrl(
                                         preset?.author?.author_avatar ||
-                                            preset?.author?.avatar || ''
+                                            preset?.author?.avatar ||
+                                            ''
                                     )
                                 "
                                 class="w-full h-full object-cover"

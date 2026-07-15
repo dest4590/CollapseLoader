@@ -46,7 +46,11 @@ watch(
         }
 
         const versions = getAvailableVersions(newType);
-        if (versions && versions.length > 0 && !versions.includes(form.version)) {
+        if (
+            versions &&
+            versions.length > 0 &&
+            !versions.includes(form.version)
+        ) {
             form.version = versions[0];
         }
     }

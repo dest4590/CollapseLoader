@@ -37,19 +37,21 @@ loadHistory();
 
 function addNotificationHistory(message: string, type: ToastType) {
     const entry: NotificationHistoryEntry = {
-        id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).slice(2),
+        id: crypto.randomUUID
+            ? crypto.randomUUID()
+            : Date.now().toString() + Math.random().toString(36).slice(2),
         message,
         type,
         timestamp: Date.now(),
         isRead: false,
     };
-    
+
     history.value.unshift(entry);
-    
+
     if (history.value.length > MAX_HISTORY_SIZE) {
         history.value = history.value.slice(0, MAX_HISTORY_SIZE);
     }
-    
+
     saveHistory();
 }
 
@@ -80,8 +82,10 @@ function clearHistory() {
 }
 
 export function useNotificationHistory() {
-    const unreadCount = computed(() => history.value.filter((e) => !e.isRead).length);
-    
+    const unreadCount = computed(
+        () => history.value.filter((e) => !e.isRead).length
+    );
+
     return {
         history,
         unreadCount,

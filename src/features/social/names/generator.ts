@@ -24,7 +24,6 @@ function randomWord(category?: keyof typeof WORDS): string {
     return pick(ALL_WORDS);
 }
 
-
 function genSimple(): string {
     const start = pick(NAME_START);
     const end = pick(NAME_END);
@@ -36,7 +35,8 @@ function genSimple(): string {
 
     if (Math.random() < 0.15 && name.length >= 4) {
         const mid = 1 + Math.floor(Math.random() * (name.length - 2));
-        name = name.slice(0, mid) + name[mid].toUpperCase() + name.slice(mid + 1);
+        name =
+            name.slice(0, mid) + name[mid].toUpperCase() + name.slice(mid + 1);
     }
 
     if (Math.random() < 0.3) {
@@ -49,7 +49,6 @@ function genSimple(): string {
 
     return name.slice(0, 16);
 }
-
 
 function genGamer(): string {
     const w1 = capitalize(randomWord());
@@ -66,8 +65,20 @@ function genGamer(): string {
 }
 
 function genCool(): string {
-    const cat1: (keyof typeof WORDS)[] = ["combat","qualities","elements","space","tech"];
-    const cat2: (keyof typeof WORDS)[] = ["monsters","animals","actions","abstract","nature"];
+    const cat1: (keyof typeof WORDS)[] = [
+        "combat",
+        "qualities",
+        "elements",
+        "space",
+        "tech",
+    ];
+    const cat2: (keyof typeof WORDS)[] = [
+        "monsters",
+        "animals",
+        "actions",
+        "abstract",
+        "nature",
+    ];
     const w1 = capitalize(randomWord(pick(cat1)));
     const w2 = capitalize(randomWord(pick(cat2)));
     const sep = pick(SEPARATORS);
@@ -76,8 +87,18 @@ function genCool(): string {
 }
 
 function genClassic(): string {
-    const cat1: (keyof typeof WORDS)[] = ["qualities","elements","nature","myth"];
-    const cat2: (keyof typeof WORDS)[] = ["actions","monsters","animals","abstract"];
+    const cat1: (keyof typeof WORDS)[] = [
+        "qualities",
+        "elements",
+        "nature",
+        "myth",
+    ];
+    const cat2: (keyof typeof WORDS)[] = [
+        "actions",
+        "monsters",
+        "animals",
+        "abstract",
+    ];
     const w1 = capitalize(randomWord(pick(cat1)));
     const w2 = capitalize(randomWord(pick(cat2)));
     return `${w1}${w2}`.slice(0, 16);
@@ -98,7 +119,11 @@ function genLeet(): string {
     const raw = `${w1}${w2}${num}`;
     const leet = raw
         .split("")
-        .map((c) => (Math.random() > 0.6 && LEET_MAP[c.toLowerCase()]) ? LEET_MAP[c.toLowerCase()] : c)
+        .map((c) =>
+            Math.random() > 0.6 && LEET_MAP[c.toLowerCase()]
+                ? LEET_MAP[c.toLowerCase()]
+                : c
+        )
         .join("");
     return leet.slice(0, 16);
 }
@@ -124,11 +149,21 @@ function genLetterNum(): string {
     ]).slice(0, 16);
 }
 
-
 export type NameMode = "simple" | "advanced";
-export type NameStyle = "random" | "gamer" | "cool" | "classic" | "og" | "leet" | "xstyle" | "letters";
+export type NameStyle =
+    | "random"
+    | "gamer"
+    | "cool"
+    | "classic"
+    | "og"
+    | "leet"
+    | "xstyle"
+    | "letters";
 
-const ADVANCED_GENERATORS: Record<Exclude<NameStyle, "random">, () => string> = {
+const ADVANCED_GENERATORS: Record<
+    Exclude<NameStyle, "random">,
+    () => string
+> = {
     gamer: genGamer,
     cool: genCool,
     classic: genClassic,
@@ -140,7 +175,10 @@ const ADVANCED_GENERATORS: Record<Exclude<NameStyle, "random">, () => string> = 
 
 const ALL_ADVANCED: (() => string)[] = Object.values(ADVANCED_GENERATORS);
 
-export function randomName(mode: NameMode = "simple", style?: NameStyle): string {
+export function randomName(
+    mode: NameMode = "simple",
+    style?: NameStyle
+): string {
     if (mode === "simple") return genSimple();
     if (style && style !== "random") return ADVANCED_GENERATORS[style]();
     return pick(ALL_ADVANCED)();

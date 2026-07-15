@@ -27,7 +27,7 @@ const props = defineProps<{
     viewVisible: boolean;
     showHistory: boolean;
     showNotifications: boolean;
-    searchBarRef: Ref<any>;
+    searchBarRef: Ref<any> | null;
 }>();
 
 const emit = defineEmits<{
@@ -46,6 +46,7 @@ const emit = defineEmits<{
 const { unreadCount } = useNotificationHistory();
 
 const rootRef = ref<HTMLElement | null>(null);
+const searchRef = computed(() => props.searchBarRef ?? undefined);
 
 const activeFiltersLocal = computed<Filters>({
     get: () => props.activeFilters,
@@ -88,7 +89,11 @@ const onDocumentClick = (event: MouseEvent) => {
     if (props.showHistory && rootRef.value && !rootRef.value.contains(target)) {
         emit("update:showHistory", false);
     }
-    if (props.showNotifications && rootRef.value && !rootRef.value.contains(target)) {
+    if (
+        props.showNotifications &&
+        rootRef.value &&
+        !rootRef.value.contains(target)
+    ) {
         emit("update:showNotifications", false);
     }
 };
@@ -111,7 +116,7 @@ onBeforeUnmount(() => {
         ]"
     >
         <SearchBar
-            :ref="searchBarRef"
+            :ref="searchRef"
             @search="handleSearch"
             class="flex-1 mr-2 home-search"
             :initial-value="searchQuery"
@@ -163,7 +168,9 @@ onBeforeUnmount(() => {
                 @click.stop="toggleNotifications"
                 class="btn btn-ghost border-base-300 gap-2 btn-primary relative"
                 :class="{ 'tooltip tooltip-bottom': !showNotifications }"
-                :data-tip="!showNotifications ? t('notifications.title') : undefined"
+                :data-tip="
+                    !showNotifications ? t('notifications.title') : undefined
+                "
                 :style="{
                     border: 'var(--border) solid #0000',
                 }"

@@ -1,21 +1,27 @@
 <template>
     <div class="flex flex-col h-full overflow-hidden">
-        <div v-if="isEditing" class="flex flex-col gap-3 overflow-y-auto flex-1 p-1">
+        <div
+            v-if="isEditing"
+            class="flex flex-col gap-3 overflow-y-auto flex-1 p-1"
+        >
             <div class="flex items-center gap-2">
-                <button
-                    class="btn btn-ghost btn-sm"
-                    @click="cancelEdit"
-                >
+                <button class="btn btn-ghost btn-sm" @click="cancelEdit">
                     <ArrowLeft class="w-4 h-4" />
                 </button>
                 <h3 class="font-bold text-sm">
-                    {{ editingBuild.id ? t("mod_builds.edit_build") : t("mod_builds.create_build") }}
+                    {{
+                        editingBuild.id
+                            ? t("mod_builds.edit_build")
+                            : t("mod_builds.create_build")
+                    }}
                 </h3>
             </div>
 
             <div class="form-control gap-1">
                 <label class="label py-0">
-                    <span class="label-text text-xs">{{ t("mod_builds.build_name") }}</span>
+                    <span class="label-text text-xs">{{
+                        t("mod_builds.build_name")
+                    }}</span>
                 </label>
                 <input
                     v-model="editingBuild.name"
@@ -27,7 +33,9 @@
 
             <div class="form-control gap-1">
                 <label class="label py-0">
-                    <span class="label-text text-xs">{{ t("mod_builds.build_description") }}</span>
+                    <span class="label-text text-xs">{{
+                        t("mod_builds.build_description")
+                    }}</span>
                 </label>
                 <textarea
                     v-model="editingBuild.description"
@@ -39,7 +47,9 @@
             <div class="flex gap-2">
                 <div class="form-control gap-1 flex-1">
                     <label class="label py-0">
-                        <span class="label-text text-xs">{{ t("mod_builds.loader") }}</span>
+                        <span class="label-text text-xs">{{
+                            t("mod_builds.loader")
+                        }}</span>
                     </label>
                     <select
                         v-model="editingBuild.loader"
@@ -52,7 +62,9 @@
                 </div>
                 <div class="form-control gap-1 flex-1">
                     <label class="label py-0">
-                        <span class="label-text text-xs">{{ t("mod_builds.mc_version") }}</span>
+                        <span class="label-text text-xs">{{
+                            t("mod_builds.mc_version")
+                        }}</span>
                     </label>
                     <select
                         v-model="editingBuild.mc_version"
@@ -62,14 +74,22 @@
                         <option v-if="versionsLoading" value="" disabled>
                             {{ t("common.loading") }}...
                         </option>
-                        <option v-for="v in availableVersions" :key="v" :value="v">
+                        <option
+                            v-for="v in availableVersions"
+                            :key="v"
+                            :value="v"
+                        >
                             {{ v }}
                         </option>
                     </select>
                 </div>
             </div>
 
-            <div class="divider text-xs opacity-50">{{ t("mod_builds.mods_in_build") }} ({{ editingBuild.mods.length }})</div>
+            <div class="divider text-xs opacity-50">
+                {{ t("mod_builds.mods_in_build") }} ({{
+                    editingBuild.mods.length
+                }})
+            </div>
 
             <div class="flex gap-2">
                 <div class="relative flex-1">
@@ -95,15 +115,23 @@
                     @click="searchModsToAdd"
                 >
                     <Search v-if="!isSearchingMods" class="w-4 h-4" />
-                    <span v-else class="loading loading-spinner loading-xs"></span>
+                    <span
+                        v-else
+                        class="loading loading-spinner loading-xs"
+                    ></span>
                 </button>
             </div>
 
             <div v-if="isSearchingMods" class="flex justify-center py-2">
-                <span class="loading loading-spinner loading-sm text-primary"></span>
+                <span
+                    class="loading loading-spinner loading-sm text-primary"
+                ></span>
             </div>
 
-            <div v-else-if="modSearchResults.length > 0" class="flex flex-col gap-1 max-h-48 overflow-y-auto">
+            <div
+                v-else-if="modSearchResults.length > 0"
+                class="flex flex-col gap-1 max-h-48 overflow-y-auto"
+            >
                 <div
                     v-for="mod in modSearchResults"
                     :key="mod.project_id"
@@ -113,12 +141,21 @@
                         v-if="mod.icon_url"
                         :src="mod.icon_url"
                         class="w-8 h-8 rounded"
-                        @error="($event.target as HTMLImageElement).style.display = 'none'"
+                        @error="
+                            ($event.target as HTMLImageElement).style.display =
+                                'none'
+                        "
                     />
                     <div class="flex-1 min-w-0">
-                        <div class="text-xs font-medium truncate">{{ mod.title }}</div>
-                        <div class="text-[10px] opacity-50 line-clamp-1">{{ mod.description }}</div>
-                        <div class="text-[10px] opacity-40 mt-0.5">{{ formatDownloads(mod.downloads) }}</div>
+                        <div class="text-xs font-medium truncate">
+                            {{ mod.title }}
+                        </div>
+                        <div class="text-[10px] opacity-50 line-clamp-1">
+                            {{ mod.description }}
+                        </div>
+                        <div class="text-[10px] opacity-40 mt-0.5">
+                            {{ formatDownloads(mod.downloads) }}
+                        </div>
                     </div>
                     <button
                         v-if="isModInBuild(mod.slug)"
@@ -137,7 +174,10 @@
                 </div>
             </div>
 
-            <div v-else-if="modSearchQuery && !isSearchingMods" class="text-center text-xs opacity-50 py-2">
+            <div
+                v-else-if="modSearchQuery && !isSearchingMods"
+                class="text-center text-xs opacity-50 py-2"
+            >
                 {{ t("mod_builds.no_results") }}
             </div>
 
@@ -150,11 +190,18 @@
                     v-if="mod.icon_url"
                     :src="mod.icon_url"
                     class="w-6 h-6 rounded"
-                    @error="($event.target as HTMLImageElement).style.display = 'none'"
+                    @error="
+                        ($event.target as HTMLImageElement).style.display =
+                            'none'
+                    "
                 />
                 <div class="flex-1 min-w-0">
-                    <div class="text-xs font-medium truncate">{{ mod.title }}</div>
-                    <div class="text-[10px] opacity-50 truncate">{{ mod.version_number }}</div>
+                    <div class="text-xs font-medium truncate">
+                        {{ mod.title }}
+                    </div>
+                    <div class="text-[10px] opacity-50 truncate">
+                        {{ mod.version_number }}
+                    </div>
                 </div>
                 <button
                     class="btn btn-ghost btn-xs text-error"
@@ -167,7 +214,10 @@
             <div class="flex justify-end gap-2 mt-2">
                 <button
                     class="btn btn-primary btn-sm"
-                    :disabled="!editingBuild.name.trim() || !editingBuild.mc_version.trim()"
+                    :disabled="
+                        !editingBuild.name.trim() ||
+                        !editingBuild.mc_version.trim()
+                    "
                     @click="saveBuild"
                 >
                     {{ t("common.save") }}
@@ -181,13 +231,12 @@
         <div v-else class="flex flex-col gap-3 overflow-hidden flex-1">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <button
-                        class="btn btn-ghost btn-sm"
-                        @click="emit('close')"
-                    >
+                    <button class="btn btn-ghost btn-sm" @click="emit('close')">
                         <ArrowLeft class="w-4 h-4" />
                     </button>
-                    <h3 class="font-bold text-sm">{{ t("mod_builds.title") }}</h3>
+                    <h3 class="font-bold text-sm">
+                        {{ t("mod_builds.title") }}
+                    </h3>
                 </div>
                 <div class="flex gap-2">
                     <button
@@ -197,17 +246,17 @@
                         <Upload class="w-4 h-4" />
                         {{ t("mod_builds.import") }}
                     </button>
-                    <button
-                        class="btn btn-primary btn-sm"
-                        @click="startCreate"
-                    >
+                    <button class="btn btn-primary btn-sm" @click="startCreate">
                         <Plus class="w-4 h-4" />
                         {{ t("mod_builds.create") }}
                     </button>
                 </div>
             </div>
 
-            <div v-if="builds.length === 0" class="flex flex-col items-center justify-center flex-1 gap-2 opacity-50">
+            <div
+                v-if="builds.length === 0"
+                class="flex flex-col items-center justify-center flex-1 gap-2 opacity-50"
+            >
                 <PackageOpen class="w-10 h-10" />
                 <span class="text-sm">{{ t("mod_builds.no_builds") }}</span>
             </div>
@@ -221,14 +270,30 @@
                     <div class="card-body p-3">
                         <div class="flex items-start justify-between">
                             <div class="flex-1 min-w-0">
-                                <h4 class="font-medium text-sm truncate">{{ build.name }}</h4>
-                                <p v-if="build.description" class="text-xs opacity-60 mt-0.5 line-clamp-2">
+                                <h4 class="font-medium text-sm truncate">
+                                    {{ build.name }}
+                                </h4>
+                                <p
+                                    v-if="build.description"
+                                    class="text-xs opacity-60 mt-0.5 line-clamp-2"
+                                >
                                     {{ build.description }}
                                 </p>
-                                <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                                    <span class="badge badge-xs badge-outline">{{ build.mc_version }}</span>
-                                    <span class="badge badge-xs badge-primary">{{ build.loader }}</span>
-                                    <span class="badge badge-xs badge-ghost">{{ build.mods.length }} {{ t("mod_builds.mods") }}</span>
+                                <div
+                                    class="flex items-center gap-2 mt-1.5 flex-wrap"
+                                >
+                                    <span
+                                        class="badge badge-xs badge-outline"
+                                        >{{ build.mc_version }}</span
+                                    >
+                                    <span
+                                        class="badge badge-xs badge-primary"
+                                        >{{ build.loader }}</span
+                                    >
+                                    <span class="badge badge-xs badge-ghost"
+                                        >{{ build.mods.length }}
+                                        {{ t("mod_builds.mods") }}</span
+                                    >
                                 </div>
                             </div>
                         </div>
@@ -274,7 +339,17 @@ import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { invoke } from "@tauri-apps/api/core";
 import {
-    ArrowLeft, Plus, Pencil, Trash2, Download, Share, PackageOpen, X, Search, Check, Upload,
+    ArrowLeft,
+    Plus,
+    Pencil,
+    Trash2,
+    Download,
+    Share,
+    PackageOpen,
+    X,
+    Search,
+    Check,
+    Upload,
 } from "@lucide/vue";
 import {
     ModBuildService,
@@ -304,7 +379,8 @@ const modSearchQuery = ref("");
 const modSearchResults = ref<ModrinthSearchResult[]>([]);
 const isSearchingMods = ref(false);
 
-const { fetchVersions, getAvailableVersions, versionsLoading } = useCustomClientVersions();
+const { fetchVersions, getAvailableVersions, versionsLoading } =
+    useCustomClientVersions();
 
 const availableVersions = computed(() => {
     return getAvailableVersions(editingBuild.value.loader);
@@ -312,7 +388,10 @@ const availableVersions = computed(() => {
 
 const onLoaderChange = () => {
     const versions = availableVersions.value;
-    if (versions.length > 0 && !versions.includes(editingBuild.value.mc_version)) {
+    if (
+        versions.length > 0 &&
+        !versions.includes(editingBuild.value.mc_version)
+    ) {
         editingBuild.value.mc_version = versions[versions.length - 1];
     }
 };

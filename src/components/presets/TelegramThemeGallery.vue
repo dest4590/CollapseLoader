@@ -99,7 +99,9 @@
                             >
                                 {{
                                     t("marketplace.by_author", {
-                                        name: getPresetAuthor(preset).toUpperCase(),
+                                        name: getPresetAuthor(
+                                            preset
+                                        ).toUpperCase(),
                                     })
                                 }}
                             </p>
