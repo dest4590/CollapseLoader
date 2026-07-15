@@ -66,10 +66,7 @@ pub struct UpdateInfo {
 
 pub(crate) fn parse_version(version: &str) -> Result<(u32, u32, u32), String> {
     let version = version.trim_start_matches('v');
-    let version = version
-        .split(|c| c == '-' || c == '+')
-        .next()
-        .unwrap_or(version);
+    let version = version.split(['-', '+']).next().unwrap_or(version);
     let parts: Vec<&str> = version.split('.').collect();
 
     if parts.len() != 3 {
@@ -239,8 +236,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
             .or_else(|| select_download_asset(&release.assets, &["zip"]))
             .unwrap_or_default()
     } else if cfg!(target_os = "linux") {
-        select_download_asset(&release.assets, &["AppImage", "deb", "rpm"])
-            .unwrap_or_default()
+        select_download_asset(&release.assets, &["AppImage", "deb", "rpm"]).unwrap_or_default()
     } else {
         String::new()
     };
@@ -307,10 +303,10 @@ pub async fn download_and_install_update(download_url: String) -> Result<(), Str
         .rsplit('/')
         .next()
         .unwrap_or("update.msi")
-        .split(|c| c == '?' || c == '#')
+        .split(['?', '#'])
         .next()
         .unwrap_or("update.msi")
-        .trim_end_matches(|c| c == '/' || c == '\\');
+        .trim_end_matches(['/', '\\']);
     let temp_file = temp_dir.join(file_name);
 
     log_debug!("Writing update to temp file: {:?}", temp_file);
@@ -402,26 +398,38 @@ exit
         std::process::exit(0);
     }
 
-
     #[cfg(target_os = "macos")]
     {
         let mount_point = "/Volumes/CollapseLoaderTmp";
         let status = std::process::Command::new("hdiutil")
-            .args(["attach", temp_file.to_str().unwrap(), "-mountpoint", mount_point])
+            .args([
+                "attach",
+                temp_file.to_str().unwrap(),
+                "-mountpoint",
+                mount_point,
+            ])
             .status()
             .map_err(|e| format!("Failed to mount dmg: {e}"))?;
-        if !status.success() { return Err("Failed to mount dmg".into()); }
+        if !status.success() {
+            return Err("Failed to mount dmg".into());
+        }
         let app_src = format!("{mount_point}/CollapseLoader.app");
         let status = std::process::Command::new("cp")
             .args(["-R", &app_src, "/Applications/"])
             .status()
             .map_err(|e| format!("Failed to copy app: {e}"))?;
         if !status.success() {
-            let _ = std::process::Command::new("hdiutil").args(["detach", mount_point]).status();
+            let _ = std::process::Command::new("hdiutil")
+                .args(["detach", mount_point])
+                .status();
             return Err("Не удалось скопировать приложение".into());
         }
-        let _ = std::process::Command::new("hdiutil").args(["detach", mount_point]).status();
-        let _ = std::process::Command::new("open").arg("/Applications/CollapseLoader.app").status();
+        let _ = std::process::Command::new("hdiutil")
+            .args(["detach", mount_point])
+            .status();
+        let _ = std::process::Command::new("open")
+            .arg("/Applications/CollapseLoader.app")
+            .status();
         std::process::exit(0);
     }
     #[cfg(target_os = "linux")]
@@ -439,13 +447,17 @@ exit
                 .args(["dpkg", "-i", temp_file.to_str().unwrap()])
                 .status()
                 .map_err(|e| format!("dpkg install failed: {e}"))?;
-            if !status.success() { return Err("dpkg error".into()); }
+            if !status.success() {
+                return Err("dpkg error".into());
+            }
         } else if file_name.ends_with(".rpm") {
             let status = std::process::Command::new("sudo")
                 .args(["rpm", "-i", temp_file.to_str().unwrap()])
                 .status()
                 .map_err(|e| format!("rpm install failed: {e}"))?;
-            if !status.success() { return Err("rpm error".into()); }
+            if !status.success() {
+                return Err("rpm error".into());
+            }
         } else {
             return Err(format!("Unsupported Linux asset: {file_name}"));
         }

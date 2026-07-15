@@ -38,7 +38,10 @@ pub async fn delete_mod_build(id: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn export_mod_build(id: String) -> Result<ModBuild, String> {
     let builds = MOD_BUILDS.lock().map_err(|e| e.to_string())?;
-    builds.get(&id).cloned().ok_or_else(|| "Build not found".to_string())
+    builds
+        .get(&id)
+        .cloned()
+        .ok_or_else(|| "Build not found".to_string())
 }
 
 #[tauri::command]

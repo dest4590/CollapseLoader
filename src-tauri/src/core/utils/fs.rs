@@ -17,6 +17,7 @@ fn clear_readonly_recursive(path: &Path) -> Result<(), String> {
 
     let mut permissions = metadata.permissions();
     if permissions.readonly() {
+        #[allow(clippy::permissions_set_readonly_false)]
         permissions.set_readonly(false);
         fs::set_permissions(path, permissions).map_err(|e| e.to_string())?;
     }

@@ -337,15 +337,14 @@ impl Data {
                 });
             }
 
-            if !matches!(info.kind, LocalFileKind::FabricJar) {
-                if SETTINGS
+            if !matches!(info.kind, LocalFileKind::FabricJar)
+                && SETTINGS
                     .lock()
                     .map(|s| s.sync_client_settings.value)
                     .unwrap_or(false)
-                {
-                    if let Err(e) = self.ensure_client_synced(&info.file_name).await {
-                        log_warn!("Failed to ensure client sync for {}: {}", info.file_name, e);
-                    }
+            {
+                if let Err(e) = self.ensure_client_synced(&info.file_name).await {
+                    log_warn!("Failed to ensure client sync for {}: {}", info.file_name, e);
                 }
             }
         }

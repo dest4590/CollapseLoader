@@ -45,7 +45,6 @@ pub trait JsonStorage: Sized + Serialize + DeserializeOwned {
                 Self::resource_name(),
                 e
             );
-            return;
         }
     }
 
