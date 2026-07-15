@@ -2093,6 +2093,14 @@ onBeforeUnmount(() => {
     transition-delay: 0.4s;
 }
 
+.home-entered .home-action-btn:nth-child(5) {
+    transition-delay: 0.5s;
+}
+
+.home-entered .home-action-btn:nth-child(6) {
+    transition-delay: 0.6s;
+}
+
 .client-card-item {
     opacity: 1;
     transition:
