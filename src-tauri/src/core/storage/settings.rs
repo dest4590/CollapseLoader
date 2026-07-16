@@ -160,6 +160,7 @@ define_settings! {
         auto_update: bool = (true, true),
         autostart: bool = (false, true),
         start_minimized: bool = (false, true),
+        auto_hide_sidebar: bool = (false, true),
     }
 }
 
@@ -184,5 +185,6 @@ pub fn settings_schema() -> Vec<(String, String)> {
         ("start_minimized".to_string(), "settings.start_minimized".to_string()),
         ("java_path".to_string(), "settings.java_path".to_string()),
         ("java_args".to_string(), "settings.java_args".to_string()),
+        ("auto_hide_sidebar".to_string(), "settings.auto_hide_sidebar".to_string()),
     ]
 }

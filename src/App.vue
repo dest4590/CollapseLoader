@@ -310,6 +310,7 @@ const getTransitionName = () => {
                     :is-authenticated="isAuthenticated"
                     :position="sidebarPosition"
                     :isMacOS="isMacOS"
+                    :auto-hide-sidebar="!!settingsService.settings.auto_hide_sidebar?.value"
                     @update:position="updateSidebarPosition"
                 />
 

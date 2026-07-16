@@ -958,7 +958,8 @@
             "java_args": "Custom JVM arguments to pass to the client on launch.",
             "auto_update": "Automatically check for updates and notify when a new version is available.",
             "autostart": "Launch CollapseLoader automatically when the system starts.",
-            "start_minimized": "Start CollapseLoader minimized to the system tray."
+            "start_minimized": "Start CollapseLoader minimized to the system tray.",
+            "auto_hide_sidebar": "Auto-hide the sidebar. It will appear when you hover over the edge of the screen."
         },
         "ram_warning": {},
         "telemetry": "Analytics",
@@ -987,6 +988,7 @@
         "reset_cache_failed": "Cannot remove cache, try again",
         "hash_verify": "Hash verify",
         "irc_chat": "IRC Chat",
+        "auto_hide_sidebar": "Auto-hide sidebar",
         "save_flags_failed": "Failed to save flags: {error}",
         "change_root": {
             "title": "Change Data Folder",

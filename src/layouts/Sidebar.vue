@@ -29,10 +29,14 @@ const props = defineProps<{
     isAuthenticated: boolean;
     position?: "left" | "right" | "top" | "bottom";
     isMacOS: boolean;
+    autoHideSidebar?: boolean;
 }>();
 
 const emit = defineEmits(["changeTab", "open-dev-menu", "update:position"]);
 const visible = ref(false);
+const isAutoHidden = ref(false);
+const isHoveringSidebar = ref(false);
+const hideTimeout = ref<number | null>(null);
 const isAltPressed = ref(false);
 const altPressCount = ref(0);
 const altPressTimeout = ref<number | null>(null);
@@ -93,6 +97,57 @@ const handleKeyDown = (event: KeyboardEvent) => {
         }
     }
 };
+
+const onHoverZoneEnter = () => {
+    if (!props.autoHideSidebar) return;
+    if (hideTimeout.value) {
+        clearTimeout(hideTimeout.value);
+        hideTimeout.value = null;
+    }
+    isAutoHidden.value = false;
+};
+
+const onHoverZoneLeave = () => {
+    if (!props.autoHideSidebar) return;
+    hideTimeout.value = setTimeout(() => {
+        if (!isHoveringSidebar.value) {
+            isAutoHidden.value = true;
+        }
+    }, 300) as unknown as number;
+};
+
+const onSidebarMouseEnter = () => {
+    if (!props.autoHideSidebar) return;
+    isHoveringSidebar.value = true;
+    if (hideTimeout.value) {
+        clearTimeout(hideTimeout.value);
+        hideTimeout.value = null;
+    }
+    isAutoHidden.value = false;
+};
+
+const onSidebarMouseLeave = () => {
+    if (!props.autoHideSidebar) return;
+    isHoveringSidebar.value = false;
+    hideTimeout.value = setTimeout(() => {
+        isAutoHidden.value = true;
+    }, 300) as unknown as number;
+};
+
+watch(
+    () => props.autoHideSidebar,
+    (val) => {
+        if (val) {
+            isAutoHidden.value = true;
+        } else {
+            isAutoHidden.value = false;
+            if (hideTimeout.value) {
+                clearTimeout(hideTimeout.value);
+                hideTimeout.value = null;
+            }
+        }
+    }
+);
 
 const isDragging = ref(false);
 const isMouseDown = ref(false);
@@ -225,13 +280,22 @@ const footerClasses = computed(() => {
 });
 
 const animationClass = computed(() => {
-    if (!visible.value) {
+    if (!visible.value || isAutoHidden.value) {
         if (currentPosition.value === "left") return "sidebar-hidden-left";
         if (currentPosition.value === "right") return "sidebar-hidden-right";
         if (currentPosition.value === "top") return "sidebar-hidden-top";
         if (currentPosition.value === "bottom") return "sidebar-hidden-bottom";
     }
     return "sidebar-entered";
+});
+
+const hoverZoneClasses = computed(() => {
+    const pos = currentPosition.value;
+    if (pos === "left") return "left-0 top-0 w-2 h-full cursor-pointer";
+    if (pos === "right") return "right-0 top-0 w-2 h-full cursor-pointer";
+    if (pos === "top") return "left-0 top-0 w-full h-2 cursor-pointer";
+    if (pos === "bottom") return "left-0 bottom-0 w-full h-2 cursor-pointer";
+    return "";
 });
 
 const helpTooltipClasses = computed(() => {
@@ -344,10 +408,20 @@ onUnmounted(() => {
     </div>
 
     <div
+        v-if="autoHideSidebar && isAutoHidden"
+        class="fixed z-[89] bg-transparent"
+        :class="hoverZoneClasses"
+        @mouseenter="onHoverZoneEnter"
+        @mouseleave="onHoverZoneLeave"
+    ></div>
+
+    <div
         ref="sidebarRef"
         :class="[sidebarClasses, animationClass, 'main-sidebar']"
         @mousedown="startDrag"
         @dblclick="toggleCenter"
+        @mouseenter="onSidebarMouseEnter"
+        @mouseleave="onSidebarMouseLeave"
     >
         <div
             v-if="showSidebarHelp"
@@ -558,6 +632,13 @@ onUnmounted(() => {
     will-change: transform, box-shadow;
 }
 
+.main-sidebar {
+    will-change: transform, opacity;
+    transition:
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.4s ease;
+}
+
 .sidebar-hidden-left {
     transform: translateX(-28px);
     opacity: 0;
@@ -585,9 +666,6 @@ onUnmounted(() => {
 .sidebar-entered {
     transform: translateX(0) translateY(0);
     opacity: 1;
-    transition:
-        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
-        opacity 0.6s ease;
 }
 
 .sidebar-hidden-left .sidebar-items-container > *,

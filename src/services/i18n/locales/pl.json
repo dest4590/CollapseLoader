@@ -929,7 +929,8 @@
             "java_args": "Dodatkowe argumenty JVM używane podczas uruchamiania klienta.",
             "auto_update": "Automatycznie sprawdzaj aktualizacje i powiadamiaj o nowych wersjach.",
             "autostart": "Automatycznie uruchamiaj CollapseLoader przy starcie systemu.",
-            "start_minimized": "Uruchamiaj CollapseLoader zminimalizowany do zasobnika systemowego."
+            "start_minimized": "Uruchamiaj CollapseLoader zminimalizowany do zasobnika systemowego.",
+            "auto_hide_sidebar": "Automatically hide the sidebar. It will appear when you hover over the edge of the screen."
         },
         "open_data": "Otwórz folder loadera",
         "add_account_title": "Dodaj nowe konto",
@@ -956,6 +957,7 @@
         "login_required": "Musisz zalogować się na swoje konto, aby używać tej funkcji.",
         "reset_cache_failed": "Nie udało się wyczyścić pamięci podręcznej, spróbuj ponownie",
         "hash_verify": "Weryfikacja hash ",
+        "auto_hide_sidebar": "Auto-ukrywanie panelu bocznego",
         "irc_chat": "Czat IRC",
         "save_flags_failed": "Nie udało się zapisać flag: {error}",
         "change_root": {

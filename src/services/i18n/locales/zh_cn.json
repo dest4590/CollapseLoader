@@ -915,7 +915,8 @@
             "java_args": "启动客户端时传递的自定义 JVM 参数。",
             "auto_update": "自动检查更新并在有新版本时通知。",
             "autostart": "在系统启动时自动运行 CollapseLoader。",
-            "start_minimized": "启动时将 CollapseLoader 最小化到系统托盘。"
+            "start_minimized": "启动时将 CollapseLoader 最小化到系统托盘。",
+            "auto_hide_sidebar": "自动隐藏侧边栏。当鼠标悬停在屏幕边缘时会显示。"
         },
         "add_account_title": "添加新账户",
         "edit_account_title": "编辑账户",
@@ -942,6 +943,7 @@
         "login_required": "使用此功能需要登录您的账户。",
         "reset_cache_failed": "无法删除缓存，请重试",
         "hash_verify": "哈希校验",
+        "auto_hide_sidebar": "自动隐藏侧边栏",
         "irc_chat": "IRC 聊天",
         "save_flags_failed": "保存标志失败：{error}",
         "change_root": {
