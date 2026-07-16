@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
-import { Copy } from "lucide-vue-next";
+import { Copy } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 const appLogs = ref<string[]>([]);

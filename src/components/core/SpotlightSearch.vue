@@ -17,7 +17,7 @@ import {
     ChevronRight,
     CheckCircle,
     Store,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import type { Client } from "@shared/types/ui";
 
 interface Account {

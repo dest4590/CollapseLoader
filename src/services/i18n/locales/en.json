@@ -1,4 +1,4 @@
-{
+﻿{
     "reports": {
         "title": "Report {name}",
         "description": "If someone is violating the rules or being toxic, please let us know.",
@@ -21,7 +21,7 @@
         "initial_setup": {
             "welcome": {
                 "title": "Welcome to CollapseLoader",
-                "description": "We'll guide you through a quick setup to optimize performance and privacy.",
+                "description": "We\u0027ll guide you through a quick setup to optimize performance and privacy.",
                 "subtitle": "Quick setup to get you up and running",
                 "features": {
                     "fast_startup": "Fast startup – minimal waiting time",
@@ -58,7 +58,7 @@
             },
             "appreciation": {
                 "title": "Thank You for Choosing CollapseLoader",
-                "subtitle": "You're all set – ready to start",
+                "subtitle": "You\u0027re all set – ready to start",
                 "description": "We hope you enjoy using our loader!"
             },
             "disclaimer": {
@@ -184,7 +184,11 @@
             "username_hint": "3–16 characters, only a-z, 0-9, _",
             "username_too_short": "Minimum 3 characters",
             "username_too_long": "Maximum 16 characters (Minecraft limit)",
-            "username_invalid_chars": "Only letters, digits and _ (underscore)"
+            "username_invalid_chars": "Only letters, digits and _ (underscore)",
+            "generate_random": "Generate random nickname",
+            "generation_mode": "Generation mode",
+            "mode_simple": "Simple",
+            "mode_advanced": "Advanced"
         },
         "telemetry_consent": {
             "title": "Optional Analytics Consent",
@@ -206,7 +210,7 @@
             "title": "Unverified Client Warning",
             "subtitle": "This client has not been checked for viruses",
             "description": "You are about to launch \"{clientName}\", which has not been verified for malware or viruses. This client may contain potentially harmful code that could damage your system or compromise your security.",
-            "dont_show_again": "Don't show this warning again for this client",
+            "dont_show_again": "Don\u0027t show this warning again for this client",
             "proceed_anyway": "Launch Anyway",
             "cancel": "Cancel",
             "close": "I understand"
@@ -224,13 +228,13 @@
             "tip_1": "Check your internet connection",
             "tip_2": "Try closing other applications using bandwidth",
             "tip_3": "Consider retrying the download later",
-            "dont_show_again": "Don't show this warning again",
+            "dont_show_again": "Don\u0027t show this warning again",
             "stalled_modal_title": "Download Stalled",
             "stalled_title": "Download Stuck",
             "stalled_subtitle": "No progress detected",
             "stalled_description": "Your download appears to be stuck. No data has been received for a while.",
             "no_progress": "No download progress detected",
-            "tip_zapret": "If you are from CIS (Russia, Belarus, Kazakhstan, except Ukraine), your provider may block our domains. Try enabling 'DPI Bypass' in settings and restart the loader as administrator."
+            "tip_zapret": "If you are from CIS (Russia, Belarus, Kazakhstan, except Ukraine), your provider may block our domains. Try enabling \u0027DPI Bypass\u0027 in settings and restart the loader as administrator."
         },
         "add_custom_client": "Add custom client",
         "edit_custom_client": "Edit client",
@@ -335,7 +339,7 @@
     "account": {
         "no_email": "No email",
         "invisible_mode": "Invisible mode",
-        "invisible_mode_description": "When enabled, you'll appear offline to other users",
+        "invisible_mode_description": "When enabled, you\u0027ll appear offline to other users",
         "streamer_mode": "Streamer mode",
         "streamer_mode_description": "When enabled, all usernames will be hidden for privacy",
         "streamer_enabled": "Streamer mode enabled",
@@ -447,7 +451,7 @@
             "enter_username": "Please enter a username",
             "password_placeholder": "Enter your password",
             "login_button": "Login",
-            "register_link": "Don't have an account?",
+            "register_link": "Don\u0027t have an account?",
             "success": "Logged in successfully!",
             "local_success": "Successfully logged into local profile!",
             "local_login": "Local Login",
@@ -497,6 +501,10 @@
         "send_hint": "Press Enter to send",
         "reply_unknown": "Original message not available",
         "send_failed": "Failed to send message",
+        "notification": {
+            "mention_title": "{user} mentioned you",
+            "mention_body": "{content}"
+        },
         "status": {
             "connected": "Connected",
             "connecting": "Connecting...",
@@ -590,6 +598,56 @@
             "open_folder": "Open Folder",
             "open_inspector": "Open Inspector"
         },
+        "client_card_preview": {
+            "title": "UI Elements Preview",
+            "description": "Full preview of all themed UI elements: client card, buttons, forms, badges and alerts. Click on alerts to test toast notifications.",
+            "controls": {
+                "running": "Running",
+                "installing": "Installing",
+                "requirements": "Requirements",
+                "favorite": "Favorite",
+                "selected": "Selected"
+            }
+        },
+        "ui_preview": {
+            "card_state": "Card State",
+            "buttons": "Buttons",
+            "forms": "Form Elements",
+            "badges": "Badges",
+            "alerts": "Alerts",
+            "primary": "Primary",
+            "secondary": "Secondary",
+            "accent": "Accent",
+            "ghost": "Ghost",
+            "outline": "Outline",
+            "success": "Success",
+            "warning": "Warning",
+            "error": "Error",
+            "info": "Info",
+            "neutral": "Neutral",
+            "with_icon": "With Icon",
+            "delete": "Delete",
+            "confirm": "Confirm",
+            "disabled": "Disabled",
+            "input_placeholder": "Type here...",
+            "select_label": "Select option",
+            "alert_success": "Operation completed successfully!",
+            "alert_error": "An error occurred while processing.",
+            "alert_warning": "Warning: please review carefully.",
+            "alert_info": "Here is some useful information."
+        },
+        "notifications": {
+            "title": "Notification Preview",
+            "description": "Test how notifications look with the current theme.",
+            "success": "Success",
+            "error": "Error",
+            "info": "Info",
+            "warning": "Warning",
+            "success_message": "Operation completed successfully!",
+            "error_message": "An error occurred while processing your request.",
+            "info_message": "Here is some useful information for you.",
+            "warning_message": "Warning: please review this carefully."
+        },
         "select_theme": "Select Theme",
         "description": "Select your preferred theme.",
         "change_success": "Theme changed",
@@ -603,6 +661,7 @@
         "enable_custom_css": "Enable custom CSS",
         "css_examples_title": "Examples",
         "example_1": "Add backdrop blur to cards",
+        "example_2": "Adjust card padding",
         "example_inserted": "Example inserted",
         "enable_custom_css_first": "Enable custom css first",
         "selected": "Selected",
@@ -624,6 +683,19 @@
         "import_success": "Preset imported successfully!",
         "import_invalid": "Invalid preset. Import failed.",
         "primary": "Primary color",
+        "color_accent": "Color Accent",
+        "accent_colors": {
+            "blue": "Blue",
+            "red": "Red",
+            "green": "Green",
+            "purple": "Purple",
+            "orange": "Orange",
+            "pink": "Pink",
+            "cyan": "Cyan",
+            "yellow": "Yellow",
+            "rose": "Rose",
+            "lime": "Lime"
+        },
         "export_success": "Preset copied to clipboard",
         "export_failed": "Failed to export preset",
         "colors": "Colors",
@@ -875,10 +947,10 @@
             "language": "The application language (e.g., en, ru).",
             "discord_rpc_enabled": "Enable Discord Rich Presence to show your activity in Discord.",
             "optional_telemetry": "Allow anonymous analytics to help improve CollapseLoader. No personal information is collected.",
-            "cordshare": "Share your coordinates with friends to show your location in-game, even when you're outside loaded chunks.",
+            "cordshare": "Share your coordinates with friends to show your location in-game, even when you\u0027re outside loaded chunks.",
             "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
             "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
-            "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
+            "dpi_bypass": "Enable if a client download is stuck at 0%, the client won\u0027t start, or clients fail to load.",
             "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients.",
             "minimize_to_tray_on_launch": "Minimize the app to system tray when a client is launched.",
             "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked.",
@@ -886,7 +958,8 @@
             "java_args": "Custom JVM arguments to pass to the client on launch.",
             "auto_update": "Automatically check for updates and notify when a new version is available.",
             "autostart": "Launch CollapseLoader automatically when the system starts.",
-            "start_minimized": "Start CollapseLoader minimized to the system tray."
+            "start_minimized": "Start CollapseLoader minimized to the system tray.",
+            "auto_hide_sidebar": "Auto-hide the sidebar. It will appear when you hover over the edge of the screen."
         },
         "ram_warning": {},
         "telemetry": "Analytics",
@@ -915,6 +988,7 @@
         "reset_cache_failed": "Cannot remove cache, try again",
         "hash_verify": "Hash verify",
         "irc_chat": "IRC Chat",
+        "auto_hide_sidebar": "Auto-hide sidebar",
         "save_flags_failed": "Failed to save flags: {error}",
         "change_root": {
             "title": "Change Data Folder",
@@ -1004,7 +1078,7 @@
         "presets_title": "Presets",
         "presets": "presets",
         "presets_hidden_streamer": "Presets are hidden in streamer mode.",
-        "no_presets": "This user hasn't shared any presets yet.",
+        "no_presets": "This user hasn\u0027t shared any presets yet.",
         "create_preset": "Create Preset",
         "playtime_title": "Playtime Statistics",
         "playtime_total": "Total",
@@ -1057,7 +1131,7 @@
         },
         "theme": {
             "emergency_reset_done": "Custom CSS reset. {action}",
-            "emergency_reset_toggle_instruction": "To re-enable custom CSS, open Theme settings and toggle 'Enable custom CSS' off and on."
+            "emergency_reset_toggle_instruction": "To re-enable custom CSS, open Theme settings and toggle \u0027Enable custom CSS\u0027 off and on."
         },
         "client": {
             "crashed": "Client {name} has crashed. {error}",
@@ -1140,7 +1214,7 @@
             "browsing_clients": "Browsing clients",
             "configuring_settings": "Configuring settings",
             "enjoying_visuals": "Enjoying the visuals",
-            "watching_client_behavior": "Watching the client's behavior",
+            "watching_client_behavior": "Watching the client\u0027s behavior",
             "in_profile": "In profile",
             "watching_about": "Watching about us",
             "debugging": "Debugging",
@@ -1222,14 +1296,17 @@
         "panel_blur_title": "UI Element Blur Settings",
         "panel_blur_preview": "Preview",
         "spotlight_blur": "Spotlight",
-        "history_blur": "Launch History"
+        "history_blur": "Launch History",
+        "notifications_blur": "Notifications History",
+        "disable_blur": "Disable blur",
+        "blur_disabled": "Blur disabled"
     },
     "updater": {
         "update_available": "Update Available",
         "current": "Current",
         "latest": "Latest",
         "changelog": "Changelog",
-        "download_install": "Download & Install",
+        "download_install": "Download \u0026 Install",
         "downloading": "Downloading...",
         "skip": "Skip",
         "starting_download": "Starting update download...",
@@ -1237,7 +1314,7 @@
         "update_failed": "Update failed: {error}",
         "check_for_updates": "Check for Updates",
         "checking_updates": "Checking for updates...",
-        "up_to_date": "You're running the latest version!",
+        "up_to_date": "You\u0027re running the latest version!",
         "show_more": "Show {count} more versions",
         "show_less": "Show less",
         "release_types": {},
@@ -1312,17 +1389,24 @@
         "comment_placeholder": "Write a comment...",
         "preset_picker_label": "Choose a local preset",
         "preset_picker_placeholder": "Select a preset...",
-        "no_local_presets": "You don't have any presets yet",
+        "no_local_presets": "You don\u0027t have any presets yet",
         "tg_source": "Themes from Telegram channel",
         "tg_refresh": "Refresh",
         "tg_retry": "Try again",
         "tg_load_failed": "Failed to load themes from Telegram. Check your connection.",
         "tg_colors": "Colors",
-        "tg_has_css": "Includes custom CSS"
+        "tg_has_css": "Includes custom CSS",
+        "add_theme_button": "Add Your Theme",
+        "add_theme_title": "Add Your Theme",
+        "add_theme_info": "If you want to add your preset to the marketplace, write to the Telegram channel:",
+        "contact_channel": "Contact Channel"
     },
-
     "login": "You need to log in to your account.",
     "notifications": {
+        "title": "Notifications History",
+        "clear_all": "Clear All",
+        "mark_read": "Mark Read",
+        "empty": "No notifications yet",
         "friend_request_received": {
             "title": "Friend Request",
             "message": "{name} sent you a friend request!"
@@ -1439,5 +1523,38 @@
         "uninstall_success": "Successfully uninstalled {mod}",
         "uninstall_failed": "Failed to uninstall mod: {error}",
         "open_in_modrinth": "Open in Modrinth"
+    },
+    "mod_builds": {
+        "title": "Mod Builds",
+        "create": "New Build",
+        "import": "Import",
+        "create_build": "Create Build",
+        "edit_build": "Edit Build",
+        "build_name": "Build Name",
+        "build_name_placeholder": "e.g. Optimisation Pack",
+        "build_description": "Description",
+        "build_description_placeholder": "What's in this build...",
+        "mc_version": "Minecraft Version",
+        "loader": "Loader",
+        "mods_in_build": "Mods",
+        "no_mods_added": "No mods added yet. Search above to add.",
+        "install_all": "Install All",
+        "build_saved": "Build saved",
+        "save_failed": "Failed to save build",
+        "build_deleted": "Build deleted",
+        "build_exported": "Build exported",
+        "no_builds": "No builds yet. Create one to save your mod collection.",
+        "no_mods_to_install": "This build has no mods to install",
+        "all_mods_installed": "All {count} mods installed successfully",
+        "some_mods_failed": "Installed {installed} mods, {failed} failed",
+        "mods": "mods",
+        "search_mods": "Search mods on Modrinth...",
+        "no_results": "No results found",
+        "no_version_found": "No compatible version found",
+        "mod_added": "{name} added to build",
+        "import_build": "Import Build",
+        "import_success": "Build imported successfully",
+        "import_failed": "Failed to import build",
+        "invalid_file": "Invalid build file"
     }
 }

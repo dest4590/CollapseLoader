@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import TelegramThemeGallery from "../components/presets/TelegramThemeGallery.vue";
-import { ArrowLeft } from "lucide-vue-next";
+import { ArrowLeft } from "@lucide/vue";
 import { useRouter } from "@router";
 
 defineEmits(["show-user-profile"]);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Customization from "../views/Customization.vue";
+import ToastContainer from "@shared/components/notifications/ToastContainer.vue";
 import { onMounted } from "vue";
 import { themeService } from "@services/theme/themeService";
 
@@ -13,6 +14,7 @@ onMounted(() => {
         class="h-screen w-screen bg-base-100 overflow-y-auto overflow-x-hidden p-6"
     >
         <Customization />
+        <ToastContainer />
     </div>
 </template>
 

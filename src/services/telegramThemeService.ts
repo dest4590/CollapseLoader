@@ -5,7 +5,7 @@ import type {
 } from "@features/presets/types";
 
 const TG_CHANNEL = "CollapseTheme";
-const TG_URL = `https://t.me/s/${TG_CHANNEL}`;
+const TG_URL = `https://telegram.me/s/${TG_CHANNEL}`;
 const CACHE_KEY = "tg_themes_cache";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -14,12 +14,26 @@ interface CacheEntry {
     fetchedAt: number;
 }
 
+function extractAuthorFromText(text: string): string | null {
+    const jsonStart = text.indexOf("{");
+    const preamble = jsonStart !== -1 ? text.slice(0, jsonStart) : text;
+
+    const m1 = /[Bb][Yy]\s+(@[\w.]+)/.exec(preamble);
+    if (m1) return m1[1];
+
+    const m2 = /[Bb][Yy]\s+https?:\/\/t\.me\/([\w.]+)/.exec(preamble);
+    if (m2) return `@${m2[1]}`;
+
+    return null;
+}
+
 function parseThemesFromHtml(html: string): MarketplacePreset[] {
     const results: MarketplacePreset[] = [];
     const allMsgBlocks = extractMessageBlocks(html);
 
     for (const rawHtml of allMsgBlocks) {
         const text = htmlToCleanText(rawHtml);
+        const tgAuthor = extractAuthorFromText(text);
         const jsonCandidates = extractJsonObjects(text);
 
         for (const candidate of jsonCandidates) {
@@ -27,7 +41,7 @@ function parseThemesFromHtml(html: string): MarketplacePreset[] {
             try {
                 const parsed = JSON.parse(repaired);
                 if (isValidTheme(parsed)) {
-                    results.push(normalizeTheme(parsed));
+                    results.push(normalizeTheme(parsed, tgAuthor));
                 }
             } catch {}
         }
@@ -215,7 +229,7 @@ function isValidTheme(obj: any): boolean {
     );
 }
 
-function normalizeTheme(raw: any): MarketplacePreset {
+function normalizeTheme(raw: any, tgAuthor?: string | null): MarketplacePreset {
     const theme: MarketplaceTheme = {
         customCSS: raw.customCSS ?? raw.custom_css ?? "",
         enableCustomCSS: raw.enableCustomCSS ?? raw.enable_custom_css ?? false,
@@ -248,6 +262,9 @@ function normalizeTheme(raw: any): MarketplacePreset {
                 : undefined,
     };
 
+    const authorHandle = tgAuthor ?? `@${TG_CHANNEL}`;
+    const authorUsername = tgAuthor ? tgAuthor.replace("@", "") : TG_CHANNEL;
+
     return {
         id: raw.id ?? `tg-${raw.name}-${raw.createdAt ?? Date.now()}`,
         name: raw.name,
@@ -258,8 +275,8 @@ function normalizeTheme(raw: any): MarketplacePreset {
         downloads_count: 0,
         comments_count: 0,
         liked: false,
-        author: { username: TG_CHANNEL, displayName: `@${TG_CHANNEL}` },
-        owner_username: TG_CHANNEL,
+        author: { username: authorUsername, displayName: authorHandle },
+        owner_username: authorUsername,
         theme,
         preset_data: theme,
     } as MarketplacePreset;

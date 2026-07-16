@@ -10,7 +10,7 @@ import {
     RefreshCcw,
     Star,
     Trash2,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import type { Client } from "@shared/types/ui";
 
 const { t } = useI18n();
@@ -238,11 +238,13 @@ const handleOpenCreateShortcut = () => {
 }
 
 .context-menu-open-animation {
-    animation: context-menu-scale-in 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: context-menu-scale-in 260ms cubic-bezier(0.16, 1, 0.3, 1)
+        forwards;
 }
 
 .context-menu-close-animation {
-    animation: context-menu-scale-out 220ms cubic-bezier(0.34, 0.84, 0.42, 0.96) forwards;
+    animation: context-menu-scale-out 220ms cubic-bezier(0.34, 0.84, 0.42, 0.96)
+        forwards;
 }
 
 .context-menu-open-animation .context-menu-header,
@@ -288,7 +290,10 @@ const handleOpenCreateShortcut = () => {
 }
 
 .menu.dropdown-content li a {
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
 .menu.dropdown-content li a:hover {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Activity, Download, StopCircle, Terminal } from "lucide-vue-next";
+import { Activity, Download, StopCircle, Terminal } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 import type { Client, InstallProgress } from "@shared/types/ui";
 

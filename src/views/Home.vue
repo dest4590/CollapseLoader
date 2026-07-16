@@ -77,6 +77,7 @@ const { showModal, hideModal } = useModal();
 const statusInterval = ref<number | null>(null);
 const searchBarRef = ref<any>(null);
 const showHistory = ref(false);
+const showNotifications = ref(false);
 
 const HOME_ANIM_KEY = "homeAnimPlayed";
 const hasAnimatedBefore = ref<boolean>(false);
@@ -1752,12 +1753,13 @@ onBeforeUnmount(() => {
 <template>
     <HomeTopBar
         :search-query="searchQuery"
-        :active-filters="activeFilters"
-        :client-sort-key="clientSortKey"
-        :client-sort-order="clientSortOrder"
+        v-model:active-filters="activeFilters"
+        v-model:client-sort-key="clientSortKey"
+        v-model:client-sort-order="clientSortOrder"
         :unread-news-count="props.unreadNewsCount"
         :view-visible="viewVisible"
-        :showHistory="showHistory"
+        v-model:showHistory="showHistory"
+        v-model:showNotifications="showNotifications"
         :search-bar-ref="searchBarRef"
         @change-view="$emit('change-view', $event)"
         @search="handleSearch"
@@ -2089,6 +2091,14 @@ onBeforeUnmount(() => {
 
 .home-entered .home-action-btn:nth-child(4) {
     transition-delay: 0.4s;
+}
+
+.home-entered .home-action-btn:nth-child(5) {
+    transition-delay: 0.5s;
+}
+
+.home-entered .home-action-btn:nth-child(6) {
+    transition-delay: 0.6s;
 }
 
 .client-card-item {

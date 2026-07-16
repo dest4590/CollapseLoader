@@ -1,7 +1,9 @@
 use std::path::{Path, MAIN_SEPARATOR};
+use std::sync::LazyLock;
+use std::time::Duration;
 
-use futures_util::FutureExt;
 use futures_util::future::try_join_all;
+use futures_util::FutureExt;
 use tauri::AppHandle;
 
 use super::{
@@ -24,6 +26,9 @@ use crate::core::utils::globals::{
 };
 use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
 use crate::{log_debug, log_error, log_info, log_warn};
+
+static REQWEST_CLIENT: LazyLock<reqwest::Client> =
+    LazyLock::new(|| super::super::super::network::create_client(Duration::from_secs(30)));
 
 #[derive(serde::Deserialize)]
 struct ModrinthFile {
@@ -314,12 +319,11 @@ impl Client {
             self.version
         );
 
-        let client = reqwest::Client::new();
-        let response = client
+        let response = REQWEST_CLIENT
             .get(&url)
             .header(
                 "User-Agent",
-                "CollapseLauncher-Reborn (github.com/dest4590/CollapseLoader)",
+                "CollapseLoader (github.com/dest4590/CollapseLoader)",
             )
             .send()
             .await
@@ -332,10 +336,43 @@ impl Client {
             ));
         }
 
-        let versions: Vec<ModrinthVersion> = response
+        let mut versions: Vec<ModrinthVersion> = response
             .json()
             .await
             .map_err(|e| format!("Failed to parse Modrinth API response: {e}"))?;
+
+        if versions.is_empty() && self.meta.is_custom {
+            let parts: Vec<&str> = self.version.split('.').collect();
+            if parts.len() >= 2 {
+                let fallback_version = format!("{}.{}", parts[0], parts[1]);
+                log_info!(
+                    "Exact version {} not found, trying fallback version {} for custom client",
+                    self.version,
+                    fallback_version
+                );
+
+                let fallback_url = format!(
+                    "https://api.modrinth.com/v2/project/P7dR8mSH/version?game_versions=[\"{}\"]&loaders=[\"fabric\"]",
+                    fallback_version
+                );
+
+                let fallback_response = REQWEST_CLIENT
+                    .get(&fallback_url)
+                    .header(
+                        "User-Agent",
+                        "CollapseLoader (github.com/dest4590/CollapseLoader)",
+                    )
+                    .send()
+                    .await
+                    .map_err(|e| {
+                        format!("Failed to fetch Fabric API info from Modrinth (fallback): {e}")
+                    })?;
+
+                if fallback_response.status().is_success() {
+                    versions = fallback_response.json().await.unwrap_or_default();
+                }
+            }
+        }
 
         let best_version = versions.first().ok_or_else(|| {
             format!(
@@ -579,7 +616,9 @@ impl Client {
         let _state_guard = RequirementsDownloadStateGuard::activate(app_handle);
 
         let needs_java_permission_fix = (IS_LINUX || IS_MACOS)
-            && files.iter().any(|file| file.starts_with(self.jdk_folder_name()));
+            && files
+                .iter()
+                .any(|file| file.starts_with(self.jdk_folder_name()));
 
         let downloads = files.into_iter().map(|file| async move {
             log_info!("Downloading requirement: {}", file);
@@ -775,8 +814,7 @@ impl Client {
             "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar";
         let dest = fabric_libs_dir.join("slf4j-api-2.0.9.jar");
 
-        let client = reqwest::Client::new();
-        let response = client
+        let response = REQWEST_CLIENT
             .get(slf4j_url)
             .header("User-Agent", "CollapseLoader-Reborn")
             .send()

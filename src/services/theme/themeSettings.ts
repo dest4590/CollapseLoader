@@ -32,6 +32,8 @@ export interface ThemeSettings {
     backgroundOpacity?: number | null;
     spotlightBlur?: number | null;
     historyBlur?: number | null;
+    notificationsBlur?: number | null;
+    disableBlur?: boolean;
 }
 
 export const THEME_SETTINGS_STORAGE_KEY = "presetSettings";
@@ -67,6 +69,8 @@ export const defaultThemeSettings: ThemeSettings = {
     backgroundOpacity: 100,
     spotlightBlur: 24,
     historyBlur: 20,
+    notificationsBlur: 20,
+    disableBlur: false,
 };
 
 const themeCssVariables: Array<[keyof ThemeSettings, string]> = [
@@ -95,6 +99,7 @@ const themeCssVariables: Array<[keyof ThemeSettings, string]> = [
     ["backgroundOpacity", "--background-opacity"],
     ["spotlightBlur", "--spotlight-blur"],
     ["historyBlur", "--history-blur"],
+    ["notificationsBlur", "--notifications-blur"],
 ];
 
 const themePresetStringFields = [
@@ -126,7 +131,7 @@ const themePresetNumberFields = [
     "backgroundBlur",
     "backgroundOpacity",
 ] as const;
-const themePresetBooleanFields = ["enableCustomCSS"] as const;
+const themePresetBooleanFields = ["enableCustomCSS", "disableBlur"] as const;
 
 const remoteImagePrefixes = ["http://", "https://", "data:", "blob:"];
 
@@ -171,7 +176,8 @@ const getThemeCssValue = (
         key === "backgroundBlur" ||
         key === "backgroundOpacity" ||
         key === "spotlightBlur" ||
-        key === "historyBlur"
+        key === "historyBlur" ||
+        key === "notificationsBlur"
     ) {
         return key === "backgroundOpacity" ? String(value) : `${value}px`;
     }
@@ -218,7 +224,19 @@ export const saveThemeSettings = (
 export const applyThemeSettingsToDocument = (settings: ThemeSettings): void => {
     const root = document.documentElement;
 
+    const blurKeys: Array<keyof ThemeSettings> = [
+        "spotlightBlur",
+        "historyBlur",
+        "notificationsBlur",
+        "backgroundBlur",
+    ];
+
     themeCssVariables.forEach(([key, cssVar]) => {
+        if (settings.disableBlur && blurKeys.includes(key)) {
+            root.style.setProperty(cssVar, "0px");
+            return;
+        }
+
         const cssValue = getThemeCssValue(key, settings[key]);
 
         if (cssValue === null) {
@@ -228,6 +246,12 @@ export const applyThemeSettingsToDocument = (settings: ThemeSettings): void => {
 
         root.style.setProperty(cssVar, cssValue);
     });
+
+    if (settings.disableBlur) {
+        root.setAttribute("data-no-blur", "true");
+    } else {
+        root.removeAttribute("data-no-blur");
+    }
 
     const hasBackgroundImage =
         settings.backgroundImage?.trim() &&
@@ -340,6 +364,10 @@ export const extractThemeSettingsFromPreset = (
             (extractedSettings as Record<string, string | null | undefined>)[
                 field
             ] = preset[field] as string | null;
+        } else {
+            (extractedSettings as Record<string, string | null | undefined>)[
+                field
+            ] = null;
         }
     });
 
@@ -348,6 +376,10 @@ export const extractThemeSettingsFromPreset = (
             (extractedSettings as Record<string, number | null | undefined>)[
                 field
             ] = preset[field] as number | null;
+        } else {
+            (extractedSettings as Record<string, number | null | undefined>)[
+                field
+            ] = defaultThemeSettings[field] as number | null;
         }
     });
 
@@ -355,6 +387,9 @@ export const extractThemeSettingsFromPreset = (
         if (typeof preset[field] === "boolean") {
             (extractedSettings as Record<string, boolean | undefined>)[field] =
                 preset[field] as boolean;
+        } else {
+            (extractedSettings as Record<string, boolean | undefined>)[field] =
+                defaultThemeSettings[field] as boolean;
         }
     });
 

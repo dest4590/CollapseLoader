@@ -44,7 +44,7 @@ import { ref, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
-import { Upload } from "lucide-vue-next";
+import { Upload } from "@lucide/vue";
 
 const props = defineProps<{
     mode: "import" | "export";

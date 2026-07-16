@@ -8,7 +8,7 @@
 
 **A secure, open-source launcher for verified Minecraft cheat clients.**
 
-[Telegram](https://t.me/CollapseLoader) • [Discord](https://discord.gg/FyKtnFqs6J) • [Releases](https://github.com/dest4590/CollapseLoader/releases)
+[Telegram](https://telegram.me/CollapseLoader) • [Discord](https://discord.gg/FyKtnFqs6J) • [Releases](https://github.com/dest4590/CollapseLoader/releases)
 
 </div>
 

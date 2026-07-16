@@ -14,7 +14,7 @@ import {
     Settings,
     StopCircle,
     Trash2,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import SearchBar from "@shared/components/common/SearchBar.vue";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";

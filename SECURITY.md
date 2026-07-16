@@ -53,7 +53,7 @@ Yes. Warden is not designed to hide malware, its purpose is to prevent JAR theft
 
 Even with our checks, always be careful. Follow these tips:
 
-- **Official Sources:** Only download from our [GitHub releases page](https://github.com/CollapseLoader) or [Telegram](https://t.me/CollapseLoader).
+- **Official Sources:** Only download from our [GitHub releases page](https://github.com/CollapseLoader) or [Telegram](https://telegram.me/CollapseLoader).
 
 ---
 

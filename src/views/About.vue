@@ -9,7 +9,7 @@ import Logo from "../assets/images/logo.svg";
 import IconGitHub from "../assets/icons/github.svg";
 import IconTelegram from "../assets/icons/telegram.svg";
 import IconDiscord from "../assets/icons/discord.svg";
-import { CircleFadingArrowUp } from "lucide-vue-next";
+import { CircleFadingArrowUp } from "@lucide/vue";
 import { achievementService } from "@features/social/achievementService";
 import { useUser } from "@features/auth/useUser";
 
@@ -80,7 +80,7 @@ const openRepository = async () => {
 
 const openTelegram = async () => {
     try {
-        await openUrl("https://t.me/collapseloader");
+        await openUrl("https://telegram.me/collapseloader");
     } catch (error) {
         console.error("Failed to open telegram:", error);
         addToast(t("about.open_failed", { platform: "Telegram" }), "error");

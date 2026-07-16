@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check as CheckIcon } from "lucide-vue-next";
+import { Check as CheckIcon } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 defineEmits(["close"]);

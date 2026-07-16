@@ -25,7 +25,7 @@
                         :placeholder="t('news.search_placeholder')"
                     />
                     <a
-                        href="https://t.me/collapseloader"
+                        href="https://telegram.me/collapseloader"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="btn btn-sm btn-ghost gap-2 text-primary"
@@ -171,7 +171,7 @@ import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { getCurrentLanguage } from "@services/i18n";
 import { formatDate } from "@shared/utils/utils";
-import { RefreshCcw, Send } from "lucide-vue-next";
+import { RefreshCcw, Send } from "@lucide/vue";
 import {
     telegramNewsService,
     type NewsArticle,

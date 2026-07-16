@@ -100,7 +100,7 @@ import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
-import { Search, Download } from "lucide-vue-next";
+import { Search, Download } from "@lucide/vue";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 

@@ -2,10 +2,12 @@
 import type { Ref } from "vue";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
-import { FileText, History, Newspaper } from "lucide-vue-next";
+import { FileText, History, Newspaper, Bell } from "@lucide/vue";
 import SearchBar from "@shared/components/common/SearchBar.vue";
 import FiltersMenu from "@shared/components/common/FiltersMenu.vue";
 import LaunchHistoryPanel from "@features/clients/components/LaunchHistoryPanel.vue";
+import NotificationCenterPanel from "@shared/components/notifications/NotificationCenterPanel.vue";
+import { useNotificationHistory } from "@shared/composables/useNotificationHistory";
 
 interface Filters {
     fabric: boolean;
@@ -24,20 +26,27 @@ const props = defineProps<{
     unreadNewsCount?: number | null;
     viewVisible: boolean;
     showHistory: boolean;
-    searchBarRef: Ref<any>;
+    showNotifications: boolean;
+    searchBarRef: Ref<any> | null;
 }>();
 
 const emit = defineEmits<{
     search: [string];
     "update:activeFilters": [Filters];
-    "update:clientSortKey": ["popularity" | "name" | "newest" | "version" | "rating"];
+    "update:clientSortKey": [
+        "popularity" | "name" | "newest" | "version" | "rating",
+    ];
     "update:clientSortOrder": ["asc" | "desc"];
     "update:showHistory": [boolean];
+    "update:showNotifications": [boolean];
     "change-view": [string];
     "launch-client": [number];
 }>();
 
+const { unreadCount } = useNotificationHistory();
+
 const rootRef = ref<HTMLElement | null>(null);
+const searchRef = computed(() => props.searchBarRef ?? undefined);
 
 const activeFiltersLocal = computed<Filters>({
     get: () => props.activeFilters,
@@ -62,6 +71,12 @@ const handleSearch = (value: string) => {
 
 const toggleHistory = () => {
     emit("update:showHistory", !props.showHistory);
+    if (!props.showHistory) emit("update:showNotifications", false);
+};
+
+const toggleNotifications = () => {
+    emit("update:showNotifications", !props.showNotifications);
+    if (!props.showNotifications) emit("update:showHistory", false);
 };
 
 const handleLaunchFromHistory = (id: number) => {
@@ -71,12 +86,15 @@ const handleLaunchFromHistory = (id: number) => {
 
 const onDocumentClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
+    if (props.showHistory && rootRef.value && !rootRef.value.contains(target)) {
+        emit("update:showHistory", false);
+    }
     if (
-        props.showHistory &&
+        props.showNotifications &&
         rootRef.value &&
         !rootRef.value.contains(target)
     ) {
-        emit("update:showHistory", false);
+        emit("update:showNotifications", false);
     }
 };
 
@@ -98,7 +116,7 @@ onBeforeUnmount(() => {
         ]"
     >
         <SearchBar
-            :ref="searchBarRef"
+            :ref="searchRef"
             @search="handleSearch"
             class="flex-1 mr-2 home-search"
             :initial-value="searchQuery"
@@ -141,14 +159,34 @@ onBeforeUnmount(() => {
                     v-if="unreadNewsCount && unreadNewsCount > 0"
                     class="absolute -top-2 -right-2 bg-primary text-primary-content text-xs font-bold rounded-full min-w-5 h-5 flex items-center justify-center border-2 border-base-100 px-1"
                 >
-                    {{ unreadNewsCount > 9 ? '9+' : unreadNewsCount }}
+                    {{ unreadNewsCount > 9 ? "9+" : unreadNewsCount }}
                 </span>
             </button>
         </div>
-        <div
-            class="home-action-btn relative"
-            style="isolation: isolate"
-        >
+        <div class="home-action-btn relative" style="isolation: isolate">
+            <button
+                @click.stop="toggleNotifications"
+                class="btn btn-ghost border-base-300 gap-2 btn-primary relative"
+                :class="{ 'tooltip tooltip-bottom': !showNotifications }"
+                :data-tip="
+                    !showNotifications ? t('notifications.title') : undefined
+                "
+                :style="{
+                    border: 'var(--border) solid #0000',
+                }"
+            >
+                <Bell class="w-4 h-4" />
+                <span
+                    v-if="unreadCount > 0"
+                    class="absolute -top-1 -right-1 w-3 h-3 bg-error rounded-full border-2 border-base-100"
+                ></span>
+            </button>
+            <NotificationCenterPanel
+                :show="showNotifications"
+                @close="emit('update:showNotifications', false)"
+            />
+        </div>
+        <div class="home-action-btn relative" style="isolation: isolate">
             <button
                 @click.stop="toggleHistory"
                 class="btn btn-ghost border-base-300 gap-2 btn-primary"
@@ -161,7 +199,7 @@ onBeforeUnmount(() => {
                 <History class="w-4 h-4" />
             </button>
             <LaunchHistoryPanel
-                v-if="showHistory"
+                :show="showHistory"
                 @close="emit('update:showHistory', false)"
                 @launch="handleLaunchFromHistory"
             />

@@ -137,7 +137,9 @@ Files updated: `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.jso
 | ---------------------------------- | -------------------------------------------------------------- |
 | `scripts/bump_version.py`          | Bump version across all config files                           |
 | `scripts/serve_mock_release.py`    | Serve mock update JSON on `localhost:8000` for updater testing |
-| `scripts/new_client.cjs`           | Scaffold a new client entry                                    |
+| `scripts/new_client.py`            | Add new client entry (interactive menu or CLI args)            |
+| `scripts/md5.py`                   | Compute MD5 hash of a file (interactive or CLI)                |
+| `scripts/scripts_gui.py`           | Web GUI with buttons – opens browser at localhost:8765         |
 | `scripts/remove_releases.py`       | Delete old GitHub releases (dry-run by default)                |
 | `scripts/remove_unused_actions.py` | Delete unused GH Actions runs                                  |
 

@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { UserRound } from "lucide-vue-next";
+import { UserRound } from "@lucide/vue";
 import { computed, watch, onUnmounted } from "vue";
 
 const props = defineProps<{

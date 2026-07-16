@@ -89,7 +89,7 @@ import {
     Blend,
     SlidersHorizontal,
     Code,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import type { MarketplacePreset } from "@features/presets/types";
 
 const props = defineProps<{ preset: MarketplacePreset }>();

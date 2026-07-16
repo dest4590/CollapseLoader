@@ -6,7 +6,7 @@
                 <span class="text-sm font-medium text-base-content/70">
                     {{ t("marketplace.tg_source") }}
                     <a
-                        :href="`https://t.me/${TG_CHANNEL}`"
+                        :href="`https://telegram.me/${TG_CHANNEL}`"
                         target="_blank"
                         rel="noreferrer"
                         class="text-primary hover:underline ml-1"
@@ -14,15 +14,24 @@
                     >
                 </span>
             </div>
-            <button
-                class="btn btn-ghost btn-xs gap-1"
-                :class="{ 'loading loading-spinner': refreshing }"
-                @click="refresh"
-                :disabled="refreshing"
-            >
-                <RefreshCw v-if="!refreshing" class="w-3.5 h-3.5" />
-                {{ t("marketplace.tg_refresh") }}
-            </button>
+            <div class="flex gap-1">
+                <button
+                    class="btn btn-ghost btn-xs gap-1"
+                    @click="showAddModal"
+                >
+                    <Plus class="w-3.5 h-3.5" />
+                    {{ t("marketplace.add_theme_button") }}
+                </button>
+                <button
+                    class="btn btn-ghost btn-xs gap-1"
+                    :class="{ 'loading loading-spinner': refreshing }"
+                    @click="refresh"
+                    :disabled="refreshing"
+                >
+                    <RefreshCw v-if="!refreshing" class="w-3.5 h-3.5" />
+                    {{ t("marketplace.tg_refresh") }}
+                </button>
+            </div>
         </div>
 
         <div class="relative mb-4">
@@ -90,7 +99,9 @@
                             >
                                 {{
                                     t("marketplace.by_author", {
-                                        name: `@${TG_CHANNEL}`.toUpperCase(),
+                                        name: getPresetAuthor(
+                                            preset
+                                        ).toUpperCase(),
                                     })
                                 }}
                             </p>
@@ -119,10 +130,10 @@
                         <PresetColorPreview :preset="preset" class="mt-0!" />
 
                         <p
-                            v-if="preset.description"
+                            v-if="getPresetDescription(preset)"
                             class="text-[11px] text-base-content/50 line-clamp-2 mt-2 leading-snug min-h-8"
                         >
-                            {{ preset.description }}
+                            {{ getPresetDescription(preset) }}
                         </p>
                         <div v-else class="min-h-8"></div>
                     </div>
@@ -162,7 +173,8 @@ import {
     PaintBucket,
     Download,
     Palette,
-} from "lucide-vue-next";
+    Plus,
+} from "@lucide/vue";
 import TelegramIcon from "@shared/components/ui/icons/TelegramIcon.vue";
 import PresetColorPreview from "./PresetColorPreview.vue";
 import { telegramThemeService } from "../../services/telegramThemeService";
@@ -173,8 +185,17 @@ import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload"
 import { usePresets } from "@features/presets/usePresets";
 import type { MarketplacePreset } from "@features/presets/types";
 import TelegramThemeDetailsModal from "@/components/modals/common/TelegramThemeDetailsModal.vue";
+import AddThemeModal from "@features/presets/modals/AddThemeModal.vue";
 
 const TG_CHANNEL = "CollapseTheme";
+
+function getPresetAuthor(preset: MarketplacePreset): string {
+    return preset.author?.displayName ?? `@${TG_CHANNEL}`;
+}
+
+function getPresetDescription(preset: MarketplacePreset): string {
+    return preset.description ?? "";
+}
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -295,6 +316,19 @@ function openDetails(preset: MarketplacePreset) {
                 saveLocal(preset);
                 hideModal(id);
             },
+            close: () => hideModal(id),
+        }
+    );
+}
+
+function showAddModal() {
+    const id = "add-theme";
+    showModal(
+        id,
+        AddThemeModal,
+        { title: t("marketplace.add_theme_title") },
+        {},
+        {
             close: () => hideModal(id),
         }
     );

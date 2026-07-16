@@ -33,7 +33,8 @@ import {
     Terminal,
     HardDrive,
     RefreshCcw,
-} from "lucide-vue-next";
+    PanelRightClose,
+} from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import type { ToastPosition } from "@shared/types/toast";
 import { syncService } from "../services/syncService";
@@ -125,6 +126,7 @@ const filteredSettingsEntries = computed(() => {
         "dpi_bypass",
         "minimize_to_tray_on_launch",
         "close_to_tray",
+        "auto_hide_sidebar",
         "auto_update",
         "autostart",
         "java_path",
@@ -550,6 +552,10 @@ const getFormattedLabel = (key: string) => {
 
     if (key === "close_to_tray") {
         return t("settings.close_to_tray");
+    }
+
+    if (key === "auto_hide_sidebar") {
+        return t("settings.auto_hide_sidebar");
     }
 
     if (key === "java_path") {
@@ -1031,6 +1037,10 @@ const handleToastPositionChange = (position: string) => {
                                     />
                                     <Minimize2
                                         v-if="key === 'start_minimized'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <PanelRightClose
+                                        v-if="key === 'auto_hide_sidebar'"
                                         class="w-5 h-5 text-primary"
                                     />
                                     <Coffee

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, shallowRef, onMounted, computed } from "vue";
-import { MessageSquare, Send, Trash2 } from "lucide-vue-next";
+import { MessageSquare, Send, Trash2 } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 import { apiDelete, apiGet, apiPost } from "@api/clients/internal";
 import { userService } from "@features/auth/userService";

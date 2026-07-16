@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { sendNotification } from "@tauri-apps/plugin-notification";
 import { useI18n } from "vue-i18n";
 import {
     Send,
@@ -12,7 +13,7 @@ import {
     ChevronDown,
     CornerUpLeft,
     X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import {
     useChatService,
     MESSAGE_MAX_LENGTH,
@@ -21,6 +22,7 @@ import {
 } from "@services/chat/useChatService";
 import { useToast } from "@shared/composables/useToast";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
+import notificationSound from "@/assets/misc/notification.mp3";
 import { useUser } from "@features/auth/useUser";
 import { achievementService } from "@features/social/achievementService";
 
@@ -81,11 +83,82 @@ const scrollToBottom = () => {
     });
 };
 
+const escapeRegExp = (value: string) =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const mentionNames = computed(() => {
+    const names = new Set<string>();
+    const addName = (value: string | undefined | null) => {
+        const normalized = value?.trim();
+        if (normalized) names.add(normalized);
+    };
+
+    addName(resolvedUsername.value);
+    addName(displayName.value);
+    addName(username.value);
+
+    return Array.from(names);
+});
+
+const isMentioned = (message: ChatMessage) => {
+    const normalizedContent = message.content || "";
+    return mentionNames.value.some((name) => {
+        const mentionRegex = new RegExp(
+            `(^|\\s)@${escapeRegExp(name)}(?=$|\\s|[.,!?])`,
+            "i"
+        );
+        return mentionRegex.test(normalizedContent);
+    });
+};
+
+const playMentionSound = () => {
+    new Audio(notificationSound)
+        .play()
+        .catch((error) =>
+            console.error("Failed to play mention sound:", error)
+        );
+};
+
+const showMentionNotification = (message: ChatMessage) => {
+    const title = t("chat.notification.mention_title", {
+        user: message.username,
+    });
+    const body = t("chat.notification.mention_body", {
+        content: message.content,
+    });
+
+    try {
+        sendNotification({ title, body });
+    } catch (error) {
+        console.error("System notification failed:", error);
+        addToast(title, "info", 8000);
+    }
+};
+
 watch(
     () => messages.value.length,
     () => {
         if (!isCollapsed.value) scrollToBottom();
     }
+);
+
+watch(
+    messages,
+    (newMessages, oldMessages) => {
+        if (!oldMessages || oldMessages.length === 0) return;
+        if (newMessages.length <= oldMessages.length) return;
+
+        const addedMessages = newMessages.slice(oldMessages.length);
+        const mention = addedMessages.find(
+            (msg) => msg.username !== resolvedUsername.value && isMentioned(msg)
+        );
+
+        if (!mention) return;
+
+        playMentionSound();
+        void showMentionNotification(mention);
+    },
+    { deep: false }
 );
 
 const handleSend = async () => {
@@ -199,6 +272,16 @@ const roleBadgeClass = (role: string) => {
     if (role === "admin") return "badge badge-error badge-xs ml-1";
     if (role === "moderator") return "badge badge-warning badge-xs ml-1";
     return "";
+};
+
+const getMessageDay = (message: ChatMessage) => {
+    const date = new Date(message.created_at);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit",
+    });
 };
 
 const onBeforeEnter = (el: Element) => {
@@ -412,8 +495,15 @@ onMounted(async () => {
                                     </span>
                                     <span
                                         class="text-[9px] text-base-content/20"
-                                        >{{ msg.time }}</span
                                     >
+                                        {{ msg.time }}
+                                        <span
+                                            class="ml-1 text-[9px] text-base-content/30"
+                                            v-if="msg.created_at"
+                                        >
+                                            {{ getMessageDay(msg) }}
+                                        </span>
+                                    </span>
                                     <button
                                         class="btn btn-ghost btn-xs h-4 min-h-4 px-1 opacity-0 group-hover:opacity-100 transition-opacity"
                                         @click="startReply(msg)"

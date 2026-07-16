@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { ref, reactive, watch, computed } from "vue";
+import { ref, reactive, watch, computed, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
 import type { CustomClient } from "@shared/types/ui";
-
-const VERSION_MAP = {
-    default: ["1.16.5"],
-    forge: ["1.8.9"],
-    fabric: ["1.21.4", "1.21.8", "1.21.11"],
-};
+import { useCustomClientVersions } from "../composables/useCustomClientVersions";
 
 const { addToast } = useToast();
 const { getModals } = useModal();
@@ -20,6 +15,8 @@ const emit = defineEmits<{
     "client-edited": [];
     close: [];
 }>();
+
+const { fetchVersions, getAvailableVersions } = useCustomClientVersions();
 
 const form = reactive({
     name: "",
@@ -35,7 +32,7 @@ const errors = ref<Record<string, string>>({});
 const currentClient = ref<CustomClient | null>(null);
 
 const availableVersions = computed(() => {
-    return VERSION_MAP[form.clientType as keyof typeof VERSION_MAP] || [];
+    return getAvailableVersions(form.clientType);
 });
 
 watch(
@@ -48,12 +45,20 @@ watch(
             form.mainClass = "net.fabricmc.loader.impl.launch.knot.KnotClient";
         }
 
-        const versions = VERSION_MAP[newType as keyof typeof VERSION_MAP];
-        if (versions && !versions.includes(form.version)) {
+        const versions = getAvailableVersions(newType);
+        if (
+            versions &&
+            versions.length > 0 &&
+            !versions.includes(form.version)
+        ) {
             form.version = versions[0];
         }
     }
 );
+
+onMounted(async () => {
+    await fetchVersions();
+});
 
 const validateForm = () => {
     errors.value = {};

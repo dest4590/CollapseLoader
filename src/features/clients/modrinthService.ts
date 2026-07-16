@@ -91,11 +91,7 @@ export class ModrinthService {
             offset?: number;
             facets?: string;
             index?:
-                | "relevance"
-                | "downloads"
-                | "followers"
-                | "newest"
-                | "updated";
+                "relevance" | "downloads" | "followers" | "newest" | "updated";
         } = {}
     ): Promise<{
         hits: ModrinthSearchResult[];

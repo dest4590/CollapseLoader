@@ -37,7 +37,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useToast } from "@shared/composables/useToast";
-import { Check as CheckIcon, X as XIcon } from "lucide-vue-next";
+import { Check as CheckIcon, X as XIcon } from "@lucide/vue";
 import { apiPatch } from "@api/clients/internal";
 import { useI18n } from "vue-i18n";
 

@@ -54,8 +54,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
-import * as LucideIcons from "lucide-vue-next";
-import { Lock } from "lucide-vue-next";
+import * as LucideIcons from "@lucide/vue";
+import { Lock } from "@lucide/vue";
 import { formatDate } from "@shared/utils/utils";
 
 const props = defineProps<{

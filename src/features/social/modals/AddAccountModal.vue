@@ -16,15 +16,25 @@
                     {{ username.length }}/16
                 </span>
             </label>
-            <input
-                v-model="username"
-                type="text"
-                :maxlength="16"
-                class="input input-bordered w-full bg-base-100"
-                :class="{ 'input-error': usernameError }"
-                :placeholder="t('modals.add_account.username_placeholder')"
-                @input="validateUsername"
-            />
+            <div class="flex gap-2">
+                <input
+                    v-model="username"
+                    type="text"
+                    :maxlength="16"
+                    class="input input-bordered w-full bg-base-100"
+                    :class="{ 'input-error': usernameError }"
+                    :placeholder="t('modals.add_account.username_placeholder')"
+                    @input="validateUsername"
+                />
+                <button
+                    class="btn btn-square btn-ghost border border-base-200 shrink-0"
+                    @click="generateRandomName"
+                    type="button"
+                    :title="t('modals.add_account.generate_random')"
+                >
+                    <Dices class="w-5 h-5" />
+                </button>
+            </div>
             <div v-if="usernameError" class="label">
                 <span class="label-text-alt text-error">{{
                     usernameError
@@ -34,6 +44,40 @@
                 <span class="label-text-alt text-base-content/40">{{
                     t("modals.add_account.username_hint")
                 }}</span>
+            </div>
+        </div>
+
+        <div class="form-control">
+            <div class="flex items-center justify-between">
+                <label class="label">
+                    <span class="label-text font-medium mb-1">{{
+                        t("modals.add_account.generation_mode")
+                    }}</span>
+                </label>
+                <div class="join">
+                    <button
+                        class="btn btn-xs join-item"
+                        :class="
+                            nameMode === 'simple' ? 'btn-primary' : 'btn-ghost'
+                        "
+                        @click="nameMode = 'simple'"
+                        type="button"
+                    >
+                        {{ t("modals.add_account.mode_simple") }}
+                    </button>
+                    <button
+                        class="btn btn-xs join-item"
+                        :class="
+                            nameMode === 'advanced'
+                                ? 'btn-primary'
+                                : 'btn-ghost'
+                        "
+                        @click="nameMode = 'advanced'"
+                        type="button"
+                    >
+                        {{ t("modals.add_account.mode_advanced") }}
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -71,6 +115,8 @@ import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
+import { Dices } from "@lucide/vue";
+import { randomName, type NameMode } from "@features/social/names/generator";
 
 const emit = defineEmits(["close", "account-added"]);
 const { addToast } = useToast();
@@ -79,8 +125,14 @@ const { t } = useI18n();
 const username = ref("");
 const tags = ref("");
 const usernameError = ref("");
+const nameMode = ref<NameMode>("simple");
 
 const MC_REGEX = /^[a-zA-Z0-9_]+$/;
+
+const generateRandomName = () => {
+    username.value = randomName(nameMode.value);
+    validateUsername();
+};
 
 const validateUsername = () => {
     const val = username.value.trim();

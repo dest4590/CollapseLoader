@@ -1,4 +1,4 @@
-{
+﻿{
     "reports": {
         "title": "举报 {name}",
         "description": "如果有人违反规则或发布恶意/有害内容，请向我们举报。",
@@ -18,7 +18,11 @@
         "error_message": "提交举报失败，请稍后再试。"
     },
     "chat": {
-        "reply_unknown": "原始消息不可用"
+        "reply_unknown": "原始消息不可用",
+        "notification": {
+            "mention_title": "{user} 提到了你",
+            "mention_body": "{content}"
+        }
     },
     "modals": {
         "initial_setup": {
@@ -187,7 +191,11 @@
             "username_hint": "3–16 个字符，仅限 a-z、0-9、_",
             "username_too_short": "最少 3 个字符",
             "username_too_long": "最多 16 个字符（Minecraft 限制）",
-            "username_invalid_chars": "仅限字母、数字和 _（下划线）"
+            "username_invalid_chars": "仅限字母、数字和 _（下划线）",
+            "generate_random": "生成随机昵称",
+            "generation_mode": "生成模式",
+            "mode_simple": "简单",
+            "mode_advanced": "高级"
         },
         "telemetry_consent": {
             "title": "可选分析同意",
@@ -574,6 +582,44 @@
             "open_folder": "打开文件夹",
             "open_inspector": "打开检查器"
         },
+        "client_card_preview": {
+            "title": "UI 元素预览",
+            "description": "完整预览所有主题化 UI 元素：客户端卡片、按钮、表单、徽章和警告。点击警告可测试通知。",
+            "controls": {
+                "running": "运行中",
+                "installing": "安装中",
+                "requirements": "要求",
+                "favorite": "收藏",
+                "selected": "已选择"
+            }
+        },
+        "ui_preview": {
+            "card_state": "卡片状态",
+            "buttons": "按钮",
+            "forms": "表单元素",
+            "badges": "徽章",
+            "alerts": "警告",
+            "primary": "主要",
+            "secondary": "次要",
+            "accent": "强调",
+            "ghost": "幽灵",
+            "outline": "轮廓",
+            "success": "成功",
+            "warning": "警告",
+            "error": "错误",
+            "info": "信息",
+            "neutral": "中性",
+            "with_icon": "带图标",
+            "delete": "删除",
+            "confirm": "确认",
+            "disabled": "禁用",
+            "input_placeholder": "在此输入...",
+            "select_label": "选择选项",
+            "alert_success": "操作已成功完成！",
+            "alert_error": "处理过程中发生错误。",
+            "alert_warning": "注意：请仔细检查。",
+            "alert_info": "一些有用的信息。"
+        },
         "select_theme": "选择主题",
         "description": "选择您偏好的主题。",
         "change_success": "主题已更改",
@@ -587,6 +633,7 @@
         "enable_custom_css": "启用自定义 CSS",
         "css_examples_title": "示例",
         "example_1": "为卡片添加毛玻璃模糊",
+        "example_2": "调整卡片内边距",
         "example_inserted": "示例已插入",
         "enable_custom_css_first": "请先启用自定义 CSS",
         "selected": "已选择",
@@ -607,6 +654,19 @@
         "import": "导入",
         "import_success": "预设导入成功！",
         "import_invalid": "预设无效。导入失败。",
+        "color_accent": "强调色",
+        "accent_colors": {
+            "blue": "蓝色",
+            "red": "红色",
+            "green": "绿色",
+            "purple": "紫色",
+            "orange": "橙色",
+            "pink": "粉色",
+            "cyan": "青色",
+            "yellow": "黄色",
+            "rose": "玫红",
+            "lime": "柠绿"
+        },
         "primary": "主色",
         "export_success": "预设已复制到剪贴板",
         "export_failed": "导出预设失败",
@@ -728,6 +788,20 @@
             "from": "从",
             "to": "到",
             "now_active": "当前激活"
+        },
+        "notifications": {
+            "title": "通知预览",
+            "description": "使用当前主题测试通知的外观。",
+            "success": "成功",
+            "error": "错误",
+            "critical_error": "严重错误",
+            "info": "信息",
+            "warning": "警告",
+            "success_message": "操作成功完成！",
+            "error_message": "处理请求时发生错误。",
+            "critical_error_message": "发生了严重错误。应用程序可能不稳定。",
+            "info_message": "这里有一些对你有用的信息。",
+            "warning_message": "警告：请仔细查看此内容。"
         }
     },
     "errors": {
@@ -841,7 +915,8 @@
             "java_args": "启动客户端时传递的自定义 JVM 参数。",
             "auto_update": "自动检查更新并在有新版本时通知。",
             "autostart": "在系统启动时自动运行 CollapseLoader。",
-            "start_minimized": "启动时将 CollapseLoader 最小化到系统托盘。"
+            "start_minimized": "启动时将 CollapseLoader 最小化到系统托盘。",
+            "auto_hide_sidebar": "自动隐藏侧边栏。当鼠标悬停在屏幕边缘时会显示。"
         },
         "add_account_title": "添加新账户",
         "edit_account_title": "编辑账户",
@@ -868,6 +943,7 @@
         "login_required": "使用此功能需要登录您的账户。",
         "reset_cache_failed": "无法删除缓存，请重试",
         "hash_verify": "哈希校验",
+        "auto_hide_sidebar": "自动隐藏侧边栏",
         "irc_chat": "IRC 聊天",
         "save_flags_failed": "保存标志失败：{error}",
         "change_root": {
@@ -1191,7 +1267,10 @@
         "panel_blur_title": "界面元素模糊设置",
         "panel_blur_preview": "预览",
         "spotlight_blur": "Spotlight",
-        "history_blur": "启动历史"
+        "history_blur": "启动历史",
+        "notifications_blur": "通知历史",
+        "disable_blur": "禁用模糊",
+        "blur_disabled": "模糊已禁用"
     },
     "updater": {
         "update_available": "有可用更新",
@@ -1287,9 +1366,12 @@
         "tg_retry": "重试",
         "tg_load_failed": "无法从 Telegram 加载主题，请检查网络连接。",
         "tg_colors": "颜色",
-        "tg_has_css": "包含自定义 CSS"
+        "tg_has_css": "包含自定义 CSS",
+        "add_theme_button": "添加您的主题",
+        "add_theme_title": "添加您的主题",
+        "add_theme_info": "如果您想要将自己的预设添加到市场，请向频道发送私信：",
+        "contact_channel": "联系频道"
     },
-
     "logs": {
         "copy_logs": "复制日志",
         "title": "{client} 日志",
@@ -1305,6 +1387,10 @@
     },
     "login": "您需要登录您的帐户。",
     "notifications": {
+        "title": "通知历史",
+        "clear_all": "全部清除",
+        "mark_read": "标为已读",
+        "empty": "暂无通知",
         "friend_request_received": {
             "title": "好友请求",
             "message": "{name} 向你发送了好友请求！"
@@ -1421,5 +1507,38 @@
         "uninstall_success": "已成功卸载 {mod}",
         "uninstall_failed": "卸载模组失败：{error}",
         "open_in_modrinth": "在 Modrinth 中打开"
+    },
+    "mod_builds": {
+        "title": "模组合集",
+        "create": "新建合集",
+        "import": "导入",
+        "create_build": "创建合集",
+        "edit_build": "编辑合集",
+        "build_name": "名称",
+        "build_name_placeholder": "例如：优化套装",
+        "build_description": "描述",
+        "build_description_placeholder": "这个合集包含什么...",
+        "mc_version": "Minecraft 版本",
+        "loader": "加载器",
+        "mods_in_build": "模组",
+        "no_mods_added": "还没有添加模组。在上方搜索添加。",
+        "install_all": "全部安装",
+        "build_saved": "合集已保存",
+        "save_failed": "保存合集失败",
+        "build_deleted": "合集已删除",
+        "build_exported": "合集已导出",
+        "no_builds": "还没有合集。创建一个来保存你的模组配置。",
+        "no_mods_to_install": "这个合集没有可安装的模组",
+        "all_mods_installed": "成功安装全部 {count} 个模组",
+        "some_mods_failed": "安装了 {installed} 个模组，{failed} 个失败",
+        "mods": "个模组",
+        "search_mods": "在 Modrinth 搜索模组...",
+        "no_results": "未找到结果",
+        "no_version_found": "未找到兼容版本",
+        "mod_added": "{name} 已添加到合集",
+        "import_build": "导入合集",
+        "import_success": "合集导入成功",
+        "import_failed": "导入合集失败",
+        "invalid_file": "无效的合集文件"
     }
 }

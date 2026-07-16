@@ -36,11 +36,7 @@ interface IncomingIrcPayload {
 }
 
 type IrcStatus =
-    | "disconnected"
-    | "connecting"
-    | "connected"
-    | "reconnecting"
-    | "error";
+    "disconnected" | "connecting" | "connected" | "reconnecting" | "error";
 
 const RECONNECT_DELAY_MS = 4000;
 

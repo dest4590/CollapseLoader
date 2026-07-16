@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref, onUnmounted } from "vue";
-import { Gamepad2 } from "lucide-vue-next";
+import { Gamepad2 } from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
 

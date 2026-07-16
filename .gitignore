@@ -32,3 +32,6 @@ TODO.md
 target/
 
 .DS_Store/
+
+.opencode/
+opencode.json

@@ -754,7 +754,7 @@ import {
     ChevronUp,
     Timer,
     LayoutList,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { invoke } from "@tauri-apps/api/core";
 import { localTrackerService } from "../services/localTrackerService";
@@ -1286,7 +1286,7 @@ const platformHref = (platform: string, handle: string) => {
         case "github":
             return `https://github.com/${h}`;
         case "telegram":
-            return `https://t.me/${h}`;
+            return `https://telegram.me/${h}`;
         case "youtube":
             return `https://www.youtube.com/@${h}`;
         default:
@@ -1301,7 +1301,7 @@ const displayHref = (platform: string, handle: string) => {
         case "github":
             return `github.com/${h}`;
         case "telegram":
-            return `t.me/${h}`;
+            return `telegram.me/${h}`;
         case "youtube":
             return handle;
         default:

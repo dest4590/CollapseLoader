@@ -25,7 +25,6 @@ interface AppHandlerProps {
     showPreloader: Ref<boolean>;
     showFirstRunInfo: Ref<boolean>;
     showInitialDisclaimer: Ref<boolean>;
-    showRegistrationPrompt: Ref<boolean>;
     activeTab: ComputedRef<string>;
     currentUserId: Ref<number | null>;
     previousTab: Ref<string>;
@@ -80,8 +79,7 @@ export function useAppHandlers(props: AppHandlerProps) {
                     const clients = await invoke<Client[]>("get_clients");
                     const found = clients.find((c) => c.id === clientId);
                     if (found) return found;
-                } catch {
-                }
+                } catch {}
                 if (attempt < 4) {
                     await new Promise((r) => setTimeout(r, 1000));
                 }
@@ -170,12 +168,6 @@ export function useAppHandlers(props: AppHandlerProps) {
 
             if (props.showPreloader.value) {
                 props.showPreloader.value = false;
-            }
-
-            if (!props.isAuthenticated.value) {
-                setTimeout(() => {
-                    props.showRegistrationPrompt.value = true;
-                }, 500);
             }
         } catch (error) {
             console.error(`Failed to mark ${flag} as shown:`, error);

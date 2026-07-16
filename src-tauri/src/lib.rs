@@ -188,6 +188,14 @@ pub fn run() {
             commands::presets::get_all_presets,
             commands::presets::get_preset,
             commands::presets::update_preset,
+            // mod build commands
+            commands::mod_builds::get_all_mod_builds,
+            commands::mod_builds::get_mod_build,
+            commands::mod_builds::create_mod_build,
+            commands::mod_builds::update_mod_build,
+            commands::mod_builds::delete_mod_build,
+            commands::mod_builds::export_mod_build,
+            commands::mod_builds::import_mod_build,
             // settings commands
             commands::settings::add_account,
             commands::settings::add_favorite_client,
@@ -272,7 +280,7 @@ pub fn run() {
             *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
 
             let startup_metadata = StartupMetadata::from_env();
-            startup_metadata.configure_main_window(&app_handle);
+            startup_metadata.configure_main_window(app_handle);
             startup_metadata.print_banner();
 
             spawn(async {

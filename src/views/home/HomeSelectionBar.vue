@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { Download, RefreshCcw, StopCircle, Trash2, X } from "lucide-vue-next";
+import { Download, RefreshCcw, StopCircle, Trash2, X } from "@lucide/vue";
 
 const { t } = useI18n();
 

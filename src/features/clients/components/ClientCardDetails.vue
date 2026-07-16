@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Camera, ZoomIn } from "lucide-vue-next";
+import { Camera, ZoomIn } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 import type { Client, ClientDetails } from "@shared/types/ui";
 

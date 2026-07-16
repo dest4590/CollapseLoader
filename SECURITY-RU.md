@@ -53,7 +53,7 @@ CollapseLoader – это бесплатный инструмент для чи�
 
 Даже с нашими проверками всегда соблюдайте осторожность. Следуйте этим советам:
 
-- **Официальные источники:** Скачивайте только с нашей [страницы релизов GitHub](https://github.com/CollapseLoader) или [Telegram](https://t.me/CollapseLoader).
+- **Официальные источники:** Скачивайте только с нашей [страницы релизов GitHub](https://github.com/CollapseLoader) или [Telegram](https://telegram.me/CollapseLoader).
 
 ---
 

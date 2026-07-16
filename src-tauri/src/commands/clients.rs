@@ -29,7 +29,7 @@ use crate::{
 };
 
 use serde::Serialize;
-use sysinfo::{Pid, ProcessesToUpdate, System};
+use sysinfo::{MemoryRefreshKind, Pid, ProcessRefreshKind, ProcessesToUpdate, RefreshKind, System};
 
 use std::fs::File;
 use std::io::Read;
@@ -69,7 +69,11 @@ fn collect_client_ram_usage(client: &Client) -> ClientRamUsage {
         .filter_map(|pid| pid.parse::<u32>().ok())
         .collect::<Vec<_>>();
 
-    let mut system = System::new_all();
+    let mut system = System::new_with_specifics(
+        RefreshKind::nothing()
+            .with_memory(MemoryRefreshKind::nothing().with_ram())
+            .with_processes(ProcessRefreshKind::nothing().with_memory()),
+    );
     system.refresh_memory();
     let _ = system.refresh_processes(ProcessesToUpdate::All, true);
 
@@ -701,6 +705,7 @@ pub fn get_custom_clients(state: State<'_, AppState>) -> Vec<CustomClient> {
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub fn add_custom_client(
     name: String,
     version: String,
@@ -730,6 +735,7 @@ pub fn remove_custom_client(id: u32, state: State<'_, AppState>) -> Result<(), S
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub fn update_custom_client(
     id: u32,
     name: Option<String>,
@@ -1148,8 +1154,8 @@ pub fn create_client_shortcut(
         .filter(|s| !s.trim().is_empty())
         .unwrap_or_else(|| client_name.clone());
 
-    let exe_path = std::env::current_exe()
-        .map_err(|e| format!("Failed to get executable path: {e}"))?;
+    let exe_path =
+        std::env::current_exe().map_err(|e| format!("Failed to get executable path: {e}"))?;
 
     log_info!(
         "Creating shortcut '{}' for client '{}' (exe: {})",
@@ -1158,7 +1164,14 @@ pub fn create_client_shortcut(
         exe_path.display()
     );
 
-    create_shortcut_platform(&display_name, &exe_path, id, custom_id, is_custom, icon_path.as_deref())
+    create_shortcut_platform(
+        &display_name,
+        &exe_path,
+        id,
+        custom_id,
+        is_custom,
+        icon_path.as_deref(),
+    )
 }
 
 #[cfg(target_os = "windows")]
@@ -1170,7 +1183,11 @@ fn create_shortcut_platform(
     is_custom: bool,
     icon_path: Option<&str>,
 ) -> Result<(), String> {
-    let client_id = if is_custom { custom_id.unwrap_or(id) } else { id };
+    let client_id = if is_custom {
+        custom_id.unwrap_or(id)
+    } else {
+        id
+    };
     let args = format!("collapseloader://launch-client/{}", client_id);
 
     let exe_str = exe_path.to_string_lossy().into_owned();
@@ -1223,13 +1240,21 @@ fn create_shortcut_platform(
     is_custom: bool,
     icon_path: Option<&str>,
 ) -> Result<(), String> {
-    let client_id = if is_custom { custom_id.unwrap_or(id) } else { id };
+    let client_id = if is_custom {
+        custom_id.unwrap_or(id)
+    } else {
+        id
+    };
     let deep_link = format!("collapseloader://launch-client/{}", client_id);
 
     let home = std::env::var("HOME").map_err(|_| "Cannot find HOME".to_string())?;
     let desktop = std::path::PathBuf::from(&home).join("Desktop");
 
-    let target_dir = if desktop.exists() { desktop } else { std::path::PathBuf::from(&home) };
+    let target_dir = if desktop.exists() {
+        desktop
+    } else {
+        std::path::PathBuf::from(&home)
+    };
     let desktop_file = target_dir.join(format!("{}.desktop", sanitize_filename(display_name)));
 
     let icon_line = if let Some(ip) = icon_path {
@@ -1266,12 +1291,20 @@ fn create_shortcut_platform(
     is_custom: bool,
     _icon_path: Option<&str>,
 ) -> Result<(), String> {
-    let client_id = if is_custom { custom_id.unwrap_or(id) } else { id };
+    let client_id = if is_custom {
+        custom_id.unwrap_or(id)
+    } else {
+        id
+    };
     let deep_link = format!("collapseloader://launch-client/{}", client_id);
 
     let home = std::env::var("HOME").map_err(|_| "Cannot find HOME".to_string())?;
     let desktop = std::path::PathBuf::from(&home).join("Desktop");
-    let target_dir = if desktop.exists() { desktop } else { std::path::PathBuf::from(&home) };
+    let target_dir = if desktop.exists() {
+        desktop
+    } else {
+        std::path::PathBuf::from(&home)
+    };
 
     let app_bundle = target_dir.join(format!("{}.app", sanitize_filename(display_name)));
     let contents = app_bundle.join("Contents");
@@ -1294,10 +1327,7 @@ fn create_shortcut_platform(
     std::fs::write(contents.join("Info.plist"), plist)
         .map_err(|e| format!("Failed to write Info.plist: {e}"))?;
 
-    let script = format!(
-        "#!/bin/sh\nopen '{}'\n",
-        deep_link
-    );
+    let script = format!("#!/bin/sh\nopen '{}'\n", deep_link);
     let script_path = macos_dir.join("launch");
     std::fs::write(&script_path, script)
         .map_err(|e| format!("Failed to write launcher script: {e}"))?;

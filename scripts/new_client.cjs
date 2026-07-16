@@ -19,9 +19,14 @@ const KOTLIN_DEP  = { md5_hash: '964103287b72e606de845420d1a8cc57', name: 'fabri
 const SATIN_DEP   = { md5_hash: '2cf1534f9e818bd567837979444557e9', name: 'satin-3.0.0-alpha.1', size: 0 };
 const SODIUM_DEP  = { md5_hash: '28922a78d1876ee062e3265f10abcc46', name: 'sodium-fabric-0.6.13+mc1.21.4', size: 1 };
 
+const BARITONE_DEPS = {
+    '1.21.11': { md5_hash: 'dbd83c7de8426f2facdc73f0a3a1da48', name: 'baritone-1.21.11', size: 2 }
+};
+
 const FABRIC_BASE_DEPS = {
     '1.21.4':  [{ md5_hash: '128a8d042180e7c92567342e21a21a6d', name: 'fabric-api-0.119.4+1.21.4', size: 2 }],
     '1.21.8':  [{ md5_hash: '85d76d57a7b5bb7043ea815133d2f6ba', name: 'fabric-api-0.136.1+1.21.8', size: 2 }],
+    '1.21.10': [{ md5_hash: 'c9ebf1b300d813310d18115a7cc03f99', name: 'fabric-api-0.138.4+1.21.10', size: 2 }],
     '1.21.11': [{ md5_hash: 'e2a72b6c6aa2c6c4f74541394858c86a', name: 'fabric-api-0.140.2+1.21.11', size: 2 }],
 };
 
@@ -80,6 +85,13 @@ if (clientType === 'fabric') {
     if (extraFlags.includes('kotlin')) deps.push(KOTLIN_DEP);
     if (extraFlags.includes('satin'))  deps.push(SATIN_DEP);
     if (extraFlags.includes('sodium')) deps.push(SODIUM_DEP);
+    if (extraFlags.includes('baritone')) {
+        if (BARITONE_DEPS[version]) {
+            deps.push(BARITONE_DEPS[version]);
+        } else {
+            console.warn(`Warning: baritone requested but no definition for version ${version}`);
+        }
+    }
     entry.dependencies = deps;
     if (extraFlags.length) console.log(`Extra deps: ${extraFlags.join(', ')}`);
 }

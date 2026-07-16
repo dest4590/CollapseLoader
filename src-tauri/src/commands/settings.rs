@@ -8,7 +8,7 @@ use crate::core::utils::discord_rpc;
 #[cfg(target_os = "windows")]
 use crate::core::utils::dpi;
 use crate::{log_debug, log_error, log_info, log_warn, AppState};
-use sysinfo::System;
+use sysinfo::{MemoryRefreshKind, RefreshKind, System};
 use tauri::State;
 
 fn with_account_manager<R>(
@@ -497,8 +497,10 @@ pub fn set_custom_clients_display(display: String) -> Result<(), String> {
 
 #[tauri::command]
 pub fn get_system_memory() -> Result<u64, String> {
-    let mut sys = System::new_all();
-    sys.refresh_all();
+    let mut sys = System::new_with_specifics(
+        RefreshKind::nothing().with_memory(MemoryRefreshKind::nothing().with_ram()),
+    );
+    sys.refresh_memory();
 
     let total_memory = sys.total_memory();
     Ok(total_memory)

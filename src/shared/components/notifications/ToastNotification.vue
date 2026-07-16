@@ -44,7 +44,7 @@ import {
     AlertCircle,
     AlertTriangle,
     X,
-} from "lucide-vue-next";
+} from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import { openUrl } from "@tauri-apps/plugin-opener";
 

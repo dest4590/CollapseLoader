@@ -1,277 +1,323 @@
 <template>
     <div class="space-y-4 flex flex-col h-full overflow-hidden">
-        <div v-if="!selectedVersionsMod" class="flex flex-col gap-2">
-            <div class="flex items-center gap-2">
-                <input
-                    v-model="searchQuery"
-                    @keyup.enter="handleSearch"
-                    type="text"
-                    :placeholder="t('mods.search_placeholder')"
-                    class="input input-sm input-bordered w-full"
-                    :disabled="isLoading"
-                />
-                <button
-                    @click="handleSearch"
-                    class="btn btn-sm btn-primary"
-                    :disabled="isLoading"
+        <ModBuildsModal
+            v-if="showBuilds"
+            :client="client"
+            @close="showBuilds = false"
+        />
+
+        <template v-else>
+            <div v-if="!selectedVersionsMod" class="flex flex-col gap-2">
+                <div class="flex items-center gap-2">
+                    <input
+                        v-model="searchQuery"
+                        @keyup.enter="handleSearch"
+                        type="text"
+                        :placeholder="t('mods.search_placeholder')"
+                        class="input input-sm input-bordered w-full"
+                        :disabled="isLoading"
+                    />
+                    <button
+                        @click="handleSearch"
+                        class="btn btn-sm btn-primary"
+                        :disabled="isLoading"
+                    >
+                        <Search class="w-4 h-4" />
+                    </button>
+                    <button
+                        @click="showBuilds = true"
+                        class="btn btn-sm btn-ghost border border-base-200"
+                        :title="t('mod_builds.title')"
+                    >
+                        <PackageOpen class="w-4 h-4" />
+                    </button>
+                </div>
+
+                <div
+                    class="flex flex-wrap items-center justify-between gap-4 px-1 pb-1"
                 >
-                    <Search class="w-4 h-4" />
-                </button>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-base-content/70"
+                            >{{ t("mods.sort_by") }}:</span
+                        >
+                        <select
+                            v-model="sortBy"
+                            class="select select-sm select-bordered bg-base-200 h-8 min-h-0 text-xs"
+                            @change="hasSearched && handleSearch()"
+                        >
+                            <option value="relevance">
+                                {{ t("mods.sort_relevance") }}
+                            </option>
+                            <option value="downloads">
+                                {{ t("mods.sort_downloads") }}
+                            </option>
+                            <option value="newest">
+                                {{ t("mods.sort_newest") }}
+                            </option>
+                            <option value="updated">
+                                {{ t("mods.sort_updated") }}
+                            </option>
+                        </select>
+                    </div>
+                    <label class="cursor-pointer label px-0 py-0 gap-2">
+                        <span class="label-text text-xs font-semibold">{{
+                            t("mods.strict_compatibility")
+                        }}</span>
+                        <input
+                            type="checkbox"
+                            v-model="enforceCompatibility"
+                            class="checkbox checkbox-xs rounded checkbox-primary"
+                            @change="hasSearched && handleSearch()"
+                        />
+                    </label>
+                </div>
             </div>
 
             <div
-                class="flex flex-wrap items-center justify-between gap-4 px-1 pb-1"
+                v-else
+                class="flex items-center gap-4 border-b border-base-content/10 pb-2"
             >
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-base-content/70"
-                        >{{ t("mods.sort_by") }}:</span
-                    >
-                    <select
-                        v-model="sortBy"
-                        class="select select-sm select-bordered bg-base-200 h-8 min-h-0 text-xs"
-                        @change="hasSearched && handleSearch()"
-                    >
-                        <option value="relevance">
-                            {{ t("mods.sort_relevance") }}
-                        </option>
-                        <option value="downloads">
-                            {{ t("mods.sort_downloads") }}
-                        </option>
-                        <option value="newest">
-                            {{ t("mods.sort_newest") }}
-                        </option>
-                        <option value="updated">
-                            {{ t("mods.sort_updated") }}
-                        </option>
-                    </select>
-                </div>
-                <label class="cursor-pointer label px-0 py-0 gap-2">
-                    <span class="label-text text-xs font-semibold">{{
-                        t("mods.strict_compatibility")
-                    }}</span>
-                    <input
-                        type="checkbox"
-                        v-model="enforceCompatibility"
-                        class="checkbox checkbox-xs rounded checkbox-primary"
-                        @change="hasSearched && handleSearch()"
-                    />
-                </label>
+                <button
+                    @click="selectedVersionsMod = null"
+                    class="btn btn-sm btn-ghost btn-circle"
+                >
+                    <ChevronLeft class="w-4 h-4" />
+                </button>
+                <h3 class="font-bold truncate text-sm">
+                    {{
+                        t("mods.versions_for", {
+                            mod: selectedVersionsMod.title,
+                        })
+                    }}
+                </h3>
             </div>
-        </div>
 
-        <div
-            v-else
-            class="flex items-center gap-4 border-b border-base-content/10 pb-2"
-        >
-            <button
-                @click="selectedVersionsMod = null"
-                class="btn btn-sm btn-ghost btn-circle"
-            >
-                <ChevronLeft class="w-4 h-4" />
-            </button>
-            <h3 class="font-bold truncate text-sm">
-                {{ t("mods.versions_for", { mod: selectedVersionsMod.title }) }}
-            </h3>
-        </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
+                <div v-if="!selectedVersionsMod">
+                    <div
+                        v-if="isLoading"
+                        class="flex justify-center items-center h-40"
+                    >
+                        <span
+                            class="loading loading-spinner loading-lg text-primary"
+                        ></span>
+                    </div>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
-            <div v-if="!selectedVersionsMod">
-                <div
-                    v-if="isLoading"
-                    class="flex justify-center items-center h-40"
-                >
-                    <span
-                        class="loading loading-spinner loading-lg text-primary"
-                    ></span>
-                </div>
+                    <div v-else-if="error" class="alert alert-error">
+                        <AlertCircle class="w-4 h-4" />
+                        <span>{{ error }}</span>
+                    </div>
 
-                <div v-else-if="error" class="alert alert-error">
-                    <AlertCircle class="w-4 h-4" />
-                    <span>{{ error }}</span>
-                </div>
+                    <div
+                        v-else-if="mods.length === 0 && hasSearched"
+                        class="text-center py-8 text-base-content/60"
+                    >
+                        <p>{{ t("mods.no_results") }}</p>
+                    </div>
 
-                <div
-                    v-else-if="mods.length === 0 && hasSearched"
-                    class="text-center py-8 text-base-content/60"
-                >
-                    <p>{{ t("mods.no_results") }}</p>
+                    <div v-else class="space-y-2">
+                        <div
+                            v-for="mod in mods"
+                            :key="mod.project_id"
+                            class="bg-base-200/50 p-3 rounded-lg flex items-center gap-3 hover:bg-base-200 transition-colors"
+                        >
+                            <img
+                                :src="
+                                    mod.icon_url ||
+                                    'https://cdn.modrinth.com/assets/unknown_server.png'
+                                "
+                                :alt="mod.title"
+                                class="w-10 h-10 rounded shadow-sm object-cover"
+                            />
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <h4
+                                        class="font-bold text-sm truncate cursor-pointer hover:underline text-primary"
+                                        @click="openInModrinth(mod)"
+                                        :title="t('mods.open_in_modrinth')"
+                                    >
+                                        {{ mod.title }}
+                                    </h4>
+                                    <span
+                                        class="text-[10px] bg-base-300 px-1.5 py-0.5 rounded text-base-content/60"
+                                        >{{ mod.author }}</span
+                                    >
+                                    <span
+                                        v-if="isModInstalled(mod)"
+                                        class="badge badge-success badge-xs text-[10px] py-2 px-2 uppercase font-bold tracking-tighter opacity-70"
+                                        >{{ t("mods.installed") }}</span
+                                    >
+                                </div>
+                                <p
+                                    class="text-xs text-base-content/70 truncate"
+                                >
+                                    {{ mod.description }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button
+                                    v-if="isModInstalled(mod)"
+                                    @click="uninstallMod(mod)"
+                                    class="btn btn-sm btn-error btn-outline"
+                                    :disabled="
+                                        installingMods.has(mod.project_id)
+                                    "
+                                >
+                                    <span
+                                        v-if="
+                                            installingMods.has(mod.project_id)
+                                        "
+                                        class="loading loading-spinner loading-xs"
+                                    ></span>
+                                    <span v-else>{{
+                                        t("mods.uninstall")
+                                    }}</span>
+                                </button>
+                                <button
+                                    @click="showVersions(mod)"
+                                    class="btn btn-sm btn-primary"
+                                    :disabled="
+                                        installingMods.has(mod.project_id)
+                                    "
+                                >
+                                    <span
+                                        v-if="
+                                            installingMods.has(mod.project_id)
+                                        "
+                                        class="loading loading-spinner loading-xs"
+                                    ></span>
+                                    <Download v-else class="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div v-else class="space-y-2">
                     <div
-                        v-for="mod in mods"
-                        :key="mod.project_id"
-                        class="bg-base-200/50 p-3 rounded-lg flex items-center gap-3 hover:bg-base-200 transition-colors"
+                        v-if="isLoadingVersions"
+                        class="flex justify-center items-center h-40"
                     >
-                        <img
-                            :src="
-                                mod.icon_url ||
-                                'https://cdn.modrinth.com/assets/unknown_server.png'
-                            "
-                            :alt="mod.title"
-                            class="w-10 h-10 rounded shadow-sm object-cover"
-                        />
+                        <span
+                            class="loading loading-spinner loading-lg text-primary"
+                        ></span>
+                    </div>
+                    <div
+                        v-else-if="versions.length === 0"
+                        class="text-center py-8 text-base-content/60"
+                    >
+                        <p>
+                            {{
+                                t("mods.no_compatible_version", {
+                                    version: client.version,
+                                })
+                            }}
+                        </p>
+                    </div>
+                    <div
+                        v-else
+                        v-for="version in versions"
+                        :key="version.id"
+                        class="bg-base-200/50 p-3 rounded-lg flex items-center justify-between gap-3 border border-transparent hover:border-primary/30 transition-all"
+                    >
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2">
-                                <h4
-                                    class="font-bold text-sm truncate cursor-pointer hover:underline text-primary"
-                                    @click="openInModrinth(mod)"
-                                    :title="t('mods.open_in_modrinth')"
-                                >
-                                    {{ mod.title }}
-                                </h4>
+                            <div
+                                class="flex items-center gap-2 font-bold text-sm"
+                            >
+                                {{ version.version_number }}
                                 <span
-                                    class="text-[10px] bg-base-300 px-1.5 py-0.5 rounded text-base-content/60"
-                                    >{{ mod.author }}</span
+                                    v-if="version.version_type === 'release'"
+                                    class="badge badge-success badge-xs"
+                                    >Release</span
                                 >
                                 <span
-                                    v-if="isModInstalled(mod)"
-                                    class="badge badge-success badge-xs text-[10px] py-2 px-2 uppercase font-bold tracking-tighter opacity-70"
-                                    >{{ t("mods.installed") }}</span
+                                    v-else-if="version.version_type === 'beta'"
+                                    class="badge badge-warning badge-xs"
+                                    >Beta</span
                                 >
                             </div>
-                            <p class="text-xs text-base-content/70 truncate">
-                                {{ mod.description }}
-                            </p>
+                            <div class="text-[10px] text-base-content/50 mt-1">
+                                {{
+                                    new Date(
+                                        version.date_published
+                                    ).toLocaleDateString()
+                                }}
+                                • {{ version.loaders.join(", ") }}
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button
-                                v-if="isModInstalled(mod)"
-                                @click="uninstallMod(mod)"
-                                class="btn btn-sm btn-error btn-outline"
-                                :disabled="installingMods.has(mod.project_id)"
-                            >
-                                <span
-                                    v-if="installingMods.has(mod.project_id)"
-                                    class="loading loading-spinner loading-xs"
-                                ></span>
-                                <span v-else>{{ t("mods.uninstall") }}</span>
-                            </button>
-                            <button
-                                @click="showVersions(mod)"
-                                class="btn btn-sm btn-primary"
-                                :disabled="installingMods.has(mod.project_id)"
-                            >
-                                <span
-                                    v-if="installingMods.has(mod.project_id)"
-                                    class="loading loading-spinner loading-xs"
-                                ></span>
-                                <Download v-else class="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div v-else class="space-y-2">
-                <div
-                    v-if="isLoadingVersions"
-                    class="flex justify-center items-center h-40"
-                >
-                    <span
-                        class="loading loading-spinner loading-lg text-primary"
-                    ></span>
-                </div>
-                <div
-                    v-else-if="versions.length === 0"
-                    class="text-center py-8 text-base-content/60"
-                >
-                    <p>
-                        {{
-                            t("mods.no_compatible_version", {
-                                version: client.version,
-                            })
-                        }}
-                    </p>
-                </div>
-                <div
-                    v-else
-                    v-for="version in versions"
-                    :key="version.id"
-                    class="bg-base-200/50 p-3 rounded-lg flex items-center justify-between gap-3 border border-transparent hover:border-primary/30 transition-all"
-                >
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 font-bold text-sm">
-                            {{ version.version_number }}
-                            <span
-                                v-if="version.version_type === 'release'"
-                                class="badge badge-success badge-xs"
-                                >Release</span
-                            >
-                            <span
-                                v-else-if="version.version_type === 'beta'"
-                                class="badge badge-warning badge-xs"
-                                >Beta</span
-                            >
-                        </div>
-                        <div class="text-[10px] text-base-content/50 mt-1">
-                            {{
-                                new Date(
-                                    version.date_published
-                                ).toLocaleDateString()
-                            }}
-                            • {{ version.loaders.join(", ") }}
-                        </div>
-                    </div>
-                    <button
-                        v-if="!isVersionInstalled(version)"
-                        @click="installVersion(selectedVersionsMod, version)"
-                        class="btn btn-sm btn-primary"
-                        :disabled="
-                            installingMods.has(selectedVersionsMod.project_id)
-                        "
-                    >
-                        <span
-                            v-if="
+                        <button
+                            v-if="!isVersionInstalled(version)"
+                            @click="
+                                installVersion(selectedVersionsMod, version)
+                            "
+                            class="btn btn-sm btn-primary"
+                            :disabled="
                                 installingMods.has(
                                     selectedVersionsMod.project_id
                                 )
                             "
-                            class="loading loading-spinner loading-xs"
-                        ></span>
-                        <span v-else>{{ t("mods.install") }}</span>
-                    </button>
-                    <button
-                        v-else
-                        @click="uninstallMod(selectedVersionsMod)"
-                        class="btn btn-sm btn-error btn-outline"
-                        :disabled="
-                            installingMods.has(selectedVersionsMod.project_id)
-                        "
-                    >
-                        <span
-                            v-if="
+                        >
+                            <span
+                                v-if="
+                                    installingMods.has(
+                                        selectedVersionsMod.project_id
+                                    )
+                                "
+                                class="loading loading-spinner loading-xs"
+                            ></span>
+                            <span v-else>{{ t("mods.install") }}</span>
+                        </button>
+                        <button
+                            v-else
+                            @click="uninstallMod(selectedVersionsMod)"
+                            class="btn btn-sm btn-error btn-outline"
+                            :disabled="
                                 installingMods.has(
                                     selectedVersionsMod.project_id
                                 )
                             "
-                            class="loading loading-spinner loading-xs"
-                        ></span>
-                        <span v-else>{{ t("mods.uninstall") }}</span>
-                    </button>
+                        >
+                            <span
+                                v-if="
+                                    installingMods.has(
+                                        selectedVersionsMod.project_id
+                                    )
+                                "
+                                class="loading loading-spinner loading-xs"
+                            ></span>
+                            <span v-else>{{ t("mods.uninstall") }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div
-            class="flex justify-end gap-2 pt-2 border-t border-base-content/10"
-        >
-            <button @click="emit('close')" class="btn btn-ghost">
-                {{ t("common.close") }}
-            </button>
-        </div>
+            <div
+                class="flex justify-end gap-2 pt-2 border-t border-base-content/10"
+            >
+                <button @click="emit('close')" class="btn btn-ghost">
+                    {{ t("common.close") }}
+                </button>
+            </div>
+        </template>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import { Search, Download, AlertCircle, ChevronLeft } from "lucide-vue-next";
+import {
+    Search,
+    Download,
+    AlertCircle,
+    ChevronLeft,
+    PackageOpen,
+} from "@lucide/vue";
 import {
     ModrinthService,
     type ModrinthSearchResult,
     type ModrinthVersion,
 } from "@features/clients/modrinthService";
+import ModBuildsModal from "@features/clients/modals/ModBuildsModal.vue";
 import { invoke } from "@tauri-apps/api/core";
 import type { Client } from "@shared/types/ui";
 import { useToast } from "@shared/composables/useToast";
@@ -293,6 +339,7 @@ const hasSearched = ref(false);
 const installingMods = ref(new Set<string>());
 
 const installedModFiles = ref<string[]>([]);
+const showBuilds = ref(false);
 
 const selectedVersionsMod = ref<ModrinthSearchResult | null>(null);
 const versions = ref<ModrinthVersion[]>([]);

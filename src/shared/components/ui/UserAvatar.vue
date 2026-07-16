@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { ImageOff } from "lucide-vue-next";
+import { ImageOff } from "@lucide/vue";
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { resolveApiAssetUrl } from "@shared/utils/url";
 

@@ -36,6 +36,7 @@ export default defineConfig(async () => ({
             "@layouts": path.resolve(__dirname, "./src/layouts"),
             "@router": path.resolve(__dirname, "./src/router"),
             "@stores": path.resolve(__dirname, "./src/stores"),
+            "@components": path.resolve(__dirname, "./src/components"),
         },
     },
 
@@ -59,7 +60,7 @@ export default defineConfig(async () => ({
                         if (id.includes("@tauri-apps")) {
                             return "vendor-tauri";
                         }
-                        if (id.includes("lucide-vue-next")) {
+                        if (id.includes("@lucide/vue")) {
                             return "vendor-icons";
                         }
                         if (id.includes("gsap") || id.includes("axios")) {
