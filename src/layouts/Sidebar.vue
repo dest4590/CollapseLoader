@@ -417,7 +417,7 @@ onUnmounted(() => {
 
     <div
         ref="sidebarRef"
-        :class="[sidebarClasses, animationClass, 'main-sidebar']"
+        :class="[sidebarClasses, animationClass, 'main-sidebar', { 'no-stagger': autoHideSidebar }]"
         @mousedown="startDrag"
         @dblclick="toggleCenter"
         @mouseenter="onSidebarMouseEnter"
@@ -685,32 +685,37 @@ onUnmounted(() => {
     opacity: 1;
     transform: scale(1) translateY(0) rotate(0deg);
     transition:
-        transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.5s ease;
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.3s ease;
 }
 
 .sidebar-entered .sidebar-items-container > *:nth-child(1) {
-    transition-delay: 0.15s;
+    transition-delay: 0.04s;
 }
 
 .sidebar-entered .sidebar-items-container > *:nth-child(2) {
-    transition-delay: 0.25s;
+    transition-delay: 0.08s;
 }
 
 .sidebar-entered .sidebar-items-container > *:nth-child(3) {
-    transition-delay: 0.35s;
+    transition-delay: 0.12s;
 }
 
 .sidebar-entered .sidebar-items-container > *:nth-child(4) {
-    transition-delay: 0.45s;
+    transition-delay: 0.16s;
 }
 
 .sidebar-entered .sidebar-footer-container > *:nth-child(1) {
-    transition-delay: 0.55s;
+    transition-delay: 0.20s;
 }
 
 .sidebar-entered .sidebar-footer-container > *:nth-child(2) {
-    transition-delay: 0.65s;
+    transition-delay: 0.24s;
+}
+
+.no-stagger.sidebar-entered .sidebar-items-container > *,
+.no-stagger.sidebar-entered .sidebar-footer-container > * {
+    transition-delay: 0s !important;
 }
 
 .sidebar-help-tooltip video {
