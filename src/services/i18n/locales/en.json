@@ -809,6 +809,9 @@
         },
         "dark": "Dark",
         "light": "Light",
+        "system": "System",
+        "system_description": "Automatically match your operating system's dark/light theme preference.",
+        "system_detected": "Detected from OS",
         "schedule": {
             "title": "Automatic",
             "description": "Automatically switch between light and dark themes based on time of day.",

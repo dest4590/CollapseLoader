@@ -781,6 +781,9 @@
         },
         "dark": "黑暗的",
         "light": "光",
+        "system": "系统",
+        "system_description": "自动匹配操作系统的深色/浅色主题偏好。",
+        "system_detected": "从操作系统检测",
         "schedule": {
             "title": "自动",
             "description": "根据一天中的时间自动切换亮色和暗色主题。",

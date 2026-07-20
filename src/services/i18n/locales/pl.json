@@ -781,6 +781,9 @@
         },
         "dark": "Ciemny",
         "light": "Jasny",
+        "system": "Systemowy",
+        "system_description": "Automatycznie dopasuj do motywu systemu operacyjnego.",
+        "system_detected": "Wykryto z systemu",
         "schedule": {
             "title": "Automatycznie",
             "description": "Automatycznie przełączaj między jasnym a ciemnym motywem w zależności od pory dnia.",

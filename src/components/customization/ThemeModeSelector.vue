@@ -87,6 +87,38 @@
                 </button>
 
                 <button
+                    @click="$emit('select-mode', 'system')"
+                    class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
+                    :class="{
+                        'border-primary/50 bg-primary/10':
+                            themeMode === 'system',
+                        'border-base-content/10': themeMode !== 'system',
+                    }"
+                >
+                    <div class="flex items-center gap-2">
+                        <Monitor
+                            class="w-5 h-5 text-emerald-400 transition-transform duration-300"
+                            :class="
+                                themeMode === 'system'
+                                    ? 'scale-110'
+                                    : 'scale-100'
+                            "
+                        />
+                        <span class="font-medium">{{
+                            t("theme.system")
+                        }}</span>
+                    </div>
+                    <transition name="badge-pop">
+                        <div
+                            v-if="themeMode === 'system'"
+                            class="badge badge-primary"
+                        >
+                            {{ t("theme.selected") }}
+                        </div>
+                    </transition>
+                </button>
+
+                <button
                     @click="$emit('select-mode', 'schedule')"
                     class="btn border flex items-center justify-between px-6 py-3 transition-all duration-300"
                     :class="{
@@ -129,6 +161,47 @@
                     </transition>
                 </button>
             </div>
+
+            <transition name="schedule-slide">
+                <div
+                    v-if="themeMode === 'system'"
+                    class="w-full sm:w-[calc(50%-0.5rem)] shrink-0 z-0 flex flex-col gap-3 border border-base-300 bg-base-200 rounded-lg p-4"
+                >
+                    <div
+                        class="flex items-center gap-2 font-medium text-sm text-primary"
+                    >
+                        <Monitor class="w-4 h-4 shrink-0" />
+                        <span>{{ t("theme.system") }}</span>
+                    </div>
+
+                    <p class="text-xs text-base-content/60">
+                        {{ t("theme.system_description") }}
+                    </p>
+
+                    <div
+                        class="flex items-center justify-between gap-2 p-2 mt-1 rounded-lg bg-base-100 border border-base-content/10"
+                    >
+                        <div class="flex items-center gap-2">
+                            <div
+                                class="w-2 h-2 rounded-full shrink-0 transition-colors duration-500"
+                                :class="
+                                    currentSystemTheme === 'light'
+                                        ? 'bg-amber-400'
+                                        : 'bg-indigo-400'
+                                "
+                            ></div>
+                            <span class="text-xs text-base-content/60">
+                                {{ t("theme.system_detected") }}
+                            </span>
+                        </div>
+                        <span
+                            class="text-xs font-bold uppercase text-primary"
+                        >
+                            {{ t(`theme.${currentSystemTheme}`) }}
+                        </span>
+                    </div>
+                </div>
+            </transition>
 
             <transition name="schedule-slide">
                 <div
@@ -212,20 +285,23 @@
 </template>
 
 <script setup lang="ts">
-import { SunMoon, Moon, Sun, Clock } from "@lucide/vue";
+import { SunMoon, Moon, Sun, Clock, Monitor } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
 defineProps<{
-    themeMode: "dark" | "light" | "schedule";
+    themeMode: "dark" | "light" | "system" | "schedule";
     scheduleLightStart: string;
     scheduleLightEnd: string;
     schedulePreviewTheme: string;
+    currentSystemTheme: "dark" | "light";
 }>();
 
 defineEmits<{
-    "select-mode": [mode: "dark" | "light" | "schedule"];
+    "select-mode": [
+        mode: "dark" | "light" | "system" | "schedule",
+    ];
     "update-schedule": [field: "lightStart" | "lightEnd", value: string];
 }>();
 </script>
