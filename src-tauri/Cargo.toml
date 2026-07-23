@@ -19,8 +19,8 @@ tauri-plugin-opener = "2.5.4"
 tauri-plugin-notification = "2.3.3"
 tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-single-instance = { version = "2.4.3", features = ["deep-link"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 colored = "3.1.1"
 rand = "0.10.2"
 reqwest = { version = "0.13.4", features = [
@@ -31,25 +31,25 @@ reqwest = { version = "0.13.4", features = [
 ] }
 semver = "1.0.28"
 zip = "8.6.0"
-tokio = { version = "1.52.3", features = ["macros", "process"] }
+tokio = { version = "1.53.1", features = ["macros", "process"] }
 opener = "0.8.5"
-uuid = { version = "1.23.5", features = ["v4"] }
+uuid = { version = "1.24.0", features = ["v4"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 paste = "1.0.15"
 open = "5.4.0"
 md5 = "0.8.1"
 discord-rich-presence = "1.1.0"
-futures-util = "0.3.32"
-base64 = "0.22.1"
-tauri-plugin-dialog = "2.7.1"
+futures-util = "0.3.33"
+base64 = "0.23.0"
+tauri-plugin-dialog = "2.7.2"
 dotenvy = "0.15.7"
 tauri-plugin-fs = "2.5.1"
-thiserror = "2.0.18"
+thiserror = "2.0.19"
 native-dialog = "0.9.7"
 sysinfo = "0.39.6"
 socket2 = "0.6.5"
 sha2 = "0.11.0"
-regex = "1.13.0"
+regex = "1.13.1"
 flate2 = "1.1.9"
 
 [target.'cfg(target_os = "macos")'.dependencies]
@@ -61,7 +61,7 @@ objc2-app-kit = { version = "0.3.2", features = [
 objc2-foundation = { version = "0.3.2", features = ["NSString"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-zbus = { version = "5.17.0", default-features = false, features = ["tokio"] }
+zbus = { version = "5.18.0", default-features = false, features = ["tokio"] }
 
 [target.'cfg(windows)'.dependencies]
 junction = "2.0.0"
