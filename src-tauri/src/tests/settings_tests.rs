@@ -5,13 +5,13 @@ fn default_settings_have_expected_values() {
     let s = Settings::default();
 
     assert_eq!(s.ram.value, 2048u32);
-    assert_eq!(s.ram.show, true);
+    assert!(s.ram.show);
 
     assert_eq!(s.theme.value, "dark".to_string());
-    assert_eq!(s.theme.show, false);
+    assert!(!s.theme.show);
 
     assert_eq!(s.language.value, "en".to_string());
-    assert_eq!(s.language.show, true);
+    assert!(s.language.show);
 }
 
 #[test]
@@ -26,8 +26,8 @@ fn from_input_applies_visibility_defaults_and_sets_path() {
     let s = Settings::from_input(input, path.clone());
 
     // visibility defaults should be applied (ram true, theme false)
-    assert_eq!(s.ram.show, true);
-    assert_eq!(s.theme.show, false);
+    assert!(s.ram.show);
+    assert!(!s.theme.show);
 
     // config_path should be set to provided path
     assert_eq!(s.config_path, path);

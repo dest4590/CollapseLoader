@@ -1,5 +1,6 @@
 use crate::core::network::create_client;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
@@ -21,13 +22,13 @@ pub struct NetworkRequest {
     pub error_message: Option<String>,
 }
 
-static NETWORK_HISTORY: OnceLock<Mutex<Vec<NetworkRequest>>> = OnceLock::new();
+static NETWORK_HISTORY: OnceLock<Mutex<VecDeque<NetworkRequest>>> = OnceLock::new();
 
-fn get_history() -> &'static Mutex<Vec<NetworkRequest>> {
-    NETWORK_HISTORY.get_or_init(|| Mutex::new(Vec::new()))
+fn get_history() -> &'static Mutex<VecDeque<NetworkRequest>> {
+    NETWORK_HISTORY.get_or_init(|| Mutex::new(VecDeque::new()))
 }
 
-fn with_network_history<R>(operation: impl FnOnce(&mut Vec<NetworkRequest>) -> R) -> R {
+fn with_network_history<R>(operation: impl FnOnce(&mut VecDeque<NetworkRequest>) -> R) -> R {
     let mut history = get_history().lock().unwrap();
     operation(&mut history)
 }
@@ -236,14 +237,16 @@ pub fn clear_network_history() {
 
 #[tauri::command]
 pub fn get_network_history() -> Result<Vec<NetworkRequest>, String> {
-    Ok(with_network_history(|history| history.clone()))
+    Ok(with_network_history(|history| {
+        history.iter().cloned().collect()
+    }))
 }
 
 fn save_request_history(rec: NetworkRequest) {
     with_network_history(|history| {
-        history.push(rec);
+        history.push_back(rec);
         if history.len() > 1000 {
-            history.remove(0);
+            history.pop_front();
         }
     });
 }

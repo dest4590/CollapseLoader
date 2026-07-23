@@ -114,7 +114,7 @@ fn clients_can_be_found_by_id_after_push() {
 fn sorting_clients_by_created_at_descending() {
     use chrono::{TimeZone, Utc};
 
-    let mut clients = vec![
+    let mut clients = [
         Client {
             id: 1,
             created_at: Utc.with_ymd_and_hms(2024, 1, 1, 0, 0, 0).unwrap(),

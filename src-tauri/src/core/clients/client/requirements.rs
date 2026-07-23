@@ -48,7 +48,9 @@ struct RequirementsDownloadStateGuard<'a> {
 impl<'a> RequirementsDownloadStateGuard<'a> {
     fn activate(app_handle: &'a AppHandle) -> Self {
         {
-            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
+            let mut downloading = REQUIREMENTS_DOWNLOADING
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             *downloading = true;
         }
         emit_to_main_window(app_handle, "requirements-status", true);
@@ -59,7 +61,9 @@ impl<'a> RequirementsDownloadStateGuard<'a> {
 impl Drop for RequirementsDownloadStateGuard<'_> {
     fn drop(&mut self) {
         {
-            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
+            let mut downloading = REQUIREMENTS_DOWNLOADING
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             *downloading = false;
         }
         emit_to_main_window(self.app_handle, "requirements-status", false);
@@ -455,7 +459,11 @@ impl Client {
             || folder == JDK8_FOLDER
             || folder == JDK21_FOLDER
         {
-            let path = DATA.root_dir.lock().unwrap().join(folder);
+            let path = DATA
+                .root_dir
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .join(folder);
             if !path.exists() {
                 log_info!("Folder '{}' missing. Queuing {} for download.", folder, zip);
                 files_to_download.push(zip.to_string());
@@ -468,7 +476,11 @@ impl Client {
                 "Integrity check failed for '{}'. Wiping folder for clean redownload.",
                 folder
             );
-            let path = DATA.root_dir.lock().unwrap().join(folder);
+            let path = DATA
+                .root_dir
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .join(folder);
             if path.exists() {
                 let _ = std::fs::remove_dir_all(&path);
             }
@@ -571,7 +583,7 @@ impl Client {
         let local_path = DATA
             .root_dir
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .join(MINECRAFT_VERSIONS_FOLDER)
             .join(dest_filename);
 
@@ -651,7 +663,7 @@ impl Client {
             let bin_dir = DATA
                 .root_dir
                 .lock()
-                .unwrap()
+                .unwrap_or_else(|e| e.into_inner())
                 .join(self.jdk_folder_name())
                 .join("bin");
             if bin_dir.exists() {
@@ -678,7 +690,11 @@ impl Client {
     }
 
     fn clean_fabric_libraries(&self) {
-        let fabric_libs_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+        let fabric_libs_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(LIBRARIES_FABRIC_FOLDER);
 
         if !fabric_libs_dir.exists() {
             return;
@@ -733,7 +749,11 @@ impl Client {
     }
 
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
-        let common_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+        let common_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(LIBRARIES_FABRIC_FOLDER);
 
         let need_common = !dir_has_any_jars(&common_dir, true);
 
@@ -743,12 +763,16 @@ impl Client {
             sanitize_version_for_paths(&self.version)
         );
 
-        let versioned_dir = DATA.root_dir.lock().unwrap().join(
-            versioned_zip
-                .strip_prefix("misc/")
-                .unwrap_or(&versioned_zip)
-                .replace(".zip", ""),
-        );
+        let versioned_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(
+                versioned_zip
+                    .strip_prefix("misc/")
+                    .unwrap_or(&versioned_zip)
+                    .replace(".zip", ""),
+            );
         let need_versioned = !dir_has_any_jars(&versioned_dir, false);
 
         let mut downloads: Vec<futures_util::future::BoxFuture<'_, Result<(), String>>> =
@@ -782,7 +806,11 @@ impl Client {
     }
 
     async fn ensure_slf4j(&self) -> Result<(), String> {
-        let fabric_libs_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+        let fabric_libs_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(LIBRARIES_FABRIC_FOLDER);
 
         let already_present = {
             let mut found = false;
@@ -846,9 +874,17 @@ impl Client {
 
         log_warn!("Java executable missing. Redownloading requirements...");
 
-        let jdk_dir = DATA.root_dir.lock().unwrap().join(self.jdk_folder_name());
+        let jdk_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(self.jdk_folder_name());
         let _ = tokio::fs::remove_dir_all(jdk_dir).await;
-        let jdk_zip = DATA.root_dir.lock().unwrap().join(self.jdk_zip_name());
+        let jdk_zip = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(self.jdk_zip_name());
         let _ = tokio::fs::remove_file(jdk_zip).await;
 
         self.download_requirements(app_handle).await?;
@@ -861,7 +897,11 @@ impl Client {
 
     pub(super) fn build_classpath(&self) -> Result<String, String> {
         let (_, client_jar) = self.get_launch_paths()?;
-        let agent_overlay = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
+        let agent_overlay = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(AGENT_OVERLAY_FOLDER);
 
         let mut cp_parts = Vec::new();
 
@@ -870,7 +910,11 @@ impl Client {
                 cp_parts.push(self.get_minecraft_jar_path());
 
                 let safe_ver = sanitize_version_for_paths(&self.version);
-                let fabric_libs_root = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+                let fabric_libs_root = DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_FABRIC_FOLDER);
 
                 let v_libs = fabric_libs_root.join(&safe_ver);
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
@@ -881,16 +925,26 @@ impl Client {
             }
             ClientType::Forge => {
                 cp_parts.push(self.get_minecraft_jar_path());
-                let libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER);
+                let libs = DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_LEGACY_FOLDER);
                 cp_parts.extend(collect_jars_recursive(&libs, false));
 
                 cp_parts.push(client_jar);
             }
             ClientType::Default => {
                 let libs = if self.is_legacy_client() {
-                    DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER)
+                    DATA.root_dir
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .join(LIBRARIES_LEGACY_FOLDER)
                 } else {
-                    DATA.root_dir.lock().unwrap().join(LIBRARIES_FOLDER)
+                    DATA.root_dir
+                        .lock()
+                        .unwrap_or_else(|e| e.into_inner())
+                        .join(LIBRARIES_FOLDER)
                 };
 
                 return Ok(format!(

@@ -33,7 +33,7 @@ use crate::{log_debug, log_error, log_info};
 
 impl Client {
     fn append_new_instance_separator(&self) {
-        let mut logs = CLIENT_LOGS.lock().unwrap();
+        let mut logs = CLIENT_LOGS.lock().unwrap_or_else(|e| e.into_inner());
         let client_logs = logs.entry(self.id).or_default();
         if !client_logs.is_empty() {
             client_logs.push("-------------------------------------------".to_string());
@@ -65,7 +65,7 @@ impl Client {
     }
 
     fn resolve_assets_dir(&self) -> PathBuf {
-        let root = DATA.root_dir.lock().unwrap();
+        let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         if self.client_type == ClientType::Fabric {
             root.join(ASSETS_FABRIC_FOLDER)
         } else {
@@ -106,7 +106,7 @@ impl Client {
     }
 
     fn resolve_natives_path(&self) -> PathBuf {
-        let root = DATA.root_dir.lock().unwrap();
+        let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
 
         if IS_LINUX {
@@ -123,7 +123,7 @@ impl Client {
     }
 
     fn get_launch_settings(&self) -> (bool, bool, String, u32) {
-        let s = SETTINGS.lock().unwrap();
+        let s = SETTINGS.lock().unwrap_or_else(|e| e.into_inner());
         (
             s.optional_telemetry.value,
             s.irc_chat.value,
@@ -269,7 +269,11 @@ impl Client {
             lang,
         );
 
-        let agent_overlay_path = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
+        let agent_overlay_path = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(AGENT_OVERLAY_FOLDER);
 
         let mut cmd = Command::new(java_bin);
 

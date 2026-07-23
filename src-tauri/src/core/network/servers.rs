@@ -213,7 +213,10 @@ impl Servers {
     }
 
     pub fn set_status(&self) -> ServerConnectivityStatus {
-        let mut status = self.connectivity_status.lock().unwrap();
+        let mut status = self
+            .connectivity_status
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         status.cdn_online = self.selected_cdn.read().unwrap().is_some();
         status.api_online = self.selected_api.read().unwrap().is_some();
         status.clone()

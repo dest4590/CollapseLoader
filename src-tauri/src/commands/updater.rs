@@ -100,10 +100,15 @@ pub(crate) fn compare_versions(v1: &str, v2: &str) -> Result<Ordering, String> {
 }
 
 pub(crate) fn truncate_str(s: &str, max: usize) -> String {
-    if s.len() <= max {
+    if s.chars().count() <= max {
         s.to_string()
     } else {
-        format!("{}...<truncated {} chars>", &s[..max], s.len() - max)
+        let truncated: String = s.chars().take(max).collect();
+        format!(
+            "{}...<truncated {} chars>",
+            truncated,
+            s.chars().count() - max
+        )
     }
 }
 
