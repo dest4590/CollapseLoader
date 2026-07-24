@@ -1129,6 +1129,7 @@
         "account": "Аккаунт",
         "about": "О программе",
         "news": "Новости",
+        "hf_clients": "HF Клиенты",
         "customization": "Кастомизация",
         "custom_clients": "Свои клиенты",
         "marketplace": "Маркетплейс",
@@ -1237,6 +1238,7 @@
             "logging_in": "Входит в систему",
             "browsing_friends": "Смотрит что делают друзья",
             "browsing_news": "Читает новости",
+            "browsing_hf_clients": "Просматривает HF клиенты",
             "browsing_custom_clients": "Смотрит на свои клиенты"
         }
     },
@@ -1263,6 +1265,27 @@
         "search_placeholder": "Поиск новостей...",
         "telegram": "Telegram",
         "time": {}
+    },
+    "hfapi": {
+        "live": "ОНЛАЙН",
+        "subtitle": "HuggingFace CDN – База клиентов",
+        "loading": "Загрузка клиентов...",
+        "error": "Ошибка загрузки клиентов",
+        "retry": "Попробовать снова",
+        "refresh": "Обновить",
+        "latest_changes": "Последние изменения",
+        "no_changes": "Изменений пока нет...",
+        "all_clients": "Все клиенты",
+        "table_name": "Название",
+        "table_version": "Версия",
+        "table_hash": "MD5 хеш",
+        "table_size": "Размер",
+        "status_down": "НЕДОСТУПЕН",
+        "total": "Всего",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "Не удалось загрузить клиенты"
     },
     "hold_button": {
         "label": "Зажмите, чтобы начать!",

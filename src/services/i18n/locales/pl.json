@@ -1099,6 +1099,7 @@
         "account": "Konto",
         "about": "O programie",
         "news": "Aktualności",
+        "hf_clients": "Klienci HF",
         "customization": "Personalizacja",
         "custom_clients": "Własne klienty",
         "marketplace": "Marketplace",
@@ -1206,6 +1207,7 @@
             "logging_in": "Loguje się",
             "browsing_friends": "Patrzy co robią znajomi",
             "browsing_news": "Czyta aktualności",
+            "browsing_hf_clients": "Przegląda klientów HF",
             "browsing_custom_clients": "Patrzy na własne klienty"
         }
     },
@@ -1232,6 +1234,27 @@
         "search_placeholder": "Szukaj aktualności...",
         "telegram": "Telegram",
         "time": {}
+    },
+    "hfapi": {
+        "live": "ONLINE",
+        "subtitle": "HuggingFace CDN – Baza klientów",
+        "loading": "Ładowanie klientów...",
+        "error": "Błąd ładowania klientów",
+        "retry": "Spróbuj ponownie",
+        "refresh": "Odśwież",
+        "latest_changes": "Ostatnie zmiany",
+        "no_changes": "Brak zmian...",
+        "all_clients": "Wszyscy klienci",
+        "table_name": "Nazwa",
+        "table_version": "Wersja",
+        "table_hash": "MD5 hash",
+        "table_size": "Rozmiar",
+        "status_down": "NIEDOSTĘPNY",
+        "total": "Łącznie",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "Nie udało się załadować klientów"
     },
     "hold_button": {
         "label": "Przytrzymaj, aby rozpocząć!",

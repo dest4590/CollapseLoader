@@ -1101,6 +1101,7 @@
         "account": "Акаунт",
         "about": "Про програму",
         "news": "Новини",
+        "hf_clients": "HF Клієнти",
         "customization": "Фон",
         "custom_clients": "Власні клієнти",
         "marketplace": "Маркетплейс",
@@ -1208,6 +1209,7 @@
             "logging_in": "Входить у систему",
             "browsing_friends": "Дивиться, що роблять друзі",
             "browsing_news": "Читає новини",
+            "browsing_hf_clients": "Переглядає HF клієнти",
             "browsing_custom_clients": "Переглядає власні клієнти"
         }
     },
@@ -1234,6 +1236,27 @@
         "mark_all_read": "Позначити все як прочитане",
         "refresh": "Оновити",
         "telegram": "Telegram"
+    },
+    "hfapi": {
+        "live": "ОНЛАЙН",
+        "subtitle": "HuggingFace CDN – База клієнтів",
+        "loading": "Завантаження клієнтів...",
+        "error": "Помилка завантаження клієнтів",
+        "retry": "Спробувати знову",
+        "refresh": "Оновити",
+        "latest_changes": "Останні зміни",
+        "no_changes": "Змін поки немає...",
+        "all_clients": "Всі клієнти",
+        "table_name": "Назва",
+        "table_version": "Версія",
+        "table_hash": "MD5 хеш",
+        "table_size": "Розмір",
+        "status_down": "НЕДОСТУПНИЙ",
+        "total": "Всього",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "Не вдалося завантажити клієнти"
     },
     "hold_button": {
         "label": "Затисніть, щоб почати!",

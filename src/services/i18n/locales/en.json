@@ -1116,6 +1116,7 @@
         "account": "Account",
         "about": "About",
         "news": "News",
+        "hf_clients": "HF Clients",
         "customization": "Customization",
         "custom_clients": "Custom Clients",
         "marketplace": "Marketplace",
@@ -1224,6 +1225,7 @@
             "logging_in": "Logging in",
             "browsing_friends": "Watching what friends do",
             "browsing_news": "Reading news",
+            "browsing_hf_clients": "Browsing HF clients",
             "browsing_custom_clients": "Browsing custom clients"
         }
     },
@@ -1250,6 +1252,27 @@
         "mark_all_read": "Mark everything as read",
         "refresh": "Refresh",
         "telegram": "Telegram"
+    },
+    "hfapi": {
+        "live": "LIVE",
+        "subtitle": "HuggingFace CDN – Client database",
+        "loading": "Loading clients...",
+        "error": "Error loading clients",
+        "retry": "Try Again",
+        "refresh": "Refresh",
+        "latest_changes": "Latest Changes",
+        "no_changes": "No changes detected yet...",
+        "all_clients": "All Clients",
+        "table_name": "Name",
+        "table_version": "Version",
+        "table_hash": "MD5 Hash",
+        "table_size": "Size",
+        "status_down": "DOWN",
+        "total": "Total",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "Failed to load clients"
     },
     "hold_button": {
         "label": "Hold to begin!",

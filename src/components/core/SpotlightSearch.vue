@@ -17,6 +17,7 @@ import {
     ChevronRight,
     CheckCircle,
     Store,
+    Database,
 } from "@lucide/vue";
 import type { Client } from "@shared/types/ui";
 
@@ -52,6 +53,7 @@ const tabItems = [
     },
     { id: "account", icon: User, labelKey: "navigation.account" },
     { id: "news", icon: Newspaper, labelKey: "navigation.news" },
+    { id: "hf_clients", icon: Database, labelKey: "navigation.hf_clients" },
     { id: "marketplace", icon: Store, labelKey: "navigation.marketplace" },
     {
         id: "custom_clients",

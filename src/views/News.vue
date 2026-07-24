@@ -18,13 +18,24 @@
                     </h1>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center justify-end">
+                    <button
+                        @click="showHfApi = !showHfApi"
+                        class="btn btn-sm gap-2"
+                        :class="showHfApi ? 'btn-primary' : 'btn-ghost'"
+                        :title="t('navigation.hf_clients')"
+                    >
+                        <Database class="w-4 h-4" />
+                        <span class="hidden md:inline">HF API</span>
+                    </button>
                     <input
+                        v-if="!showHfApi"
                         v-model="searchQuery"
                         type="text"
                         class="input input-bordered input-md w-full sm:w-60 bg-base-100"
                         :placeholder="t('news.search_placeholder')"
                     />
                     <a
+                        v-if="!showHfApi"
                         href="https://telegram.me/collapseloader"
                         target="_blank"
                         rel="noopener noreferrer"
@@ -37,6 +48,7 @@
                         }}</span>
                     </a>
                     <button
+                        v-if="!showHfApi"
                         @click="fetchNews"
                         :disabled="loading"
                         class="btn btn-sm btn-ghost"
@@ -45,7 +57,7 @@
                         <RefreshCcw class="w-4 h-4" />
                     </button>
                     <button
-                        v-if="unreadCount > 0"
+                        v-if="!showHfApi && unreadCount > 0"
                         @click="markAllNewsAsRead"
                         class="btn btn-primary btn-sm"
                         :disabled="loading"
@@ -56,7 +68,9 @@
             </div>
         </div>
 
-        <div v-if="loading" class="flex justify-center items-center py-12">
+        <HfClients v-if="showHfApi" />
+
+        <div v-else-if="loading" class="flex justify-center items-center py-12">
             <div class="text-center space-y-3">
                 <span
                     class="loading loading-spinner loading-md text-primary"
@@ -171,11 +185,12 @@ import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { getCurrentLanguage } from "@services/i18n";
 import { formatDate } from "@shared/utils/utils";
-import { RefreshCcw, Send } from "@lucide/vue";
+import { RefreshCcw, Send, Database } from "@lucide/vue";
 import {
     telegramNewsService,
     type NewsArticle,
 } from "@services/telegramNewsService";
+import HfClients from "./HfClients.vue";
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -187,6 +202,7 @@ const currentLanguage = ref(getCurrentLanguage() || "en");
 const searchQuery = ref("");
 const unreadCount = ref(0);
 const newsCardRefs = ref<Record<number, any>>({});
+const showHfApi = ref(false);
 let observer: IntersectionObserver | null = null;
 
 const emit = defineEmits<{

@@ -1088,6 +1088,7 @@
         "account": "账户",
         "about": "关于",
         "news": "新闻",
+        "hf_clients": "HF 客户端",
         "customization": "个性化",
         "custom_clients": "自定义客户端",
         "marketplace": "市场",
@@ -1195,6 +1196,7 @@
             "logging_in": "登录中",
             "browsing_friends": "查看好友动态",
             "browsing_news": "阅读新闻",
+            "browsing_hf_clients": "浏览 HF 客户端",
             "browsing_custom_clients": "浏览自定义客户端"
         }
     },
@@ -1221,6 +1223,27 @@
         "mark_all_read": "标记全部为已读",
         "refresh": "刷新",
         "telegram": "Telegram"
+    },
+    "hfapi": {
+        "live": "在线",
+        "subtitle": "HuggingFace CDN – 客户端数据库",
+        "loading": "加载客户端中...",
+        "error": "加载客户端失败",
+        "retry": "重试",
+        "refresh": "刷新",
+        "latest_changes": "最新更改",
+        "no_changes": "暂无更改...",
+        "all_clients": "所有客户端",
+        "table_name": "名称",
+        "table_version": "版本",
+        "table_hash": "MD5 哈希",
+        "table_size": "大小",
+        "status_down": "离线",
+        "total": "总计",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "加载客户端失败"
     },
     "hold_button": {
         "label": "长按开始！",

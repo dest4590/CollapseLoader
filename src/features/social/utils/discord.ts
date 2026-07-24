@@ -2,6 +2,7 @@ export const DISCORD_STATE_KEYS: Record<string, string> = {
     home: "discord.states.browsing_clients",
     custom_clients: "discord.states.browsing_custom_clients",
     news: "discord.states.browsing_news",
+    hf_clients: "discord.states.browsing_hf_clients",
     settings: "discord.states.configuring_settings",
     friends: "discord.states.browsing_friends",
     theme: "discord.states.enjoying_visuals",
