@@ -2,6 +2,7 @@ use serde::Deserialize;
 use std::path::Path;
 
 use super::get_api_client;
+use crate::core::storage::settings::SETTINGS;
 use crate::{log_error, log_info, log_warn};
 
 const SERVER_ADS_URL: &str =
@@ -104,6 +105,12 @@ pub async fn fetch_server_ads() -> ServerFetchResult {
 /// Priority order: paid ads → regular servers → user servers
 /// Duplicates by IP are removed (first occurrence wins).
 pub fn inject_servers_dat(path: &Path, result: &ServerFetchResult) {
+    // Check if server ads are disabled in settings
+    if SETTINGS.lock().unwrap().disable_server_ads.value {
+        log_info!("Server ads disabled by user setting, skipping injection");
+        return;
+    }
+
     let has_ads = !result.ads.is_empty();
     let has_regular = !result.regular.is_empty();
 

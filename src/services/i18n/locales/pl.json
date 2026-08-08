@@ -933,7 +933,8 @@
             "auto_update": "Automatycznie sprawdzaj aktualizacje i powiadamiaj o nowych wersjach.",
             "autostart": "Automatycznie uruchamiaj CollapseLoader przy starcie systemu.",
             "start_minimized": "Uruchamiaj CollapseLoader zminimalizowany do zasobnika systemowego.",
-            "auto_hide_sidebar": "Automatically hide the sidebar. It will appear when you hover over the edge of the screen."
+            "auto_hide_sidebar": "Automatically hide the sidebar. It will appear when you hover over the edge of the screen.",
+            "disable_server_ads": "Wyłącz automatyczne dodawanie promowanych serwerów do listy trybu wieloosobowego Minecraft przy uruchamianiu klienta."
         },
         "open_data": "Otwórz folder loadera",
         "add_account_title": "Dodaj nowe konto",
@@ -961,6 +962,7 @@
         "reset_cache_failed": "Nie udało się wyczyścić pamięci podręcznej, spróbuj ponownie",
         "hash_verify": "Weryfikacja hash ",
         "auto_hide_sidebar": "Auto-ukrywanie panelu bocznego",
+        "disable_server_ads": "Wyłącz reklamy serwerów",
         "irc_chat": "Czat IRC",
         "save_flags_failed": "Nie udało się zapisać flag: {error}",
         "change_root": {
