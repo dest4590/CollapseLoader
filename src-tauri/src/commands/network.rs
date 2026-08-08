@@ -1,8 +1,7 @@
-use crate::core::network::create_client;
+use crate::core::network::get_api_client;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::{Mutex, OnceLock};
-use std::time::Duration;
 use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -62,8 +61,7 @@ pub async fn api_request(
     body: Option<serde_json::Value>,
     app_handle: AppHandle,
 ) -> Result<serde_json::Value, String> {
-    static API_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
-    let client = API_CLIENT.get_or_init(|| create_client(Duration::from_secs(30)));
+    let client = get_api_client();
 
     let start = std::time::Instant::now();
     let id = uuid::Uuid::new_v4().to_string();

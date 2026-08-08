@@ -7,9 +7,15 @@ pub mod servers;
 
 use crate::log_error;
 use reqwest::{Client, ClientBuilder};
+use std::sync::OnceLock;
 use std::time::Duration;
 
-use std::sync::OnceLock;
+/// Returns a lazily-initialized shared HTTP client with a 30-second timeout.
+/// Used by both `commands/network.rs` and `core/network/server_ads.rs`.
+pub fn get_api_client() -> &'static Client {
+    static API_CLIENT: OnceLock<Client> = OnceLock::new();
+    API_CLIENT.get_or_init(|| create_client(Duration::from_secs(30)))
+}
 
 pub fn user_agent() -> &'static str {
     static USER_AGENT: OnceLock<String> = OnceLock::new();

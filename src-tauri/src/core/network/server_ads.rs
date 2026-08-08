@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::path::Path;
 
+use super::get_api_client;
 use crate::{log_error, log_info, log_warn};
 
 const SERVER_ADS_URL: &str =
@@ -17,14 +18,18 @@ pub struct ServerAdData {
     pub ip: String,
 }
 
-/// Fetches JSON from a URL with timeout and error handling.
-/// Returns None if the response is empty (0 bytes).
-async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<Option<T>, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+/// Result of fetching server lists from CDN.
+pub struct ServerFetchResult {
+    /// Paid advertisement servers (placed at the top of the list).
+    pub ads: Vec<ServerAdData>,
+    /// Regular servers (placed after ads, before user servers).
+    pub regular: Vec<ServerAdData>,
+}
 
+/// Fetches a JSON list from a URL using the global network client.
+/// Returns None if the response is empty.
+async fn fetch_server_list<T: serde::de::DeserializeOwned>(url: &str) -> Result<Option<T>, String> {
+    let client = get_api_client();
     let response = client
         .get(url)
         .send()
@@ -50,14 +55,6 @@ async fn fetch_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<Option<
     Ok(Some(value))
 }
 
-/// Result of fetching server lists from CDN.
-pub struct ServerFetchResult {
-    /// Paid advertisement servers (placed at the top of the list).
-    pub ads: Vec<ServerAdData>,
-    /// Regular servers (placed after ads, before user servers).
-    pub regular: Vec<ServerAdData>,
-}
-
 /// Fetches server lists from HuggingFace CDN.
 /// - autoaddserverads.json → paid ads (priority, placed first)
 /// - autoaddservernotads.json → regular servers (placed after ads)
@@ -66,7 +63,7 @@ pub async fn fetch_server_ads() -> ServerFetchResult {
     let mut regular = Vec::new();
 
     // Fetch paid ads
-    match fetch_json::<Vec<ServerAdData>>(SERVER_ADS_URL).await {
+    match fetch_server_list::<Vec<ServerAdData>>(SERVER_ADS_URL).await {
         Ok(Some(fetched)) => {
             log_info!("Fetched {} paid server ad(s) from CDN", fetched.len());
             ads = fetched;
@@ -80,7 +77,7 @@ pub async fn fetch_server_ads() -> ServerFetchResult {
     }
 
     // Fetch regular servers
-    match fetch_json::<Vec<ServerAdData>>(SERVER_NOT_ADS_URL).await {
+    match fetch_server_list::<Vec<ServerAdData>>(SERVER_NOT_ADS_URL).await {
         Ok(Some(fetched)) => {
             log_info!("Fetched {} regular server(s) from CDN", fetched.len());
             regular = fetched;
