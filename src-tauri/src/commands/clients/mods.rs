@@ -15,11 +15,18 @@ fn get_mods_folder_for_client(
 fn get_mods_folder_for_custom_client(
     custom_client: &crate::core::clients::custom_clients::CustomClient,
 ) -> Result<PathBuf, String> {
-    custom_client
+    let parent = custom_client
         .file_path
         .parent()
-        .ok_or_else(|| "Cannot determine client folder".to_string())
-        .map(|p| p.join("mods"))
+        .ok_or_else(|| "Cannot determine client folder".to_string())?;
+
+    // Fabric/Forge clients already have the jar inside a "mods/" subdirectory,
+    // so we should NOT append "mods" again to avoid creating a "mods/mods" path.
+    if parent.ends_with("mods") {
+        Ok(parent.to_path_buf())
+    } else {
+        Ok(parent.join("mods"))
+    }
 }
 
 async fn list_jar_files(mods_folder: &std::path::Path) -> Result<Vec<String>, String> {

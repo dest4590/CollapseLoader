@@ -334,10 +334,9 @@ impl Client {
 
         cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
-        // PROJECT CLOSED
-        //let servers_dat_path = client_folder.join("servers.dat");
-        //let ads = server_ads::fetch_server_ads().await;
-        //server_ads::inject_servers_dat(&servers_dat_path, &ads);
+        let servers_dat_path = client_folder.join("servers.dat");
+        let server_result = server_ads::fetch_server_ads().await;
+        server_ads::inject_servers_dat(&servers_dat_path, &server_result);
 
         log_debug!("Spawning client process: {}", self.name);
 
