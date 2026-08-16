@@ -154,7 +154,7 @@
 
                     <div
                         class="prose prose-sm max-w-none text-base-content/80 news-content"
-                        v-html="article.content"
+                        v-html="sanitizeHtml(article.content)"
                     ></div>
 
                     <div
@@ -204,6 +204,33 @@ const unreadCount = ref(0);
 const newsCardRefs = ref<Record<number, any>>({});
 const showHfApi = ref(false);
 let observer: IntersectionObserver | null = null;
+
+const DISALLOWED_TAGS = new Set([
+    "script", "style", "iframe", "object", "embed",
+    "form", "input", "textarea", "select", "button",
+    "link", "meta", "base", "applet",
+]);
+
+function sanitizeHtml(dirty: string): string {
+    const doc = new DOMParser().parseFromString(dirty, "text/html");
+    const walk = (el: Element) => {
+        for (const child of Array.from(el.children)) {
+            if (DISALLOWED_TAGS.has(child.tagName.toLowerCase())) {
+                child.remove();
+                continue;
+            }
+            for (const attr of Array.from(child.attributes)) {
+                if (/^on/i.test(attr.name)) child.removeAttribute(attr.name);
+                if (/^\s*javascript\s*:/i.test(attr.value) && (attr.name === "href" || attr.name === "src" || attr.name === "action")) {
+                    child.removeAttribute(attr.name);
+                }
+            }
+            walk(child);
+        }
+    };
+    walk(doc.body);
+    return doc.body.innerHTML;
+}
 
 const emit = defineEmits<{
     "change-view": [view: string];
