@@ -26,6 +26,8 @@ const form = reactive({
     fileName: "",
     javaPath: "",
     javaArgs: "",
+    librariesPath: "",
+    nativesPath: "",
     clientType: "default",
 });
 
@@ -173,6 +175,50 @@ const selectFile = async () => {
     }
 };
 
+const selectJavaExecutable = async () => {
+    try {
+        const selected = await open({
+            multiple: false,
+        });
+
+        if (selected) {
+            form.javaPath = selected;
+        }
+    } catch (error) {
+        console.log("Java executable selection cancelled or failed", error);
+    }
+};
+
+const selectLibrariesDir = async () => {
+    try {
+        const selected = await open({
+            directory: true,
+            multiple: false,
+        });
+
+        if (selected) {
+            form.librariesPath = selected;
+        }
+    } catch (error) {
+        console.log("Library directory selection cancelled or failed", error);
+    }
+};
+
+const selectNativesDir = async () => {
+    try {
+        const selected = await open({
+            directory: true,
+            multiple: false,
+        });
+
+        if (selected) {
+            form.nativesPath = selected;
+        }
+    } catch (error) {
+        console.log("Natives directory selection cancelled or failed", error);
+    }
+};
+
 const handleSubmit = async () => {
     if (!validateForm()) {
         return;
@@ -189,6 +235,8 @@ const handleSubmit = async () => {
             mainClass: form.mainClass.trim(),
             javaPath: form.javaPath.trim() || null,
             javaArgs: form.javaArgs.trim() || null,
+            librariesPath: form.librariesPath.trim() || null,
+            nativesPath: form.nativesPath.trim() || null,
             clientType: form.clientType,
         });
 
@@ -200,6 +248,8 @@ const handleSubmit = async () => {
             fileName: "",
             javaPath: "",
             javaArgs: "",
+            librariesPath: "",
+            nativesPath: "",
             clientType: "default",
         });
 
@@ -390,12 +440,67 @@ const handleSubmit = async () => {
                         $t("modals.add_custom_client_modal.java_path")
                     }}</span>
                 </label>
-                <input
-                    v-model="form.javaPath"
-                    type="text"
-                    placeholder="C:\Path\To\bin\java.exe"
-                    class="input input-bordered"
-                />
+                <div class="join w-full">
+                    <input
+                        v-model="form.javaPath"
+                        type="text"
+                        placeholder="C:\Path\To\bin\java.exe"
+                        class="input input-bordered join-item w-full"
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-primary join-item"
+                        @click="selectJavaExecutable"
+                    >
+                        {{ $t("common.select") }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.libraries_path")
+                    }}</span>
+                </label>
+                <div class="join w-full">
+                    <input
+                        v-model="form.librariesPath"
+                        type="text"
+                        placeholder="/path/to/libraries"
+                        class="input input-bordered join-item w-full"
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-primary join-item"
+                        @click="selectLibrariesDir"
+                    >
+                        {{ $t("common.select") }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.natives_path")
+                    }}</span>
+                </label>
+                <div class="join w-full">
+                    <input
+                        v-model="form.nativesPath"
+                        type="text"
+                        placeholder="/path/to/natives"
+                        class="input input-bordered join-item w-full"
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-primary join-item"
+                        @click="selectNativesDir"
+                    >
+                        {{ $t("common.select") }}
+                    </button>
+                </div>
             </div>
 
             <div class="form-control">

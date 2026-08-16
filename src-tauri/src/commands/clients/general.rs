@@ -231,7 +231,9 @@ pub async fn launch_client(
     );
 
     verify_client_hash(&client, &jar_path, &app_handle, &state).await?;
-    ensure_agent_overlay().await?;
+    if !client.meta.is_custom {
+        ensure_agent_overlay().await?;
+    }
 
     let sync_enabled = state.settings().sync_client_settings.value;
 

@@ -240,6 +240,10 @@ pub struct Client {
     pub java_path: Option<String>,
     #[serde(default)]
     pub java_args: Option<String>,
+    #[serde(default)]
+    pub libraries_path: Option<String>,
+    #[serde(default)]
+    pub natives_path: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

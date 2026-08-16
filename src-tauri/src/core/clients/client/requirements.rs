@@ -1,4 +1,4 @@
-use std::path::{Path, MAIN_SEPARATOR};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -903,49 +903,60 @@ impl Client {
             .unwrap_or_else(|e| e.into_inner())
             .join(AGENT_OVERLAY_FOLDER);
 
+        let resolve_libraries_root = |this: &Self| {
+            if let Some(path) = this
+                .libraries_path
+                .as_deref()
+                .filter(|p| !p.trim().is_empty())
+            {
+                return PathBuf::from(path);
+            }
+
+            match this.client_type {
+                ClientType::Fabric => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_FABRIC_FOLDER),
+                ClientType::Forge => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_LEGACY_FOLDER),
+                ClientType::Default if this.is_legacy_client() => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_LEGACY_FOLDER),
+                ClientType::Default => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_FOLDER),
+            }
+        };
+
         let mut cp_parts = Vec::new();
 
         match self.client_type {
             ClientType::Fabric => {
                 cp_parts.push(self.get_minecraft_jar_path());
 
+                let libs_root = resolve_libraries_root(self);
                 let safe_ver = sanitize_version_for_paths(&self.version);
-                let fabric_libs_root = DATA
-                    .root_dir
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .join(LIBRARIES_FABRIC_FOLDER);
-
-                let v_libs = fabric_libs_root.join(&safe_ver);
+                let v_libs = libs_root.join(&safe_ver);
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
-
-                cp_parts.extend(collect_jars_recursive(&fabric_libs_root, true));
-
+                cp_parts.extend(collect_jars_recursive(&libs_root, true));
                 cp_parts.push(client_jar);
             }
             ClientType::Forge => {
                 cp_parts.push(self.get_minecraft_jar_path());
-                let libs = DATA
-                    .root_dir
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .join(LIBRARIES_LEGACY_FOLDER);
+                let libs = resolve_libraries_root(self);
                 cp_parts.extend(collect_jars_recursive(&libs, false));
-
                 cp_parts.push(client_jar);
             }
             ClientType::Default => {
-                let libs = if self.is_legacy_client() {
-                    DATA.root_dir
-                        .lock()
-                        .unwrap_or_else(|e| e.into_inner())
-                        .join(LIBRARIES_LEGACY_FOLDER)
-                } else {
-                    DATA.root_dir
-                        .lock()
-                        .unwrap_or_else(|e| e.into_inner())
-                        .join(LIBRARIES_FOLDER)
-                };
+                let libs = resolve_libraries_root(self);
 
                 return Ok(format!(
                     "{}{}*{}{}{}{}",

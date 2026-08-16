@@ -106,6 +106,14 @@ impl Client {
     }
 
     fn resolve_natives_path(&self) -> PathBuf {
+        if let Some(path) = self
+            .natives_path
+            .as_deref()
+            .filter(|p| !p.trim().is_empty())
+        {
+            return PathBuf::from(path);
+        }
+
         let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
 
@@ -297,7 +305,7 @@ impl Client {
 
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
 
-        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
+        if !self.meta.is_custom && self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(
                 "-javaagent:{}={}",
                 agent_overlay_path.join(AGENT_FILE).display(),
@@ -308,12 +316,19 @@ impl Client {
         self.apply_java_args(&mut cmd);
 
         cmd.arg(format!("-Xmx{ram_mb}M"));
-        cmd.arg(format!(
-            "-Djava.library.path={}{}{}",
-            natives_path.display(),
-            PATH_SEPARATOR,
-            agent_overlay_path.display()
-        ));
+        if self.meta.is_custom {
+            cmd.arg(format!(
+                "-Djava.library.path={}",
+                natives_path.display(),
+            ));
+        } else {
+            cmd.arg(format!(
+                "-Djava.library.path={}{}{}",
+                natives_path.display(),
+                PATH_SEPARATOR,
+                agent_overlay_path.display()
+            ));
+        }
 
         let actual_main_class = if self.client_type == ClientType::Forge {
             "net.minecraft.launchwrapper.Launch".to_string()

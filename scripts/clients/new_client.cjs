@@ -101,11 +101,23 @@ async function main() {
     };
 
     const BARITONE_DEPS = {
-        "1.21.11": {
-            md5_hash: "dbd83c7de8426f2facdc73f0a3a1da48",
-            name: "baritone-1.21.11",
-            size: 2,
-        },
+        "1.21.4": [
+            {
+                md5_hash: "0f8e922606f64c422cafafc0ad887c0e",
+                name: "baritone-api-fabric-1.13.1",
+                size: 2,
+            },
+            {
+                md5_hash: "56cc7fc0294adc92cbbefe6f456d8f68",
+                name: "baritone-standalone-fabric-1.13.1",
+                size: 1,
+            },
+            {
+                md5_hash: "015e00b79c6ae76881373d367b88a565",
+                name: "baritone-unoptimized-fabric-1.13.1",
+                size: 2,
+            },
+        ],
     };
 
     const FABRIC_BASE_DEPS = {
@@ -201,7 +213,9 @@ async function main() {
         if (extraFlags.includes("sodium")) deps.push(SODIUM_DEP);
         if (extraFlags.includes("baritone")) {
             if (BARITONE_DEPS[version]) {
-                deps.push(BARITONE_DEPS[version]);
+                for (const dep of BARITONE_DEPS[version]) {
+                    deps.push(dep);
+                }
             } else {
                 console.warn(
                     `Warning: baritone requested but no definition for version ${version}`

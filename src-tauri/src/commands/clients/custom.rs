@@ -24,6 +24,8 @@ pub async fn add_custom_client(
     main_class: String,
     java_path: Option<String>,
     java_args: Option<String>,
+    libraries_path: Option<String>,
+    natives_path: Option<String>,
     client_type: ClientType,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
@@ -32,6 +34,8 @@ pub async fn add_custom_client(
     let mut custom_client = CustomClient::new(0, name, version, filename, path_buf, main_class);
     custom_client.java_path = java_path;
     custom_client.java_args = java_args;
+    custom_client.libraries_path = libraries_path;
+    custom_client.natives_path = natives_path;
     custom_client.client_type = client_type;
 
     log_debug!("New custom client details: {:?}", custom_client);
@@ -65,6 +69,8 @@ pub fn update_custom_client(
     main_class: Option<String>,
     java_path: Option<String>,
     java_args: Option<String>,
+    libraries_path: Option<String>,
+    natives_path: Option<String>,
     client_type: Option<ClientType>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
@@ -75,6 +81,8 @@ pub fn update_custom_client(
         main_class,
         java_path,
         java_args,
+        libraries_path,
+        natives_path,
         client_type,
     };
 

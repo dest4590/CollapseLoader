@@ -144,6 +144,14 @@ impl CustomClientManager {
                 client.java_args = Some(java_args);
             }
 
+            if let Some(libraries_path) = updates.libraries_path {
+                client.libraries_path = Some(libraries_path);
+            }
+
+            if let Some(natives_path) = updates.natives_path {
+                client.natives_path = Some(natives_path);
+            }
+
             if let Some(client_type) = updates.client_type {
                 client.client_type = client_type;
             }
@@ -163,6 +171,8 @@ pub struct CustomClientUpdate {
     pub main_class: Option<String>,
     pub java_path: Option<String>,
     pub java_args: Option<String>,
+    pub libraries_path: Option<String>,
+    pub natives_path: Option<String>,
     pub client_type: Option<ClientType>,
 }
 

@@ -21,7 +21,11 @@ SATIN_DEP = {"md5_hash": "2cf1534f9e818bd567837979444557e9", "name": "satin-3.0.
 SODIUM_DEP = {"md5_hash": "28922a78d1876ee062e3265f10abcc46", "name": "sodium-fabric-0.6.13+mc1.21.4", "size": 1}
 
 BARITONE_DEPS = {
-    "1.21.11": {"md5_hash": "dbd83c7de8426f2facdc73f0a3a1da48", "name": "baritone-1.21.11", "size": 2},
+    "1.21.4": [
+        {"md5_hash": "0f8e922606f64c422cafafc0ad887c0e", "name": "baritone-api-fabric-1.13.1", "size": 2},
+        {"md5_hash": "56cc7fc0294adc92cbbefe6f456d8f68", "name": "baritone-standalone-fabric-1.13.1", "size": 1},
+        {"md5_hash": "015e00b79c6ae76881373d367b88a565", "name": "baritone-unoptimized-fabric-1.13.1", "size": 2},
+    ],
 }
 
 MAIN_CLASSES = {
@@ -348,10 +352,14 @@ def main():
             if dep: deps.append(dep)
             else: deps.append(SODIUM_DEP)
         if "baritone" in flags:
-            dep = _find_dep(local, "baritone")
-            if dep: deps.append(dep)
+            known_names = {d["name"] for d in BARITONE_DEPS.get(version, [])}
+            local_baritone = [v for k, v in local.items() if "baritone" in k.lower() and v["name"] in known_names]
+            if local_baritone:
+                for dep in local_baritone:
+                    deps.append({"md5_hash": dep["md5_hash"], "name": dep["name"], "size": dep["size"]})
             elif version in BARITONE_DEPS:
-                deps.append(BARITONE_DEPS[version])
+                for dep in BARITONE_DEPS[version]:
+                    deps.append(dep)
             else:
                 print(f"Warning: baritone not available for {version}")
 
