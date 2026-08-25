@@ -1,6 +1,7 @@
 use super::{get_client_by_id, refresh_tray_menu_after_client_change, with_client_manager};
 use crate::core::clients::client::{Client, LaunchOptions, CLIENT_LOGS};
 use crate::core::clients::internal::agent_overlay::AgentOverlayManager;
+use crate::core::clients::internal::titlebar_branding::TitlebarBrandingManager;
 use crate::core::clients::manager::ClientManager;
 use crate::core::network::servers::{ServerConnectivityStatus, SERVERS};
 use crate::core::storage::data::DATA;
@@ -201,6 +202,20 @@ async fn ensure_agent_overlay() -> Result<(), String> {
     }
 }
 
+async fn ensure_titlebar_branding() {
+    match TitlebarBrandingManager::verify_titlebar_file().await {
+        Ok(true) => {}
+        Ok(false) => {
+            if let Err(e) = TitlebarBrandingManager::download_titlebar_file().await {
+                log_warn!("Titlebar branding not available: {}", e);
+            }
+        }
+        Err(e) => {
+            log_warn!("Error verifying titlebar branding: {}", e);
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn launch_client(
     id: u32,
@@ -233,6 +248,7 @@ pub async fn launch_client(
     verify_client_hash(&client, &jar_path, &app_handle, &state).await?;
     if !client.meta.is_custom {
         ensure_agent_overlay().await?;
+        ensure_titlebar_branding().await;
     }
 
     let sync_enabled = state.settings().sync_client_settings.value;

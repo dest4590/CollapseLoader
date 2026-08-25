@@ -14,7 +14,12 @@ use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
 #[allow(unused)]
 use crate::core::{
     clients::{
-        internal::agent_overlay::AgentArguments, log_checker::LogChecker, manager::ClientManager,
+        internal::{
+            agent_overlay::AgentArguments,
+            titlebar_branding::TitlebarBrandingManager,
+        },
+        log_checker::LogChecker,
+        manager::ClientManager,
     },
     network::{analytics::Analytics, server_ads},
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
@@ -23,7 +28,7 @@ use crate::core::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
             IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
             NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
-            NATIVES_MACOS_FOLDER, PATH_SEPARATOR,
+            NATIVES_MACOS_FOLDER, PATH_SEPARATOR, SKIP_TITLEBAR_BRANDING, TITLEBAR_FILE,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
@@ -32,6 +37,17 @@ use crate::core::{
 use crate::{log_debug, log_error, log_info};
 
 impl Client {
+    #[cfg(target_os = "linux")]
+    fn has_nvidia_gpu() -> bool {
+        std::process::Command::new("lspci")
+            .output()
+            .map(|o| {
+                let stdout = String::from_utf8_lossy(&o.stdout);
+                stdout.to_lowercase().contains("nvidia")
+            })
+            .unwrap_or(false)
+    }
+
     fn append_new_instance_separator(&self) {
         let mut logs = CLIENT_LOGS.lock().unwrap_or_else(|e| e.into_inner());
         let client_logs = logs.entry(self.id).or_default();
@@ -283,6 +299,34 @@ impl Client {
             .unwrap_or_else(|e| e.into_inner())
             .join(AGENT_OVERLAY_FOLDER);
 
+        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+
+        let should_apply_titlebar = !*SKIP_TITLEBAR_BRANDING
+            && !self.meta.is_custom
+            && self.client_type != ClientType::Forge
+            && !is_legacy_vanilla
+            && !TitlebarBrandingManager::has_branding_in_jar(&client_folder.join(&self.filename));
+
+        if should_apply_titlebar {
+            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
+            if titlebar_path.exists() {
+                log_info!(
+                    "Titlebar branding will be applied for client: {}",
+                    self.name
+                );
+            } else {
+                log_debug!(
+                    "Titlebar branding file not found, skipping for: {}",
+                    self.name
+                );
+            }
+        } else if !*SKIP_TITLEBAR_BRANDING && !self.meta.is_custom {
+            log_info!(
+                "Skipping titlebar branding for {} (already branded or excluded)",
+                self.name
+            );
+        }
+
         let mut cmd = Command::new(java_bin);
 
         #[cfg(windows)]
@@ -296,14 +340,21 @@ impl Client {
         cmd.arg("-XstartOnFirstThread");
 
         #[cfg(target_os = "linux")]
-        {
+        if Self::has_nvidia_gpu() {
             cmd.env("__NV_PRIME_RENDER_OFFLOAD", "1");
             cmd.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
             cmd.env("__VK_LAYER_NV_optimus", "NVIDIA_only");
             cmd.env("DRI_PRIME", "1");
         }
 
-        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+        if !should_apply_titlebar {
+            cmd.env("COLLAPSE_SKIP_TITLEBAR", "1");
+        }
+
+        #[cfg(target_os = "linux")]
+        if should_apply_titlebar && agent_overlay_path.join(TITLEBAR_FILE).exists() {
+            cmd.env("LD_PRELOAD", agent_overlay_path.join(TITLEBAR_FILE));
+        }
 
         if !self.meta.is_custom && self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(

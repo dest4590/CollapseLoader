@@ -130,6 +130,20 @@ pub static OVERLAY_FILE: &str = if IS_LINUX {
     "CollapseOverlay.dll"
 };
 
+pub static TITLEBAR_FILE: &str = if IS_LINUX {
+    "libCollapseTitlebar.so"
+} else if IS_MACOS {
+    "libCollapseTitlebar.dylib"
+} else {
+    "libCollapseTitlebar.dll"
+};
+
+pub static TITLEBAR_BRANDING_MARKER: &str = "@CollapseLoader";
+
+pub static SKIP_TITLEBAR_BRANDING: LazyLock<bool> = LazyLock::new(|| {
+    parse_env_bool("SKIP_TITLEBAR_BRANDING")
+});
+
 /// The IRC server host and port.
 pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {
     if let Ok(url) = std::env::var("FORCE_IRC") {
