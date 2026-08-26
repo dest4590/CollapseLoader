@@ -356,6 +356,22 @@ impl Client {
             cmd.env("LD_PRELOAD", agent_overlay_path.join(TITLEBAR_FILE));
         }
 
+        #[cfg(target_os = "windows")]
+        if should_apply_titlebar {
+            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
+            if titlebar_path.exists() {
+                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        if should_apply_titlebar {
+            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
+            if titlebar_path.exists() {
+                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
+            }
+        }
+
         if !self.meta.is_custom && self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(
                 "-javaagent:{}={}",
