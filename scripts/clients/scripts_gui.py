@@ -13,7 +13,7 @@ import webbrowser
 CDN_ROOT = os.environ.get("CDN_ROOT", "/media/w1xced/disk/collapsecdn")
 
 FALLBACK_VERSIONS: dict[str, list[str]] = {
-    "default": ["1.16.5"],
+    "default": ["1.8.9", "1.16.5"],
     "fabric": ["1.21.4", "1.21.8", "1.21.11"],
     "forge": ["1.8.9"],
 }
@@ -66,7 +66,7 @@ def scan_cdn_client_versions(cdn_root: str) -> dict[str, list[str]]:
     result: dict[str, list[str]] = {t: [] for t in FALLBACK_VERSIONS}
     mv_dir = os.path.join(cdn_root, "misc", "minecraft-versions")
     if not os.path.isdir(mv_dir):
-        return result
+        return {"default": FALLBACK_VERSIONS["default"], "fabric": FALLBACK_VERSIONS["fabric"], "forge": FALLBACK_VERSIONS["forge"]}
     for client_type in ["fabric", "forge"]:
         versions: set[str] = set()
         for fname in os.listdir(mv_dir):
@@ -76,6 +76,7 @@ def scan_cdn_client_versions(cdn_root: str) -> dict[str, list[str]]:
             if m:
                 versions.add(m.group(1))
         result[client_type] = _sort_versions(list(versions)) if versions else FALLBACK_VERSIONS.get(client_type, [])
+    result["default"] = FALLBACK_VERSIONS["default"]
     return result
 
 

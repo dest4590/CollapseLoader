@@ -199,7 +199,6 @@ def fetch_cdn_versions() -> dict[str, list[str]]:
             data = json.loads(result.stdout)
             map_fabric: set[str] = set()
             map_forge: set[str] = set()
-            map_default: set[str] = set()
             for item in data:
                 if item.get("type") == "file" and item.get("path"):
                     filename = item["path"].rsplit("/", 1)[-1]
@@ -210,10 +209,8 @@ def fetch_cdn_versions() -> dict[str, list[str]]:
                             map_fabric.add(ver)
                         elif kind == "forge":
                             map_forge.add(ver)
-                    elif re.match(r"^(\d+\.\d+(?:\.\d+)?)\.jar$", filename) and "vanilla" in item.get("path", ""):
-                        map_default.add(filename[:-4])
             return {
-                "default": _sort_versions(list(map_default)) if map_default else FALLBACK_VERSIONS["default"],
+                "default": FALLBACK_VERSIONS["default"],
                 "fabric": _sort_versions(list(map_fabric)) if map_fabric else FALLBACK_VERSIONS["fabric"],
                 "forge": _sort_versions(list(map_forge)) if map_forge else FALLBACK_VERSIONS["forge"],
             }
