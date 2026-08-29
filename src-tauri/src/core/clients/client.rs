@@ -22,7 +22,7 @@ use crate::core::utils::{
 use crate::{log_error, log_info};
 
 mod launch;
-mod requirements;
+pub(crate) mod requirements;
 
 pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -291,6 +291,19 @@ impl Client {
         semver.major == 1 && semver.minor <= 12
     }
 
+    fn uses_sub_libraries(&self) -> bool {
+        if !self.is_legacy_client() {
+            return false;
+        }
+        if self.client_type == ClientType::Forge || self.client_type == ClientType::Fabric {
+            return false;
+        }
+        match Version::parse(&self.version) {
+            Ok(v) => v.major == 1 && v.minor == 8 && v.patch == 9,
+            Err(_) => self.version == "1.8.9",
+        }
+    }
+
     fn client_base_folder(&self) -> PathBuf {
         let root = DATA.root_dir.lock().unwrap();
 
@@ -309,7 +322,7 @@ impl Client {
     }
 
     fn jdk_folder_name(&self) -> &'static str {
-        if self.client_type == ClientType::Forge {
+        if self.client_type == ClientType::Forge || self.is_legacy_client() {
             JDK8_FOLDER
         } else {
             JDK21_FOLDER
@@ -317,7 +330,7 @@ impl Client {
     }
 
     fn jdk_zip_name(&self) -> String {
-        if self.client_type == ClientType::Forge {
+        if self.client_type == ClientType::Forge || self.is_legacy_client() {
             format!("misc/{JDK8_FOLDER}.zip")
         } else {
             format!("misc/{JDK21_FOLDER}.zip")

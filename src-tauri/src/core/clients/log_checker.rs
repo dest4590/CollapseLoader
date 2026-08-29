@@ -1,17 +1,35 @@
 use regex::Regex;
 use serde::Serialize;
-use std::sync::LazyLock;
+use std::collections::HashSet;
+use std::sync::{Arc, LazyLock, Mutex};
 use tauri::AppHandle;
 
 use crate::{
     core::{
         clients::client::{Client, CLIENT_LOGS},
         network::servers::SERVERS,
+        storage::data::DATA,
         utils::globals::API_VERSION,
         utils::helpers::emit_to_main_window,
     },
     log_debug, log_error, log_info, log_warn,
 };
+
+static OPTIONS_BLACKLIST: LazyLock<Arc<Mutex<HashSet<String>>>> =
+    LazyLock::new(|| Arc::new(Mutex::new(HashSet::new())));
+
+pub fn is_options_sync_blocked(client_base: &str) -> bool {
+    OPTIONS_BLACKLIST
+        .lock()
+        .map(|s| s.contains(client_base))
+        .unwrap_or(false)
+}
+
+pub fn block_options_sync(client_base: &str) {
+    if let Ok(mut s) = OPTIONS_BLACKLIST.lock() {
+        s.insert(client_base.to_string());
+    }
+}
 
 pub struct LogChecker {
     pub client: Client,
@@ -23,6 +41,7 @@ enum CrashType {
     MissingMainClass,
     OutOfMemory,
     GameCrashed,
+    OptionsCorrupted,
 }
 
 #[derive(Serialize)]
@@ -128,6 +147,9 @@ impl LogChecker {
         } else if log_string.contains("java.lang.OutOfMemoryError") {
             log_debug!("Detected OutOfMemory crash type");
             Some(CrashType::OutOfMemory)
+        } else if self.is_options_corruption(log_string) {
+            log_debug!("Detected options.txt corruption crash type");
+            Some(CrashType::OptionsCorrupted)
         } else if log_string.contains("#@!@# Game crashed!")
             || log_string.contains("Error occurred during initialization of VM")
             || log_string.contains("java.lang.UnsupportedClassVersionError")
@@ -137,6 +159,15 @@ impl LogChecker {
         } else {
             None
         }
+    }
+
+    fn is_options_corruption(&self, log_string: &str) -> bool {
+        log_string.contains("NumberFormatException: For input string:")
+            && log_string.contains("GameSettings.loadOptions")
+            || log_string.contains("java.lang.NoSuchMethodError")
+                && log_string.contains("ITransformation")
+            || log_string.contains("NoClassDefFoundError")
+                && log_string.contains("Reflector")
     }
 
     fn handle_crash(&self, crash_type: CrashType, client_logs: &[String], app_handle: &AppHandle) {
@@ -183,7 +214,57 @@ impl LogChecker {
                     }),
                 );
             }
+            CrashType::OptionsCorrupted => {
+                self.handle_options_corruption(app_handle);
+            }
         }
+    }
+
+    fn handle_options_corruption(&self, app_handle: &AppHandle) {
+        let client_base = crate::core::storage::data::Data::get_filename(&self.client.filename);
+        log_warn!(
+            "Detected corrupted options for client '{}' (base={}), cleaning up and disabling sync",
+            self.client.name,
+            client_base
+        );
+
+        let client_dir = DATA
+            .root_dir
+            .lock()
+            .ok()
+            .map(|root| root.join(&client_base));
+
+        if let Some(dir) = client_dir {
+            if dir.exists() {
+                for name in ["options.txt", "optionsof.txt"] {
+                    let path = dir.join(name);
+                    if path.exists() {
+                        if let Err(e) = std::fs::remove_file(&path) {
+                            log_warn!("Failed to remove {}: {}", path.display(), e);
+                        } else {
+                            log_info!("Removed corrupted {}", path.display());
+                        }
+                    }
+                }
+            }
+        }
+
+        block_options_sync(&client_base);
+
+        let _ = std::fs::remove_file(DATA.root_dir.lock().ok()
+            .map(|r| r.join("synced_options").join("options.txt")).unwrap_or_default());
+        let _ = std::fs::remove_file(DATA.root_dir.lock().ok()
+            .map(|r| r.join("synced_options").join("optionsof.txt")).unwrap_or_default());
+
+        emit_to_main_window(
+            app_handle,
+            "client-options-reset",
+            serde_json::json!({
+                "id": self.client.id,
+                "name": self.client.name.clone(),
+                "reason": "Corrupted options.txt detected; files removed and sync disabled"
+            }),
+        );
     }
 
     fn emit_crash_details(&self, client_logs: &[String], app_handle: &AppHandle) {
@@ -229,6 +310,7 @@ impl LogChecker {
             CrashType::MissingMainClass => "MissingMainClass",
             CrashType::OutOfMemory => "OutOfMemory",
             CrashType::GameCrashed => "GameCrashed",
+            CrashType::OptionsCorrupted => "OptionsCorrupted",
         }
         .to_string();
 

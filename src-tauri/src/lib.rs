@@ -147,6 +147,7 @@ pub fn run() {
             // client commands
             commands::clients::add_custom_client,
             commands::clients::delete_client,
+            commands::clients::detect_custom_client,
             commands::clients::detect_main_class,
             commands::clients::download_client_only,
             commands::clients::get_app_logs,

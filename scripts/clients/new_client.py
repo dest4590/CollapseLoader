@@ -45,7 +45,7 @@ FILENAMES = {
 CDN_ROOT = os.environ.get("CDN_ROOT", "/media/w1xced/Disk/hf-cdn")
 HF_VERSIONS_URL = "https://huggingface.co/api/datasets/Collapsecdn/collapsecdn/tree/main/misc/minecraft-versions"
 FALLBACK_VERSIONS: dict[str, list[str]] = {
-    "default": ["1.16.5"],
+    "default": ["1.8.9", "1.16.5"],
     "fabric": ["1.21.4", "1.21.8", "1.21.11"],
     "forge": ["1.8.9"],
 }
@@ -199,6 +199,7 @@ def fetch_cdn_versions() -> dict[str, list[str]]:
             data = json.loads(result.stdout)
             map_fabric: set[str] = set()
             map_forge: set[str] = set()
+            map_default: set[str] = set()
             for item in data:
                 if item.get("type") == "file" and item.get("path"):
                     filename = item["path"].rsplit("/", 1)[-1]
@@ -209,8 +210,10 @@ def fetch_cdn_versions() -> dict[str, list[str]]:
                             map_fabric.add(ver)
                         elif kind == "forge":
                             map_forge.add(ver)
+                    elif re.match(r"^(\d+\.\d+(?:\.\d+)?)\.jar$", filename) and "vanilla" in item.get("path", ""):
+                        map_default.add(filename[:-4])
             return {
-                "default": FALLBACK_VERSIONS["default"],
+                "default": _sort_versions(list(map_default)) if map_default else FALLBACK_VERSIONS["default"],
                 "fabric": _sort_versions(list(map_fabric)) if map_fabric else FALLBACK_VERSIONS["fabric"],
                 "forge": _sort_versions(list(map_forge)) if map_forge else FALLBACK_VERSIONS["forge"],
             }

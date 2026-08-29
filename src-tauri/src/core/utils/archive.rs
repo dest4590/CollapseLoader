@@ -17,13 +17,16 @@ pub fn unzip(
 
     if unzip_path.exists() {
         log_debug!(
-            "Directory {} exists, will overwrite contents",
+            "Directory {} exists, wiping for clean re-extract",
             unzip_path.display()
         );
-    } else {
-        log_debug!("Creating unzip directory: {}", unzip_path.display());
-        fs::create_dir_all(unzip_path).map_err(|e| e.to_string())?;
+        fs::remove_dir_all(unzip_path).map_err(|e| {
+            log_error!("Failed to wipe unzip dir {}: {}", unzip_path.display(), e);
+            e.to_string()
+        })?;
     }
+    log_debug!("Creating unzip directory: {}", unzip_path.display());
+    fs::create_dir_all(unzip_path).map_err(|e| e.to_string())?;
 
     if !zip_path.exists() {
         log_error!(

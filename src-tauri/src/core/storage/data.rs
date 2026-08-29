@@ -635,6 +635,14 @@ impl Data {
             return Ok(());
         }
 
+        if crate::core::clients::log_checker::is_options_sync_blocked(client_base) {
+            log_debug!(
+                "Skipping options sync for {} (client is on the corrupted-options blacklist)",
+                client_base
+            );
+            return Ok(());
+        }
+
         let file_items = ["options.txt", "optionsof.txt"];
 
         for name in file_items {

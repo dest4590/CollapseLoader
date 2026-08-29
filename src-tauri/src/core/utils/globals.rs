@@ -73,6 +73,8 @@ pub static LIBRARIES_FOLDER: &str = "libraries";
 pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 /// Folder for legacy game libraries.
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
+/// Folder for minimal 1.8.9 vanilla libraries (no Forge).
+pub static SUBLIBRARIES_1_8_9_FOLDER: &str = "subLibraries-1.8.9";
 /// Folder for standard native libraries.
 pub static NATIVES_FOLDER: &str = "natives";
 /// Folder for Linux-specific native libraries.
@@ -85,6 +87,10 @@ pub static NATIVES_MACOS_ARM64_FOLDER: &str = "natives-macos-arm64";
 pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 /// Folder for legacy Linux native libraries.
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
+/// Folders for minimal 1.8.9 vanilla native libraries (per platform).
+pub static SUBNATIVES_1_8_9_LINUX_FOLDER: &str = "subNatives-1.8.9-linux";
+pub static SUBNATIVES_1_8_9_MACOS_FOLDER: &str = "subNatives-1.8.9-macos";
+pub static SUBNATIVES_1_8_9_WINDOWS_FOLDER: &str = "subNatives-1.8.9-windows";
 /// Folder for Fabric-specific native libraries.
 pub static NATIVES_FABRIC_FOLDER: &str = "natives-fabric";
 
@@ -99,6 +105,8 @@ pub static LIBRARIES_ZIP: &str = "misc/libraries.zip";
 pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
 /// ZIP file containing legacy game libraries.
 pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
+/// ZIP file containing minimal 1.8.9 vanilla libraries (no Forge).
+pub static SUBLIBRARIES_1_8_9_ZIP: &str = "misc/subLibraries-1.8.9.zip";
 /// ZIP file containing standard native libraries.
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 /// ZIP file containing Linux-specific native libraries.
@@ -111,6 +119,10 @@ pub static NATIVES_MACOS_ARM64_ZIP: &str = "misc/natives-macos-arm64.zip";
 pub static NATIVES_LEGACY_ZIP: &str = "misc/natives-legacy.zip";
 /// ZIP file containing legacy Linux native libraries.
 pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
+/// ZIP file containing sub-set legacy native libraries (per platform).
+pub static SUBNATIVES_1_8_9_LINUX_ZIP: &str = "misc/subNatives-1.8.9-linux.zip";
+pub static SUBNATIVES_1_8_9_MACOS_ZIP: &str = "misc/subNatives-1.8.9-macos.zip";
+pub static SUBNATIVES_1_8_9_WINDOWS_ZIP: &str = "misc/subNatives-1.8.9-windows.zip";
 
 /// Folder where Minecraft version JARs are stored.
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft-versions";
