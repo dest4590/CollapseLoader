@@ -267,6 +267,20 @@
                     <option value="default">default</option>
                 </select>
 
+                <div id="c-viaversion-section" style="display:none">
+                    <label>ViaVersion variant</label>
+                    <select id="c-viaversion">
+                        <option value="" disabled selected>
+                            Loading...
+                        </option>
+                    </select>
+                    <p class="hint">
+                        Selects which subLibraries-1.8.9 archive to use:
+                        <code>subLibraries-1.8.9-via53.zip</code>,
+                        <code>via59</code>, or <code>via511</code>.
+                    </p>
+                </div>
+
                 <hr class="sep" />
                 <div id="c-deps-section">
                     <label>Fabric API version</label>
@@ -334,10 +348,28 @@
             }
 
             function onTypeChange() {
-                const isFabric = $("c-type").value === "fabric";
+                const type = $("c-type").value;
+                const isFabric = type === "fabric";
+                const isDefault = type === "default";
                 $("c-deps-section").style.display = isFabric ? "block" : "none";
-                populateVersions($("c-type").value);
+                $("c-viaversion-section").style.display = isDefault ? "block" : "none";
+                populateVersions(type);
+                if (isDefault) populateViaVersions();
                 if (isFabric) populateFabricApi();
+            }
+
+            function populateViaVersions() {
+                const select = $("c-viaversion");
+                select.innerHTML = "";
+                const versions = window.__INIT.viaversions || ["5.9.1"];
+                const defaultVer = window.__INIT.default_viaversion || "5.9.1";
+                versions.forEach((v) => {
+                    const opt = document.createElement("option");
+                    opt.value = v;
+                    opt.textContent = `ViaVersion ${v}${v === defaultVer ? " (default)" : ""}`;
+                    if (v === defaultVer) opt.selected = true;
+                    select.appendChild(opt);
+                });
             }
 
             function pickMd5() {
@@ -412,6 +444,7 @@
                     client_type: $("c-type").value,
                     flags,
                     cdn_root: $("c-cdn").value.trim(),
+                    viaversion: $("c-viaversion").value,
                     fabric_api: fabricApiOpt
                         ? {
                               filename: fabricApiSelect.value,

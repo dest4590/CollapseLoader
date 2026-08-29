@@ -23,9 +23,9 @@ use crate::core::utils::globals::{
     NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
     NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP,
     NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
-    SUBLIBRARIES_1_8_9_FOLDER, SUBLIBRARIES_1_8_9_ZIP, SUBNATIVES_1_8_9_LINUX_ZIP,
-    SUBNATIVES_1_8_9_MACOS_ZIP, SUBNATIVES_1_8_9_WINDOWS_ZIP, SUBNATIVES_1_8_9_LINUX_FOLDER,
-    SUBNATIVES_1_8_9_MACOS_FOLDER, SUBNATIVES_1_8_9_WINDOWS_FOLDER,
+    SUBNATIVES_1_8_9_LINUX_ZIP, SUBNATIVES_1_8_9_MACOS_ZIP, SUBNATIVES_1_8_9_WINDOWS_ZIP,
+    SUBNATIVES_1_8_9_LINUX_FOLDER, SUBNATIVES_1_8_9_MACOS_FOLDER,
+    SUBNATIVES_1_8_9_WINDOWS_FOLDER,
 };
 use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -505,8 +505,8 @@ impl Client {
         if self.is_legacy_client() {
             if self.uses_sub_libraries() {
                 (
-                    SUBLIBRARIES_1_8_9_ZIP,
-                    SUBLIBRARIES_1_8_9_FOLDER,
+                    self.sub_libraries_zip(),
+                    self.sub_libraries_folder(),
                     SUBNATIVES_1_8_9_WINDOWS_ZIP,
                     SUBNATIVES_1_8_9_WINDOWS_FOLDER,
                 )
@@ -923,7 +923,7 @@ impl Client {
                     .root_dir
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
-                    .join(SUBLIBRARIES_1_8_9_FOLDER),
+                    .join(this.sub_libraries_folder()),
                 ClientType::Default if this.is_legacy_client() => DATA
                     .root_dir
                     .lock()

@@ -43,6 +43,8 @@ MAIN_CLASSES = {
     "forge": "net.minecraft.launchwrapper.Launch",
 }
 FILENAMES = {"default": "clients.json", "fabric": "fabric-clients.json", "forge": "forge-clients.json"}
+DEFAULT_VIAVERSION = "5.9.1"
+VIA_VERSIONS = ["5.3.0", "5.9.1", "5.11.0"]
 
 HTML_TEMPLATE_PATH = Path(__file__).parent / "gui_template.html"
 
@@ -159,7 +161,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/" or self.path == "/index.html":
             versions = scan_cdn_client_versions(CDN_ROOT)
             deps = scan_local_deps(CDN_ROOT)
-            payload = json.dumps({"versions": versions, "deps": deps}).replace("\\", "\\\\").replace("'", "\\'")
+            payload = json.dumps({"versions": versions, "deps": deps, "viaversions": VIA_VERSIONS, "default_viaversion": DEFAULT_VIAVERSION}).replace("\\", "\\\\").replace("'", "\\'")
             html = HTML_TEMPLATE_PATH.read_text(encoding="utf-8")
             body = html.replace("CDN_ROOT_PLACEHOLDER", CDN_ROOT).replace("/*__INIT_DATA__*/", f"window.__INIT={payload};").encode()
             self.send_response(200)
@@ -207,6 +209,9 @@ class Handler(BaseHTTPRequestHandler):
                 version = data.get("version", "1.21.11")
                 client_type = data.get("client_type", "fabric")
                 flags = data.get("flags", [])
+                viaversion = data.get("viaversion", DEFAULT_VIAVERSION)
+                if viaversion not in VIA_VERSIONS:
+                    viaversion = DEFAULT_VIAVERSION
                 cdn_root = data.get("cdn_root", CDN_ROOT)
 
                 if not jar:
@@ -249,6 +254,9 @@ class Handler(BaseHTTPRequestHandler):
                     "version": version,
                     "working": True,
                 }
+
+                if client_type == "default" and viaversion:
+                    entry["viaversion"] = viaversion
 
                 if client_type == "fabric":
                     deps = []

@@ -75,6 +75,10 @@ pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 /// Folder for minimal 1.8.9 vanilla libraries (no Forge).
 pub static SUBLIBRARIES_1_8_9_FOLDER: &str = "subLibraries-1.8.9";
+/// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.3.0.
+pub static SUBLIBRARIES_1_8_9_VIA53_FOLDER: &str = "subLibraries-1.8.9-via53";
+/// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.11.0.
+pub static SUBLIBRARIES_1_8_9_VIA511_FOLDER: &str = "subLibraries-1.8.9-via511";
 /// Folder for standard native libraries.
 pub static NATIVES_FOLDER: &str = "natives";
 /// Folder for Linux-specific native libraries.
@@ -107,6 +111,10 @@ pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
 pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
 /// ZIP file containing minimal 1.8.9 vanilla libraries (no Forge).
 pub static SUBLIBRARIES_1_8_9_ZIP: &str = "misc/subLibraries-1.8.9.zip";
+/// ZIP file containing 1.8.9 libraries with ViaVersion 5.3.0.
+pub static SUBLIBRARIES_1_8_9_VIA53_ZIP: &str = "misc/subLibraries-1.8.9-via53.zip";
+/// ZIP file containing 1.8.9 libraries with ViaVersion 5.11.0.
+pub static SUBLIBRARIES_1_8_9_VIA511_ZIP: &str = "misc/subLibraries-1.8.9-via511.zip";
 /// ZIP file containing standard native libraries.
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 /// ZIP file containing Linux-specific native libraries.

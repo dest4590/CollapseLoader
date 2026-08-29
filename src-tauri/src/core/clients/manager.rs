@@ -49,6 +49,7 @@ impl ClientManager {
                     installed: rng.random_bool(1.0 / 3.0),
                     is_custom: false,
                     size: rng.random_range(50..=100),
+                    viaversion: None,
                 },
                 ..Default::default()
             })

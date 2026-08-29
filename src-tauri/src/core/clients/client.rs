@@ -15,7 +15,10 @@ use crate::core::storage::data::{Data, DATA};
 use crate::core::utils::{
     globals::{
         CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
-        JDK8_FOLDER, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+        JDK8_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, MINECRAFT_VERSIONS_FOLDER,
+        MODS_FOLDER, SUBLIBRARIES_1_8_9_FOLDER, SUBLIBRARIES_1_8_9_VIA511_FOLDER,
+        SUBLIBRARIES_1_8_9_VIA511_ZIP, SUBLIBRARIES_1_8_9_VIA53_FOLDER,
+        SUBLIBRARIES_1_8_9_VIA53_ZIP, SUBLIBRARIES_1_8_9_ZIP,
     },
     process,
 };
@@ -135,6 +138,7 @@ pub struct Meta {
     pub installed: bool,
     pub is_custom: bool,
     pub size: u64,
+    pub viaversion: Option<String>,
 }
 
 impl Meta {
@@ -148,6 +152,7 @@ impl Meta {
         let is_new_version = semver.minor >= 16;
         let is_fabric = *client_type == ClientType::Fabric || filename.contains("fabric/");
         let is_forge = *client_type == ClientType::Forge || filename.contains("forge/");
+        let viaversion = None;
 
         let jar_path = match client_type {
             ClientType::Fabric | ClientType::Forge => {
@@ -193,6 +198,7 @@ impl Meta {
             is_fabric,
             is_forge,
             size: 0,
+            viaversion,
         }
     }
 }
@@ -262,6 +268,7 @@ fn default_meta() -> Meta {
         installed: false,
         is_custom: false,
         size: 0,
+        viaversion: None,
     }
 }
 
@@ -301,6 +308,40 @@ impl Client {
         match Version::parse(&self.version) {
             Ok(v) => v.major == 1 && v.minor == 8 && v.patch == 9,
             Err(_) => self.version == "1.8.9",
+        }
+    }
+
+    fn via_version_normalized(&self) -> String {
+        let v = self.meta.viaversion.as_deref().unwrap_or("5.9.1");
+        match v {
+            "5.3.0" | "5.9.1" | "5.11.0" => v.to_string(),
+            _ => "5.9.1".to_string(),
+        }
+    }
+
+    fn sub_libraries_folder(&self) -> &'static str {
+        if self.uses_sub_libraries() {
+            match self.via_version_normalized().as_str() {
+                "5.3.0" => SUBLIBRARIES_1_8_9_VIA53_FOLDER,
+                "5.9.1" => SUBLIBRARIES_1_8_9_FOLDER,
+                "5.11.0" => SUBLIBRARIES_1_8_9_VIA511_FOLDER,
+                _ => SUBLIBRARIES_1_8_9_FOLDER,
+            }
+        } else {
+            LIBRARIES_LEGACY_FOLDER
+        }
+    }
+
+    fn sub_libraries_zip(&self) -> &'static str {
+        if self.uses_sub_libraries() {
+            match self.via_version_normalized().as_str() {
+                "5.3.0" => SUBLIBRARIES_1_8_9_VIA53_ZIP,
+                "5.9.1" => SUBLIBRARIES_1_8_9_ZIP,
+                "5.11.0" => SUBLIBRARIES_1_8_9_VIA511_ZIP,
+                _ => SUBLIBRARIES_1_8_9_ZIP,
+            }
+        } else {
+            LIBRARIES_LEGACY_ZIP
         }
     }
 

@@ -89,6 +89,7 @@ impl CustomClient {
                 installed: self.is_installed,
                 is_custom: true,
                 size: 0,
+                viaversion: None,
             },
             java_path: self.java_path.clone(),
             java_args: self.java_args.clone(),
