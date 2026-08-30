@@ -16,10 +16,10 @@ use crate::core::utils::{
     globals::{
         CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
         JDK8_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, MINECRAFT_VERSIONS_FOLDER,
-        MODS_FOLDER, SUBLIBRARIES_1_8_9_FOLDER, SUBLIBRARIES_1_8_9_VIA511_FOLDER,
-        SUBLIBRARIES_1_8_9_VIA511_ZIP, SUBLIBRARIES_1_8_9_VIA53_FOLDER,
-        SUBLIBRARIES_1_8_9_VIA53_ZIP, SUBLIBRARIES_1_8_9_VIA57_FOLDER,
-        SUBLIBRARIES_1_8_9_VIA57_ZIP, SUBLIBRARIES_1_8_9_ZIP,
+        MODS_FOLDER, LIBRARIES_VA1_8_9_FOLDER, LIBRARIES_VA1_8_9_VIA511_FOLDER,
+        LIBRARIES_VA1_8_9_VIA511_ZIP, LIBRARIES_VA1_8_9_VIA53_FOLDER,
+        LIBRARIES_VA1_8_9_VIA53_ZIP, LIBRARIES_VA1_8_9_VIA57_FOLDER,
+        LIBRARIES_VA1_8_9_VIA57_ZIP, LIBRARIES_VA1_8_9_ZIP,
     },
     process,
 };
@@ -335,11 +335,11 @@ impl Client {
     fn sub_libraries_folder(&self) -> &'static str {
         if self.uses_sub_libraries() {
             match self.via_version_normalized().as_str() {
-                "5.3.0" => SUBLIBRARIES_1_8_9_VIA53_FOLDER,
-                "5.7.1" => SUBLIBRARIES_1_8_9_VIA57_FOLDER,
-                "5.9.1" => SUBLIBRARIES_1_8_9_FOLDER,
-                "5.11.0" => SUBLIBRARIES_1_8_9_VIA511_FOLDER,
-                _ => SUBLIBRARIES_1_8_9_FOLDER,
+                "5.3.0" => LIBRARIES_VA1_8_9_VIA53_FOLDER,
+                "5.7.1" => LIBRARIES_VA1_8_9_VIA57_FOLDER,
+                "5.9.1" => LIBRARIES_VA1_8_9_FOLDER,
+                "5.11.0" => LIBRARIES_VA1_8_9_VIA511_FOLDER,
+                _ => LIBRARIES_VA1_8_9_FOLDER,
             }
         } else {
             LIBRARIES_LEGACY_FOLDER
@@ -349,11 +349,11 @@ impl Client {
     fn sub_libraries_zip(&self) -> &'static str {
         if self.uses_sub_libraries() {
             match self.via_version_normalized().as_str() {
-                "5.3.0" => SUBLIBRARIES_1_8_9_VIA53_ZIP,
-                "5.7.1" => SUBLIBRARIES_1_8_9_VIA57_ZIP,
-                "5.9.1" => SUBLIBRARIES_1_8_9_ZIP,
-                "5.11.0" => SUBLIBRARIES_1_8_9_VIA511_ZIP,
-                _ => SUBLIBRARIES_1_8_9_ZIP,
+                "5.3.0" => LIBRARIES_VA1_8_9_VIA53_ZIP,
+                "5.7.1" => LIBRARIES_VA1_8_9_VIA57_ZIP,
+                "5.9.1" => LIBRARIES_VA1_8_9_ZIP,
+                "5.11.0" => LIBRARIES_VA1_8_9_VIA511_ZIP,
+                _ => LIBRARIES_VA1_8_9_ZIP,
             }
         } else {
             LIBRARIES_LEGACY_ZIP

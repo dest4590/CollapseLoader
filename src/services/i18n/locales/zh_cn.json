@@ -277,7 +277,15 @@
             "file_select_failed": "选择文件失败",
             "add_failed": "添加客户端失败：{error}",
             "drop_jar_here": "将 .jar 文件拖放到此处",
-            "or_click_browse": "或点击浏览"
+            "or_click_browse": "或点击浏览",
+            "viaversion_label": "ViaVersion 变体",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "选择要使用的 subLibraries-1.8.9 压缩包。",
+            "java_version_label": "Java 版本（仅限 1.8.9）",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "默认：Java 8。仅当您的客户端支持时才切换到 Java 21。",
+            "default_option": "默认 ({value})",
+            "default_suffix": "（默认）"
         },
         "edit_custom_client_modal": {
             "client_name": "客户端名称",

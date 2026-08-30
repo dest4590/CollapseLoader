@@ -270,7 +270,15 @@
             "file_select_failed": "Failed to select file",
             "add_failed": "Failed to add custom client: {error}",
             "drop_jar_here": "Drop .jar file here",
-            "or_click_browse": "or click to browse"
+            "or_click_browse": "or click to browse",
+            "viaversion_label": "ViaVersion variant",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "Selects which subLibraries-1.8.9 archive to use.",
+            "java_version_label": "Java version (1.8.9 only)",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "Default: Java 8. Switch to Java 21 only if your client supports it.",
+            "default_option": "Default ({value})",
+            "default_suffix": " (default)"
         },
         "edit_custom_client_modal": {
             "client_name": "Client Name",

@@ -23,9 +23,9 @@ use crate::core::utils::globals::{
     NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
     NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP,
     NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
-    SUBNATIVES_1_8_9_LINUX_ZIP, SUBNATIVES_1_8_9_MACOS_ZIP, SUBNATIVES_1_8_9_WINDOWS_ZIP,
-    SUBNATIVES_1_8_9_LINUX_FOLDER, SUBNATIVES_1_8_9_MACOS_FOLDER,
-    SUBNATIVES_1_8_9_WINDOWS_FOLDER,
+    NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_MACOS_ZIP, NATIVES_VA1_8_9_WINDOWS_ZIP,
+    NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
+    NATIVES_VA1_8_9_WINDOWS_FOLDER,
 };
 use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -507,8 +507,8 @@ impl Client {
                 (
                     self.sub_libraries_zip(),
                     self.sub_libraries_folder(),
-                    SUBNATIVES_1_8_9_WINDOWS_ZIP,
-                    SUBNATIVES_1_8_9_WINDOWS_FOLDER,
+                    NATIVES_VA1_8_9_WINDOWS_ZIP,
+                    NATIVES_VA1_8_9_WINDOWS_FOLDER,
                 )
             } else {
                 (
@@ -530,7 +530,7 @@ impl Client {
     ) -> (&'static str, &'static str) {
         if IS_LINUX {
             if self.uses_sub_libraries() {
-                (SUBNATIVES_1_8_9_LINUX_ZIP, SUBNATIVES_1_8_9_LINUX_FOLDER)
+                (NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_LINUX_FOLDER)
             } else if self.is_legacy_client() {
                 (NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_LINUX_FOLDER)
             } else {
@@ -538,7 +538,7 @@ impl Client {
             }
         } else if IS_MACOS {
             if self.uses_sub_libraries() {
-                (SUBNATIVES_1_8_9_MACOS_ZIP, SUBNATIVES_1_8_9_MACOS_FOLDER)
+                (NATIVES_VA1_8_9_MACOS_ZIP, NATIVES_VA1_8_9_MACOS_FOLDER)
             } else if IS_AARCH64 {
                 (NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_ARM64_FOLDER)
             } else {

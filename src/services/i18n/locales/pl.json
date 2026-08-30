@@ -277,7 +277,15 @@
             "file_select_failed": "Nie udało się wybrać pliku",
             "add_failed": "Nie udało się dodać klienta: {error}",
             "drop_jar_here": "Upuść plik .jar tutaj",
-            "or_click_browse": "lub kliknij, aby przeglądać"
+            "or_click_browse": "lub kliknij, aby przeglądać",
+            "viaversion_label": "Wariant ViaVersion",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "Wybiera które archiwum subLibraries-1.8.9 użyć.",
+            "java_version_label": "Wersja Java (tylko 1.8.9)",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "Domyślnie: Java 8. Przełącz na Java 21 tylko jeśli klient to obsługuje.",
+            "default_option": "Domyślnie ({value})",
+            "default_suffix": " (domyślnie)"
         },
         "edit_custom_client_modal": {
             "client_name": "Nazwa klienta",

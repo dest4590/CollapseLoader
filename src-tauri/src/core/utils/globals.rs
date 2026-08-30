@@ -74,13 +74,13 @@ pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 /// Folder for legacy game libraries.
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 /// Folder for minimal 1.8.9 vanilla libraries (no Forge).
-pub static SUBLIBRARIES_1_8_9_FOLDER: &str = "subLibraries-1.8.9";
+pub static LIBRARIES_VA1_8_9_FOLDER: &str = "libraries-va1.8.9";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.3.0.
-pub static SUBLIBRARIES_1_8_9_VIA53_FOLDER: &str = "subLibraries-1.8.9-via53";
+pub static LIBRARIES_VA1_8_9_VIA53_FOLDER: &str = "libraries-va1.8.9-via53";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.7.1.
-pub static SUBLIBRARIES_1_8_9_VIA57_FOLDER: &str = "subLibraries-1.8.9-via57";
+pub static LIBRARIES_VA1_8_9_VIA57_FOLDER: &str = "libraries-va1.8.9-via57";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.11.0.
-pub static SUBLIBRARIES_1_8_9_VIA511_FOLDER: &str = "subLibraries-1.8.9-via511";
+pub static LIBRARIES_VA1_8_9_VIA511_FOLDER: &str = "libraries-va1.8.9-via511";
 /// Folder for standard native libraries.
 pub static NATIVES_FOLDER: &str = "natives";
 /// Folder for Linux-specific native libraries.
@@ -94,9 +94,9 @@ pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 /// Folder for legacy Linux native libraries.
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
 /// Folders for minimal 1.8.9 vanilla native libraries (per platform).
-pub static SUBNATIVES_1_8_9_LINUX_FOLDER: &str = "subNatives-1.8.9-linux";
-pub static SUBNATIVES_1_8_9_MACOS_FOLDER: &str = "subNatives-1.8.9-macos";
-pub static SUBNATIVES_1_8_9_WINDOWS_FOLDER: &str = "subNatives-1.8.9-windows";
+pub static NATIVES_VA1_8_9_LINUX_FOLDER: &str = "natives-va1.8.9-linux";
+pub static NATIVES_VA1_8_9_MACOS_FOLDER: &str = "natives-va1.8.9-macos";
+pub static NATIVES_VA1_8_9_WINDOWS_FOLDER: &str = "natives-va1.8.9-windows";
 /// Folder for Fabric-specific native libraries.
 pub static NATIVES_FABRIC_FOLDER: &str = "natives-fabric";
 
@@ -112,13 +112,13 @@ pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
 /// ZIP file containing legacy game libraries.
 pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
 /// ZIP file containing minimal 1.8.9 vanilla libraries (no Forge).
-pub static SUBLIBRARIES_1_8_9_ZIP: &str = "misc/subLibraries-1.8.9.zip";
+pub static LIBRARIES_VA1_8_9_ZIP: &str = "misc/libraries-va1.8.9.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.3.0.
-pub static SUBLIBRARIES_1_8_9_VIA53_ZIP: &str = "misc/subLibraries-1.8.9-via53.zip";
+pub static LIBRARIES_VA1_8_9_VIA53_ZIP: &str = "misc/libraries-va1.8.9-via53.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.7.1.
-pub static SUBLIBRARIES_1_8_9_VIA57_ZIP: &str = "misc/subLibraries-1.8.9-via57.zip";
+pub static LIBRARIES_VA1_8_9_VIA57_ZIP: &str = "misc/libraries-va1.8.9-via57.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.11.0.
-pub static SUBLIBRARIES_1_8_9_VIA511_ZIP: &str = "misc/subLibraries-1.8.9-via511.zip";
+pub static LIBRARIES_VA1_8_9_VIA511_ZIP: &str = "misc/libraries-va1.8.9-via511.zip";
 /// ZIP file containing standard native libraries.
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 /// ZIP file containing Linux-specific native libraries.
@@ -132,9 +132,9 @@ pub static NATIVES_LEGACY_ZIP: &str = "misc/natives-legacy.zip";
 /// ZIP file containing legacy Linux native libraries.
 pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
 /// ZIP file containing sub-set legacy native libraries (per platform).
-pub static SUBNATIVES_1_8_9_LINUX_ZIP: &str = "misc/subNatives-1.8.9-linux.zip";
-pub static SUBNATIVES_1_8_9_MACOS_ZIP: &str = "misc/subNatives-1.8.9-macos.zip";
-pub static SUBNATIVES_1_8_9_WINDOWS_ZIP: &str = "misc/subNatives-1.8.9-windows.zip";
+pub static NATIVES_VA1_8_9_LINUX_ZIP: &str = "misc/natives-va1.8.9-linux.zip";
+pub static NATIVES_VA1_8_9_MACOS_ZIP: &str = "misc/natives-va1.8.9-macos.zip";
+pub static NATIVES_VA1_8_9_WINDOWS_ZIP: &str = "misc/natives-va1.8.9-windows.zip";
 
 /// Folder where Minecraft version JARs are stored.
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft-versions";

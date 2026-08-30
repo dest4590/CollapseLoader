@@ -277,7 +277,15 @@
             "file_select_failed": "Не вдалося вибрати файл",
             "add_failed": "Не вдалося додати клієнта: {error}",
             "drop_jar_here": "Перетягніть .jar файл сюди",
-            "or_click_browse": "або натисніть для вибору"
+            "or_click_browse": "або натисніть для вибору",
+            "viaversion_label": "Варіант ViaVersion",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "Вибирає який архів subLibraries-1.8.9 використовувати.",
+            "java_version_label": "Версія Java (тільки 1.8.9)",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "За замовчуванням: Java 8. Переключіть на Java 21 тільки якщо ваш клієнт підтримує.",
+            "default_option": "За замовчуванням ({value})",
+            "default_suffix": " (за замовчуванням)"
         },
         "edit_custom_client_modal": {
             "client_name": "Назва клієнта",

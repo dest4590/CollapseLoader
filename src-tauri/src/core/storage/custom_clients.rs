@@ -156,6 +156,22 @@ impl CustomClientManager {
                 client.client_type = client_type;
             }
 
+            if let Some(viaversion) = updates.viaversion {
+                client.viaversion = if viaversion.is_empty() {
+                    None
+                } else {
+                    Some(viaversion)
+                };
+            }
+
+            if let Some(java_version) = updates.java_version {
+                client.java_version = if java_version.is_empty() {
+                    None
+                } else {
+                    Some(java_version)
+                };
+            }
+
             self.save_to_disk();
             Ok(())
         } else {
@@ -174,6 +190,8 @@ pub struct CustomClientUpdate {
     pub libraries_path: Option<String>,
     pub natives_path: Option<String>,
     pub client_type: Option<ClientType>,
+    pub viaversion: Option<String>,
+    pub java_version: Option<String>,
 }
 
 impl JsonStorage for CustomClientManager {

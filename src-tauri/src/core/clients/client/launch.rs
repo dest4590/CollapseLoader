@@ -33,8 +33,8 @@ use crate::core::{
             IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
             NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
             NATIVES_MACOS_FOLDER, PATH_SEPARATOR, SKIP_TITLEBAR_BRANDING,
-            SUBNATIVES_1_8_9_LINUX_FOLDER, SUBNATIVES_1_8_9_MACOS_FOLDER,
-            SUBNATIVES_1_8_9_WINDOWS_FOLDER, TITLEBAR_FILE,
+            NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
+            NATIVES_VA1_8_9_WINDOWS_FOLDER, TITLEBAR_FILE,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
@@ -141,7 +141,7 @@ impl Client {
 
         if IS_LINUX {
             if self.uses_sub_libraries() {
-                root.join(SUBNATIVES_1_8_9_LINUX_FOLDER)
+                root.join(NATIVES_VA1_8_9_LINUX_FOLDER)
             } else if self.is_legacy_client() {
                 root.join(NATIVES_LEGACY_LINUX_FOLDER)
             } else {
@@ -149,13 +149,13 @@ impl Client {
             }
         } else if IS_MACOS {
             if self.uses_sub_libraries() {
-                root.join(SUBNATIVES_1_8_9_MACOS_FOLDER)
+                root.join(NATIVES_VA1_8_9_MACOS_FOLDER)
             } else {
                 Self::resolve_macos_natives_path(&root, use_legacy_layout)
             }
         } else {
             if self.uses_sub_libraries() {
-                root.join(SUBNATIVES_1_8_9_WINDOWS_FOLDER)
+                root.join(NATIVES_VA1_8_9_WINDOWS_FOLDER)
             } else {
                 Self::resolve_default_natives_path(&root, use_legacy_layout)
             }

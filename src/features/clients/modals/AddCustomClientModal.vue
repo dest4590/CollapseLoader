@@ -29,7 +29,20 @@ const form = reactive({
     librariesPath: "",
     nativesPath: "",
     clientType: "default",
+    viaversion: "",
+    javaVersion: "",
 });
+
+const VIA_VERSIONS = ["5.3.0", "5.7.1", "5.9.1", "5.11.0"];
+const DEFAULT_VIAVERSION = "5.9.1";
+const JAVA_VERSIONS = ["8", "21"];
+const DEFAULT_JAVA_VERSION = "8";
+
+const isVersion18 = computed(() => form.version === "1.8.9");
+const isDefaultType = computed(() => form.clientType === "default");
+const showViaSelect = computed(
+    () => isDefaultType.value && isVersion18.value
+);
 
 const isDragging = ref(false);
 let unlistenDrop: (() => void) | null = null;
@@ -238,6 +251,8 @@ const handleSubmit = async () => {
             librariesPath: form.librariesPath.trim() || null,
             nativesPath: form.nativesPath.trim() || null,
             clientType: form.clientType,
+            viaversion: form.viaversion || null,
+            javaVersion: form.javaVersion || null,
         });
 
         Object.assign(form, {
@@ -251,6 +266,8 @@ const handleSubmit = async () => {
             librariesPath: "",
             nativesPath: "",
             clientType: "default",
+            viaversion: "",
+            javaVersion: "",
         });
 
         emit("client-added");
@@ -349,6 +366,67 @@ const handleSubmit = async () => {
                     <span class="label-text-alt text-error">{{
                         errors.mainClass
                     }}</span>
+                </label>
+            </div>
+
+            <div class="form-control" v-if="showViaSelect">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.viaversion_label")
+                    }}</span>
+                </label>
+                <select v-model="form.viaversion" class="select select-bordered">
+                    <option value="">
+                        {{ $t("modals.add_custom_client_modal.default_option", { value: DEFAULT_VIAVERSION }) }}
+                    </option>
+                    <option
+                        v-for="v in VIA_VERSIONS"
+                        :key="v"
+                        :value="v"
+                    >
+                        {{ $t("modals.add_custom_client_modal.viaversion_option", { version: v, default: v === DEFAULT_VIAVERSION ? $t("modals.add_custom_client_modal.default_suffix") : "" }) }}
+                    </option>
+                </select>
+                <label class="label">
+                    <span class="label-text-alt text-base-content/60">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.viaversion_hint"
+                            )
+                        }}
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-control" v-if="showViaSelect">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.java_version_label")
+                    }}</span>
+                </label>
+                <select
+                    v-model="form.javaVersion"
+                    class="select select-bordered"
+                >
+                    <option value="">
+                        {{ $t("modals.add_custom_client_modal.default_option", { value: DEFAULT_JAVA_VERSION }) }}
+                    </option>
+                    <option
+                        v-for="v in JAVA_VERSIONS"
+                        :key="v"
+                        :value="v"
+                    >
+                        {{ $t("modals.add_custom_client_modal.java_version_option", { version: v, default: v === DEFAULT_JAVA_VERSION ? $t("modals.add_custom_client_modal.default_suffix") : "" }) }}
+                    </option>
+                </select>
+                <label class="label">
+                    <span class="label-text-alt text-base-content/60">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.java_version_hint"
+                            )
+                        }}
+                    </span>
                 </label>
             </div>
 

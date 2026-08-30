@@ -24,6 +24,10 @@ pub struct CustomClient {
     pub libraries_path: Option<String>,
     pub natives_path: Option<String>,
     pub client_type: ClientType,
+    #[serde(default)]
+    pub viaversion: Option<String>,
+    #[serde(default)]
+    pub java_version: Option<String>,
 }
 
 impl CustomClient {
@@ -51,6 +55,8 @@ impl CustomClient {
             libraries_path: None,
             natives_path: None,
             client_type: ClientType::Default,
+            viaversion: None,
+            java_version: None,
         }
     }
 
@@ -96,8 +102,8 @@ impl CustomClient {
             java_args: self.java_args.clone(),
             libraries_path: self.libraries_path.clone(),
             natives_path: self.natives_path.clone(),
-            viaversion: None,
-            java_version: None,
+            viaversion: self.viaversion.clone(),
+            java_version: self.java_version.clone(),
         }
     }
 
