@@ -50,6 +50,7 @@ impl ClientManager {
                     is_custom: false,
                     size: rng.random_range(50..=100),
                     viaversion: None,
+                    java_version: None,
                 },
                 ..Default::default()
             })
@@ -97,7 +98,15 @@ impl ClientManager {
         let dev_enabled = crate::core::utils::helpers::is_development_enabled();
 
         for client in clients {
-            client.meta = Meta::new(&client.version, &client.filename, &client.client_type);
+            let viaversion = client.viaversion.clone();
+            let java_version = client.java_version.clone();
+            client.meta = Meta::new(
+                &client.version,
+                &client.filename,
+                &client.client_type,
+                viaversion,
+                java_version,
+            );
             client.meta.size = client.size;
 
             if dev_enabled {

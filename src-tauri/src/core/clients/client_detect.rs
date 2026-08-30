@@ -14,6 +14,7 @@ pub struct DetectedClient {
     pub reason: String,
 }
 
+#[allow(dead_code)]
 const FORGE_MAIN_CANDIDATES: &[&str] = &[
     "net.minecraftforge.legacy.server.start.LegacyServerStart",
     "GradleStart",
@@ -81,7 +82,7 @@ pub fn detect_client_type(jar_path: &Path) -> Option<DetectedClient> {
     let mut has_vanilla_main = false;
 
     for i in 0..archive.len() {
-        let mut entry = match archive.by_index(i) {
+        let entry = match archive.by_index(i) {
             Ok(e) => e,
             Err(_) => continue,
         };

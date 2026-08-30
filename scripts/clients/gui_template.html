@@ -254,7 +254,7 @@
                 </div>
 
                 <label>Version</label>
-                <select id="c-version" onchange="populateFabricApi()">
+                <select id="c-version" onchange="populateFabricApi(); if($('c-type').value==='default') populateJavaVersions();">
                     <option value="" disabled selected>
                         Loading versions...
                     </option>
@@ -277,8 +277,23 @@
                     <p class="hint">
                         Selects which subLibraries-1.8.9 archive to use:
                         <code>subLibraries-1.8.9-via53.zip</code>,
-                        <code>via59</code>, or <code>via511</code>.
+                        <code>via59</code>, <code>via511</code>, or
+                        <code>via57</code>.
                     </p>
+
+                    <div id="c-javaversion-section" style="display:none">
+                        <label>Java version (1.8.9 only)</label>
+                        <select id="c-javaversion">
+                            <option value="" disabled selected>
+                                Loading...
+                            </option>
+                        </select>
+                        <p class="hint">
+                            Default: <strong>Java 8</strong>. Switch to
+                            <strong>Java 21</strong> only if your client
+                            supports it.
+                        </p>
+                    </div>
                 </div>
 
                 <hr class="sep" />
@@ -354,7 +369,10 @@
                 $("c-deps-section").style.display = isFabric ? "block" : "none";
                 $("c-viaversion-section").style.display = isDefault ? "block" : "none";
                 populateVersions(type);
-                if (isDefault) populateViaVersions();
+                if (isDefault) {
+                    populateViaVersions();
+                    populateJavaVersions();
+                }
                 if (isFabric) populateFabricApi();
             }
 
@@ -370,6 +388,23 @@
                     if (v === defaultVer) opt.selected = true;
                     select.appendChild(opt);
                 });
+            }
+
+            function populateJavaVersions() {
+                const select = $("c-javaversion");
+                if (!select) return;
+                select.innerHTML = "";
+                const versions = window.__INIT.javaversions || ["8"];
+                const defaultVer = window.__INIT.default_java_version || "8";
+                versions.forEach((v) => {
+                    const opt = document.createElement("option");
+                    opt.value = v;
+                    opt.textContent = `Java ${v}${v === defaultVer ? " (default)" : ""}`;
+                    if (v === defaultVer) opt.selected = true;
+                    select.appendChild(opt);
+                });
+                const mcVer = $("c-version").value;
+                $("c-javaversion-section").style.display = mcVer === "1.8.9" ? "block" : "none";
             }
 
             function pickMd5() {
@@ -445,6 +480,7 @@
                     flags,
                     cdn_root: $("c-cdn").value.trim(),
                     viaversion: $("c-viaversion").value,
+                    java_version: $("c-javaversion").value,
                     fabric_api: fabricApiOpt
                         ? {
                               filename: fabricApiSelect.value,

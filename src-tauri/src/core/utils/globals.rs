@@ -77,6 +77,8 @@ pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
 pub static SUBLIBRARIES_1_8_9_FOLDER: &str = "subLibraries-1.8.9";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.3.0.
 pub static SUBLIBRARIES_1_8_9_VIA53_FOLDER: &str = "subLibraries-1.8.9-via53";
+/// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.7.1.
+pub static SUBLIBRARIES_1_8_9_VIA57_FOLDER: &str = "subLibraries-1.8.9-via57";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.11.0.
 pub static SUBLIBRARIES_1_8_9_VIA511_FOLDER: &str = "subLibraries-1.8.9-via511";
 /// Folder for standard native libraries.
@@ -113,6 +115,8 @@ pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
 pub static SUBLIBRARIES_1_8_9_ZIP: &str = "misc/subLibraries-1.8.9.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.3.0.
 pub static SUBLIBRARIES_1_8_9_VIA53_ZIP: &str = "misc/subLibraries-1.8.9-via53.zip";
+/// ZIP file containing 1.8.9 libraries with ViaVersion 5.7.1.
+pub static SUBLIBRARIES_1_8_9_VIA57_ZIP: &str = "misc/subLibraries-1.8.9-via57.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.11.0.
 pub static SUBLIBRARIES_1_8_9_VIA511_ZIP: &str = "misc/subLibraries-1.8.9-via511.zip";
 /// ZIP file containing standard native libraries.

@@ -90,11 +90,14 @@ impl CustomClient {
                 is_custom: true,
                 size: 0,
                 viaversion: None,
+                java_version: None,
             },
             java_path: self.java_path.clone(),
             java_args: self.java_args.clone(),
             libraries_path: self.libraries_path.clone(),
             natives_path: self.natives_path.clone(),
+            viaversion: None,
+            java_version: None,
         }
     }
 

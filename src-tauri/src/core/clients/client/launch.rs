@@ -5,6 +5,7 @@ use std::{
 };
 
 #[cfg(unix)]
+#[allow(unused_imports)]
 use std::os::unix::process::CommandExt;
 
 use tokio::{
@@ -365,9 +366,11 @@ impl Client {
 
         cmd.current_dir(&client_folder);
 
-        cmd.arg("-Xverify:none");
+        if self.wants_jdk8() {
+            cmd.arg("-Xverify:none");
+        }
 
-        if self.is_legacy_client() && self.client_type == ClientType::Default {
+        if self.wants_jdk8() && self.client_type == ClientType::Default {
             cmd.arg("-XX:+UseG1GC");
             cmd.arg("-XX:MaxPermSize=256m");
             cmd.arg("-Dorg.lwjgl.system.stacksize=16384");
@@ -467,7 +470,7 @@ impl Client {
 
         self.apply_java_args(&mut cmd);
 
-        if is_legacy_vanilla {
+        if is_legacy_vanilla && self.wants_jdk8() {
             cmd.arg("-XX:+UseG1GC");
             cmd.arg("-Dorg.lwjgl.system.stacksize=16384");
             cmd.arg("-Dorg.lwjgl.system.nojni=false");
@@ -477,7 +480,7 @@ impl Client {
             }
         }
 
-        if is_legacy_vanilla {
+        if is_legacy_vanilla && self.wants_jdk8() {
             cmd.arg("-Xss256k");
         }
 

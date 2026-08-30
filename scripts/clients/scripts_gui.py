@@ -44,7 +44,9 @@ MAIN_CLASSES = {
 }
 FILENAMES = {"default": "clients.json", "fabric": "fabric-clients.json", "forge": "forge-clients.json"}
 DEFAULT_VIAVERSION = "5.9.1"
-VIA_VERSIONS = ["5.3.0", "5.9.1", "5.11.0"]
+VIA_VERSIONS = ["5.3.0", "5.7.1", "5.9.1", "5.11.0"]
+DEFAULT_JAVA_VERSION = "8"
+JAVA_VERSIONS = ["8", "21"]
 
 HTML_TEMPLATE_PATH = Path(__file__).parent / "gui_template.html"
 
@@ -161,7 +163,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/" or self.path == "/index.html":
             versions = scan_cdn_client_versions(CDN_ROOT)
             deps = scan_local_deps(CDN_ROOT)
-            payload = json.dumps({"versions": versions, "deps": deps, "viaversions": VIA_VERSIONS, "default_viaversion": DEFAULT_VIAVERSION}).replace("\\", "\\\\").replace("'", "\\'")
+            payload = json.dumps({"versions": versions, "deps": deps, "viaversions": VIA_VERSIONS, "default_viaversion": DEFAULT_VIAVERSION, "javaversions": JAVA_VERSIONS, "default_java_version": DEFAULT_JAVA_VERSION}).replace("\\", "\\\\").replace("'", "\\'")
             html = HTML_TEMPLATE_PATH.read_text(encoding="utf-8")
             body = html.replace("CDN_ROOT_PLACEHOLDER", CDN_ROOT).replace("/*__INIT_DATA__*/", f"window.__INIT={payload};").encode()
             self.send_response(200)
@@ -212,6 +214,9 @@ class Handler(BaseHTTPRequestHandler):
                 viaversion = data.get("viaversion", DEFAULT_VIAVERSION)
                 if viaversion not in VIA_VERSIONS:
                     viaversion = DEFAULT_VIAVERSION
+                java_version = data.get("java_version", DEFAULT_JAVA_VERSION)
+                if java_version not in JAVA_VERSIONS:
+                    java_version = DEFAULT_JAVA_VERSION
                 cdn_root = data.get("cdn_root", CDN_ROOT)
 
                 if not jar:
@@ -257,6 +262,8 @@ class Handler(BaseHTTPRequestHandler):
 
                 if client_type == "default" and viaversion:
                     entry["viaversion"] = viaversion
+                if client_type == "default" and version == "1.8.9":
+                    entry["java_version"] = java_version
 
                 if client_type == "fabric":
                     deps = []
