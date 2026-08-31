@@ -33,24 +33,24 @@ semver = "1.0.28"
 zip = "8.6.0"
 tokio = { version = "1.53.1", features = ["macros", "process"] }
 opener = "0.8.5"
-uuid = { version = "1.24.0", features = ["v4"] }
+uuid = { version = "1.26.0", features = ["v4"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 paste = "1.0.15"
-open = "5.4.0"
+open = "5.4.2"
 md5 = "0.8.1"
 discord-rich-presence = "1.1.0"
-futures-util = "0.3.33"
-base64 = "0.23.0"
+futures-util = "0.3.34"
+base64 = "0.23.1"
 tauri-plugin-dialog = "2.7.2"
 dotenvy = "0.15.7"
 tauri-plugin-fs = "2.5.1"
-thiserror = "2.0.19"
+thiserror = "2.0.20"
 native-dialog = "0.9.7"
 sysinfo = "0.39.6"
 socket2 = "0.6.5"
 sha2 = "0.11.0"
 regex = "1.13.1"
-flate2 = "1.1.9"
+flate2 = "1.1.10"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.4"
@@ -61,7 +61,7 @@ objc2-app-kit = { version = "0.3.2", features = [
 objc2-foundation = { version = "0.3.2", features = ["NSString"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-zbus = { version = "5.18.0", default-features = false, features = ["tokio"] }
+zbus = { version = "5.19.0", default-features = false, features = ["tokio"] }
 
 [target.'cfg(windows)'.dependencies]
 junction = "2.0.0"
