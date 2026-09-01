@@ -9,6 +9,8 @@ Usage:
 import json
 import hashlib
 import os
+import re
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,14 +21,11 @@ SATIN_DEP = {"md5_hash": "2cf1534f9e818bd567837979444557e9", "name": "satin-3.0.
 SODIUM_DEP = {"md5_hash": "28922a78d1876ee062e3265f10abcc46", "name": "sodium-fabric-0.6.13+mc1.21.4", "size": 1}
 
 BARITONE_DEPS = {
-    "1.21.11": {"md5_hash": "dbd83c7de8426f2facdc73f0a3a1da48", "name": "baritone-1.21.11", "size": 2},
-}
-
-FABRIC_BASE_DEPS = {
-    "1.21.4": [{"md5_hash": "128a8d042180e7c92567342e21a21a6d", "name": "fabric-api-0.119.4+1.21.4", "size": 2}],
-    "1.21.8": [{"md5_hash": "85d76d57a7b5bb7043ea815133d2f6ba", "name": "fabric-api-0.136.1+1.21.8", "size": 2}],
-    "1.21.10": [{"md5_hash": "c9ebf1b300d813310d18115a7cc03f99", "name": "fabric-api-0.138.4+1.21.10", "size": 2}],
-    "1.21.11": [{"md5_hash": "e2a72b6c6aa2c6c4f74541394858c86a", "name": "fabric-api-0.140.2+1.21.11", "size": 2}],
+    "1.21.4": [
+        {"md5_hash": "0f8e922606f64c422cafafc0ad887c0e", "name": "baritone-api-fabric-1.13.1", "size": 2},
+        {"md5_hash": "56cc7fc0294adc92cbbefe6f456d8f68", "name": "baritone-standalone-fabric-1.13.1", "size": 1},
+        {"md5_hash": "015e00b79c6ae76881373d367b88a565", "name": "baritone-unoptimized-fabric-1.13.1", "size": 2},
+    ],
 }
 
 MAIN_CLASSES = {
@@ -44,6 +43,12 @@ FILENAMES = {
 }
 
 CDN_ROOT = os.environ.get("CDN_ROOT", "/media/w1xced/Disk/hf-cdn")
+HF_VERSIONS_URL = "https://huggingface.co/api/datasets/Collapsecdn/collapsecdn/tree/main/misc/minecraft-versions"
+FALLBACK_VERSIONS: dict[str, list[str]] = {
+    "default": ["1.8.9", "1.16.5"],
+    "fabric": ["1.21.4", "1.21.8", "1.21.11"],
+    "forge": ["1.8.9"],
+}
 
 
 def compute_md5(filepath: Path) -> str:
@@ -113,8 +118,110 @@ def pick_client_type() -> str | None:
     return CLIENT_TYPES[choice - 1]
 
 
-def pick_version() -> str | None:
-    versions = ["1.21.4", "1.21.8", "1.21.10", "1.21.11"]
+def _sort_versions(versions: list[str]) -> list[str]:
+    def to_num(v: str) -> int:
+        parts = v.split(".")
+        return sum(int(p) * (1000 ** (2 - i)) for i, p in enumerate(parts))
+    return sorted(versions, key=to_num)
+
+
+FABRIC_API_RE = re.compile(r"^fabric-api-([0-9.]+\+\d+\.\d+\.\d+)\.jar$")
+
+
+def scan_local_deps(cdn_root: str) -> dict:
+    """Scan {cdn_root}/clients/fabric/deps/jars/ and return parsed deps with MD5."""
+    deps_dir = os.path.join(cdn_root, "clients", "fabric", "deps", "jars")
+    result: dict[str, dict] = {}
+    if not os.path.isdir(deps_dir):
+        return result
+    for fname in sorted(os.listdir(deps_dir)):
+        if not fname.endswith(".jar"):
+            continue
+        fpath = os.path.join(deps_dir, fname)
+        if not os.path.isfile(fpath):
+            continue
+        md5 = compute_md5(Path(fpath))
+        size_mb = round(os.path.getsize(fpath) / 1024 / 1024)
+        result[fname] = {
+            "md5_hash": md5,
+            "name": fname.replace(".jar", ""),
+            "size": size_mb,
+        }
+    return result
+
+
+def _find_dep(local_deps: dict, keyword: str) -> dict | None:
+    """Find a dep by keyword in local scanned deps."""
+    for fname, info in local_deps.items():
+        if keyword.lower() in fname.lower():
+            return {"md5_hash": info["md5_hash"], "name": info["name"], "size": info["size"]}
+    return None
+
+
+def pick_fabric_api(cdn_root: str, mc_version: str) -> dict | None:
+    """Let user pick a fabric-api version from local deps, auto-compute MD5."""
+    local = scan_local_deps(cdn_root)
+    api_deps = {k: v for k, v in local.items() if FABRIC_API_RE.match(k)}
+    if not api_deps:
+        print("No fabric-api jars found in CDN deps folder.")
+        return None
+
+    matching = {k: v for k, v in api_deps.items() if f"+{mc_version}.jar" in k}
+    if not matching:
+        print(f"\nNo fabric-api for MC {mc_version}. Available:")
+        matching = api_deps
+
+    items = sorted(matching.items(), key=lambda x: x[1]["name"])
+    print("\nFabric API version:\n")
+    for i, (_, info) in enumerate(items, 1):
+        print(f"  {i}) {info['name']}  (md5: {info['md5_hash'][:12]}...)")
+    print(f"\n  0) None (skip fabric-api)\n")
+
+    try:
+        choice = int(input("Select fabric-api: "))
+    except (ValueError, EOFError):
+        return None
+
+    if choice == 0 or choice > len(items):
+        return None
+    _, info = items[choice - 1]
+    return {"md5_hash": info["md5_hash"], "name": info["name"], "size": info["size"]}
+
+
+def fetch_cdn_versions() -> dict[str, list[str]]:
+    """Parse jar filenames from HuggingFace CDN to get available versions per type."""
+    try:
+        result = subprocess.run(
+            ["curl", "-s", "--max-time", "10", HF_VERSIONS_URL],
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode == 0 and result.stdout:
+            data = json.loads(result.stdout)
+            map_fabric: set[str] = set()
+            map_forge: set[str] = set()
+            for item in data:
+                if item.get("type") == "file" and item.get("path"):
+                    filename = item["path"].rsplit("/", 1)[-1]
+                    m = re.match(r"^(fabric|forge)_(.+)\.jar$", filename)
+                    if m:
+                        kind, ver = m.group(1), m.group(2)
+                        if kind == "fabric":
+                            map_fabric.add(ver)
+                        elif kind == "forge":
+                            map_forge.add(ver)
+            return {
+                "default": FALLBACK_VERSIONS["default"],
+                "fabric": _sort_versions(list(map_fabric)) if map_fabric else FALLBACK_VERSIONS["fabric"],
+                "forge": _sort_versions(list(map_forge)) if map_forge else FALLBACK_VERSIONS["forge"],
+            }
+    except Exception:
+        pass
+    return {**FALLBACK_VERSIONS}
+
+
+def pick_version(client_type: str = "fabric") -> str | None:
+    cdn = fetch_cdn_versions()
+    versions = cdn.get(client_type, cdn.get("fabric", []))
     print("\nMinecraft version:\n")
     for i, v in enumerate(versions, 1):
         print(f"  {i}) {v}")
@@ -182,7 +289,7 @@ def main():
             print("Cancelled.")
             sys.exit(0)
 
-        version = pick_version()
+        version = pick_version(client_type)
         if not version:
             print("Cancelled.")
             sys.exit(0)
@@ -221,21 +328,38 @@ def main():
     }
 
     if client_type == "fabric":
-        deps = list(FABRIC_BASE_DEPS.get(version, []))
+        deps = []
+        fabric_api = pick_fabric_api(CDN_ROOT, version)
+        if fabric_api:
+            deps.append(fabric_api)
+
         if len(sys.argv) > 4:
             flags = [a.lower() for a in sys.argv[4:] if not os.sep in a and "/" not in a]
         else:
             flags = pick_flags()
 
+        local = scan_local_deps(CDN_ROOT)
         if "kotlin" in flags:
-            deps.append(KOTLIN_DEP)
+            dep = _find_dep(local, "kotlin")
+            if dep: deps.append(dep)
+            else: deps.append(KOTLIN_DEP)
         if "satin" in flags:
-            deps.append(SATIN_DEP)
+            dep = _find_dep(local, "satin")
+            if dep: deps.append(dep)
+            else: deps.append(SATIN_DEP)
         if "sodium" in flags:
-            deps.append(SODIUM_DEP)
+            dep = _find_dep(local, "sodium")
+            if dep: deps.append(dep)
+            else: deps.append(SODIUM_DEP)
         if "baritone" in flags:
-            if version in BARITONE_DEPS:
-                deps.append(BARITONE_DEPS[version])
+            known_names = {d["name"] for d in BARITONE_DEPS.get(version, [])}
+            local_baritone = [v for k, v in local.items() if "baritone" in k.lower() and v["name"] in known_names]
+            if local_baritone:
+                for dep in local_baritone:
+                    deps.append({"md5_hash": dep["md5_hash"], "name": dep["name"], "size": dep["size"]})
+            elif version in BARITONE_DEPS:
+                for dep in BARITONE_DEPS[version]:
+                    deps.append(dep)
             else:
                 print(f"Warning: baritone not available for {version}")
 

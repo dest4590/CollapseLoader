@@ -266,6 +266,8 @@
             "client_type_vanilla": "Vanilla (За замовчуванням)",
             "client_type_hint": "Оберіть Fabric/Forge, якщо ваш jar потребує цих бібліотек.",
             "java_path": "Шлях до Java (необов\u0027язково)",
+            "libraries_path": "Шлях до бібліотек (необов\u0027язково)",
+            "natives_path": "Шлях до нативних файлів (необов\u0027язково)",
             "java_args": "Аргументи Java (необов\u0027язково)",
             "validate_name": "Назва обов\u0027язкова",
             "validate_version": "Версія обов\u0027язкова",
@@ -275,7 +277,15 @@
             "file_select_failed": "Не вдалося вибрати файл",
             "add_failed": "Не вдалося додати клієнта: {error}",
             "drop_jar_here": "Перетягніть .jar файл сюди",
-            "or_click_browse": "або натисніть для вибору"
+            "or_click_browse": "або натисніть для вибору",
+            "viaversion_label": "Варіант ViaVersion",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "Вибирає який архів subLibraries-1.8.9 використовувати.",
+            "java_version_label": "Версія Java (тільки 1.8.9)",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "За замовчуванням: Java 8. Переключіть на Java 21 тільки якщо ваш клієнт підтримує.",
+            "default_option": "За замовчуванням ({value})",
+            "default_suffix": " (за замовчуванням)"
         },
         "edit_custom_client_modal": {
             "client_name": "Назва клієнта",
@@ -289,6 +299,8 @@
             "client_type_vanilla": "Vanilla (За замовчуванням)",
             "client_type_hint": "Оберіть Fabric/Forge, якщо ваш jar потребує цих бібліотек.",
             "java_path": "Шлях до Java (необов\u0027язково)",
+            "libraries_path": "Шлях до бібліотек (необов\u0027язково)",
+            "natives_path": "Шлях до нативних файлів (необов\u0027язково)",
             "java_args": "Аргументи Java (необов\u0027язково)",
             "validate_name": "Назва обов\u0027язкова",
             "validate_version": "Версія обов\u0027язкова",
@@ -432,6 +444,7 @@
         "close": "Закрити",
         "save": "Зберегти",
         "browse": "Огляд",
+        "select": "Вибрати",
         "edit": "Редагувати",
         "add": "Додати",
         "details": "Деталі",
@@ -781,6 +794,9 @@
         },
         "dark": "Темна",
         "light": "Світла",
+        "system": "Системна",
+        "system_description": "Автоматично підлаштовуватися під тему операційної системи.",
+        "system_detected": "Визначено з ОС",
         "schedule": {
             "title": "Автоматично",
             "description": "Автоматично перемикати тему залежно від часу доби.",
@@ -929,7 +945,8 @@
             "auto_update": "Автоматично перевіряти оновлення та сповіщати про нові версії.",
             "autostart": "Автоматично запускати CollapseLoader при старті системи.",
             "start_minimized": "Запускати CollapseLoader згорнутим у системний трей.",
-            "auto_hide_sidebar": "Автоматично ховати бічну панель. Вона з'явиться при наведенні на край екрана."
+            "auto_hide_sidebar": "Автоматично ховати бічну панель. Вона з'явиться при наведенні на край екрана.",
+            "disable_server_ads": "Вимкнути автоматичне додавання просунутих серверів до списку мультиплеєра Minecraft при запуску клієнта."
         },
         "add_account_title": "Додати новий акаунт",
         "edit_account_title": "Редагувати акаунт",
@@ -957,6 +974,7 @@
         "reset_cache_failed": "Не вдалося видалити кеш, спробуйте ще раз",
         "hash_verify": "Перевірка хешу",
         "auto_hide_sidebar": "Авто-приховування панелі",
+        "disable_server_ads": "Вимкнути рекламні сервери",
         "irc_chat": "IRC-чат",
         "save_flags_failed": "Не вдалося зберегти прапорці: {error}",
         "change_root": {
@@ -1098,6 +1116,7 @@
         "account": "Акаунт",
         "about": "Про програму",
         "news": "Новини",
+        "hf_clients": "HF Клієнти",
         "customization": "Фон",
         "custom_clients": "Власні клієнти",
         "marketplace": "Маркетплейс",
@@ -1205,6 +1224,7 @@
             "logging_in": "Входить у систему",
             "browsing_friends": "Дивиться, що роблять друзі",
             "browsing_news": "Читає новини",
+            "browsing_hf_clients": "Переглядає HF клієнти",
             "browsing_custom_clients": "Переглядає власні клієнти"
         }
     },
@@ -1231,6 +1251,27 @@
         "mark_all_read": "Позначити все як прочитане",
         "refresh": "Оновити",
         "telegram": "Telegram"
+    },
+    "hfapi": {
+        "live": "ОНЛАЙН",
+        "subtitle": "HuggingFace CDN – База клієнтів",
+        "loading": "Завантаження клієнтів...",
+        "error": "Помилка завантаження клієнтів",
+        "retry": "Спробувати знову",
+        "refresh": "Оновити",
+        "latest_changes": "Останні зміни",
+        "no_changes": "Змін поки немає...",
+        "all_clients": "Всі клієнти",
+        "table_name": "Назва",
+        "table_version": "Версія",
+        "table_hash": "MD5 хеш",
+        "table_size": "Розмір",
+        "status_down": "НЕДОСТУПНИЙ",
+        "total": "Всього",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "Не вдалося завантажити клієнти"
     },
     "hold_button": {
         "label": "Затисніть, щоб почати!",

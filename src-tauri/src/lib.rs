@@ -147,6 +147,7 @@ pub fn run() {
             // client commands
             commands::clients::add_custom_client,
             commands::clients::delete_client,
+            commands::clients::detect_custom_client,
             commands::clients::detect_main_class,
             commands::clients::download_client_only,
             commands::clients::get_app_logs,
@@ -277,7 +278,7 @@ pub fn run() {
             }
 
             let app_handle = app.handle();
-            *APP_HANDLE.lock().unwrap() = Some(app_handle.clone());
+            *APP_HANDLE.lock().unwrap_or_else(|e| e.into_inner()) = Some(app_handle.clone());
 
             let startup_metadata = StartupMetadata::from_env();
             startup_metadata.configure_main_window(app_handle);
@@ -333,7 +334,9 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                let settings = crate::core::storage::settings::SETTINGS.lock().unwrap();
+                let settings = crate::core::storage::settings::SETTINGS
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner());
                 if settings.close_to_tray.value {
                     api.prevent_close();
                     let _ = window.hide();

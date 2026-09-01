@@ -18,6 +18,7 @@ import {
 } from "./themeSettings";
 
 const THEME_STORAGE_KEY = STORAGE_KEYS.THEME;
+const THEME_MODE_STORAGE_KEY = "themeMode";
 
 const presetSettings = reactive<ThemeSettings>({ ...defaultThemeSettings });
 
@@ -36,6 +37,49 @@ const applyNativeWindowTheme = async (theme: string) => {
     } catch (error) {
         console.error("Failed to apply native window theme:", error);
     }
+};
+
+const getSystemTheme = (): "dark" | "light" => {
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+    }
+    return "light";
+};
+
+let systemMediaQuery: MediaQueryList | null = null;
+let systemThemeListener: (() => void) | null = null;
+
+const startSystemThemeListener = (onThemeChange: (theme: "dark" | "light") => void): void => {
+    if (!window.matchMedia) return;
+
+    systemMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    systemThemeListener = () => {
+        const newTheme = getSystemTheme();
+        onThemeChange(newTheme);
+    };
+
+    systemMediaQuery.addEventListener("change", systemThemeListener);
+};
+
+const stopSystemThemeListener = (): void => {
+    if (systemMediaQuery && systemThemeListener) {
+        systemMediaQuery.removeEventListener("change", systemThemeListener);
+        systemMediaQuery = null;
+        systemThemeListener = null;
+    }
+};
+
+const getStoredThemeMode = (): "dark" | "light" | "system" | "schedule" => {
+    const stored = localStorage.getItem(THEME_MODE_STORAGE_KEY);
+    if (stored && ["dark", "light", "system", "schedule"].includes(stored)) {
+        return stored as "dark" | "light" | "system" | "schedule";
+    }
+    return "dark";
+};
+
+const setStoredThemeMode = (mode: "dark" | "light" | "system" | "schedule"): void => {
+    localStorage.setItem(THEME_MODE_STORAGE_KEY, mode);
 };
 
 export const cssVarList = themeCssVarList;
@@ -144,4 +188,9 @@ export const themeService = {
     saveCardSettings,
     exportPreset,
     importPreset,
+    getSystemTheme,
+    startSystemThemeListener,
+    stopSystemThemeListener,
+    getStoredThemeMode,
+    setStoredThemeMode,
 };

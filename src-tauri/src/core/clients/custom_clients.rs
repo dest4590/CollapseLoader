@@ -21,7 +21,13 @@ pub struct CustomClient {
     pub insecure: bool,
     pub java_path: Option<String>,
     pub java_args: Option<String>,
+    pub libraries_path: Option<String>,
+    pub natives_path: Option<String>,
     pub client_type: ClientType,
+    #[serde(default)]
+    pub viaversion: Option<String>,
+    #[serde(default)]
+    pub java_version: Option<String>,
 }
 
 impl CustomClient {
@@ -46,7 +52,11 @@ impl CustomClient {
             insecure: false,
             java_path: None,
             java_args: None,
+            libraries_path: None,
+            natives_path: None,
             client_type: ClientType::Default,
+            viaversion: None,
+            java_version: None,
         }
     }
 
@@ -85,9 +95,15 @@ impl CustomClient {
                 installed: self.is_installed,
                 is_custom: true,
                 size: 0,
+                viaversion: None,
+                java_version: None,
             },
             java_path: self.java_path.clone(),
             java_args: self.java_args.clone(),
+            libraries_path: self.libraries_path.clone(),
+            natives_path: self.natives_path.clone(),
+            viaversion: self.viaversion.clone(),
+            java_version: self.java_version.clone(),
         }
     }
 
@@ -140,5 +156,45 @@ impl CustomClient {
 
     pub fn stop(&self) -> Result<(), String> {
         process::stop_process_by_filename(&self.filename, &self.name)
+    }
+
+    pub fn resolve_libraries_dir(&self) -> PathBuf {
+        self.libraries_path
+            .as_deref()
+            .filter(|p| !p.trim().is_empty())
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                let root = crate::core::storage::data::DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
+                match self.client_type {
+                    ClientType::Fabric => root.join(crate::core::utils::globals::LIBRARIES_FABRIC_FOLDER),
+                    ClientType::Forge => root.join(crate::core::utils::globals::LIBRARIES_LEGACY_FOLDER),
+                    ClientType::Default if self.version.contains("1.8") || self.version.contains("1.7") => {
+                        root.join(crate::core::utils::globals::LIBRARIES_LEGACY_FOLDER)
+                    }
+                    _ => root.join(crate::core::utils::globals::LIBRARIES_FOLDER),
+                }
+            })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CustomClient;
+    use std::path::PathBuf;
+
+    #[test]
+    fn custom_client_resolves_libraries_dir_override() {
+        let mut client = CustomClient::new(
+            1,
+            "Test Client".to_string(),
+            "1.20.1".to_string(),
+            "test.jar".to_string(),
+            PathBuf::from("/tmp/test.jar"),
+            "net.minecraft.client.main.Main".to_string(),
+        );
+
+        client.libraries_path = Some("/tmp/custom-libs".to_string());
+
+        assert_eq!(client.resolve_libraries_dir(), PathBuf::from("/tmp/custom-libs"));
     }
 }

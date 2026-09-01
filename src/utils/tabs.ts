@@ -12,6 +12,7 @@ export const VALID_TABS = [
     "friends",
     "user-profile",
     "news",
+    "hf_clients",
     "marketplace",
     "network_debug",
     "chat",

@@ -26,8 +26,23 @@ const form = reactive({
     fileName: "",
     javaPath: "",
     javaArgs: "",
+    librariesPath: "",
+    nativesPath: "",
     clientType: "default",
+    viaversion: "",
+    javaVersion: "",
 });
+
+const VIA_VERSIONS = ["5.3.0", "5.7.1", "5.9.1", "5.11.0"];
+const DEFAULT_VIAVERSION = "5.9.1";
+const JAVA_VERSIONS = ["8", "21"];
+const DEFAULT_JAVA_VERSION = "8";
+
+const isVersion18 = computed(() => form.version === "1.8.9");
+const isDefaultType = computed(() => form.clientType === "default");
+const showViaSelect = computed(
+    () => isDefaultType.value && isVersion18.value
+);
 
 const isDragging = ref(false);
 let unlistenDrop: (() => void) | null = null;
@@ -173,6 +188,50 @@ const selectFile = async () => {
     }
 };
 
+const selectJavaExecutable = async () => {
+    try {
+        const selected = await open({
+            multiple: false,
+        });
+
+        if (selected) {
+            form.javaPath = selected;
+        }
+    } catch (error) {
+        console.log("Java executable selection cancelled or failed", error);
+    }
+};
+
+const selectLibrariesDir = async () => {
+    try {
+        const selected = await open({
+            directory: true,
+            multiple: false,
+        });
+
+        if (selected) {
+            form.librariesPath = selected;
+        }
+    } catch (error) {
+        console.log("Library directory selection cancelled or failed", error);
+    }
+};
+
+const selectNativesDir = async () => {
+    try {
+        const selected = await open({
+            directory: true,
+            multiple: false,
+        });
+
+        if (selected) {
+            form.nativesPath = selected;
+        }
+    } catch (error) {
+        console.log("Natives directory selection cancelled or failed", error);
+    }
+};
+
 const handleSubmit = async () => {
     if (!validateForm()) {
         return;
@@ -189,7 +248,11 @@ const handleSubmit = async () => {
             mainClass: form.mainClass.trim(),
             javaPath: form.javaPath.trim() || null,
             javaArgs: form.javaArgs.trim() || null,
+            librariesPath: form.librariesPath.trim() || null,
+            nativesPath: form.nativesPath.trim() || null,
             clientType: form.clientType,
+            viaversion: form.viaversion || null,
+            javaVersion: form.javaVersion || null,
         });
 
         Object.assign(form, {
@@ -200,7 +263,11 @@ const handleSubmit = async () => {
             fileName: "",
             javaPath: "",
             javaArgs: "",
+            librariesPath: "",
+            nativesPath: "",
             clientType: "default",
+            viaversion: "",
+            javaVersion: "",
         });
 
         emit("client-added");
@@ -302,6 +369,67 @@ const handleSubmit = async () => {
                 </label>
             </div>
 
+            <div class="form-control" v-if="showViaSelect">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.viaversion_label")
+                    }}</span>
+                </label>
+                <select v-model="form.viaversion" class="select select-bordered">
+                    <option value="">
+                        {{ $t("modals.add_custom_client_modal.default_option", { value: DEFAULT_VIAVERSION }) }}
+                    </option>
+                    <option
+                        v-for="v in VIA_VERSIONS"
+                        :key="v"
+                        :value="v"
+                    >
+                        {{ $t("modals.add_custom_client_modal.viaversion_option", { version: v, default: v === DEFAULT_VIAVERSION ? $t("modals.add_custom_client_modal.default_suffix") : "" }) }}
+                    </option>
+                </select>
+                <label class="label">
+                    <span class="label-text-alt text-base-content/60">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.viaversion_hint"
+                            )
+                        }}
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-control" v-if="showViaSelect">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.java_version_label")
+                    }}</span>
+                </label>
+                <select
+                    v-model="form.javaVersion"
+                    class="select select-bordered"
+                >
+                    <option value="">
+                        {{ $t("modals.add_custom_client_modal.default_option", { value: DEFAULT_JAVA_VERSION }) }}
+                    </option>
+                    <option
+                        v-for="v in JAVA_VERSIONS"
+                        :key="v"
+                        :value="v"
+                    >
+                        {{ $t("modals.add_custom_client_modal.java_version_option", { version: v, default: v === DEFAULT_JAVA_VERSION ? $t("modals.add_custom_client_modal.default_suffix") : "" }) }}
+                    </option>
+                </select>
+                <label class="label">
+                    <span class="label-text-alt text-base-content/60">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.java_version_hint"
+                            )
+                        }}
+                    </span>
+                </label>
+            </div>
+
             <div class="form-control">
                 <label class="label">
                     <span class="label-text"
@@ -390,12 +518,67 @@ const handleSubmit = async () => {
                         $t("modals.add_custom_client_modal.java_path")
                     }}</span>
                 </label>
-                <input
-                    v-model="form.javaPath"
-                    type="text"
-                    placeholder="C:\Path\To\bin\java.exe"
-                    class="input input-bordered"
-                />
+                <div class="join w-full">
+                    <input
+                        v-model="form.javaPath"
+                        type="text"
+                        placeholder="C:\Path\To\bin\java.exe"
+                        class="input input-bordered join-item w-full"
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-primary join-item"
+                        @click="selectJavaExecutable"
+                    >
+                        {{ $t("common.select") }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.libraries_path")
+                    }}</span>
+                </label>
+                <div class="join w-full">
+                    <input
+                        v-model="form.librariesPath"
+                        type="text"
+                        placeholder="/path/to/libraries"
+                        class="input input-bordered join-item w-full"
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-primary join-item"
+                        @click="selectLibrariesDir"
+                    >
+                        {{ $t("common.select") }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.natives_path")
+                    }}</span>
+                </label>
+                <div class="join w-full">
+                    <input
+                        v-model="form.nativesPath"
+                        type="text"
+                        placeholder="/path/to/natives"
+                        class="input input-bordered join-item w-full"
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-primary join-item"
+                        @click="selectNativesDir"
+                    >
+                        {{ $t("common.select") }}
+                    </button>
+                </div>
             </div>
 
             <div class="form-control">

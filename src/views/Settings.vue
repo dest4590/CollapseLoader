@@ -34,6 +34,7 @@ import {
     HardDrive,
     RefreshCcw,
     PanelRightClose,
+    Megaphone,
 } from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import type { ToastPosition } from "@shared/types/toast";
@@ -123,6 +124,7 @@ const filteredSettingsEntries = computed(() => {
         "irc_chat",
         "hash_verify",
         "sync_client_settings",
+        "disable_server_ads",
         "dpi_bypass",
         "minimize_to_tray_on_launch",
         "close_to_tray",
@@ -556,6 +558,10 @@ const getFormattedLabel = (key: string) => {
 
     if (key === "auto_hide_sidebar") {
         return t("settings.auto_hide_sidebar");
+    }
+
+    if (key === "disable_server_ads") {
+        return t("settings.disable_server_ads");
     }
 
     if (key === "java_path") {
@@ -1041,6 +1047,10 @@ const handleToastPositionChange = (position: string) => {
                                     />
                                     <PanelRightClose
                                         v-if="key === 'auto_hide_sidebar'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <Megaphone
+                                        v-if="key === 'disable_server_ads'"
                                         class="w-5 h-5 text-primary"
                                     />
                                     <Coffee

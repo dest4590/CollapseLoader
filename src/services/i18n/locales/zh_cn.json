@@ -266,6 +266,8 @@
             "client_type_vanilla": "Vanilla（默认）",
             "client_type_hint": "如果您的 jar 需要 Fabric/Forge 库，请选择对应类型。",
             "java_path": "自定义 Java 路径（可选）",
+            "libraries_path": "自定义库路径（可选）",
+            "natives_path": "自定义 natives 路径（可选）",
             "java_args": "自定义 Java 参数（可选）",
             "validate_name": "名称为必填项",
             "validate_version": "版本为必填项",
@@ -275,7 +277,15 @@
             "file_select_failed": "选择文件失败",
             "add_failed": "添加客户端失败：{error}",
             "drop_jar_here": "将 .jar 文件拖放到此处",
-            "or_click_browse": "或点击浏览"
+            "or_click_browse": "或点击浏览",
+            "viaversion_label": "ViaVersion 变体",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "选择要使用的 subLibraries-1.8.9 压缩包。",
+            "java_version_label": "Java 版本（仅限 1.8.9）",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "默认：Java 8。仅当您的客户端支持时才切换到 Java 21。",
+            "default_option": "默认 ({value})",
+            "default_suffix": "（默认）"
         },
         "edit_custom_client_modal": {
             "client_name": "客户端名称",
@@ -289,6 +299,8 @@
             "client_type_vanilla": "Vanilla（默认）",
             "client_type_hint": "如果您的 jar 需要 Fabric/Forge 库，请选择对应类型。",
             "java_path": "自定义 Java 路径（可选）",
+            "libraries_path": "自定义库路径（可选）",
+            "natives_path": "自定义 natives 路径（可选）",
             "java_args": "自定义 Java 参数（可选）",
             "validate_name": "名称为必填项",
             "validate_version": "版本为必填项",
@@ -432,6 +444,7 @@
         "close": "关闭",
         "save": "保存",
         "browse": "浏览",
+        "select": "选择",
         "edit": "编辑",
         "add": "添加",
         "details": "详情",
@@ -781,6 +794,9 @@
         },
         "dark": "黑暗的",
         "light": "光",
+        "system": "系统",
+        "system_description": "自动匹配操作系统的深色/浅色主题偏好。",
+        "system_detected": "从操作系统检测",
         "schedule": {
             "title": "自动",
             "description": "根据一天中的时间自动切换亮色和暗色主题。",
@@ -916,7 +932,8 @@
             "auto_update": "自动检查更新并在有新版本时通知。",
             "autostart": "在系统启动时自动运行 CollapseLoader。",
             "start_minimized": "启动时将 CollapseLoader 最小化到系统托盘。",
-            "auto_hide_sidebar": "自动隐藏侧边栏。当鼠标悬停在屏幕边缘时会显示。"
+            "auto_hide_sidebar": "自动隐藏侧边栏。当鼠标悬停在屏幕边缘时会显示。",
+            "disable_server_ads": "启动客户端时禁止自动将推广服务器添加到 Minecraft 多人游戏列表中。"
         },
         "add_account_title": "添加新账户",
         "edit_account_title": "编辑账户",
@@ -944,6 +961,7 @@
         "reset_cache_failed": "无法删除缓存，请重试",
         "hash_verify": "哈希校验",
         "auto_hide_sidebar": "自动隐藏侧边栏",
+        "disable_server_ads": "禁用服务器广告",
         "irc_chat": "IRC 聊天",
         "save_flags_failed": "保存标志失败：{error}",
         "change_root": {
@@ -1085,6 +1103,7 @@
         "account": "账户",
         "about": "关于",
         "news": "新闻",
+        "hf_clients": "HF 客户端",
         "customization": "个性化",
         "custom_clients": "自定义客户端",
         "marketplace": "市场",
@@ -1192,6 +1211,7 @@
             "logging_in": "登录中",
             "browsing_friends": "查看好友动态",
             "browsing_news": "阅读新闻",
+            "browsing_hf_clients": "浏览 HF 客户端",
             "browsing_custom_clients": "浏览自定义客户端"
         }
     },
@@ -1218,6 +1238,27 @@
         "mark_all_read": "标记全部为已读",
         "refresh": "刷新",
         "telegram": "Telegram"
+    },
+    "hfapi": {
+        "live": "在线",
+        "subtitle": "HuggingFace CDN – 客户端数据库",
+        "loading": "加载客户端中...",
+        "error": "加载客户端失败",
+        "retry": "重试",
+        "refresh": "刷新",
+        "latest_changes": "最新更改",
+        "no_changes": "暂无更改...",
+        "all_clients": "所有客户端",
+        "table_name": "名称",
+        "table_version": "版本",
+        "table_hash": "MD5 哈希",
+        "table_size": "大小",
+        "status_down": "离线",
+        "total": "总计",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "加载客户端失败"
     },
     "hold_button": {
         "label": "长按开始！",

@@ -15,14 +15,18 @@ use crate::core::storage::data::{Data, DATA};
 use crate::core::utils::{
     globals::{
         CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
-        JDK8_FOLDER, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
+        JDK8_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, MINECRAFT_VERSIONS_FOLDER,
+        MODS_FOLDER, LIBRARIES_VA1_8_9_FOLDER, LIBRARIES_VA1_8_9_VIA511_FOLDER,
+        LIBRARIES_VA1_8_9_VIA511_ZIP, LIBRARIES_VA1_8_9_VIA53_FOLDER,
+        LIBRARIES_VA1_8_9_VIA53_ZIP, LIBRARIES_VA1_8_9_VIA57_FOLDER,
+        LIBRARIES_VA1_8_9_VIA57_ZIP, LIBRARIES_VA1_8_9_ZIP,
     },
     process,
 };
 use crate::{log_error, log_info};
 
 mod launch;
-mod requirements;
+pub(crate) mod requirements;
 
 pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -135,10 +139,18 @@ pub struct Meta {
     pub installed: bool,
     pub is_custom: bool,
     pub size: u64,
+    pub viaversion: Option<String>,
+    pub java_version: Option<String>,
 }
 
 impl Meta {
-    pub fn new(version: &str, filename: &str, client_type: &ClientType) -> Self {
+    pub fn new(
+        version: &str,
+        filename: &str,
+        client_type: &ClientType,
+        viaversion: Option<String>,
+        java_version: Option<String>,
+    ) -> Self {
         let semver = Version::parse(version).unwrap_or_else(|err| {
             log_error!("Failed to parse version '{}': {}", version, err);
             Version::new(1, 16, 5)
@@ -193,6 +205,8 @@ impl Meta {
             is_fabric,
             is_forge,
             size: 0,
+            viaversion,
+            java_version,
         }
     }
 }
@@ -240,6 +254,14 @@ pub struct Client {
     pub java_path: Option<String>,
     #[serde(default)]
     pub java_args: Option<String>,
+    #[serde(default)]
+    pub libraries_path: Option<String>,
+    #[serde(default)]
+    pub natives_path: Option<String>,
+    #[serde(default)]
+    pub viaversion: Option<String>,
+    #[serde(default)]
+    pub java_version: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -258,6 +280,8 @@ fn default_meta() -> Meta {
         installed: false,
         is_custom: false,
         size: 0,
+        viaversion: None,
+        java_version: None,
     }
 }
 
@@ -287,6 +311,55 @@ impl Client {
         semver.major == 1 && semver.minor <= 12
     }
 
+    fn uses_sub_libraries(&self) -> bool {
+        if !self.is_legacy_client() {
+            return false;
+        }
+        if self.client_type == ClientType::Forge || self.client_type == ClientType::Fabric {
+            return false;
+        }
+        match Version::parse(&self.version) {
+            Ok(v) => v.major == 1 && v.minor == 8 && v.patch == 9,
+            Err(_) => self.version == "1.8.9",
+        }
+    }
+
+    fn via_version_normalized(&self) -> String {
+        let v = self.meta.viaversion.as_deref().unwrap_or("5.9.1");
+        match v {
+            "5.3.0" | "5.7.1" | "5.9.1" | "5.11.0" => v.to_string(),
+            _ => "5.9.1".to_string(),
+        }
+    }
+
+    fn sub_libraries_folder(&self) -> &'static str {
+        if self.uses_sub_libraries() {
+            match self.via_version_normalized().as_str() {
+                "5.3.0" => LIBRARIES_VA1_8_9_VIA53_FOLDER,
+                "5.7.1" => LIBRARIES_VA1_8_9_VIA57_FOLDER,
+                "5.9.1" => LIBRARIES_VA1_8_9_FOLDER,
+                "5.11.0" => LIBRARIES_VA1_8_9_VIA511_FOLDER,
+                _ => LIBRARIES_VA1_8_9_FOLDER,
+            }
+        } else {
+            LIBRARIES_LEGACY_FOLDER
+        }
+    }
+
+    fn sub_libraries_zip(&self) -> &'static str {
+        if self.uses_sub_libraries() {
+            match self.via_version_normalized().as_str() {
+                "5.3.0" => LIBRARIES_VA1_8_9_VIA53_ZIP,
+                "5.7.1" => LIBRARIES_VA1_8_9_VIA57_ZIP,
+                "5.9.1" => LIBRARIES_VA1_8_9_ZIP,
+                "5.11.0" => LIBRARIES_VA1_8_9_VIA511_ZIP,
+                _ => LIBRARIES_VA1_8_9_ZIP,
+            }
+        } else {
+            LIBRARIES_LEGACY_ZIP
+        }
+    }
+
     fn client_base_folder(&self) -> PathBuf {
         let root = DATA.root_dir.lock().unwrap();
 
@@ -304,8 +377,18 @@ impl Client {
             .unwrap_or(&self.filename)
     }
 
+    fn wants_jdk8(&self) -> bool {
+        if let Some(v) = self.meta.java_version.as_deref() {
+            return v == "8";
+        }
+        if self.client_type == ClientType::Forge || self.is_legacy_client() {
+            return true;
+        }
+        false
+    }
+
     fn jdk_folder_name(&self) -> &'static str {
-        if self.client_type == ClientType::Forge {
+        if self.wants_jdk8() {
             JDK8_FOLDER
         } else {
             JDK21_FOLDER
@@ -313,7 +396,7 @@ impl Client {
     }
 
     fn jdk_zip_name(&self) -> String {
-        if self.client_type == ClientType::Forge {
+        if self.wants_jdk8() {
             format!("misc/{JDK8_FOLDER}.zip")
         } else {
             format!("misc/{JDK21_FOLDER}.zip")

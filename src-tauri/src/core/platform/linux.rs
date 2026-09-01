@@ -1,41 +1,106 @@
 use crate::core::platform::error::StartupError;
-use std::process::Command;
+use crate::log_warn;
+use std::path::Path;
 
-fn has_pkg_config_binary() -> bool {
-    Command::new("pkg-config")
-        .arg("--version")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
-}
+/// Checks if the WebKitGTK shared library is available on the system.
+/// new since 18.08.2026
+/// on user pc old pkg-config variant isn't worked, so now we check for the lib in folders
+fn has_webkit2gtk_library() -> bool {
+    let search_dirs = ["/usr/lib", "/usr/lib64", "/usr/local/lib"];
 
-fn has_pkg_config_package(name: &str) -> bool {
-    if !has_pkg_config_binary() {
-        return false;
+    for dir in &search_dirs {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            continue;
+        };
+
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+
+            if entry.path().is_dir() {
+                if let Ok(sub) = std::fs::read_dir(entry.path()) {
+                    for sub_entry in sub.flatten() {
+                        let sub_name = sub_entry.file_name();
+                        let sub_name = sub_name.to_string_lossy();
+                        if (sub_name.starts_with("libwebkit2gtk-4.1.so")
+                            || sub_name.starts_with("libwebkit2gtk-4.0.so"))
+                            && sub_entry.path().is_file()
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            if (name.starts_with("libwebkit2gtk-4.1.so")
+                || name.starts_with("libwebkit2gtk-4.0.so"))
+                && entry.path().is_file()
+            {
+                return true;
+            }
+        }
     }
 
-    Command::new("pkg-config")
-        .args(["--exists", name])
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
+    if let Ok(conf) = std::fs::read_to_string("/etc/ld.so.conf") {
+        for line in conf.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if line.starts_with("include ") {
+                let pattern = line.strip_prefix("include ").unwrap_or(line);
+                if let Some((dir_part, glob_part)) = pattern.rsplit_once('/') {
+                    if glob_part == "*" {
+                        if let Ok(entries) = std::fs::read_dir(dir_part) {
+                            for entry in entries.flatten() {
+                                if let Ok(include_conf) = std::fs::read_to_string(entry.path()) {
+                                    for inc_line in include_conf.lines() {
+                                        let inc_line = inc_line.trim();
+                                        if !inc_line.is_empty() && !inc_line.starts_with('#') {
+                                            if check_dir_for_webkit(Path::new(inc_line)) {
+                                                return true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if check_dir_for_webkit(Path::new(line)) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
+fn check_dir_for_webkit(dir: &Path) -> bool {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return false;
+    };
+
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if (name.starts_with("libwebkit2gtk-4.1.so") || name.starts_with("libwebkit2gtk-4.0.so"))
+            && entry.path().is_file()
+        {
+            return true;
+        }
+    }
+
+    false
 }
 
 pub fn check_platform_dependencies() -> Result<(), StartupError> {
-    if !has_pkg_config_binary() {
-        return Err(StartupError::LinuxDependenciesMissing);
+    if !has_webkit2gtk_library() {
+        log_warn!(
+            "WebKitGTK shared library (libwebkit2gtk-4.1.so or libwebkit2gtk-4.0.so) was not found. \
+             The app may fail to start if WebKitGTK is not installed."
+        );
     }
-
-    let ok = has_pkg_config_package("webkit2gtk-4.1") || has_pkg_config_package("webkit2gtk-4.0");
-
-    if !ok {
-        return Err(StartupError::LinuxDependenciesMissing);
-    }
-
     Ok(())
 }
 

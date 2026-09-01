@@ -1,10 +1,14 @@
 use serde::Deserialize;
 use std::path::Path;
 
-use crate::core::network::api::API;
+use super::get_api_client;
+use crate::core::storage::settings::SETTINGS;
 use crate::{log_error, log_info, log_warn};
 
-const SERVER_ADS_URL: &str = "server-ads";
+const SERVER_ADS_URL: &str =
+    "https://huggingface.co/datasets/Collapsecdn/collapsecdn/raw/main/server-ads/autoaddserverads.json";
+const SERVER_NOT_ADS_URL: &str =
+    "https://huggingface.co/datasets/Collapsecdn/collapsecdn/raw/main/server-ads/autoaddservernotads.json";
 
 /// Data structure for a server advertisement.
 #[derive(Debug, Clone, Deserialize)]
@@ -15,31 +19,102 @@ pub struct ServerAdData {
     pub ip: String,
 }
 
-/// Fetches the current list of server advertisements from the API.
-pub async fn fetch_server_ads() -> Vec<ServerAdData> {
-    let Some(api) = API.as_ref() else {
-        log_warn!("API not available, skipping server ads fetch");
-        return vec![];
-    };
-
-    match api.json_async::<Vec<ServerAdData>>(SERVER_ADS_URL).await {
-        Ok(ads) => {
-            log_info!("Fetched {} server ad(s)", ads.len());
-            ads
-        }
-        Err(e) => {
-            log_warn!("Failed to fetch server ads: {}", e);
-            vec![]
-        }
-    }
+/// Result of fetching server lists from CDN.
+pub struct ServerFetchResult {
+    /// Paid advertisement servers (placed at the top of the list).
+    pub ads: Vec<ServerAdData>,
+    /// Regular servers (placed after ads, before user servers).
+    pub regular: Vec<ServerAdData>,
 }
 
-/// Injects server advertisements into a Minecraft `servers.dat` file.
+/// Fetches a JSON list from a URL using the global network client.
+/// Returns None if the response is empty.
+async fn fetch_server_list<T: serde::de::DeserializeOwned>(url: &str) -> Result<Option<T>, String> {
+    let client = get_api_client();
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch {}: {}", url, e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("HTTP {} for {}", response.status(), url));
+    }
+
+    let text = response
+        .text()
+        .await
+        .map_err(|e| format!("Failed to read response from {}: {}", url, e))?;
+
+    if text.trim().is_empty() {
+        return Ok(None);
+    }
+
+    let value: T = serde_json::from_str(&text)
+        .map_err(|e| format!("Failed to parse JSON from {}: {}", url, e))?;
+
+    Ok(Some(value))
+}
+
+/// Fetches server lists from HuggingFace CDN.
+/// - autoaddserverads.json → paid ads (priority, placed first)
+/// - autoaddservernotads.json → regular servers (placed after ads)
+pub async fn fetch_server_ads() -> ServerFetchResult {
+    let mut ads = Vec::new();
+    let mut regular = Vec::new();
+
+    // Fetch paid ads
+    match fetch_server_list::<Vec<ServerAdData>>(SERVER_ADS_URL).await {
+        Ok(Some(fetched)) => {
+            log_info!("Fetched {} paid server ad(s) from CDN", fetched.len());
+            ads = fetched;
+        }
+        Ok(None) => {
+            log_info!("Paid server ads file is empty");
+        }
+        Err(e) => {
+            log_warn!("Failed to fetch paid server ads from CDN: {}", e);
+        }
+    }
+
+    // Fetch regular servers
+    match fetch_server_list::<Vec<ServerAdData>>(SERVER_NOT_ADS_URL).await {
+        Ok(Some(fetched)) => {
+            log_info!("Fetched {} regular server(s) from CDN", fetched.len());
+            regular = fetched;
+        }
+        Ok(None) => {
+            log_info!("Regular servers file is empty");
+        }
+        Err(e) => {
+            log_warn!("Failed to fetch regular servers from CDN: {}", e);
+        }
+    }
+
+    log_info!(
+        "Server fetch result: {} paid ads, {} regular servers",
+        ads.len(),
+        regular.len()
+    );
+
+    ServerFetchResult { ads, regular }
+}
+
+/// Injects server lists into a Minecraft `servers.dat` file.
 ///
-/// This function merges the ads with existing user servers, ensuring that
-/// ads are placed at the top of the list and duplicates are removed.
-pub fn inject_servers_dat(path: &Path, ads: &[ServerAdData]) {
-    if ads.is_empty() {
+/// Priority order: paid ads → regular servers → user servers
+/// Duplicates by IP are removed (first occurrence wins).
+pub fn inject_servers_dat(path: &Path, result: &ServerFetchResult) {
+    // Check if server ads are disabled in settings
+    if SETTINGS.lock().unwrap().disable_server_ads.value {
+        log_info!("Server ads disabled by user setting, skipping injection");
+        return;
+    }
+
+    let has_ads = !result.ads.is_empty();
+    let has_regular = !result.regular.is_empty();
+
+    if !has_ads && !has_regular {
         return;
     }
 
@@ -49,19 +124,40 @@ pub fn inject_servers_dat(path: &Path, ads: &[ServerAdData]) {
         vec![]
     };
 
-    let ad_ips: std::collections::HashSet<&str> = ads.iter().map(|a| a.ip.as_str()).collect();
+    // Collect all CDN IPs to filter user servers
+    let mut seen_ips: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    for ad in &result.ads {
+        seen_ips.insert(ad.ip.as_str());
+    }
+    for server in &result.regular {
+        seen_ips.insert(server.ip.as_str());
+    }
 
+    // User servers (without duplicates)
     let user_servers: Vec<(String, String)> = existing
         .into_iter()
-        .filter(|(_, ip)| !ad_ips.contains(ip.as_str()))
+        .filter(|(_, ip)| !seen_ips.contains(ip.as_str()))
         .collect();
 
-    let mut all_servers: Vec<(String, String)> =
-        ads.iter().map(|a| (a.name.clone(), a.ip.clone())).collect();
+    // Build final list: ads first, then regular, then user servers
+    let mut all_servers: Vec<(String, String)> = Vec::new();
+
+    for ad in &result.ads {
+        all_servers.push((ad.name.clone(), ad.ip.clone()));
+    }
+    for server in &result.regular {
+        all_servers.push((server.name.clone(), server.ip.clone()));
+    }
     all_servers.extend(user_servers);
 
+    let total_injected = result.ads.len() + result.regular.len();
     match write_servers_dat(path, &all_servers) {
-        Ok(_) => log_info!("Injected {} server(s) into servers.dat", ads.len()),
+        Ok(_) => log_info!(
+            "Injected {} server(s) into servers.dat ({} ads, {} regular)",
+            total_injected,
+            result.ads.len(),
+            result.regular.len()
+        ),
         Err(e) => log_error!("Failed to write servers.dat: {}", e),
     }
 }

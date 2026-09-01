@@ -161,6 +161,7 @@ define_settings! {
         autostart: bool = (false, true),
         start_minimized: bool = (false, true),
         auto_hide_sidebar: bool = (false, true),
+        disable_server_ads: bool = (false, true),
     }
 }
 
@@ -186,5 +187,6 @@ pub fn settings_schema() -> Vec<(String, String)> {
         ("java_path".to_string(), "settings.java_path".to_string()),
         ("java_args".to_string(), "settings.java_args".to_string()),
         ("auto_hide_sidebar".to_string(), "settings.auto_hide_sidebar".to_string()),
+        ("disable_server_ads".to_string(), "settings.disable_server_ads".to_string()),
     ]
 }

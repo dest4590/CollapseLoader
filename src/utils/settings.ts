@@ -38,6 +38,20 @@ export const applyThemeOnStartup = async () => {
     const settings = await fetchSettings();
     const themeFromSettings = settings?.theme?.value;
     const localTheme = localStorage.getItem("theme");
+    const storedMode = themeService.getStoredThemeMode();
+
+    if (storedMode === "system") {
+        const systemTheme = themeService.getSystemTheme();
+        document.documentElement.setAttribute("data-theme", systemTheme);
+
+        try {
+            themeService.loadSettings();
+        } catch (e) {
+            console.error("Failed to load theme settings in service:", e);
+        }
+
+        return systemTheme;
+    }
 
     const chosenTheme =
         themeFromSettings ||

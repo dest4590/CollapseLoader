@@ -1,6 +1,7 @@
-use crate::core::storage::presets::{ThemePreset, PRESET_MANAGER};
-use crate::{log_debug, log_info, log_warn};
+use crate::core::storage::presets::ThemePreset;
+use crate::{log_debug, log_info, log_warn, AppState};
 use chrono::Utc;
+use tauri::State;
 use uuid::Uuid;
 
 #[derive(Clone, serde::Deserialize)]
@@ -124,31 +125,29 @@ pub struct UpdatePresetInput {
 }
 
 #[tauri::command]
-pub fn get_all_presets() -> Result<Vec<ThemePreset>, String> {
+pub fn get_all_presets(state: State<'_, AppState>) -> Result<Vec<ThemePreset>, String> {
     log_debug!("Fetching all theme presets");
-    PRESET_MANAGER
-        .lock()
-        .map(|p| p.get_all_presets())
-        .map_err(|e| {
-            log_warn!("Failed to get presets: {}", e);
-            "Failed to get presets".to_string()
-        })
+    let presets = state.presets();
+    Ok(presets.get_all_presets())
 }
 
 #[tauri::command]
-pub fn get_preset(id: String) -> Result<Option<ThemePreset>, String> {
+pub fn get_preset(state: State<'_, AppState>, id: String) -> Result<Option<ThemePreset>, String> {
     log_debug!("Fetching theme preset with ID: {}", id);
-    let preset_manager = PRESET_MANAGER.lock().unwrap();
+    let preset_manager = state.presets();
     Ok(preset_manager.get_preset(&id).cloned())
 }
 
 #[tauri::command]
-pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
+pub fn create_preset(
+    state: State<'_, AppState>,
+    input: CreatePresetInput,
+) -> Result<ThemePreset, String> {
     log_info!(
         "Creating new theme preset with name: '{}'",
         input.preset.name
     );
-    let mut preset_manager = PRESET_MANAGER.lock().unwrap();
+    let mut preset_manager = state.presets();
 
     let preset = build_preset(
         Uuid::new_v4().to_string(),
@@ -165,9 +164,12 @@ pub fn create_preset(input: CreatePresetInput) -> Result<ThemePreset, String> {
 }
 
 #[tauri::command]
-pub fn update_preset(input: UpdatePresetInput) -> Result<ThemePreset, String> {
+pub fn update_preset(
+    state: State<'_, AppState>,
+    input: UpdatePresetInput,
+) -> Result<ThemePreset, String> {
     log_info!("Updating theme preset with ID: {}", input.id);
-    let mut preset_manager = PRESET_MANAGER.lock().unwrap();
+    let mut preset_manager = state.presets();
 
     if !preset_manager.preset_exists(&input.id) {
         log_warn!("Update failed: Preset with ID '{}' not found", input.id);
@@ -188,16 +190,20 @@ pub fn update_preset(input: UpdatePresetInput) -> Result<ThemePreset, String> {
 }
 
 #[tauri::command]
-pub fn delete_preset(id: String) -> Result<(), String> {
+pub fn delete_preset(state: State<'_, AppState>, id: String) -> Result<(), String> {
     log_info!("Deleting theme preset with ID: {}", id);
-    let mut preset_manager = PRESET_MANAGER.lock().unwrap();
+    let mut preset_manager = state.presets();
     preset_manager.delete_preset(&id)
 }
 
 #[tauri::command]
-pub fn duplicate_preset(id: String, new_name: String) -> Result<ThemePreset, String> {
+pub fn duplicate_preset(
+    state: State<'_, AppState>,
+    id: String,
+    new_name: String,
+) -> Result<ThemePreset, String> {
     log_info!("Duplicating theme preset with ID: {} as '{}'", id, new_name);
-    let mut preset_manager = PRESET_MANAGER.lock().unwrap();
+    let mut preset_manager = state.presets();
 
     let existing_preset = preset_manager.get_preset(&id).ok_or_else(|| {
         log_warn!("Duplication failed: Preset with ID '{}' not found", id);

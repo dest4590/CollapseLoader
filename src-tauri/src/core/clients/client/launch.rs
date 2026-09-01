@@ -4,6 +4,10 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+#[cfg(unix)]
+#[allow(unused_imports)]
+use std::os::unix::process::CommandExt;
+
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
     process::Command,
@@ -14,7 +18,12 @@ use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
 #[allow(unused)]
 use crate::core::{
     clients::{
-        internal::agent_overlay::AgentArguments, log_checker::LogChecker, manager::ClientManager,
+        internal::{
+            agent_overlay::AgentArguments,
+            titlebar_branding::TitlebarBrandingManager,
+        },
+        log_checker::LogChecker,
+        manager::ClientManager,
     },
     network::{analytics::Analytics, server_ads},
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
@@ -23,17 +32,30 @@ use crate::core::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
             IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
             NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
-            NATIVES_MACOS_FOLDER, PATH_SEPARATOR,
+            NATIVES_MACOS_FOLDER, PATH_SEPARATOR, SKIP_TITLEBAR_BRANDING,
+            NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
+            NATIVES_VA1_8_9_WINDOWS_FOLDER, TITLEBAR_FILE,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
     },
 };
-use crate::{log_debug, log_error, log_info};
+use crate::{log_debug, log_error, log_info, log_warn};
 
 impl Client {
+    #[cfg(target_os = "linux")]
+    fn has_nvidia_gpu() -> bool {
+        std::process::Command::new("lspci")
+            .output()
+            .map(|o| {
+                let stdout = String::from_utf8_lossy(&o.stdout);
+                stdout.to_lowercase().contains("nvidia")
+            })
+            .unwrap_or(false)
+    }
+
     fn append_new_instance_separator(&self) {
-        let mut logs = CLIENT_LOGS.lock().unwrap();
+        let mut logs = CLIENT_LOGS.lock().unwrap_or_else(|e| e.into_inner());
         let client_logs = logs.entry(self.id).or_default();
         if !client_logs.is_empty() {
             client_logs.push("-------------------------------------------".to_string());
@@ -65,7 +87,7 @@ impl Client {
     }
 
     fn resolve_assets_dir(&self) -> PathBuf {
-        let root = DATA.root_dir.lock().unwrap();
+        let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         if self.client_type == ClientType::Fabric {
             root.join(ASSETS_FABRIC_FOLDER)
         } else {
@@ -106,24 +128,42 @@ impl Client {
     }
 
     fn resolve_natives_path(&self) -> PathBuf {
-        let root = DATA.root_dir.lock().unwrap();
+        if let Some(path) = self
+            .natives_path
+            .as_deref()
+            .filter(|p| !p.trim().is_empty())
+        {
+            return PathBuf::from(path);
+        }
+
+        let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
 
         if IS_LINUX {
-            if self.is_legacy_client() {
+            if self.uses_sub_libraries() {
+                root.join(NATIVES_VA1_8_9_LINUX_FOLDER)
+            } else if self.is_legacy_client() {
                 root.join(NATIVES_LEGACY_LINUX_FOLDER)
             } else {
                 Self::resolve_linux_natives_path(&root)
             }
         } else if IS_MACOS {
-            Self::resolve_macos_natives_path(&root, use_legacy_layout)
+            if self.uses_sub_libraries() {
+                root.join(NATIVES_VA1_8_9_MACOS_FOLDER)
+            } else {
+                Self::resolve_macos_natives_path(&root, use_legacy_layout)
+            }
         } else {
-            Self::resolve_default_natives_path(&root, use_legacy_layout)
+            if self.uses_sub_libraries() {
+                root.join(NATIVES_VA1_8_9_WINDOWS_FOLDER)
+            } else {
+                Self::resolve_default_natives_path(&root, use_legacy_layout)
+            }
         }
     }
 
     fn get_launch_settings(&self) -> (bool, bool, String, u32) {
-        let s = SETTINGS.lock().unwrap();
+        let s = SETTINGS.lock().unwrap_or_else(|e| e.into_inner());
         (
             s.optional_telemetry.value,
             s.irc_chat.value,
@@ -251,6 +291,22 @@ impl Client {
         let assets_dir = self.resolve_assets_dir();
         let natives_path = self.resolve_natives_path();
 
+        let is_legacy_vanilla_for_natives = self.client_type == ClientType::Default
+            && self.is_legacy_client();
+        if is_legacy_vanilla_for_natives {
+            let natives_link = client_folder.join("natives");
+            if !natives_link.exists() {
+                #[cfg(unix)]
+                {
+                    let _ = std::os::unix::fs::symlink(&natives_path, &natives_link);
+                }
+                #[cfg(windows)]
+                {
+                    let _ = std::os::windows::fs::symlink_dir(&natives_path, &natives_link);
+                }
+            }
+        }
+
         let classpath = self.build_classpath()?;
 
         let (analytics, irc, lang, ram_mb) = self.get_launch_settings();
@@ -269,7 +325,39 @@ impl Client {
             lang,
         );
 
-        let agent_overlay_path = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
+        let agent_overlay_path = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(AGENT_OVERLAY_FOLDER);
+
+        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+
+        let should_apply_titlebar = !*SKIP_TITLEBAR_BRANDING
+            && !self.meta.is_custom
+            && self.client_type != ClientType::Forge
+            && !is_legacy_vanilla
+            && !TitlebarBrandingManager::has_branding_in_jar(&client_folder.join(&self.filename));
+
+        if should_apply_titlebar {
+            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
+            if titlebar_path.exists() {
+                log_info!(
+                    "Titlebar branding will be applied for client: {}",
+                    self.name
+                );
+            } else {
+                log_debug!(
+                    "Titlebar branding file not found, skipping for: {}",
+                    self.name
+                );
+            }
+        } else if !*SKIP_TITLEBAR_BRANDING && !self.meta.is_custom {
+            log_info!(
+                "Skipping titlebar branding for {} (already branded or excluded)",
+                self.name
+            );
+        }
 
         let mut cmd = Command::new(java_bin);
 
@@ -278,22 +366,101 @@ impl Client {
 
         cmd.current_dir(&client_folder);
 
-        cmd.arg("-Xverify:none");
+        if self.wants_jdk8() {
+            cmd.arg("-Xverify:none");
+        }
+
+        if self.wants_jdk8() && self.client_type == ClientType::Default {
+            cmd.arg("-XX:+UseG1GC");
+            cmd.arg("-XX:MaxPermSize=256m");
+            cmd.arg("-Dorg.lwjgl.system.stacksize=16384");
+            cmd.arg("-Dorg.lwjgl.system.nojni=false");
+        }
 
         #[cfg(target_os = "macos")]
         cmd.arg("-XstartOnFirstThread");
 
         #[cfg(target_os = "linux")]
-        {
+        if Self::has_nvidia_gpu() {
             cmd.env("__NV_PRIME_RENDER_OFFLOAD", "1");
             cmd.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia");
             cmd.env("__VK_LAYER_NV_optimus", "NVIDIA_only");
             cmd.env("DRI_PRIME", "1");
         }
 
-        let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
+        if self.is_legacy_client() && self.client_type == ClientType::Default {
+            #[cfg(target_os = "linux")]
+            {
+                cmd.env("MALLOC_TRIM_THRESHOLD_", "131072");
+                cmd.env("MALLOC_TOP_PAD_", "131072");
+                cmd.env("MALLOC_MMAP_THRESHOLD_", "131072");
+                cmd.env("MALLOC_ARENA_MAX", "1");
+            }
+        }
 
-        if self.client_type != ClientType::Forge && !is_legacy_vanilla {
+        if !should_apply_titlebar {
+            cmd.env("COLLAPSE_SKIP_TITLEBAR", "1");
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            if is_legacy_vanilla {
+                let jemalloc_path = DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join("natives-linux")
+                    .join("libjemalloc.so");
+                if jemalloc_path.exists() {
+                    cmd.env("LD_PRELOAD", &jemalloc_path);
+                    cmd.env(
+                        "MALLOC_CONF",
+                        "background_thread:true,metadata_thp:auto,dirty_decay_ms:9000000000,muzzy_decay_ms:9000000000",
+                    );
+                    log_info!(
+                        "Loaded libjemalloc.so via LD_PRELOAD for legacy vanilla client: {}",
+                        self.name
+                    );
+                } else {
+                    log_warn!("libjemalloc.so not found at {}", jemalloc_path.display());
+                }
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        if should_apply_titlebar && agent_overlay_path.join(TITLEBAR_FILE).exists() {
+            let jemalloc_path = DATA
+                .root_dir
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .join("natives-linux")
+                .join("libjemalloc.so");
+            let titlebar = agent_overlay_path.join(TITLEBAR_FILE);
+            let preload = if jemalloc_path.exists() {
+                format!("{}:{}", jemalloc_path.display(), titlebar.display())
+            } else {
+                titlebar.display().to_string()
+            };
+            cmd.env("LD_PRELOAD", &preload);
+        }
+
+        #[cfg(target_os = "windows")]
+        if should_apply_titlebar {
+            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
+            if titlebar_path.exists() {
+                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        if should_apply_titlebar {
+            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
+            if titlebar_path.exists() {
+                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
+            }
+        }
+
+        if !self.meta.is_custom && self.client_type != ClientType::Forge && !is_legacy_vanilla {
             cmd.arg(format!(
                 "-javaagent:{}={}",
                 agent_overlay_path.join(AGENT_FILE).display(),
@@ -303,13 +470,34 @@ impl Client {
 
         self.apply_java_args(&mut cmd);
 
+        if is_legacy_vanilla && self.wants_jdk8() {
+            cmd.arg("-XX:+UseG1GC");
+            cmd.arg("-Dorg.lwjgl.system.stacksize=16384");
+            cmd.arg("-Dorg.lwjgl.system.nojni=false");
+            #[cfg(target_os = "linux")]
+            {
+                cmd.arg("-Dcom.sun.java.util.jar.disableSHA1=true");
+            }
+        }
+
+        if is_legacy_vanilla && self.wants_jdk8() {
+            cmd.arg("-Xss256k");
+        }
+
         cmd.arg(format!("-Xmx{ram_mb}M"));
-        cmd.arg(format!(
-            "-Djava.library.path={}{}{}",
-            natives_path.display(),
-            PATH_SEPARATOR,
-            agent_overlay_path.display()
-        ));
+        if self.meta.is_custom {
+            cmd.arg(format!(
+                "-Djava.library.path={}",
+                natives_path.display(),
+            ));
+        } else {
+            cmd.arg(format!(
+                "-Djava.library.path={}{}{}",
+                natives_path.display(),
+                PATH_SEPARATOR,
+                agent_overlay_path.display()
+            ));
+        }
 
         let actual_main_class = if self.client_type == ClientType::Forge {
             "net.minecraft.launchwrapper.Launch".to_string()
@@ -330,12 +518,25 @@ impl Client {
 
         cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
-        // PROJECT CLOSED
-        //let servers_dat_path = client_folder.join("servers.dat");
-        //let ads = server_ads::fetch_server_ads().await;
-        //server_ads::inject_servers_dat(&servers_dat_path, &ads);
+        let servers_dat_path = client_folder.join("servers.dat");
+        let server_result = server_ads::fetch_server_ads().await;
+        server_ads::inject_servers_dat(&servers_dat_path, &server_result);
 
         log_debug!("Spawning client process: {}", self.name);
+
+        #[cfg(target_os = "linux")]
+        {
+            lower_nofile_in_parent();
+            let is_legacy = self.is_legacy_client();
+            unsafe {
+                cmd.pre_exec(move || {
+                    if is_legacy {
+                        lower_nofile_in_parent();
+                    }
+                    Ok(())
+                });
+            }
+        }
 
         let mut child = cmd
             .spawn()
@@ -449,5 +650,118 @@ impl Client {
                 "error": error
             }),
         );
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn lower_nofile_in_child() {
+        use std::os::raw::{c_int, c_ulong};
+
+        const RLIMIT_NOFILE: c_int = 7;
+        const TARGET_SOFT: c_ulong = 8192;
+
+        #[repr(C)]
+        struct Rlimit {
+            rlim_cur: c_ulong,
+            rlim_max: c_ulong,
+        }
+
+        extern "C" {
+            fn prlimit(
+                pid: c_int,
+                resource: c_int,
+                new_limit: *const Rlimit,
+                old_limit: *mut Rlimit,
+            ) -> c_int;
+        }
+
+        let mut current = Rlimit { rlim_cur: 0, rlim_max: 0 };
+        let ret = unsafe {
+            prlimit(0, RLIMIT_NOFILE, std::ptr::null(), &mut current)
+        };
+        if ret != 0 {
+            return;
+        }
+
+        if current.rlim_cur > TARGET_SOFT || current.rlim_max > TARGET_SOFT {
+            let target = if TARGET_SOFT < current.rlim_max {
+                TARGET_SOFT
+            } else {
+                current.rlim_max
+            };
+            let new_limit = Rlimit {
+                rlim_cur: target,
+                rlim_max: target,
+            };
+            unsafe {
+                prlimit(0, RLIMIT_NOFILE, &new_limit, std::ptr::null_mut());
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+pub fn lower_nofile_in_parent() {
+    use std::os::raw::{c_int, c_ulong};
+
+    const RLIMIT_NOFILE: c_int = 7;
+    const TARGET_SOFT: c_ulong = 8192;
+
+    #[repr(C)]
+    struct Rlimit {
+        rlim_cur: c_ulong,
+        rlim_max: c_ulong,
+    }
+
+    extern "C" {
+        fn prlimit(
+            pid: c_int,
+            resource: c_int,
+            new_limit: *const Rlimit,
+            old_limit: *mut Rlimit,
+        ) -> c_int;
+    }
+
+    let mut current = Rlimit { rlim_cur: 0, rlim_max: 0 };
+    let ret = unsafe {
+        prlimit(0, RLIMIT_NOFILE, std::ptr::null(), &mut current)
+    };
+    if ret != 0 {
+        log_warn!("Failed to read RLIMIT_NOFILE");
+        return;
+    }
+
+    log_debug!(
+        "Current RLIMIT_NOFILE: cur={} max={}",
+        current.rlim_cur,
+        current.rlim_max
+    );
+
+    if current.rlim_cur > TARGET_SOFT || current.rlim_max > TARGET_SOFT {
+        let target = if TARGET_SOFT < current.rlim_max {
+            TARGET_SOFT
+        } else {
+            current.rlim_max
+        };
+        let new_limit = Rlimit {
+            rlim_cur: target,
+            rlim_max: target,
+        };
+        let ret = unsafe {
+            prlimit(0, RLIMIT_NOFILE, &new_limit, std::ptr::null_mut())
+        };
+        if ret == 0 {
+            log_info!(
+                "Lowered RLIMIT_NOFILE from {}/{} to {}/{} for legacy client",
+                current.rlim_cur,
+                current.rlim_max,
+                target,
+                target
+            );
+        } else {
+            log_warn!(
+                "Failed to set RLIMIT_NOFILE: {}",
+                std::io::Error::last_os_error()
+            );
+        }
     }
 }

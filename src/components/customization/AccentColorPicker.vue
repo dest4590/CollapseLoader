@@ -77,9 +77,9 @@ import { Palette, RotateCcw, Check } from "@lucide/vue";
 
 const { t } = useI18n();
 
-const props = defineProps<{
+defineProps<{
     primaryColor: string | null;
-    themeMode: "dark" | "light" | "schedule";
+    themeMode: "dark" | "light" | "system" | "schedule";
 }>();
 
 defineEmits<{

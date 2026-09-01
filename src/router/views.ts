@@ -14,10 +14,12 @@ import UserProfileView from "../views/UserProfileView.vue";
 import Marketplace from "../views/Marketplace.vue";
 import NetworkDebug from "../views/NetworkDebug.vue";
 import ChatView from "../views/ChatView.vue";
+import HfClients from "../views/HfClients.vue";
 
 export const views: Record<string, any> = {
     home: Home,
     news: News,
+    hf_clients: HfClients,
     settings: Settings,
     about: About,
     customization: Customization,

@@ -23,6 +23,8 @@ impl StartupRuntime {
             check_webkit_environment()?;
         }
 
+        crate::core::clients::client::requirements::ensure_jdk_permissions_on_startup();
+
         Ok(())
     }
 }

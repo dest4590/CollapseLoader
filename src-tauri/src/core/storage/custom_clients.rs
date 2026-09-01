@@ -1,17 +1,14 @@
 use std::{path::PathBuf, sync::Mutex};
 
+use super::common::JsonStorage;
 use crate::core::clients::client::ClientType;
 use crate::core::clients::custom_clients::CustomClient;
 use crate::core::storage::data::DATA;
 use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::CUSTOM_CLIENTS_FOLDER;
-use crate::log_warn;
 use serde::{Deserialize, Serialize};
 use std::sync::LazyLock;
-use tauri::async_runtime::block_on;
-
-use super::common::JsonStorage;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CustomClientManager {
@@ -28,7 +25,11 @@ impl CustomClientManager {
         })
     }
 
-    pub fn add_client(&mut self, mut custom_client: CustomClient) -> Result<(), String> {
+    /// Returns the client_base path if sync is needed, so the caller can do it async.
+    pub fn add_client(
+        &mut self,
+        mut custom_client: CustomClient,
+    ) -> Result<Option<String>, String> {
         if !custom_client.file_path.exists() {
             return Err(format!(
                 "File '{}' does not exist. Please select a valid .jar file.",
@@ -73,28 +74,21 @@ impl CustomClientManager {
         custom_client.file_path = target_path;
         custom_client.is_installed = true;
 
-        if SETTINGS
+        let sync_needed = SETTINGS
             .lock()
             .map(|s| s.sync_client_settings.value)
             .unwrap_or(false)
-        {
-            let client_base = format!(
-                "custom_clients{}{}",
-                std::path::MAIN_SEPARATOR,
-                custom_client.name
-            );
-            if let Err(e) = block_on(DATA.ensure_client_synced(&client_base)) {
-                log_warn!(
-                    "Failed to ensure client sync for custom client {}: {}",
-                    custom_client.name,
-                    e
-                );
-            }
-        }
+            .then(|| {
+                format!(
+                    "custom_clients{}{}",
+                    std::path::MAIN_SEPARATOR,
+                    custom_client.name
+                )
+            });
 
         self.clients.push(custom_client);
         self.save_to_disk();
-        Ok(())
+        Ok(sync_needed)
     }
 
     pub fn remove_client(&mut self, id: u32) -> Result<(), String> {
@@ -150,8 +144,32 @@ impl CustomClientManager {
                 client.java_args = Some(java_args);
             }
 
+            if let Some(libraries_path) = updates.libraries_path {
+                client.libraries_path = Some(libraries_path);
+            }
+
+            if let Some(natives_path) = updates.natives_path {
+                client.natives_path = Some(natives_path);
+            }
+
             if let Some(client_type) = updates.client_type {
                 client.client_type = client_type;
+            }
+
+            if let Some(viaversion) = updates.viaversion {
+                client.viaversion = if viaversion.is_empty() {
+                    None
+                } else {
+                    Some(viaversion)
+                };
+            }
+
+            if let Some(java_version) = updates.java_version {
+                client.java_version = if java_version.is_empty() {
+                    None
+                } else {
+                    Some(java_version)
+                };
             }
 
             self.save_to_disk();
@@ -169,7 +187,11 @@ pub struct CustomClientUpdate {
     pub main_class: Option<String>,
     pub java_path: Option<String>,
     pub java_args: Option<String>,
+    pub libraries_path: Option<String>,
+    pub natives_path: Option<String>,
     pub client_type: Option<ClientType>,
+    pub viaversion: Option<String>,
+    pub java_version: Option<String>,
 }
 
 impl JsonStorage for CustomClientManager {

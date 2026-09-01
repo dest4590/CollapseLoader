@@ -266,6 +266,8 @@
             "client_type_vanilla": "Vanilla (Domyślny)",
             "client_type_hint": "Wybierz Fabric/Forge, jeśli twój jar wymaga tych bibliotek.",
             "java_path": "Niestandardowa ścieżka Java (opcjonalnie)",
+            "libraries_path": "Niestandardowa ścieżka bibliotek (opcjonalnie)",
+            "natives_path": "Niestandardowa ścieżka natywów (opcjonalnie)",
             "java_args": "Niestandardowe argumenty Java (opcjonalnie)",
             "validate_name": "Nazwa jest wymagana",
             "validate_version": "Wersja jest wymagana",
@@ -275,7 +277,15 @@
             "file_select_failed": "Nie udało się wybrać pliku",
             "add_failed": "Nie udało się dodać klienta: {error}",
             "drop_jar_here": "Upuść plik .jar tutaj",
-            "or_click_browse": "lub kliknij, aby przeglądać"
+            "or_click_browse": "lub kliknij, aby przeglądać",
+            "viaversion_label": "Wariant ViaVersion",
+            "viaversion_option": "ViaVersion {version}{default}",
+            "viaversion_hint": "Wybiera które archiwum subLibraries-1.8.9 użyć.",
+            "java_version_label": "Wersja Java (tylko 1.8.9)",
+            "java_version_option": "Java {version}{default}",
+            "java_version_hint": "Domyślnie: Java 8. Przełącz na Java 21 tylko jeśli klient to obsługuje.",
+            "default_option": "Domyślnie ({value})",
+            "default_suffix": " (domyślnie)"
         },
         "edit_custom_client_modal": {
             "client_name": "Nazwa klienta",
@@ -289,6 +299,8 @@
             "client_type_vanilla": "Vanilla (Domyślny)",
             "client_type_hint": "Wybierz Fabric/Forge, jeśli twój jar wymaga tych bibliotek.",
             "java_path": "Niestandardowa ścieżka Java (opcjonalnie)",
+            "libraries_path": "Niestandardowa ścieżka bibliotek (opcjonalnie)",
+            "natives_path": "Niestandardowa ścieżka natywów (opcjonalnie)",
             "java_args": "Niestandardowe argumenty Java (opcjonalnie)",
             "validate_name": "Nazwa jest wymagana",
             "validate_version": "Wersja jest wymagana",
@@ -482,6 +494,7 @@
         "close": "Zamknij",
         "save": "Zapisz",
         "browse": "Wybierz",
+        "select": "Wybierz",
         "edit": "Edytuj",
         "add": "Dodaj",
         "details": "Szczegóły",
@@ -781,6 +794,9 @@
         },
         "dark": "Ciemny",
         "light": "Jasny",
+        "system": "Systemowy",
+        "system_description": "Automatycznie dopasuj do motywu systemu operacyjnego.",
+        "system_detected": "Wykryto z systemu",
         "schedule": {
             "title": "Automatycznie",
             "description": "Automatycznie przełączaj między jasnym a ciemnym motywem w zależności od pory dnia.",
@@ -930,7 +946,8 @@
             "auto_update": "Automatycznie sprawdzaj aktualizacje i powiadamiaj o nowych wersjach.",
             "autostart": "Automatycznie uruchamiaj CollapseLoader przy starcie systemu.",
             "start_minimized": "Uruchamiaj CollapseLoader zminimalizowany do zasobnika systemowego.",
-            "auto_hide_sidebar": "Automatically hide the sidebar. It will appear when you hover over the edge of the screen."
+            "auto_hide_sidebar": "Automatically hide the sidebar. It will appear when you hover over the edge of the screen.",
+            "disable_server_ads": "Wyłącz automatyczne dodawanie promowanych serwerów do listy trybu wieloosobowego Minecraft przy uruchamianiu klienta."
         },
         "open_data": "Otwórz folder loadera",
         "add_account_title": "Dodaj nowe konto",
@@ -958,6 +975,7 @@
         "reset_cache_failed": "Nie udało się wyczyścić pamięci podręcznej, spróbuj ponownie",
         "hash_verify": "Weryfikacja hash ",
         "auto_hide_sidebar": "Auto-ukrywanie panelu bocznego",
+        "disable_server_ads": "Wyłącz reklamy serwerów",
         "irc_chat": "Czat IRC",
         "save_flags_failed": "Nie udało się zapisać flag: {error}",
         "change_root": {
@@ -1096,6 +1114,7 @@
         "account": "Konto",
         "about": "O programie",
         "news": "Aktualności",
+        "hf_clients": "Klienci HF",
         "customization": "Personalizacja",
         "custom_clients": "Własne klienty",
         "marketplace": "Marketplace",
@@ -1203,6 +1222,7 @@
             "logging_in": "Loguje się",
             "browsing_friends": "Patrzy co robią znajomi",
             "browsing_news": "Czyta aktualności",
+            "browsing_hf_clients": "Przegląda klientów HF",
             "browsing_custom_clients": "Patrzy na własne klienty"
         }
     },
@@ -1229,6 +1249,27 @@
         "search_placeholder": "Szukaj aktualności...",
         "telegram": "Telegram",
         "time": {}
+    },
+    "hfapi": {
+        "live": "ONLINE",
+        "subtitle": "HuggingFace CDN – Baza klientów",
+        "loading": "Ładowanie klientów...",
+        "error": "Błąd ładowania klientów",
+        "retry": "Spróbuj ponownie",
+        "refresh": "Odśwież",
+        "latest_changes": "Ostatnie zmiany",
+        "no_changes": "Brak zmian...",
+        "all_clients": "Wszyscy klienci",
+        "table_name": "Nazwa",
+        "table_version": "Wersja",
+        "table_hash": "MD5 hash",
+        "table_size": "Rozmiar",
+        "status_down": "NIEDOSTĘPNY",
+        "total": "Łącznie",
+        "fabric": "Fabric",
+        "forge": "Forge",
+        "default": "Default",
+        "fetch_failed": "Nie udało się załadować klientów"
     },
     "hold_button": {
         "label": "Przytrzymaj, aby rozpocząć!",

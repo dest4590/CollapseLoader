@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { applyLanguageOnStartup, applyThemeOnStartup } from "../utils/settings";
 import { themeScheduler } from "@services/theme/themeScheduler";
+import { themeService } from "@services/theme/themeService";
 import { useToast } from "@shared/composables/useToast";
 import { useUser } from "@features/auth/useUser";
 import { userService } from "@features/auth/userService";
@@ -208,6 +209,19 @@ export function useAppInit() {
             const themeTask = applyThemeOnStartup().then((theme) => {
                 currentTheme.value = (theme as string) || "dark";
                 themeScheduler.startScheduler();
+
+                const storedMode = themeService.getStoredThemeMode();
+                if (storedMode === "system") {
+                    themeService.startSystemThemeListener(
+                        async (newTheme) => {
+                            currentTheme.value = newTheme;
+                            document.documentElement.setAttribute(
+                                "data-theme",
+                                newTheme
+                            );
+                        }
+                    );
+                }
             });
 
             const languageTask = applyLanguageOnStartup();

@@ -6,6 +6,7 @@
                 :schedule-light-start="scheduleLightStart"
                 :schedule-light-end="scheduleLightEnd"
                 :schedule-preview-theme="schedulePreviewTheme"
+                :current-system-theme="currentSystemTheme"
                 @select-mode="selectThemeMode"
                 @update-schedule="updateScheduleTime"
             />
@@ -192,9 +193,15 @@ const { t } = i18n;
 const { addToast } = useToast();
 const { showModal } = useModal();
 
-type ThemeMode = "dark" | "light" | "schedule";
+type ThemeMode = "dark" | "light" | "system" | "schedule";
+
+const currentSystemTheme = ref<"dark" | "light">(
+    themeService.getSystemTheme()
+);
 
 const _getInitialThemeMode = (): ThemeMode => {
+    const storedMode = themeService.getStoredThemeMode();
+    if (storedMode === "system") return "system";
     if (themeScheduler.schedule.value.enabled) return "schedule";
     return (
         (document.documentElement.getAttribute("data-theme") as ThemeMode) ||
@@ -213,14 +220,30 @@ const scheduleLightStart = computed(
 const scheduleLightEnd = computed(() => themeScheduler.schedule.value.lightEnd);
 const schedulePreviewTheme = themeScheduler.previewTheme;
 
+const applySystemTheme = async () => {
+    const systemTheme = themeService.getSystemTheme();
+    currentSystemTheme.value = systemTheme;
+    await changeTheme(systemTheme);
+};
+
 const selectThemeMode = async (mode: ThemeMode) => {
     themeMode.value = mode;
+    themeService.setStoredThemeMode(mode);
 
     if (mode === "schedule") {
         themeScheduler.updateSchedule({ enabled: true });
         selectedTheme.value = themeScheduler.previewTheme.value;
+        themeService.stopSystemThemeListener();
+    } else if (mode === "system") {
+        themeScheduler.updateSchedule({ enabled: false });
+        themeService.startSystemThemeListener(async (newTheme) => {
+            currentSystemTheme.value = newTheme;
+            await changeTheme(newTheme);
+        });
+        await applySystemTheme();
     } else {
         themeScheduler.updateSchedule({ enabled: false });
+        themeService.stopSystemThemeListener();
         await changeTheme(mode);
     }
 };
@@ -429,13 +452,26 @@ onMounted(() => {
     listen<string>("theme-mode-update", (event) => {
         if (event.payload) {
             selectedTheme.value = event.payload;
-            if (!themeScheduler.schedule.value.enabled) {
-                themeMode.value = event.payload as "dark" | "light";
+            if (
+                !themeScheduler.schedule.value.enabled &&
+                themeMode.value !== "system"
+            ) {
+                themeMode.value = event.payload as
+                    | "dark"
+                    | "light"
+                    | "system";
             }
         }
     }).then((unlisten) => {
         _unlistenThemeMode = unlisten;
     });
+
+    if (themeMode.value === "system") {
+        themeService.startSystemThemeListener(async (newTheme) => {
+            currentSystemTheme.value = newTheme;
+            await changeTheme(newTheme);
+        });
+    }
 });
 
 let _unlistenThemeMode: (() => void) | null = null;
@@ -443,6 +479,7 @@ let _unlistenThemeMode: (() => void) | null = null;
 onUnmounted(() => {
     document.removeEventListener("keydown", handleKeyDown);
     _unlistenThemeMode?.();
+    themeService.stopSystemThemeListener();
 });
 </script>
 

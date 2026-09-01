@@ -1,4 +1,4 @@
-use std::path::{Path, MAIN_SEPARATOR};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR};
 use std::sync::LazyLock;
 use std::time::Duration;
 
@@ -23,6 +23,9 @@ use crate::core::utils::globals::{
     NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
     NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP,
     NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
+    NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_MACOS_ZIP, NATIVES_VA1_8_9_WINDOWS_ZIP,
+    NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
+    NATIVES_VA1_8_9_WINDOWS_FOLDER,
 };
 use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
 use crate::{log_debug, log_error, log_info, log_warn};
@@ -48,7 +51,9 @@ struct RequirementsDownloadStateGuard<'a> {
 impl<'a> RequirementsDownloadStateGuard<'a> {
     fn activate(app_handle: &'a AppHandle) -> Self {
         {
-            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
+            let mut downloading = REQUIREMENTS_DOWNLOADING
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             *downloading = true;
         }
         emit_to_main_window(app_handle, "requirements-status", true);
@@ -59,7 +64,9 @@ impl<'a> RequirementsDownloadStateGuard<'a> {
 impl Drop for RequirementsDownloadStateGuard<'_> {
     fn drop(&mut self) {
         {
-            let mut downloading = REQUIREMENTS_DOWNLOADING.lock().unwrap();
+            let mut downloading = REQUIREMENTS_DOWNLOADING
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
             *downloading = false;
         }
         emit_to_main_window(self.app_handle, "requirements-status", false);
@@ -455,7 +462,11 @@ impl Client {
             || folder == JDK8_FOLDER
             || folder == JDK21_FOLDER
         {
-            let path = DATA.root_dir.lock().unwrap().join(folder);
+            let path = DATA
+                .root_dir
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .join(folder);
             if !path.exists() {
                 log_info!("Folder '{}' missing. Queuing {} for download.", folder, zip);
                 files_to_download.push(zip.to_string());
@@ -468,7 +479,11 @@ impl Client {
                 "Integrity check failed for '{}'. Wiping folder for clean redownload.",
                 folder
             );
-            let path = DATA.root_dir.lock().unwrap().join(folder);
+            let path = DATA
+                .root_dir
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .join(folder);
             if path.exists() {
                 let _ = std::fs::remove_dir_all(&path);
             }
@@ -488,12 +503,21 @@ impl Client {
         &self,
     ) -> (&'static str, &'static str, &'static str, &'static str) {
         if self.is_legacy_client() {
-            (
-                LIBRARIES_LEGACY_ZIP,
-                LIBRARIES_LEGACY_FOLDER,
-                NATIVES_LEGACY_ZIP,
-                NATIVES_LEGACY_FOLDER,
-            )
+            if self.uses_sub_libraries() {
+                (
+                    self.sub_libraries_zip(),
+                    self.sub_libraries_folder(),
+                    NATIVES_VA1_8_9_WINDOWS_ZIP,
+                    NATIVES_VA1_8_9_WINDOWS_FOLDER,
+                )
+            } else {
+                (
+                    LIBRARIES_LEGACY_ZIP,
+                    LIBRARIES_LEGACY_FOLDER,
+                    NATIVES_LEGACY_ZIP,
+                    NATIVES_LEGACY_FOLDER,
+                )
+            }
         } else {
             (LIBRARIES_ZIP, LIBRARIES_FOLDER, NATIVES_ZIP, NATIVES_FOLDER)
         }
@@ -505,13 +529,17 @@ impl Client {
         natives_folder: &'static str,
     ) -> (&'static str, &'static str) {
         if IS_LINUX {
-            if self.is_legacy_client() {
+            if self.uses_sub_libraries() {
+                (NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_LINUX_FOLDER)
+            } else if self.is_legacy_client() {
                 (NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_LINUX_FOLDER)
             } else {
                 (NATIVES_LINUX_ZIP, NATIVES_LINUX_FOLDER)
             }
         } else if IS_MACOS {
-            if IS_AARCH64 {
+            if self.uses_sub_libraries() {
+                (NATIVES_VA1_8_9_MACOS_ZIP, NATIVES_VA1_8_9_MACOS_FOLDER)
+            } else if IS_AARCH64 {
                 (NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_ARM64_FOLDER)
             } else {
                 (NATIVES_MACOS_ZIP, NATIVES_MACOS_FOLDER)
@@ -571,7 +599,7 @@ impl Client {
         let local_path = DATA
             .root_dir
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .join(MINECRAFT_VERSIONS_FOLDER)
             .join(dest_filename);
 
@@ -616,9 +644,10 @@ impl Client {
         let _state_guard = RequirementsDownloadStateGuard::activate(app_handle);
 
         let needs_java_permission_fix = (IS_LINUX || IS_MACOS)
-            && files
-                .iter()
-                .any(|file| file.starts_with(self.jdk_folder_name()));
+            && files.iter().any(|file| {
+                let folder = self.jdk_folder_name();
+                file.starts_with(folder) || file.contains(&format!("/{folder}"))
+            });
 
         let downloads = files.into_iter().map(|file| async move {
             log_info!("Downloading requirement: {}", file);
@@ -647,38 +676,21 @@ impl Client {
     fn fix_java_permissions(&self) {
         #[cfg(unix)]
         {
-            use std::os::unix::fs::PermissionsExt;
-            let bin_dir = DATA
+            let jdk_root = DATA
                 .root_dir
                 .lock()
-                .unwrap()
-                .join(self.jdk_folder_name())
-                .join("bin");
-            if bin_dir.exists() {
-                if let Ok(entries) = std::fs::read_dir(&bin_dir) {
-                    for entry in entries.flatten() {
-                        let path = entry.path();
-                        if path.is_file() {
-                            if let Ok(mut perms) = std::fs::metadata(&path).map(|m| m.permissions())
-                            {
-                                perms.set_mode(0o755);
-                                if let Err(e) = std::fs::set_permissions(&path, perms) {
-                                    log_warn!(
-                                        "Failed to set exec perm on {}: {}",
-                                        path.display(),
-                                        e
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+                .unwrap_or_else(|e| e.into_inner())
+                .join(self.jdk_folder_name());
+            set_exec_bit_recursive(&jdk_root);
         }
     }
 
     fn clean_fabric_libraries(&self) {
-        let fabric_libs_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+        let fabric_libs_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(LIBRARIES_FABRIC_FOLDER);
 
         if !fabric_libs_dir.exists() {
             return;
@@ -733,7 +745,11 @@ impl Client {
     }
 
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
-        let common_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+        let common_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(LIBRARIES_FABRIC_FOLDER);
 
         let need_common = !dir_has_any_jars(&common_dir, true);
 
@@ -743,12 +759,16 @@ impl Client {
             sanitize_version_for_paths(&self.version)
         );
 
-        let versioned_dir = DATA.root_dir.lock().unwrap().join(
-            versioned_zip
-                .strip_prefix("misc/")
-                .unwrap_or(&versioned_zip)
-                .replace(".zip", ""),
-        );
+        let versioned_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(
+                versioned_zip
+                    .strip_prefix("misc/")
+                    .unwrap_or(&versioned_zip)
+                    .replace(".zip", ""),
+            );
         let need_versioned = !dir_has_any_jars(&versioned_dir, false);
 
         let mut downloads: Vec<futures_util::future::BoxFuture<'_, Result<(), String>>> =
@@ -782,7 +802,11 @@ impl Client {
     }
 
     async fn ensure_slf4j(&self) -> Result<(), String> {
-        let fabric_libs_dir = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
+        let fabric_libs_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(LIBRARIES_FABRIC_FOLDER);
 
         let already_present = {
             let mut found = false;
@@ -846,9 +870,17 @@ impl Client {
 
         log_warn!("Java executable missing. Redownloading requirements...");
 
-        let jdk_dir = DATA.root_dir.lock().unwrap().join(self.jdk_folder_name());
+        let jdk_dir = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(self.jdk_folder_name());
         let _ = tokio::fs::remove_dir_all(jdk_dir).await;
-        let jdk_zip = DATA.root_dir.lock().unwrap().join(self.jdk_zip_name());
+        let jdk_zip = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(self.jdk_zip_name());
         let _ = tokio::fs::remove_file(jdk_zip).await;
 
         self.download_requirements(app_handle).await?;
@@ -861,7 +893,49 @@ impl Client {
 
     pub(super) fn build_classpath(&self) -> Result<String, String> {
         let (_, client_jar) = self.get_launch_paths()?;
-        let agent_overlay = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
+        let agent_overlay = DATA
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(AGENT_OVERLAY_FOLDER);
+
+        let resolve_libraries_root = |this: &Self| {
+            if let Some(path) = this
+                .libraries_path
+                .as_deref()
+                .filter(|p| !p.trim().is_empty())
+            {
+                return PathBuf::from(path);
+            }
+
+            match this.client_type {
+                ClientType::Fabric => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_FABRIC_FOLDER),
+                ClientType::Forge => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_LEGACY_FOLDER),
+                ClientType::Default if this.uses_sub_libraries() => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(this.sub_libraries_folder()),
+                ClientType::Default if this.is_legacy_client() => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_LEGACY_FOLDER),
+                ClientType::Default => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_FOLDER),
+            }
+        };
 
         let mut cp_parts = Vec::new();
 
@@ -869,29 +943,21 @@ impl Client {
             ClientType::Fabric => {
                 cp_parts.push(self.get_minecraft_jar_path());
 
+                let libs_root = resolve_libraries_root(self);
                 let safe_ver = sanitize_version_for_paths(&self.version);
-                let fabric_libs_root = DATA.root_dir.lock().unwrap().join(LIBRARIES_FABRIC_FOLDER);
-
-                let v_libs = fabric_libs_root.join(&safe_ver);
+                let v_libs = libs_root.join(&safe_ver);
                 cp_parts.extend(collect_jars_recursive(&v_libs, false));
-
-                cp_parts.extend(collect_jars_recursive(&fabric_libs_root, true));
-
+                cp_parts.extend(collect_jars_recursive(&libs_root, true));
                 cp_parts.push(client_jar);
             }
             ClientType::Forge => {
                 cp_parts.push(self.get_minecraft_jar_path());
-                let libs = DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER);
+                let libs = resolve_libraries_root(self);
                 cp_parts.extend(collect_jars_recursive(&libs, false));
-
                 cp_parts.push(client_jar);
             }
             ClientType::Default => {
-                let libs = if self.is_legacy_client() {
-                    DATA.root_dir.lock().unwrap().join(LIBRARIES_LEGACY_FOLDER)
-                } else {
-                    DATA.root_dir.lock().unwrap().join(LIBRARIES_FOLDER)
-                };
+                let libs = resolve_libraries_root(self);
 
                 return Ok(format!(
                     "{}{}*{}{}{}{}",
@@ -919,5 +985,67 @@ impl Client {
             .map(|p: &std::path::PathBuf| p.display().to_string())
             .collect::<Vec<_>>()
             .join(PATH_SEPARATOR))
+    }
+}
+
+#[cfg(unix)]
+pub(crate) fn ensure_jdk_permissions_on_startup() {
+    use std::os::unix::fs::PermissionsExt;
+    let Ok(root) = DATA.root_dir.lock() else {
+        return;
+    };
+    for folder in [JDK8_FOLDER, JDK21_FOLDER] {
+        let jdk_root = root.join(folder);
+        if !jdk_root.exists() {
+            continue;
+        }
+        set_exec_bit_recursive(&jdk_root);
+        let java_bin = jdk_root.join("bin").join("java");
+        if let Ok(meta) = std::fs::metadata(&java_bin) {
+            let mut perms = meta.permissions();
+            let mode = perms.mode();
+            if mode & 0o111 == 0 {
+                perms.set_mode(mode | 0o755);
+                let _ = std::fs::set_permissions(&java_bin, perms);
+                log_warn!(
+                    "Fixed missing exec bit on java binary: {}",
+                    java_bin.display()
+                );
+            }
+        }
+    }
+}
+
+#[cfg(not(unix))]
+pub(crate) fn ensure_jdk_permissions_on_startup() {}
+
+#[cfg(unix)]
+fn set_exec_bit_recursive(dir: &std::path::Path) {
+    use std::os::unix::fs::PermissionsExt;
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let Ok(file_type) = entry.file_type() else {
+            continue;
+        };
+        if file_type.is_dir() {
+            set_exec_bit_recursive(&path);
+            continue;
+        }
+        if !file_type.is_file() {
+            continue;
+        }
+        let Ok(mut perms) = std::fs::metadata(&path).map(|m| m.permissions()) else {
+            continue;
+        };
+        let mode = perms.mode();
+        if mode & 0o111 == 0 {
+            perms.set_mode(mode | 0o755);
+            if let Err(e) = std::fs::set_permissions(&path, perms) {
+                log_warn!("Failed to set exec perm on {}: {}", path.display(), e);
+            }
+        }
     }
 }

@@ -157,12 +157,12 @@ pub fn download_dpi_bypass() -> Result<(), String> {
 
     log_info!("Downloading DPI bypass package from {}", download_url);
 
-    let rt = tokio::runtime::Builder::new_current_thread()
+    let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .map_err(|e| format!("Failed to create Tokio runtime: {}", e))?;
 
-    rt.block_on(async { DATA.download(&download_url).await })
+    rt.block_on(DATA.download(&download_url))
         .map_err(|e| format!("Failed to download DPI package: {}", e))?;
 
     Ok(())

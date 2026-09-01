@@ -1,7 +1,7 @@
 import { ref } from "vue";
 
 const FALLBACK_VERSIONS: Record<string, string[]> = {
-    default: ["1.16.5"],
+    default: ["1.8.9", "1.16.5"],
     forge: ["1.8.9"],
     fabric: ["1.21.4", "1.21.8", "1.21.11"],
 };

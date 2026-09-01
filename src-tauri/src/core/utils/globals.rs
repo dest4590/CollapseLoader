@@ -5,7 +5,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 use crate::{core::network::servers::Server, log_debug, log_info};
 
 /// The internal codename for this version of the application.
-pub static CODENAME: &str = "Refresh";
+pub static CODENAME: &str = "Horizon";
 /// The current API version string.
 pub static API_VERSION: &str = "v1";
 
@@ -73,6 +73,14 @@ pub static LIBRARIES_FOLDER: &str = "libraries";
 pub static LIBRARIES_FABRIC_FOLDER: &str = "libraries-fabric";
 /// Folder for legacy game libraries.
 pub static LIBRARIES_LEGACY_FOLDER: &str = "libraries-legacy";
+/// Folder for minimal 1.8.9 vanilla libraries (no Forge).
+pub static LIBRARIES_VA1_8_9_FOLDER: &str = "libraries-va1.8.9";
+/// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.3.0.
+pub static LIBRARIES_VA1_8_9_VIA53_FOLDER: &str = "libraries-va1.8.9-via53";
+/// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.7.1.
+pub static LIBRARIES_VA1_8_9_VIA57_FOLDER: &str = "libraries-va1.8.9-via57";
+/// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.11.0.
+pub static LIBRARIES_VA1_8_9_VIA511_FOLDER: &str = "libraries-va1.8.9-via511";
 /// Folder for standard native libraries.
 pub static NATIVES_FOLDER: &str = "natives";
 /// Folder for Linux-specific native libraries.
@@ -85,6 +93,10 @@ pub static NATIVES_MACOS_ARM64_FOLDER: &str = "natives-macos-arm64";
 pub static NATIVES_LEGACY_FOLDER: &str = "natives-legacy";
 /// Folder for legacy Linux native libraries.
 pub static NATIVES_LEGACY_LINUX_FOLDER: &str = "natives-legacy-linux";
+/// Folders for minimal 1.8.9 vanilla native libraries (per platform).
+pub static NATIVES_VA1_8_9_LINUX_FOLDER: &str = "natives-va1.8.9-linux";
+pub static NATIVES_VA1_8_9_MACOS_FOLDER: &str = "natives-va1.8.9-macos";
+pub static NATIVES_VA1_8_9_WINDOWS_FOLDER: &str = "natives-va1.8.9-windows";
 /// Folder for Fabric-specific native libraries.
 pub static NATIVES_FABRIC_FOLDER: &str = "natives-fabric";
 
@@ -99,6 +111,14 @@ pub static LIBRARIES_ZIP: &str = "misc/libraries.zip";
 pub static LIBRARIES_FABRIC_ZIP: &str = "misc/libraries-fabric.zip";
 /// ZIP file containing legacy game libraries.
 pub static LIBRARIES_LEGACY_ZIP: &str = "misc/libraries-legacy.zip";
+/// ZIP file containing minimal 1.8.9 vanilla libraries (no Forge).
+pub static LIBRARIES_VA1_8_9_ZIP: &str = "misc/libraries-va1.8.9.zip";
+/// ZIP file containing 1.8.9 libraries with ViaVersion 5.3.0.
+pub static LIBRARIES_VA1_8_9_VIA53_ZIP: &str = "misc/libraries-va1.8.9-via53.zip";
+/// ZIP file containing 1.8.9 libraries with ViaVersion 5.7.1.
+pub static LIBRARIES_VA1_8_9_VIA57_ZIP: &str = "misc/libraries-va1.8.9-via57.zip";
+/// ZIP file containing 1.8.9 libraries with ViaVersion 5.11.0.
+pub static LIBRARIES_VA1_8_9_VIA511_ZIP: &str = "misc/libraries-va1.8.9-via511.zip";
 /// ZIP file containing standard native libraries.
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 /// ZIP file containing Linux-specific native libraries.
@@ -111,6 +131,10 @@ pub static NATIVES_MACOS_ARM64_ZIP: &str = "misc/natives-macos-arm64.zip";
 pub static NATIVES_LEGACY_ZIP: &str = "misc/natives-legacy.zip";
 /// ZIP file containing legacy Linux native libraries.
 pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
+/// ZIP file containing sub-set legacy native libraries (per platform).
+pub static NATIVES_VA1_8_9_LINUX_ZIP: &str = "misc/natives-va1.8.9-linux.zip";
+pub static NATIVES_VA1_8_9_MACOS_ZIP: &str = "misc/natives-va1.8.9-macos.zip";
+pub static NATIVES_VA1_8_9_WINDOWS_ZIP: &str = "misc/natives-va1.8.9-windows.zip";
 
 /// Folder where Minecraft version JARs are stored.
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft-versions";
@@ -129,6 +153,20 @@ pub static OVERLAY_FILE: &str = if IS_LINUX {
 } else {
     "CollapseOverlay.dll"
 };
+
+pub static TITLEBAR_FILE: &str = if IS_LINUX {
+    "libCollapseTitlebar.so"
+} else if IS_MACOS {
+    "libCollapseTitlebar.dylib"
+} else {
+    "libCollapseTitlebar.dll"
+};
+
+pub static TITLEBAR_BRANDING_MARKER: &str = "@CollapseLoader";
+
+pub static SKIP_TITLEBAR_BRANDING: LazyLock<bool> = LazyLock::new(|| {
+    parse_env_bool("SKIP_TITLEBAR_BRANDING")
+});
 
 /// The IRC server host and port.
 pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {

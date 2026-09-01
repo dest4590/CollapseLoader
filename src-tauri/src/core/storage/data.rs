@@ -160,7 +160,10 @@ impl Data {
     }
 
     fn root_dir_snapshot(&self) -> PathBuf {
-        self.root_dir.lock().unwrap().clone()
+        self.root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     fn get_local_with_root(root_dir: &Path, relative_path: &str) -> PathBuf {
@@ -186,7 +189,7 @@ impl Data {
         let zip_path = Self::get_local_with_root(&root_dir, &info.local_file);
         let unzip_path = info.unzip_path(&root_dir);
 
-        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        let app_handle = APP_HANDLE.lock().unwrap_or_else(|e| e.into_inner()).clone();
         let emit_name = info.local_file.clone();
 
         task::spawn_blocking(move || {
@@ -247,7 +250,11 @@ impl Data {
     pub async fn download_to_folder(&self, file: &str, dest_folder: &str) -> Result<(), String> {
         let info = Self::resolve_local_file_info(file);
         let root_dir = self.root_dir_snapshot();
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+        if let Some(app_handle) = APP_HANDLE
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+        {
             emit_to_main_window(app_handle, "download-start", &info.local_file);
         }
 
@@ -268,7 +275,7 @@ impl Data {
             &info.local_file,
         ));
 
-        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        let app_handle = APP_HANDLE.lock().unwrap_or_else(|e| e.into_inner()).clone();
         download_file(
             &download_urls,
             &dest_path,
@@ -391,7 +398,11 @@ impl Data {
             return Ok(());
         }
 
-        if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+        if let Some(app_handle) = APP_HANDLE
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+        {
             emit_to_main_window(app_handle, "download-start", &info.local_file);
         }
 
@@ -400,7 +411,7 @@ impl Data {
         let download_urls = Self::get_download_urls(file)?;
         let dest_path = Self::get_destination_path(&root_dir, &info);
 
-        let app_handle = APP_HANDLE.lock().unwrap().clone();
+        let app_handle = APP_HANDLE.lock().unwrap_or_else(|e| e.into_inner()).clone();
         download_file(
             &download_urls,
             &dest_path,
@@ -416,7 +427,11 @@ impl Data {
         if info.is_zip() {
             self.unzip(file).await.map_err(|e| {
                 log_error!("Failed to extract {}: {}", file, e);
-                if let Some(app_handle) = APP_HANDLE.lock().unwrap().as_ref() {
+                if let Some(app_handle) = APP_HANDLE
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .as_ref()
+                {
                     let err_data = serde_json::json!({
                         "file": info.local_file,
                         "error": e
@@ -620,6 +635,14 @@ impl Data {
             return Ok(());
         }
 
+        if crate::core::clients::log_checker::is_options_sync_blocked(client_base) {
+            log_debug!(
+                "Skipping options sync for {} (client is on the corrupted-options blacklist)",
+                client_base
+            );
+            return Ok(());
+        }
+
         let file_items = ["options.txt", "optionsof.txt"];
 
         for name in file_items {
@@ -741,7 +764,11 @@ impl Data {
     }
 
     pub fn verify_folder_integrity(&self, folder_name: &str) -> bool {
-        let folder_path = self.root_dir.lock().unwrap().join(folder_name);
+        let folder_path = self
+            .root_dir
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .join(folder_name);
         let manifest_path = folder_path.join("manifest.txt");
 
         if !manifest_path.exists() {
