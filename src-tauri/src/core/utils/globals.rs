@@ -5,7 +5,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 use crate::{core::network::servers::Server, log_debug, log_info};
 
 /// The internal codename for this version of the application.
-pub static CODENAME: &str = "Refresh";
+pub static CODENAME: &str = "Horizon";
 /// The current API version string.
 pub static API_VERSION: &str = "v1";
 
