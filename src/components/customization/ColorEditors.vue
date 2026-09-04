@@ -31,7 +31,9 @@
                     <ColorInput
                         :label="t('theme.base_content')"
                         :model-value="baseContent"
-                        @update:model-value="(v) => $emit('update:baseContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:baseContent', v)
+                        "
                     />
                 </div>
             </div>
@@ -46,22 +48,30 @@
                     <ColorInput
                         :label="t('theme.primary')"
                         :model-value="primaryColorOverride"
-                        @update:model-value="(v) => $emit('update:primaryColorOverride', v)"
+                        @update:model-value="
+                            (v) => $emit('update:primaryColorOverride', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.primary_content')"
                         :model-value="primaryContent"
-                        @update:model-value="(v) => $emit('update:primaryContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:primaryContent', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.secondary')"
                         :model-value="secondary"
-                        @update:model-value="(v) => $emit('update:secondary', v)"
+                        @update:model-value="
+                            (v) => $emit('update:secondary', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.secondary_content')"
                         :model-value="secondaryContent"
-                        @update:model-value="(v) => $emit('update:secondaryContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:secondaryContent', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.accent')"
@@ -86,7 +96,9 @@
                     <ColorInput
                         :label="t('theme.neutral_content')"
                         :model-value="neutralContent"
-                        @update:model-value="(v) => $emit('update:neutralContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:neutralContent', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.info')"
@@ -96,7 +108,9 @@
                     <ColorInput
                         :label="t('theme.info_content')"
                         :model-value="infoContent"
-                        @update:model-value="(v) => $emit('update:infoContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:infoContent', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.success')"
@@ -106,7 +120,9 @@
                     <ColorInput
                         :label="t('theme.success_content')"
                         :model-value="successContent"
-                        @update:model-value="(v) => $emit('update:successContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:successContent', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.warning')"
@@ -116,7 +132,9 @@
                     <ColorInput
                         :label="t('theme.warning_content')"
                         :model-value="warningContent"
-                        @update:model-value="(v) => $emit('update:warningContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:warningContent', v)
+                        "
                     />
                     <ColorInput
                         :label="t('theme.error')"
@@ -126,7 +144,9 @@
                     <ColorInput
                         :label="t('theme.error_content')"
                         :model-value="errorContent"
-                        @update:model-value="(v) => $emit('update:errorContent', v)"
+                        @update:model-value="
+                            (v) => $emit('update:errorContent', v)
+                        "
                     />
                 </div>
             </div>

@@ -40,9 +40,7 @@ const DEFAULT_JAVA_VERSION = "8";
 
 const isVersion18 = computed(() => form.version === "1.8.9");
 const isDefaultType = computed(() => form.clientType === "default");
-const showViaSelect = computed(
-    () => isDefaultType.value && isVersion18.value
-);
+const showViaSelect = computed(() => isDefaultType.value && isVersion18.value);
 
 const isDragging = ref(false);
 let unlistenDrop: (() => void) | null = null;
@@ -375,24 +373,39 @@ const handleSubmit = async () => {
                         $t("modals.add_custom_client_modal.viaversion_label")
                     }}</span>
                 </label>
-                <select v-model="form.viaversion" class="select select-bordered">
+                <select
+                    v-model="form.viaversion"
+                    class="select select-bordered"
+                >
                     <option value="">
-                        {{ $t("modals.add_custom_client_modal.default_option", { value: DEFAULT_VIAVERSION }) }}
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.default_option",
+                                { value: DEFAULT_VIAVERSION }
+                            )
+                        }}
                     </option>
-                    <option
-                        v-for="v in VIA_VERSIONS"
-                        :key="v"
-                        :value="v"
-                    >
-                        {{ $t("modals.add_custom_client_modal.viaversion_option", { version: v, default: v === DEFAULT_VIAVERSION ? $t("modals.add_custom_client_modal.default_suffix") : "" }) }}
+                    <option v-for="v in VIA_VERSIONS" :key="v" :value="v">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.viaversion_option",
+                                {
+                                    version: v,
+                                    default:
+                                        v === DEFAULT_VIAVERSION
+                                            ? $t(
+                                                  "modals.add_custom_client_modal.default_suffix"
+                                              )
+                                            : "",
+                                }
+                            )
+                        }}
                     </option>
                 </select>
                 <label class="label">
                     <span class="label-text-alt text-base-content/60">
                         {{
-                            $t(
-                                "modals.add_custom_client_modal.viaversion_hint"
-                            )
+                            $t("modals.add_custom_client_modal.viaversion_hint")
                         }}
                     </span>
                 </label>
@@ -409,14 +422,28 @@ const handleSubmit = async () => {
                     class="select select-bordered"
                 >
                     <option value="">
-                        {{ $t("modals.add_custom_client_modal.default_option", { value: DEFAULT_JAVA_VERSION }) }}
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.default_option",
+                                { value: DEFAULT_JAVA_VERSION }
+                            )
+                        }}
                     </option>
-                    <option
-                        v-for="v in JAVA_VERSIONS"
-                        :key="v"
-                        :value="v"
-                    >
-                        {{ $t("modals.add_custom_client_modal.java_version_option", { version: v, default: v === DEFAULT_JAVA_VERSION ? $t("modals.add_custom_client_modal.default_suffix") : "" }) }}
+                    <option v-for="v in JAVA_VERSIONS" :key="v" :value="v">
+                        {{
+                            $t(
+                                "modals.add_custom_client_modal.java_version_option",
+                                {
+                                    version: v,
+                                    default:
+                                        v === DEFAULT_JAVA_VERSION
+                                            ? $t(
+                                                  "modals.add_custom_client_modal.default_suffix"
+                                              )
+                                            : "",
+                                }
+                            )
+                        }}
                     </option>
                 </select>
                 <label class="label">

@@ -28,7 +28,9 @@
                     :label="t('customization.spotlight_blur')"
                     :model-value="spotlightBlur"
                     :default-value="24"
-                    @update:model-value="(v) => $emit('update:spotlightBlur', v)"
+                    @update:model-value="
+                        (v) => $emit('update:spotlightBlur', v)
+                    "
                 />
                 <BlurSlider
                     :label="t('customization.history_blur')"
@@ -40,7 +42,9 @@
                     :label="t('customization.notifications_blur')"
                     :model-value="notificationsBlur"
                     :default-value="20"
-                    @update:model-value="(v) => $emit('update:notificationsBlur', v)"
+                    @update:model-value="
+                        (v) => $emit('update:notificationsBlur', v)
+                    "
                 />
             </div>
         </div>

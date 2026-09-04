@@ -49,7 +49,9 @@ const getSystemTheme = (): "dark" | "light" => {
 let systemMediaQuery: MediaQueryList | null = null;
 let systemThemeListener: (() => void) | null = null;
 
-const startSystemThemeListener = (onThemeChange: (theme: "dark" | "light") => void): void => {
+const startSystemThemeListener = (
+    onThemeChange: (theme: "dark" | "light") => void
+): void => {
     if (!window.matchMedia) return;
 
     systemMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -78,7 +80,9 @@ const getStoredThemeMode = (): "dark" | "light" | "system" | "schedule" => {
     return "dark";
 };
 
-const setStoredThemeMode = (mode: "dark" | "light" | "system" | "schedule"): void => {
+const setStoredThemeMode = (
+    mode: "dark" | "light" | "system" | "schedule"
+): void => {
     localStorage.setItem(THEME_MODE_STORAGE_KEY, mode);
 };
 

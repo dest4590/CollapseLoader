@@ -15,10 +15,10 @@ tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
 tauri = { version = "2.11.5", features = ["devtools", "tray-icon"] }
-tauri-plugin-opener = "2.5.4"
-tauri-plugin-notification = "2.3.3"
-tauri-plugin-deep-link = "2.4.9"
-tauri-plugin-single-instance = { version = "2.4.3", features = ["deep-link"] }
+tauri-plugin-opener = "2.5.5"
+tauri-plugin-notification = "2.4.0"
+tauri-plugin-deep-link = "2.4.10"
+tauri-plugin-single-instance = { version = "2.4.4", features = ["deep-link"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 colored = "3.1.1"
@@ -36,14 +36,14 @@ opener = "0.8.5"
 uuid = { version = "1.26.0", features = ["v4"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 paste = "1.0.15"
-open = "5.4.2"
+open = "5.4.3"
 md5 = "0.8.1"
 discord-rich-presence = "1.1.0"
 futures-util = "0.3.34"
 base64 = "0.23.1"
-tauri-plugin-dialog = "2.7.2"
+tauri-plugin-dialog = "2.7.3"
 dotenvy = "0.15.7"
-tauri-plugin-fs = "2.5.1"
+tauri-plugin-fs = "2.5.2"
 thiserror = "2.0.20"
 native-dialog = "0.9.7"
 sysinfo = "0.39.6"

@@ -5,21 +5,16 @@
         </h3>
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-12">
-                <label
-                    class="label text-sm font-medium text-base-content"
-                    >{{
-                        t("customization.background_image")
-                    }}</label
-                >
+                <label class="label text-sm font-medium text-base-content">{{
+                    t("customization.background_image")
+                }}</label>
                 <div class="relative">
                     <input
                         type="text"
                         class="input input-bordered w-full pr-10"
                         :value="backgroundImage"
                         :placeholder="
-                            t(
-                                'customization.background_image_placeholder'
-                            )
+                            t('customization.background_image_placeholder')
                         "
                         @input="
                             $emit(
@@ -43,12 +38,9 @@
 
             <div class="lg:col-span-6">
                 <div class="flex justify-between mb-2">
-                    <label
-                        class="text-sm font-medium text-base-content"
-                        >{{
-                            t("customization.background_blur")
-                        }}</label
-                    >
+                    <label class="text-sm font-medium text-base-content">{{
+                        t("customization.background_blur")
+                    }}</label>
                     <span class="text-xs font-mono"
                         >{{ backgroundBlur ?? 0 }}px</span
                     >
@@ -71,12 +63,9 @@
 
             <div class="lg:col-span-6">
                 <div class="flex justify-between mb-2">
-                    <label
-                        class="text-sm font-medium text-base-content"
-                        >{{
-                            t("customization.background_opacity")
-                        }}</label
-                    >
+                    <label class="text-sm font-medium text-base-content">{{
+                        t("customization.background_opacity")
+                    }}</label>
                     <span class="text-xs font-mono"
                         >{{ backgroundOpacity ?? 100 }}%</span
                     >

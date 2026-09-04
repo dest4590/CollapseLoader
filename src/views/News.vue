@@ -206,9 +206,20 @@ const showHfApi = ref(false);
 let observer: IntersectionObserver | null = null;
 
 const DISALLOWED_TAGS = new Set([
-    "script", "style", "iframe", "object", "embed",
-    "form", "input", "textarea", "select", "button",
-    "link", "meta", "base", "applet",
+    "script",
+    "style",
+    "iframe",
+    "object",
+    "embed",
+    "form",
+    "input",
+    "textarea",
+    "select",
+    "button",
+    "link",
+    "meta",
+    "base",
+    "applet",
 ]);
 
 function sanitizeHtml(dirty: string): string {
@@ -221,7 +232,12 @@ function sanitizeHtml(dirty: string): string {
             }
             for (const attr of Array.from(child.attributes)) {
                 if (/^on/i.test(attr.name)) child.removeAttribute(attr.name);
-                if (/^\s*javascript\s*:/i.test(attr.value) && (attr.name === "href" || attr.name === "src" || attr.name === "action")) {
+                if (
+                    /^\s*javascript\s*:/i.test(attr.value) &&
+                    (attr.name === "href" ||
+                        attr.name === "src" ||
+                        attr.name === "action")
+                ) {
                     child.removeAttribute(attr.name);
                 }
             }

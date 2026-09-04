@@ -45,7 +45,12 @@ export const hfClientsService = {
     async fetchClients(): Promise<{
         all: HfClient[];
         latest: HfClient[];
-        counts: { total: number; fabric: number; forge: number; default: number };
+        counts: {
+            total: number;
+            fabric: number;
+            forge: number;
+            default: number;
+        };
     }> {
         const [allData, fabricData, forgeData] = await Promise.all(
             CDN_URLS.map((url) =>
@@ -81,12 +86,10 @@ export const hfClientsService = {
 
         const counts = {
             total: all.length,
-            fabric: all.filter(
-                (c) => c.client_type?.toLowerCase() === "fabric"
-            ).length,
-            forge: all.filter(
-                (c) => c.client_type?.toLowerCase() === "forge"
-            ).length,
+            fabric: all.filter((c) => c.client_type?.toLowerCase() === "fabric")
+                .length,
+            forge: all.filter((c) => c.client_type?.toLowerCase() === "forge")
+                .length,
             default: all.filter(
                 (c) => c.client_type?.toLowerCase() === "default"
             ).length,

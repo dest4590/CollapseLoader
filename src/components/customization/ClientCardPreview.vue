@@ -41,7 +41,9 @@
                                     v-model="previewRunning"
                                 />
                                 <span class="text-sm">{{
-                                    t("theme.client_card_preview.controls.running")
+                                    t(
+                                        "theme.client_card_preview.controls.running"
+                                    )
                                 }}</span>
                             </label>
                             <label
@@ -53,7 +55,9 @@
                                     v-model="previewInstalling"
                                 />
                                 <span class="text-sm">{{
-                                    t("theme.client_card_preview.controls.installing")
+                                    t(
+                                        "theme.client_card_preview.controls.installing"
+                                    )
                                 }}</span>
                             </label>
                             <label
@@ -65,7 +69,9 @@
                                     v-model="previewRequirements"
                                 />
                                 <span class="text-sm">{{
-                                    t("theme.client_card_preview.controls.requirements")
+                                    t(
+                                        "theme.client_card_preview.controls.requirements"
+                                    )
                                 }}</span>
                             </label>
                             <label
@@ -77,7 +83,9 @@
                                     v-model="previewFavorite"
                                 />
                                 <span class="text-sm">{{
-                                    t("theme.client_card_preview.controls.favorite")
+                                    t(
+                                        "theme.client_card_preview.controls.favorite"
+                                    )
                                 }}</span>
                             </label>
                             <label
@@ -89,7 +97,9 @@
                                     v-model="previewSelected"
                                 />
                                 <span class="text-sm">{{
-                                    t("theme.client_card_preview.controls.selected")
+                                    t(
+                                        "theme.client_card_preview.controls.selected"
+                                    )
                                 }}</span>
                             </label>
                         </div>
@@ -151,9 +161,7 @@
                             <button class="btn btn-ghost btn-sm btn-circle">
                                 <Star class="w-4 h-4" />
                             </button>
-                            <button
-                                class="btn btn-outline btn-sm btn-circle"
-                            >
+                            <button class="btn btn-outline btn-sm btn-circle">
                                 <Search class="w-4 h-4" />
                             </button>
                             <button class="btn btn-disabled btn-sm">
@@ -255,7 +263,9 @@
                         <div class="flex flex-col gap-2">
                             <div
                                 class="alert alert-success py-2 text-sm cursor-pointer hover:brightness-110 transition-all"
-                                @click="$emit('trigger-notification', 'success')"
+                                @click="
+                                    $emit('trigger-notification', 'success')
+                                "
                             >
                                 <CheckCircle class="w-4 h-4 shrink-0" />
                                 {{ t("theme.ui_preview.alert_success") }}
@@ -269,7 +279,9 @@
                             </div>
                             <div
                                 class="alert alert-warning py-2 text-sm cursor-pointer hover:brightness-110 transition-all"
-                                @click="$emit('trigger-notification', 'warning')"
+                                @click="
+                                    $emit('trigger-notification', 'warning')
+                                "
                             >
                                 <AlertTriangle class="w-4 h-4 shrink-0" />
                                 {{ t("theme.ui_preview.alert_warning") }}

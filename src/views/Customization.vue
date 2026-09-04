@@ -100,31 +100,55 @@
                     @update:base100="(v: string | null) => (base100 = v)"
                     @update:base200="(v: string | null) => (base200 = v)"
                     @update:base300="(v: string | null) => (base300 = v)"
-                    @update:base-content="(v: string | null) => (baseContent = v)"
-                    @update:primary-color-override="(v: string | null) => (primaryColor = v)"
-                    @update:primary-content="(v: string | null) => (primaryContent = v)"
+                    @update:base-content="
+                        (v: string | null) => (baseContent = v)
+                    "
+                    @update:primary-color-override="
+                        (v: string | null) => (primaryColor = v)
+                    "
+                    @update:primary-content="
+                        (v: string | null) => (primaryContent = v)
+                    "
                     @update:secondary="(v: string | null) => (secondary = v)"
-                    @update:secondary-content="(v: string | null) => (secondaryContent = v)"
+                    @update:secondary-content="
+                        (v: string | null) => (secondaryContent = v)
+                    "
                     @update:accent="(v: string | null) => (accent = v)"
                     @update:neutral="(v: string | null) => (neutral = v)"
-                    @update:neutral-content="(v: string | null) => (neutralContent = v)"
+                    @update:neutral-content="
+                        (v: string | null) => (neutralContent = v)
+                    "
                     @update:info="(v: string | null) => (info = v)"
-                    @update:info-content="(v: string | null) => (infoContent = v)"
+                    @update:info-content="
+                        (v: string | null) => (infoContent = v)
+                    "
                     @update:success="(v: string | null) => (success = v)"
-                    @update:success-content="(v: string | null) => (successContent = v)"
+                    @update:success-content="
+                        (v: string | null) => (successContent = v)
+                    "
                     @update:warning="(v: string | null) => (warning = v)"
-                    @update:warning-content="(v: string | null) => (warningContent = v)"
+                    @update:warning-content="
+                        (v: string | null) => (warningContent = v)
+                    "
                     @update:error="(v: string | null) => (error = v)"
-                    @update:error-content="(v: string | null) => (errorContent = v)"
+                    @update:error-content="
+                        (v: string | null) => (errorContent = v)
+                    "
                 />
 
                 <BackgroundSettings
                     :background-image="backgroundImage ?? null"
                     :background-blur="backgroundBlur ?? null"
                     :background-opacity="backgroundOpacity ?? null"
-                    @update:background-image="(v: string) => (backgroundImage = v)"
-                    @update:background-blur="(v: number) => (backgroundBlur = v)"
-                    @update:background-opacity="(v: number) => (backgroundOpacity = v)"
+                    @update:background-image="
+                        (v: string) => (backgroundImage = v)
+                    "
+                    @update:background-blur="
+                        (v: number) => (backgroundBlur = v)
+                    "
+                    @update:background-opacity="
+                        (v: number) => (backgroundOpacity = v)
+                    "
                 />
             </div>
         </div>
@@ -195,9 +219,7 @@ const { showModal } = useModal();
 
 type ThemeMode = "dark" | "light" | "system" | "schedule";
 
-const currentSystemTheme = ref<"dark" | "light">(
-    themeService.getSystemTheme()
-);
+const currentSystemTheme = ref<"dark" | "light">(themeService.getSystemTheme());
 
 const _getInitialThemeMode = (): ThemeMode => {
     const storedMode = themeService.getStoredThemeMode();
@@ -456,10 +478,7 @@ onMounted(() => {
                 !themeScheduler.schedule.value.enabled &&
                 themeMode.value !== "system"
             ) {
-                themeMode.value = event.payload as
-                    | "dark"
-                    | "light"
-                    | "system";
+                themeMode.value = event.payload as "dark" | "light" | "system";
             }
         }
     }).then((unlisten) => {
