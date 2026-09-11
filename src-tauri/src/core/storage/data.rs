@@ -4,7 +4,8 @@ use crate::core::storage::settings::SETTINGS;
 use crate::core::utils::archive::unzip;
 use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::{
-    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK21_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER,
+    ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER,
+    LIBRARIES_FABRIC_FOLDER,
     LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER,
     NATIVES_FOLDER, NATIVES_LEGACY_FOLDER, ROOT_DIR,
 };
@@ -697,6 +698,7 @@ impl Data {
         let root_dir = self.root_dir_snapshot();
         let base_requirements = [
             JDK21_FOLDER,
+            JDK25_FOLDER,
             JDK8_FOLDER,
             ASSETS_FOLDER,
             NATIVES_FOLDER,

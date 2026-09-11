@@ -13,8 +13,8 @@ import webbrowser
 CDN_ROOT = os.environ.get("CDN_ROOT", "/media/w1xced/disk/collapsecdn")
 
 FALLBACK_VERSIONS: dict[str, list[str]] = {
-    "default": ["1.8.9", "1.16.5"],
-    "fabric": ["1.21.4", "1.21.8", "1.21.11"],
+    "default": ["1.8.9", "1.12.2", "1.16.5"],
+    "fabric": ["1.21.4", "1.21.8", "1.21.11", "26.1.2", "26.2"],
     "forge": ["1.8.9"],
 }
 
@@ -46,7 +46,7 @@ FILENAMES = {"default": "clients.json", "fabric": "fabric-clients.json", "forge"
 DEFAULT_VIAVERSION = "5.9.1"
 VIA_VERSIONS = ["5.3.0", "5.7.1", "5.9.1", "5.11.0"]
 DEFAULT_JAVA_VERSION = "8"
-JAVA_VERSIONS = ["8", "21"]
+JAVA_VERSIONS = ["8", "21", "25"]
 
 HTML_TEMPLATE_PATH = Path(__file__).parent / "gui_template.html"
 
@@ -214,9 +214,9 @@ class Handler(BaseHTTPRequestHandler):
                 viaversion = data.get("viaversion", DEFAULT_VIAVERSION)
                 if viaversion not in VIA_VERSIONS:
                     viaversion = DEFAULT_VIAVERSION
-                java_version = data.get("java_version", DEFAULT_JAVA_VERSION)
+                java_version = data.get("java_version", "") or ""
                 if java_version not in JAVA_VERSIONS:
-                    java_version = DEFAULT_JAVA_VERSION
+                    java_version = ""
                 cdn_root = data.get("cdn_root", CDN_ROOT)
 
                 if not jar:
@@ -262,7 +262,9 @@ class Handler(BaseHTTPRequestHandler):
 
                 if client_type == "default" and viaversion:
                     entry["viaversion"] = viaversion
-                if client_type == "default" and version == "1.8.9":
+
+                java_relevant = client_type == "default" and version == "1.8.9"
+                if java_relevant and java_version and java_version != DEFAULT_JAVA_VERSION:
                     entry["java_version"] = java_version
 
                 if client_type == "fabric":

@@ -230,7 +230,7 @@ impl Client {
             .arg(&self.filename);
     }
 
-    fn effective_asset_index(&self) -> String {
+    pub(super) fn effective_asset_index(&self) -> String {
         if !self.meta.asset_index.is_empty() {
             return self.meta.asset_index.clone();
         }

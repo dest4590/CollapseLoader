@@ -288,6 +288,9 @@
             "default_suffix": " (за замовчуванням)"
         },
         "edit_custom_client_modal": {
+            "java_version_label": "Версія Java (тільки 1.8.9)",
+            "default_option": "Default ({value})",
+            "default_suffix": " (за замовчуванням)",
             "client_name": "Назва клієнта",
             "enter_client_name": "Введіть назву клієнта",
             "minecraft_version": "Версія Minecraft",

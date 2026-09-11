@@ -15,11 +15,11 @@ use crate::core::storage::data::{Data, DATA};
 use crate::core::utils::{
     globals::{
         CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
-        JDK8_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, MINECRAFT_VERSIONS_FOLDER,
-        MODS_FOLDER, LIBRARIES_VA1_8_9_FOLDER, LIBRARIES_VA1_8_9_VIA511_FOLDER,
-        LIBRARIES_VA1_8_9_VIA511_ZIP, LIBRARIES_VA1_8_9_VIA53_FOLDER,
-        LIBRARIES_VA1_8_9_VIA53_ZIP, LIBRARIES_VA1_8_9_VIA57_FOLDER,
-        LIBRARIES_VA1_8_9_VIA57_ZIP, LIBRARIES_VA1_8_9_ZIP,
+        JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
+        MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, LIBRARIES_VA1_8_9_FOLDER,
+        LIBRARIES_VA1_8_9_VIA511_FOLDER, LIBRARIES_VA1_8_9_VIA511_ZIP,
+        LIBRARIES_VA1_8_9_VIA53_FOLDER, LIBRARIES_VA1_8_9_VIA53_ZIP,
+        LIBRARIES_VA1_8_9_VIA57_FOLDER, LIBRARIES_VA1_8_9_VIA57_ZIP, LIBRARIES_VA1_8_9_ZIP,
     },
     process,
 };
@@ -46,10 +46,19 @@ fn sanitize_version_for_paths(version: &str) -> String {
 fn is_minecraft_version_dir_name(name: &str) -> bool {
     let parts: Vec<&str> = name.split('.').collect();
     (2..=3).contains(&parts.len())
-        && parts[0] == "1"
         && parts
             .iter()
             .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
+}
+
+fn resolve_asset_index(semver: &Version) -> String {
+    if semver.major == 26 {
+        if semver.minor <= 1 {
+            return "30".to_string();
+        }
+        return "32".to_string();
+    }
+    format!("{}.{}", semver.major, semver.minor)
 }
 
 fn collect_jars_recursive(dir: &Path, skip_root_mc_version_dirs: bool) -> Vec<PathBuf> {
@@ -156,8 +165,8 @@ impl Meta {
             Version::new(1, 16, 5)
         });
 
-        let asset_index = format!("{}.{}", semver.major, semver.minor);
-        let is_new_version = semver.minor >= 16;
+        let asset_index = resolve_asset_index(&semver);
+        let is_new_version = semver.minor >= 16 || semver.major > 1;
         let is_fabric = *client_type == ClientType::Fabric || filename.contains("fabric/");
         let is_forge = *client_type == ClientType::Forge || filename.contains("forge/");
 
@@ -387,8 +396,24 @@ impl Client {
         false
     }
 
+    /// Whether the client should run on the bundled JDK 25.
+    ///
+    /// Minecraft 26.x requires Java 25; the selection can be overridden
+    /// per-client via `java_version`.
+    fn wants_jdk25(&self) -> bool {
+        if let Some(v) = self.meta.java_version.as_deref() {
+            return v == "25";
+        }
+        match Version::parse(&self.version) {
+            Ok(v) => v.major >= 26,
+            Err(_) => false,
+        }
+    }
+
     fn jdk_folder_name(&self) -> &'static str {
-        if self.wants_jdk8() {
+        if self.wants_jdk25() {
+            JDK25_FOLDER
+        } else if self.wants_jdk8() {
             JDK8_FOLDER
         } else {
             JDK21_FOLDER
@@ -396,7 +421,9 @@ impl Client {
     }
 
     fn jdk_zip_name(&self) -> String {
-        if self.wants_jdk8() {
+        if self.wants_jdk25() {
+            format!("misc/{JDK25_FOLDER}.zip")
+        } else if self.wants_jdk8() {
             format!("misc/{JDK8_FOLDER}.zip")
         } else {
             format!("misc/{JDK21_FOLDER}.zip")

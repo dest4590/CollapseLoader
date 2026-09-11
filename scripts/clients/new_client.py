@@ -45,8 +45,8 @@ FILENAMES = {
 CDN_ROOT = os.environ.get("CDN_ROOT", "/media/w1xced/Disk/hf-cdn")
 HF_VERSIONS_URL = "https://huggingface.co/api/datasets/Collapsecdn/collapsecdn/tree/main/misc/minecraft-versions"
 FALLBACK_VERSIONS: dict[str, list[str]] = {
-    "default": ["1.8.9", "1.16.5"],
-    "fabric": ["1.21.4", "1.21.8", "1.21.11"],
+    "default": ["1.8.9", "1.12.2", "1.16.5"],
+    "fabric": ["1.21.4", "1.21.8", "1.21.11", "26.1.2", "26.2"],
     "forge": ["1.8.9"],
 }
 

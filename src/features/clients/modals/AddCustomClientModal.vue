@@ -35,7 +35,7 @@ const form = reactive({
 
 const VIA_VERSIONS = ["5.3.0", "5.7.1", "5.9.1", "5.11.0"];
 const DEFAULT_VIAVERSION = "5.9.1";
-const JAVA_VERSIONS = ["8", "21"];
+const JAVA_VERSIONS = ["8", "21", "25"];
 const DEFAULT_JAVA_VERSION = "8";
 
 const isVersion18 = computed(() => form.version === "1.8.9");

@@ -1,9 +1,9 @@
 import { ref } from "vue";
 
 const FALLBACK_VERSIONS: Record<string, string[]> = {
-    default: ["1.8.9", "1.16.5"],
+    default: ["1.8.9", "1.12.2", "1.16.5"],
     forge: ["1.8.9"],
-    fabric: ["1.21.4", "1.21.8", "1.21.11"],
+    fabric: ["1.21.4", "1.21.8", "1.21.11", "26.1.2", "26.2"],
 };
 
 const serverVersions = ref<Record<string, string[]>>({});
@@ -61,16 +61,18 @@ export function useCustomClientVersions() {
                 }
             }
 
+            const mergeWithFallback = (
+                type: string,
+                fromServer: Iterable<string>
+            ) => {
+                const fallback = FALLBACK_VERSIONS[type] ?? [];
+                return sortVersions(new Set([...fallback, ...fromServer]));
+            };
+
             serverVersions.value = {
-                default: FALLBACK_VERSIONS.default,
-                fabric:
-                    map.fabric.size > 0
-                        ? sortVersions(map.fabric)
-                        : FALLBACK_VERSIONS.fabric,
-                forge:
-                    map.forge.size > 0
-                        ? sortVersions(map.forge)
-                        : FALLBACK_VERSIONS.forge,
+                default: mergeWithFallback("default", []),
+                fabric: mergeWithFallback("fabric", map.fabric),
+                forge: mergeWithFallback("forge", map.forge),
             };
             versionsLoaded.value = true;
         } catch (e) {

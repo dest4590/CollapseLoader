@@ -28,7 +28,12 @@ const form = reactive({
     librariesPath: "",
     nativesPath: "",
     clientType: "default",
+    javaVersion: "",
 });
+
+const JAVA_VERSIONS = ["8", "21", "25"];
+
+const showJavaSelect = computed(() => form.version === "1.8.9");
 
 const loading = ref(false);
 const errors = ref<Record<string, string>>({});
@@ -147,6 +152,7 @@ const handleSubmit = async () => {
             librariesPath: form.librariesPath.trim() || null,
             nativesPath: form.nativesPath.trim() || null,
             client_type: form.clientType,
+            javaVersion: form.javaVersion.trim() || null,
         });
 
         emit("client-edited");
@@ -176,6 +182,7 @@ watch(
             form.librariesPath = client.libraries_path || "";
             form.nativesPath = client.natives_path || "";
             form.clientType = client.client_type || "default";
+            form.javaVersion = client.java_version || "";
         }
     },
     { immediate: true }
@@ -286,6 +293,29 @@ watch(
 
         <div class="divider text-xs opacity-50 uppercase tracking-widest">
             {{ $t("common.advanced") || "Advanced" }}
+        </div>
+
+        <div class="form-control" v-if="showJavaSelect">
+            <label class="label">
+                <span class="label-text">{{
+                    $t("modals.edit_custom_client_modal.java_version_label")
+                }}</span>
+            </label>
+            <select
+                v-model="form.javaVersion"
+                class="select select-bordered"
+            >
+                <option value="">
+                    {{
+                        $t("modals.edit_custom_client_modal.default_option", {
+                            value: "8"
+                        })
+                    }}
+                </option>
+                <option v-for="v in JAVA_VERSIONS" :key="v" :value="v">
+                    Java {{ v }}
+                </option>
+            </select>
         </div>
 
         <div class="form-control" v-if="form.clientType === 'default'">

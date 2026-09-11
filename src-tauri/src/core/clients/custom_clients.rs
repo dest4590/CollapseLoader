@@ -61,6 +61,18 @@ impl CustomClient {
     }
 
     pub fn to_client(&self) -> Client {
+        let mut meta = Meta::new(
+            &self.version,
+            &self.filename,
+            &self.client_type,
+            None,
+            self.java_version.clone(),
+        );
+        meta.installed = self.is_installed;
+        meta.is_custom = true;
+        meta.size = 0;
+        meta.viaversion = None;
+
         Client {
             id: self.id,
             name: self.name.clone(),
@@ -79,25 +91,7 @@ impl CustomClient {
             dependencies: None,
             client_type: self.client_type.clone(),
             created_at: chrono::Utc::now(),
-            meta: Meta {
-                is_new: false,
-                is_fabric: self.client_type == ClientType::Fabric,
-                is_forge: self.client_type == ClientType::Forge,
-                asset_index: if self.version.contains("1.21") {
-                    "1.21".to_string()
-                } else if self.version.contains("1.16") {
-                    "1.16".to_string()
-                } else if self.version.contains("1.8.9") {
-                    "1.8".to_string()
-                } else {
-                    "1.16".to_string()
-                },
-                installed: self.is_installed,
-                is_custom: true,
-                size: 0,
-                viaversion: None,
-                java_version: None,
-            },
+            meta,
             java_path: self.java_path.clone(),
             java_args: self.java_args.clone(),
             libraries_path: self.libraries_path.clone(),

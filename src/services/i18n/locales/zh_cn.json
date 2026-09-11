@@ -288,6 +288,9 @@
             "default_suffix": "（默认）"
         },
         "edit_custom_client_modal": {
+            "java_version_label": "Java 版本（仅限 1.8.9）",
+            "default_option": "Default ({value})",
+            "default_suffix": "（默认）",
             "client_name": "客户端名称",
             "enter_client_name": "输入客户端名称",
             "minecraft_version": "Minecraft 版本",

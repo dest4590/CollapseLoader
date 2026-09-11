@@ -288,6 +288,9 @@
             "default_suffix": " (domyślnie)"
         },
         "edit_custom_client_modal": {
+            "java_version_label": "Wersja Java (tylko 1.8.9)",
+            "default_option": "Default ({value})",
+            "default_suffix": " (domyślnie)",
             "client_name": "Nazwa klienta",
             "enter_client_name": "Wprowadź nazwę klienta",
             "minecraft_version": "Wersja Minecraft",

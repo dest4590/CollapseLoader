@@ -46,6 +46,19 @@ pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2"
 };
 
+/// The directory name for the bundled JDK 25.
+pub static JDK25_FOLDER: &str = if IS_LINUX {
+    "jdk-25.0.4.1-linux"
+} else if IS_MACOS {
+    if IS_AARCH64 {
+        "jdk-25.0.4.1-macos-aarch64"
+    } else {
+        "jdk-25.0.4.1-macos-x64"
+    }
+} else {
+    "jdk-25.0.4.1"
+};
+
 /// The directory name for the bundled JDK 8.
 pub static JDK8_FOLDER: &str = if IS_LINUX {
     "jdk8-linux"
@@ -60,7 +73,8 @@ pub static JDK8_FOLDER: &str = if IS_LINUX {
 };
 
 /// List of all bundled JDK folder names.
-pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
+pub static JDK_FOLDERS: LazyLock<Vec<&str>> =
+    LazyLock::new(|| vec![JDK25_FOLDER, JDK21_FOLDER, JDK8_FOLDER]);
 
 // Resource folder names.
 /// Folder for standard game assets.
