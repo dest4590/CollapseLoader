@@ -36,6 +36,8 @@ FABRIC_BASE_DEPS = {
     "1.21.8": [{"md5_hash": "85d76d57a7b5bb7043ea815133d2f6ba", "name": "fabric-api-0.136.1+1.21.8", "size": 2}],
     "1.21.10": [{"md5_hash": "c9ebf1b300d813310d18115a7cc03f99", "name": "fabric-api-0.138.4+1.21.10", "size": 2}],
     "1.21.11": [{"md5_hash": "e2a72b6c6aa2c6c4f74541394858c86a", "name": "fabric-api-0.140.2+1.21.11", "size": 2}],
+    "26.1.2": [{"md5_hash": "0100feb8acda9242a6353ead3f1893be", "name": "fabric-api-0.155.3+26.1.2", "size": 2}],
+    "26.2": [{"md5_hash": "edcbe4e7328f68f285d3a2425cd4f0a6", "name": "fabric-api-0.160.0+26.2", "size": 2}],
 }
 MAIN_CLASSES = {
     "default": "net.minecraft.client.main.Main",

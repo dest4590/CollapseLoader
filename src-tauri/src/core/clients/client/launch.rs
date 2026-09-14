@@ -456,7 +456,34 @@ impl Client {
         if should_apply_titlebar {
             let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
             if titlebar_path.exists() {
-                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
+                let is_compatible = std::process::Command::new("lipo")
+                    .arg("-info")
+                    .arg(&titlebar_path)
+                    .output()
+                    .map(|o| {
+                        let info = String::from_utf8_lossy(&o.stdout);
+                        let is_arm64_only = info.contains("arm64")
+                            && !info.contains("x86_64")
+                            && !info.contains("universal");
+                        let is_x86_64 = info.contains("x86_64") || info.contains("universal");
+                        if is_arm64_only && !IS_AARCH64 {
+                            log_warn!(
+                                "Titlebar dylib is arm64-only but JDK is x86_64, skipping"
+                            );
+                            false
+                        } else {
+                            is_x86_64 || IS_AARCH64
+                        }
+                    })
+                    .unwrap_or(true);
+
+                if is_compatible {
+                    cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
+                } else {
+                    log_warn!(
+                        "Skipping titlebar branding due to architecture mismatch"
+                    );
+                }
             }
         }
 
