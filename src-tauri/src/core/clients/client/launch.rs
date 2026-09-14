@@ -18,10 +18,7 @@ use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
 #[allow(unused)]
 use crate::core::{
     clients::{
-        internal::{
-            agent_overlay::AgentArguments,
-            titlebar_branding::TitlebarBrandingManager,
-        },
+        internal::agent_overlay::AgentArguments,
         log_checker::LogChecker,
         manager::ClientManager,
     },
@@ -32,9 +29,8 @@ use crate::core::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
             IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
             NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
-            NATIVES_MACOS_FOLDER, PATH_SEPARATOR, SKIP_TITLEBAR_BRANDING,
-            NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
-            NATIVES_VA1_8_9_WINDOWS_FOLDER, TITLEBAR_FILE,
+            NATIVES_MACOS_FOLDER, PATH_SEPARATOR, NATIVES_VA1_8_9_LINUX_FOLDER,
+            NATIVES_VA1_8_9_MACOS_FOLDER, NATIVES_VA1_8_9_WINDOWS_FOLDER,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
@@ -333,32 +329,6 @@ impl Client {
 
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
 
-        let should_apply_titlebar = !*SKIP_TITLEBAR_BRANDING
-            && !self.meta.is_custom
-            && self.client_type != ClientType::Forge
-            && !is_legacy_vanilla
-            && !TitlebarBrandingManager::has_branding_in_jar(&client_folder.join(&self.filename));
-
-        if should_apply_titlebar {
-            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
-            if titlebar_path.exists() {
-                log_info!(
-                    "Titlebar branding will be applied for client: {}",
-                    self.name
-                );
-            } else {
-                log_debug!(
-                    "Titlebar branding file not found, skipping for: {}",
-                    self.name
-                );
-            }
-        } else if !*SKIP_TITLEBAR_BRANDING && !self.meta.is_custom {
-            log_info!(
-                "Skipping titlebar branding for {} (already branded or excluded)",
-                self.name
-            );
-        }
-
         let mut cmd = Command::new(java_bin);
 
         #[cfg(windows)]
@@ -398,10 +368,6 @@ impl Client {
             }
         }
 
-        if !should_apply_titlebar {
-            cmd.env("COLLAPSE_SKIP_TITLEBAR", "1");
-        }
-
         #[cfg(target_os = "linux")]
         {
             if is_legacy_vanilla {
@@ -423,66 +389,6 @@ impl Client {
                     );
                 } else {
                     log_warn!("libjemalloc.so not found at {}", jemalloc_path.display());
-                }
-            }
-        }
-
-        #[cfg(target_os = "linux")]
-        if should_apply_titlebar && agent_overlay_path.join(TITLEBAR_FILE).exists() {
-            let jemalloc_path = DATA
-                .root_dir
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .join("natives-linux")
-                .join("libjemalloc.so");
-            let titlebar = agent_overlay_path.join(TITLEBAR_FILE);
-            let preload = if jemalloc_path.exists() {
-                format!("{}:{}", jemalloc_path.display(), titlebar.display())
-            } else {
-                titlebar.display().to_string()
-            };
-            cmd.env("LD_PRELOAD", &preload);
-        }
-
-        #[cfg(target_os = "windows")]
-        if should_apply_titlebar {
-            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
-            if titlebar_path.exists() {
-                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
-            }
-        }
-
-        #[cfg(target_os = "macos")]
-        if should_apply_titlebar {
-            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
-            if titlebar_path.exists() {
-                let is_compatible = std::process::Command::new("lipo")
-                    .arg("-info")
-                    .arg(&titlebar_path)
-                    .output()
-                    .map(|o| {
-                        let info = String::from_utf8_lossy(&o.stdout);
-                        let is_arm64_only = info.contains("arm64")
-                            && !info.contains("x86_64")
-                            && !info.contains("universal");
-                        let is_x86_64 = info.contains("x86_64") || info.contains("universal");
-                        if is_arm64_only && !IS_AARCH64 {
-                            log_warn!(
-                                "Titlebar dylib is arm64-only but JDK is x86_64, skipping"
-                            );
-                            false
-                        } else {
-                            is_x86_64 || IS_AARCH64
-                        }
-                    })
-                    .unwrap_or(true);
-
-                if is_compatible {
-                    cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
-                } else {
-                    log_warn!(
-                        "Skipping titlebar branding due to architecture mismatch"
-                    );
                 }
             }
         }
