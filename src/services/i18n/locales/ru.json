@@ -572,7 +572,7 @@
         "launch_another": "Запустить ещё раз",
         "stop": "Остановить",
         "monitor_ram_usage": "Мониторинг ОЗУ",
-        "unavailable": "Не доступно",
+        "unavailable": "Недоступно",
         "start_with": "Запустить с",
         "selected_clients": "Выбрано: {count} клиентов",
         "multiple_clients_selected": "Выбрано клиентов: {count}",
