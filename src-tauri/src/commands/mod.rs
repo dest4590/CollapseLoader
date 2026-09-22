@@ -1,5 +1,6 @@
 //! Tauri command handlers for various application features.
 
+pub mod auth;
 pub mod clients;
 pub mod irc;
 pub mod mod_builds;

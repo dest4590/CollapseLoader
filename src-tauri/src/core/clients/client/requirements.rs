@@ -20,14 +20,15 @@ use crate::core::utils::globals::{
     IS_WINDOWS, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER,
     LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
     LIBRARIES_ZIP, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_FOLDER,
-    NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP, NATIVES_LINUX_FOLDER,
-    NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_FOLDER,
-    NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
-    NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_MACOS_ZIP, NATIVES_VA1_8_9_WINDOWS_ZIP,
-    NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
-    NATIVES_VA1_8_9_WINDOWS_FOLDER,
+    NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
+    NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP,
+    NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_VA1_8_9_LINUX_FOLDER,
+    NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_MACOS_FOLDER, NATIVES_VA1_8_9_MACOS_ZIP,
+    NATIVES_VA1_8_9_WINDOWS_FOLDER, NATIVES_VA1_8_9_WINDOWS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
-use crate::core::utils::{hashing::calculate_hash, hashing::calculate_md5_hash, helpers::emit_to_main_window};
+use crate::core::utils::{
+    hashing::calculate_hash, hashing::calculate_md5_hash, helpers::emit_to_main_window,
+};
 use crate::{log_debug, log_error, log_info, log_warn};
 
 static REQWEST_CLIENT: LazyLock<reqwest::Client> =
@@ -581,12 +582,7 @@ impl Client {
 
         let (libs_zip, libs_folder, natives_zip, natives_folder) =
             self.resolve_libraries_and_natives_requirement();
-        Self::verify_or_queue_requirement(
-            &mut files_to_download,
-            libs_folder,
-            libs_zip,
-            None,
-        );
+        Self::verify_or_queue_requirement(&mut files_to_download, libs_folder, libs_zip, None);
 
         let (actual_natives_zip, actual_natives_folder) =
             self.resolve_platform_natives_requirement(natives_zip, natives_folder);
@@ -768,7 +764,6 @@ impl Client {
         }
     }
 
-   
     fn versioned_libs_need_download(versioned_dir: &Path) -> bool {
         let manifest_path = versioned_dir.join("manifest.txt");
         let Ok(content) = std::fs::read_to_string(&manifest_path) else {
@@ -781,7 +776,7 @@ impl Client {
             let Some((name, expected)) = line.split_once(':') else {
                 continue;
             };
-            
+
             if expected.len() != 64 || name.contains("natives") || name == "manifest.txt" {
                 continue;
             }
@@ -886,7 +881,6 @@ impl Client {
         };
 
         if already_present {
-            
             return Ok(());
         }
 

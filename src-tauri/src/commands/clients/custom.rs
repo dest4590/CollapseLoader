@@ -18,8 +18,8 @@ pub fn get_custom_clients(state: State<'_, AppState>) -> Vec<CustomClient> {
 pub fn detect_custom_client(file_path: String) -> Result<DetectResult, String> {
     log_info!("Detecting custom client type for '{}'", file_path);
     let path = std::path::PathBuf::from(&file_path);
-    let detected = crate::core::clients::client_detect::detect_client_type(&path)
-        .ok_or_else(|| {
+    let detected =
+        crate::core::clients::client_detect::detect_client_type(&path).ok_or_else(|| {
             format!(
                 "Could not detect client type for {}. Please configure manually.",
                 file_path
@@ -70,11 +70,8 @@ pub async fn add_custom_client(
     let mut resolved_main_class = main_class.clone();
     let mut resolved_client_type = client_type.clone();
 
-    if resolved_main_class.trim().is_empty() || resolved_client_type == ClientType::Default
-    {
-        if let Some(detected) =
-            crate::core::clients::client_detect::detect_client_type(&path_buf)
-        {
+    if resolved_main_class.trim().is_empty() || resolved_client_type == ClientType::Default {
+        if let Some(detected) = crate::core::clients::client_detect::detect_client_type(&path_buf) {
             log_info!(
                 "Auto-detected client: main_class={}, client_type={:?}, confidence={}",
                 detected.main_class,
@@ -90,14 +87,8 @@ pub async fn add_custom_client(
         }
     }
 
-    let mut custom_client = CustomClient::new(
-        0,
-        name,
-        version,
-        filename,
-        path_buf,
-        resolved_main_class,
-    );
+    let mut custom_client =
+        CustomClient::new(0, name, version, filename, path_buf, resolved_main_class);
     custom_client.java_path = java_path;
     custom_client.java_args = java_args;
     custom_client.libraries_path = libraries_path;

@@ -14,7 +14,7 @@ CDN_ROOT = os.environ.get("CDN_ROOT", "/media/w1xced/disk/collapsecdn")
 
 FALLBACK_VERSIONS: dict[str, list[str]] = {
     "default": ["1.8.9", "1.12.2", "1.16.5"],
-    "fabric": ["1.21.4", "1.21.8", "1.21.11", "26.1.2", "26.2"],
+    "fabric": ["1.21.1", "1.21.4", "1.21.8", "1.21.11", "26.1.2", "26.2"],
     "forge": ["1.8.9"],
 }
 
@@ -32,6 +32,7 @@ BARITONE_DEPS = {
     ],
 }
 FABRIC_BASE_DEPS = {
+    "1.21.1": [{"md5_hash": "e027a4f5fcf21ee26fa48de7e7033c2b", "name": "fabric-api-0.116.17+1.21.1", "size": 2}],
     "1.21.4": [{"md5_hash": "128a8d042180e7c92567342e21a21a6d", "name": "fabric-api-0.119.4+1.21.4", "size": 2}],
     "1.21.8": [{"md5_hash": "85d76d57a7b5bb7043ea815133d2f6ba", "name": "fabric-api-0.136.1+1.21.8", "size": 2}],
     "1.21.10": [{"md5_hash": "c9ebf1b300d813310d18115a7cc03f99", "name": "fabric-api-0.138.4+1.21.10", "size": 2}],

@@ -25,6 +25,29 @@
         }
     },
     "modals": {
+        "microsoft_account": {
+            "title": "Microsoft 账户",
+            "description": "使用 Microsoft 登录以使用正版 Minecraft Java Edition 档案。",
+            "browser_hint": "将打开安全的 Microsoft 登录窗口。登录后，授权完成时窗口会自动关闭。",
+            "sign_in": "使用 Microsoft 登录",
+            "enter_code": "在 Microsoft 页面输入此代码：",
+            "copy_hint": "点击代码进行复制",
+            "open_page": "打开 Microsoft 登录",
+            "continue": "我已登录",
+            "checking": "正在检查账户…",
+            "code_copied": "代码已复制",
+            "oauth": "OAuth（当前登录）",
+            "access_token": "访问令牌",
+            "refresh_token": "刷新令牌",
+            "cookies": "Microsoft Cookies",
+            "add_with_method": "添加账户",
+            "access_hint": "粘贴 Minecraft Services 访问令牌或 Microsoft OAuth 访问令牌。没有刷新令牌时，过期后需要重新登录。",
+            "refresh_hint": "粘贴 Microsoft OAuth 刷新令牌，它将被交换为新的 Xbox 和 Minecraft 凭据。",
+            "cookies_hint": "粘贴 login.live.com 的 Cookie 标头、Netscape Cookie 文件或 JSON 导出。Cookies 仅用于获取令牌，不会保存。",
+            "cookies_placeholder": "Cookie: MSPAuth=...; MSPOK=...",
+            "security_hint": "令牌仅发送到 Rust 后端，并保存在操作系统凭据存储中。",
+            "success": "Microsoft 账户添加成功"
+        },
         "initial_setup": {
             "welcome": {
                 "title": "欢迎使用 CollapseLoader",
@@ -880,6 +903,10 @@
         "client_download": "下载"
     },
     "settings": {
+        "add_microsoft_account": "添加 Microsoft 账户",
+        "add_offline_account": "添加离线昵称",
+        "account_type_microsoft": "Microsoft",
+        "account_type_offline": "离线",
         "general": "设置",
         "sync": "云同步",
         "accounts": "账户",

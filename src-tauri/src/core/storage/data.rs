@@ -5,9 +5,8 @@ use crate::core::utils::archive::unzip;
 use crate::core::utils::fs as fs_utils;
 use crate::core::utils::globals::{
     ASSETS_FABRIC_FOLDER, ASSETS_FOLDER, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER,
-    LIBRARIES_FABRIC_FOLDER,
-    LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER, NATIVES_FABRIC_FOLDER,
-    NATIVES_FOLDER, NATIVES_LEGACY_FOLDER, ROOT_DIR,
+    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, MINECRAFT_VERSIONS_FOLDER,
+    NATIVES_FABRIC_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_FOLDER, ROOT_DIR,
 };
 use crate::core::utils::helpers::emit_to_main_window;
 use crate::{log_debug, log_error, log_info, log_warn};

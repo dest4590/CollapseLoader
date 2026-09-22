@@ -144,6 +144,11 @@ pub fn run() {
         )))
         .manage(commands::irc::IrcState::default())
         .invoke_handler(tauri::generate_handler![
+            // authentication commands
+            commands::auth::login_microsoft_account,
+            commands::auth::login_microsoft_account_with_access_token,
+            commands::auth::login_microsoft_account_with_refresh_token,
+            commands::auth::login_microsoft_account_with_cookies,
             // client commands
             commands::clients::add_custom_client,
             commands::clients::delete_client,

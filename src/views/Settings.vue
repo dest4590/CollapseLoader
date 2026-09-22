@@ -46,6 +46,7 @@ import {
     type UserExternalAccount,
 } from "@features/auth/userService";
 import AddAccountModal from "@features/social/modals/AddAccountModal.vue";
+import AddMicrosoftAccountModal from "@features/social/modals/AddMicrosoftAccountModal.vue";
 import EditAccountModal from "@features/social/modals/EditAccountModal.vue";
 import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue";
 import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
@@ -67,6 +68,8 @@ interface Account {
     created_at: string;
     last_used?: string;
     is_active: boolean;
+    account_type?: "offline" | "microsoft";
+    uuid?: string;
 }
 
 const settings = settingsService.settings;
@@ -389,6 +392,16 @@ const showAddAccountDialog = () => {
         {
             "account-added": handleAccountAdded,
         }
+    );
+};
+
+const showAddMicrosoftAccountDialog = () => {
+    showModal(
+        "add-microsoft-account",
+        AddMicrosoftAccountModal,
+        { title: t("settings.add_microsoft_account") },
+        {},
+        { "account-added": handleAccountAdded }
     );
 };
 
@@ -1416,13 +1429,24 @@ const handleToastPositionChange = (position: string) => {
                                         {{ t("settings.accounts_description") }}
                                     </p>
                                 </div>
-                                <button
-                                    @click="showAddAccountDialog"
-                                    class="btn btn-primary btn-sm"
-                                >
-                                    <Plus class="w-4 h-4 mr-2" />
-                                    {{ t("settings.add_account") }}
-                                </button>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        @click="showAddMicrosoftAccountDialog"
+                                        class="btn btn-primary btn-sm"
+                                    >
+                                        <BadgeCheck class="w-4 h-4 mr-2" />
+                                        {{
+                                            t("settings.add_microsoft_account")
+                                        }}
+                                    </button>
+                                    <button
+                                        @click="showAddAccountDialog"
+                                        class="btn btn-outline btn-sm"
+                                    >
+                                        <Plus class="w-4 h-4 mr-2" />
+                                        {{ t("settings.add_offline_account") }}
+                                    </button>
+                                </div>
                             </div>
 
                             <div

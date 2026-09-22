@@ -18,6 +18,29 @@
         "error_message": "Failed to submit report. Please try again later."
     },
     "modals": {
+        "microsoft_account": {
+            "title": "Microsoft account",
+            "description": "Sign in with Microsoft to use your licensed Minecraft Java Edition profile.",
+            "browser_hint": "A secure Microsoft sign-in window will open. Sign in there; it will close automatically when authorization finishes.",
+            "sign_in": "Sign in with Microsoft",
+            "enter_code": "Enter this code on the Microsoft page:",
+            "copy_hint": "Click the code to copy it",
+            "open_page": "Open Microsoft sign-in",
+            "continue": "I have signed in",
+            "checking": "Checking account…",
+            "code_copied": "Code copied",
+            "oauth": "OAuth (current sign-in)",
+            "access_token": "Access token",
+            "refresh_token": "Refresh token",
+            "cookies": "Microsoft cookies",
+            "add_with_method": "Add account",
+            "access_hint": "Paste a Minecraft services access token or a Microsoft OAuth access token. A token without refresh support may require signing in again after it expires.",
+            "refresh_hint": "Paste a Microsoft OAuth refresh token. It will be exchanged for fresh Xbox and Minecraft credentials.",
+            "cookies_hint": "Paste a raw Cookie header, Netscape cookie file, or JSON cookie export for login.live.com. Cookies are only used to obtain tokens and are not stored.",
+            "cookies_placeholder": "Cookie: MSPAuth=...; MSPOK=...",
+            "security_hint": "Tokens are sent only to the Rust backend and stored in the operating system credential vault.",
+            "success": "Microsoft account added successfully"
+        },
         "initial_setup": {
             "welcome": {
                 "title": "Welcome to CollapseLoader",
@@ -907,6 +930,10 @@
         "client_download": "Download"
     },
     "settings": {
+        "add_microsoft_account": "Add Microsoft account",
+        "add_offline_account": "Add offline nickname",
+        "account_type_microsoft": "Microsoft",
+        "account_type_offline": "Offline",
         "general": "Settings",
         "sync": "Cloud Sync",
         "accounts": "Accounts",

@@ -25,6 +25,29 @@
         }
     },
     "modals": {
+        "microsoft_account": {
+            "title": "Konto Microsoft",
+            "description": "Zaloguj się przez Microsoft, aby używać licencjonowanego profilu Minecraft Java Edition.",
+            "browser_hint": "Otworzy się bezpieczne okno logowania Microsoft. Zaloguj się — po autoryzacji okno zamknie się automatycznie.",
+            "sign_in": "Zaloguj przez Microsoft",
+            "enter_code": "Wpisz ten kod na stronie Microsoft:",
+            "copy_hint": "Kliknij kod, aby go skopiować",
+            "open_page": "Otwórz logowanie Microsoft",
+            "continue": "Zalogowano",
+            "checking": "Sprawdzanie konta…",
+            "code_copied": "Kod skopiowany",
+            "oauth": "OAuth (obecne logowanie)",
+            "access_token": "Token dostępu",
+            "refresh_token": "Token odświeżania",
+            "cookies": "Pliki cookie Microsoft",
+            "add_with_method": "Dodaj konto",
+            "access_hint": "Wklej token dostępu Minecraft Services lub Microsoft OAuth. Bez tokenu odświeżania po wygaśnięciu może być wymagane ponowne logowanie.",
+            "refresh_hint": "Wklej token odświeżania Microsoft OAuth. Zostanie wymieniony na nowe dane Xbox i Minecraft.",
+            "cookies_hint": "Wklej nagłówek Cookie, plik Netscape cookies lub eksport JSON dla login.live.com. Cookies służą tylko do uzyskania tokenów i nie są zapisywane.",
+            "cookies_placeholder": "Cookie: MSPAuth=...; MSPOK=...",
+            "security_hint": "Tokeny trafiają wyłącznie do backendu Rust i są przechowywane w systemowym magazynie poświadczeń.",
+            "success": "Konto Microsoft zostało dodane"
+        },
         "initial_setup": {
             "welcome": {
                 "title": "Witamy w CollapseLoader",
@@ -891,6 +914,10 @@
         "client_download": "Pobierz"
     },
     "settings": {
+        "add_microsoft_account": "Dodaj konto Microsoft",
+        "add_offline_account": "Dodaj lokalny nick",
+        "account_type_microsoft": "Microsoft",
+        "account_type_offline": "Offline",
         "general": "Ustawienia",
         "sync": "Synchronizacja w chmurze",
         "accounts": "Konta",

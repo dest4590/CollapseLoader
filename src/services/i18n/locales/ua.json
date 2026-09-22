@@ -25,6 +25,29 @@
         }
     },
     "modals": {
+        "microsoft_account": {
+            "title": "Microsoft-акаунт",
+            "description": "Увійдіть через Microsoft, щоб використовувати ліцензійний профіль Minecraft Java Edition.",
+            "browser_hint": "Відкриється захищене вікно Microsoft. Увійдіть в акаунт — після завершення авторизації вікно закриється автоматично.",
+            "sign_in": "Увійти через Microsoft",
+            "enter_code": "Введіть цей код на сторінці Microsoft:",
+            "copy_hint": "Натисніть на код, щоб скопіювати",
+            "open_page": "Відкрити вхід Microsoft",
+            "continue": "Я увійшов",
+            "checking": "Перевіряємо акаунт…",
+            "code_copied": "Код скопійовано",
+            "oauth": "OAuth (поточний вхід)",
+            "access_token": "Access-токен",
+            "refresh_token": "Refresh-токен",
+            "cookies": "Cookies Microsoft",
+            "add_with_method": "Додати акаунт",
+            "access_hint": "Вставте access-токен Minecraft Services або Microsoft OAuth. Якщо токен не має refresh, після завершення терміну дії знадобиться повторний вхід.",
+            "refresh_hint": "Вставте refresh-токен Microsoft OAuth. Його буде обміняно на нові дані Xbox і Minecraft.",
+            "cookies_hint": "Вставте Cookie header, cookies у форматі Netscape або JSON-експорт для login.live.com. Cookies використовуються лише для отримання токенів і не зберігаються.",
+            "cookies_placeholder": "Cookie: MSPAuth=...; MSPOK=...",
+            "security_hint": "Токени передаються лише Rust-бекенду та зберігаються в системному сховищі облікових даних.",
+            "success": "Microsoft-акаунт успішно додано"
+        },
         "initial_setup": {
             "welcome": {
                 "title": "Ласкаво просимо до CollapseLoader",
@@ -893,6 +916,10 @@
         "client_download": "Завантажити"
     },
     "settings": {
+        "add_microsoft_account": "Додати Microsoft-акаунт",
+        "add_offline_account": "Додати локальний нік",
+        "account_type_microsoft": "Microsoft",
+        "account_type_offline": "Локальний",
         "general": "Налаштування",
         "sync": "Хмарна синхронізація",
         "accounts": "Акаунти",
