@@ -163,7 +163,7 @@ onBeforeUnmount(() => {
                 </span>
             </button>
         </div>
-        <div class="home-action-btn relative" style="isolation: isolate">
+        <div class="home-action-btn relative z-50">
             <button
                 @click.stop="toggleNotifications"
                 class="btn btn-ghost border-base-300 gap-2 btn-primary relative"
@@ -186,7 +186,7 @@ onBeforeUnmount(() => {
                 @close="emit('update:showNotifications', false)"
             />
         </div>
-        <div class="home-action-btn relative" style="isolation: isolate">
+        <div class="home-action-btn relative z-50">
             <button
                 @click.stop="toggleHistory"
                 class="btn btn-ghost border-base-300 gap-2 btn-primary"

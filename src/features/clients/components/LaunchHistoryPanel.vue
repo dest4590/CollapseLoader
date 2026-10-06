@@ -199,14 +199,16 @@ watch(
     right: 0;
     width: 320px;
     max-height: 420px;
-    background: var(--color-base-200);
-    backdrop-filter: blur(var(--history-blur, 20px));
-    -webkit-backdrop-filter: blur(var(--history-blur, 20px));
-    border: 1px solid var(--color-base-300);
+    background: color-mix(in srgb, var(--color-base-300) 58%, transparent);
+    backdrop-filter: blur(var(--history-blur, 28px)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--history-blur, 28px)) saturate(1.8);
+    border: 1px solid
+        color-mix(in srgb, var(--color-base-content) 12%, transparent);
     border-radius: 12px;
     box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.4),
-        0 2px 8px rgba(0, 0, 0, 0.2);
+        0 12px 40px rgba(0, 0, 0, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -218,7 +220,9 @@ watch(
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    border-bottom: 1px solid hsl(var(--b3));
+    background: color-mix(in srgb, var(--color-base-content) 4%, transparent);
+    border-bottom: 1px solid
+        color-mix(in srgb, var(--color-base-content) 10%, transparent);
     flex-shrink: 0;
 }
 
@@ -250,7 +254,7 @@ watch(
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: hsl(var(--bc) / 0.4);
+    color: color-mix(in srgb, var(--color-base-content) 45%, transparent);
     padding: 6px 14px 2px;
 }
 
@@ -278,14 +282,14 @@ watch(
 }
 
 .history-entry:hover {
-    background: hsl(var(--b3) / 0.6);
+    background: color-mix(in srgb, var(--color-base-content) 8%, transparent);
 }
 
 .history-entry-icon {
     width: 24px;
     height: 24px;
     border-radius: 6px;
-    background: hsl(var(--p) / 0.12);
+    background: color-mix(in srgb, var(--color-primary) 14%, transparent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -303,24 +307,24 @@ watch(
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: hsl(var(--bc));
+    color: var(--color-base-content);
 }
 
 .history-entry-meta {
     font-size: 11px;
-    color: hsl(var(--bc) / 0.5);
+    color: color-mix(in srgb, var(--color-base-content) 55%, transparent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .history-entry-version {
-    color: hsl(var(--p) / 0.8);
+    color: color-mix(in srgb, var(--color-primary) 80%, transparent);
 }
 
 .history-entry-time {
     font-size: 11px;
-    color: hsl(var(--bc) / 0.35);
+    color: color-mix(in srgb, var(--color-base-content) 40%, transparent);
     flex-shrink: 0;
     white-space: nowrap;
 }

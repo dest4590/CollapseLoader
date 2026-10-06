@@ -51,6 +51,27 @@ fn is_minecraft_version_dir_name(name: &str) -> bool {
             .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_digit()))
 }
 
+pub(crate) fn parse_minecraft_version(version: &str) -> Result<Version, semver::Error> {
+    let trimmed = version.trim();
+
+    if let Ok(parsed) = Version::parse(trimmed) {
+        return Ok(parsed);
+    }
+
+    let mut padded = String::with_capacity(trimmed.len() + 4);
+    for (index, part) in trimmed.split('.').enumerate() {
+        if index > 0 {
+            padded.push('.');
+        }
+        padded.push_str(part);
+    }
+    while padded.split('.').count() < 3 {
+        padded.push_str(".0");
+    }
+
+    Version::parse(&padded)
+}
+
 fn resolve_asset_index(semver: &Version) -> String {
     if semver.major == 26 {
         if semver.minor <= 1 {
@@ -160,7 +181,7 @@ impl Meta {
         viaversion: Option<String>,
         java_version: Option<String>,
     ) -> Self {
-        let semver = Version::parse(version).unwrap_or_else(|err| {
+        let semver = parse_minecraft_version(version).unwrap_or_else(|err| {
             log_error!("Failed to parse version '{}': {}", version, err);
             Version::new(1, 16, 5)
         });
@@ -316,7 +337,8 @@ impl LaunchOptions {
 
 impl Client {
     fn is_legacy_client(&self) -> bool {
-        let semver = Version::parse(&self.version).unwrap_or_else(|_| Version::new(1, 12, 2));
+        let semver =
+            parse_minecraft_version(&self.version).unwrap_or_else(|_| Version::new(1, 12, 2));
         semver.major == 1 && semver.minor <= 12
     }
 
@@ -327,7 +349,7 @@ impl Client {
         if self.client_type == ClientType::Forge || self.client_type == ClientType::Fabric {
             return false;
         }
-        match Version::parse(&self.version) {
+        match parse_minecraft_version(&self.version) {
             Ok(v) => v.major == 1 && v.minor == 8 && v.patch == 9,
             Err(_) => self.version == "1.8.9",
         }
@@ -404,7 +426,7 @@ impl Client {
         if let Some(v) = self.meta.java_version.as_deref() {
             return v == "25";
         }
-        match Version::parse(&self.version) {
+        match parse_minecraft_version(&self.version) {
             Ok(v) => v.major >= 26,
             Err(_) => false,
         }

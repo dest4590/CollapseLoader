@@ -1,7 +1,6 @@
 <template>
     <div
-        class="card bg-base-200 shadow-md border border-base-300 p-6 transition-all duration-300"
-        :class="themeMode === 'schedule' ? 'lg:col-span-7' : 'lg:col-span-4'"
+        class="card bg-base-200 shadow-md border border-base-300 p-6 transition-all duration-300 lg:col-span-12"
     >
         <h2 class="card-title flex items-center gap-2">
             <SunMoon class="w-5 h-5 text-primary" />

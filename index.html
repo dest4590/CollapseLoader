@@ -1,27 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/src/assets/css/style.css" />
+        <link rel="favicon" href="/src/assets/images/logo.png" />
+        <link rel="icon" href="/src/assets/favicon.ico" type="image/x-icon" />
+        <title>CollapseLoader</title>
+    </head>
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/src/assets/css/style.css" />
-    <link rel="favicon" href="/src/assets/images/logo.png" />
-    <link rel="icon" href="/src/assets/favicon.ico" type="image/x-icon" />
-    <title>CollapseLoader</title>
-</head>
-
-<body>
-    <script>
-        (function () {
-            var theme = localStorage.getItem("theme");
-            document.documentElement.setAttribute(
-                "data-theme",
-                theme === "light" || theme === "dark" ? theme : "dark"
-            );
-        })();
-    </script>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-</body>
-
+    <body>
+        <script>
+            (function () {
+                var theme = localStorage.getItem("theme");
+                document.documentElement.setAttribute(
+                    "data-theme",
+                    theme === "light" || theme === "dark" ? theme : "dark"
+                );
+                var ua = navigator.userAgent || "";
+                if (/linux/i.test(ua) && !/android/i.test(ua)) {
+                    document.documentElement.setAttribute(
+                        "data-linux-blur-fallback",
+                        "true"
+                    );
+                }
+            })();
+        </script>
+        <div id="app"></div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>

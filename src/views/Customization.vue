@@ -10,12 +10,6 @@
                 @select-mode="selectThemeMode"
                 @update-schedule="updateScheduleTime"
             />
-            <AccentColorPicker
-                :primary-color="primaryColor"
-                :theme-mode="themeMode"
-                @update:primary-color="(v: string) => (primaryColor = v)"
-                @reset="primaryColor = null"
-            />
         </div>
 
         <div
@@ -199,7 +193,6 @@ import { useModal } from "@shared/composables/useModal";
 import { themeScheduler } from "@services/theme/themeScheduler";
 
 import ThemeModeSelector from "@components/customization/ThemeModeSelector.vue";
-import AccentColorPicker from "@components/customization/AccentColorPicker.vue";
 import ColorEditors from "@components/customization/ColorEditors.vue";
 import BackgroundSettings from "@components/customization/BackgroundSettings.vue";
 import PanelBlurSettings from "@components/customization/PanelBlurSettings.vue";

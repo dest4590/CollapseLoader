@@ -966,22 +966,59 @@ const handleToastPositionChange = (position: string) => {
                     class="space-y-4"
                 >
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                        <div
+                        <template
                             v-for="(
                                 [key, field], index
                             ) in filteredSettingsEntries"
                             :key="key"
-                            :data-setting-key="key"
-                            :class="[
-                                'flex w-full',
-                                key === 'java_path' || key === 'java_args'
-                                    ? 'lg:col-span-2'
-                                    : 'h-full',
-                                highlightedSetting === key
-                                    ? 'spotlight-highlight'
-                                    : '',
-                            ]"
                         >
+                            <div
+                                v-if="key === 'java_path'"
+                                class="flex w-full lg:col-span-2"
+                            >
+                                <SettingCard
+                                    :delay="index * 0.05"
+                                    layout="row"
+                                    :description="
+                                        $t(
+                                            'settings.toast_position.description'
+                                        )
+                                    "
+                                    class="w-full"
+                                >
+                                    <template #title>
+                                        <Info
+                                            class="w-5 h-5 text-primary"
+                                        />
+                                        {{
+                                            $t("settings.toast_position.title")
+                                        }}
+                                    </template>
+                                    <div>
+                                        <AnimatedDropdown
+                                            v-model="toastPosition"
+                                            :options="toastPositionOptions"
+                                            direction="auto"
+                                            @change="
+                                                handleToastPositionChange
+                                            "
+                                        />
+                                    </div>
+                                </SettingCard>
+                            </div>
+                            <div
+                                :data-setting-key="key"
+                                :class="[
+                                    'flex w-full',
+                                    key === 'java_path' ||
+                                    key === 'java_args'
+                                        ? 'lg:col-span-2'
+                                        : 'h-full',
+                                    highlightedSetting === key
+                                        ? 'spotlight-highlight'
+                                        : '',
+                                ]"
+                            >
                             <SettingCard
                                 :field="field"
                                 :delay="index * 0.05"
@@ -1225,25 +1262,8 @@ const handleToastPositionChange = (position: string) => {
                                 </div>
                             </SettingCard>
                         </div>
-                    </div>
-                    <SettingCard
-                        :delay="filteredSettingsEntries.length * 0.05"
-                        layout="row"
-                        :description="$t('settings.toast_position.description')"
-                    >
-                        <template #title>
-                            <Info class="w-5 h-5 text-primary" />
-                            {{ $t("settings.toast_position.title") }}
                         </template>
-                        <div>
-                            <AnimatedDropdown
-                                v-model="toastPosition"
-                                :options="toastPositionOptions"
-                                direction="auto"
-                                @change="handleToastPositionChange"
-                            />
-                        </div>
-                    </SettingCard>
+                    </div>
                     <div
                         class="card bg-base-200 shadow-md border border-base-300"
                     >

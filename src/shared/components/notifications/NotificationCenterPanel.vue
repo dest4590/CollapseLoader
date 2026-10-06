@@ -237,14 +237,17 @@ const getBgForType = (type: ToastType) => {
     right: 0;
     width: 320px;
     max-height: 420px;
-    background: var(--color-base-200);
-    backdrop-filter: blur(var(--notifications-blur, 20px));
-    -webkit-backdrop-filter: blur(var(--notifications-blur, 20px));
-    border: 1px solid var(--color-base-300);
+    background: color-mix(in srgb, var(--color-base-300) 58%, transparent);
+    backdrop-filter: blur(var(--notifications-blur, 28px)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--notifications-blur, 28px))
+        saturate(1.8);
+    border: 1px solid
+        color-mix(in srgb, var(--color-base-content) 12%, transparent);
     border-radius: 12px;
     box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.4),
-        0 2px 8px rgba(0, 0, 0, 0.2);
+        0 12px 40px rgba(0, 0, 0, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -256,7 +259,9 @@ const getBgForType = (type: ToastType) => {
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    border-bottom: 1px solid hsl(var(--b3));
+    background: color-mix(in srgb, var(--color-base-content) 4%, transparent);
+    border-bottom: 1px solid
+        color-mix(in srgb, var(--color-base-content) 10%, transparent);
     flex-shrink: 0;
 }
 
@@ -288,7 +293,7 @@ const getBgForType = (type: ToastType) => {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: hsl(var(--bc) / 0.4);
+    color: color-mix(in srgb, var(--color-base-content) 45%, transparent);
     padding: 6px 14px 2px;
 }
 
@@ -318,7 +323,7 @@ const getBgForType = (type: ToastType) => {
 }
 
 .history-entry:hover {
-    background: hsl(var(--b3) / 0.6);
+    background: color-mix(in srgb, var(--color-base-content) 8%, transparent);
 }
 
 .history-entry-icon {
@@ -340,13 +345,13 @@ const getBgForType = (type: ToastType) => {
     font-size: 12px;
     font-weight: 500;
     word-break: break-word;
-    color: hsl(var(--bc));
+    color: var(--color-base-content);
     line-height: 1.3;
 }
 
 .history-entry-time {
     font-size: 11px;
-    color: hsl(var(--bc) / 0.35);
+    color: color-mix(in srgb, var(--color-base-content) 40%, transparent);
     flex-shrink: 0;
     white-space: nowrap;
     text-align: right;
