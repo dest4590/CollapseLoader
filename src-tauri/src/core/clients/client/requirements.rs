@@ -17,7 +17,8 @@ use crate::core::storage::{
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
     CUSTOM_CLIENTS_FOLDER, FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_AARCH64, IS_LINUX, IS_MACOS,
-    IS_WINDOWS, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER,
+    IS_WINDOWS, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_121_FOLDER, LIBRARIES_121_ZIP,
+    LIBRARIES_FABRIC_FOLDER,
     LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
     LIBRARIES_ZIP, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_FOLDER,
     NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
@@ -514,7 +515,14 @@ impl Client {
     fn resolve_libraries_and_natives_requirement(
         &self,
     ) -> (&'static str, &'static str, &'static str, &'static str) {
-        if self.is_legacy_client() {
+        if self.uses_modern_libraries() {
+            (
+                LIBRARIES_121_ZIP,
+                LIBRARIES_121_FOLDER,
+                NATIVES_ZIP,
+                NATIVES_FOLDER,
+            )
+        } else if self.is_legacy_client() {
             if self.uses_sub_libraries() {
                 (
                     self.sub_libraries_zip(),
@@ -583,6 +591,10 @@ impl Client {
         let (libs_zip, libs_folder, natives_zip, natives_folder) =
             self.resolve_libraries_and_natives_requirement();
         Self::verify_or_queue_requirement(&mut files_to_download, libs_folder, libs_zip, None);
+
+        if self.uses_modern_libraries() {
+            return files_to_download;
+        }
 
         let (actual_natives_zip, actual_natives_folder) =
             self.resolve_platform_natives_requirement(natives_zip, natives_folder);
@@ -976,6 +988,11 @@ impl Client {
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
                     .join(this.sub_libraries_folder()),
+                ClientType::Default if this.uses_modern_libraries() => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_121_FOLDER),
                 ClientType::Default if this.is_legacy_client() => DATA
                     .root_dir
                     .lock()

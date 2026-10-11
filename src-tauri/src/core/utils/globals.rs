@@ -95,6 +95,7 @@ pub static LIBRARIES_VA1_8_9_VIA53_FOLDER: &str = "libraries-va1.8.9-via53";
 pub static LIBRARIES_VA1_8_9_VIA57_FOLDER: &str = "libraries-va1.8.9-via57";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.11.0.
 pub static LIBRARIES_VA1_8_9_VIA511_FOLDER: &str = "libraries-va1.8.9-via511";
+pub static LIBRARIES_121_FOLDER: &str = "libraries-1.21";
 /// Folder for standard native libraries.
 pub static NATIVES_FOLDER: &str = "natives";
 /// Folder for Linux-specific native libraries.
@@ -133,6 +134,7 @@ pub static LIBRARIES_VA1_8_9_VIA53_ZIP: &str = "misc/libraries-va1.8.9-via53.zip
 pub static LIBRARIES_VA1_8_9_VIA57_ZIP: &str = "misc/libraries-va1.8.9-via57.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.11.0.
 pub static LIBRARIES_VA1_8_9_VIA511_ZIP: &str = "misc/libraries-va1.8.9-via511.zip";
+pub static LIBRARIES_121_ZIP: &str = "misc/libraries-1.21.zip";
 /// ZIP file containing standard native libraries.
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 /// ZIP file containing Linux-specific native libraries.

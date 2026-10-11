@@ -342,8 +342,7 @@ impl Client {
         semver.major == 1 && semver.minor <= 12
     }
 
-    fn uses_sub_libraries(&self) -> bool {
-        if !self.is_legacy_client() {
+    fn uses_sub_libraries(&self) -> bool {        if !self.is_legacy_client() {
             return false;
         }
         if self.client_type == ClientType::Forge || self.client_type == ClientType::Fabric {
@@ -352,6 +351,16 @@ impl Client {
         match parse_minecraft_version(&self.version) {
             Ok(v) => v.major == 1 && v.minor == 8 && v.patch == 9,
             Err(_) => self.version == "1.8.9",
+        }
+    }
+
+    pub(crate) fn uses_modern_libraries(&self) -> bool {
+        if self.client_type != ClientType::Default || self.is_legacy_client() {
+            return false;
+        }
+        match parse_minecraft_version(&self.version) {
+            Ok(v) => v.major > 1 || v.minor >= 21,
+            Err(_) => self.version.contains("1.21"),
         }
     }
 

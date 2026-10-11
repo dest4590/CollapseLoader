@@ -25,7 +25,8 @@ use crate::core::{
     utils::{
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
-            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
+            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LIBRARIES_121_FOLDER,
+            LINUX_SUFFIX, MACOS_SUFFIX,
             NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
             NATIVES_MACOS_FOLDER, NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
             NATIVES_VA1_8_9_WINDOWS_FOLDER, PATH_SEPARATOR,
@@ -139,6 +140,10 @@ impl Client {
 
         let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
+
+        if self.uses_modern_libraries() {
+            return root.join(LIBRARIES_121_FOLDER);
+        }
 
         if IS_LINUX {
             if self.uses_sub_libraries() {
