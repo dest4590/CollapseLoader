@@ -11,19 +11,19 @@ name = "collapseloader_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.6.3", features = [] }
+tauri-build = { version = "2.7.2", features = [] }
 
 [dependencies]
-tauri = { version = "2.11.5", features = ["devtools", "tray-icon"] }
-tauri-plugin-opener = "2.5.5"
-tauri-plugin-notification = "2.4.0"
-tauri-plugin-deep-link = "2.4.10"
-tauri-plugin-single-instance = { version = "2.4.4", features = ["deep-link"] }
+tauri = { version = "2.12.3", features = ["devtools", "tray-icon"] }
+tauri-plugin-opener = "2.7.1"
+tauri-plugin-notification = "2.6.0"
+tauri-plugin-deep-link = "2.6.1"
+tauri-plugin-single-instance = { version = "2.5.3", features = ["deep-link"] }
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
+serde_json = "1.0.154"
 colored = "3.1.1"
-rand = "0.10.2"
-reqwest = { version = "0.13.4", features = [
+rand = "0.10.3"
+reqwest = { version = "0.13.5", features = [
     "blocking",
     "json",
     "stream",
@@ -33,20 +33,20 @@ reqwest = { version = "0.13.4", features = [
 ] }
 semver = "1.0.28"
 zip = "8.6.0"
-tokio = { version = "1.53.1", features = ["macros", "process"] }
+tokio = { version = "1.53.2", features = ["macros", "process"] }
 opener = "0.8.5"
-uuid = { version = "1.26.0", features = ["v4"] }
+uuid = { version = "1.28.0", features = ["v4"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 paste = "1.0.15"
-open = "5.4.3"
+open = "5.4.4"
 md5 = "0.8.1"
 discord-rich-presence = "1.1.0"
 futures-util = "0.3.34"
 base64 = "0.23.1"
-tauri-plugin-dialog = "2.7.3"
+tauri-plugin-dialog = "2.8.2"
 dotenvy = "0.15.7"
-tauri-plugin-fs = "2.5.2"
-thiserror = "2.0.20"
+tauri-plugin-fs = "2.7.0"
+thiserror = "2.0.21"
 native-dialog = "0.9.7"
 sysinfo = "0.39.6"
 socket2 = "0.6.5"
@@ -58,7 +58,7 @@ flate2 = "1.1.10"
 url = "2.5.8"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6.4"
+objc2 = "0.6.5"
 objc2-app-kit = { version = "0.3.2", features = [
     "NSApplication",
     "NSDockTile",
@@ -69,7 +69,7 @@ objc2-foundation = { version = "0.3.2", features = ["NSString"] }
 zbus = { version = "5.19.0", default-features = false, features = ["tokio"] }
 
 [target.'cfg(windows)'.dependencies]
-junction = "2.0.0"
+junction = "2.1.0"
 winreg = { version = "0.56.0" }
 windows = { version = "0.62.2", features = [
     "Win32_UI_HiDpi",
