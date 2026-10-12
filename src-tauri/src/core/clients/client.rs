@@ -342,7 +342,8 @@ impl Client {
         semver.major == 1 && semver.minor <= 12
     }
 
-    fn uses_sub_libraries(&self) -> bool {        if !self.is_legacy_client() {
+    fn uses_sub_libraries(&self) -> bool {
+        if !self.is_legacy_client() {
             return false;
         }
         if self.client_type == ClientType::Forge || self.client_type == ClientType::Fabric {
@@ -421,10 +422,7 @@ impl Client {
         if let Some(v) = self.meta.java_version.as_deref() {
             return v == "8";
         }
-        if self.client_type == ClientType::Forge || self.is_legacy_client() {
-            return true;
-        }
-        false
+        self.client_type == ClientType::Forge || self.is_legacy_client()
     }
 
     /// Whether the client should run on the bundled JDK 25.

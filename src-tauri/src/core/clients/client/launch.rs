@@ -26,16 +26,18 @@ use crate::core::{
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
             IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LIBRARIES_121_FOLDER,
-            LINUX_SUFFIX, MACOS_SUFFIX,
-            NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
-            NATIVES_MACOS_FOLDER, NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
-            NATIVES_VA1_8_9_WINDOWS_FOLDER, PATH_SEPARATOR,
+            LINUX_SUFFIX, MACOS_SUFFIX, NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER,
+            NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_FOLDER, NATIVES_VA1_8_9_LINUX_FOLDER,
+            NATIVES_VA1_8_9_MACOS_FOLDER, NATIVES_VA1_8_9_WINDOWS_FOLDER, PATH_SEPARATOR,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
     },
 };
-use crate::{log_debug, log_error, log_info, log_warn};
+use crate::{log_debug, log_error, log_info};
+
+#[cfg(target_os = "linux")]
+use crate::log_warn;
 
 struct LaunchIdentity {
     username: String,

@@ -409,7 +409,6 @@ pub async fn login_with_access_token(access_token: &str) -> Result<MinecraftAcco
         });
     }
 
-    
     let oauth = OAuthTokenResponse {
         access_token: access_token.to_string(),
         refresh_token: String::new(),
