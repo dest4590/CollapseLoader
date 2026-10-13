@@ -225,6 +225,22 @@ impl Client {
         }
     }
 
+    fn has_bytebuddy_experimental_arg(&self) -> bool {
+        if let Ok(s) = SETTINGS.lock() {
+            if s.java_args.value.contains("net.bytebuddy.experimental") {
+                return true;
+            }
+        }
+
+        if let Some(args) = self.java_args.as_deref() {
+            if args.contains("net.bytebuddy.experimental") {
+                return true;
+            }
+        }
+
+        false
+    }
+
     fn apply_java_args(&self, cmd: &mut Command) {
         if let Ok(s) = SETTINGS.lock() {
             if !s.java_args.value.is_empty() {
@@ -438,6 +454,9 @@ impl Client {
         }
 
         if !self.meta.is_custom && self.client_type != ClientType::Forge && !is_legacy_vanilla {
+            if !self.has_bytebuddy_experimental_arg() {
+                cmd.arg("-Dnet.bytebuddy.experimental=true");
+            }
             cmd.arg(format!(
                 "-javaagent:{}={}",
                 agent_overlay_path.join(AGENT_FILE).display(),
