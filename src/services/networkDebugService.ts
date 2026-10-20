@@ -21,6 +21,23 @@ let inited = false;
 let unlistenReq: (() => void) | null = null;
 let unlistenRes: (() => void) | null = null;
 
+const MAX_RESPONSE_TEXT_LEN = 4000;
+
+function truncateResponseText(r: NetworkRequest): NetworkRequest {
+    if (
+        typeof r.response_text === "string" &&
+        r.response_text.length > MAX_RESPONSE_TEXT_LEN
+    ) {
+        return {
+            ...r,
+            response_text:
+                r.response_text.slice(0, MAX_RESPONSE_TEXT_LEN) +
+                `… [truncated ${r.response_text.length - MAX_RESPONSE_TEXT_LEN} chars]`,
+        };
+    }
+    return r;
+}
+
 export function getRequestsRef() {
     return requests;
 }
@@ -32,7 +49,7 @@ export async function initNetworkDebug() {
     try {
         const hist = await invoke<NetworkRequest[]>("get_network_history");
         for (const r of hist) {
-            requests.value[r.id] = r;
+            requests.value[r.id] = truncateResponseText(r);
         }
     } catch (e) {
         console.warn("Failed to load network history:", e);
@@ -43,7 +60,7 @@ export async function initNetworkDebug() {
     });
 
     unlistenRes = await listen<NetworkRequest>("network-response", (e) => {
-        requests.value[e.payload.id] = e.payload;
+        requests.value[e.payload.id] = truncateResponseText(e.payload);
     });
 
     await listen("network-clear-local", () => {

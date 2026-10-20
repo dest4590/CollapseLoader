@@ -16,7 +16,7 @@
             <div
                 class="flex flex-col gap-3 w-full shrink-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] z-10"
                 :class="
-                    themeMode === 'schedule'
+                    themeMode === 'schedule' || themeMode === 'system'
                         ? 'sm:w-[calc(50%-0.5rem)]'
                         : 'sm:w-full'
                 "

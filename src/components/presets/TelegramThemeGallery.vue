@@ -111,12 +111,10 @@
                             v-if="preset.theme?.backgroundImage"
                             class="w-full h-24 rounded-xl bg-base-300/50 border border-white/5 overflow-hidden relative group-hover:border-primary/20 transition-colors mb-2.5"
                         >
-                            <div
+                            <PresetBackground
+                                :src="preset.theme.backgroundImage || ''"
                                 class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                :style="{
-                                    backgroundImage: `url(${preset.theme.backgroundImage})`,
-                                }"
-                            ></div>
+                            />
                         </div>
                         <div
                             v-else
@@ -177,6 +175,7 @@ import {
 } from "@lucide/vue";
 import TelegramIcon from "@shared/components/ui/icons/TelegramIcon.vue";
 import PresetColorPreview from "./PresetColorPreview.vue";
+import PresetBackground from "./PresetBackground.vue";
 import { telegramThemeService } from "../../services/telegramThemeService";
 import { presetService } from "@features/presets/presetService";
 import { useToast } from "@shared/composables/useToast";
@@ -229,13 +228,7 @@ watch(filteredThemes, () => {
 async function load(force = false) {
     error.value = null;
     try {
-        const data = await telegramThemeService.fetchThemes(force);
-        if (data.length === 0 && !force) {
-            const fresh = await telegramThemeService.fetchThemes(true);
-            themes.value = fresh;
-        } else {
-            themes.value = data;
-        }
+        themes.value = await telegramThemeService.fetchThemes(force);
     } catch (e: any) {
         error.value = t("marketplace.tg_load_failed");
         console.error(e);

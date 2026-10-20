@@ -35,6 +35,7 @@ import {
     RefreshCcw,
     PanelRightClose,
     Megaphone,
+    Shirt,
 } from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import type { ToastPosition } from "@shared/types/toast";
@@ -52,6 +53,7 @@ import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue"
 import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
 import SettingCard from "../components/settings/SettingCard.vue";
 import AccountCard from "../components/settings/AccountCard.vue";
+import SkinSettings from "../components/settings/SkinSettings.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
@@ -77,7 +79,7 @@ const accounts = ref<Account[]>([]);
 const remoteAccounts = ref<UserExternalAccount[]>([]);
 const remoteAccountsLoading = ref(false);
 const isAccountSyncing = ref(false);
-const activeTab = ref<"general" | "sync" | "accounts">("general");
+const activeTab = ref<"general" | "accounts" | "skin">("general");
 const loading = ref(true);
 const isRefreshing = ref(false);
 const { addToast, setToastPosition, getToastPosition } = useToast();
@@ -958,6 +960,18 @@ const handleToastPositionChange = (position: string) => {
                     <User class="w-4 h-4 mr-2" />
                     {{ t("settings.accounts") }}
                 </a>
+                <a
+                    @click="activeTab = 'skin'"
+                    class="tab transition-all duration-300"
+                    :class="{
+                        'tab-active transform scale-105 shadow-md bg-base-300':
+                            activeTab === 'skin',
+                        'hover:bg-base-300': activeTab !== 'skin',
+                    }"
+                >
+                    <Shirt class="w-4 h-4 mr-2" />
+                    {{ t("settings.skin") }}
+                </a>
             </div>
             <transition name="tab-switch" mode="out-in">
                 <div
@@ -1717,6 +1731,17 @@ const handleToastPositionChange = (position: string) => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div
+                    v-else-if="activeTab === 'skin'"
+                    key="skin"
+                    class="space-y-3"
+                >
+                    <SkinSettings
+                        :accounts="accounts"
+                        @open-accounts="activeTab = 'accounts'"
+                    />
                 </div>
             </transition>
         </div>

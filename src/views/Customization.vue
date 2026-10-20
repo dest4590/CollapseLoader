@@ -1,5 +1,5 @@
 <template>
-    <div class="container mx-auto mt-4">
+    <div class="max-w-6xl mx-auto mt-4">
         <div key="theme" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <ThemeModeSelector
                 :theme-mode="themeMode"

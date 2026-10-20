@@ -8,5 +8,6 @@ pub mod network;
 pub mod presets;
 pub mod report;
 pub mod settings;
+pub mod skin;
 pub mod updater;
 pub mod utils;

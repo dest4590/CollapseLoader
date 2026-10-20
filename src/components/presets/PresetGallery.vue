@@ -81,12 +81,12 @@
                                 v-if="getThemeValues(p).backgroundImage"
                                 class="w-full h-24 rounded-xl bg-base-300/50 border border-white/5 overflow-hidden relative group-hover:border-primary/20 transition-colors mb-2.5"
                             >
-                                <div
+                                <PresetBackground
+                                    :src="
+                                        getThemeValues(p).backgroundImage || ''
+                                    "
                                     class="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                    :style="{
-                                        backgroundImage: `url(${getThemeValues(p).backgroundImage})`,
-                                    }"
-                                ></div>
+                                />
                             </div>
 
                             <div
@@ -288,6 +288,7 @@ import {
 } from "@lucide/vue";
 import { buildPresetCreatePayload } from "@features/presets/utils/presetPayload";
 import PresetColorPreview from "./PresetColorPreview.vue";
+import PresetBackground from "./PresetBackground.vue";
 
 type MarketplacePresetView = MarketplacePreset & {
     liking?: boolean;
@@ -312,6 +313,7 @@ export default defineComponent({
         Eye,
         EyeOff,
         PresetColorPreview,
+        PresetBackground,
         Image,
         PaintBucket,
     },

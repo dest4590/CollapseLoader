@@ -1,10 +1,10 @@
 <template>
     <div class="space-y-5">
-        <div
+        <PresetBackground
             v-if="theme.backgroundImage"
+            :src="theme.backgroundImage || ''"
             class="w-full h-48 rounded-xl bg-cover bg-center border border-white/5 overflow-hidden"
-            :style="{ backgroundImage: `url(${theme.backgroundImage})` }"
-        ></div>
+        />
 
         <div>
             <p
@@ -91,6 +91,7 @@ import {
     Code,
 } from "@lucide/vue";
 import type { MarketplacePreset } from "@features/presets/types";
+import PresetBackground from "@components/presets/PresetBackground.vue";
 
 const props = defineProps<{ preset: MarketplacePreset }>();
 defineEmits(["apply", "save", "close"]);

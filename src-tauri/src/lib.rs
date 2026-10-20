@@ -228,6 +228,14 @@ pub fn run() {
             commands::settings::set_custom_clients_display,
             commands::settings::set_optional_telemetry,
             commands::settings::update_account,
+            commands::skin::get_minecraft_skin_profile,
+            commands::skin::upload_minecraft_skin,
+            commands::skin::reset_minecraft_skin,
+            commands::skin::set_minecraft_cape,
+            commands::skin::list_saved_minecraft_skins,
+            commands::skin::delete_saved_minecraft_skin,
+            commands::skin::apply_saved_minecraft_skin,
+            commands::skin::apply_default_minecraft_skin,
             // updater commands
             commands::updater::check_for_updates,
             commands::updater::download_and_install_update,
@@ -254,6 +262,7 @@ pub fn run() {
             commands::utils::record_launch,
             // network commands
             commands::network::api_request,
+            commands::network::fetch_cached_image,
             commands::network::get_network_history,
             commands::network::clear_network_history,
             commands::report::generate_network_report,

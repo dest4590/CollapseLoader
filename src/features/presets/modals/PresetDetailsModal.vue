@@ -146,12 +146,10 @@
                     <ImageIcon class="w-4 h-4" />
                     {{ t("customization.background_image") }}
                 </h3>
-                <div
+                <PresetBackground
+                    :src="themeSource.backgroundImage || ''"
                     class="w-full h-48 rounded-xl bg-cover bg-center border border-white/5"
-                    :style="{
-                        backgroundImage: `url(${themeSource.backgroundImage})`,
-                    }"
-                ></div>
+                />
                 <div class="flex gap-4 text-xs opacity-60">
                     <span v-if="themeSource.backgroundBlur !== undefined"
                         >{{ t("customization.background_blur") }}:
