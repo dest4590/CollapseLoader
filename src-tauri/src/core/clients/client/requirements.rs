@@ -306,6 +306,31 @@ impl Client {
                 .map_err(|e| format!("Failed to create mods folder: {e}"))?;
         }
 
+        if self.disable_fabric_api {
+            let mut removed = false;
+            if let Ok(entries) = std::fs::read_dir(&mods_folder) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    if name.contains("fabric-api") {
+                        let path = entry.path();
+                        match std::fs::remove_file(&path) {
+                            Ok(()) => {
+                                removed = true;
+                                log_info!("Removed Fabric API from mods folder: {}", path.display());
+                            }
+                            Err(e) => {
+                                log_warn!("Failed to remove {}: {}", path.display(), e);
+                            }
+                        }
+                    }
+                }
+            }
+            if !removed {
+                log_debug!("Fabric API disabled for client '{}'", self.name);
+            }
+            return Ok(());
+        }
+
         if let Ok(entries) = std::fs::read_dir(&mods_folder) {
             for entry in entries.flatten() {
                 if let Some(name) = entry.file_name().to_str() {

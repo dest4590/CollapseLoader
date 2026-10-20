@@ -292,6 +292,8 @@ pub struct Client {
     pub viaversion: Option<String>,
     #[serde(default)]
     pub java_version: Option<String>,
+    #[serde(default, alias = "no_fabric_api")]
+    pub disable_fabric_api: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]

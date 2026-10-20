@@ -98,6 +98,7 @@ impl CustomClient {
             natives_path: self.natives_path.clone(),
             viaversion: self.viaversion.clone(),
             java_version: self.java_version.clone(),
+            disable_fabric_api: false,
         }
     }
 
