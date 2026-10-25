@@ -18,29 +18,33 @@ use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
 #[allow(unused)]
 use crate::core::{
     clients::{
-        internal::{
-            agent_overlay::AgentArguments,
-            titlebar_branding::TitlebarBrandingManager,
-        },
-        log_checker::LogChecker,
-        manager::ClientManager,
+        internal::agent_overlay::AgentArguments, log_checker::LogChecker, manager::ClientManager,
     },
     network::{analytics::Analytics, server_ads},
     storage::{accounts::ACCOUNT_MANAGER, data::DATA, settings::SETTINGS},
     utils::{
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
-            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LINUX_SUFFIX, MACOS_SUFFIX,
-            NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER,
-            NATIVES_MACOS_FOLDER, PATH_SEPARATOR, SKIP_TITLEBAR_BRANDING,
-            NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
-            NATIVES_VA1_8_9_WINDOWS_FOLDER, TITLEBAR_FILE,
+            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LIBRARIES_121_FOLDER,
+            LINUX_SUFFIX, MACOS_SUFFIX, NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER,
+            NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_FOLDER, NATIVES_VA1_8_9_LINUX_FOLDER,
+            NATIVES_VA1_8_9_MACOS_FOLDER, NATIVES_VA1_8_9_WINDOWS_FOLDER, PATH_SEPARATOR,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
     },
 };
-use crate::{log_debug, log_error, log_info, log_warn};
+use crate::{log_debug, log_error, log_info};
+
+#[cfg(target_os = "linux")]
+use crate::log_warn;
+
+struct LaunchIdentity {
+    username: String,
+    uuid: String,
+    access_token: String,
+    user_type: &'static str,
+}
 
 impl Client {
     #[cfg(target_os = "linux")]
@@ -139,6 +143,10 @@ impl Client {
         let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
         let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
 
+        if self.uses_modern_libraries() {
+            return root.join(LIBRARIES_121_FOLDER);
+        }
+
         if IS_LINUX {
             if self.uses_sub_libraries() {
                 root.join(NATIVES_VA1_8_9_LINUX_FOLDER)
@@ -172,21 +180,65 @@ impl Client {
         )
     }
 
-    fn resolve_username(&self) -> String {
-        ACCOUNT_MANAGER
+    async fn resolve_launch_identity(&self) -> Result<LaunchIdentity, String> {
+        let active = ACCOUNT_MANAGER
             .lock()
             .ok()
-            .and_then(|m| m.get_active_account().map(|a| a.username.clone()))
-            .unwrap_or_else(|| {
-                let rnd = rand::random::<u32>() % 100_000;
-                format!("Collapse{rnd:05}")
-            })
+            .and_then(|manager| manager.get_active_account().cloned());
+
+        let Some(account) = active else {
+            let rnd = rand::random::<u32>() % 100_000;
+            return Ok(LaunchIdentity {
+                username: format!("Collapse{rnd:05}"),
+                uuid: "N/A".to_string(),
+                access_token: "0".to_string(),
+                user_type: "legacy",
+            });
+        };
+
+        let Some(microsoft_data) = account.minecraft_data()? else {
+            return Ok(LaunchIdentity {
+                username: account.username,
+                uuid: "N/A".to_string(),
+                access_token: "0".to_string(),
+                user_type: "legacy",
+            });
+        };
+
+        let refreshed = crate::core::auth::microsoft::ensure_valid(&microsoft_data).await?;
+        let mut manager = ACCOUNT_MANAGER
+            .lock()
+            .map_err(|_| "Failed to lock the account store.".to_string())?;
+        manager.update_microsoft_account(&account.id, refreshed.clone())?;
+
+        Ok(LaunchIdentity {
+            username: refreshed.username,
+            uuid: refreshed.uuid,
+            access_token: refreshed.access_token,
+            user_type: "msa",
+        })
     }
 
     fn append_java_args(cmd: &mut Command, args: &str) {
         for arg in args.split_whitespace() {
             cmd.arg(arg);
         }
+    }
+
+    fn has_bytebuddy_experimental_arg(&self) -> bool {
+        if let Ok(s) = SETTINGS.lock() {
+            if s.java_args.value.contains("net.bytebuddy.experimental") {
+                return true;
+            }
+        }
+
+        if let Some(args) = self.java_args.as_deref() {
+            if args.contains("net.bytebuddy.experimental") {
+                return true;
+            }
+        }
+
+        false
     }
 
     fn apply_java_args(&self, cmd: &mut Command) {
@@ -204,14 +256,14 @@ impl Client {
     fn append_game_launch_args(
         &self,
         cmd: &mut Command,
-        username: &str,
+        identity: &LaunchIdentity,
         client_folder: &Path,
         assets_dir: &Path,
     ) {
         let effective_asset_index = self.effective_asset_index();
 
         cmd.arg("--username")
-            .arg(username)
+            .arg(&identity.username)
             .arg("--gameDir")
             .arg(client_folder)
             .arg("--assetsDir")
@@ -219,18 +271,18 @@ impl Client {
             .arg("--assetIndex")
             .arg(effective_asset_index)
             .arg("--uuid")
-            .arg("N/A")
+            .arg(&identity.uuid)
             .arg("--accessToken")
-            .arg("0")
+            .arg(&identity.access_token)
             .arg("--userType")
-            .arg("legacy")
+            .arg(identity.user_type)
             .arg("--version")
             .arg(&self.version)
             .arg("--client")
             .arg(&self.filename);
     }
 
-    fn effective_asset_index(&self) -> String {
+    pub(super) fn effective_asset_index(&self) -> String {
         if !self.meta.asset_index.is_empty() {
             return self.meta.asset_index.clone();
         }
@@ -246,7 +298,7 @@ impl Client {
         }
     }
 
-    fn redact_sensitive_command(command: &str) -> String {
+    fn redact_sensitive_command(command: &str, access_token: &str) -> String {
         let mut secure_command = command.to_owned();
 
         if let Some(start) = secure_command.find("-javaagent:") {
@@ -257,6 +309,10 @@ impl Client {
                 let actual_end = start + end;
                 secure_command.replace_range(start..actual_end, "-javaagent:[HIDDEN]");
             }
+        }
+
+        if access_token != "0" && !access_token.is_empty() {
+            secure_command = secure_command.replace(access_token, "[HIDDEN]");
         }
 
         secure_command
@@ -291,8 +347,8 @@ impl Client {
         let assets_dir = self.resolve_assets_dir();
         let natives_path = self.resolve_natives_path();
 
-        let is_legacy_vanilla_for_natives = self.client_type == ClientType::Default
-            && self.is_legacy_client();
+        let is_legacy_vanilla_for_natives =
+            self.client_type == ClientType::Default && self.is_legacy_client();
         if is_legacy_vanilla_for_natives {
             let natives_link = client_folder.join("natives");
             if !natives_link.exists() {
@@ -311,7 +367,7 @@ impl Client {
 
         let (analytics, irc, lang, ram_mb) = self.get_launch_settings();
 
-        let username = self.resolve_username();
+        let identity = self.resolve_launch_identity().await?;
 
         let agent_args = AgentArguments::new(
             options.user_token,
@@ -332,32 +388,6 @@ impl Client {
             .join(AGENT_OVERLAY_FOLDER);
 
         let is_legacy_vanilla = self.client_type == ClientType::Default && !self.meta.is_new;
-
-        let should_apply_titlebar = !*SKIP_TITLEBAR_BRANDING
-            && !self.meta.is_custom
-            && self.client_type != ClientType::Forge
-            && !is_legacy_vanilla
-            && !TitlebarBrandingManager::has_branding_in_jar(&client_folder.join(&self.filename));
-
-        if should_apply_titlebar {
-            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
-            if titlebar_path.exists() {
-                log_info!(
-                    "Titlebar branding will be applied for client: {}",
-                    self.name
-                );
-            } else {
-                log_debug!(
-                    "Titlebar branding file not found, skipping for: {}",
-                    self.name
-                );
-            }
-        } else if !*SKIP_TITLEBAR_BRANDING && !self.meta.is_custom {
-            log_info!(
-                "Skipping titlebar branding for {} (already branded or excluded)",
-                self.name
-            );
-        }
 
         let mut cmd = Command::new(java_bin);
 
@@ -398,10 +428,6 @@ impl Client {
             }
         }
 
-        if !should_apply_titlebar {
-            cmd.env("COLLAPSE_SKIP_TITLEBAR", "1");
-        }
-
         #[cfg(target_os = "linux")]
         {
             if is_legacy_vanilla {
@@ -427,40 +453,10 @@ impl Client {
             }
         }
 
-        #[cfg(target_os = "linux")]
-        if should_apply_titlebar && agent_overlay_path.join(TITLEBAR_FILE).exists() {
-            let jemalloc_path = DATA
-                .root_dir
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .join("natives-linux")
-                .join("libjemalloc.so");
-            let titlebar = agent_overlay_path.join(TITLEBAR_FILE);
-            let preload = if jemalloc_path.exists() {
-                format!("{}:{}", jemalloc_path.display(), titlebar.display())
-            } else {
-                titlebar.display().to_string()
-            };
-            cmd.env("LD_PRELOAD", &preload);
-        }
-
-        #[cfg(target_os = "windows")]
-        if should_apply_titlebar {
-            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
-            if titlebar_path.exists() {
-                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
-            }
-        }
-
-        #[cfg(target_os = "macos")]
-        if should_apply_titlebar {
-            let titlebar_path = agent_overlay_path.join(TITLEBAR_FILE);
-            if titlebar_path.exists() {
-                cmd.arg(format!("-agentpath:{}", titlebar_path.display()));
-            }
-        }
-
         if !self.meta.is_custom && self.client_type != ClientType::Forge && !is_legacy_vanilla {
+            if !self.has_bytebuddy_experimental_arg() {
+                cmd.arg("-Dnet.bytebuddy.experimental=true");
+            }
             cmd.arg(format!(
                 "-javaagent:{}={}",
                 agent_overlay_path.join(AGENT_FILE).display(),
@@ -486,10 +482,7 @@ impl Client {
 
         cmd.arg(format!("-Xmx{ram_mb}M"));
         if self.meta.is_custom {
-            cmd.arg(format!(
-                "-Djava.library.path={}",
-                natives_path.display(),
-            ));
+            cmd.arg(format!("-Djava.library.path={}", natives_path.display(),));
         } else {
             cmd.arg(format!(
                 "-Djava.library.path={}{}{}",
@@ -514,7 +507,7 @@ impl Client {
                 .arg("net.minecraftforge.fml.common.launcher.FMLTweaker");
         }
 
-        self.append_game_launch_args(&mut cmd, &username, &client_folder, &assets_dir);
+        self.append_game_launch_args(&mut cmd, &identity, &client_folder, &assets_dir);
 
         cmd.stdout(Stdio::piped()).stderr(Stdio::piped());
 
@@ -542,7 +535,8 @@ impl Client {
             .spawn()
             .map_err(|e| format!("Failed to spawn process: {e}"))?;
 
-        let secure_command = Self::redact_sensitive_command(&format!("{cmd:#?}"));
+        let secure_command =
+            Self::redact_sensitive_command(&format!("{cmd:#?}"), &identity.access_token);
 
         add_log_line(client_id, secure_command);
 
@@ -674,10 +668,11 @@ impl Client {
             ) -> c_int;
         }
 
-        let mut current = Rlimit { rlim_cur: 0, rlim_max: 0 };
-        let ret = unsafe {
-            prlimit(0, RLIMIT_NOFILE, std::ptr::null(), &mut current)
+        let mut current = Rlimit {
+            rlim_cur: 0,
+            rlim_max: 0,
         };
+        let ret = unsafe { prlimit(0, RLIMIT_NOFILE, std::ptr::null(), &mut current) };
         if ret != 0 {
             return;
         }
@@ -721,10 +716,11 @@ pub fn lower_nofile_in_parent() {
         ) -> c_int;
     }
 
-    let mut current = Rlimit { rlim_cur: 0, rlim_max: 0 };
-    let ret = unsafe {
-        prlimit(0, RLIMIT_NOFILE, std::ptr::null(), &mut current)
+    let mut current = Rlimit {
+        rlim_cur: 0,
+        rlim_max: 0,
     };
+    let ret = unsafe { prlimit(0, RLIMIT_NOFILE, std::ptr::null(), &mut current) };
     if ret != 0 {
         log_warn!("Failed to read RLIMIT_NOFILE");
         return;
@@ -746,9 +742,7 @@ pub fn lower_nofile_in_parent() {
             rlim_cur: target,
             rlim_max: target,
         };
-        let ret = unsafe {
-            prlimit(0, RLIMIT_NOFILE, &new_limit, std::ptr::null_mut())
-        };
+        let ret = unsafe { prlimit(0, RLIMIT_NOFILE, &new_limit, std::ptr::null_mut()) };
         if ret == 0 {
             log_info!(
                 "Lowered RLIMIT_NOFILE from {}/{} to {}/{} for legacy client",

@@ -35,6 +35,7 @@ export interface CustomClient {
     java_args?: string | null;
     libraries_path?: string | null;
     natives_path?: string | null;
+    java_version?: string | null;
     client_type: string;
 }
 

@@ -417,7 +417,12 @@ onUnmounted(() => {
 
     <div
         ref="sidebarRef"
-        :class="[sidebarClasses, animationClass, 'main-sidebar', { 'no-stagger': autoHideSidebar }]"
+        :class="[
+            sidebarClasses,
+            animationClass,
+            'main-sidebar',
+            { 'no-stagger': autoHideSidebar },
+        ]"
         @mousedown="startDrag"
         @dblclick="toggleCenter"
         @mouseenter="onSidebarMouseEnter"
@@ -706,7 +711,7 @@ onUnmounted(() => {
 }
 
 .sidebar-entered .sidebar-footer-container > *:nth-child(1) {
-    transition-delay: 0.20s;
+    transition-delay: 0.2s;
 }
 
 .sidebar-entered .sidebar-footer-container > *:nth-child(2) {

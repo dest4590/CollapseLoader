@@ -212,15 +212,13 @@ export function useAppInit() {
 
                 const storedMode = themeService.getStoredThemeMode();
                 if (storedMode === "system") {
-                    themeService.startSystemThemeListener(
-                        async (newTheme) => {
-                            currentTheme.value = newTheme;
-                            document.documentElement.setAttribute(
-                                "data-theme",
-                                newTheme
-                            );
-                        }
-                    );
+                    themeService.startSystemThemeListener(async (newTheme) => {
+                        currentTheme.value = newTheme;
+                        document.documentElement.setAttribute(
+                            "data-theme",
+                            newTheme
+                        );
+                    });
                 }
             });
 

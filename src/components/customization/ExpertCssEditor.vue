@@ -10,10 +10,7 @@
                     {{ t("theme.expert_css_title") }}
                 </h2>
                 <button class="btn btn-sm btn-ghost">
-                    <ChevronDown
-                        v-if="!showExpertOptions"
-                        class="w-5 h-5"
-                    />
+                    <ChevronDown v-if="!showExpertOptions" class="w-5 h-5" />
                     <ChevronUp v-else class="w-5 h-5" />
                     {{
                         showExpertOptions
@@ -83,7 +80,10 @@
                                     t('theme.tooltip_launch_download_btn')
                                 "
                                 @click="
-                                    $emit('add-example', '.launch-btn, .download-btn')
+                                    $emit(
+                                        'add-example',
+                                        '.launch-btn, .download-btn'
+                                    )
                                 "
                                 >download-btn | launch-btn</span
                             >
@@ -97,12 +97,12 @@
                             }}</label>
                             <VueMonacoEditor
                                 :value="customCss"
-                                @update:value="$emit('update:customCss', $event)"
+                                @update:value="
+                                    $emit('update:customCss', $event)
+                                "
                                 language="css"
                                 :theme="
-                                    selectedTheme === 'dark'
-                                        ? 'vs-dark'
-                                        : 'vs'
+                                    selectedTheme === 'dark' ? 'vs-dark' : 'vs'
                                 "
                                 :options="{
                                     readOnly: !enableCustomCss,
@@ -116,8 +116,7 @@
                                 style="
                                     height: 300px;
                                     border-radius: 0.5rem;
-                                    border: 1px solid
-                                        rgba(255, 255, 255, 0.1);
+                                    border: 1px solid rgba(255, 255, 255, 0.1);
                                 "
                             />
                         </div>
@@ -158,7 +157,12 @@
                                         class="text-xs bg-base-300 p-2 rounded overflow-x-auto mt-2"
                                     ><code>{{ example.code }}</code></pre>
                                     <button
-                                        @click="$emit('insert-example', example.code)"
+                                        @click="
+                                            $emit(
+                                                'insert-example',
+                                                example.code
+                                            )
+                                        "
                                         class="btn btn-xs btn-primary mt-2"
                                         :disabled="!enableCustomCss"
                                     >

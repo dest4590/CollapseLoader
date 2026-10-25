@@ -17,17 +17,18 @@ use crate::core::storage::{
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
     CUSTOM_CLIENTS_FOLDER, FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_AARCH64, IS_LINUX, IS_MACOS,
-    IS_WINDOWS, JDK21_FOLDER, JDK8_FOLDER, LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP,
-    LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP,
-    MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER, NATIVES_LEGACY_FOLDER,
-    NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP, NATIVES_LEGACY_ZIP,
-    NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_ARM64_ZIP,
-    NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
-    NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_MACOS_ZIP, NATIVES_VA1_8_9_WINDOWS_ZIP,
-    NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
-    NATIVES_VA1_8_9_WINDOWS_FOLDER,
+    IS_WINDOWS, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_121_FOLDER, LIBRARIES_121_ZIP,
+    LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER,
+    LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER,
+    NATIVES_LEGACY_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP,
+    NATIVES_LEGACY_ZIP, NATIVES_LINUX_FOLDER, NATIVES_LINUX_ZIP, NATIVES_MACOS_ARM64_FOLDER,
+    NATIVES_MACOS_ARM64_ZIP, NATIVES_MACOS_FOLDER, NATIVES_MACOS_ZIP, NATIVES_VA1_8_9_LINUX_FOLDER,
+    NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_MACOS_FOLDER, NATIVES_VA1_8_9_MACOS_ZIP,
+    NATIVES_VA1_8_9_WINDOWS_FOLDER, NATIVES_VA1_8_9_WINDOWS_ZIP, NATIVES_ZIP, PATH_SEPARATOR,
 };
-use crate::core::utils::{hashing::calculate_md5_hash, helpers::emit_to_main_window};
+use crate::core::utils::{
+    hashing::calculate_hash, hashing::calculate_md5_hash, helpers::emit_to_main_window,
+};
 use crate::{log_debug, log_error, log_info, log_warn};
 
 static REQWEST_CLIENT: LazyLock<reqwest::Client> =
@@ -305,6 +306,31 @@ impl Client {
                 .map_err(|e| format!("Failed to create mods folder: {e}"))?;
         }
 
+        if self.disable_fabric_api {
+            let mut removed = false;
+            if let Ok(entries) = std::fs::read_dir(&mods_folder) {
+                for entry in entries.flatten() {
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    if name.contains("fabric-api") {
+                        let path = entry.path();
+                        match std::fs::remove_file(&path) {
+                            Ok(()) => {
+                                removed = true;
+                                log_info!("Removed Fabric API from mods folder: {}", path.display());
+                            }
+                            Err(e) => {
+                                log_warn!("Failed to remove {}: {}", path.display(), e);
+                            }
+                        }
+                    }
+                }
+            }
+            if !removed {
+                log_debug!("Fabric API disabled for client '{}'", self.name);
+            }
+            return Ok(());
+        }
+
         if let Ok(entries) = std::fs::read_dir(&mods_folder) {
             for entry in entries.flatten() {
                 if let Some(name) = entry.file_name().to_str() {
@@ -456,18 +482,29 @@ impl Client {
         }
     }
 
-    fn verify_or_queue_requirement(files_to_download: &mut Vec<String>, folder: &str, zip: &str) {
+    fn verify_or_queue_requirement(
+        files_to_download: &mut Vec<String>,
+        folder: &str,
+        zip: &str,
+        asset_index: Option<&str>,
+    ) {
         if folder == ASSETS_FOLDER
             || folder == ASSETS_FABRIC_FOLDER
             || folder == JDK8_FOLDER
             || folder == JDK21_FOLDER
+            || folder == JDK25_FOLDER
         {
             let path = DATA
                 .root_dir
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())
                 .join(folder);
-            if !path.exists() {
+            // Assets are only considered present when the asset index used by
+            // this client exists as well (e.g. indexes/30.json for MC 26.1.2).
+            let index_present = asset_index
+                .map(|index| path.join("indexes").join(format!("{index}.json")).exists())
+                .unwrap_or(true);
+            if !path.exists() || !index_present {
                 log_info!("Folder '{}' missing. Queuing {} for download.", folder, zip);
                 files_to_download.push(zip.to_string());
             }
@@ -502,7 +539,14 @@ impl Client {
     fn resolve_libraries_and_natives_requirement(
         &self,
     ) -> (&'static str, &'static str, &'static str, &'static str) {
-        if self.is_legacy_client() {
+        if self.uses_modern_libraries() {
+            (
+                LIBRARIES_121_ZIP,
+                LIBRARIES_121_FOLDER,
+                NATIVES_ZIP,
+                NATIVES_FOLDER,
+            )
+        } else if self.is_legacy_client() {
             if self.uses_sub_libraries() {
                 (
                     self.sub_libraries_zip(),
@@ -556,14 +600,25 @@ impl Client {
             &mut files_to_download,
             self.jdk_folder_name(),
             &self.jdk_zip_name(),
+            None,
         );
 
         let (assets_folder, assets_zip) = self.resolve_assets_requirement();
-        Self::verify_or_queue_requirement(&mut files_to_download, assets_folder, assets_zip);
+        let asset_index = self.effective_asset_index();
+        Self::verify_or_queue_requirement(
+            &mut files_to_download,
+            assets_folder,
+            assets_zip,
+            Some(&asset_index),
+        );
 
         let (libs_zip, libs_folder, natives_zip, natives_folder) =
             self.resolve_libraries_and_natives_requirement();
-        Self::verify_or_queue_requirement(&mut files_to_download, libs_folder, libs_zip);
+        Self::verify_or_queue_requirement(&mut files_to_download, libs_folder, libs_zip, None);
+
+        if self.uses_modern_libraries() {
+            return files_to_download;
+        }
 
         let (actual_natives_zip, actual_natives_folder) =
             self.resolve_platform_natives_requirement(natives_zip, natives_folder);
@@ -571,6 +626,7 @@ impl Client {
             &mut files_to_download,
             actual_natives_folder,
             actual_natives_zip,
+            None,
         );
 
         files_to_download
@@ -744,6 +800,39 @@ impl Client {
         }
     }
 
+    fn versioned_libs_need_download(versioned_dir: &Path) -> bool {
+        let manifest_path = versioned_dir.join("manifest.txt");
+        let Ok(content) = std::fs::read_to_string(&manifest_path) else {
+            return !dir_has_any_jars(versioned_dir, false);
+        };
+
+        let mut checked = 0;
+        for line in content.lines() {
+            let line = line.trim();
+            let Some((name, expected)) = line.split_once(':') else {
+                continue;
+            };
+
+            if expected.len() != 64 || name.contains("natives") || name == "manifest.txt" {
+                continue;
+            }
+            checked += 1;
+            let ok = versioned_dir.join(name).is_file()
+                && calculate_hash(&versioned_dir.join(name))
+                    .map(|h| h == expected)
+                    .unwrap_or(false);
+            if !ok {
+                log_info!("Versioned fabric libraries outdated: {}", name);
+                return true;
+            }
+        }
+
+        if checked > 0 {
+            return false;
+        }
+        !dir_has_any_jars(versioned_dir, false)
+    }
+
     async fn ensure_fabric_libraries(&self) -> Result<(), String> {
         let common_dir = DATA
             .root_dir
@@ -769,7 +858,7 @@ impl Client {
                     .unwrap_or(&versioned_zip)
                     .replace(".zip", ""),
             );
-        let need_versioned = !dir_has_any_jars(&versioned_dir, false);
+        let need_versioned = Self::versioned_libs_need_download(&versioned_dir);
 
         let mut downloads: Vec<futures_util::future::BoxFuture<'_, Result<(), String>>> =
             Vec::new();
@@ -828,7 +917,6 @@ impl Client {
         };
 
         if already_present {
-            //log_debug!("SLF4J already present in libraries-fabric, skipping download");
             return Ok(());
         }
 
@@ -924,6 +1012,11 @@ impl Client {
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
                     .join(this.sub_libraries_folder()),
+                ClientType::Default if this.uses_modern_libraries() => DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .join(LIBRARIES_121_FOLDER),
                 ClientType::Default if this.is_legacy_client() => DATA
                     .root_dir
                     .lock()
@@ -994,7 +1087,7 @@ pub(crate) fn ensure_jdk_permissions_on_startup() {
     let Ok(root) = DATA.root_dir.lock() else {
         return;
     };
-    for folder in [JDK8_FOLDER, JDK21_FOLDER] {
+    for folder in [JDK8_FOLDER, JDK21_FOLDER, JDK25_FOLDER] {
         let jdk_root = root.join(folder);
         if !jdk_root.exists() {
             continue;

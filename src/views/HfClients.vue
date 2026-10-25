@@ -40,7 +40,10 @@
             </div>
         </div>
 
-        <div v-if="loading && !clients.length" class="flex justify-center items-center py-12">
+        <div
+            v-if="loading && !clients.length"
+            class="flex justify-center items-center py-12"
+        >
             <div class="text-center space-y-3">
                 <span
                     class="loading loading-spinner loading-md text-primary"
@@ -99,11 +102,14 @@
                             </div>
                             <code
                                 class="text-[11px] font-mono text-base-content/30 shrink-0 hidden sm:block"
-                                >{{ String(client.md5_hash).slice(0, 10) }}</code
+                                >{{
+                                    String(client.md5_hash).slice(0, 10)
+                                }}</code
                             >
-                            <span class="text-xs text-base-content/30 shrink-0">{{
-                                formatDate(client.created_at)
-                            }}</span>
+                            <span
+                                class="text-xs text-base-content/30 shrink-0"
+                                >{{ formatDate(client.created_at) }}</span
+                            >
                         </div>
                     </div>
                 </div>
@@ -161,10 +167,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr
-                            v-for="client in filteredClients"
-                            :key="client.id"
-                        >
+                        <tr v-for="client in filteredClients" :key="client.id">
                             <td>
                                 <div class="flex items-center gap-2">
                                     <span class="font-semibold">{{
@@ -183,9 +186,10 @@
                                 }}</span>
                             </td>
                             <td class="hidden sm:table-cell">
-                                <code class="text-xs font-mono text-base-content/40">{{
-                                    client.md5_hash
-                                }}</code>
+                                <code
+                                    class="text-xs font-mono text-base-content/40"
+                                    >{{ client.md5_hash }}</code
+                                >
                             </td>
                             <td class="hidden sm:table-cell">
                                 <span class="text-xs text-base-content/40"
@@ -237,10 +241,7 @@ import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { formatDate } from "@shared/utils/utils";
 import { RefreshCcw } from "@lucide/vue";
-import {
-    hfClientsService,
-    type HfClient,
-} from "@services/hfClientsService";
+import { hfClientsService, type HfClient } from "@services/hfClientsService";
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -260,7 +261,9 @@ const activeTab = ref<"fabric" | "forge" | "default">("fabric");
 const tabs = ["fabric", "forge", "default"] as const;
 
 const filteredClients = computed(() =>
-    clients.value.filter((c) => c.client_type?.toLowerCase() === activeTab.value)
+    clients.value.filter(
+        (c) => c.client_type?.toLowerCase() === activeTab.value
+    )
 );
 
 const typeLabel = (type: string): string => {

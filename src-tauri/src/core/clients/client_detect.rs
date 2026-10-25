@@ -173,7 +173,11 @@ pub fn detect_client_type(jar_path: &Path) -> Option<DetectedClient> {
         return Some(DetectedClient {
             main_class: main,
             client_type: ClientType::Fabric,
-            confidence: if has_fabric_class && has_fabric_dep { 100 } else { 80 },
+            confidence: if has_fabric_class && has_fabric_dep {
+                100
+            } else {
+                80
+            },
             reason: "Detected fabric loader classes/dependencies".to_string(),
         });
     }
@@ -203,7 +207,11 @@ pub fn detect_client_type(jar_path: &Path) -> Option<DetectedClient> {
             return Some(DetectedClient {
                 main_class: "net.minecraft.launchwrapper.Launch".to_string(),
                 client_type: ClientType::Forge,
-                confidence: if has_forge_class && has_forge_dep { 100 } else { 80 },
+                confidence: if has_forge_class && has_forge_dep {
+                    100
+                } else {
+                    80
+                },
                 reason: "Detected Forge launchwrapper / OptiFine-Forge / Forge deps".to_string(),
             });
         }
@@ -218,18 +226,18 @@ pub fn detect_client_type(jar_path: &Path) -> Option<DetectedClient> {
                 main_class: "net.minecraft.launchwrapper.Launch".to_string(),
                 client_type: ClientType::Forge,
                 confidence: 85,
-                reason: "OptiFine Forge integration detected (ReflectorForge class)"
-                    .to_string(),
+                reason: "OptiFine Forge integration detected (ReflectorForge class)".to_string(),
             });
         }
-        let main = manifest_main_class.clone().unwrap_or_else(|| {
-            "net.minecraft.client.main.Main".to_string()
-        });
+        let main = manifest_main_class
+            .clone()
+            .unwrap_or_else(|| "net.minecraft.client.main.Main".to_string());
         return Some(DetectedClient {
             main_class: main,
             client_type: ClientType::Default,
             confidence: 60,
-            reason: "OptiFine without Forge launchwrapper; using manifest or vanilla main".to_string(),
+            reason: "OptiFine without Forge launchwrapper; using manifest or vanilla main"
+                .to_string(),
         });
     }
 
@@ -256,12 +264,8 @@ pub fn detect_client_type(jar_path: &Path) -> Option<DetectedClient> {
     None
 }
 
-fn read_manifest_main_class(
-    archive: &mut zip::ZipArchive<BufReader<File>>,
-) -> Option<String> {
-    let mut entry = archive
-        .by_name("META-INF/MANIFEST.MF")
-        .ok()?;
+fn read_manifest_main_class(archive: &mut zip::ZipArchive<BufReader<File>>) -> Option<String> {
+    let mut entry = archive.by_name("META-INF/MANIFEST.MF").ok()?;
     let mut contents = String::new();
     entry.read_to_string(&mut contents).ok()?;
     for line in contents.lines() {

@@ -168,9 +168,41 @@ html[data-no-blur] .modal-box,
 html[data-no-blur] .history-panel,
 html[data-no-blur] .notification-panel,
 html[data-no-blur] .spotlight-panel {
-    background-color: var(--color-base-100) !important;
+    background-color: var(--color-base-300) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+}
+
+html[data-linux-blur-fallback="true"] .history-panel,
+html[data-linux-blur-fallback="true"] .spotlight-panel {
+    background:
+        linear-gradient(
+            180deg,
+            color-mix(in srgb, var(--color-base-content) 7%, transparent),
+            transparent 22%
+        ),
+        linear-gradient(
+            180deg,
+            var(--color-base-200),
+            color-mix(in srgb, var(--color-base-200) 88%, black)
+        ) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: color-mix(
+        in srgb,
+        var(--color-base-content) 18%,
+        transparent
+    ) !important;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 18px 55px rgba(0, 0, 0, 0.6),
+        0 4px 14px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+html[data-linux-blur-fallback="true"] .spotlight-overlay > div:first-child {
+    background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .slide-up {

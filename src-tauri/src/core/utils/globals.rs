@@ -5,7 +5,7 @@ use std::{fs, path::PathBuf, sync::LazyLock};
 use crate::{core::network::servers::Server, log_debug, log_info};
 
 /// The internal codename for this version of the application.
-pub static CODENAME: &str = "Horizon";
+pub static CODENAME: &str = "Prism";
 /// The current API version string.
 pub static API_VERSION: &str = "v1";
 
@@ -46,6 +46,19 @@ pub static JDK21_FOLDER: &str = if IS_LINUX {
     "jdk-21.0.2"
 };
 
+/// The directory name for the bundled JDK 25.
+pub static JDK25_FOLDER: &str = if IS_LINUX {
+    "jdk-25.0.4.1-linux"
+} else if IS_MACOS {
+    if IS_AARCH64 {
+        "jdk-25.0.4.1-macos-aarch64"
+    } else {
+        "jdk-25.0.4.1-macos-x64"
+    }
+} else {
+    "jdk-25.0.4.1"
+};
+
 /// The directory name for the bundled JDK 8.
 pub static JDK8_FOLDER: &str = if IS_LINUX {
     "jdk8-linux"
@@ -60,7 +73,8 @@ pub static JDK8_FOLDER: &str = if IS_LINUX {
 };
 
 /// List of all bundled JDK folder names.
-pub static JDK_FOLDERS: LazyLock<Vec<&str>> = LazyLock::new(|| vec![JDK21_FOLDER, JDK8_FOLDER]);
+pub static JDK_FOLDERS: LazyLock<Vec<&str>> =
+    LazyLock::new(|| vec![JDK25_FOLDER, JDK21_FOLDER, JDK8_FOLDER]);
 
 // Resource folder names.
 /// Folder for standard game assets.
@@ -81,6 +95,7 @@ pub static LIBRARIES_VA1_8_9_VIA53_FOLDER: &str = "libraries-va1.8.9-via53";
 pub static LIBRARIES_VA1_8_9_VIA57_FOLDER: &str = "libraries-va1.8.9-via57";
 /// Folder for minimal 1.8.9 vanilla libraries with ViaVersion 5.11.0.
 pub static LIBRARIES_VA1_8_9_VIA511_FOLDER: &str = "libraries-va1.8.9-via511";
+pub static LIBRARIES_121_FOLDER: &str = "libraries-1.21";
 /// Folder for standard native libraries.
 pub static NATIVES_FOLDER: &str = "natives";
 /// Folder for Linux-specific native libraries.
@@ -119,6 +134,7 @@ pub static LIBRARIES_VA1_8_9_VIA53_ZIP: &str = "misc/libraries-va1.8.9-via53.zip
 pub static LIBRARIES_VA1_8_9_VIA57_ZIP: &str = "misc/libraries-va1.8.9-via57.zip";
 /// ZIP file containing 1.8.9 libraries with ViaVersion 5.11.0.
 pub static LIBRARIES_VA1_8_9_VIA511_ZIP: &str = "misc/libraries-va1.8.9-via511.zip";
+pub static LIBRARIES_121_ZIP: &str = "misc/libraries-1.21.zip";
 /// ZIP file containing standard native libraries.
 pub static NATIVES_ZIP: &str = "misc/natives.zip";
 /// ZIP file containing Linux-specific native libraries.
@@ -153,20 +169,6 @@ pub static OVERLAY_FILE: &str = if IS_LINUX {
 } else {
     "CollapseOverlay.dll"
 };
-
-pub static TITLEBAR_FILE: &str = if IS_LINUX {
-    "libCollapseTitlebar.so"
-} else if IS_MACOS {
-    "libCollapseTitlebar.dylib"
-} else {
-    "libCollapseTitlebar.dll"
-};
-
-pub static TITLEBAR_BRANDING_MARKER: &str = "@CollapseLoader";
-
-pub static SKIP_TITLEBAR_BRANDING: LazyLock<bool> = LazyLock::new(|| {
-    parse_env_bool("SKIP_TITLEBAR_BRANDING")
-});
 
 /// The IRC server host and port.
 pub static IRC_HOST: LazyLock<String> = LazyLock::new(|| {

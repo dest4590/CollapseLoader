@@ -1,5 +1,5 @@
 use crate::commands::utils::refresh_tray_menu;
-use crate::core::storage::accounts::Account;
+use crate::core::storage::accounts::PublicAccount;
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::flags::Flags;
 use crate::core::storage::settings::{settings_schema, Settings};
@@ -294,8 +294,13 @@ pub fn set_optional_telemetry(state: State<'_, AppState>, enabled: bool) -> Resu
 }
 
 #[tauri::command]
-pub fn get_accounts(state: State<'_, AppState>) -> Vec<Account> {
-    state.accounts().accounts.clone()
+pub fn get_accounts(state: State<'_, AppState>) -> Vec<PublicAccount> {
+    state
+        .accounts()
+        .accounts
+        .iter()
+        .map(PublicAccount::from)
+        .collect()
 }
 
 #[tauri::command]
@@ -316,12 +321,19 @@ pub fn add_account(
 pub fn remove_account(state: State<'_, AppState>, id: String) -> Result<(), String> {
     log_info!("Removing account with ID: {}", id);
     let mut account_manager = state.accounts();
-    if account_manager.remove_account(&id) {
-        log_info!("Account ID {} removed and saved to disk", id);
-        Ok(())
-    } else {
-        log_error!("Account with ID {} not found for removal", id);
-        Err("Account not found".to_string())
+    match account_manager.remove_account(&id) {
+        Ok(true) => {
+            log_info!("Account ID {} removed and saved to disk", id);
+            Ok(())
+        }
+        Ok(false) => {
+            log_error!("Account with ID {} not found for removal", id);
+            Err("Account not found".to_string())
+        }
+        Err(error) => {
+            log_error!("Failed to remove account ID {} securely: {}", id, error);
+            Err(error)
+        }
     }
 }
 
@@ -357,9 +369,12 @@ pub fn update_account(
 }
 
 #[tauri::command]
-pub fn get_active_account(state: State<'_, AppState>) -> Option<Account> {
+pub fn get_active_account(state: State<'_, AppState>) -> Option<PublicAccount> {
     log_debug!("Fetching active account");
-    state.accounts().get_active_account().cloned()
+    state
+        .accounts()
+        .get_active_account()
+        .map(PublicAccount::from)
 }
 
 #[tauri::command]

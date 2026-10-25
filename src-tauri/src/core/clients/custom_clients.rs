@@ -61,6 +61,18 @@ impl CustomClient {
     }
 
     pub fn to_client(&self) -> Client {
+        let mut meta = Meta::new(
+            &self.version,
+            &self.filename,
+            &self.client_type,
+            None,
+            self.java_version.clone(),
+        );
+        meta.installed = self.is_installed;
+        meta.is_custom = true;
+        meta.size = 0;
+        meta.viaversion = None;
+
         Client {
             id: self.id,
             name: self.name.clone(),
@@ -79,31 +91,14 @@ impl CustomClient {
             dependencies: None,
             client_type: self.client_type.clone(),
             created_at: chrono::Utc::now(),
-            meta: Meta {
-                is_new: false,
-                is_fabric: self.client_type == ClientType::Fabric,
-                is_forge: self.client_type == ClientType::Forge,
-                asset_index: if self.version.contains("1.21") {
-                    "1.21".to_string()
-                } else if self.version.contains("1.16") {
-                    "1.16".to_string()
-                } else if self.version.contains("1.8.9") {
-                    "1.8".to_string()
-                } else {
-                    "1.16".to_string()
-                },
-                installed: self.is_installed,
-                is_custom: true,
-                size: 0,
-                viaversion: None,
-                java_version: None,
-            },
+            meta,
             java_path: self.java_path.clone(),
             java_args: self.java_args.clone(),
             libraries_path: self.libraries_path.clone(),
             natives_path: self.natives_path.clone(),
             viaversion: self.viaversion.clone(),
             java_version: self.java_version.clone(),
+            disable_fabric_api: false,
         }
     }
 
@@ -164,11 +159,20 @@ impl CustomClient {
             .filter(|p| !p.trim().is_empty())
             .map(PathBuf::from)
             .unwrap_or_else(|| {
-                let root = crate::core::storage::data::DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
+                let root = crate::core::storage::data::DATA
+                    .root_dir
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner());
                 match self.client_type {
-                    ClientType::Fabric => root.join(crate::core::utils::globals::LIBRARIES_FABRIC_FOLDER),
-                    ClientType::Forge => root.join(crate::core::utils::globals::LIBRARIES_LEGACY_FOLDER),
-                    ClientType::Default if self.version.contains("1.8") || self.version.contains("1.7") => {
+                    ClientType::Fabric => {
+                        root.join(crate::core::utils::globals::LIBRARIES_FABRIC_FOLDER)
+                    }
+                    ClientType::Forge => {
+                        root.join(crate::core::utils::globals::LIBRARIES_LEGACY_FOLDER)
+                    }
+                    ClientType::Default
+                        if self.version.contains("1.8") || self.version.contains("1.7") =>
+                    {
                         root.join(crate::core::utils::globals::LIBRARIES_LEGACY_FOLDER)
                     }
                     _ => root.join(crate::core::utils::globals::LIBRARIES_FOLDER),
@@ -195,6 +199,9 @@ mod tests {
 
         client.libraries_path = Some("/tmp/custom-libs".to_string());
 
-        assert_eq!(client.resolve_libraries_dir(), PathBuf::from("/tmp/custom-libs"));
+        assert_eq!(
+            client.resolve_libraries_dir(),
+            PathBuf::from("/tmp/custom-libs")
+        );
     }
 }

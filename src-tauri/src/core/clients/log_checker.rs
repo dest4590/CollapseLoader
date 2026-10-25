@@ -166,8 +166,7 @@ impl LogChecker {
             && log_string.contains("GameSettings.loadOptions")
             || log_string.contains("java.lang.NoSuchMethodError")
                 && log_string.contains("ITransformation")
-            || log_string.contains("NoClassDefFoundError")
-                && log_string.contains("Reflector")
+            || log_string.contains("NoClassDefFoundError") && log_string.contains("Reflector")
     }
 
     fn handle_crash(&self, crash_type: CrashType, client_logs: &[String], app_handle: &AppHandle) {
@@ -251,10 +250,20 @@ impl LogChecker {
 
         block_options_sync(&client_base);
 
-        let _ = std::fs::remove_file(DATA.root_dir.lock().ok()
-            .map(|r| r.join("synced_options").join("options.txt")).unwrap_or_default());
-        let _ = std::fs::remove_file(DATA.root_dir.lock().ok()
-            .map(|r| r.join("synced_options").join("optionsof.txt")).unwrap_or_default());
+        let _ = std::fs::remove_file(
+            DATA.root_dir
+                .lock()
+                .ok()
+                .map(|r| r.join("synced_options").join("options.txt"))
+                .unwrap_or_default(),
+        );
+        let _ = std::fs::remove_file(
+            DATA.root_dir
+                .lock()
+                .ok()
+                .map(|r| r.join("synced_options").join("optionsof.txt"))
+                .unwrap_or_default(),
+        );
 
         emit_to_main_window(
             app_handle,

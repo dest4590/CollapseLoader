@@ -8,6 +8,8 @@ const TG_CHANNEL = "CollapseTheme";
 const TG_URL = `https://telegram.me/s/${TG_CHANNEL}`;
 const CACHE_KEY = "tg_themes_cache";
 const CACHE_TTL_MS = 5 * 60 * 1000;
+const MAX_PAGES = 5;
+const MAX_THEMES = 200;
 
 interface CacheEntry {
     themes: MarketplacePreset[];
@@ -27,11 +29,15 @@ function extractAuthorFromText(text: string): string | null {
     return null;
 }
 
-function parseThemesFromHtml(html: string): MarketplacePreset[] {
+function parseThemesFromHtml(
+    html: string,
+    limit: number = MAX_THEMES
+): MarketplacePreset[] {
     const results: MarketplacePreset[] = [];
     const allMsgBlocks = extractMessageBlocks(html);
 
     for (const rawHtml of allMsgBlocks) {
+        if (results.length >= limit) break;
         const text = htmlToCleanText(rawHtml);
         const tgAuthor = extractAuthorFromText(text);
         const jsonCandidates = extractJsonObjects(text);
@@ -97,7 +103,7 @@ function extractMessageBlocks(html: string): string[] {
         }
 
         blocks.push(html.slice(openEnd + 1, i - (depth === 0 ? 6 : 0)));
-        pos = openEnd + 1;
+        pos = i > openEnd + 1 ? i : openEnd + 1;
     }
 
     return blocks;
@@ -304,10 +310,15 @@ class TelegramThemeService {
 
         try {
             const allThemes: MarketplacePreset[] = [];
-            let url = TG_URL;
+            let url: string | null = TG_URL;
             const visited = new Set<string>();
+            let lastMinId = Number.POSITIVE_INFINITY;
 
-            while (url && !visited.has(url)) {
+            for (
+                let page = 0;
+                page < MAX_PAGES && url && !visited.has(url);
+                page++
+            ) {
                 visited.add(url);
 
                 const html = await invoke<string>("api_request", {
@@ -323,8 +334,12 @@ class TelegramThemeService {
 
                 const htmlStr =
                     typeof html === "string" ? html : JSON.stringify(html);
-                const pageThemes = parseThemesFromHtml(htmlStr);
+                const pageThemes = parseThemesFromHtml(
+                    htmlStr,
+                    MAX_THEMES - allThemes.length
+                );
                 allThemes.push(...pageThemes);
+                if (allThemes.length >= MAX_THEMES) break;
 
                 const msgIds = [
                     ...htmlStr.matchAll(/data-post="[^/]+\/(\d+)"/g),
@@ -335,18 +350,21 @@ class TelegramThemeService {
                 if (msgIds.length === 0) break;
 
                 const minId = Math.min(...msgIds);
-                if (minId <= 1) break;
+                if (minId <= 1 || minId >= lastMinId) break;
+                lastMinId = minId;
 
                 url = `${TG_URL}?before=${minId}`;
             }
 
             const seen = new Set<string>();
-            const themes = allThemes.filter((t) => {
-                const key = String(t.id);
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            });
+            const themes = allThemes
+                .filter((t) => {
+                    const key = String(t.id);
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                })
+                .slice(0, MAX_THEMES);
 
             const entry: CacheEntry = { themes, fetchedAt: Date.now() };
             this.cache = entry;

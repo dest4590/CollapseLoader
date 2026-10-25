@@ -1,4 +1,6 @@
 use crate::core::network::get_api_client;
+use crate::core::storage::data::DATA;
+use crate::log_error;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use std::sync::{Mutex, OnceLock};
@@ -51,6 +53,20 @@ fn mask_auth_headers(
         }
     }
     headers
+}
+
+const MAX_HISTORY_TEXT_LEN: usize = 4_000;
+
+fn truncate_for_history(text: &str) -> String {
+    if text.len() <= MAX_HISTORY_TEXT_LEN {
+        text.to_string()
+    } else {
+        let mut end = MAX_HISTORY_TEXT_LEN;
+        while !text.is_char_boundary(end) {
+            end -= 1;
+        }
+        format!("{}… [truncated {} chars]", &text[..end], text.len() - end)
+    }
 }
 
 #[tauri::command]
@@ -211,7 +227,7 @@ pub async fn api_request(
         response_size,
         response_body: response_json.clone(),
         response_text: if response_json.is_none() {
-            Some(text.clone())
+            Some(truncate_for_history(&text))
         } else {
             None
         },
@@ -226,6 +242,96 @@ pub async fn api_request(
     } else {
         Ok(serde_json::json!(text))
     }
+}
+
+const MAX_CACHED_IMAGE_BYTES: usize = 20 * 1024 * 1024;
+
+fn marketplace_image_cache_dir() -> std::path::PathBuf {
+    let root = DATA
+        .root_dir
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    root.join("cache").join("marketplace-images")
+}
+
+#[tauri::command]
+pub async fn fetch_cached_image(url: String) -> Result<String, String> {
+    use base64::Engine;
+    use sha2::{Digest, Sha256};
+
+    let parsed = reqwest::Url::parse(&url).map_err(|e| format!("Invalid image URL: {e}"))?;
+    if !matches!(parsed.scheme(), "http" | "https") {
+        return Err("Only http(s) image URLs are supported".to_string());
+    }
+
+    let cache_dir = marketplace_image_cache_dir();
+    let cache_key = Sha256::digest(url.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect::<String>();
+    let cache_path = cache_dir.join(cache_key);
+
+    if let Ok(cached) = tokio::fs::read_to_string(&cache_path).await {
+        if !cached.is_empty() {
+            return Ok(cached);
+        }
+    }
+
+    tokio::fs::create_dir_all(&cache_dir)
+        .await
+        .map_err(|e| format!("Failed to create image cache directory: {e}"))?;
+
+    let response = get_api_client()
+        .get(&url)
+        .header(reqwest::header::ACCEPT, "image/*")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to download image: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!(
+            "Failed to download image: HTTP {}",
+            response.status().as_u16()
+        ));
+    }
+
+    if response
+        .content_length()
+        .is_some_and(|length| length as usize > MAX_CACHED_IMAGE_BYTES)
+    {
+        return Err("Image is too large to cache".to_string());
+    }
+
+    let content_type = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.split(';').next())
+        .map(str::trim)
+        .filter(|value| value.starts_with("image/"))
+        .unwrap_or("image/jpeg")
+        .to_string();
+
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Failed to read image data: {e}"))?;
+
+    if bytes.len() > MAX_CACHED_IMAGE_BYTES {
+        return Err("Image is too large to cache".to_string());
+    }
+
+    let data_url = format!(
+        "data:{content_type};base64,{}",
+        base64::engine::general_purpose::STANDARD.encode(&bytes)
+    );
+
+    if let Err(e) = tokio::fs::write(&cache_path, &data_url).await {
+        log_error!("Failed to write marketplace image cache: {}", e);
+    }
+
+    Ok(data_url)
 }
 
 #[tauri::command]

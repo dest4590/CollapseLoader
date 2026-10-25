@@ -35,6 +35,7 @@ import {
     RefreshCcw,
     PanelRightClose,
     Megaphone,
+    Shirt,
 } from "@lucide/vue";
 import { useToast } from "@shared/composables/useToast";
 import type { ToastPosition } from "@shared/types/toast";
@@ -46,11 +47,13 @@ import {
     type UserExternalAccount,
 } from "@features/auth/userService";
 import AddAccountModal from "@features/social/modals/AddAccountModal.vue";
+import AddMicrosoftAccountModal from "@features/social/modals/AddMicrosoftAccountModal.vue";
 import EditAccountModal from "@features/social/modals/EditAccountModal.vue";
 import TelemetryInfoModal from "@features/clients/modals/TelemetryInfoModal.vue";
 import ChangeRootFolderModal from "@services/settings/modals/ChangeRootFolderModal.vue";
 import SettingCard from "../components/settings/SettingCard.vue";
 import AccountCard from "../components/settings/AccountCard.vue";
+import SkinSettings from "../components/settings/SkinSettings.vue";
 import {
     changeLanguage,
     getAvailableLanguages,
@@ -67,6 +70,8 @@ interface Account {
     created_at: string;
     last_used?: string;
     is_active: boolean;
+    account_type?: "offline" | "microsoft";
+    uuid?: string;
 }
 
 const settings = settingsService.settings;
@@ -74,7 +79,7 @@ const accounts = ref<Account[]>([]);
 const remoteAccounts = ref<UserExternalAccount[]>([]);
 const remoteAccountsLoading = ref(false);
 const isAccountSyncing = ref(false);
-const activeTab = ref<"general" | "sync" | "accounts">("general");
+const activeTab = ref<"general" | "accounts" | "skin">("general");
 const loading = ref(true);
 const isRefreshing = ref(false);
 const { addToast, setToastPosition, getToastPosition } = useToast();
@@ -389,6 +394,16 @@ const showAddAccountDialog = () => {
         {
             "account-added": handleAccountAdded,
         }
+    );
+};
+
+const showAddMicrosoftAccountDialog = () => {
+    showModal(
+        "add-microsoft-account",
+        AddMicrosoftAccountModal,
+        { title: t("settings.add_microsoft_account") },
+        {},
+        { "account-added": handleAccountAdded }
     );
 };
 
@@ -945,6 +960,18 @@ const handleToastPositionChange = (position: string) => {
                     <User class="w-4 h-4 mr-2" />
                     {{ t("settings.accounts") }}
                 </a>
+                <a
+                    @click="activeTab = 'skin'"
+                    class="tab transition-all duration-300"
+                    :class="{
+                        'tab-active transform scale-105 shadow-md bg-base-300':
+                            activeTab === 'skin',
+                        'hover:bg-base-300': activeTab !== 'skin',
+                    }"
+                >
+                    <Shirt class="w-4 h-4 mr-2" />
+                    {{ t("settings.skin") }}
+                </a>
             </div>
             <transition name="tab-switch" mode="out-in">
                 <div
@@ -953,22 +980,59 @@ const handleToastPositionChange = (position: string) => {
                     class="space-y-4"
                 >
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                        <div
+                        <template
                             v-for="(
                                 [key, field], index
                             ) in filteredSettingsEntries"
                             :key="key"
-                            :data-setting-key="key"
-                            :class="[
-                                'flex w-full',
-                                key === 'java_path' || key === 'java_args'
-                                    ? 'lg:col-span-2'
-                                    : 'h-full',
-                                highlightedSetting === key
-                                    ? 'spotlight-highlight'
-                                    : '',
-                            ]"
                         >
+                            <div
+                                v-if="key === 'java_path'"
+                                class="flex w-full lg:col-span-2"
+                            >
+                                <SettingCard
+                                    :delay="index * 0.05"
+                                    layout="row"
+                                    :description="
+                                        $t(
+                                            'settings.toast_position.description'
+                                        )
+                                    "
+                                    class="w-full"
+                                >
+                                    <template #title>
+                                        <Info
+                                            class="w-5 h-5 text-primary"
+                                        />
+                                        {{
+                                            $t("settings.toast_position.title")
+                                        }}
+                                    </template>
+                                    <div>
+                                        <AnimatedDropdown
+                                            v-model="toastPosition"
+                                            :options="toastPositionOptions"
+                                            direction="auto"
+                                            @change="
+                                                handleToastPositionChange
+                                            "
+                                        />
+                                    </div>
+                                </SettingCard>
+                            </div>
+                            <div
+                                :data-setting-key="key"
+                                :class="[
+                                    'flex w-full',
+                                    key === 'java_path' ||
+                                    key === 'java_args'
+                                        ? 'lg:col-span-2'
+                                        : 'h-full',
+                                    highlightedSetting === key
+                                        ? 'spotlight-highlight'
+                                        : '',
+                                ]"
+                            >
                             <SettingCard
                                 :field="field"
                                 :delay="index * 0.05"
@@ -1212,25 +1276,8 @@ const handleToastPositionChange = (position: string) => {
                                 </div>
                             </SettingCard>
                         </div>
-                    </div>
-                    <SettingCard
-                        :delay="filteredSettingsEntries.length * 0.05"
-                        layout="row"
-                        :description="$t('settings.toast_position.description')"
-                    >
-                        <template #title>
-                            <Info class="w-5 h-5 text-primary" />
-                            {{ $t("settings.toast_position.title") }}
                         </template>
-                        <div>
-                            <AnimatedDropdown
-                                v-model="toastPosition"
-                                :options="toastPositionOptions"
-                                direction="auto"
-                                @change="handleToastPositionChange"
-                            />
-                        </div>
-                    </SettingCard>
+                    </div>
                     <div
                         class="card bg-base-200 shadow-md border border-base-300"
                     >
@@ -1416,13 +1463,24 @@ const handleToastPositionChange = (position: string) => {
                                         {{ t("settings.accounts_description") }}
                                     </p>
                                 </div>
-                                <button
-                                    @click="showAddAccountDialog"
-                                    class="btn btn-primary btn-sm"
-                                >
-                                    <Plus class="w-4 h-4 mr-2" />
-                                    {{ t("settings.add_account") }}
-                                </button>
+                                <div class="flex flex-wrap gap-2">
+                                    <button
+                                        @click="showAddMicrosoftAccountDialog"
+                                        class="btn btn-primary btn-sm"
+                                    >
+                                        <BadgeCheck class="w-4 h-4 mr-2" />
+                                        {{
+                                            t("settings.add_microsoft_account")
+                                        }}
+                                    </button>
+                                    <button
+                                        @click="showAddAccountDialog"
+                                        class="btn btn-outline btn-sm"
+                                    >
+                                        <Plus class="w-4 h-4 mr-2" />
+                                        {{ t("settings.add_offline_account") }}
+                                    </button>
+                                </div>
                             </div>
 
                             <div
@@ -1673,6 +1731,17 @@ const handleToastPositionChange = (position: string) => {
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div
+                    v-else-if="activeTab === 'skin'"
+                    key="skin"
+                    class="space-y-3"
+                >
+                    <SkinSettings
+                        :accounts="accounts"
+                        @open-accounts="activeTab = 'accounts'"
+                    />
                 </div>
             </transition>
         </div>

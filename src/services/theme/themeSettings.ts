@@ -67,9 +67,9 @@ export const defaultThemeSettings: ThemeSettings = {
     backgroundImage: null,
     backgroundBlur: 0,
     backgroundOpacity: 100,
-    spotlightBlur: 24,
-    historyBlur: 20,
-    notificationsBlur: 20,
+    spotlightBlur: 32,
+    historyBlur: 28,
+    notificationsBlur: 28,
     disableBlur: false,
 };
 
@@ -223,6 +223,17 @@ export const saveThemeSettings = (
 
 export const applyThemeSettingsToDocument = (settings: ThemeSettings): void => {
     const root = document.documentElement;
+
+    const isLinuxFallback =
+        typeof navigator !== "undefined" &&
+        /linux/i.test(navigator.userAgent) &&
+        !/android/i.test(navigator.userAgent);
+
+    if (isLinuxFallback) {
+        root.setAttribute("data-linux-blur-fallback", "true");
+    } else {
+        root.removeAttribute("data-linux-blur-fallback");
+    }
 
     const blurKeys: Array<keyof ThemeSettings> = [
         "spotlightBlur",

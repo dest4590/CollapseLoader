@@ -23,6 +23,8 @@ dist-ssr
 *.sw?
 
 data/
+!/src/shared/data/
+!/src/shared/data/minecraftSkins.ts
 crash-reports/
 
 TODO.md

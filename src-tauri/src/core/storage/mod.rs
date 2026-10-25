@@ -8,3 +8,4 @@ pub mod launch_history;
 pub mod mod_builds;
 pub mod presets;
 pub mod settings;
+pub mod skin_library;

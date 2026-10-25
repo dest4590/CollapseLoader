@@ -12,6 +12,8 @@ const props = defineProps<{
         created_at: string;
         last_used?: string;
         is_active: boolean;
+        account_type?: "offline" | "microsoft";
+        uuid?: string;
     };
     formatDate?: (v: string) => string;
     isDragging?: boolean;
@@ -69,6 +71,20 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
                             >
                                 {{ account.username }}
                             </h3>
+                            <div
+                                class="badge badge-sm shrink-0"
+                                :class="
+                                    account.account_type === 'microsoft'
+                                        ? 'badge-info'
+                                        : 'badge-ghost'
+                                "
+                            >
+                                {{
+                                    account.account_type === "microsoft"
+                                        ? t("settings.account_type_microsoft")
+                                        : t("settings.account_type_offline")
+                                }}
+                            </div>
                             <div
                                 v-if="account.is_active"
                                 class="badge badge-success badge-sm gap-1 shrink-0"
@@ -137,6 +153,7 @@ const handleDragStart = (e: MouseEvent) => emit("drag-start", e);
                             <slot name="user-icon" />
                         </button>
                         <button
+                            v-if="account.account_type !== 'microsoft'"
                             @click="handleEdit"
                             class="btn btn-sm btn-square btn-ghost hover:bg-warning/10 hover:text-warning"
                         >

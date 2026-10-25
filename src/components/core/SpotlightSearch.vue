@@ -378,7 +378,7 @@ const handleKeydown = (e: KeyboardEvent) => {
                 @keydown="handleKeydown"
             >
                 <div
-                    class="flex items-center gap-3 px-4 py-3 border-b border-base-300"
+                    class="flex items-center gap-3 px-4 py-3 border-b-2 border-base-content/10"
                 >
                     <Search class="w-5 h-5 text-base-content/40 shrink-0" />
                     <input
@@ -387,7 +387,10 @@ const handleKeydown = (e: KeyboardEvent) => {
                         :placeholder="t('spotlight.placeholder')"
                         class="flex-1 bg-transparent outline-none text-base-content text-sm placeholder:text-base-content/40"
                     />
-                    <kbd class="kbd kbd-sm opacity-50">Esc</kbd>
+                    <kbd
+                        class="kbd kbd-xs opacity-50 !px-1.5 !py-0 !text-[10px] !min-h-0 !h-5"
+                        >Esc</kbd
+                    >
                 </div>
 
                 <div
@@ -514,13 +517,14 @@ const handleKeydown = (e: KeyboardEvent) => {
 .spotlight-panel {
     background-color: color-mix(
         in srgb,
-        var(--color-base-100) 45%,
+        var(--color-base-300) 58%,
         transparent
     );
-    backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6)
-        brightness(1.05);
-    -webkit-backdrop-filter: blur(var(--spotlight-blur, 24px)) saturate(1.6)
-        brightness(1.05);
+    backdrop-filter: blur(var(--spotlight-blur, 32px)) saturate(1.8);
+    -webkit-backdrop-filter: blur(var(--spotlight-blur, 32px)) saturate(1.8);
+    box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.45),
+        0 4px 16px rgba(0, 0, 0, 0.25);
     transition:
         opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
