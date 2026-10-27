@@ -534,6 +534,7 @@ impl Client {
         let mut child = cmd
             .spawn()
             .map_err(|e| format!("Failed to spawn process: {e}"))?;
+        Client::register_running_process(client_id);
 
         let secure_command =
             Self::redact_sensitive_command(&format!("{cmd:#?}"), &identity.access_token);
@@ -629,6 +630,7 @@ impl Client {
                     );
                 }
             }
+            Client::unregister_running_process(client_id);
         });
 
         Ok(())

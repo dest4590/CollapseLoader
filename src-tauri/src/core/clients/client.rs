@@ -31,6 +31,9 @@ pub(crate) mod requirements;
 pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
+static RUNNING_CLIENT_COUNTS: std::sync::LazyLock<Mutex<HashMap<u32, usize>>> =
+    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
+
 pub static REQUIREMENTS_DOWNLOADING: std::sync::LazyLock<Mutex<bool>> =
     std::sync::LazyLock::new(|| Mutex::new(false));
 
@@ -520,6 +523,30 @@ impl Client {
             .unwrap_or_default();
 
         process::filter_running(clients, |client| &client.filename)
+    }
+
+    pub fn register_running_process(client_id: u32) {
+        if let Ok(mut running) = RUNNING_CLIENT_COUNTS.lock() {
+            *running.entry(client_id).or_default() += 1;
+        }
+    }
+
+    pub fn unregister_running_process(client_id: u32) {
+        if let Ok(mut running) = RUNNING_CLIENT_COUNTS.lock() {
+            if let Some(count) = running.get_mut(&client_id) {
+                *count -= 1;
+                if *count == 0 {
+                    running.remove(&client_id);
+                }
+            }
+        }
+    }
+
+    pub fn get_tracked_running_client_ids() -> Vec<u32> {
+        RUNNING_CLIENT_COUNTS
+            .lock()
+            .map(|running| running.keys().copied().collect())
+            .unwrap_or_default()
     }
 
     pub fn get_client_folder(&self) -> Result<PathBuf, String> {

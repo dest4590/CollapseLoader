@@ -267,10 +267,14 @@ pub async fn launch_client(
 pub async fn get_running_client_ids(state: State<'_, AppState>) -> Result<Vec<u32>, String> {
     let manager = state.clients.manager.clone();
     let handle = tokio::task::spawn_blocking(move || {
-        Client::get_running_clients(&manager)
+        let mut running_ids: Vec<u32> = Client::get_running_clients(&manager)
             .iter()
             .map(|client| client.id)
-            .collect()
+            .collect();
+        running_ids.extend(Client::get_tracked_running_client_ids());
+        running_ids.sort_unstable();
+        running_ids.dedup();
+        running_ids
     });
 
     handle
