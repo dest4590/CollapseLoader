@@ -33,6 +33,8 @@ pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
 
 static RUNNING_CLIENT_COUNTS: std::sync::LazyLock<Mutex<HashMap<u32, usize>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
+static RUNNING_CLIENT_PIDS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<u32>>>> =
+    std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub static REQUIREMENTS_DOWNLOADING: std::sync::LazyLock<Mutex<bool>> =
     std::sync::LazyLock::new(|| Mutex::new(false));
@@ -525,18 +527,33 @@ impl Client {
         process::filter_running(clients, |client| &client.filename)
     }
 
-    pub fn register_running_process(client_id: u32) {
+    pub fn register_running_process(client_id: u32, process_id: Option<u32>) {
         if let Ok(mut running) = RUNNING_CLIENT_COUNTS.lock() {
             *running.entry(client_id).or_default() += 1;
         }
+        if let Some(process_id) = process_id {
+            if let Ok(mut running) = RUNNING_CLIENT_PIDS.lock() {
+                running.entry(client_id).or_default().push(process_id);
+            }
+        }
     }
 
-    pub fn unregister_running_process(client_id: u32) {
+    pub fn unregister_running_process(client_id: u32, process_id: Option<u32>) {
         if let Ok(mut running) = RUNNING_CLIENT_COUNTS.lock() {
             if let Some(count) = running.get_mut(&client_id) {
                 *count -= 1;
                 if *count == 0 {
                     running.remove(&client_id);
+                }
+            }
+        }
+        if let Some(process_id) = process_id {
+            if let Ok(mut running) = RUNNING_CLIENT_PIDS.lock() {
+                if let Some(process_ids) = running.get_mut(&client_id) {
+                    process_ids.retain(|pid| *pid != process_id);
+                    if process_ids.is_empty() {
+                        running.remove(&client_id);
+                    }
                 }
             }
         }
@@ -549,13 +566,35 @@ impl Client {
             .unwrap_or_default()
     }
 
+    pub fn get_tracked_running_process_ids(client_id: u32) -> Vec<u32> {
+        RUNNING_CLIENT_PIDS
+            .lock()
+            .ok()
+            .and_then(|running| running.get(&client_id).cloned())
+            .unwrap_or_default()
+    }
+
     pub fn get_client_folder(&self) -> Result<PathBuf, String> {
         let (folder, _) = self.get_launch_paths()?;
         Ok(folder)
     }
 
     pub fn stop(&self) -> Result<(), String> {
-        process::stop_process_by_filename(&self.filename, &self.name)
+        let process_ids = Self::get_tracked_running_process_ids(self.id);
+        if process_ids.is_empty() {
+            return process::stop_process_by_filename(&self.filename, &self.name);
+        }
+
+        let mut stopped = false;
+        for process_id in process_ids {
+            stopped |= process::kill_process(&process_id.to_string(), &self.name)?;
+        }
+
+        if stopped {
+            Ok(())
+        } else {
+            process::stop_process_by_filename(&self.filename, &self.name)
+        }
     }
 
     fn mark_installed(&self, manager: &Arc<Mutex<ClientManager>>, installed: bool) {
