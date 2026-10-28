@@ -58,14 +58,10 @@ impl Client {
             .unwrap_or(false)
     }
 
-    fn append_new_instance_separator(&self) {
+    fn reset_logs_for_new_instance(&self) {
         let mut logs = CLIENT_LOGS.lock().unwrap_or_else(|e| e.into_inner());
         let client_logs = logs.entry(self.id).or_default();
-        if !client_logs.is_empty() {
-            client_logs.push("-------------------------------------------".to_string());
-            client_logs.push("--- New Instance Started ---".to_string());
-            client_logs.push("-------------------------------------------".to_string());
-        }
+        client_logs.clear();
     }
 
     async fn prepare_launch_prerequisites(
@@ -327,7 +323,7 @@ impl Client {
             Analytics::send_client_analytics(self.id, &options.user_token);
         }
 
-        self.append_new_instance_separator();
+        self.reset_logs_for_new_instance();
         let crash_report_token = options.user_token.clone();
 
         let app_handle = options.app_handle.clone();
