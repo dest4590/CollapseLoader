@@ -21,7 +21,7 @@ const { t } = useI18n();
 const props = defineProps<{
     searchQuery: string;
     activeFilters: Filters;
-    clientSortKey: "popularity" | "name" | "newest" | "version" | "rating";
+    clientSortKey: "name" | "newest" | "version";
     clientSortOrder: "asc" | "desc";
     unreadNewsCount?: number | null;
     viewVisible: boolean;
@@ -34,7 +34,7 @@ const emit = defineEmits<{
     search: [string];
     "update:activeFilters": [Filters];
     "update:clientSortKey": [
-        "popularity" | "name" | "newest" | "version" | "rating",
+        "name" | "newest" | "version",
     ];
     "update:clientSortOrder": ["asc" | "desc"];
     "update:showHistory": [boolean];
@@ -54,7 +54,7 @@ const activeFiltersLocal = computed<Filters>({
 });
 
 const clientSortKeyLocal = computed<
-    "popularity" | "name" | "newest" | "version" | "rating"
+    "name" | "newest" | "version"
 >({
     get: () => props.clientSortKey,
     set: (value) => emit("update:clientSortKey", value),

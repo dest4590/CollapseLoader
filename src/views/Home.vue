@@ -122,18 +122,19 @@ const activeFilters = ref<Filters>(initialFilters);
 const debouncedActiveFilters = ref<Filters>({ ...initialFilters });
 let filterDebounceTimer: number | null = null;
 
-let initialSortKey: "popularity" | "name" | "newest" | "version" | "rating" =
-    "popularity";
+let initialSortKey: "name" | "newest" | "version" = "version";
 
 try {
     const stored = localStorage.getItem(CLIENT_SORT_KEY);
-    if (stored) initialSortKey = stored as any;
+    if (stored === "name" || stored === "newest" || stored === "version") {
+        initialSortKey = stored;
+    }
 } catch (e) {
     console.error("Failed to read client sort key from localStorage:", e);
 }
 
 const clientSortKey = ref<
-    "popularity" | "name" | "newest" | "version" | "rating"
+    "name" | "newest" | "version"
 >(initialSortKey);
 
 let initialSortOrder: "asc" | "desc" = "desc";
@@ -154,7 +155,7 @@ const clearAllFilters = () => {
         forge: false,
         installed: false,
     };
-    clientSortKey.value = "popularity";
+    clientSortKey.value = "version";
     clientSortOrder.value = "desc";
 };
 
@@ -519,32 +520,6 @@ const sortedClients = computed(() => {
                 }
             }
 
-            return b.name.localeCompare(a.name) * sortMultiplier;
-        });
-    } else if (sortKey === "rating") {
-        sorted.sort((a, b) => {
-            const aAvg = (a.rating_avg ?? 0) as number;
-            const bAvg = (b.rating_avg ?? 0) as number;
-
-            if (aAvg !== bAvg) {
-                return (bAvg - aAvg) * sortMultiplier;
-            }
-
-            const aCount = (a.rating_count ?? 0) as number;
-            const bCount = (b.rating_count ?? 0) as number;
-            if (aCount !== bCount) {
-                return (bCount - aCount) * sortMultiplier;
-            }
-
-            return b.name.localeCompare(a.name) * sortMultiplier;
-        });
-    } else if (sortKey === "popularity") {
-        sorted.sort((a, b) => {
-            const av = a.launches ?? 0;
-            const bv = b.launches ?? 0;
-            if (av !== bv) {
-                return (bv - av) * sortMultiplier;
-            }
             return b.name.localeCompare(a.name) * sortMultiplier;
         });
     } else {
