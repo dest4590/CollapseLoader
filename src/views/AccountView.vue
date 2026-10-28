@@ -4,7 +4,7 @@
             <div class="col-span-1 md:col-span-2">
                 <div class="card shadow-md border border-base-300">
                     <div class="card-body">
-                        <div class="flex items-center gap-4 mb-4">
+                        <div class="flex items-center gap-4 mb-4 translate-y-1">
                             <UserAvatar
                                 :name="
                                     userInfo.nickname ||
@@ -73,6 +73,7 @@
                                 </p>
 
                                 <p
+                                    v-if="!isLocalUser"
                                     class="text-base-content/60 text-xs mt-1 flex items-center gap-2"
                                 >
                                     <button
@@ -93,31 +94,6 @@
                                     />
                                 </p>
 
-                                <div class="flex items-center mt-3 text-sm">
-                                    <div
-                                        class="badge"
-                                        :class="
-                                            invisibleMode
-                                                ? 'badge-secondary'
-                                                : 'badge-success'
-                                        "
-                                    >
-                                        {{
-                                            invisibleMode
-                                                ? t("time.offline")
-                                                : t("time.online")
-                                        }}
-                                    </div>
-
-                                    <span>
-                                        <button
-                                            @click="openSocialLinks"
-                                            class="btn btn-primary btn-xs ml-3"
-                                        >
-                                            {{ t("account.social_links") }}
-                                        </button>
-                                    </span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -321,110 +297,6 @@
             </div>
 
             <div class="col-span-1 md:col-span-2">
-                <div class="card bg-base-200 shadow-md border border-base-300">
-                    <div class="card-body">
-                        <h2
-                            class="card-title text-lg font-medium text-primary-focus mb-4"
-                        >
-                            {{ t("account.favorite_client") }}
-                        </h2>
-                        <p class="text-sm text-base-content/70 mb-4">
-                            {{ t("account.favorite_client_description") }}
-                        </p>
-                        <div
-                            v-if="loadingClients"
-                            class="flex justify-center py-4"
-                        >
-                            <span
-                                class="loading loading-spinner loading-md"
-                            ></span>
-                        </div>
-                        <div v-else class="form-control">
-                            <select
-                                v-model="selectedFavoriteClientId"
-                                class="select select-bordered w-full bg-base-100"
-                                @change="handleFavoriteClientChange"
-                                :disabled="
-                                    isLoadingFromCache || updatingFavoriteClient
-                                "
-                            >
-                                <option :value="null">
-                                    {{ t("account.no_favorite_client") }}
-                                </option>
-                                <option
-                                    v-for="client in availableClients"
-                                    :key="client.id"
-                                    :value="client.id"
-                                >
-                                    {{ client.name }}
-                                    {{ formatVersion(client.version) }}
-                                </option>
-                            </select>
-                            <div
-                                v-if="currentFavoriteClient"
-                                class="mt-3 p-3 bg-base-300 rounded-lg"
-                            >
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm font-medium"
-                                        >{{
-                                            t("account.current_favorite")
-                                        }}:</span
-                                    >
-                                    <span class="badge badge-primary"
-                                        >{{ currentFavoriteClient.name }}
-                                        {{
-                                            formatVersion(
-                                                currentFavoriteClient.version
-                                            )
-                                        }}</span
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div
-                    class="card bg-base-200 shadow-md border border-base-300 h-full"
-                >
-                    <div class="card-body">
-                        <h2
-                            class="card-title text-lg font-medium text-primary-focus mb-2"
-                        >
-                            {{ t("account.invisible_mode") }}
-                        </h2>
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="font-medium">
-                                    {{ t("account.invisible_mode") }}
-                                </h3>
-                                <p class="text-sm text-base-content/70">
-                                    {{
-                                        t("account.invisible_mode_description")
-                                    }}
-                                </p>
-                            </div>
-                            <input
-                                type="checkbox"
-                                class="checkbox"
-                                v-model="invisibleMode"
-                                @change="handleInvisibleModeToggle"
-                                :disabled="isLoadingFromCache"
-                            />
-                        </div>
-                        <div
-                            v-if="isLoadingFromCache"
-                            class="text-sm text-warning mt-3"
-                        >
-                            <span>{{ t("account.using_cached_data") }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div>
                 <div
                     class="card bg-base-200 shadow-md border border-base-300 h-full"
                 >
@@ -557,7 +429,6 @@ import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
 import EditNicknameModal from "@features/social/modals/EditNicknameModal.vue";
-import SocialLinksModal from "@features/social/modals/SocialLinksModal.vue";
 import AvatarUploadModal from "@features/social/modals/AvatarUploadModal.vue";
 import RoleSelectionModal from "@features/social/modals/RoleSelectionModal.vue";
 import UserAvatar from "@shared/components/ui/UserAvatar.vue";
@@ -584,22 +455,6 @@ import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vu
 import getRoleBadge from "@features/social/utils/roleBadge";
 import { globalUserStatus } from "@features/auth/useUserStatus";
 import { syncService, SyncServiceState } from "../services/syncService";
-import { invoke } from "@tauri-apps/api/core";
-
-interface Client {
-    id: number;
-    name: string;
-    version: string;
-    filename: string;
-    md5_hash: string;
-    main_class: string;
-    show: boolean;
-    working: boolean;
-    insecure: boolean;
-    launches: number;
-    downloads: number;
-    size: number;
-}
 
 const { t } = useI18n();
 const { addToast } = useToast();
@@ -617,11 +472,6 @@ const loadingAchievements = ref(false);
 const isAchievementsExpanded = ref(false);
 const initialDisplayCount = 4;
 
-const availableClients = ref<Client[]>([]);
-const loadingClients = ref(false);
-const selectedFavoriteClientId = ref<number | null>(null);
-const updatingFavoriteClient = ref(false);
-
 const user = useUser();
 const {
     username,
@@ -637,11 +487,6 @@ const {
 const isLocalUser = computed(() =>
     localStorage.getItem("authToken")?.startsWith("local_")
 );
-
-const invisibleMode = computed({
-    get: () => globalUserStatus.isInvisible.value,
-    set: (_) => {},
-});
 
 const streamerMode = computed({
     get: () => globalUserStatus.isStreamer.value,
@@ -671,15 +516,6 @@ const userInfo = computed(() => {
         email: mail,
         role: role,
     };
-});
-
-const currentFavoriteClient = computed(() => {
-    const profile = useUser().profile.value;
-    if (profile && (profile as any).favorite_client_id) {
-        const clientId = (profile as any).favorite_client_id;
-        return availableClients.value.find((c) => c.id === clientId) || null;
-    }
-    return null;
 });
 
 const roleBadge = computed(() => {
@@ -797,66 +633,6 @@ const toggleShowEmail = () => {
     showEmail.value = !showEmail.value;
 };
 
-const formatVersion = (version: string): string => {
-    if (!version) return "";
-    return version.replace(/^V/, "").replace(/_/g, ".");
-};
-
-const loadClients = async () => {
-    try {
-        loadingClients.value = true;
-        const clients = await invoke<Client[]>("get_clients");
-        availableClients.value = clients.filter((c) => c.show && c.working);
-
-        const profile = useUser().profile.value;
-        if (profile && (profile as any).favorite_client_id) {
-            selectedFavoriteClientId.value = (
-                profile as any
-            ).favorite_client_id;
-        }
-    } catch (error) {
-        console.error("Failed to load clients:", error);
-        addToast(t("errors.clients_load_failed", { error }), "error");
-    } finally {
-        loadingClients.value = false;
-    }
-};
-
-const handleFavoriteClientChange = async () => {
-    try {
-        updatingFavoriteClient.value = true;
-        const result = await userService.updateUserProfile(
-            null,
-            selectedFavoriteClientId.value
-        );
-
-        if (result.success) {
-            await refreshUserData();
-            addToast(t("account.favorite_client_updated"), "success");
-        } else {
-            addToast(
-                result.error || t("account.favorite_client_update_failed"),
-                "error"
-            );
-
-            const profile = useUser().profile.value;
-
-            if (profile && (profile as any).favorite_client_id) {
-                selectedFavoriteClientId.value = (
-                    profile as any
-                ).favorite_client_id;
-            } else {
-                selectedFavoriteClientId.value = null;
-            }
-        }
-    } catch (error) {
-        console.error("Failed to update favorite client:", error);
-        addToast(t("account.favorite_client_update_failed"), "error");
-    } finally {
-        updatingFavoriteClient.value = false;
-    }
-};
-
 const syncState = ref<SyncServiceState>(syncService.getState());
 let unsubscribeSyncService: (() => void) | null = null;
 
@@ -869,7 +645,6 @@ onMounted(async () => {
 
     await syncService.initializeSyncStatus();
     await loadAchievements();
-    await loadClients();
 });
 
 watch(
@@ -929,22 +704,6 @@ const handleStreamerModeToggle = async () => {
     }
 };
 
-const handleInvisibleModeToggle = async () => {
-    try {
-        globalUserStatus.setInvisibleMode(!invisibleMode.value);
-        await globalUserStatus.forceSyncStatus();
-        addToast(
-            invisibleMode.value
-                ? t("account.invisible_enabled")
-                : t("account.invisible_disabled"),
-            "success"
-        );
-    } catch (error) {
-        console.error("Failed to toggle invisible mode:", error);
-        addToast(t("account.invisible_failed"), "error");
-    }
-};
-
 const openNicknameModal = () => {
     showModal(
         "edit-nickname",
@@ -987,18 +746,6 @@ const openRoleModal = () => {
                 }
             },
             close: () => hideModal("role-selection"),
-        }
-    );
-};
-
-const openSocialLinks = () => {
-    showModal(
-        "social-links",
-        SocialLinksModal,
-        { title: t("modals.social_links.title") },
-        {},
-        {
-            close: () => hideModal("social-links"),
         }
     );
 };

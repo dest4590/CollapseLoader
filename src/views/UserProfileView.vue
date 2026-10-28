@@ -283,24 +283,6 @@
                                 }}</span>
                             </div>
 
-                            <div
-                                v-if="favoriteClientDisplay"
-                                class="flex justify-between items-center"
-                            >
-                                <span class="text-base-content/70"
-                                    >{{
-                                        t("userProfile.favorite_client")
-                                    }}:</span
-                                >
-                                <span class="badge badge-primary">
-                                    {{ favoriteClientDisplay.name }}
-                                    {{
-                                        formatVersion(
-                                            favoriteClientDisplay.version
-                                        )
-                                    }}
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -756,24 +738,8 @@ import {
     LayoutList,
 } from "@lucide/vue";
 import { globalUserStatus } from "@features/auth/useUserStatus";
-import { invoke } from "@tauri-apps/api/core";
 import { localTrackerService } from "../services/localTrackerService";
 import PlaytimeStatsModal from "@/components/modals/common/PlaytimeStatsModal.vue";
-
-interface Client {
-    id: number;
-    name: string;
-    version: string;
-    filename: string;
-    md5_hash: string;
-    main_class: string;
-    show: boolean;
-    working: boolean;
-    insecure: boolean;
-    launches: number;
-    downloads: number;
-    size: number;
-}
 import { useStreamerMode } from "@features/social/useStreamerMode";
 import getRoleBadge from "@features/social/utils/roleBadge";
 import { resolveApiAssetUrl } from "@shared/utils/url";
@@ -810,8 +776,6 @@ const userAchievements = ref<UserAchievement[]>([]);
 const loadingAchievements = ref(false);
 const isAchievementsExpanded = ref(false);
 const initialDisplayCount = 4;
-const availableClients = ref<Client[]>([]);
-
 const { username } = useUser();
 
 const isOwnProfile = computed(() => {
@@ -878,14 +842,6 @@ const displayNickname = computed(() => {
         return "??????";
     }
     return userProfile.value?.nickname || userProfile.value?.username || "User";
-});
-
-const favoriteClientDisplay = computed(() => {
-    if (userProfile.value && (userProfile.value as any).favorite_client_id) {
-        const clientId = (userProfile.value as any).favorite_client_id;
-        return availableClients.value.find((c) => c.id === clientId) || null;
-    }
-    return null;
 });
 
 const displayUsername = computed(() => {
@@ -1079,20 +1035,6 @@ const formatDate = (dateString: string) => {
         month: "long",
         day: "numeric",
     });
-};
-
-const formatVersion = (version: string): string => {
-    if (!version) return "";
-    return version.replace(/^V/, "").replace(/_/g, ".");
-};
-
-const loadClients = async () => {
-    try {
-        const clients = await invoke<Client[]>("get_clients");
-        availableClients.value = clients.filter((c) => c.show && c.working);
-    } catch (error) {
-        console.error("Failed to load clients:", error);
-    }
 };
 
 const handleRemoveFriend = async () => {
@@ -1373,6 +1315,5 @@ onMounted(async () => {
     await loadUserProfile();
     if (!userProfile.value?.presets) await loadUserPresets();
     if (!userProfile.value?.achievements) await loadAchievements();
-    await loadClients();
 });
 </script>
