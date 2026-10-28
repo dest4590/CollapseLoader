@@ -150,7 +150,21 @@ impl CustomClient {
     }
 
     pub fn stop(&self) -> Result<(), String> {
-        process::stop_process_by_filename(&self.filename, &self.name)
+        let process_ids = Client::get_tracked_running_process_ids(self.id, true);
+        if process_ids.is_empty() {
+            return process::stop_process_by_filename(&self.filename, &self.name);
+        }
+
+        let mut stopped = false;
+        for process_id in process_ids {
+            stopped |= process::kill_process(&process_id.to_string(), &self.name)?;
+        }
+
+        if stopped {
+            Ok(())
+        } else {
+            process::stop_process_by_filename(&self.filename, &self.name)
+        }
     }
 
     pub fn resolve_libraries_dir(&self) -> PathBuf {

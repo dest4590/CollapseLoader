@@ -271,7 +271,7 @@ pub async fn get_running_client_ids(state: State<'_, AppState>) -> Result<Vec<u3
             .iter()
             .map(|client| client.id)
             .collect();
-        running_ids.extend(Client::get_tracked_running_client_ids());
+        running_ids.extend(Client::get_tracked_running_client_ids(false));
         running_ids.sort_unstable();
         running_ids.dedup();
         running_ids

@@ -535,7 +535,7 @@ impl Client {
             .spawn()
             .map_err(|e| format!("Failed to spawn process: {e}"))?;
         let process_id = child.id();
-        Client::register_running_process(client_id, process_id);
+        Client::register_running_process(client_id, process_id, options.is_custom);
 
         let secure_command =
             Self::redact_sensitive_command(&format!("{cmd:#?}"), &identity.access_token);
@@ -631,7 +631,7 @@ impl Client {
                     );
                 }
             }
-            Client::unregister_running_process(client_id, process_id);
+            Client::unregister_running_process(client_id, process_id, options.is_custom);
         });
 
         Ok(())

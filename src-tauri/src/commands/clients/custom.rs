@@ -1,6 +1,6 @@
 use super::with_custom_client_manager;
 use crate::core::clients::client::{ClientType, LaunchOptions};
-use crate::core::clients::custom_clients::CustomClient;
+use crate::core::clients::{client::Client, custom_clients::CustomClient};
 use crate::core::storage::common::JsonStorage;
 use crate::core::storage::custom_clients::CustomClientUpdate;
 use crate::core::utils::helpers::{emit_to_main_window, hide_main_window};
@@ -208,10 +208,14 @@ pub async fn launch_custom_client(
 #[tauri::command]
 pub async fn get_running_custom_client_ids() -> Vec<u32> {
     let handle = tokio::task::spawn_blocking(|| {
-        CustomClient::get_running_custom_clients()
+        let mut running_ids: Vec<u32> = CustomClient::get_running_custom_clients()
             .iter()
             .map(|client| client.id)
-            .collect()
+            .collect();
+        running_ids.extend(Client::get_tracked_running_client_ids(true));
+        running_ids.sort_unstable();
+        running_ids.dedup();
+        running_ids
     });
 
     handle.await.unwrap_or_else(|e| {
