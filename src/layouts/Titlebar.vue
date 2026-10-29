@@ -3,7 +3,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { Minus, Square, X } from "@lucide/vue";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 const appWindow = getCurrentWindow();
 const minimize = async () => appWindow.minimize();
 const maximize = async () => {
@@ -166,20 +168,27 @@ onUnmounted(() => {
                     : 'opacity-0 -translate-y-4 scale-95',
             ]"
         >
-            <button class="titlebar-btn" @click="minimize" title="Minimize">
+            <button
+                class="titlebar-btn tooltip tooltip-bottom titlebar-control-tooltip"
+                @click="minimize"
+                :data-tip="t('common.minimize')"
+                :aria-label="t('common.minimize')"
+            >
                 <Minus :size="14" :stroke-width="2.5" />
             </button>
             <button
-                class="titlebar-btn"
+                class="titlebar-btn tooltip tooltip-bottom titlebar-control-tooltip"
                 @click="maximize"
-                :title="isMaximized ? 'Restore' : 'Maximize'"
+                :data-tip="t(isMaximized ? 'common.restore' : 'common.maximize')"
+                :aria-label="t(isMaximized ? 'common.restore' : 'common.maximize')"
             >
                 <Square :size="12" :stroke-width="2.5" />
             </button>
             <button
-                class="titlebar-btn titlebar-close"
+                class="titlebar-btn titlebar-close tooltip tooltip-bottom titlebar-control-tooltip"
                 @click="close"
-                title="Close"
+                :data-tip="t('common.close')"
+                :aria-label="t('common.close')"
             >
                 <X :size="14" :stroke-width="2.5" />
             </button>
@@ -221,6 +230,21 @@ onUnmounted(() => {
     border-bottom-color: #161616;
     left: 20px;
     transform: translateX(0);
+}
+
+.titlebar-control-tooltip.tooltip:before {
+    background-color: var(--color-base-300);
+    color: var(--color-base-content);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.titlebar-control-tooltip.tooltip:after {
+    border-bottom-color: var(--color-base-300);
 }
 
 .titlebar-btn {
