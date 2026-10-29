@@ -6,7 +6,13 @@
             <div
                 class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
-                <div>
+                <div class="flex items-center gap-2">
+                    <button
+                        @click="goBack"
+                        class="btn btn-ghost btn-sm"
+                    >
+                        <ArrowLeft class="w-5 h-5" />
+                    </button>
                     <h1 class="text-2xl font-semibold text-primary-focus">
                         {{ t("navigation.news") }}
                         <span
@@ -185,7 +191,8 @@ import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { getCurrentLanguage } from "@services/i18n";
 import { formatDate } from "@shared/utils/utils";
-import { RefreshCcw, Send, Database } from "@lucide/vue";
+import { ArrowLeft, RefreshCcw, Send, Database } from "@lucide/vue";
+import { useRouter } from "@router";
 import {
     telegramNewsService,
     type NewsArticle,
@@ -194,6 +201,11 @@ import HfClients from "./HfClients.vue";
 
 const { t } = useI18n();
 const { addToast } = useToast();
+const router = useRouter();
+
+const goBack = () => {
+    router.back();
+};
 
 const news = ref<NewsArticle[]>([]);
 const loading = ref(false);

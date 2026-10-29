@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
     AlertTriangle,
+    ArrowLeft,
     Calendar,
     Copy,
     Edit3,
@@ -26,8 +27,14 @@ import EditCustomClientModal from "@features/clients/modals/EditCustomClientModa
 import CustomClientDisplaySettingsModal from "@features/clients/modals/CustomClientDisplaySettingsModal.vue";
 import LogViewerModal from "@features/clients/modals/LogViewerModal.vue";
 import CustomClientModsModal from "@features/clients/modals/CustomClientModsModal.vue";
+import { useRouter } from "@router";
 
 const { t } = useI18n();
+const router = useRouter();
+
+const goBack = () => {
+    router.back();
+};
 
 defineProps<{
     isOnline?: boolean;
@@ -348,8 +355,11 @@ const handleSearch = (query: string) => {
 <template>
     <div class="max-w-6xl mx-auto slide-up">
         <div class="flex justify-between items-center mb-4">
-            <div>
-                <h1 class="text-3xl font-bold text-primary mb-2">
+            <div class="flex items-center gap-2">
+                <button class="btn btn-ghost btn-sm" @click="goBack">
+                    <ArrowLeft class="w-5 h-5" />
+                </button>
+                <h1 class="text-3xl font-bold text-primary">
                     {{ t("navigation.custom_clients") }}
                 </h1>
             </div>
