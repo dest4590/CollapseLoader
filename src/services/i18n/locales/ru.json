@@ -1356,6 +1356,8 @@
         "fetch_failed": "Не удалось загрузить новости: {error}",
         "fetch_failed_toast": "Не удалось загрузить новости",
         "new": "Новое",
+        "feed_regular": "Обычные новости",
+        "feed_devlogs": "Девлоги",
         "mark_all_read": "Отметить всё как прочитанное",
         "refresh": "Обновить",
         "search_placeholder": "Поиск новостей...",

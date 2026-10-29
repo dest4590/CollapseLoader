@@ -1314,6 +1314,8 @@
         "fetch_failed": "获取新闻失败：{error}",
         "fetch_failed_toast": "加载新闻失败",
         "new": "新",
+        "feed_regular": "常规新闻",
+        "feed_devlogs": "开发日志",
         "time": {},
         "search_placeholder": "搜索新闻...",
         "mark_all_read": "标记全部为已读",

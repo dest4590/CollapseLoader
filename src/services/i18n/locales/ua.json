@@ -1327,6 +1327,8 @@
         "fetch_failed": "Не вдалося завантажити новини: {error}",
         "fetch_failed_toast": "Не вдалося завантажити новини",
         "new": "Нове",
+        "feed_regular": "Звичайні новини",
+        "feed_devlogs": "Девлоги",
         "time": {},
         "search_placeholder": "Пошук новин...",
         "mark_all_read": "Позначити все як прочитане",

@@ -1343,6 +1343,8 @@
         "fetch_failed": "Failed to fetch news: {error}",
         "fetch_failed_toast": "Failed to load news",
         "new": "New",
+        "feed_regular": "General news",
+        "feed_devlogs": "Devlogs",
         "time": {},
         "search_placeholder": "News search...",
         "mark_all_read": "Mark everything as read",

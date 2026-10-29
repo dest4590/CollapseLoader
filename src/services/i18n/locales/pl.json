@@ -1325,6 +1325,8 @@
         "fetch_failed": "Nie udało się załadować aktualności: {error}",
         "fetch_failed_toast": "Nie udało się załadować aktualności",
         "new": "Nowe",
+        "feed_regular": "Aktualności",
+        "feed_devlogs": "Dzienniki deweloperskie",
         "mark_all_read": "Oznacz wszystko jako przeczytane",
         "refresh": "Odśwież",
         "search_placeholder": "Szukaj aktualności...",

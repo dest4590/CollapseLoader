@@ -6,7 +6,7 @@
             <div
                 class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-3">
                     <button
                         @click="goBack"
                         class="btn btn-ghost btn-sm"
@@ -22,6 +22,38 @@
                             {{ unreadCount }}
                         </span>
                     </h1>
+                    <div
+                        v-if="!showHfApi"
+                        role="tablist"
+                        class="inline-flex max-w-full items-center gap-1 rounded-xl border border-base-300 bg-base-300/60 p-1"
+                    >
+                        <button
+                            role="tab"
+                            class="min-h-9 min-w-28 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-px active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                            :class="
+                                activeFeed === 'general'
+                                    ? 'bg-primary text-primary-content shadow-md shadow-primary/15'
+                                    : 'text-base-content/65 hover:bg-base-100/70 hover:text-base-content'
+                            "
+                            :aria-selected="activeFeed === 'general'"
+                            @click="selectFeed('general')"
+                        >
+                            {{ t("news.feed_regular") }}
+                        </button>
+                        <button
+                            role="tab"
+                            class="min-h-9 min-w-28 rounded-lg px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 ease-out hover:-translate-y-px active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                            :class="
+                                activeFeed === 'devlogs'
+                                    ? 'bg-primary text-primary-content shadow-md shadow-primary/15'
+                                    : 'text-base-content/65 hover:bg-base-100/70 hover:text-base-content'
+                            "
+                            :aria-selected="activeFeed === 'devlogs'"
+                            @click="selectFeed('devlogs')"
+                        >
+                            {{ t("news.feed_devlogs") }}
+                        </button>
+                    </div>
                 </div>
                 <div class="flex flex-wrap gap-2 items-center justify-end">
                     <button
@@ -42,7 +74,7 @@
                     />
                     <a
                         v-if="!showHfApi"
-                        href="https://telegram.me/collapseloader"
+                        :href="telegramChannelUrl"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="btn btn-sm btn-ghost gap-2 text-primary"
@@ -215,7 +247,15 @@ const searchQuery = ref("");
 const unreadCount = ref(0);
 const newsCardRefs = ref<Record<number, any>>({});
 const showHfApi = ref(false);
+const activeFeed = ref<"general" | "devlogs">("general");
 let observer: IntersectionObserver | null = null;
+let newsRequestId = 0;
+
+const telegramChannelUrl = computed(() =>
+    activeFeed.value === "devlogs"
+        ? "https://t.me/collapseloader_devlogs"
+        : "https://t.me/collapseloader"
+);
 
 const DISALLOWED_TAGS = new Set([
     "script",
@@ -277,7 +317,9 @@ const markNewsAsRead = (article: NewsArticle) => {
 
 const updateUnreadCount = () => {
     unreadCount.value = telegramNewsService.getUnreadCount(news.value);
-    emit("unread-count-updated", unreadCount.value);
+    if (activeFeed.value === "general") {
+        emit("unread-count-updated", unreadCount.value);
+    }
 };
 
 const markAllNewsAsRead = () => {
@@ -288,13 +330,24 @@ const markAllNewsAsRead = () => {
 };
 
 const fetchNews = async () => {
+    const requestId = ++newsRequestId;
+    const channel =
+        activeFeed.value === "devlogs"
+            ? "collapseloader_devlogs"
+            : "collapseloader";
     loading.value = true;
     error.value = null;
 
     try {
-        news.value = await telegramNewsService.fetchNews(currentLanguage.value);
+        const result = await telegramNewsService.fetchNews(
+            currentLanguage.value,
+            channel
+        );
+        if (requestId !== newsRequestId) return;
+        news.value = result;
         updateUnreadCount();
     } catch (err: any) {
+        if (requestId !== newsRequestId) return;
         console.error("Failed to fetch news:", err);
 
         if (err.response?.status === 404) {
@@ -311,11 +364,17 @@ const fetchNews = async () => {
                 error: err.message || "Unknown error",
             });
         }
-
         addToast(t("news.fetch_failed_toast"), "error");
     } finally {
-        loading.value = false;
+        if (requestId === newsRequestId) loading.value = false;
     }
+};
+
+const selectFeed = (feed: "general" | "devlogs") => {
+    if (activeFeed.value === feed) return;
+    activeFeed.value = feed;
+    newsCardRefs.value = {};
+    fetchNews();
 };
 
 const filteredNews = computed(() => {

@@ -5,16 +5,27 @@ export interface NewsArticle {
     title: string;
     content: string;
     language: string;
+    source?: string;
     created_at: string;
     updated_at: string;
 }
 
+const getReadArticleKey = (article: NewsArticle): string => {
+    if (article.source && article.source !== "collapseloader") {
+        return `news_${article.source}_${article.id}`;
+    }
+    return `news_${article.language}_${article.id}`;
+};
+
 export const telegramNewsService = {
-    async fetchNews(language: string = "en"): Promise<NewsArticle[]> {
+    async fetchNews(
+        language: string = "en",
+        channel: string = "collapseloader"
+    ): Promise<NewsArticle[]> {
         try {
             const response = await invoke<string>("api_request", {
                 method: "GET",
-                url: "https://telegram.me/s/collapseloader",
+                url: `https://telegram.me/s/${channel}`,
                 headers: {
                     "User-Agent":
                         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -112,6 +123,7 @@ export const telegramNewsService = {
                         title: "Telegram Update",
                         content: contentHtml,
                         language: language,
+                        source: channel,
                         created_at:
                             dateElement.getAttribute("datetime") ||
                             new Date().toISOString(),
@@ -143,19 +155,19 @@ export const telegramNewsService = {
     getUnreadCount(news: NewsArticle[]): number {
         const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
         return news.filter((article) => {
-            const uniqueId = `news_${article.language}_${article.id}`;
+            const uniqueId = getReadArticleKey(article);
             return !readNews.includes(uniqueId);
         }).length;
     },
 
     isRead(article: NewsArticle): boolean {
-        const uniqueId = `news_${article.language}_${article.id}`;
+        const uniqueId = getReadArticleKey(article);
         const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
         return readNews.includes(uniqueId);
     },
 
     markAsRead(article: NewsArticle) {
-        const uniqueId = `news_${article.language}_${article.id}`;
+        const uniqueId = getReadArticleKey(article);
         const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
         if (!readNews.includes(uniqueId)) {
             readNews.push(uniqueId);
@@ -167,7 +179,7 @@ export const telegramNewsService = {
         const readNews = JSON.parse(localStorage.getItem("readNews") || "[]");
         let updated = false;
         news.forEach((article) => {
-            const uniqueId = `news_${article.language}_${article.id}`;
+            const uniqueId = getReadArticleKey(article);
             if (!readNews.includes(uniqueId)) {
                 readNews.push(uniqueId);
                 updated = true;
