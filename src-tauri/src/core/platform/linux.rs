@@ -56,10 +56,11 @@ fn has_webkit2gtk_library() -> bool {
                                 if let Ok(include_conf) = std::fs::read_to_string(entry.path()) {
                                     for inc_line in include_conf.lines() {
                                         let inc_line = inc_line.trim();
-                                        if !inc_line.is_empty() && !inc_line.starts_with('#') {
-                                            if check_dir_for_webkit(Path::new(inc_line)) {
-                                                return true;
-                                            }
+                                        if !inc_line.is_empty()
+                                            && !inc_line.starts_with('#')
+                                            && check_dir_for_webkit(Path::new(inc_line))
+                                        {
+                                            return true;
                                         }
                                     }
                                 }

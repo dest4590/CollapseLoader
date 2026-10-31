@@ -33,6 +33,7 @@ pub static CLIENT_LOGS: std::sync::LazyLock<Mutex<HashMap<u32, Vec<String>>>> =
 
 static RUNNING_CLIENT_COUNTS: std::sync::LazyLock<Mutex<HashMap<(bool, u32), usize>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
+#[allow(clippy::type_complexity)]
 static RUNNING_CLIENT_PIDS: std::sync::LazyLock<Mutex<HashMap<(bool, u32), Vec<u32>>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
 
