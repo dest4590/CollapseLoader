@@ -301,21 +301,23 @@ watch(
                     $t("modals.edit_custom_client_modal.java_version_label")
                 }}</span>
             </label>
-            <select
+            <AnimatedDropdown
                 v-model="form.javaVersion"
-                class="select select-bordered"
-            >
-                <option value="">
-                    {{
-                        $t("modals.edit_custom_client_modal.default_option", {
-                            value: "8"
-                        })
-                    }}
-                </option>
-                <option v-for="v in JAVA_VERSIONS" :key="v" :value="v">
-                    Java {{ v }}
-                </option>
-            </select>
+                :options="[
+                    {
+                        value: '',
+                        label: $t('modals.edit_custom_client_modal.default_option', {
+                            value: '8',
+                        }),
+                    },
+                    ...JAVA_VERSIONS.map((v) => ({
+                        value: v,
+                        label: `Java ${v}`,
+                    })),
+                ]"
+                width="100%"
+                field-size
+            />
         </div>
 
         <div class="form-control" v-if="form.clientType === 'default'">

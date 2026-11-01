@@ -369,35 +369,35 @@ const handleSubmit = async () => {
                         $t("modals.add_custom_client_modal.viaversion_label")
                     }}</span>
                 </label>
-                <select
+                <AnimatedDropdown
                     v-model="form.viaversion"
-                    class="select select-bordered"
-                >
-                    <option value="">
-                        {{
-                            $t(
-                                "modals.add_custom_client_modal.default_option",
+                    :options="[
+                        {
+                            value: '',
+                            label: $t(
+                                'modals.add_custom_client_modal.default_option',
                                 { value: DEFAULT_VIAVERSION }
-                            )
-                        }}
-                    </option>
-                    <option v-for="v in VIA_VERSIONS" :key="v" :value="v">
-                        {{
-                            $t(
-                                "modals.add_custom_client_modal.viaversion_option",
+                            ),
+                        },
+                        ...VIA_VERSIONS.map((v) => ({
+                            value: v,
+                            label: $t(
+                                'modals.add_custom_client_modal.viaversion_option',
                                 {
                                     version: v,
                                     default:
                                         v === DEFAULT_VIAVERSION
                                             ? $t(
-                                                  "modals.add_custom_client_modal.default_suffix"
+                                                  'modals.add_custom_client_modal.default_suffix'
                                               )
-                                            : "",
+                                            : '',
                                 }
-                            )
-                        }}
-                    </option>
-                </select>
+                            ),
+                        })),
+                    ]"
+                    width="100%"
+                    field-size
+                />
                 <label class="label">
                     <span class="label-text-alt text-base-content/60">
                         {{
@@ -413,35 +413,35 @@ const handleSubmit = async () => {
                         $t("modals.add_custom_client_modal.java_version_label")
                     }}</span>
                 </label>
-                <select
+                <AnimatedDropdown
                     v-model="form.javaVersion"
-                    class="select select-bordered"
-                >
-                    <option value="">
-                        {{
-                            $t(
-                                "modals.add_custom_client_modal.default_option",
+                    :options="[
+                        {
+                            value: '',
+                            label: $t(
+                                'modals.add_custom_client_modal.default_option',
                                 { value: DEFAULT_JAVA_VERSION }
-                            )
-                        }}
-                    </option>
-                    <option v-for="v in JAVA_VERSIONS" :key="v" :value="v">
-                        {{
-                            $t(
-                                "modals.add_custom_client_modal.java_version_option",
+                            ),
+                        },
+                        ...JAVA_VERSIONS.map((v) => ({
+                            value: v,
+                            label: $t(
+                                'modals.add_custom_client_modal.java_version_option',
                                 {
                                     version: v,
                                     default:
                                         v === DEFAULT_JAVA_VERSION
                                             ? $t(
-                                                  "modals.add_custom_client_modal.default_suffix"
+                                                  'modals.add_custom_client_modal.default_suffix'
                                               )
-                                            : "",
+                                            : '',
                                 }
-                            )
-                        }}
-                    </option>
-                </select>
+                            ),
+                        })),
+                    ]"
+                    width="100%"
+                    field-size
+                />
                 <label class="label">
                     <span class="label-text-alt text-base-content/60">
                         {{
