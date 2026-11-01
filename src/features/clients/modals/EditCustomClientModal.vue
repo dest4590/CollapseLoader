@@ -6,6 +6,7 @@ import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import { useI18n } from "vue-i18n";
 import type { CustomClient } from "@shared/types/ui";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 import { useCustomClientVersions } from "../composables/useCustomClientVersions";
 
 const { addToast } = useToast();
@@ -223,15 +224,13 @@ watch(
                     *</span
                 >
             </label>
-            <select
+            <AnimatedDropdown
                 v-model="form.version"
-                class="select select-bordered w-full"
-                :class="{ 'select-error': errors.version }"
-            >
-                <option v-for="v in availableVersions" :key="v" :value="v">
-                    {{ v }}
-                </option>
-            </select>
+                :options="availableVersions.map((v) => ({ value: v, label: v }))"
+                width="100%"
+                field-size
+                :error="!!errors.version"
+            />
             <label v-if="errors.version" class="label">
                 <span class="label-text-alt text-error">{{
                     errors.version
@@ -270,20 +269,21 @@ watch(
                     $t("modals.edit_custom_client_modal.client_type")
                 }}</span>
             </label>
-            <select
+            <AnimatedDropdown
                 v-model="form.clientType"
-                class="select select-bordered w-full"
-            >
-                <option value="default">
-                    {{
-                        $t(
-                            "modals.edit_custom_client_modal.client_type_vanilla"
-                        )
-                    }}
-                </option>
-                <option value="fabric">Fabric</option>
-                <option value="forge">Forge</option>
-            </select>
+                :options="[
+                    {
+                        value: 'default',
+                        label: $t(
+                            'modals.edit_custom_client_modal.client_type_vanilla'
+                        ),
+                    },
+                    { value: 'fabric', label: 'Fabric' },
+                    { value: 'forge', label: 'Forge' },
+                ]"
+                width="100%"
+                field-size
+            />
             <label class="label">
                 <span class="label-text-alt opacity-60">{{
                     $t("modals.edit_custom_client_modal.client_type_hint")

@@ -12,6 +12,9 @@ const props = defineProps<{
     options: Option[];
     width?: string;
     direction?: "up" | "down" | "auto";
+    disabled?: boolean;
+    fieldSize?: boolean;
+    error?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -71,6 +74,8 @@ const updateMenuPosition = () => {
 };
 
 const toggle = async () => {
+    if (props.disabled) return;
+
     if (!isOpen.value) {
         if (!triggerRef.value) {
             isOpen.value = true;
@@ -140,8 +145,9 @@ onBeforeUnmount(() => {
         <button
             ref="triggerRef"
             type="button"
+            :disabled="disabled"
             class="animated-dropdown-trigger"
-            :class="{ open: isOpen }"
+            :class="{ open: isOpen, 'field-size': fieldSize, error }"
             @click="toggle"
         >
             <span class="trigger-label">{{ selectedLabel }}</span>
@@ -239,6 +245,27 @@ onBeforeUnmount(() => {
         box-shadow 0.15s ease,
         background 0.15s ease;
     outline: none;
+}
+
+.animated-dropdown-trigger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.animated-dropdown-trigger.field-size {
+    height: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0 0.875rem;
+    border: 1px solid
+        color-mix(in oklab, var(--color-base-content) 20%, transparent);
+    border-radius: var(--radius-field, 0.5rem);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    font-size: 0.9375rem;
+}
+
+.animated-dropdown-trigger.error {
+    border-color: var(--color-error);
 }
 
 [data-theme="light"] .animated-dropdown-trigger {

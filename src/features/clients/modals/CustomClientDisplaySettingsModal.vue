@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useToast } from "@shared/composables/useToast";
 import { onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 
 defineEmits(["close"]);
 
@@ -52,14 +53,21 @@ watch(selectedOption, async () => {
                 $t("custom_clients.display_mode")
             }}</span>
         </label>
-        <select v-model="selectedOption" class="select select-bordered w-full">
-            <option value="separate">
-                {{ $t("custom_clients.display_mode_separate") }}
-            </option>
-            <option value="global">
-                {{ $t("custom_clients.display_mode_global") }}
-            </option>
-        </select>
+        <AnimatedDropdown
+            v-model="selectedOption"
+            :options="[
+                {
+                    value: 'separate',
+                    label: $t('custom_clients.display_mode_separate'),
+                },
+                {
+                    value: 'global',
+                    label: $t('custom_clients.display_mode_global'),
+                },
+            ]"
+            width="100%"
+            field-size
+        />
     </div>
     <div class="flex justify-end">
         <button class="btn btn-primary" @click="$emit('close')">
