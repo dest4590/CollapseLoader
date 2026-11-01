@@ -1562,13 +1562,15 @@ const handleToastPositionChange = (position: string) => {
                                     <span class="label-text mb-1">{{
                                         t("settings.proxy_type")
                                     }}</span>
-                                    <select
+                                    <AnimatedDropdown
                                         v-model="settings.game_proxy_type.value"
-                                        class="select select-bordered w-full"
-                                    >
-                                        <option value="socks5">SOCKS5</option>
-                                        <option value="socks4">SOCKS4</option>
-                                    </select>
+                                        :options="[
+                                            { value: 'socks5', label: 'SOCKS5' },
+                                            { value: 'socks4', label: 'SOCKS4' },
+                                        ]"
+                                        width="100%"
+                                        field-size
+                                    />
                                 </label>
                                 <label class="form-control w-full">
                                     <span class="label-text mb-1">{{
