@@ -14,6 +14,8 @@ const props = defineProps<{
     direction?: "up" | "down" | "auto";
     disabled?: boolean;
     fieldSize?: boolean;
+    smallField?: boolean;
+    tinyField?: boolean;
     error?: boolean;
 }>();
 
@@ -147,7 +149,13 @@ onBeforeUnmount(() => {
             type="button"
             :disabled="disabled"
             class="animated-dropdown-trigger"
-            :class="{ open: isOpen, 'field-size': fieldSize, error }"
+            :class="{
+                open: isOpen,
+                'field-size': fieldSize,
+                'small-field': smallField,
+                'tiny-field': tinyField,
+                error,
+            }"
             @click="toggle"
         >
             <span class="trigger-label">{{ selectedLabel }}</span>
@@ -264,11 +272,35 @@ onBeforeUnmount(() => {
     font-size: 0.9375rem;
 }
 
+.animated-dropdown-trigger.small-field {
+    height: 2rem;
+    min-height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid
+        color-mix(in oklab, var(--color-base-content) 20%, transparent);
+    border-radius: var(--radius-field, 0.5rem);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    font-size: 0.875rem;
+}
+
+.animated-dropdown-trigger.tiny-field {
+    height: 1.875rem;
+    min-height: 1.875rem;
+    padding: 0 0.375rem;
+    border: 1px solid
+        color-mix(in oklab, var(--color-base-content) 20%, transparent);
+    border-radius: var(--radius-field, 0.5rem);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    font-size: 0.8125rem;
+}
+
 .animated-dropdown-trigger.error {
     border-color: var(--color-error);
 }
 
-[data-theme="light"] .animated-dropdown-trigger {
+[data-theme="light"] .animated-dropdown-trigger:not(.field-size):not(.small-field) {
     border-color: rgba(0, 0, 0, 0.15);
     background: rgba(0, 0, 0, 0.05);
 }

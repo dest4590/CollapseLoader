@@ -51,14 +51,16 @@
                             t("mod_builds.loader")
                         }}</span>
                     </label>
-                    <select
+                    <AnimatedDropdown
                         v-model="editingBuild.loader"
-                        class="select select-sm select-bordered"
+                        :options="[
+                            { value: 'fabric', label: 'Fabric' },
+                            { value: 'forge', label: 'Forge' },
+                        ]"
+                        width="100%"
+                        small-field
                         @change="onLoaderChange"
-                    >
-                        <option value="fabric">Fabric</option>
-                        <option value="forge">Forge</option>
-                    </select>
+                    />
                 </div>
                 <div class="form-control gap-1 flex-1">
                     <label class="label py-0">
@@ -66,22 +68,13 @@
                             t("mod_builds.mc_version")
                         }}</span>
                     </label>
-                    <select
+                    <AnimatedDropdown
                         v-model="editingBuild.mc_version"
-                        class="select select-sm select-bordered"
+                        :options="availableVersions.map((v) => ({ value: v, label: v }))"
+                        width="100%"
+                        small-field
                         :disabled="versionsLoading"
-                    >
-                        <option v-if="versionsLoading" value="" disabled>
-                            {{ t("common.loading") }}...
-                        </option>
-                        <option
-                            v-for="v in availableVersions"
-                            :key="v"
-                            :value="v"
-                        >
-                            {{ v }}
-                        </option>
-                    </select>
+                    />
                 </div>
             </div>
 
@@ -361,6 +354,7 @@ import {
 } from "@features/clients/modrinthService";
 import { useCustomClientVersions } from "@features/clients/composables/useCustomClientVersions";
 import type { Client } from "@shared/types/ui";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 
 const props = defineProps<{
     client: Client;

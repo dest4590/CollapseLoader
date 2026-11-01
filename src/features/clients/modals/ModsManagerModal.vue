@@ -26,8 +26,9 @@
                     </button>
                     <button
                         @click="showBuilds = true"
-                        class="btn btn-sm btn-ghost border border-base-200"
-                        :title="t('mod_builds.title')"
+                        class="btn btn-sm btn-ghost border border-base-200 tooltip tooltip-bottom titlebar-control-tooltip"
+                        :data-tip="t('mod_builds.title')"
+                        :aria-label="t('mod_builds.title')"
                     >
                         <PackageOpen class="w-4 h-4" />
                     </button>
@@ -40,24 +41,30 @@
                         <span class="text-xs font-semibold text-base-content/70"
                             >{{ t("mods.sort_by") }}:</span
                         >
-                        <select
+                        <AnimatedDropdown
                             v-model="sortBy"
-                            class="select select-sm select-bordered bg-base-200 h-8 min-h-0 text-xs"
-                            @change="hasSearched && handleSearch()"
-                        >
-                            <option value="relevance">
-                                {{ t("mods.sort_relevance") }}
-                            </option>
-                            <option value="downloads">
-                                {{ t("mods.sort_downloads") }}
-                            </option>
-                            <option value="newest">
-                                {{ t("mods.sort_newest") }}
-                            </option>
-                            <option value="updated">
-                                {{ t("mods.sort_updated") }}
-                            </option>
-                        </select>
+                            :options="[
+                                {
+                                    value: 'relevance',
+                                    label: t('mods.sort_relevance'),
+                                },
+                                {
+                                    value: 'downloads',
+                                    label: t('mods.sort_downloads'),
+                                },
+                                {
+                                    value: 'newest',
+                                    label: t('mods.sort_newest'),
+                                },
+                                {
+                                    value: 'updated',
+                                    label: t('mods.sort_updated'),
+                                },
+                            ]"
+                            width="12rem"
+                            tiny-field
+                            @change="handleSortChange"
+                        />
                     </div>
                     <label class="cursor-pointer label px-0 py-0 gap-2">
                         <span class="label-text text-xs font-semibold">{{
@@ -322,6 +329,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { Client } from "@shared/types/ui";
 import { useToast } from "@shared/composables/useToast";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 
 const props = defineProps<{
     client: Client;
@@ -414,6 +422,11 @@ const handleSearch = async () => {
     } finally {
         isLoading.value = false;
     }
+};
+
+const handleSortChange = async (value: string) => {
+    sortBy.value = value as typeof sortBy.value;
+    if (hasSearched.value) await handleSearch();
 };
 
 const isVersionInstalled = (version: ModrinthVersion) => {
@@ -527,3 +540,29 @@ const openInModrinth = async (mod: ModrinthSearchResult) => {
     }
 };
 </script>
+
+<style scoped>
+.titlebar-control-tooltip.tooltip:after {
+    left: auto;
+    right: 12px;
+    transform: none;
+    border-bottom-color: var(--color-base-300);
+}
+
+.titlebar-control-tooltip.tooltip:before {
+    left: auto;
+    right: 0;
+    transform: none;
+    width: max-content;
+    max-width: min(12rem, calc(100vw - 2rem));
+    white-space: normal;
+    text-align: center;
+    background-color: var(--color-base-300);
+    color: var(--color-base-content);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    font-size: 11px;
+    font-weight: 500;
+}
+</style>

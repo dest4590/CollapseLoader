@@ -26,24 +26,24 @@
                     <span class="text-xs font-semibold text-base-content/70"
                         >{{ t("mods.sort_by") }}:</span
                     >
-                    <select
+                    <AnimatedDropdown
                         v-model="sortBy"
-                        class="select select-sm select-bordered bg-base-200 h-8 min-h-0 text-xs"
-                        @change="hasSearched && handleSearch()"
-                    >
-                        <option value="relevance">
-                            {{ t("mods.sort_relevance") }}
-                        </option>
-                        <option value="downloads">
-                            {{ t("mods.sort_downloads") }}
-                        </option>
-                        <option value="newest">
-                            {{ t("mods.sort_newest") }}
-                        </option>
-                        <option value="updated">
-                            {{ t("mods.sort_updated") }}
-                        </option>
-                    </select>
+                        :options="[
+                            {
+                                value: 'relevance',
+                                label: t('mods.sort_relevance'),
+                            },
+                            {
+                                value: 'downloads',
+                                label: t('mods.sort_downloads'),
+                            },
+                            { value: 'newest', label: t('mods.sort_newest') },
+                            { value: 'updated', label: t('mods.sort_updated') },
+                        ]"
+                        width="12rem"
+                        tiny-field
+                        @change="handleSortChange"
+                    />
                 </div>
                 <label class="cursor-pointer label px-0 py-0 gap-2">
                     <span class="label-text text-xs font-semibold">{{
@@ -265,6 +265,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { invoke } from "@tauri-apps/api/core";
 import type { CustomClient } from "@shared/types/ui";
 import { useToast } from "@shared/composables/useToast";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 
 const props = defineProps<{
     client: CustomClient;
@@ -351,6 +352,11 @@ const handleSearch = async () => {
     } finally {
         isLoading.value = false;
     }
+};
+
+const handleSortChange = async (value: string) => {
+    sortBy.value = value as typeof sortBy.value;
+    if (hasSearched.value) await handleSearch();
 };
 
 const isVersionInstalled = (version: ModrinthVersion) => {
