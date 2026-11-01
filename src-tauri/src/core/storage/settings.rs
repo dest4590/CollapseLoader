@@ -162,6 +162,12 @@ define_settings! {
         start_minimized: bool = (false, true),
         auto_hide_sidebar: bool = (false, true),
         disable_server_ads: bool = (false, true),
+        game_proxy_enabled: bool = (false, false),
+        game_proxy_type: String = ("socks5".to_string(), false),
+        game_proxy_host: String = ("127.0.0.1".to_string(), false),
+        game_proxy_port: u16 = (1080, false),
+        game_proxy_username: String = ("".to_string(), false),
+        game_proxy_password: String = ("".to_string(), false),
     }
 }
 

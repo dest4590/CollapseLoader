@@ -234,6 +234,9 @@ pub async fn launch_client(
     if !client.meta.is_custom {
         ensure_agent_overlay().await?;
     }
+    if state.settings().game_proxy_enabled.value {
+        AgentOverlayManager::ensure_proxy_agent().await?;
+    }
 
     let sync_enabled = state.settings().sync_client_settings.value;
 

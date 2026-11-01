@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    path::{Path, PathBuf, MAIN_SEPARATOR},
+    path::{MAIN_SEPARATOR, Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
@@ -11,14 +11,14 @@ use tauri::AppHandle;
 use tokio::sync::Semaphore;
 
 use crate::core::clients::manager::ClientManager;
-use crate::core::storage::data::{Data, DATA};
+use crate::core::storage::data::{DATA, Data};
 use crate::core::utils::{
     globals::{
-        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK21_FOLDER,
-        JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
-        LIBRARIES_VA1_8_9_FOLDER, LIBRARIES_VA1_8_9_VIA511_FOLDER, LIBRARIES_VA1_8_9_VIA511_ZIP,
-        LIBRARIES_VA1_8_9_VIA53_FOLDER, LIBRARIES_VA1_8_9_VIA53_ZIP,
-        LIBRARIES_VA1_8_9_VIA57_FOLDER, LIBRARIES_VA1_8_9_VIA57_ZIP, LIBRARIES_VA1_8_9_ZIP,
+        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK8_FOLDER,
+        JDK21_FOLDER, JDK25_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
+        LIBRARIES_VA1_8_9_FOLDER, LIBRARIES_VA1_8_9_VIA53_FOLDER, LIBRARIES_VA1_8_9_VIA53_ZIP,
+        LIBRARIES_VA1_8_9_VIA57_FOLDER, LIBRARIES_VA1_8_9_VIA57_ZIP,
+        LIBRARIES_VA1_8_9_VIA511_FOLDER, LIBRARIES_VA1_8_9_VIA511_ZIP, LIBRARIES_VA1_8_9_ZIP,
         MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER,
     },
     process,
@@ -154,7 +154,7 @@ fn dir_has_any_jars(dir: &Path, skip_root_mc_version_dirs: bool) -> bool {
     !jars.is_empty()
 }
 
-fn add_log_line(client_id: u32, line: String) {
+pub(crate) fn add_log_line(client_id: u32, line: String) {
     if let Ok(mut logs) = CLIENT_LOGS.lock() {
         if let Some(client_logs) = logs.get_mut(&client_id) {
             client_logs.push(line);
@@ -528,11 +528,7 @@ impl Client {
         process::filter_running(clients, |client| &client.filename)
     }
 
-    pub fn register_running_process(
-        client_id: u32,
-        process_id: Option<u32>,
-        is_custom: bool,
-    ) {
+    pub fn register_running_process(client_id: u32, process_id: Option<u32>, is_custom: bool) {
         let key = (is_custom, client_id);
         if let Ok(mut running) = RUNNING_CLIENT_COUNTS.lock() {
             *running.entry(key).or_default() += 1;
@@ -544,11 +540,7 @@ impl Client {
         }
     }
 
-    pub fn unregister_running_process(
-        client_id: u32,
-        process_id: Option<u32>,
-        is_custom: bool,
-    ) {
+    pub fn unregister_running_process(client_id: u32, process_id: Option<u32>, is_custom: bool) {
         let key = (is_custom, client_id);
         if let Ok(mut running) = RUNNING_CLIENT_COUNTS.lock() {
             if let Some(count) = running.get_mut(&key) {

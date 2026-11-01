@@ -2,6 +2,7 @@
 
 pub mod auth;
 pub mod clients;
+pub mod game_proxy;
 pub mod irc;
 pub mod mod_builds;
 pub mod network;

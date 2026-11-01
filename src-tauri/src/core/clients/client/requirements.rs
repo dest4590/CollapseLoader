@@ -1,23 +1,23 @@
-use std::path::{Path, PathBuf, MAIN_SEPARATOR};
+use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::sync::LazyLock;
 use std::time::Duration;
 
-use futures_util::future::try_join_all;
 use futures_util::FutureExt;
+use futures_util::future::try_join_all;
 use tauri::AppHandle;
 
 use super::{
-    collect_jars_recursive, dir_has_any_jars, sanitize_version_for_paths, Client, ClientType,
-    REQUIREMENTS_DOWNLOADING, REQUIREMENTS_SEMAPHORE,
+    Client, ClientType, REQUIREMENTS_DOWNLOADING, REQUIREMENTS_SEMAPHORE, collect_jars_recursive,
+    dir_has_any_jars, sanitize_version_for_paths,
 };
 use crate::core::storage::{
-    data::{Data, DATA},
+    data::{DATA, Data},
     settings::SETTINGS,
 };
 use crate::core::utils::globals::{
     AGENT_OVERLAY_FOLDER, ASSETS_FABRIC_FOLDER, ASSETS_FABRIC_ZIP, ASSETS_FOLDER, ASSETS_ZIP,
     CUSTOM_CLIENTS_FOLDER, FABRIC_DEPS_URL, FORGE_DEPS_URL, IS_AARCH64, IS_LINUX, IS_MACOS,
-    IS_WINDOWS, JDK21_FOLDER, JDK25_FOLDER, JDK8_FOLDER, LIBRARIES_121_FOLDER, LIBRARIES_121_ZIP,
+    IS_WINDOWS, JDK8_FOLDER, JDK21_FOLDER, JDK25_FOLDER, LIBRARIES_121_FOLDER, LIBRARIES_121_ZIP,
     LIBRARIES_FABRIC_FOLDER, LIBRARIES_FABRIC_ZIP, LIBRARIES_FOLDER, LIBRARIES_LEGACY_FOLDER,
     LIBRARIES_LEGACY_ZIP, LIBRARIES_ZIP, MINECRAFT_VERSIONS_FOLDER, MODS_FOLDER, NATIVES_FOLDER,
     NATIVES_LEGACY_FOLDER, NATIVES_LEGACY_LINUX_FOLDER, NATIVES_LEGACY_LINUX_ZIP,
@@ -316,7 +316,10 @@ impl Client {
                         match std::fs::remove_file(&path) {
                             Ok(()) => {
                                 removed = true;
-                                log_info!("Removed Fabric API from mods folder: {}", path.display());
+                                log_info!(
+                                    "Removed Fabric API from mods folder: {}",
+                                    path.display()
+                                );
                             }
                             Err(e) => {
                                 log_warn!("Failed to remove {}: {}", path.display(), e);

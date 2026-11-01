@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import AnimatedSlider from "@shared/components/ui/AnimatedSlider.vue";
 import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
@@ -79,9 +79,18 @@ const accounts = ref<Account[]>([]);
 const remoteAccounts = ref<UserExternalAccount[]>([]);
 const remoteAccountsLoading = ref(false);
 const isAccountSyncing = ref(false);
-const activeTab = ref<"general" | "accounts" | "skin">("general");
+const activeTab = ref<"general" | "accounts" | "skin" | "proxy">("general");
 const loading = ref(true);
 const isRefreshing = ref(false);
+const proxyTestHost = ref("");
+const proxyTestPort = ref(25565);
+const proxyTestState = ref<"idle" | "testing" | "success" | "error">("idle");
+const proxyTestError = ref("");
+const gameProxyStatus = ref<{
+    status: string;
+    server: string | null;
+    error: string | null;
+}>({ status: "off", server: null, error: null });
 const { addToast, setToastPosition, getToastPosition } = useToast();
 const { showModal, showConfirm } = useModal();
 
@@ -201,6 +210,40 @@ const loadSettings = async () => {
         addToast(t("settings.load_settings_failed", { error }), "error");
     } finally {
         loading.value = false;
+    }
+};
+
+const refreshGameProxyStatus = async () => {
+    try {
+        gameProxyStatus.value = await invoke("get_game_proxy_status");
+    } catch (error) {
+        console.error("Failed to read Minecraft proxy status:", error);
+    }
+};
+
+const testGameProxy = async () => {
+    const serverHost = proxyTestHost.value.trim();
+    if (!serverHost || proxyTestPort.value < 1 || proxyTestPort.value > 65535) {
+        proxyTestState.value = "error";
+        proxyTestError.value = t("settings.proxy_test_invalid_server");
+        return;
+    }
+
+    proxyTestState.value = "testing";
+    proxyTestError.value = "";
+    try {
+        await settingsService.saveSettings();
+        await invoke("test_game_proxy", {
+            serverHost,
+            serverPort: proxyTestPort.value,
+        });
+        proxyTestState.value = "success";
+    } catch (error) {
+        proxyTestState.value = "error";
+        const message = String(error);
+        proxyTestError.value = message.includes("connection denied by the proxy's ruleset")
+            ? t("settings.proxy_error_ruleset")
+            : message;
     }
 };
 
@@ -877,6 +920,22 @@ onMounted(async () => {
     }
 });
 
+let proxyStatusInterval: number | undefined;
+onMounted(async () => {
+    await refreshGameProxyStatus();
+    proxyStatusInterval = window.setInterval(() => {
+        if (activeTab.value === "proxy") {
+            void refreshGameProxyStatus();
+        }
+    }, 1200);
+});
+
+onUnmounted(() => {
+    if (proxyStatusInterval !== undefined) {
+        window.clearInterval(proxyStatusInterval);
+    }
+});
+
 // onUnmounted(() => {
 //     if (unsubscribeSyncService) {
 //         unsubscribeSyncService();
@@ -971,6 +1030,18 @@ const handleToastPositionChange = (position: string) => {
                 >
                     <Shirt class="w-4 h-4 mr-2" />
                     {{ t("settings.skin") }}
+                </a>
+                <a
+                    @click="activeTab = 'proxy'"
+                    class="tab transition-all duration-300"
+                    :class="{
+                        'tab-active transform scale-105 shadow-md bg-base-300':
+                            activeTab === 'proxy',
+                        'hover:bg-base-300': activeTab !== 'proxy',
+                    }"
+                >
+                    <Waypoints class="w-4 h-4 mr-2" />
+                    {{ t("settings.proxy") }}
                 </a>
             </div>
             <transition name="tab-switch" mode="out-in">
@@ -1438,6 +1509,181 @@ const handleToastPositionChange = (position: string) => {
                     </div>
                 </div>
 
+                <div
+                    v-else-if="activeTab === 'proxy'"
+                    key="proxy"
+                    class="space-y-3"
+                >
+                    <section class="card bg-base-200 border border-base-300">
+                        <div class="card-body gap-5 p-4">
+                            <div>
+                                <h2 class="card-title text-base font-semibold gap-2">
+                                    <Waypoints class="w-5 h-5 text-primary" />
+                                    {{ t("settings.proxy") }}
+                                </h2>
+                                <p class="text-sm text-base-content/70 mt-1">
+                                    {{ t("settings.proxy_description") }}
+                                </p>
+                                <div class="alert alert-info alert-soft mt-3 text-sm whitespace-normal break-words">
+                                    {{ t("settings.proxy_scope_note") }}
+                                </div>
+                                <div
+                                    v-if="['connected', 'error'].includes(gameProxyStatus.status)"
+                                    role="status"
+                                    class="alert alert-soft text-sm flex flex-col items-start gap-1 min-w-0 w-full"
+                                    :class="{
+                                        'alert-success': gameProxyStatus.status === 'connected',
+                                        'alert-error': gameProxyStatus.status === 'error',
+                                    }"
+                                >
+                                    <span class="block w-full whitespace-normal break-words">{{
+                                        t(`settings.proxy_runtime_${gameProxyStatus.status}`)
+                                    }}</span>
+                                    <span v-if="gameProxyStatus.server" class="block w-full font-mono whitespace-normal break-all">
+                                        {{ gameProxyStatus.server }}
+                                    </span>
+                                    <span v-if="gameProxyStatus.error" class="block w-full whitespace-normal break-words">
+                                        {{ gameProxyStatus.error }}
+                                    </span>
+                                </div>
+                            </div>
+                            <label class="label cursor-pointer justify-start gap-3">
+                                <input
+                                    v-model="settings.game_proxy_enabled.value"
+                                    type="checkbox"
+                                    class="toggle toggle-primary toggle-sm"
+                                />
+                                <span class="label-text">{{
+                                    t("settings.proxy_enabled")
+                                }}</span>
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <label class="form-control w-full">
+                                    <span class="label-text mb-1">{{
+                                        t("settings.proxy_type")
+                                    }}</span>
+                                    <select
+                                        v-model="settings.game_proxy_type.value"
+                                        class="select select-bordered w-full"
+                                    >
+                                        <option value="socks5">SOCKS5</option>
+                                        <option value="socks4">SOCKS4</option>
+                                    </select>
+                                </label>
+                                <label class="form-control w-full">
+                                    <span class="label-text mb-1">{{
+                                        t("settings.proxy_host")
+                                    }}</span>
+                                    <input
+                                        v-model.trim="settings.game_proxy_host.value"
+                                        type="text"
+                                        autocomplete="off"
+                                        spellcheck="false"
+                                        placeholder="127.0.0.1"
+                                        class="input input-bordered w-full"
+                                    />
+                                </label>
+                                <label class="form-control w-full">
+                                    <span class="label-text mb-1">{{
+                                        t("settings.proxy_port")
+                                    }}</span>
+                                    <input
+                                        v-model.number="settings.game_proxy_port.value"
+                                        type="number"
+                                        min="1"
+                                        max="65535"
+                                        class="input input-bordered w-full"
+                                    />
+                                </label>
+                                <label class="form-control w-full">
+                                    <span class="label-text mb-1">{{
+                                        t("settings.proxy_username")
+                                    }}</span>
+                                    <input
+                                        v-model="settings.game_proxy_username.value"
+                                        type="text"
+                                        autocomplete="off"
+                                        class="input input-bordered w-full"
+                                    />
+                                </label>
+                                <label
+                                    v-if="settings.game_proxy_type.value === 'socks5'"
+                                    class="form-control w-full"
+                                >
+                                    <span class="label-text mb-1">{{
+                                        t("settings.proxy_password")
+                                    }}</span>
+                                    <input
+                                        v-model="settings.game_proxy_password.value"
+                                        type="password"
+                                        autocomplete="new-password"
+                                        class="input input-bordered w-full"
+                                    />
+                                </label>
+                            </div>
+                            <div class="border-t border-base-300 pt-4 space-y-3">
+                                <h3 class="font-medium text-sm">
+                                    {{ t("settings.proxy_test_title") }}
+                                </h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_8rem_auto] gap-3 items-end">
+                                    <label class="form-control w-full">
+                                        <span class="label-text mb-1">{{
+                                            t("settings.proxy_test_server")
+                                        }}</span>
+                                        <input
+                                            v-model.trim="proxyTestHost"
+                                            type="text"
+                                            autocomplete="off"
+                                            spellcheck="false"
+                                            placeholder="mc.example.net"
+                                            class="input input-bordered w-full"
+                                        />
+                                    </label>
+                                    <label class="form-control w-full">
+                                        <span class="label-text mb-1">{{
+                                            t("settings.proxy_port")
+                                        }}</span>
+                                        <input
+                                            v-model.number="proxyTestPort"
+                                            type="number"
+                                            min="1"
+                                            max="65535"
+                                            class="input input-bordered w-full"
+                                        />
+                                    </label>
+                                    <button
+                                        class="btn btn-primary"
+                                        :disabled="proxyTestState === 'testing'"
+                                        @click="testGameProxy"
+                                    >
+                                        <RefreshCcw
+                                            class="w-4 h-4"
+                                            :class="{ 'animate-spin': proxyTestState === 'testing' }"
+                                        />
+                                        {{ t("settings.proxy_test") }}
+                                    </button>
+                                </div>
+                                <div
+                                    v-if="proxyTestState === 'success'"
+                                    class="alert alert-success alert-soft text-sm"
+                                >
+                                    {{ t("settings.proxy_test_success") }}
+                                </div>
+                                <div
+                                    v-else-if="proxyTestState === 'error'"
+                                    class="alert alert-error alert-soft text-sm flex flex-col items-start gap-1 min-w-0 w-full"
+                                >
+                                    <span class="block w-full whitespace-normal break-words">{{
+                                        t("settings.proxy_test_failed")
+                                    }}</span>
+                                    <span class="block w-full whitespace-normal break-words">{{
+                                        proxyTestError
+                                    }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
                 <div
                     v-else-if="activeTab === 'accounts'"
                     key="accounts"

@@ -13,7 +13,7 @@ use tokio::{
     process::Command,
 };
 
-use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
+use super::{CLIENT_LOGS, Client, ClientType, LaunchOptions, add_log_line};
 
 #[allow(unused)]
 use crate::core::{
@@ -25,10 +25,11 @@ use crate::core::{
     utils::{
         globals::{
             AGENT_FILE, AGENT_OVERLAY_FOLDER, ARM64_SUFFIX, ASSETS_FABRIC_FOLDER, ASSETS_FOLDER,
-            IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX, LIBRARIES_121_FOLDER,
-            LINUX_SUFFIX, MACOS_SUFFIX, NATIVES_FOLDER, NATIVES_LEGACY_LINUX_FOLDER,
-            NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_FOLDER, NATIVES_VA1_8_9_LINUX_FOLDER,
-            NATIVES_VA1_8_9_MACOS_FOLDER, NATIVES_VA1_8_9_WINDOWS_FOLDER, PATH_SEPARATOR,
+            COLLAPSE_PROXY_FILE, IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS, LEGACY_SUFFIX,
+            LIBRARIES_121_FOLDER, LINUX_SUFFIX, MACOS_SUFFIX, NATIVES_FOLDER,
+            NATIVES_LEGACY_LINUX_FOLDER, NATIVES_MACOS_ARM64_FOLDER, NATIVES_MACOS_FOLDER,
+            NATIVES_VA1_8_9_LINUX_FOLDER, NATIVES_VA1_8_9_MACOS_FOLDER,
+            NATIVES_VA1_8_9_WINDOWS_FOLDER, PATH_SEPARATOR,
         },
         helpers::emit_to_main_window,
         process::force_high_performance_gpu,
@@ -392,6 +393,24 @@ impl Client {
 
         cmd.current_dir(&client_folder);
 
+        let game_proxy_config = SETTINGS.lock().ok().and_then(|settings| {
+            settings.game_proxy_enabled.value.then(|| {
+                crate::core::network::game_proxy::GameProxyConfig {
+                    proxy_type: settings.game_proxy_type.value.clone(),
+                    proxy_host: settings.game_proxy_host.value.clone(),
+                    proxy_port: settings.game_proxy_port.value,
+                    username: settings.game_proxy_username.value.clone(),
+                    password: settings.game_proxy_password.value.clone(),
+                }
+            })
+        });
+        let game_proxy_tunnel = match game_proxy_config {
+            Some(config) => Some(
+                crate::core::network::game_proxy::start_game_proxy_tunnel(config, client_id)
+                    .await?,
+            ),
+            None => None,
+        };
         if self.wants_jdk8() {
             cmd.arg("-Xverify:none");
         }
@@ -461,6 +480,35 @@ impl Client {
         }
 
         self.apply_java_args(&mut cmd);
+        if let Some(tunnel) = &game_proxy_tunnel {
+            cmd.arg(format!(
+                "-javaagent:{}={}",
+                agent_overlay_path.join(COLLAPSE_PROXY_FILE).display(),
+                tunnel.local_port()
+            ));
+            add_log_line(
+                client_id,
+                format!(
+                    "CollapseProxy agent configured: SOCKS{} {}:{}; waiting for a game connection.",
+                    if SETTINGS
+                        .lock()
+                        .is_ok_and(|settings| settings.game_proxy_type.value == "socks4")
+                    {
+                        "4"
+                    } else {
+                        "5"
+                    },
+                    SETTINGS
+                        .lock()
+                        .map(|settings| settings.game_proxy_host.value.clone())
+                        .unwrap_or_default(),
+                    SETTINGS
+                        .lock()
+                        .map(|settings| settings.game_proxy_port.value)
+                        .unwrap_or_default()
+                ),
+            );
+        }
 
         if is_legacy_vanilla && self.wants_jdk8() {
             cmd.arg("-XX:+UseG1GC");
@@ -571,6 +619,7 @@ impl Client {
         }
 
         tokio::spawn(async move {
+            let _game_proxy_tunnel = game_proxy_tunnel;
             match child.wait().await {
                 Ok(status) => {
                     let msg = format!("Process finished with status: {status}");
@@ -626,6 +675,15 @@ impl Client {
                         }),
                     );
                 }
+            }
+            if _game_proxy_tunnel
+                .as_ref()
+                .is_some_and(|tunnel| !tunnel.was_used())
+            {
+                add_log_line(
+                    client_id,
+                    "Minecraft exited without using the configured proxy tunnel. The game may have ignored the Java SOCKS properties.".to_string(),
+                );
             }
             Client::unregister_running_process(client_id, process_id, options.is_custom);
         });

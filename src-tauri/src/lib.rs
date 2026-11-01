@@ -262,6 +262,8 @@ pub fn run() {
             commands::utils::record_launch,
             // network commands
             commands::network::api_request,
+            commands::game_proxy::get_game_proxy_status,
+            commands::game_proxy::test_game_proxy,
             commands::network::fetch_cached_image,
             commands::network::get_network_history,
             commands::network::clear_network_history,

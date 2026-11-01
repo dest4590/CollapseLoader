@@ -163,6 +163,7 @@ pub static MODS_FOLDER: &str = "mods";
 
 /// The filename of the Java agent.
 pub static AGENT_FILE: &str = "CollapseAgent.jar";
+pub static COLLAPSE_PROXY_FILE: &str = "CollapseProxy.jar";
 /// The filename of the native overlay library.
 pub static OVERLAY_FILE: &str = if IS_LINUX {
     "libCollapseOverlay.so"

@@ -2,6 +2,7 @@ pub mod analytics;
 pub mod api;
 pub mod cache;
 pub mod downloader;
+pub mod game_proxy;
 pub mod server_ads;
 pub mod servers;
 

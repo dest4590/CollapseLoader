@@ -12,6 +12,7 @@ use std::path::PathBuf;
 pub struct AgentOverlayInfo {
     pub agent_hash: String,
     pub overlay_hash: String,
+    pub proxy_hash: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -19,6 +20,8 @@ struct AgentOverlayHashes {
     agent: String,
     overlay_windows: String,
     overlay_linux: String,
+    #[serde(default)]
+    proxy: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -198,7 +201,42 @@ impl AgentOverlayManager {
         Ok(AgentOverlayInfo {
             agent_hash: hashes.agent,
             overlay_hash,
+            proxy_hash: hashes.proxy,
         })
+    }
+
+    pub async fn ensure_proxy_agent() -> Result<PathBuf, String> {
+        let folder = DATA.root_dir.lock().unwrap().join(AGENT_OVERLAY_FOLDER);
+        fs::create_dir_all(&folder)
+            .map_err(|error| format!("Failed to create proxy agent directory: {error}"))?;
+
+        let info = Self::get_agent_overlay_info().await?;
+        let expected_hash = info.proxy_hash.ok_or_else(|| {
+            "CollapseProxy checksum is missing from agent/hashes.json.".to_string()
+        })?;
+        let proxy_path = folder.join("CollapseProxy.jar");
+        let current_hash = if proxy_path.exists() {
+            Some(calculate_md5_hash(&proxy_path)?)
+        } else {
+            None
+        };
+
+        if current_hash.as_deref() != Some(expected_hash.as_str()) {
+            let base_url = Self::get_api_base_url()?;
+            let url = format!("{}/agent/CollapseProxy.jar", base_url.trim_end_matches('/'));
+            log_info!("Downloading CollapseProxy agent...");
+            Self::download_file(&url, &proxy_path).await?;
+
+            let downloaded_hash = calculate_md5_hash(&proxy_path)?;
+            if downloaded_hash != expected_hash {
+                return Err(format!(
+                    "CollapseProxy checksum mismatch. Expected: {}, Got: {}",
+                    expected_hash, downloaded_hash
+                ));
+            }
+        }
+
+        Ok(proxy_path)
     }
 
     async fn download_file(url: &str, path: &PathBuf) -> Result<(), String> {
@@ -281,5 +319,20 @@ impl AgentOverlayManager {
 
         log_info!("Agent and overlay files verified successfully");
         Ok(true)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AgentOverlayHashes;
+
+    #[test]
+    fn proxy_hash_is_optional_for_existing_manifests() {
+        let hashes: AgentOverlayHashes = serde_json::from_str(
+            r#"{"agent":"agent-hash","overlay_windows":"windows-hash","overlay_linux":"linux-hash"}"#,
+        )
+        .unwrap();
+
+        assert!(hashes.proxy.is_none());
     }
 }
