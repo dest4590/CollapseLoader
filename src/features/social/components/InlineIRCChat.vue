@@ -2,11 +2,12 @@
     <div
         v-bind="attrs"
         class="irc-chat flex flex-col bg-base-200 border border-base-300 rounded-lg overflow-hidden transition-all duration-300 ease-out relative mb-6"
-        :class="
+        :class="[
             isExpanded
                 ? 'shadow-lg max-h-95'
-                : 'shadow-sm max-h-17 hover:shadow-md'
-        "
+                : 'shadow-sm max-h-17 hover:shadow-md',
+            isStreamerMode ? 'blur-sm' : ''
+        ]"
     >
         <button
             type="button"
@@ -265,6 +266,9 @@ const contextMenu = ref({
 let clickHandlerRef: (() => void) | null = null;
 let keydownHandlerRef: ((e: KeyboardEvent) => void) | null = null;
 const isExpanded = ref(false);
+import { useStreamerMode } from "../useStreamerMode";
+const { isStreamerModeEnabled } = useStreamerMode();
+const isStreamerMode = isStreamerModeEnabled;
 const messagesContainer = ref<HTMLElement | null>(null);
 const { addToast } = useToast();
 const profileIdCache = new Map<string, number>();

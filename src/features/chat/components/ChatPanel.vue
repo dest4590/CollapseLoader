@@ -3,6 +3,7 @@ import { ref, computed, onMounted, nextTick, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { sendNotification } from "@tauri-apps/plugin-notification";
 import { useI18n } from "vue-i18n";
+import { useStreamerMode } from "@features/social/useStreamerMode";
 import {
     Send,
     Users,
@@ -32,6 +33,8 @@ const { displayName, username, isAuthenticated } = useUser();
 
 const { messages, status, onlineCount, isLoading, connect, sendMessage } =
     useChatService();
+
+const { getDisplayUsername, maskIfEnabled, maskString } = useStreamerMode();
 
 const resolvedUsername = ref("Guest");
 
@@ -385,10 +388,15 @@ onMounted(async () => {
                         <span
                             class="text-xs font-semibold text-base-content/50 shrink-0"
                         >
-                            {{ messages[messages.length - 1].username }}:
+                            {{ getDisplayUsername(messages[messages.length - 1].username) }}:
                         </span>
                         <span class="text-xs text-base-content/40 truncate">
-                            {{ messages[messages.length - 1].content }}
+                            {{
+                                maskIfEnabled(
+                                    messages[messages.length - 1].content,
+                                    maskString
+                                )
+                            }}
                         </span>
                     </div>
                 </transition>
@@ -485,7 +493,9 @@ onMounted(async () => {
                                     <span
                                         class="text-[10px] font-semibold text-base-content/50 truncate max-w-25"
                                     >
-                                        {{ msg.username }}
+                                        {{
+                                            getDisplayUsername(msg.username)
+                                        }}
                                     </span>
                                     <span
                                         v-if="msg.role !== 'user'"
@@ -527,15 +537,19 @@ onMounted(async () => {
                                             class="font-medium text-base-content/70"
                                         >
                                             @{{
-                                                getReplyPreview(msg)?.username
+                                                getDisplayUsername(
+                                                    getReplyPreview(msg)?.username
+                                                )
                                             }}
                                         </div>
                                         <div
                                             class="truncate text-base-content/45"
                                         >
                                             {{
-                                                getReplyPreview(msg)?.content ??
-                                                t("chat.reply_unknown")
+                                                maskIfEnabled(
+                                                    getReplyPreview(msg)?.content,
+                                                    maskString
+                                                ) || "Message not found"
                                             }}
                                         </div>
                                     </button>
@@ -550,7 +564,9 @@ onMounted(async () => {
                                     "
                                     :data-msg-id="msg.id"
                                 >
-                                    {{ msg.content }}
+                                    {{
+                                        maskIfEnabled(msg.content, maskString)
+                                    }}
                                 </div>
                             </div>
                         </div>
@@ -569,7 +585,7 @@ onMounted(async () => {
                                 class="w-3 h-3 shrink-0 text-primary"
                             />
                             <span class="truncate">
-                                Replying to @{{ replyTarget.username }}
+                                Replying to @{{ getDisplayUsername(replyTarget.username) }}
                             </span>
                         </div>
                         <button
