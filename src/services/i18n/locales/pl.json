@@ -1076,6 +1076,8 @@
         "auto_hide_sidebar": "Auto-ukrywanie panelu bocznego",
         "disable_server_ads": "Wyłącz reklamy serwerów",
         "irc_chat": "Czat IRC",
+        "chat_reply_notifications": "Powiadomienia o odpowiedziach w czacie",
+        "chat_reply_notifications_desc": "Powiadamiaj i odtwarzaj dźwięk, gdy ktoś odpowie na twoją wiadomość.",
         "save_flags_failed": "Nie udało się zapisać flag: {error}",
         "change_root": {
             "title": "Zmień folder danych",

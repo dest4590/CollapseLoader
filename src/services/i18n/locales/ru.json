@@ -1106,6 +1106,8 @@
         "auto_hide_sidebar": "Автоскрытие боковой панели",
         "disable_server_ads": "Отключить рекламные серверы",
         "irc_chat": "IRC чат",
+        "chat_reply_notifications": "Уведомления об ответах в чате",
+        "chat_reply_notifications_desc": "Уведомлять и проигрывать звук, когда кто-то отвечает на ваше сообщение.",
         "save_flags_failed": "Не удалось сохранить флаги: {error}",
         "change_root": {
             "title": "Изменить папку данных",

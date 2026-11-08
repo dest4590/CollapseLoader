@@ -1104,6 +1104,8 @@
         "reset_cache_failed": "Cannot remove cache, try again",
         "hash_verify": "Hash verify",
         "irc_chat": "IRC Chat",
+        "chat_reply_notifications": "Chat reply notifications",
+        "chat_reply_notifications_desc": "Notify and play a sound when someone replies to your message.",
         "auto_hide_sidebar": "Auto-hide sidebar",
         "disable_server_ads": "Disable server ads",
         "save_flags_failed": "Failed to save flags: {error}",

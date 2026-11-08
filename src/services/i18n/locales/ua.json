@@ -1075,6 +1075,8 @@
         "auto_hide_sidebar": "Авто-приховування панелі",
         "disable_server_ads": "Вимкнути рекламні сервери",
         "irc_chat": "IRC-чат",
+        "chat_reply_notifications": "Сповіщення про відповіді в чаті",
+        "chat_reply_notifications_desc": "Сповіщати та відтворювати звук, коли хтось відповідає на ваше повідомлення.",
         "save_flags_failed": "Не вдалося зберегти прапорці: {error}",
         "change_root": {
             "title": "Змінити папку даних",

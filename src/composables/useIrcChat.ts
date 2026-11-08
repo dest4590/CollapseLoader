@@ -113,7 +113,7 @@ const registerListeners = async (): Promise<void> => {
     listenersRegistered = true;
 
     try {
-        await listen<string>("irc-message", (event) => {
+         await listen<string>("irc-message", (event) => {
             const msg = parseIrcPayload(event.payload);
             if (msg) {
                 if (msg.type === "room_state" && msg.roomState) {
@@ -121,6 +121,25 @@ const registerListeners = async (): Promise<void> => {
                     onlineGuests.value = msg.roomState.online_guests;
                 } else {
                     messages.value.push(msg);
+
+                    const mentionNotificationsEnabled =
+                        localStorage.getItem("irc_mention_notifications") !==
+                        "false";
+                    const currentUsername = localStorage.getItem("username") || "";
+                    if (
+                        mentionNotificationsEnabled &&
+                        currentUsername &&
+                        msg.sender?.username !== currentUsername &&
+                        msg.content.toLowerCase().includes(
+                            "@" + currentUsername.toLowerCase()
+                        )
+                    ) {
+                        addToast(
+                            (msg.sender?.username || "Someone") +
+                                " mentioned you in chat",
+                            "info"
+                        );
+                    }
                 }
             }
         });

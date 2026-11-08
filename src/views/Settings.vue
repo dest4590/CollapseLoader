@@ -20,6 +20,7 @@ import {
     Folder,
     Waypoints,
     MessagesSquare,
+    Bell,
     BadgeCheck,
     FileText,
     FolderSync,
@@ -143,6 +144,7 @@ const filteredSettingsEntries = computed(() => {
         "minimize_to_tray_on_launch",
         "close_to_tray",
         "auto_hide_sidebar",
+        "chat_reply_notifications",
         "auto_update",
         "autostart",
         "java_path",
@@ -586,6 +588,10 @@ const getFormattedLabel = (key: string) => {
         return t("settings.irc_chat");
     }
 
+    if (key === "chat_reply_notifications") {
+        return t("settings.chat_reply_notifications");
+    }
+
     if (key === "hash_verify") {
         return t("settings.hash_verify");
     }
@@ -717,6 +723,9 @@ const handleLanguageChange = async (languageCode: string) => {
 };
 
 const getSettingDescription = (key: string) => {
+    if (key === "chat_reply_notifications") {
+        return t("settings.chat_reply_notifications_desc");
+    }
     return t(`settings.descriptions.${key}`);
 };
 
@@ -1140,6 +1149,10 @@ const handleToastPositionChange = (position: string) => {
                                     />
                                     <MessagesSquare
                                         v-if="key === 'irc_chat'"
+                                        class="w-5 h-5 text-primary"
+                                    />
+                                    <Bell
+                                        v-if="key === 'chat_reply_notifications'"
                                         class="w-5 h-5 text-primary"
                                     />
                                     <BadgeCheck

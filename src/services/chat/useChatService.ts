@@ -1,6 +1,8 @@
 import { ref, readonly } from "vue";
 import { supabase } from "./supabaseClient";
 import { formatTime } from "@shared/utils/utils";
+import { useToast } from "@shared/composables/useToast";
+import { settingsService } from "@services/settings/settingsService";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export interface ChatMessage {
@@ -50,11 +52,39 @@ const normalizeMessage = (row: Record<string, any>): ChatMessage => {
     } as ChatMessage;
 };
 
-const appendMessage = (msg: ChatMessage) => {
+const { addToast } = useToast();
+
+const appendMessage = (msg: ChatMessage, silent = false) => {
     if (messages.value.some((m) => m.id === msg.id)) return;
     messages.value.push(msg);
     if (messages.value.length > MAX_MESSAGES) {
         messages.value = messages.value.slice(-MAX_MESSAGES);
+    }
+
+    if (silent) return;
+
+    const replyNotificationsEnabled =
+        settingsService.getSetting<boolean>("chat_reply_notifications")
+            ?.value !== false;
+    if (
+        replyNotificationsEnabled &&
+        msg.replyToId != null &&
+        connectedUsername &&
+        msg.username !== connectedUsername
+    ) {
+        const replied = messages.value.find((m) => m.id === msg.replyToId);
+        if (replied && replied.username === connectedUsername) {
+            addToast(`${msg.username} replied to you in chat`, "info");
+            try {
+                const audio = new Audio(
+                    new URL("../../assets/misc/notification.mp3", import.meta.url).href
+                );
+                audio.volume = 0.5;
+                audio.play().catch(() => {});
+            } catch {
+                // ignore
+            }
+        }
     }
 };
 
@@ -74,7 +104,7 @@ export function useChatService() {
             if (data) {
                 const historical = [...data].reverse().map(normalizeMessage);
                 messages.value = [];
-                historical.forEach(appendMessage);
+                historical.forEach((m) => appendMessage(m, true));
             }
         } catch (e: any) {
             console.error("[Chat] Failed to load history:", e);
