@@ -172,6 +172,14 @@ impl CustomClientManager {
                 };
             }
 
+            if let Some(lwjgl_version) = updates.lwjgl_version {
+                client.lwjgl_version = if lwjgl_version.is_empty() {
+                    None
+                } else {
+                    Some(lwjgl_version)
+                };
+            }
+
             self.save_to_disk();
             Ok(())
         } else {
@@ -192,6 +200,7 @@ pub struct CustomClientUpdate {
     pub client_type: Option<ClientType>,
     pub viaversion: Option<String>,
     pub java_version: Option<String>,
+    pub lwjgl_version: Option<String>,
 }
 
 impl JsonStorage for CustomClientManager {

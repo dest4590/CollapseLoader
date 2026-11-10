@@ -63,6 +63,7 @@ pub async fn add_custom_client(
     client_type: ClientType,
     viaversion: Option<String>,
     java_version: Option<String>,
+    lwjgl_version: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Adding new custom client: '{}'", name);
@@ -96,6 +97,7 @@ pub async fn add_custom_client(
     custom_client.client_type = resolved_client_type;
     custom_client.viaversion = viaversion.filter(|v| !v.is_empty());
     custom_client.java_version = java_version.filter(|v| !v.is_empty());
+    custom_client.lwjgl_version = lwjgl_version.filter(|v| !v.is_empty());
 
     log_debug!("New custom client details: {:?}", custom_client);
     let sync_needed =
@@ -133,6 +135,7 @@ pub fn update_custom_client(
     client_type: Option<ClientType>,
     viaversion: Option<String>,
     java_version: Option<String>,
+    lwjgl_version: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     log_info!("Updating custom client with ID: {}", id);
@@ -147,6 +150,7 @@ pub fn update_custom_client(
         client_type,
         viaversion,
         java_version,
+        lwjgl_version,
     };
 
     log_debug!("Applying updates to custom client ID {}: {:?}", id, updates);

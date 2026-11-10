@@ -1,4 +1,4 @@
-﻿{
+{
     "reports": {
         "title": "举报 {name}",
         "description": "如果有人违反规则或发布恶意/有害内容，请向我们举报。",
@@ -308,7 +308,10 @@
             "java_version_option": "Java {version}{default}",
             "java_version_hint": "默认：Java 8。仅当您的客户端支持时才切换到 Java 21。",
             "default_option": "默认 ({value})",
-            "default_suffix": "（默认）"
+            "default_suffix": "（默认）",
+            "lwjgl_version_label": "LWJGL 版本（仅限 1.16.5）",
+            "lwjgl_version_option": "LWJGL {version}{default}",
+            "lwjgl_version_hint": "默认：LWJGL 3.2.2。如果你的 1.16.5 客户端需要更新的原生库，请选择 3.3.6。"
         },
         "edit_custom_client_modal": {
             "java_version_label": "Java 版本（仅限 1.8.9）",
@@ -331,7 +334,9 @@
             "validate_name": "名称为必填项",
             "validate_version": "版本为必填项",
             "validate_main_class": "主类为必填项",
-            "update_failed": "更新客户端失败：{error}"
+            "update_failed": "更新客户端失败：{error}",
+            "lwjgl_version_label": "LWJGL 版本（仅限 1.16.5）",
+            "lwjgl_version_hint": "默认：LWJGL 3.2.2。如果你的 1.16.5 客户端需要更新的原生库，请选择 3.3.6。"
         },
         "delete_custom_client_confirm_modal": {
             "title": "删除自定义客户端",

@@ -36,6 +36,7 @@ export interface CustomClient {
     libraries_path?: string | null;
     natives_path?: string | null;
     java_version?: string | null;
+    lwjgl_version?: string | null;
     client_type: string;
 }
 

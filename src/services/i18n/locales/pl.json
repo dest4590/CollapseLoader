@@ -1,4 +1,4 @@
-﻿{
+{
     "reports": {
         "title": "Zgłoś {name}",
         "report_user": "Zgłoś użytkownika",
@@ -264,7 +264,7 @@
             "stalled_subtitle": "Brak postępu",
             "stalled_description": "Pobieranie wygląda na zawieszone. Dane nie napływają od dłuższego czasu.",
             "no_progress": "Brak postępu pobierania",
-            "tip_zapret": "Jeśli znajdujesz się w krajach WNP (Rosja, Białoruś, Kazachstan, z wyjątkiem Ukrainy), Twój dostawca może blokować nasze domeny. Spróbuj włączyć \u0027DPI Bypass\u0027 w ustawieniach i uruchom loader ponownie jako administrator."
+            "tip_zapret": "Jeśli znajdujesz się w krajach WNP (Rosja, Białoruś, Kazachstan, z wyjątkiem Ukrainy), Twój dostawca może blokować nasze domeny. Spróbuj włączyć 'DPI Bypass' w ustawieniach i uruchom loader ponownie jako administrator."
         },
         "add_custom_client": "Dodaj własnego klienta",
         "delete_custom_client": "Usuń własnego klienta",
@@ -308,7 +308,10 @@
             "java_version_option": "Java {version}{default}",
             "java_version_hint": "Domyślnie: Java 8. Przełącz na Java 21 tylko jeśli klient to obsługuje.",
             "default_option": "Domyślnie ({value})",
-            "default_suffix": " (domyślnie)"
+            "default_suffix": " (domyślnie)",
+            "lwjgl_version_label": "Wersja LWJGL (tylko 1.16.5)",
+            "lwjgl_version_option": "LWJGL {version}{default}",
+            "lwjgl_version_hint": "Domyślnie: LWJGL 3.2.2. Wybierz 3.3.6, jeśli klient 1.16.5 potrzebuje nowszych natywek."
         },
         "edit_custom_client_modal": {
             "java_version_label": "Wersja Java (tylko 1.8.9)",
@@ -331,7 +334,9 @@
             "validate_name": "Nazwa jest wymagana",
             "validate_version": "Wersja jest wymagana",
             "validate_main_class": "Klasa główna jest wymagana",
-            "update_failed": "Nie udało się zaktualizować klienta: {error}"
+            "update_failed": "Nie udało się zaktualizować klienta: {error}",
+            "lwjgl_version_label": "Wersja LWJGL (tylko 1.16.5)",
+            "lwjgl_version_hint": "Domyślnie: LWJGL 3.2.2. Wybierz 3.3.6, jeśli klient 1.16.5 potrzebuje nowszych natywek."
         },
         "delete_custom_client_confirm_modal": {
             "title": "Usuń klienta",
@@ -1233,7 +1238,7 @@
         },
         "theme": {
             "emergency_reset_done": "Niestandardowy CSS zresetowany. {action}",
-            "emergency_reset_toggle_instruction": "Aby ponownie włączyć niestandardowy CSS, otwórz ustawienia motywu i wyłącz, a następnie włącz \u0027Włącz niestandardowy CSS\u0027."
+            "emergency_reset_toggle_instruction": "Aby ponownie włączyć niestandardowy CSS, otwórz ustawienia motywu i wyłącz, a następnie włącz 'Włącz niestandardowy CSS'."
         },
         "client": {
             "crashed": "Klient {name} uległ awarii. {error}",

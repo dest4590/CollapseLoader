@@ -115,6 +115,12 @@ pub static NATIVES_VA1_8_9_WINDOWS_FOLDER: &str = "natives-va1.8.9-windows";
 /// Folder for Fabric-specific native libraries.
 pub static NATIVES_FABRIC_FOLDER: &str = "natives-fabric";
 
+/// LWJGL 3.3.6 native libraries for 1.16.5.
+pub static NATIVES_LWJGL336_WINDOWS_FOLDER: &str = "natives-lwjgl336-windows";
+pub static NATIVES_LWJGL336_LINUX_FOLDER: &str = "natives-lwjgl336-linux";
+pub static NATIVES_LWJGL336_MACOS_X64_FOLDER: &str = "natives-lwjgl336-macos-x64";
+pub static NATIVES_LWJGL336_MACOS_ARM64_FOLDER: &str = "natives-lwjgl336-macos-arm64";
+
 // Resource ZIP file paths relative to the data folder.
 /// ZIP file containing standard game assets.
 pub static ASSETS_ZIP: &str = "misc/assets.zip";
@@ -151,6 +157,12 @@ pub static NATIVES_LEGACY_LINUX_ZIP: &str = "misc/natives-legacy-linux.zip";
 pub static NATIVES_VA1_8_9_LINUX_ZIP: &str = "misc/natives-va1.8.9-linux.zip";
 pub static NATIVES_VA1_8_9_MACOS_ZIP: &str = "misc/natives-va1.8.9-macos.zip";
 pub static NATIVES_VA1_8_9_WINDOWS_ZIP: &str = "misc/natives-va1.8.9-windows.zip";
+
+/// ZIP files containing LWJGL 3.3.6 native libraries for 1.16.5.
+pub static NATIVES_LWJGL336_WINDOWS_ZIP: &str = "misc/natives-lwjgl336-windows.zip";
+pub static NATIVES_LWJGL336_LINUX_ZIP: &str = "misc/natives-lwjgl336-linux.zip";
+pub static NATIVES_LWJGL336_MACOS_X64_ZIP: &str = "misc/natives-lwjgl336-macos-x64.zip";
+pub static NATIVES_LWJGL336_MACOS_ARM64_ZIP: &str = "misc/natives-lwjgl336-macos-arm64.zip";
 
 /// Folder where Minecraft version JARs are stored.
 pub static MINECRAFT_VERSIONS_FOLDER: &str = "minecraft-versions";

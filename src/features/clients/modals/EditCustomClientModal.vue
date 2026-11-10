@@ -30,11 +30,15 @@ const form = reactive({
     nativesPath: "",
     clientType: "default",
     javaVersion: "",
+    lwjglVersion: "",
 });
 
 const JAVA_VERSIONS = ["8", "21", "25"];
+const LWJGL_VERSIONS = ["3.2.2", "3.3.6"];
+const DEFAULT_LWJGL_VERSION = "3.2.2";
 
 const showJavaSelect = computed(() => form.version === "1.8.9");
+const showLwjglSelect = computed(() => form.version === "1.16.5");
 
 const loading = ref(false);
 const errors = ref<Record<string, string>>({});
@@ -154,6 +158,7 @@ const handleSubmit = async () => {
             nativesPath: form.nativesPath.trim() || null,
             client_type: form.clientType,
             javaVersion: form.javaVersion.trim() || null,
+            lwjglVersion: form.lwjglVersion.trim() || null,
         });
 
         emit("client-edited");
@@ -184,6 +189,7 @@ watch(
             form.nativesPath = client.natives_path || "";
             form.clientType = client.client_type || "default";
             form.javaVersion = client.java_version || "";
+            form.lwjglVersion = client.lwjgl_version || "";
         }
     },
     { immediate: true }
@@ -318,6 +324,38 @@ watch(
                 width="100%"
                 field-size
             />
+        </div>
+
+        <div class="form-control" v-if="showLwjglSelect">
+            <label class="label">
+                <span class="label-text">{{
+                    $t("modals.edit_custom_client_modal.lwjgl_version_label")
+                }}</span>
+            </label>
+            <AnimatedDropdown
+                v-model="form.lwjglVersion"
+                :options="[
+                    {
+                        value: '',
+                        label: $t('modals.edit_custom_client_modal.default_option', {
+                            value: DEFAULT_LWJGL_VERSION,
+                        }),
+                    },
+                    ...LWJGL_VERSIONS.map((v) => ({
+                        value: v,
+                        label: `LWJGL ${v}`,
+                    })),
+                ]"
+                width="100%"
+                field-size
+            />
+            <label class="label">
+                <span class="label-text-alt text-base-content/60">
+                    {{
+                        $t("modals.edit_custom_client_modal.lwjgl_version_hint")
+                    }}
+                </span>
+            </label>
         </div>
 
         <div class="form-control" v-if="form.clientType === 'default'">

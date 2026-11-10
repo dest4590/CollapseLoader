@@ -28,6 +28,8 @@ pub struct CustomClient {
     pub viaversion: Option<String>,
     #[serde(default)]
     pub java_version: Option<String>,
+    #[serde(default)]
+    pub lwjgl_version: Option<String>,
 }
 
 impl CustomClient {
@@ -57,6 +59,7 @@ impl CustomClient {
             client_type: ClientType::Default,
             viaversion: None,
             java_version: None,
+            lwjgl_version: None,
         }
     }
 
@@ -67,6 +70,7 @@ impl CustomClient {
             &self.client_type,
             None,
             self.java_version.clone(),
+            self.lwjgl_version.clone(),
         );
         meta.installed = self.is_installed;
         meta.is_custom = true;
@@ -98,6 +102,7 @@ impl CustomClient {
             natives_path: self.natives_path.clone(),
             viaversion: self.viaversion.clone(),
             java_version: self.java_version.clone(),
+            lwjgl_version: self.lwjgl_version.clone(),
             disable_fabric_api: false,
         }
     }

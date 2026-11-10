@@ -138,6 +138,10 @@ impl Client {
         }
 
         let root = DATA.root_dir.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((_, folder)) = self.lwjgl336_natives_requirement() {
+            return root.join(folder);
+        }
+
         let use_legacy_layout = self.is_legacy_client() || (!self.meta.is_new && IS_WINDOWS);
 
         if self.uses_modern_libraries() {

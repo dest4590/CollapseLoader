@@ -14,8 +14,8 @@ use crate::core::clients::manager::ClientManager;
 use crate::core::storage::data::{DATA, Data};
 use crate::core::utils::{
     globals::{
-        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_LINUX, IS_MACOS, IS_WINDOWS, JDK8_FOLDER,
-        JDK21_FOLDER, JDK25_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
+        CUSTOM_CLIENTS_FOLDER, FILE_EXTENSION, IS_AARCH64, IS_LINUX, IS_MACOS, IS_WINDOWS,
+        JDK8_FOLDER, JDK21_FOLDER, JDK25_FOLDER, LIBRARIES_LEGACY_FOLDER, LIBRARIES_LEGACY_ZIP,
         LIBRARIES_VA1_8_9_FOLDER, LIBRARIES_VA1_8_9_VIA53_FOLDER, LIBRARIES_VA1_8_9_VIA53_ZIP,
         LIBRARIES_VA1_8_9_VIA57_FOLDER, LIBRARIES_VA1_8_9_VIA57_ZIP,
         LIBRARIES_VA1_8_9_VIA511_FOLDER, LIBRARIES_VA1_8_9_VIA511_ZIP, LIBRARIES_VA1_8_9_ZIP,
@@ -177,6 +177,7 @@ pub struct Meta {
     pub size: u64,
     pub viaversion: Option<String>,
     pub java_version: Option<String>,
+    pub lwjgl_version: Option<String>,
 }
 
 impl Meta {
@@ -186,6 +187,7 @@ impl Meta {
         client_type: &ClientType,
         viaversion: Option<String>,
         java_version: Option<String>,
+        lwjgl_version: Option<String>,
     ) -> Self {
         let semver = parse_minecraft_version(version).unwrap_or_else(|err| {
             log_error!("Failed to parse version '{}': {}", version, err);
@@ -243,6 +245,7 @@ impl Meta {
             size: 0,
             viaversion,
             java_version,
+            lwjgl_version,
         }
     }
 }
@@ -298,6 +301,8 @@ pub struct Client {
     pub viaversion: Option<String>,
     #[serde(default)]
     pub java_version: Option<String>,
+    #[serde(default)]
+    pub lwjgl_version: Option<String>,
     #[serde(default, alias = "no_fabric_api")]
     pub disable_fabric_api: bool,
 }
@@ -320,6 +325,7 @@ fn default_meta() -> Meta {
         size: 0,
         viaversion: None,
         java_version: None,
+        lwjgl_version: None,
     }
 }
 
@@ -378,6 +384,40 @@ impl Client {
         match v {
             "5.3.0" | "5.7.1" | "5.9.1" | "5.11.0" => v.to_string(),
             _ => "5.9.1".to_string(),
+        }
+    }
+
+    pub(crate) fn wants_lwjgl336(&self) -> bool {
+        self.version == "1.16.5" && self.meta.lwjgl_version.as_deref() == Some("3.3.6")
+    }
+
+    pub(crate) fn lwjgl336_natives_requirement(&self) -> Option<(&'static str, &'static str)> {
+        if !self.wants_lwjgl336() {
+            return None;
+        }
+
+        if IS_LINUX {
+            Some((
+                crate::core::utils::globals::NATIVES_LWJGL336_LINUX_ZIP,
+                crate::core::utils::globals::NATIVES_LWJGL336_LINUX_FOLDER,
+            ))
+        } else if IS_MACOS {
+            if IS_AARCH64 {
+                Some((
+                    crate::core::utils::globals::NATIVES_LWJGL336_MACOS_ARM64_ZIP,
+                    crate::core::utils::globals::NATIVES_LWJGL336_MACOS_ARM64_FOLDER,
+                ))
+            } else {
+                Some((
+                    crate::core::utils::globals::NATIVES_LWJGL336_MACOS_X64_ZIP,
+                    crate::core::utils::globals::NATIVES_LWJGL336_MACOS_X64_FOLDER,
+                ))
+            }
+        } else {
+            Some((
+                crate::core::utils::globals::NATIVES_LWJGL336_WINDOWS_ZIP,
+                crate::core::utils::globals::NATIVES_LWJGL336_WINDOWS_FOLDER,
+            ))
         }
     }
 

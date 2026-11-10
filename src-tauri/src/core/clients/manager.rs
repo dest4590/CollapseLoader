@@ -51,7 +51,11 @@ impl ClientManager {
                     size: rng.random_range(50..=100),
                     viaversion: None,
                     java_version: None,
+                    lwjgl_version: None,
                 },
+                viaversion: None,
+                java_version: None,
+                lwjgl_version: None,
                 ..Default::default()
             })
             .collect()
@@ -100,12 +104,14 @@ impl ClientManager {
         for client in clients {
             let viaversion = client.viaversion.clone();
             let java_version = client.java_version.clone();
+            let lwjgl_version = client.lwjgl_version.clone();
             client.meta = Meta::new(
                 &client.version,
                 &client.filename,
                 &client.client_type,
                 viaversion,
                 java_version,
+                lwjgl_version,
             );
             client.meta.size = client.size;
 

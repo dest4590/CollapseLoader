@@ -32,16 +32,21 @@ const form = reactive({
     clientType: "default",
     viaversion: "",
     javaVersion: "",
+    lwjglVersion: "",
 });
 
 const VIA_VERSIONS = ["5.3.0", "5.7.1", "5.9.1", "5.11.0"];
 const DEFAULT_VIAVERSION = "5.9.1";
 const JAVA_VERSIONS = ["8", "21", "25"];
 const DEFAULT_JAVA_VERSION = "8";
+const LWJGL_VERSIONS = ["3.2.2", "3.3.6"];
+const DEFAULT_LWJGL_VERSION = "3.2.2";
 
 const isVersion18 = computed(() => form.version === "1.8.9");
+const isVersion1165 = computed(() => form.version === "1.16.5");
 const isDefaultType = computed(() => form.clientType === "default");
 const showViaSelect = computed(() => isDefaultType.value && isVersion18.value);
+const showLwjglSelect = computed(() => isVersion1165.value);
 
 const isDragging = ref(false);
 let unlistenDrop: (() => void) | null = null;
@@ -252,6 +257,7 @@ const handleSubmit = async () => {
             clientType: form.clientType,
             viaversion: form.viaversion || null,
             javaVersion: form.javaVersion || null,
+            lwjglVersion: form.lwjglVersion || null,
         });
 
         Object.assign(form, {
@@ -267,6 +273,7 @@ const handleSubmit = async () => {
             clientType: "default",
             viaversion: "",
             javaVersion: "",
+            lwjglVersion: "",
         });
 
         emit("client-added");
@@ -448,6 +455,50 @@ const handleSubmit = async () => {
                             $t(
                                 "modals.add_custom_client_modal.java_version_hint"
                             )
+                        }}
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-control" v-if="showLwjglSelect">
+                <label class="label">
+                    <span class="label-text">{{
+                        $t("modals.add_custom_client_modal.lwjgl_version_label")
+                    }}</span>
+                </label>
+                <AnimatedDropdown
+                    v-model="form.lwjglVersion"
+                    :options="[
+                        {
+                            value: '',
+                            label: $t(
+                                'modals.add_custom_client_modal.default_option',
+                                { value: DEFAULT_LWJGL_VERSION }
+                            ),
+                        },
+                        ...LWJGL_VERSIONS.map((v) => ({
+                            value: v,
+                            label: $t(
+                                'modals.add_custom_client_modal.lwjgl_version_option',
+                                {
+                                    version: v,
+                                    default:
+                                        v === DEFAULT_LWJGL_VERSION
+                                            ? $t(
+                                                  'modals.add_custom_client_modal.default_suffix'
+                                              )
+                                            : '',
+                                }
+                            ),
+                        })),
+                    ]"
+                    width="100%"
+                    field-size
+                />
+                <label class="label">
+                    <span class="label-text-alt text-base-content/60">
+                        {{
+                            $t("modals.add_custom_client_modal.lwjgl_version_hint")
                         }}
                     </span>
                 </label>

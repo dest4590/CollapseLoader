@@ -575,6 +575,10 @@ impl Client {
         natives_zip: &'static str,
         natives_folder: &'static str,
     ) -> (&'static str, &'static str) {
+        if let Some(req) = self.lwjgl336_natives_requirement() {
+            return req;
+        }
+
         if IS_LINUX {
             if self.uses_sub_libraries() {
                 (NATIVES_VA1_8_9_LINUX_ZIP, NATIVES_VA1_8_9_LINUX_FOLDER)
@@ -620,6 +624,11 @@ impl Client {
         Self::verify_or_queue_requirement(&mut files_to_download, libs_folder, libs_zip, None);
 
         if self.uses_modern_libraries() {
+            return files_to_download;
+        }
+
+        if let Some((lw_zip, lw_folder)) = self.lwjgl336_natives_requirement() {
+            Self::verify_or_queue_requirement(&mut files_to_download, lw_folder, lw_zip, None);
             return files_to_download;
         }
 

@@ -1,4 +1,4 @@
-﻿{
+{
     "reports": {
         "title": "Report {name}",
         "description": "If someone is violating the rules or being toxic, please let us know.",
@@ -44,7 +44,7 @@
         "initial_setup": {
             "welcome": {
                 "title": "Welcome to CollapseLoader",
-                "description": "We\u0027ll guide you through a quick setup to optimize performance and privacy.",
+                "description": "We'll guide you through a quick setup to optimize performance and privacy.",
                 "subtitle": "Quick setup to get you up and running",
                 "features": {
                     "fast_startup": "Fast startup – minimal waiting time",
@@ -81,7 +81,7 @@
             },
             "appreciation": {
                 "title": "Thank You for Choosing CollapseLoader",
-                "subtitle": "You\u0027re all set – ready to start",
+                "subtitle": "You're all set – ready to start",
                 "description": "We hope you enjoy using our loader!"
             },
             "disclaimer": {
@@ -233,7 +233,7 @@
             "title": "Unverified Client Warning",
             "subtitle": "This client has not been checked for viruses",
             "description": "You are about to launch \"{clientName}\", which has not been verified for malware or viruses. This client may contain potentially harmful code that could damage your system or compromise your security.",
-            "dont_show_again": "Don\u0027t show this warning again for this client",
+            "dont_show_again": "Don't show this warning again for this client",
             "proceed_anyway": "Launch Anyway",
             "cancel": "Cancel",
             "close": "I understand"
@@ -251,13 +251,13 @@
             "tip_1": "Check your internet connection",
             "tip_2": "Try closing other applications using bandwidth",
             "tip_3": "Consider retrying the download later",
-            "dont_show_again": "Don\u0027t show this warning again",
+            "dont_show_again": "Don't show this warning again",
             "stalled_modal_title": "Download Stalled",
             "stalled_title": "Download Stuck",
             "stalled_subtitle": "No progress detected",
             "stalled_description": "Your download appears to be stuck. No data has been received for a while.",
             "no_progress": "No download progress detected",
-            "tip_zapret": "If you are from CIS (Russia, Belarus, Kazakhstan, except Ukraine), your provider may block our domains. Try enabling \u0027DPI Bypass\u0027 in settings and restart the loader as administrator."
+            "tip_zapret": "If you are from CIS (Russia, Belarus, Kazakhstan, except Ukraine), your provider may block our domains. Try enabling 'DPI Bypass' in settings and restart the loader as administrator."
         },
         "add_custom_client": "Add custom client",
         "edit_custom_client": "Edit client",
@@ -301,7 +301,10 @@
             "java_version_option": "Java {version}{default}",
             "java_version_hint": "Default: Java 8. Switch to Java 21 only if your client supports it.",
             "default_option": "Default ({value})",
-            "default_suffix": " (default)"
+            "default_suffix": " (default)",
+            "lwjgl_version_label": "LWJGL version (1.16.5 only)",
+            "lwjgl_version_option": "LWJGL {version}{default}",
+            "lwjgl_version_hint": "Default: LWJGL 3.2.2. Use 3.3.6 if your 1.16.5 client needs newer natives."
         },
         "edit_custom_client_modal": {
             "java_version_label": "Java version (1.8.9 only)",
@@ -324,7 +327,9 @@
             "validate_name": "Name is required",
             "validate_version": "Version is required",
             "validate_main_class": "Main class is required",
-            "update_failed": "Failed to update custom client: {error}"
+            "update_failed": "Failed to update custom client: {error}",
+            "lwjgl_version_label": "LWJGL version (1.16.5 only)",
+            "lwjgl_version_hint": "Default: LWJGL 3.2.2. Use 3.3.6 if your 1.16.5 client needs newer natives."
         },
         "delete_custom_client_confirm_modal": {
             "title": "Delete Custom Client",
@@ -377,7 +382,7 @@
     "account": {
         "no_email": "No email",
         "invisible_mode": "Invisible mode",
-        "invisible_mode_description": "When enabled, you\u0027ll appear offline to other users",
+        "invisible_mode_description": "When enabled, you'll appear offline to other users",
         "streamer_mode": "Streamer mode",
         "streamer_mode_description": "When enabled, all usernames will be hidden for privacy",
         "streamer_enabled": "Streamer mode enabled",
@@ -493,7 +498,7 @@
             "enter_username": "Please enter a username",
             "password_placeholder": "Enter your password",
             "login_button": "Login",
-            "register_link": "Don\u0027t have an account?",
+            "register_link": "Don't have an account?",
             "success": "Logged in successfully!",
             "local_success": "Successfully logged into local profile!",
             "local_login": "Local Login",
@@ -1062,10 +1067,10 @@
             "language": "The application language (e.g., en, ru).",
             "discord_rpc_enabled": "Enable Discord Rich Presence to show your activity in Discord.",
             "optional_telemetry": "Allow anonymous analytics to help improve CollapseLoader. No personal information is collected.",
-            "cordshare": "Share your coordinates with friends to show your location in-game, even when you\u0027re outside loaded chunks.",
+            "cordshare": "Share your coordinates with friends to show your location in-game, even when you're outside loaded chunks.",
             "irc_chat": "Chat with other CollapseLoader users in the IRC chat available in each client.",
             "hash_verify": "Enable hash verification to ensure downloaded clients are not corrupted. This helps keep your clients up to date.",
-            "dpi_bypass": "Enable if a client download is stuck at 0%, the client won\u0027t start, or clients fail to load.",
+            "dpi_bypass": "Enable if a client download is stuck at 0%, the client won't start, or clients fail to load.",
             "sync_client_settings": "Sync options, resourcepacks, and other settings across all clients.",
             "minimize_to_tray_on_launch": "Minimize the app to system tray when a client is launched.",
             "close_to_tray": "Minimize the app to system tray instead of closing when the close button is clicked.",
@@ -1197,7 +1202,7 @@
         "presets_title": "Presets",
         "presets": "presets",
         "presets_hidden_streamer": "Presets are hidden in streamer mode.",
-        "no_presets": "This user hasn\u0027t shared any presets yet.",
+        "no_presets": "This user hasn't shared any presets yet.",
         "create_preset": "Create Preset",
         "playtime_title": "Playtime Statistics",
         "playtime_total": "Total",
@@ -1251,7 +1256,7 @@
         },
         "theme": {
             "emergency_reset_done": "Custom CSS reset. {action}",
-            "emergency_reset_toggle_instruction": "To re-enable custom CSS, open Theme settings and toggle \u0027Enable custom CSS\u0027 off and on."
+            "emergency_reset_toggle_instruction": "To re-enable custom CSS, open Theme settings and toggle 'Enable custom CSS' off and on."
         },
         "client": {
             "crashed": "Client {name} has crashed. {error}",
@@ -1334,7 +1339,7 @@
             "browsing_clients": "Browsing clients",
             "configuring_settings": "Configuring settings",
             "enjoying_visuals": "Enjoying the visuals",
-            "watching_client_behavior": "Watching the client\u0027s behavior",
+            "watching_client_behavior": "Watching the client's behavior",
             "in_profile": "In profile",
             "watching_about": "Watching about us",
             "debugging": "Debugging",
@@ -1450,7 +1455,7 @@
         "current": "Current",
         "latest": "Latest",
         "changelog": "Changelog",
-        "download_install": "Download \u0026 Install",
+        "download_install": "Download & Install",
         "downloading": "Downloading...",
         "skip": "Skip",
         "starting_download": "Starting update download...",
@@ -1458,7 +1463,7 @@
         "update_failed": "Update failed: {error}",
         "check_for_updates": "Check for Updates",
         "checking_updates": "Checking for updates...",
-        "up_to_date": "You\u0027re running the latest version!",
+        "up_to_date": "You're running the latest version!",
         "show_more": "Show {count} more versions",
         "show_less": "Show less",
         "release_types": {},
@@ -1533,7 +1538,7 @@
         "comment_placeholder": "Write a comment...",
         "preset_picker_label": "Choose a local preset",
         "preset_picker_placeholder": "Select a preset...",
-        "no_local_presets": "You don\u0027t have any presets yet",
+        "no_local_presets": "You don't have any presets yet",
         "tg_source": "Themes from Telegram channel",
         "tg_refresh": "Refresh",
         "tg_retry": "Try again",

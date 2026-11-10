@@ -31,7 +31,7 @@
         "@tauri-apps/api": "2.12.3",
         "@tauri-apps/plugin-dialog": "2.8.2",
         "@tauri-apps/plugin-fs": "2.7.0",
-        "@tauri-apps/plugin-notification": "2.6.0",
+        "@tauri-apps/plugin-notification": "2.8.0",
         "@tauri-apps/plugin-opener": "2.7.1",
         "axios": "1.20.0",
         "gsap": "3.15.0",
