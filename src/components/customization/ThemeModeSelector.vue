@@ -25,16 +25,17 @@
                     >
                         <div
                             data-theme="light"
+                           
                             class="w-full aspect-[16/10] rounded-lg border border-base-300 overflow-hidden bg-base-100 shadow-sm"
                         >
-                            <div class="h-full w-full flex">
-                                <div class="w-[18%] border-r border-base-content/10 bg-base-300 flex flex-col items-center py-1.5 gap-1.5">
-                                    <div class="w-4 h-4 rounded-md bg-primary text-primary-content shadow-sm"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
-                                    <div class="mt-auto"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
+                            <div class="h-full w-full flex" :class="frameClass">
+                                <div :class="sidebarClass">
+                                    <div :class="navIconActiveClass"></div>
+                                    <div :class="navIconClass"></div>
+                                    <div :class="navIconClass"></div>
+                                    <div :class="spacerClass"></div>
+                                    <div :class="navIconClass"></div>
+                                    <div :class="navIconClass"></div>
                                 </div>
                                 <div class="flex-1 p-1.5 flex flex-col gap-1.5 min-w-0 bg-base-100">
                                     <div class="flex items-center gap-1">
@@ -45,64 +46,21 @@
                                         <div class="h-4 w-4 rounded border border-base-300 bg-base-200/70"></div>
                                     </div>
                                     <div class="flex-1 grid grid-cols-3 gap-1 min-h-0">
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-3/4 rounded bg-base-content/30"></div>
+                                        <div
+                                            v-for="i in 6"
+                                            :key="'l' + i"
+                                            class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col"
+                                        >
+                                            <div class="h-1 rounded bg-base-content/30" :class="i % 3 === 1 ? 'w-3/4' : i % 3 === 2 ? 'w-2/3' : 'w-4/5'"></div>
                                             <div class="mt-0.5 flex items-center gap-0.5">
                                                 <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
+                                                <div class="h-0.5 rounded bg-base-content/20" :class="i % 2 ? 'w-4' : 'w-3'"></div>
                                             </div>
                                             <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-2/3 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-4/5 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-3 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-2/3 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-base-300 border border-base-content/10"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-3/4 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-3 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-1/2 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
+                                                <div
+                                                    class="h-2.5 w-7 rounded"
+                                                    :class="i === 4 ? 'bg-base-300 border border-base-content/10' : 'bg-primary'"
+                                                ></div>
                                             </div>
                                         </div>
                                     </div>
@@ -111,9 +69,7 @@
                         </div>
                         <div class="flex items-center justify-center gap-1.5">
                             <Sun class="w-4 h-4 text-warning" />
-                            <span class="text-sm font-medium">{{
-                                t("theme.light")
-                            }}</span>
+                            <span class="text-sm font-medium">{{ t("theme.light") }}</span>
                         </div>
                     </button>
 
@@ -129,16 +85,17 @@
                     >
                         <div
                             data-theme="dark"
+                           
                             class="w-full aspect-[16/10] rounded-lg border border-base-300 overflow-hidden bg-base-100 shadow-sm"
                         >
-                            <div class="h-full w-full flex">
-                                <div class="w-[18%] border-r border-base-content/10 bg-base-300 flex flex-col items-center py-1.5 gap-1.5">
-                                    <div class="w-4 h-4 rounded-md bg-primary text-primary-content shadow-sm"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
-                                    <div class="mt-auto"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
-                                    <div class="w-4 h-4 rounded-md bg-base-content/10"></div>
+                            <div class="h-full w-full flex" :class="frameClass">
+                                <div :class="sidebarClass">
+                                    <div :class="navIconActiveClass"></div>
+                                    <div :class="navIconClass"></div>
+                                    <div :class="navIconClass"></div>
+                                    <div :class="spacerClass"></div>
+                                    <div :class="navIconClass"></div>
+                                    <div :class="navIconClass"></div>
                                 </div>
                                 <div class="flex-1 p-1.5 flex flex-col gap-1.5 min-w-0 bg-base-100">
                                     <div class="flex items-center gap-1">
@@ -149,64 +106,21 @@
                                         <div class="h-4 w-4 rounded border border-base-300 bg-base-200/70"></div>
                                     </div>
                                     <div class="flex-1 grid grid-cols-3 gap-1 min-h-0">
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-3/4 rounded bg-base-content/30"></div>
+                                        <div
+                                            v-for="i in 6"
+                                            :key="'d' + i"
+                                            class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col"
+                                        >
+                                            <div class="h-1 rounded bg-base-content/30" :class="i % 3 === 1 ? 'w-3/4' : i % 3 === 2 ? 'w-2/3' : 'w-4/5'"></div>
                                             <div class="mt-0.5 flex items-center gap-0.5">
                                                 <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
+                                                <div class="h-0.5 rounded bg-base-content/20" :class="i % 2 ? 'w-4' : 'w-3'"></div>
                                             </div>
                                             <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-2/3 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-4/5 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-3 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-2/3 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-base-300 border border-base-content/10"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-3/4 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-3 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded-md border border-base-content/10 bg-base-300 shadow-sm p-1 flex flex-col">
-                                            <div class="h-1 w-1/2 rounded bg-base-content/30"></div>
-                                            <div class="mt-0.5 flex items-center gap-0.5">
-                                                <div class="w-1 h-1 rounded-full bg-base-content/20"></div>
-                                                <div class="h-0.5 w-4 rounded bg-base-content/20"></div>
-                                            </div>
-                                            <div class="mt-auto flex justify-end pt-0.5">
-                                                <div class="h-2.5 w-7 rounded bg-primary"></div>
+                                                <div
+                                                    class="h-2.5 w-7 rounded"
+                                                    :class="i === 4 ? 'bg-base-300 border border-base-content/10' : 'bg-primary'"
+                                                ></div>
                                             </div>
                                         </div>
                                     </div>
@@ -215,9 +129,7 @@
                         </div>
                         <div class="flex items-center justify-center gap-1.5">
                             <Moon class="w-4 h-4 text-info" />
-                            <span class="text-sm font-medium">{{
-                                t("theme.dark")
-                            }}</span>
+                            <span class="text-sm font-medium">{{ t("theme.dark") }}</span>
                         </div>
                     </button>
 
@@ -231,16 +143,15 @@
                         "
                         @click="$emit('select-mode', 'system')"
                     >
-                        <div
-                            class="w-full aspect-[16/10] rounded-lg border border-base-300 overflow-hidden bg-base-100 shadow-sm flex"
-                        >
-                            <div data-theme="light" class="w-1/2 h-full flex">
-                                <div class="w-[22%] border-r border-base-content/10 bg-base-300 flex flex-col items-center py-1 gap-1">
-                                    <div class="w-3 h-3 rounded-sm bg-primary"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="mt-auto w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
+                        <div class="w-full aspect-[16/10] rounded-lg border border-base-300 overflow-hidden bg-base-100 shadow-sm flex">
+                            <div data-theme="light" class="w-1/2 h-full flex" :class="frameClass">
+                                <div :class="sidebarClassMini">
+                                    <div :class="navIconActiveClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="spacerClass"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
                                 </div>
                                 <div class="flex-1 p-1 flex flex-col gap-1 min-w-0 bg-base-100">
                                     <div class="flex gap-0.5">
@@ -249,40 +160,30 @@
                                         <div class="h-3 w-3 rounded border border-base-300 bg-base-200/70"></div>
                                     </div>
                                     <div class="flex-1 grid grid-cols-2 gap-0.5 min-h-0">
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
+                                        <div
+                                            v-for="i in 4"
+                                            :key="'sl' + i"
+                                            class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col"
+                                        >
                                             <div class="h-0.5 w-3/4 rounded bg-base-content/25"></div>
                                             <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-2/3 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-4/5 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-1/2 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-base-300 border border-base-content/10"></div>
+                                                <div
+                                                    class="h-2 w-5 rounded"
+                                                    :class="i === 4 ? 'bg-base-300 border border-base-content/10' : 'bg-primary'"
+                                                ></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div data-theme="dark" class="w-1/2 h-full flex border-l border-base-300">
-                                <div class="w-[22%] border-r border-base-content/10 bg-base-300 flex flex-col items-center py-1 gap-1">
-                                    <div class="w-3 h-3 rounded-sm bg-primary"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="mt-auto w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
+                            <div data-theme="dark" class="w-1/2 h-full flex border-l border-base-300" :class="frameClass">
+                                <div :class="sidebarClassMini">
+                                    <div :class="navIconActiveClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="spacerClass"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
                                 </div>
                                 <div class="flex-1 p-1 flex flex-col gap-1 min-w-0 bg-base-100">
                                     <div class="flex gap-0.5">
@@ -291,28 +192,17 @@
                                         <div class="h-3 w-3 rounded border border-base-300 bg-base-200/70"></div>
                                     </div>
                                     <div class="flex-1 grid grid-cols-2 gap-0.5 min-h-0">
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
+                                        <div
+                                            v-for="i in 4"
+                                            :key="'sd' + i"
+                                            class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col"
+                                        >
                                             <div class="h-0.5 w-3/4 rounded bg-base-content/25"></div>
                                             <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-2/3 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-4/5 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-1/2 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-base-300 border border-base-content/10"></div>
+                                                <div
+                                                    class="h-2 w-5 rounded"
+                                                    :class="i === 4 ? 'bg-base-300 border border-base-content/10' : 'bg-primary'"
+                                                ></div>
                                             </div>
                                         </div>
                                     </div>
@@ -321,9 +211,7 @@
                         </div>
                         <div class="flex items-center justify-center gap-1.5">
                             <Monitor class="w-4 h-4 text-success" />
-                            <span class="text-sm font-medium">{{
-                                t("theme.system")
-                            }}</span>
+                            <span class="text-sm font-medium">{{ t("theme.system") }}</span>
                         </div>
                     </button>
 
@@ -337,36 +225,29 @@
                         "
                         @click="$emit('select-mode', 'schedule')"
                     >
-                        <div
-                            class="w-full aspect-[16/10] rounded-lg border border-base-300 overflow-hidden bg-base-100 shadow-sm flex relative"
-                        >
-                            <div data-theme="light" class="w-1/2 h-full flex">
-                                <div class="w-[22%] border-r border-base-content/10 bg-base-300 flex flex-col items-center py-1 gap-1">
-                                    <div class="w-3 h-3 rounded-sm bg-primary"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="mt-auto w-3 h-3 rounded-sm bg-base-content/10"></div>
+                        <div class="w-full aspect-[16/10] rounded-lg border border-base-300 overflow-hidden bg-base-100 shadow-sm flex relative">
+                            <div data-theme="light" class="w-1/2 h-full flex" :class="frameClass">
+                                <div :class="sidebarClassMini">
+                                    <div :class="navIconActiveClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="spacerClass"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
                                 </div>
                                 <div class="flex-1 p-1 flex flex-col gap-1 min-w-0 bg-base-100">
                                     <div class="flex gap-0.5">
                                         <div class="h-3 flex-1 rounded border border-base-300 bg-base-200/70"></div>
                                         <div class="h-3 w-3 rounded border border-base-300 bg-base-200/70"></div>
+                                        <div class="h-3 w-3 rounded border border-base-300 bg-base-200/70"></div>
                                     </div>
                                     <div class="flex-1 grid grid-cols-2 gap-0.5 min-h-0">
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
+                                        <div
+                                            v-for="i in 4"
+                                            :key="'cl' + i"
+                                            class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col"
+                                        >
                                             <div class="h-0.5 w-3/4 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-2/3 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col col-span-2">
-                                            <div class="h-0.5 w-1/2 rounded bg-base-content/25"></div>
                                             <div class="mt-auto flex justify-end">
                                                 <div class="h-2 w-5 rounded bg-primary"></div>
                                             </div>
@@ -374,33 +255,28 @@
                                     </div>
                                 </div>
                             </div>
-                            <div data-theme="dark" class="w-1/2 h-full flex border-l border-base-300">
-                                <div class="w-[22%] border-r border-base-content/10 bg-base-300 flex flex-col items-center py-1 gap-1">
-                                    <div class="w-3 h-3 rounded-sm bg-primary"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="w-3 h-3 rounded-sm bg-base-content/10"></div>
-                                    <div class="mt-auto w-3 h-3 rounded-sm bg-base-content/10"></div>
+                            <div data-theme="dark" class="w-1/2 h-full flex border-l border-base-300" :class="frameClass">
+                                <div :class="sidebarClassMini">
+                                    <div :class="navIconActiveClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="spacerClass"></div>
+                                    <div :class="navIconClassMini"></div>
+                                    <div :class="navIconClassMini"></div>
                                 </div>
                                 <div class="flex-1 p-1 flex flex-col gap-1 min-w-0 bg-base-100">
                                     <div class="flex gap-0.5">
                                         <div class="h-3 flex-1 rounded border border-base-300 bg-base-200/70"></div>
                                         <div class="h-3 w-3 rounded border border-base-300 bg-base-200/70"></div>
+                                        <div class="h-3 w-3 rounded border border-base-300 bg-base-200/70"></div>
                                     </div>
                                     <div class="flex-1 grid grid-cols-2 gap-0.5 min-h-0">
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
+                                        <div
+                                            v-for="i in 4"
+                                            :key="'cd' + i"
+                                            class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col"
+                                        >
                                             <div class="h-0.5 w-3/4 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col">
-                                            <div class="h-0.5 w-2/3 rounded bg-base-content/25"></div>
-                                            <div class="mt-auto flex justify-end">
-                                                <div class="h-2 w-5 rounded bg-primary"></div>
-                                            </div>
-                                        </div>
-                                        <div class="rounded border border-base-content/10 bg-base-300 p-0.5 flex flex-col col-span-2">
-                                            <div class="h-0.5 w-1/2 rounded bg-base-content/25"></div>
                                             <div class="mt-auto flex justify-end">
                                                 <div class="h-2 w-5 rounded bg-primary"></div>
                                             </div>
@@ -408,21 +284,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <div
-                                class="absolute inset-0 flex items-center justify-center pointer-events-none"
-                            >
-                                <div
-                                    class="rounded-full bg-base-100 border border-base-300 p-1 shadow-sm"
-                                >
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div class="rounded-full bg-base-100 border border-base-300 p-1 shadow-sm">
                                     <Clock class="w-3.5 h-3.5 text-primary" />
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center justify-center gap-1.5">
                             <Clock class="w-4 h-4 text-primary" />
-                            <span class="text-sm font-medium">{{
-                                t("theme.schedule.title")
-                            }}</span>
+                            <span class="text-sm font-medium">{{ t("theme.schedule.title") }}</span>
                         </div>
                     </button>
                 </div>
@@ -545,8 +415,11 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { SunMoon, Moon, Sun, Clock, Monitor } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
+
+type SidebarPosition = "left" | "right" | "top" | "bottom";
 
 const { t } = useI18n();
 
@@ -562,6 +435,102 @@ defineEmits<{
     "select-mode": [mode: "dark" | "light" | "system" | "schedule"];
     "update-schedule": [field: "lightStart" | "lightEnd", value: string];
 }>();
+
+const resolveSidebarPosition = (): SidebarPosition => {
+    const v = localStorage.getItem("sidebarPosition") as SidebarPosition | null;
+    return v === "right" || v === "top" || v === "bottom" ? v : "left";
+};
+
+const sidebarPosition = ref<SidebarPosition>(resolveSidebarPosition());
+
+const syncSidebarPosition = () => {
+    sidebarPosition.value = resolveSidebarPosition();
+};
+
+const handleSidebarPositionChanged = (event: Event) => {
+    const detail = (event as CustomEvent<SidebarPosition>).detail;
+    if (
+        detail === "left" ||
+        detail === "right" ||
+        detail === "top" ||
+        detail === "bottom"
+    ) {
+        sidebarPosition.value = detail;
+    } else {
+        syncSidebarPosition();
+    }
+};
+
+const handleStorage = (event: StorageEvent) => {
+    if (event.key === "sidebarPosition") {
+        syncSidebarPosition();
+    }
+};
+
+onMounted(() => {
+    syncSidebarPosition();
+    window.addEventListener(
+        "sidebar-position-changed",
+        handleSidebarPositionChanged as EventListener
+    );
+    window.addEventListener("storage", handleStorage);
+});
+
+onUnmounted(() => {
+    window.removeEventListener(
+        "sidebar-position-changed",
+        handleSidebarPositionChanged as EventListener
+    );
+    window.removeEventListener("storage", handleStorage);
+});
+
+const frameClass = computed(() => {
+    if (sidebarPosition.value === "right") return "flex-row-reverse";
+    if (sidebarPosition.value === "top") return "flex-col";
+    if (sidebarPosition.value === "bottom") return "flex-col-reverse";
+    return "flex-row";
+});
+
+const isVertical = computed(
+    () => sidebarPosition.value === "left" || sidebarPosition.value === "right"
+);
+
+const sidebarClass = computed(() => {
+    if (isVertical.value) {
+        const border =
+            sidebarPosition.value === "left"
+                ? "border-r border-base-content/10"
+                : "border-l border-base-content/10";
+        return `w-[18%] h-full ${border} bg-base-300 flex flex-col items-center py-1.5 gap-1.5 shrink-0`;
+    }
+    const border =
+        sidebarPosition.value === "top"
+            ? "border-b border-base-content/10"
+            : "border-t border-base-content/10";
+    return `h-[22%] w-full ${border} bg-base-300 flex flex-row items-center px-1.5 gap-1.5 shrink-0`;
+});
+
+const sidebarClassMini = computed(() => {
+    if (isVertical.value) {
+        const border =
+            sidebarPosition.value === "left"
+                ? "border-r border-base-content/10"
+                : "border-l border-base-content/10";
+        return `w-[22%] h-full ${border} bg-base-300 flex flex-col items-center py-1 gap-1 shrink-0`;
+    }
+    const border =
+        sidebarPosition.value === "top"
+            ? "border-b border-base-content/10"
+            : "border-t border-base-content/10";
+    return `h-[24%] w-full ${border} bg-base-300 flex flex-row items-center px-1 gap-1 shrink-0`;
+});
+
+const navIconActiveClass =
+    "w-4 h-4 rounded-md bg-primary text-primary-content shadow-sm shrink-0";
+const navIconClass = "w-4 h-4 rounded-md bg-base-content/10 shrink-0";
+const navIconActiveClassMini = "w-3 h-3 rounded-sm bg-primary shrink-0";
+const navIconClassMini = "w-3 h-3 rounded-sm bg-base-content/10 shrink-0";
+const spacerClass = computed(() => (isVertical.value ? "mt-auto" : "ml-auto"));
 </script>
 
 <style scoped>

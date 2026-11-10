@@ -16,6 +16,7 @@ import {
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import type { SkinProfile, SkinVariant } from "@shared/types/skin";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 import SkinCatalog from "./SkinCatalog.vue";
 import SkinPreview from "./SkinPreview.vue";
 
@@ -259,18 +260,17 @@ const setCape = async (capeId: string | null) => {
                             <span class="text-sm text-base-content/70">{{
                                 t("settings.skin_account")
                             }}</span>
-                            <select
-                                v-model="selectedAccountId"
-                                class="select select-bordered select-sm"
-                            >
-                                <option
-                                    v-for="account in microsoftAccounts"
-                                    :key="account.id"
-                                    :value="account.id"
-                                >
-                                    {{ account.username }}
-                                </option>
-                            </select>
+                            <AnimatedDropdown
+                                :model-value="selectedAccountId"
+                                :options="
+                                    microsoftAccounts.map((account) => ({
+                                        value: account.id,
+                                        label: account.username,
+                                    }))
+                                "
+                                width="7.5rem"
+                                @change="(v) => (selectedAccountId = v)"
+                            />
                         </label>
                     </div>
                 </div>

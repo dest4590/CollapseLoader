@@ -7,6 +7,7 @@ import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import type { SavedSkin, SkinProfile, SkinVariant } from "@shared/types/skin";
 import { MINECRAFT_SKINS } from "@shared/data/minecraftSkins";
+import AnimatedDropdown from "@shared/components/ui/AnimatedDropdown.vue";
 import SkinThumbnail from "./SkinThumbnail.vue";
 
 interface CatalogSkin {
@@ -38,6 +39,8 @@ const { showConfirm } = useModal();
 
 const tab = ref<"saved" | "defaults">("saved");
 const search = ref("");
+const sortKey = ref<"name">("name");
+const sortOrder = ref<"asc" | "desc">("asc");
 const savedSkins = ref<SavedSkin[]>([]);
 const loading = ref(false);
 const loadError = ref("");
@@ -64,13 +67,17 @@ const filteredSkins = computed<CatalogSkin[]>(() => {
               }));
 
     const query = search.value.trim().toLowerCase();
-    if (!query) {
-        return source;
-    }
-    return source.filter((skin) =>
-        `${skin.name} ${skin.variant} ${skin.section ?? ""}`
-            .toLowerCase()
-            .includes(query)
+    const filtered = query
+        ? source.filter((skin) =>
+              `${skin.name} ${skin.variant} ${skin.section ?? ""}`
+                  .toLowerCase()
+                  .includes(query)
+          )
+        : source;
+
+    const multiplier = sortOrder.value === "asc" ? 1 : -1;
+    return [...filtered].sort(
+        (a, b) => a.name.localeCompare(b.name) * multiplier
     );
 });
 
@@ -222,6 +229,23 @@ watch(() => props.refreshKey, loadSaved);
                             </span>
                         </button>
                     </div>
+                    <AnimatedDropdown
+                        :model-value="sortKey"
+                        :options="[
+                            { value: 'name', label: t('home.sort.name') },
+                        ]"
+                        width="6.5rem"
+                        @change="(v) => (sortKey = v as 'name')"
+                    />
+                    <AnimatedDropdown
+                        :model-value="sortOrder"
+                        :options="[
+                            { value: 'asc', label: t('home.sort.order.asc') },
+                            { value: 'desc', label: t('home.sort.order.desc') },
+                        ]"
+                        width="7.5rem"
+                        @change="(v) => (sortOrder = v as 'asc' | 'desc')"
+                    />
                     <label
                         class="input input-sm input-bordered flex items-center gap-2 bg-base-300/40 w-full sm:w-56"
                     >

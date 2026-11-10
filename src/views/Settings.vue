@@ -97,6 +97,8 @@ const { showModal, showConfirm } = useModal();
 
 const editingAccount = ref<Account | null>(null);
 const searchQuery = ref("");
+const accountSortKey = ref<"name">("name");
+const accountSortOrder = ref<"asc" | "desc">("asc");
 
 const ramOptions = [
     { mb: 2048, label: "2 GB" },
@@ -699,7 +701,10 @@ const filteredAccounts = computed(() => {
         );
     }
 
-    return result;
+    const multiplier = accountSortOrder.value === "asc" ? 1 : -1;
+    return [...result].sort(
+        (a, b) => a.username.localeCompare(b.username) * multiplier
+    );
 });
 
 const selectTag = (tag: string) => {
@@ -1915,6 +1920,23 @@ const handleToastPositionChange = (position: string) => {
                                         class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 z-50"
                                     />
                                 </div>
+                                <AnimatedDropdown
+                                    :model-value="accountSortKey"
+                                    :options="[
+                                        { value: 'name', label: t('home.sort.name') },
+                                    ]"
+                                    width="6.5rem"
+                                    @change="(v) => (accountSortKey = v as 'name')"
+                                />
+                                <AnimatedDropdown
+                                    :model-value="accountSortOrder"
+                                    :options="[
+                                        { value: 'asc', label: t('home.sort.order.asc') },
+                                        { value: 'desc', label: t('home.sort.order.desc') },
+                                    ]"
+                                    width="7.5rem"
+                                    @change="(v) => (accountSortOrder = v as 'asc' | 'desc')"
+                                />
                                 <div
                                     class="flex flex-wrap gap-2"
                                     v-if="uniqueTags.length > 0"

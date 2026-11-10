@@ -126,6 +126,9 @@ export function useAppHandlers(props: AppHandlerProps) {
     const updateSidebarPosition = (newPosition: SidebarPosition) => {
         sidebarPosition.value = newPosition;
         localStorage.setItem("sidebarPosition", newPosition);
+        window.dispatchEvent(
+            new CustomEvent("sidebar-position-changed", { detail: newPosition })
+        );
     };
 
     const mainClasses = computed(() => {
