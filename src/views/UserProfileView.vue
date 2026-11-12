@@ -704,6 +704,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useToast } from "@shared/composables/useToast";
 import { useModal } from "@shared/composables/useModal";
 import {
@@ -1263,7 +1264,7 @@ const copySocialHandle = async (link: any) => {
             return;
         }
         const raw = link.url.startsWith("@") ? link.url.substring(1) : link.url;
-        await navigator.clipboard.writeText(raw);
+        await writeText(raw);
         addToast(
             t("userProfile.copied_username", {
                 name: displayHandle(link.platform, link.url),
@@ -1282,7 +1283,7 @@ const copyUsername = async () => {
             addToast(t("userProfile.copy_failed"), "error");
             return;
         }
-        await navigator.clipboard.writeText(userProfile.value.username);
+        await writeText(userProfile.value.username);
         addToast(
             t("userProfile.copied_username", {
                 name: userProfile.value.username,

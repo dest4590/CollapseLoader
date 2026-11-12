@@ -235,6 +235,7 @@ import {
     AtSign,
     Copy,
 } from "@lucide/vue";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useToast } from "@shared/composables/useToast";
 import { useIrcChat } from "../../../composables/useIrcChat";
 import { useI18n } from "vue-i18n";
@@ -547,7 +548,7 @@ const startPrivateMessage = async () => {
 
 const copyToClipboard = async (text: string) => {
     try {
-        await navigator.clipboard.writeText(text);
+        await writeText(text);
         addToast("Copied to clipboard", "success");
     } catch {
         addToast("Failed to copy", "error");

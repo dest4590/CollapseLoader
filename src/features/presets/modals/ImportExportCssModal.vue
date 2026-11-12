@@ -42,6 +42,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useI18n } from "vue-i18n";
 import { useToast } from "@shared/composables/useToast";
 import { Upload } from "@lucide/vue";
@@ -73,7 +74,7 @@ onMounted(async () => {
 
 const copyToClipboard = async (text: string) => {
     try {
-        await navigator.clipboard.writeText(text);
+        await writeText(text);
         addToast(t("theme.copied"), "success");
     } catch {
         addToast(t("theme.copy_failed"), "error");

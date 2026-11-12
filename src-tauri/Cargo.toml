@@ -56,6 +56,7 @@ keyring = "4.2.0"
 regex = "1.13.1"
 flate2 = "1.1.10"
 url = "2.5.8"
+tauri-plugin-clipboard-manager = "2.5.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.5"

@@ -384,6 +384,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from "vue";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@shared/utils/utils";
 import { resolveApiAssetUrl } from "@shared/utils/url";
@@ -490,9 +491,7 @@ async function copyColor(key: string) {
     }
 
     try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(color);
-        }
+        await writeText(color);
         addToast(
             t("common.copied_to_clipboard", { value: color }) || color,
             "success"

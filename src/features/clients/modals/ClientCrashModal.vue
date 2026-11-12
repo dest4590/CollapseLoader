@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useToast } from "@shared/composables/useToast";
 import { useI18n } from "vue-i18n";
 
@@ -53,7 +54,7 @@ const closeModal = () => {
 
 const copyLogs = async () => {
     try {
-        await navigator.clipboard.writeText(formattedLogs.value);
+        await writeText(formattedLogs.value);
         addToast(t("toast.logs.client_logs_copied"), "success");
     } catch (err) {
         console.error("Failed to copy logs: ", err);

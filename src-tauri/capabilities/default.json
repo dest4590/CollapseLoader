@@ -13,6 +13,7 @@
         "opener:default",
         "notification:default",
         "dialog:default",
+        "clipboard-manager:allow-write-text",
 
         {
             "identifier": "fs:allow-write-file",

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import {
     computed,
     onBeforeUnmount,
@@ -1280,7 +1281,7 @@ const copyClientLogs = async (client: Client) => {
         const logs = await invoke<string>("get_latest_client_logs", {
             id: client.id,
         });
-        await navigator.clipboard.writeText(logs);
+        await writeText(logs);
         addToast(t("home.logs_copied", { name: client.name }), "success");
     } catch (err) {
         console.error("Error copying client logs:", err);

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/core";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
     AlertTriangle,
@@ -291,7 +292,7 @@ const copyClientLogs = async (client: CustomClient) => {
         const logs = await invoke<string>("get_latest_client_logs", {
             id: client.id,
         });
-        await navigator.clipboard.writeText(logs);
+        await writeText(logs);
         addToast(t("logs.copied"), "success");
     } catch (err) {
         addToast(t("logs.copy_failed", { error: err }), "error");

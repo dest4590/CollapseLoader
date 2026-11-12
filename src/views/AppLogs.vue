@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useToast } from "@shared/composables/useToast";
 import { Copy } from "@lucide/vue";
 import { useI18n } from "vue-i18n";
@@ -38,8 +39,7 @@ const scrollToBottom = () => {
 const copyLogs = () => {
     if (appLogs.value.length > 0) {
         const logsText = appLogs.value.join("\n");
-        navigator.clipboard
-            .writeText(logsText)
+        writeText(logsText)
             .then(() => {
                 console.log("Logs copied to clipboard");
                 addToast(t("toast.logs.copied_success"), "success");

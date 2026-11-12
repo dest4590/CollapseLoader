@@ -282,6 +282,7 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, computed, watch } from "vue";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import {
     Plus,
     Upload,
@@ -448,7 +449,7 @@ const duplicatePreset = async (preset: ThemePreset) => {
 const exportPreset = async (preset: ThemePreset) => {
     try {
         const json = exportPresetAction(preset);
-        await navigator.clipboard.writeText(json);
+        await writeText(json);
         addToast(t("theme.export_success"), "success");
     } catch (e) {
         console.error("Failed to export preset:", e);
@@ -591,7 +592,7 @@ const exportSelectedPresets = async () => {
             })
             .filter(Boolean);
         const json = JSON.stringify(exported, null, 2);
-        await navigator.clipboard.writeText(json);
+        await writeText(json);
         addToast(
             t("theme.presets.messages.multiple_exported", {
                 count: exported.length,
