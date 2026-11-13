@@ -863,7 +863,13 @@
         "downloading": "Pobieranie",
         "extracting": "Rozpakowywanie",
         "download_complete": "Pobieranie zakończone",
-        "installation_complete": "Instalacja zakończona"
+        "installation_complete": "Instalacja zakończona",
+        "paused": "Wstrzymano",
+        "pause": "Pauza",
+        "resume": "Wznów",
+        "pause_all": "Wstrzymaj wszystkie",
+        "resume_all": "Wznów wszystkie",
+        "waiting_network": "Oczekiwanie na sieć…"
     },
     "errors": {
         "clients_load_failed": "Nie udało się załadować listy klientów: {error}",

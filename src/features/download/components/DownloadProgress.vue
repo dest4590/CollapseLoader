@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted } from "vue";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { useI18n } from "vue-i18n";
+import { CirclePause, CirclePlay, Pause, Play, X } from "@lucide/vue";
 import { useDownloadSpeedMonitor } from "../../../composables/useDownloadSpeedMonitor";
 
 const { t } = useI18n();
@@ -20,6 +21,16 @@ interface ProgressEvent {
     total_files?: number;
 }
 
+interface DownloadSnapshot {
+    file: string;
+    percentage: number;
+    downloaded: number;
+    total: number;
+    speed_bps: number;
+    paused: boolean;
+    waiting: boolean;
+}
+
 interface FileProgressState {
     percentage: number;
     downloadedBytes: number;
@@ -27,6 +38,8 @@ interface FileProgressState {
     speedBps: number;
     hasKnownTotal: boolean;
     action: string;
+    paused: boolean;
+    waiting: boolean;
 }
 
 const fileProgress = ref<Map<string, FileProgressState>>(new Map());
@@ -47,9 +60,35 @@ const humanSize = (bytes: number): string => {
 };
 
 const activeFiles = computed(() => [...activeDownloads.value]);
-const currentFile = computed(() => activeFiles.value[0] ?? "");
+const currentFile = computed(() => {
+    const files = activeFiles.value;
+    return (
+        files.find((file) => {
+            const state = fileProgress.value.get(file);
+            return state && !state.paused && !state.waiting;
+        }) ??
+        files[0] ??
+        ""
+    );
+});
 const currentState = computed((): FileProgressState | undefined =>
     fileProgress.value.get(currentFile.value)
+);
+const isCurrentPaused = computed(() => currentState.value?.paused ?? false);
+const isCurrentWaiting = computed(() => currentState.value?.waiting ?? false);
+
+const downloadableFiles = computed(() =>
+    activeFiles.value.filter((file) => {
+        const state = fileProgress.value.get(file);
+        return state && state.action !== t("installation.extracting");
+    })
+);
+const allPaused = computed(
+    () =>
+        downloadableFiles.value.length > 0 &&
+        downloadableFiles.value.every(
+            (file) => fileProgress.value.get(file)?.paused
+        )
 );
 
 const visibleFileEntries = computed(() =>
@@ -76,7 +115,7 @@ const currentAction = computed(
 
 const formattedSpeed = computed((): string => {
     const bps = currentState.value?.speedBps ?? 0;
-    if (bps <= 0) return "";
+    if (bps <= 0 || isCurrentPaused.value || isCurrentWaiting.value) return "";
     return `${humanSize(bps)}/s`;
 });
 
@@ -84,6 +123,8 @@ const formattedEta = computed((): string => {
     const state = currentState.value;
     if (
         !state ||
+        state.paused ||
+        state.waiting ||
         !state.hasKnownTotal ||
         state.speedBps <= 0 ||
         state.totalBytes <= 0 ||
@@ -136,6 +177,8 @@ const formattedProgress = computed((): string => {
 const isIndeterminate = computed(
     () =>
         !(currentState.value?.hasKnownTotal ?? false) &&
+        !isCurrentPaused.value &&
+        !isCurrentWaiting.value &&
         currentState.value?.action !== t("installation.extracting")
 );
 
@@ -146,6 +189,8 @@ const makeInitialState = (action: string): FileProgressState => ({
     speedBps: 0,
     hasKnownTotal: false,
     action,
+    paused: false,
+    waiting: false,
 });
 
 const updateFileProgress = (
@@ -165,7 +210,11 @@ const removeFileProgress = (file: string) => {
 };
 
 const updateMonitoringState = () => {
-    if (activeDownloads.value.size > 0) {
+    const hasRunning = activeFiles.value.some((file) => {
+        const state = fileProgress.value.get(file);
+        return state && !state.paused && !state.waiting;
+    });
+    if (hasRunning) {
         downloadMonitor.startMonitoring();
     } else {
         downloadMonitor.stopMonitoring();
@@ -187,6 +236,54 @@ const cancelDownload = async (file: string) => {
     }
 };
 
+const pauseDownload = async (file: string) => {
+    if (!file) return;
+    try {
+        const ok = await invoke<boolean>("pause_download", { name: file });
+        if (ok) {
+            updateFileProgress(file, {
+                paused: true,
+                waiting: false,
+                action: t("installation.paused"),
+                speedBps: 0,
+            });
+            updateMonitoringState();
+        }
+    } catch (e) {
+        console.error("Failed to pause download:", e);
+    }
+};
+
+const resumeDownload = async (file: string) => {
+    if (!file) return;
+    try {
+        const ok = await invoke<boolean>("resume_download", { name: file });
+        if (ok) {
+            updateFileProgress(file, {
+                paused: false,
+                waiting: false,
+                action: t("installation.downloading"),
+            });
+            updateMonitoringState();
+        }
+    } catch (e) {
+        console.error("Failed to resume download:", e);
+    }
+};
+
+const toggleAll = async () => {
+    const shouldResume = allPaused.value;
+    for (const file of downloadableFiles.value) {
+        const state = fileProgress.value.get(file);
+        if (!state) continue;
+        if (shouldResume && state.paused) {
+            await resumeDownload(file);
+        } else if (!shouldResume && !state.paused) {
+            await pauseDownload(file);
+        }
+    }
+};
+
 onMounted(async () => {
     listeners.value.push(
         await listen("download-start", (event: any) => {
@@ -205,18 +302,30 @@ onMounted(async () => {
     listeners.value.push(
         await listen("download-progress", (event: any) => {
             const data = event.payload as ProgressEvent;
-            if (data.downloaded !== undefined) {
-                downloadMonitor.onProgress(data.downloaded, data.percentage);
-            }
-
             if (
                 !isValidFile(data.file) ||
                 !activeDownloads.value.has(data.file)
             )
                 return;
 
+            const isPaused = data.action === "paused";
+            const isWaiting = data.action === "waiting";
+            const previous = fileProgress.value.get(data.file);
+            const wasIdle =
+                (previous?.paused ?? false) || (previous?.waiting ?? false);
+
+            if (!isPaused && !isWaiting && data.downloaded !== undefined) {
+                downloadMonitor.onProgress(data.downloaded, data.percentage);
+            }
+
             updateFileProgress(data.file, {
-                action: t("installation.downloading"),
+                action: isPaused
+                    ? t("installation.paused")
+                    : isWaiting
+                      ? t("installation.waiting_network")
+                      : t("installation.downloading"),
+                paused: isPaused,
+                waiting: isWaiting,
                 percentage: data.percentage,
                 ...(data.downloaded !== undefined
                     ? { downloadedBytes: data.downloaded }
@@ -224,10 +333,12 @@ onMounted(async () => {
                 ...(data.total !== undefined && data.total > 0
                     ? { totalBytes: data.total, hasKnownTotal: true }
                     : {}),
-                ...(data.speed_bps !== undefined
-                    ? { speedBps: data.speed_bps }
-                    : {}),
+                speedBps: isPaused || isWaiting ? 0 : (data.speed_bps ?? 0),
             });
+
+            if ((isPaused || isWaiting) !== wasIdle) {
+                updateMonitoringState();
+            }
         })
     );
 
@@ -254,6 +365,8 @@ onMounted(async () => {
                 totalBytes: 0,
                 speedBps: 0,
                 hasKnownTotal: false,
+                paused: false,
+                waiting: false,
             });
         })
     );
@@ -270,6 +383,8 @@ onMounted(async () => {
             updateFileProgress(data.file, {
                 action: t("installation.extracting"),
                 percentage: data.percentage,
+                paused: false,
+                waiting: false,
                 ...(data.files_extracted !== undefined
                     ? { downloadedBytes: data.files_extracted }
                     : {}),
@@ -299,6 +414,33 @@ onMounted(async () => {
             }
         })
     );
+
+    try {
+        const snapshots = await invoke<DownloadSnapshot[]>(
+            "get_download_states"
+        );
+        for (const snapshot of snapshots || []) {
+            if (!isValidFile(snapshot.file)) continue;
+            activeDownloads.value.add(snapshot.file);
+            updateFileProgress(snapshot.file, {
+                percentage: snapshot.percentage,
+                downloadedBytes: snapshot.downloaded,
+                totalBytes: snapshot.total,
+                hasKnownTotal: snapshot.total > 0,
+                speedBps: snapshot.speed_bps,
+                paused: snapshot.paused,
+                waiting: snapshot.waiting,
+                action: snapshot.paused
+                    ? t("installation.paused")
+                    : snapshot.waiting
+                      ? t("installation.waiting_network")
+                      : t("installation.downloading"),
+            });
+        }
+        updateMonitoringState();
+    } catch (e) {
+        console.error("Failed to restore download states:", e);
+    }
 });
 
 onUnmounted(() => {
@@ -312,11 +454,21 @@ onUnmounted(() => {
         <div
             v-if="isVisible"
             class="download-progress"
+            :class="{
+                'download-progress--paused':
+                    isCurrentPaused || isCurrentWaiting,
+            }"
             role="status"
             aria-live="polite"
         >
             <div class="progress-info">
-                <span class="progress-label">
+                <span
+                    class="progress-label"
+                    :class="{
+                        'progress-label--paused':
+                            isCurrentPaused || isCurrentWaiting,
+                    }"
+                >
                     {{ currentAction }}
                 </span>
                 <span class="progress-meta">
@@ -332,15 +484,72 @@ onUnmounted(() => {
                     <span class="progress-pct">{{
                         isIndeterminate ? "..." : `${percentage}%`
                     }}</span>
-                    <button
-                        v-if="currentAction === t('installation.downloading')"
-                        @click="cancelDownload(currentFile)"
-                        class="cancel-btn"
-                        :aria-label="t('common.cancel')"
-                        :title="t('common.cancel')"
-                    >
-                        ✕
-                    </button>
+
+                    <span class="ctrl-cluster">
+                        <template
+                            v-if="
+                                currentAction !== t('installation.extracting')
+                            "
+                        >
+                            <button
+                                v-if="downloadableFiles.length > 1"
+                                type="button"
+                                class="icon-btn tooltip tooltip-top"
+                                :class="{ 'icon-btn--resume': allPaused }"
+                                :data-tip="
+                                    allPaused
+                                        ? t('installation.resume_all')
+                                        : t('installation.pause_all')
+                                "
+                                :aria-label="
+                                    allPaused
+                                        ? t('installation.resume_all')
+                                        : t('installation.pause_all')
+                                "
+                                @click="toggleAll"
+                            >
+                                <CirclePlay
+                                    v-if="allPaused"
+                                    :size="14"
+                                    :stroke-width="2"
+                                />
+                                <CirclePause
+                                    v-else
+                                    :size="14"
+                                    :stroke-width="2"
+                                />
+                            </button>
+                            <button
+                                v-if="!isCurrentPaused"
+                                type="button"
+                                class="icon-btn tooltip tooltip-top"
+                                :data-tip="t('installation.pause')"
+                                :aria-label="t('installation.pause')"
+                                @click="pauseDownload(currentFile)"
+                            >
+                                <Pause :size="14" :stroke-width="2" />
+                            </button>
+                            <button
+                                v-else
+                                type="button"
+                                class="icon-btn icon-btn--resume tooltip tooltip-top"
+                                :data-tip="t('installation.resume')"
+                                :aria-label="t('installation.resume')"
+                                @click="resumeDownload(currentFile)"
+                            >
+                                <Play :size="14" :stroke-width="2" />
+                            </button>
+                            <button
+                                type="button"
+                                class="icon-btn icon-btn--danger tooltip tooltip-top"
+                                :data-tip="t('common.cancel')"
+                                :aria-label="t('common.cancel')"
+                                @click="cancelDownload(currentFile)"
+                            >
+                                <X :size="14" :stroke-width="2" />
+                            </button>
+                        </template>
+                    </span>
                 </span>
             </div>
             <TransitionGroup
@@ -352,10 +561,57 @@ onUnmounted(() => {
                 <span
                     v-for="entry in visibleFileEntries"
                     :key="entry.file"
-                    class="progress-file-item"
-                    :style="{ '--fill': `${entry.state?.percentage ?? 0}%` }"
+                    class="progress-file-entry"
+                    :class="{
+                        'progress-file-entry--paused':
+                            entry.state?.paused || entry.state?.waiting,
+                    }"
                 >
-                    {{ entry.file }}
+                    <span
+                        class="progress-file-item"
+                        :style="{
+                            '--fill': `${entry.state?.percentage ?? 0}%`,
+                        }"
+                    >
+                        {{ entry.file }}
+                    </span>
+                    <span
+                        v-if="
+                            entry.state &&
+                            entry.state.action !== t('installation.extracting')
+                        "
+                        class="queue-controls"
+                    >
+                        <button
+                            v-if="!entry.state.paused"
+                            type="button"
+                            class="queue-btn tooltip tooltip-top"
+                            :data-tip="t('installation.pause')"
+                            :aria-label="`${t('installation.pause')}: ${entry.file}`"
+                            @click="pauseDownload(entry.file)"
+                        >
+                            <Pause :size="10" :stroke-width="2.5" />
+                        </button>
+                        <button
+                            v-else
+                            type="button"
+                            class="queue-btn queue-btn--resume tooltip tooltip-top"
+                            :data-tip="t('installation.resume')"
+                            :aria-label="`${t('installation.resume')}: ${entry.file}`"
+                            @click="resumeDownload(entry.file)"
+                        >
+                            <Play :size="10" :stroke-width="2.5" />
+                        </button>
+                        <button
+                            type="button"
+                            class="queue-btn queue-btn--cancel tooltip tooltip-top"
+                            :data-tip="t('common.cancel')"
+                            :aria-label="`${t('common.cancel')}: ${entry.file}`"
+                            @click="cancelDownload(entry.file)"
+                        >
+                            <X :size="10" :stroke-width="2.5" />
+                        </button>
+                    </span>
                 </span>
                 <span v-if="hasMoreText" key="more-count" class="progress-more">
                     +{{ activeFiles.length - visibleFileEntries.length }} more
@@ -385,6 +641,10 @@ onUnmounted(() => {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.download-progress--paused {
+    border-top-color: rgba(251, 191, 36, 0.35);
+}
+
 .progress-info {
     display: flex;
     justify-content: space-between;
@@ -405,6 +665,10 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     flex-shrink: 1;
+}
+
+.progress-label--paused {
+    color: #fbbf24;
 }
 
 .progress-file {
@@ -431,6 +695,14 @@ onUnmounted(() => {
     margin-bottom: 6px;
 }
 
+.progress-file-entry {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
 .progress-file-item {
     position: relative;
     display: inline-block;
@@ -454,6 +726,81 @@ onUnmounted(() => {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+.progress-file-entry--paused .progress-file-item {
+    background: linear-gradient(
+        90deg,
+        rgba(251, 191, 36, 1) 0%,
+        rgba(251, 191, 36, 1) var(--fill),
+        rgba(251, 191, 36, 0.35) var(--fill),
+        rgba(251, 191, 36, 0.35) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+.queue-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0.55;
+    transition: opacity 0.15s ease;
+}
+
+.progress-file-entry:hover .queue-controls {
+    opacity: 1;
+}
+
+.queue-btn {
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0;
+    transition:
+        transform 0.15s ease,
+        background-color 0.12s ease,
+        color 0.12s ease;
+}
+
+.queue-btn:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.12);
+    transform: scale(1.08);
+}
+
+.queue-btn:active {
+    transform: scale(0.9);
+}
+
+.queue-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.queue-btn--resume {
+    color: rgba(251, 191, 36, 0.85);
+}
+
+.queue-btn--resume:hover {
+    color: #fcd34d;
+    background-color: rgba(251, 191, 36, 0.15);
+}
+
+.queue-btn--cancel:hover {
+    color: #ff6b6b;
+    background-color: rgba(255, 77, 77, 0.12);
+}
+
+.progress-file-entry:focus-within .queue-controls {
+    opacity: 1;
 }
 
 .progress-more {
@@ -535,21 +882,61 @@ onUnmounted(() => {
     text-align: right;
 }
 
-.cancel-btn {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.4);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: all 0.2s;
-    line-height: 1;
+.ctrl-cluster {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
 }
 
-.cancel-btn:hover {
-    color: #ff4d4d;
-    background-color: rgba(255, 77, 77, 0.1);
+.icon-btn {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    padding: 0;
+    transition:
+        transform 0.15s ease,
+        background-color 0.12s ease,
+        color 0.12s ease;
+}
+
+.icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transform: scale(1.06);
+}
+
+.icon-btn:active {
+    transform: scale(0.92);
+}
+
+.icon-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.icon-btn--resume {
+    color: #fbbf24;
+}
+
+.icon-btn--resume:hover {
+    background-color: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+.icon-btn--danger:hover {
+    background-color: rgba(255, 77, 77, 0.12);
+    color: #ff6b6b;
 }
 
 .progress-bar-container {
@@ -564,6 +951,10 @@ onUnmounted(() => {
     background: linear-gradient(90deg, #3b3b3b, #777777);
     border-radius: 2px;
     transition: width 0.2s ease-out;
+}
+
+.download-progress--paused .progress-bar {
+    background: linear-gradient(90deg, #b45309, #fbbf24);
 }
 
 .progress-bar--indeterminate {
@@ -591,5 +982,28 @@ onUnmounted(() => {
 .slide-up-leave-to {
     transform: translateY(100%);
     opacity: 0;
+}
+
+@media (max-width: 640px) {
+    .progress-info {
+        flex-wrap: wrap;
+        row-gap: 4px;
+    }
+
+    .progress-meta {
+        flex-shrink: 1;
+        min-width: 0;
+        flex-wrap: wrap;
+        row-gap: 4px;
+        gap: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .icon-btn,
+    .queue-btn {
+        transition: none !important;
+        transform: none !important;
+    }
 }
 </style>

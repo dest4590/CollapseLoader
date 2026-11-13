@@ -879,7 +879,13 @@
         "downloading": "Downloading",
         "extracting": "Extracting",
         "download_complete": "Download Complete",
-        "installation_complete": "Installation Complete"
+        "installation_complete": "Installation Complete",
+        "paused": "Paused",
+        "pause": "Pause",
+        "resume": "Resume",
+        "pause_all": "Pause all",
+        "resume_all": "Resume all",
+        "waiting_network": "Waiting for network…"
     },
     "errors": {
         "clients_load_failed": "Failed to load clients: {error}",

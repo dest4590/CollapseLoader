@@ -865,7 +865,13 @@
         "downloading": "Завантаження",
         "extracting": "Розпакування",
         "download_complete": "Завантаження завершено",
-        "installation_complete": "Встановлення завершено"
+        "installation_complete": "Встановлення завершено",
+        "paused": "Призупинено",
+        "pause": "Пауза",
+        "resume": "Продовжити",
+        "pause_all": "Призупинити все",
+        "resume_all": "Продовжити все",
+        "waiting_network": "Очікування мережі…"
     },
     "errors": {
         "clients_load_failed": "Не вдалося завантажити клієнти: {error}",

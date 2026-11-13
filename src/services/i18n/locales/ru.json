@@ -881,7 +881,13 @@
         "downloading": "Загрузка",
         "extracting": "Извлечение",
         "download_complete": "Загрузка завершена",
-        "installation_complete": "Установка завершена"
+        "installation_complete": "Установка завершена",
+        "paused": "Приостановлено",
+        "pause": "Пауза",
+        "resume": "Продолжить",
+        "pause_all": "Приостановить все",
+        "resume_all": "Продолжить все",
+        "waiting_network": "Ожидание сети…"
     },
     "errors": {
         "clients_load_failed": "Не удалось загрузить список клиентов: {error}",

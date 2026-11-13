@@ -13,7 +13,7 @@ use tokio::{
     process::Command,
 };
 
-use super::{CLIENT_LOGS, Client, ClientType, LaunchOptions, add_log_line};
+use super::{add_log_line, Client, ClientType, LaunchOptions, CLIENT_LOGS};
 
 #[allow(unused)]
 use crate::core::{

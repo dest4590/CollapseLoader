@@ -23,6 +23,22 @@ pub fn cancel_download(name: String) -> Result<bool, String> {
 }
 
 #[tauri::command]
+pub fn pause_download(name: String) -> Result<bool, String> {
+    Ok(crate::core::network::downloader::pause_download(&name))
+}
+
+#[tauri::command]
+pub fn resume_download(name: String) -> Result<bool, String> {
+    Ok(crate::core::network::downloader::resume_download(&name))
+}
+
+#[tauri::command]
+pub fn get_download_states(
+) -> Result<Vec<crate::core::network::downloader::DownloadSnapshot>, String> {
+    Ok(crate::core::network::downloader::active_download_states())
+}
+
+#[tauri::command]
 pub fn get_version() -> Result<serde_json::Value, String> {
     let result = serde_json::json!({
       "version":  env!("CARGO_PKG_VERSION").to_string(),

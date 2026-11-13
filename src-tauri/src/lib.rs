@@ -244,6 +244,9 @@ pub fn run() {
             // utils commands
             commands::utils::change_data_folder,
             commands::utils::cancel_download,
+            commands::utils::pause_download,
+            commands::utils::resume_download,
+            commands::utils::get_download_states,
             commands::utils::decode_base64,
             commands::utils::encode_base64,
             commands::utils::get_api_url,

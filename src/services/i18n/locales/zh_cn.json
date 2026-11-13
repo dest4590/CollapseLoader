@@ -1532,7 +1532,13 @@
         "downloading": "正在下载",
         "extracting": "正在解压",
         "download_complete": "下载完成",
-        "installation_complete": "安装完成"
+        "installation_complete": "安装完成",
+        "paused": "已暂停",
+        "pause": "暂停",
+        "resume": "继续",
+        "pause_all": "全部暂停",
+        "resume_all": "全部继续",
+        "waiting_network": "等待网络…"
     },
     "login": "您需要登录您的帐户。",
     "notifications": {
